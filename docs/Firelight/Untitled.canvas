@@ -1,0 +1,34 @@
+{
+	"nodes":[
+		{"id":"12acadd5e58439f9","type":"text","text":"Playlists/Favorites","x":-640,"y":100,"width":262,"height":60,"color":"2"},
+		{"id":"dd53d755f1fc38f6","type":"text","text":"Home Screen","x":-640,"y":220,"width":262,"height":60,"color":"4"},
+		{"id":"8d388ffb800b9c97","type":"text","text":"All Games","x":-300,"y":100,"width":262,"height":60,"color":"2"},
+		{"id":"f43f2a1535f6ceab","type":"text","text":"Library Screen","x":-300,"y":220,"width":262,"height":60,"color":"4"},
+		{"id":"35a459df102427c1","type":"text","text":"InMemoryGameRepository","x":-462,"y":-340,"width":262,"height":60,"color":"2"},
+		{"id":"557f294db1560438","x":-462,"y":-200,"width":262,"height":60,"color":"2","type":"text","text":"GameScanner"},
+		{"id":"629090c1db33907d","type":"text","text":"User Filesystem","x":-720,"y":-200,"width":160,"height":60,"color":"5"},
+		{"id":"09e6aa9d748bc7c8","type":"text","text":"GameLibrary","x":-462,"y":-60,"width":262,"height":60,"color":"2"},
+		{"id":"b18fc9251ed76e62","type":"text","text":"Libretro Core","x":60,"y":-60,"width":262,"height":60,"color":"2"},
+		{"id":"f7358ab328940d52","type":"text","text":"Quick Menu","x":411,"y":-60,"width":262,"height":60,"color":"2"},
+		{"id":"306f91224389a7ea","type":"text","text":"Game Screen","x":240,"y":220,"width":262,"height":60,"color":"4"},
+		{"id":"27c893a6147768af","type":"text","text":"Settings Screen","x":780,"y":220,"width":262,"height":60,"color":"4"},
+		{"id":"61413092cccbebfd","type":"text","text":"OpenGLDriver","x":-100,"y":-540,"width":262,"height":60,"color":"2"},
+		{"id":"d09383c98f671e3c","type":"text","text":"TBD Audio","x":-100,"y":-440,"width":262,"height":60,"color":"2"},
+		{"id":"1d355e85bdea6405","type":"text","text":"SDL2Input","x":-100,"y":-340,"width":262,"height":60,"color":"2"}
+	],
+	"edges":[
+		{"id":"bea07a211377657d","fromNode":"557f294db1560438","fromSide":"left","toNode":"629090c1db33907d","toSide":"right"},
+		{"id":"ce71ebf59dc6ee94","fromNode":"557f294db1560438","fromSide":"top","toNode":"35a459df102427c1","toSide":"bottom"},
+		{"id":"8770cfc579850311","fromNode":"09e6aa9d748bc7c8","fromSide":"top","toNode":"557f294db1560438","toSide":"bottom"},
+		{"id":"f8ae39cf974f105f","fromNode":"dd53d755f1fc38f6","fromSide":"top","toNode":"12acadd5e58439f9","toSide":"bottom"},
+		{"id":"d03b6c8a0c344192","fromNode":"12acadd5e58439f9","fromSide":"top","toNode":"09e6aa9d748bc7c8","toSide":"bottom"},
+		{"id":"d1ac08d46f8ad528","fromNode":"8d388ffb800b9c97","fromSide":"top","toNode":"09e6aa9d748bc7c8","toSide":"bottom"},
+		{"id":"91833b6e3fa61856","fromNode":"f43f2a1535f6ceab","fromSide":"top","toNode":"8d388ffb800b9c97","toSide":"bottom"},
+		{"id":"2a8ba249d9f3342e","fromNode":"09e6aa9d748bc7c8","fromSide":"right","toNode":"b18fc9251ed76e62","toSide":"left"},
+		{"id":"75d0037fa6c71091","fromNode":"306f91224389a7ea","fromSide":"top","toNode":"b18fc9251ed76e62","toSide":"bottom"},
+		{"id":"0e9dc8b113fad99b","fromNode":"306f91224389a7ea","fromSide":"top","toNode":"f7358ab328940d52","toSide":"bottom"},
+		{"id":"0a36298d9c525be2","fromNode":"b18fc9251ed76e62","fromSide":"top","toNode":"61413092cccbebfd","toSide":"bottom"},
+		{"id":"b1a8488b5facc9ce","fromNode":"b18fc9251ed76e62","fromSide":"top","toNode":"d09383c98f671e3c","toSide":"bottom"},
+		{"id":"3e7ba17ade5423f8","fromNode":"b18fc9251ed76e62","fromSide":"top","toNode":"1d355e85bdea6405","toSide":"bottom"}
+	]
+}

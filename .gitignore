@@ -1,0 +1,7 @@
+*.exe
+cmake-build-debug
+.idea
+
+.gitbak
+out
+build
