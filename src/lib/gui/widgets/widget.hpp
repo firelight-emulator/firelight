@@ -22,6 +22,9 @@ public:
   virtual ~Widget() = default;
   virtual void paint(WidgetPainter *painter, FL::Math::Box box) = 0;
   virtual bool focusable() = 0;
+  Style activeStyle;
+  Style focusStyle;
+  Style inactiveStyle;
 
   virtual Widget *getFirstFocusable() = 0;
 
@@ -33,6 +36,8 @@ public:
   virtual bool handleEvent(FL::GUI::Event &event);
 
   bool isFocused = false;
+  bool isHovered = false;
+  bool isActive = false;
 
   virtual void show() { isVisible = true; }
   virtual void hide() { isVisible = false; }

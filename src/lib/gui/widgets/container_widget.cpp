@@ -80,15 +80,7 @@ Widget *ContainerWidget::getFirstFocusable() {
 
 void ContainerWidget::addChild(std::unique_ptr<Widget> widget) {
   widget->setParent(this);
-  // TODO TEMPORARY
-  widget->setStyle(new FL::GUI::Style{
-      .background = FILL_BACKGROUND,
-      .backgroundColor = FL::Graphics::Color{.B = 1},
-      .horiAlignment = CENTER,
-      .vertAlignment = CENTER,
-      .textColor = FL::Graphics::Color{.R = 1, .G = 1, .B = 1}});
-
-  childWidgets.emplace_back(std::move(widget));
+  childWidgets.push_back(std::move(widget));
 }
 
 bool ContainerWidget::gainFocus() {

@@ -96,11 +96,11 @@ OpenGLDriver::OpenGLDriver(int w, int h) {
     // oops
   }
 
-  if (FT_New_Face(fontLib, "Lexend-Regular.ttf", 0, &fontFace) != 0) {
+  if (FT_New_Face(fontLib, "Lexend-Light.ttf", 0, &fontFace) != 0) {
     // oops
   }
 
-  int size = 12; // pixels high
+  int size = 24; // pixels high
   if (FT_Set_Char_Size(fontFace, 0, size * 64, 96, 96) != 0) {
     // oops
   }

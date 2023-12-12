@@ -127,7 +127,9 @@ target_link_libraries(firelight_lib mingw32 SDL2main SDL2 glew32 opengl32 freety
 # main code
 add_executable(firelight
         src/main.cpp
-        src/logo.ico)
+        src/logo.ico
+        src/app/gui/themes.hpp
+)
 
 target_link_libraries(firelight PRIVATE firelight_lib)
 target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)

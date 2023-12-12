@@ -16,12 +16,13 @@ void Button::paint(WidgetPainter *painter, FL::Math::Box box) {
   FL::Math::Box cool(pos.x, pos.y, this->box.widthPx, this->box.heightPx);
 
   if (isFocused) {
-    painter->paintBackground(cool, *style);
+    painter->paintBackground(cool, focusStyle);
+    painter->paintText(label, cool, focusStyle);
+  } else {
+    painter->paintText(label, cool, inactiveStyle);
   }
-
-  painter->paintText(label, cool, *style);
-  // draw rectangle
 }
+
 bool Button::focusable() { return true; }
 Widget *Button::getFirstFocusable() { return this; }
 

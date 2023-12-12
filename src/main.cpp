@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
   //  signal(SIGINT, [](int signal) { printf("got signal: %d\n", signal); });
 
   auto context = SDL_GL_CreateContext(window);
-  SDL_SetWindowMinimumSize(window, 160, 144); // TODO set based on core
+  SDL_SetWindowMinimumSize(window, 720, 480); // TODO set based on core
 
   if (GLEW_OK != glewInit()) {
     exit(1);
