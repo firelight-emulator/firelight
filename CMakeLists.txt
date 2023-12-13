@@ -1,17 +1,14 @@
 cmake_minimum_required(VERSION 3.26.4)
 project(firelight)
 
-#find_package(SDL REQUIRED)
-#find_package(GLEW REQUIRED)
-#find_package(OpenGL REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(Freetype REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(GTest)
 
 set(CMAKE_CXX_STANDARD 17)
-
-include_directories(includes)
-include_directories(includes/imgui)
-include_directories(includes/SDL2)
-
-link_directories(lib)
 
 # Include Google Test as an external project
 #include(ExternalProject)
@@ -122,7 +119,8 @@ add_library(firelight_lib
         src/lib/audio/sdl_source.cpp
         src/lib/audio/sdl_source.hpp)
 
-target_link_libraries(firelight_lib mingw32 SDL2main SDL2 glew32 opengl32 freetype ssl crypto gtest_main)
+target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
+target_link_libraries(firelight_lib mingw32 SDL2main SDL2 glew32 opengl32 freetype ssl crypto)
 
 # main code
 add_executable(firelight
@@ -131,14 +129,15 @@ add_executable(firelight
         src/app/gui/themes.hpp
 )
 
+target_include_directories(firelight PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
 target_link_libraries(firelight PRIVATE firelight_lib)
-target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 
 add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
 )
 
-target_link_libraries(fl_test PRIVATE firelight_lib gtest gtest_main)
+target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS})
+target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES})
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #
 #add_test(NAME firelight_test COMMAND firelight)
