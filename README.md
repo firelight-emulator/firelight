@@ -56,3 +56,25 @@ cmake ..      # generates Makefile + deactivates HarfBuzz if not found
 make          # compile libs
 make install  # install libs & headers
 ```
+
+### Installation on Windows
+
+1. Download and install [MSYS2](Download and install MSYS2: https://github.com/msys2/msys2-installer/releases)
+2. Open a MSYS2 terminal and run the following commands:
+    * pacman -S mingw-w64-x86_64-qt6 (hit enter for all)
+    * pacman -S mingw-w64-x86_64-SDL2
+    * pacman -S mingw-w64-x86_64-openssl
+    * pacman -S mingw-w64-x86_64-sqlite3
+    * pacman -S mingw-w64-x86_64-glew
+    * pacman -S mingw-w64-x86_64-freetype
+    * pacman -S mingw-w64-x86_64-gtest
+    * pacman -S mingw-w64-x86_64-cmake
+    * pacman -S mingw-w64-x86_64-gcc
+    * pacman -S make gettext base-devel
+3. Add the MSYS2 directory to the PATH environment variable in Windows (mine was C:\msys64\mingw64\bin)
+4. Make a folder called build in the root directory of the project
+5. Open a Linux Shell and run the following commands (start in the build directory)
+    * apt install cmake
+    * apt install make
+    * cmake -G "MinGW Makefiles" ..
+    * make

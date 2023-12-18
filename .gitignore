@@ -5,3 +5,5 @@ cmake-build-debug
 .gitbak
 out
 build
+
+.vscode
