@@ -17,19 +17,6 @@ void Screen::render(const std::shared_ptr<WidgetPainter> &painter) {
 }
 
 void Screen::addWidget(std::unique_ptr<Widget> widget) {
-  widget->onFocusGained.connect([this](Widget *w) {
-    if (focusTarget && focusTarget != w) {
-      focusTarget->loseFocus();
-    }
-    focusTarget = w;
-  });
-
-  widget->onFocusLost.connect([this](Widget *w) {
-    if (focusTarget == w) {
-      focusTarget = nullptr;
-    }
-  });
-
   auto rawWidgetPtr = widget.get();
 
   mainContainer->addChild(std::move(widget));

@@ -6,7 +6,7 @@
 #define FIRELIGHT_OPEN_GL_TEXTURE_HPP
 
 #include "../texture.hpp"
-#include <GL/glew.h>
+#include <QOpenGLContext>
 
 namespace FL::Graphics {
 

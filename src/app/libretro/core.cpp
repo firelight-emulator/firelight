@@ -68,7 +68,9 @@ static int16_t inputStateCallback(unsigned port, unsigned device,
 
 static void videoCallback(const void *data, unsigned width, unsigned height,
                           size_t pitch) {
-  currentCore->getVideo()->refreshCoreVideo(data, width, height, pitch);
+  currentCore->videoReceiver->receive(data, width, height, pitch);
+  //  printf("video callback w: %u, h: %u\n", width, height);
+  //  currentCore->getVideo()->refreshCoreVideo(data, width, height, pitch);
 }
 
 static bool envCallback(unsigned cmd, void *data) {
@@ -79,8 +81,8 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   switch (cmd) {
   case RETRO_ENVIRONMENT_SET_ROTATION:
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_ROTATION");
-    this->video->setRotation(*(unsigned *)data);
-    return true;
+    //    this->video->setRotation(*(unsigned *)data);
+    return false;
   case (3 | 0x800000): {
     this->environmentCalls.push_back(
         "RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB");
@@ -95,11 +97,11 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_OVERSCAN");
     this->recordPotentialAPIViolation(
         "Using deprecated environment call GET_OVERSCAN");
-    *(bool *)data = this->video->getOverscan();
+    *(bool *)data = false;
     return true;
   case RETRO_ENVIRONMENT_GET_CAN_DUPE: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_CAN_DUPE");
-    *(bool *)data = this->video->getAllowDupeFrames();
+    *(bool *)data = true;
     return true;
   }
   case RETRO_ENVIRONMENT_SET_MESSAGE: {
@@ -129,7 +131,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
-    this->video->setPixelFormat((retro_pixel_format *)data);
+    //    this->video->setPixelFormat((retro_pixel_format *)data);
     return true;
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS");
@@ -178,8 +180,9 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_HW_RENDER: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
     // TODO I think this is actually mostly stuff informing the frontend
-    this->video->setHardwareRenderCallback((retro_hw_render_callback *)data);
-    return true;
+    //    this->video->setHardwareRenderCallback((retro_hw_render_callback
+    //    *)data);
+    return false;
   }
   case RETRO_ENVIRONMENT_GET_VARIABLE: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_VARIABLE");
@@ -225,7 +228,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK: {
     this->environmentCalls.push_back(
         "RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK");
-    this->video->setFrameTimeCallback((retro_frame_time_callback *)data);
+    //    this->video->setFrameTimeCallback((retro_frame_time_callback *)data);
     return false;
   }
   case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK: {
@@ -378,7 +381,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
     this->environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
     this->retroSystemAVInfo = (retro_system_av_info *)data;
-    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
+    //    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
     return true;
   }
   case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
@@ -431,7 +434,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_GEOMETRY: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_GEOMETRY");
     this->retroSystemAVInfo->geometry = *(retro_game_geometry *)data;
-    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
+    //    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
     return true;
   }
   case RETRO_ENVIRONMENT_GET_USERNAME: {
@@ -862,7 +865,7 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 
 Core::Core(const std::string &libPath, FL::Graphics::Driver *driver,
            FL::Input::ControllerManager *conManager)
-    : gfxDriver(driver), controllerManager(conManager) {
+    : controllerManager(conManager) {
   this->dll = SDL_LoadObject(libPath.c_str());
   if (this->dll == nullptr) {
     // Check error
@@ -912,7 +915,7 @@ Core::Core(const std::string &libPath, FL::Graphics::Driver *driver,
   this->retroSystemInfo = new retro_system_info;
   this->retroSystemAVInfo = new retro_system_av_info;
 
-  this->video = new Video(gfxDriver);
+  //  this->video = new Video(gfxDriver);
 
   currentCore = this; // todo prob different namespace
 
@@ -945,7 +948,7 @@ Core::Core(const std::string &libPath, FL::Graphics::Driver *driver,
   SDL_AudioSpec want, have;
 
   SDL_memset(&want, 0, sizeof(want));
-  want.freq = 44100;       // Sample rate (e.g., 44.1 kHz)
+  want.freq = 32000;       // Sample rate (e.g., 44.1 kHz)
   want.format = AUDIO_S16; // Audio format (16-bit signed)
   want.channels = 2;       // Number of audio channels (stereo)
   want.samples = 1024;     // Audio buffer size (samples)
@@ -967,7 +970,7 @@ Core::~Core() {
   // need to close symbol handles or free their memory?
   delete this->retroSystemInfo;
   delete this->retroSystemAVInfo;
-  delete this->video;
+  //  delete this->video;
 }
 
 bool Core::loadGame(Game *game) {
@@ -981,7 +984,7 @@ bool Core::loadGame(Game *game) {
 
   this->symRetroGetSystemInfo(this->retroSystemInfo);
   this->symRetroGetSystemAVInfo(this->retroSystemAVInfo);
-  this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
+  //  this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
 
   return result;
 }
@@ -1006,8 +1009,6 @@ void Core::recordPotentialAPIViolation(const std::string &msg) {
   printf("Potential API violation: %s\n", msg.c_str());
 }
 
-Video *Core::getVideo() { return this->video; }
-
 std::vector<char> Core::getMemoryData(MemoryType memType) {
   auto size = symRetroGetMemoryDataSize((unsigned)memType);
   auto ptr = symRetroGetMemoryData((unsigned)memType);
@@ -1031,6 +1032,9 @@ void Core::writeMemoryData(MemoryType memType, char *data) {
 }
 FL::Input::ControllerManager *Core::getControllerManager() {
   return controllerManager;
+}
+void Core::setVideoStuff(CoreVideoDataReceiver *receiver) {
+  videoReceiver = receiver;
 }
 
 } // namespace libretro

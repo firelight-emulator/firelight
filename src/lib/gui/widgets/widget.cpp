@@ -23,13 +23,9 @@ void Widget::setId(int widgetId) { id = widgetId; }
 
 bool Widget::gainFocus() {
   isFocused = true;
-  onFocusGained.emit(this);
   return true;
 }
 
-void Widget::loseFocus() {
-  isFocused = false;
-  onFocusLost.emit(this);
-}
+void Widget::loseFocus() { isFocused = false; }
 
 } // namespace FL::GUI

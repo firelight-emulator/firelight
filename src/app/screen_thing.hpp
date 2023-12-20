@@ -49,22 +49,22 @@ public:
 
     for (const auto &e : library->getAllGames()) {
       auto button = widgetFactory->createButton(e.gameName);
-      button->onPressed.connect([e, library, this](Button *button) {
-        auto container = std::make_unique<ContainerWidget>();
-        container->box.xPx = 0;
-        container->box.yPx = 0;
-        container->box.widthPx = 1280;
-        container->box.heightPx = 720;
-
-        container->setLayoutManager(
-            std::make_unique<VerticalBoxLayoutManager>(30, 10));
-
-        auto screen = std::make_unique<GameScreen>(
-            std::move(container), controllerManager, gfxDriver,
-            e.romPath.generic_string(), library, e, saveManager);
-
-        this->screenManager->pushScreen(std::move(screen));
-      });
+      //      button->onPressed.connect([e, library, this](Button *button) {
+      //        auto container = std::make_unique<ContainerWidget>();
+      //        container->box.xPx = 0;
+      //        container->box.yPx = 0;
+      //        container->box.widthPx = 1280;
+      //        container->box.heightPx = 720;
+      //
+      //        container->setLayoutManager(
+      //            std::make_unique<VerticalBoxLayoutManager>(30, 10));
+      //
+      //        auto screen = std::make_unique<GameScreen>(
+      //            std::move(container), controllerManager, gfxDriver,
+      //            e.romPath.generic_string(), library, e, saveManager);
+      //
+      //        this->screenManager->pushScreen(std::move(screen));
+      //      });
 
       screen->addWidget(std::move(button));
     }
@@ -96,9 +96,6 @@ public:
     auto screen = std::make_unique<Screen>(std::move(container));
 
     auto button = widgetFactory->createButton("resume");
-
-    button->onPressed.connect(
-        [this](Button *button) { this->screenManager->popScreen(); });
 
     screen->addWidget(std::move(button));
 

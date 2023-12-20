@@ -9,7 +9,6 @@
 #include "../character.hpp"
 #include "../color.hpp"
 #include "../driver.hpp"
-#include "GL/glew.h"
 #include "freetype/freetype.h"
 #include "open_gl_texture.hpp"
 #include <array>

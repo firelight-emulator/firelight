@@ -21,6 +21,7 @@ struct Entry {
   std::string sourceGameId; // todo
   std::string corePath;
   std::filesystem::path romPath; // todo: change name
+  bool verified = false;
 };
 
 static void to_json(json &j, const Entry &entry) {
@@ -30,7 +31,8 @@ static void to_json(json &j, const Entry &entry) {
            {"game_id", entry.gameId},
            {"source_game_id", entry.sourceGameId},
            {"core_path", entry.corePath},
-           {"rom_path", entry.romPath}};
+           {"rom_path", entry.romPath},
+           {"verified", entry.verified}};
 }
 
 static void from_json(const json &j, Entry &entry) {

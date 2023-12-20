@@ -15,9 +15,6 @@ public:
   void paint(WidgetPainter *painter, FL::Math::Box box) override;
   Widget *getFirstFocusable() override;
   bool focusable() override;
-  bool handleEvent(Event &event) override;
-
-  Signal<Button *> onPressed;
 
 private:
   std::string label;

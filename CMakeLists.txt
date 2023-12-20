@@ -1,29 +1,40 @@
 cmake_minimum_required(VERSION 3.26.4)
 project(firelight)
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    message("This is a Windows platform.")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message("This is a Linux platform.")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    message("This is a macOS platform.")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Android")
+    message("This is a Android platform.")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    message("This is a FreeBSD platform.")
+else ()
+    message("This is an unknown platform. :(")
+endif ()
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+if (CMAKE_VERSION VERSION_LESS "3.7.0")
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+endif ()
+
 find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(SQLite3 REQUIRED)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D REQUIRED)
 find_package(GTest)
 
-set(CMAKE_CXX_STANDARD 17)
+qt_standard_project_setup(REQUIRES 6.5)
 
-# Include Google Test as an external project
-#include(ExternalProject)
-#ExternalProject_Add(googletest
-#        GIT_REPOSITORY https://github.com/google/googletest.git
-#        GIT_TAG master
-#        PREFIX ${CMAKE_BINARY_DIR}/gtest
-#        INSTALL_COMMAND ""
-#)
-#
-## Set GTest source and binary directories
-#ExternalProject_Get_Property(googletest source_dir binary_dir)
-#
-## Add Google Test headers to your project's include directories
-#include_directories(${source_dir}/googletest/include)
+set(CMAKE_CXX_STANDARD 17)
 
 add_library(firelight_lib
         src/app/libretro/core.cpp
@@ -86,7 +97,6 @@ add_library(firelight_lib
         src/lib/gui/screens/screen_manager.cpp
         src/lib/gui/screens/screen_manager.hpp
         src/lib/gui/screens/screen.cpp
-        src/lib/gui/signal.hpp
         src/app/screen_thing.cpp
         src/app/screen_thing.hpp
         src/app/db/game_repository.hpp
@@ -105,7 +115,6 @@ add_library(firelight_lib
         src/app/saves/save_manager.cpp
         src/app/saves/save_manager.hpp
         src/app/app_constants.hpp
-        src/app/platforms/platform_configuration.hpp
         src/app/patching/pm_star_rod_mod_patch.cpp
         src/app/patching/yay_0_codec.cpp
         src/app/patching/yay_0_codec.hpp
@@ -117,20 +126,51 @@ add_library(firelight_lib
         src/app/controller/sdl_controller.hpp
         src/lib/audio/source.hpp
         src/lib/audio/sdl_source.cpp
-        src/lib/audio/sdl_source.hpp)
+        src/lib/audio/sdl_source.hpp
+        src/app/library/library_manager.cpp
+        src/app/library/library_manager.hpp
+        src/app/gui/themes.hpp
+        src/app/libretro/video_data_receiver.hpp
+        src/app/emulation_manager.cpp)
 
-target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
-target_link_libraries(firelight_lib mingw32 SDL2main SDL2 glew32 opengl32 freetype ssl crypto)
+target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
+        ${FREETYPE_INCLUDE_DIRS} ${SQLite3_INCLUDE_DIRS})
+target_link_libraries(firelight_lib mingw32 SDL2main SDL2 glew32 opengl32 freetype ssl crypto ${SQLite3_LIBRARIES}
+        Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D)
 
 # main code
-add_executable(firelight
+qt_add_executable(firelight
+        Main.qml
         src/main.cpp
         src/logo.ico
-        src/app/gui/themes.hpp
+        src/rom_model.cpp
+        src/rom_model.hpp
+        src/gui/fl_game.cpp
+        src/gui/fl_game.hpp
+        src/gui/emulator_view.cpp
+        src/gui/emulator_view.hpp
+        src/gui/emulator_renderer.cpp
+        src/gui/emulator_renderer.hpp
+        src/counter.cpp
 )
 
-target_include_directories(firelight PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
+qt_add_qml_module(firelight
+        URI QtFirelight
+        VERSION 1.0
+        QML_FILES Main.qml
+)
+
+target_include_directories(firelight PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS}
+        ${SQLite3_INCLUDE_DIRS})
 target_link_libraries(firelight PRIVATE firelight_lib)
+
+
+include(GNUInstallDirs)
+install(TARGETS firelight
+        BUNDLE DESTINATION .
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
 add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
@@ -141,4 +181,4 @@ target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES})
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #
 #add_test(NAME firelight_test COMMAND firelight)
-#
+

@@ -26,12 +26,4 @@ void Button::paint(WidgetPainter *painter, FL::Math::Box box) {
 bool Button::focusable() { return true; }
 Widget *Button::getFirstFocusable() { return this; }
 
-bool Button::handleEvent(Event &event) {
-  if (event.type == Event::NAV_SELECT_PUSHED) {
-    onPressed.emit(this);
-  }
-
-  return Widget::handleEvent(event);
-}
-
 } // namespace FL::GUI

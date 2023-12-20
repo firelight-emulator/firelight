@@ -11,7 +11,7 @@
 #include "coreoption.hpp"
 #include "game.hpp"
 #include "libretro.h"
-#include "video.hpp"
+#include "video_data_receiver.hpp"
 #include <iostream>
 #include <mutex>
 #include <queue>
@@ -42,7 +42,7 @@ typedef void (*RetroRunFunc)();
 class Core {
 
 public:
-  Video *getVideo();
+  //  Video *getVideo();
   FL::Input::ControllerManager *getControllerManager();
 
   std::basic_string<char> dumpJson();
@@ -51,6 +51,8 @@ public:
        FL::Input::ControllerManager *conManager);
 
   virtual ~Core();
+
+  void setVideoStuff(CoreVideoDataReceiver *receiver);
 
   bool handleEnvironmentCall(unsigned cmd, void *data);
 
@@ -71,13 +73,14 @@ public:
   std::vector<char> getMemoryData(MemoryType memType);
 
   void writeMemoryData(MemoryType memType, char *data);
+  CoreVideoDataReceiver *videoReceiver;
 
 private:
   FL::Input::ControllerManager *controllerManager;
   FL::Graphics::Driver *gfxDriver;
   SDL_AudioDeviceID audioDevice;
 
-  Video *video;
+  //  Video *video;
 
   vector<string> environmentCalls;
 

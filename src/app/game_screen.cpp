@@ -75,7 +75,7 @@ void GameScreen::enter() {
     libretro::Game lrGame(patchedGame);
 
     core->loadGame(&lrGame);
-    core->getVideo()->initialize(0, 0, 1280, 720);
+    //    core->getVideo()->initialize(0, 0, 1280, 720);
 
     auto saveData = saveManager->read(libraryEntry.gameId);
     if (!saveData.empty()) {
@@ -87,7 +87,7 @@ void GameScreen::enter() {
 
   libretro::Game game(gameRomPath);
   core->loadGame(&game);
-  core->getVideo()->initialize(0, 0, 1280, 720);
+  //  core->getVideo()->initialize(0, 0, 1280, 720);
 
   auto saveData = saveManager->read(libraryEntry.gameId);
   if (!saveData.empty()) {
@@ -115,12 +115,12 @@ void GameScreen::forceStop() {
 }
 
 void GameScreen::render(const std::shared_ptr<WidgetPainter> &painter) {
-  core->getVideo()->draw();
+  //  core->getVideo()->draw();
 }
 void GameScreen::setWindowArea(int width, int height) {
   Screen::setWindowArea(width, height);
   if (core) {
-    core->getVideo()->setScreenDimensions(0, 0, width, height);
+    //    core->getVideo()->setScreenDimensions(0, 0, width, height);
   }
 }
 

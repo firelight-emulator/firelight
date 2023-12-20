@@ -3,7 +3,6 @@
 //
 
 #include "game_library.hpp"
-#include "../db/game_scanner.hpp"
 #include <fstream>
 
 namespace FL::Library {
