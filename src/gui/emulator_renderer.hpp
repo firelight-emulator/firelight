@@ -57,8 +57,9 @@ public:
     //    painter.setFont(QFont("Arial", 72));
     //    painter.drawText(200, 200,
     //                     QString::fromStdString(std::to_string(getCounterValue())));
-    painter.drawImage(bounds.toRect(),
-                      *EmulationManager::getInstance()->getImage());
+    auto image = EmulationManager::getInstance()->getImage();
+    painter.drawImage(bounds.toRect(), *image);
+    image.release();
 
     //    painter.setRenderHints(QPainter::LosslessImageRendering);
     //

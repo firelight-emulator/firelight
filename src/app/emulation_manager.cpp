@@ -82,9 +82,9 @@ void EmulationManager::receive(const void *data, unsigned int width,
   m_pitch = pitch;
 }
 
-QImage *EmulationManager::getImage() {
-  auto image = new QImage((uchar *)m_data, m_width, m_height, m_pitch,
-                          QImage::Format_RGB16);
+std::unique_ptr<QImage> EmulationManager::getImage() {
+  auto image = std::make_unique<QImage>((uchar *)m_data, m_width, m_height,
+                                        m_pitch, QImage::Format_RGB16);
 
   image->mirror();
   return image;

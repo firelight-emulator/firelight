@@ -17,7 +17,7 @@ public:
   void initialize();
   void receive(const void *data, unsigned int width, unsigned int height,
                size_t pitch) override;
-  QImage *getImage();
+  std::unique_ptr<QImage> getImage();
 
 public slots:
   void runOneFrame();
