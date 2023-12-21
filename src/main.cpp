@@ -15,6 +15,7 @@
 #include <QOpenGLVersionFunctionsFactory>
 #include <QQmlApplicationEngine>
 #include <QQuickRenderControl>
+#include <QQuickStyle>
 #include <QQuickView>
 #include <QQuickWindow>
 #include <QThread>
@@ -117,6 +118,7 @@ int main(int argc, char *argv[]) {
   library.scanNow();
 
   QGuiApplication app(argc, argv);
+  QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   qmlRegisterType<RomModel>("Firelight", 1, 0, "RomModel");
