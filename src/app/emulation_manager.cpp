@@ -20,7 +20,7 @@ void EmulationManager::initialize() {
   conManager.scanGamepads();
 
   core = std::make_unique<libretro::Core>("./system/_cores/snes9x_libretro.dll",
-                                          nullptr, &conManager);
+                                          &conManager);
 
   core->setSystemDirectory(".");
   core->setSaveDirectory(".");

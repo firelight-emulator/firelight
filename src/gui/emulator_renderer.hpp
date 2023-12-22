@@ -5,7 +5,6 @@
 #ifndef FIRELIGHT_EMULATOR_RENDERER_HPP
 #define FIRELIGHT_EMULATOR_RENDERER_HPP
 
-#include "../counter.hpp"
 #include "src/app/emulation_manager.hpp"
 #include <QObject>
 #include <QOpenGLFramebufferObject>

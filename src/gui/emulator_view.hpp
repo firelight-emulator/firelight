@@ -5,7 +5,6 @@
 #ifndef FIRELIGHT_EMULATOR_VIEW_HPP
 #define FIRELIGHT_EMULATOR_VIEW_HPP
 
-#include "../counter.hpp"
 #include <QQuickFramebufferObject>
 #include <QQuickItem>
 #include <QQuickWindow>
@@ -16,7 +15,6 @@ public:
   explicit EmulatorView(QQuickItem *parent = nullptr);
   [[nodiscard]] Renderer *createRenderer() const override;
 
-  Q_INVOKABLE void doneRendering() { incrementCounterValue(); }
   Q_INVOKABLE void init();
 private slots:
   void updateThing();

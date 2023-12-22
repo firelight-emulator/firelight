@@ -5,14 +5,19 @@
 #ifndef FIRELIGHT_LIBRARY_MANAGER_HPP
 #define FIRELIGHT_LIBRARY_MANAGER_HPP
 
+#include "../db/content_database.hpp"
 #include "entry.hpp"
+#include <sqlite3.h>
+#include <unordered_map>
+#include <vector>
 
 namespace FL::Library {
 
 class LibraryManager {
 public:
-  LibraryManager(const std::filesystem::path &libraryFile,
-                 const std::filesystem::path &defaultRomPath);
+  LibraryManager(std::filesystem::path libraryFile,
+                 const std::filesystem::path &defaultRomPath,
+                 ContentDatabase *contentDb);
 
   /**
    * Perform an on-command scan of the content directories to get up to date.
@@ -36,12 +41,19 @@ public:
    * @param gameId
    * @return True if the Library contains an Entry with the given gameId.
    */
-  bool contains(std::string gameId);
+  bool contains(int gameId);
 
 private:
+  ContentDatabase *contentDatabase = nullptr;
+  void insertEntry(const Entry &entry);
+  sqlite3 *getOrCreateDbConnection();
+
+  std::filesystem::path libraryDbFile;
   std::vector<std::filesystem::path> watchedRomDirs;
   std::vector<Entry> entries;
   std::unordered_map<std::string, std::string> romFileExtensions;
+
+  sqlite3 *database;
 };
 
 } // namespace FL::Library

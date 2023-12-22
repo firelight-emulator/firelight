@@ -863,8 +863,7 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 //        return j.dump();
 //    }
 
-Core::Core(const std::string &libPath, FL::Graphics::Driver *driver,
-           FL::Input::ControllerManager *conManager)
+Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
     : controllerManager(conManager) {
   this->dll = SDL_LoadObject(libPath.c_str());
   if (this->dll == nullptr) {

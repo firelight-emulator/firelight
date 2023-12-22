@@ -42,96 +42,24 @@ add_library(firelight_lib
         src/app/libretro/coreoption.hpp
         src/app/libretro/game.cpp
         src/app/libretro/game.hpp
-        src/app/libretro/video.cpp
-        src/app/libretro/video.hpp
-        src/app/metrics/gameloop.cpp
-        src/app/metrics/gameloop.hpp
         src/app/controller/controller_manager.cpp
         src/app/controller/controller_manager.hpp
-        includes/imgui/imconfig.h
-        includes/imgui/imgui.cpp
-        includes/imgui/imgui.h
-        includes/imgui/imgui_demo.cpp
-        includes/imgui/imgui_draw.cpp
-        includes/imgui/imgui_impl_opengl3.cpp
-        includes/imgui/imgui_impl_opengl3.h
-        includes/imgui/imgui_impl_opengl3_loader.h
-        includes/imgui/imgui_impl_sdl2.cpp
-        includes/imgui/imgui_impl_sdl2.h
-        includes/imgui/imgui_internal.h
-        includes/imgui/imgui_stdlib.cpp
-        includes/imgui/imgui_stdlib.h
-        includes/imgui/imgui_tables.cpp
-        includes/imgui/imgui_widgets.cpp
-        includes/imgui/imstb_rectpack.h
-        includes/imgui/imstb_textedit.h
-        includes/imgui/imstb_truetype.h
-        includes/imgui/imgui_impl_opengl3.cpp
-        src/lib/gui/style.hpp
-        src/lib/graphics/character.hpp
-        src/lib/graphics/opengl/shaders.hpp
-        src/lib/graphics/opengl/shaders.cpp
-        src/lib/graphics/color.hpp
-        src/lib/gui/widgets/widget.cpp
-        src/lib/gui/widgets/widget.hpp
-        src/lib/math/bbox.hpp
-        src/lib/math/bbox.cpp
-        src/lib/gui/widget_painter.hpp
-        src/lib/gui/widget_painter.cpp
-        src/lib/graphics/driver.hpp
-        src/lib/graphics/opengl/open_gl_driver.cpp
-        src/lib/graphics/opengl/open_gl_driver.hpp
-        src/lib/gui/widgets/container_widget.cpp
-        src/lib/gui/widgets/container_widget.hpp
-        src/lib/gui/events/event.hpp
-        src/lib/gui/widgets/button.cpp
-        src/lib/gui/widgets/button.hpp
-        src/lib/gui/widget_factory.cpp
-        src/lib/gui/widget_factory.hpp
-        src/lib/gui/layout_manager.hpp
-        src/lib/gui/vertical_box_layout_manager.cpp
-        src/lib/gui/vertical_box_layout_manager.hpp
-        src/lib/math/position.hpp
-        src/lib/graphics/texture.hpp
-        src/lib/gui/screens/screen.hpp
-        src/lib/gui/screens/screen_manager.cpp
-        src/lib/gui/screens/screen_manager.hpp
-        src/lib/gui/screens/screen.cpp
-        src/app/screen_thing.cpp
-        src/app/screen_thing.hpp
-        src/app/db/game_repository.hpp
-        src/app/db/game_record.hpp
         src/app/library/entry.hpp
-        src/app/db/game_scanner.cpp
-        src/app/db/game_scanner.hpp
-        src/app/db/in_memory_game_repository.cpp
-        src/app/db/in_memory_game_repository.hpp
-        src/app/game_screen.cpp
-        src/app/game_screen.hpp
-        src/lib/graphics/opengl/open_gl_texture.cpp
-        src/lib/graphics/opengl/open_gl_texture.hpp
-        src/app/library/game_library.cpp
-        src/app/library/game_library.hpp
         src/app/saves/save_manager.cpp
         src/app/saves/save_manager.hpp
-        src/app/app_constants.hpp
         src/app/patching/pm_star_rod_mod_patch.cpp
         src/app/patching/yay_0_codec.cpp
         src/app/patching/yay_0_codec.hpp
         src/app/patching/pm_star_rod_mod_patch.hpp
-        src/app/db/romhack_record.hpp
-        src/app/db/romhack_version_record.hpp
-        src/lib/graphics/framebuffer.hpp
         src/app/controller/sdl_controller.cpp
         src/app/controller/sdl_controller.hpp
-        src/lib/audio/source.hpp
-        src/lib/audio/sdl_source.cpp
-        src/lib/audio/sdl_source.hpp
         src/app/library/library_manager.cpp
         src/app/library/library_manager.hpp
-        src/app/gui/themes.hpp
         src/app/libretro/video_data_receiver.hpp
-        src/app/emulation_manager.cpp)
+        src/app/emulation_manager.cpp
+        src/app/db/content_database.hpp
+        src/app/db/sqlite_content_database.cpp
+        src/app/db/sqlite_content_database.hpp)
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
         ${FREETYPE_INCLUDE_DIRS} ${SQLite3_INCLUDE_DIRS})
@@ -143,15 +71,17 @@ qt_add_executable(firelight
         Main.qml
         src/main.cpp
         src/logo.ico
-        src/rom_model.cpp
-        src/rom_model.hpp
         src/gui/fl_game.cpp
         src/gui/fl_game.hpp
         src/gui/emulator_view.cpp
         src/gui/emulator_view.hpp
         src/gui/emulator_renderer.cpp
         src/gui/emulator_renderer.hpp
-        src/counter.cpp
+        src/gui/QLibraryManager.cpp
+        src/gui/QLibraryManager.hpp
+        src/gui/QLibEntryModelShort.cpp
+        src/gui/QLibEntryModelShort.hpp
+        src/app/db/daos/rom.hpp
 )
 
 qt_add_qml_module(firelight

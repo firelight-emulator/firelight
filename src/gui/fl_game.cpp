@@ -3,7 +3,6 @@
 //
 
 #include "fl_game.hpp"
-#include "../counter.hpp"
 #include "QGuiApplication"
 #include "QQuickWindow"
 #include <QOpenGLTexture>
@@ -72,8 +71,6 @@ void FLGame::paint(QPainter *painter) {
 
   painter->setPen(Qt::black);
   painter->setFont(QFont("Arial", 72));
-  painter->drawText(100, 100,
-                    QString::fromStdString(std::to_string(getCounterValue())));
   //  QImage image((uchar *)m_data, m_width, m_height, m_pitch,
   //               QImage::Format_RGB16);
   //  painter->drawImage(boundingRect().toRect(), image);

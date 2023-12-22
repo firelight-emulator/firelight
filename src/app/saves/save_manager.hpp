@@ -5,7 +5,7 @@
 #ifndef FIRELIGHT_SAVE_MANAGER_HPP
 #define FIRELIGHT_SAVE_MANAGER_HPP
 
-#include "../db/game_repository.hpp"
+#include <filesystem>
 #include <string>
 #include <vector>
 namespace FL {
@@ -17,7 +17,6 @@ public:
 
 private:
   std::string profileId = "defaultuser";
-  DB::GameRepository *gameRepository;
 
   std::filesystem::path getSaveFilePath(const std::string &gameId);
   std::filesystem::path getSaveFileDirectory();
