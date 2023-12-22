@@ -3,6 +3,7 @@
 //
 
 #include "QLibEntryModelShort.hpp"
+
 int QLibEntryModelShort::rowCount(const QModelIndex &parent) const {
   return m_entries.size();
 }
@@ -14,7 +15,9 @@ QVariant QLibEntryModelShort::data(const QModelIndex &index, int role) const {
   const FL::Library::Entry &entry = m_entries.at(index.row());
   switch (role) {
   case DisplayName:
-    return QString::fromStdString(entry.display_name);
+    return QString::fromStdString(entry.content_path);
+  case EntryId:
+    return {entry.id};
     // Handle other roles
   }
 
@@ -24,13 +27,14 @@ QVariant QLibEntryModelShort::data(const QModelIndex &index, int role) const {
 QHash<int, QByteArray> QLibEntryModelShort::roleNames() const {
   QHash<int, QByteArray> roles;
   roles[DisplayName] = "displayName";
+  roles[EntryId] = "entryId";
   // Add other roles
   return roles;
 }
 
-void QLibEntryModelShort::setEntries(std::vector<FL::Library::Entry> &entries) {
+void QLibEntryModelShort::setEntries(
+    const std::vector<FL::Library::Entry> &entries) {
   beginResetModel();
-  m_entries.clear();
   m_entries = entries;
   endResetModel();
 }

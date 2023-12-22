@@ -186,12 +186,11 @@ Window {
                 clip: true
 
                 anchors.fill: parent
-                model: RomModel {
-                }
+                model: libraryEntryModelShort
                 boundsBehavior: Flickable.StopAtBounds
                 delegate: gameListItem
-                preferredHighlightBegin: height / 3
-                preferredHighlightEnd: 2 * (height / 3) + currentItem.height
+                // preferredHighlightBegin: height / 3
+                // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
             }
 
             Component {
@@ -212,7 +211,8 @@ Window {
 
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            startGame.start()
+                            console.log(model.entryId)
+                            // startGame.start()
                         }
                     }
 
@@ -227,7 +227,7 @@ Window {
                         anchors.verticalCenter: parent.verticalCenter
                         font.family: "Helvetica"
                         font.pointSize: 14
-                        text: "testing " + model.filename
+                        text: "testing " + model.displayName
                         color: "white"
                     }
                 }

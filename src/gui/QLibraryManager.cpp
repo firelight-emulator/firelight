@@ -3,5 +3,10 @@
 //
 
 #include "QLibraryManager.hpp"
-QLibraryManager::QLibraryManager(QLibEntryModelShort *shortModel)
-    : m_shortModel(shortModel) {}
+QLibraryManager::QLibraryManager(FL::Library::LibraryManager *library_manager,
+                                 QLibEntryModelShort *shortModel)
+    : m_shortModel(shortModel), m_library_manager(library_manager) {}
+
+void QLibraryManager::refresh() const {
+  m_shortModel->setEntries(m_library_manager->getEntries());
+}

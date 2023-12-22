@@ -150,17 +150,17 @@ void LibraryManager::scanNow() {
       auto result = contentDatabase->getRomByMd5(md5);
       if (result.has_value()) {
         // TODO: Will need to do a game lookup here as well.
-        insertEntry({.id = -1,
-                     .display_name = "default display name",
-                     .verified = true,
-                     .platform = result->platform,
-                     .md5 = md5,
-                     .game = result->game,
-                     .rom = result->id,
-                     .romhack = -1,
-                     .content_path = entry.path().string()});
+        Entry e = {.id = -1,
+                   .display_name = "default display name",
+                   .verified = true,
+                   .platform = result->platform,
+                   .md5 = md5,
+                   .game = result->game,
+                   .rom = result->id,
+                   .romhack = -1,
+                   .content_path = entry.path().string()};
+        insertEntry(e);
       } else {
-        printf("DIDN'T WORK\n");
         // TODO: Start trying other stuff
       }
 
@@ -188,8 +188,9 @@ bool LibraryManager::contains(int gameId) {
   //                    [&gameId](const Entry &e) { return e.game == gameId; });
   return false;
 }
+std::vector<Entry> LibraryManager::getEntries() { return entries; }
 
-void LibraryManager::insertEntry(const Entry &entry) {
+void LibraryManager::insertEntry(Entry &entry) {
   auto db = getOrCreateDbConnection();
   sqlite3_stmt *stmt = nullptr;
   const char *query = "INSERT OR IGNORE INTO library ("
@@ -223,10 +224,40 @@ void LibraryManager::insertEntry(const Entry &entry) {
   if (sqlite3_step(stmt) != SQLITE_DONE) {
     printf("insert didn't work: %s\n", sqlite3_errmsg(database));
     // Handle error
+  } else {
+    if (sqlite3_changes(db) == 0) {
+      // No new row was inserted, need to fetch the existing row's ID
+      sqlite3_stmt *selectStmt = nullptr;
+      const char *selectQuery = "SELECT id FROM library WHERE md5 = ?";
+
+      if (sqlite3_prepare_v2(db, selectQuery, -1, &selectStmt, nullptr) ==
+          SQLITE_OK) {
+        sqlite3_bind_text(selectStmt, 1, entry.md5.c_str(), -1, SQLITE_STATIC);
+
+        if (sqlite3_step(selectStmt) == SQLITE_ROW) {
+          entry.id = sqlite3_column_int(selectStmt, 0);
+        } else {
+          printf("Failed to retrieve existing row ID: %s\n",
+                 sqlite3_errmsg(database));
+          // Handle error
+        }
+        sqlite3_finalize(selectStmt);
+      } else {
+        printf("prepare for select didn't work: %s\n",
+               sqlite3_errmsg(database));
+        // Handle error
+      }
+    } else {
+      // A new row was inserted
+      entry.id = static_cast<int>(sqlite3_last_insert_rowid(db));
+    }
   }
+
+  // TODO: Do another query here to get the ID of the one we just put in...
 
   // Finalize the prepared statement to avoid resource leaks
   sqlite3_finalize(stmt);
+  entries.push_back(entry);
 }
 
 sqlite3 *LibraryManager::getOrCreateDbConnection() {

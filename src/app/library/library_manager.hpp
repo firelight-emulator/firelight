@@ -43,9 +43,11 @@ public:
    */
   bool contains(int gameId);
 
+  std::vector<Entry> getEntries();
+
 private:
   ContentDatabase *contentDatabase = nullptr;
-  void insertEntry(const Entry &entry);
+  void insertEntry(Entry &entry);
   sqlite3 *getOrCreateDbConnection();
 
   std::filesystem::path libraryDbFile;

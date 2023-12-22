@@ -18,7 +18,7 @@ public:
   QVariant data(const QModelIndex &index, int role) const override;
   QHash<int, QByteArray> roleNames() const override;
 
-  void setEntries(std::vector<FL::Library::Entry> &entries);
+  void setEntries(const std::vector<FL::Library::Entry> &entries);
 
 private:
   std::vector<FL::Library::Entry> m_entries;

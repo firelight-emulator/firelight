@@ -12,6 +12,7 @@
 #include <QGuiApplication>
 #include <QOpenGLFunctions>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QWindow>
@@ -39,6 +40,11 @@ int main(int argc, char *argv[]) {
                                               &content_database);
   library_manager.scanNow();
 
+  QLibEntryModelShort shortModel;
+  QLibraryManager libraryManager(&library_manager, &shortModel);
+
+  libraryManager.refresh();
+
   // Load:
   //   SDL2 Event Loop
   //   ControllerManager
@@ -48,8 +54,6 @@ int main(int argc, char *argv[]) {
   //   EmulationManager
   //
 
-  return 0;
-
   QGuiApplication app(argc, argv);
   QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
@@ -57,12 +61,10 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<FLGame>("Firelight", 1, 0, "FLGame");
   qmlRegisterType<EmulatorView>("Firelight", 1, 0, "EmulatorView");
 
-  QLibEntryModelShort shortModel;
-  QLibraryManager libraryManager(&shortModel);
-  // QLibraryManager to manage all entries
-  // QShortLibraryEntryModel to expose basic elements to QML list
-
   QQmlApplicationEngine engine;
+  engine.rootContext()->setContextProperty("libraryEntryModelShort",
+                                           &shortModel);
+
   QObject::connect(
       &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
       []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
