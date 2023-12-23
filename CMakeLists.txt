@@ -82,6 +82,7 @@ qt_add_executable(firelight
         src/gui/QLibEntryModelShort.cpp
         src/gui/QLibEntryModelShort.hpp
         src/app/db/daos/rom.hpp
+        src/app/db/daos/game.hpp
 )
 
 qt_add_qml_module(firelight

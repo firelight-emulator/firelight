@@ -4,6 +4,8 @@
 
 #include "sqlite_content_database.hpp"
 
+#include "daos/game.hpp"
+
 #include <iostream>
 #include <utility>
 
@@ -33,7 +35,39 @@ std::optional<ROM> SqliteContentDatabase::getRomByMd5(const std::string &md5) {
 
   if (sqlite3_step(stmt) == SQLITE_DONE) {
     // TODO: log the error (opposite) somehow
-    printf("lol yep all good\n");
+  }
+
+  sqlite3_finalize(stmt);
+
+  return result;
+}
+std::optional<Game> SqliteContentDatabase::getGameByRomId(int romId) {
+  sqlite3_stmt *stmt = nullptr;
+  const auto query = "SELECT games.* FROM roms INNER JOIN games ON games.id = "
+                     "roms.game WHERE roms.id = ?";
+
+  if (sqlite3_prepare_v2(database, query, -1, &stmt, nullptr) != SQLITE_OK) {
+    printf("prepare didn't work\n");
+    // TODO: error handle
+    sqlite3_finalize(stmt);
+    return {};
+  }
+
+  if (sqlite3_bind_int(stmt, 1, romId) != SQLITE_OK) {
+    printf("bind didn't work: %s\n", sqlite3_errmsg(database));
+    // TODO: Handle error
+    sqlite3_finalize(stmt);
+    return {};
+  }
+
+  std::optional<Game> result;
+
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    result.emplace(gameFromDbRow(stmt));
+  }
+
+  if (sqlite3_step(stmt) == SQLITE_DONE) {
+    // TODO: log the error (opposite) somehow
   }
 
   sqlite3_finalize(stmt);
@@ -78,4 +112,11 @@ ROM SqliteContentDatabase::romFromDbRow(sqlite3_stmt *stmt) {
           .region = region,
           .md5 = rom_md5,
           .size_bytes = size_bytes};
+}
+Game SqliteContentDatabase::gameFromDbRow(sqlite3_stmt *stmt) {
+  int id = sqlite3_column_int(stmt, 0);
+  std::string name = reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 1)));
+
+  return {.id = id, .name = name};
 }

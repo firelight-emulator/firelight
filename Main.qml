@@ -15,6 +15,7 @@ Window {
     title: qsTr("Firelight")
     color: "#1c1b1f"
     Material.theme: Material.Dark
+    Material.accent: Material.color("#ff704f")
 
     // Rectangle {
     //     id: navBar
@@ -227,7 +228,7 @@ Window {
                         anchors.verticalCenter: parent.verticalCenter
                         font.family: "Helvetica"
                         font.pointSize: 14
-                        text: "testing " + model.displayName
+                        text: model.displayName
                         color: "white"
                     }
                 }

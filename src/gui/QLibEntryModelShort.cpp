@@ -15,7 +15,7 @@ QVariant QLibEntryModelShort::data(const QModelIndex &index, int role) const {
   const FL::Library::Entry &entry = m_entries.at(index.row());
   switch (role) {
   case DisplayName:
-    return QString::fromStdString(entry.content_path);
+    return QString::fromStdString(entry.display_name);
   case EntryId:
     return {entry.id};
     // Handle other roles

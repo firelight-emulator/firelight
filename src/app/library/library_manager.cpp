@@ -104,19 +104,23 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
 
   if (rc != SQLITE_OK) {
     std::cerr << "SQL error: " << sqlite3_errmsg(database) << std::endl;
+    sqlite3_finalize(stmt);
     return;
   }
 
-  // Iterate through the result set
-  while (sqlite3_step(stmt) == SQLITE_ROW) {
-    int id = sqlite3_column_int(stmt, 0);
-    const unsigned char *displayName = sqlite3_column_text(stmt, 1);
-    const unsigned char *md5 = sqlite3_column_text(stmt, 2);
-    const unsigned char *filename = sqlite3_column_text(stmt, 3);
+  sqlite3_finalize(stmt);
 
-    printf("ID: %d, display name: %s, filename: %s, md5: %s\n", id, displayName,
-           filename, md5);
-  }
+  // // Iterate through the result set
+  // while (sqlite3_step(stmt) == SQLITE_ROW) {
+  //   int id = sqlite3_column_int(stmt, 0);
+  //   const unsigned char *displayName = sqlite3_column_text(stmt, 1);
+  //   const unsigned char *md5 = sqlite3_column_text(stmt, 2);
+  //   const unsigned char *filename = sqlite3_column_text(stmt, 3);
+  //
+  //   printf("ID: %d, display name: %s, filename: %s, md5: %s\n", id,
+  //   displayName,
+  //          filename, md5);
+  // }
 }
 
 void LibraryManager::scanNow() {
@@ -149,9 +153,15 @@ void LibraryManager::scanNow() {
 
       auto result = contentDatabase->getRomByMd5(md5);
       if (result.has_value()) {
+        auto game = contentDatabase->getGameByRomId(result->id);
+
+        auto displayName = result->filename;
+        if (game.has_value()) {
+          displayName = game->name;
+        }
         // TODO: Will need to do a game lookup here as well.
         Entry e = {.id = -1,
-                   .display_name = "default display name",
+                   .display_name = displayName,
                    .verified = true,
                    .platform = result->platform,
                    .md5 = md5,
