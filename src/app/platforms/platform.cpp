@@ -1,7 +1,7 @@
 //
 // Created by nicho on 12/23/2023.
 //
-#include "platform.h"
+#include "platform.hpp"
 
 std::string get_display_name(const Platform::platform p) {
     switch(p) {

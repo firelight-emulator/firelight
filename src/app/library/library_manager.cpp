@@ -9,7 +9,7 @@
 #include <sqlite3.h>
 #include <utility>
 #include <vector>
-#include "../platforms/platform.h"
+#include "..\platforms\platform.hpp"
 
 namespace FL::Library {
 const int MAX_FILESIZE_BYTES = 50000000;
