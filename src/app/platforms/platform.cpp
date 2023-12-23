@@ -3,8 +3,6 @@
 //
 #include "platform.h"
 
-#include <map>
-
 std::string get_display_name(const Platform::platform p) {
     switch(p) {
         case Platform::GB: return "gb";
