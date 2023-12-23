@@ -171,6 +171,16 @@ void LibraryManager::scanNow() {
                    .content_path = entry.path().string()};
         insertEntry(e);
       } else {
+        Entry e = {.id = -1,
+                   .display_name = entry.path().string(),
+                   .verified = false,
+                   .platform = "n64", // TODO: Based on file extension
+                   .md5 = md5,
+                   .game = -1,
+                   .rom = -1,
+                   .romhack = -1,
+                   .content_path = entry.path().string()};
+        insertEntry(e);
         // TODO: Start trying other stuff
       }
 
