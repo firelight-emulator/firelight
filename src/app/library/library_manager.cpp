@@ -9,6 +9,7 @@
 #include <sqlite3.h>
 #include <utility>
 #include <vector>
+#include "../platforms/platform.h"
 
 namespace FL::Library {
 const int MAX_FILESIZE_BYTES = 50000000;
@@ -66,12 +67,6 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
                                ContentDatabase *contentDb)
     : libraryDbFile(std::move(libraryDb)), contentDatabase(contentDb) {
   // read from library file, validate entries, add to list
-
-  romFileExtensions[".gb"] = "gameboy";
-  romFileExtensions[".gbc"] = "gameboy color";
-  romFileExtensions[".gba"] = "gameboy";
-  romFileExtensions[".z64"] = "gameboy";
-  romFileExtensions[".smc"] = "gameboy";
   addWatchedRomDirectory(defaultRomPath);
 
   // Open a new SQLite database (or create if not exists)
@@ -134,7 +129,8 @@ void LibraryManager::scanNow() {
       }
 
       auto ext = entry.path().extension();
-      if (romFileExtensions.find(ext.string()) == romFileExtensions.end()) {
+      std::string platform_display_name = get_display_name_by_extension(ext.string());
+      if(platform_display_name.empty()) {
         continue;
       }
 
@@ -172,9 +168,9 @@ void LibraryManager::scanNow() {
         insertEntry(e);
       } else {
         Entry e = {.id = -1,
-                   .display_name = entry.path().string(),
+                   .display_name = entry.path().stem().string(),
                    .verified = false,
-                   .platform = "n64", // TODO: Based on file extension
+                   .platform = platform_display_name, // TODO: Based on file extension
                    .md5 = md5,
                    .game = -1,
                    .rom = -1,
