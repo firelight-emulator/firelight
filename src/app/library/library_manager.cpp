@@ -13,17 +13,17 @@
 
 namespace FL::Library {
 const int MAX_FILESIZE_BYTES = 50000000;
-
 const char *createQuery = "CREATE TABLE IF NOT EXISTS library("
-                          "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                          "display_name TEXT NOT NULL,"
-                          "verified INTEGER,"
-                          "platform TEXT NOT NULL,"
-                          "md5 TEXT NOT NULL UNIQUE,"
-                          "game INTEGER,"
-                          "rom INTEGER,"
-                          "romhack INTEGER,"
-                          "content_path TEXT NOT NULL);";
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                            "display_name NVARCHAR(999) NOT NULL,"
+                            "verified INTEGER,"
+                            "platform NVARCHAR(999) NOT NULL,"
+                            "md5 NVARCHAR(999) NOT NULL UNIQUE,"
+                            "game INTEGER,"
+                            "rom INTEGER,"
+                            "romhack INTEGER,"
+                            "content_path NVARCHAR(999) NOT NULL);"
+                            " CREATE UNIQUE INDEX IF NOT EXISTS idx_display_name ON library (display_name);";
 
 static std::string calculateMD5(const char *input, int size) {
   unsigned char md5Hash[EVP_MAX_MD_SIZE];
