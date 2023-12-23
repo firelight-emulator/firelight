@@ -199,10 +199,6 @@ void LibraryManager::addWatchedRomDirectory(
   watchedRomDirs.push_back(romPath);
 }
 
-std::weak_ptr<Entry> LibraryManager::getByRomId(std::string romId) {
-  return {};
-}
-
 bool LibraryManager::contains(int gameId) {
   // return std::any_of(entries.begin(), entries.end(),
   //                    [&gameId](const Entry &e) { return e.game == gameId; });
@@ -211,7 +207,7 @@ bool LibraryManager::contains(int gameId) {
 std::vector<Entry> LibraryManager::getEntries() { return entries; }
 
 void LibraryManager::insertEntry(Entry &entry) {
-  auto db = getOrCreateDbConnection();
+  const auto db = getOrCreateDbConnection();
   sqlite3_stmt *stmt = nullptr;
   const char *query = "INSERT OR IGNORE INTO library ("
                       "display_name, "
@@ -280,7 +276,7 @@ void LibraryManager::insertEntry(Entry &entry) {
   entries.push_back(entry);
 }
 
-sqlite3 *LibraryManager::getOrCreateDbConnection() {
+sqlite3 *LibraryManager::getOrCreateDbConnection() const {
   if (database) {
     return database;
   }
