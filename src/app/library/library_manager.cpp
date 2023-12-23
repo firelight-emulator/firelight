@@ -9,11 +9,11 @@
 #include <sqlite3.h>
 #include <utility>
 #include <vector>
-#include "..\platforms\platform.hpp"
+#include "../platforms/platform.hpp"
 
 namespace FL::Library {
-const int MAX_FILESIZE_BYTES = 50000000;
-const char *createQuery = "CREATE TABLE IF NOT EXISTS library("
+  constexpr int MAX_FILESIZE_BYTES = 50000000;
+  const char *createQuery = "CREATE TABLE IF NOT EXISTS library("
                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                             "display_name NVARCHAR(999) NOT NULL,"
                             "verified INTEGER,"
@@ -76,9 +76,8 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
     std::cerr << "Cannot open database: " << sqlite3_errmsg(database)
               << std::endl;
     return;
-  } else {
-    std::cout << "Database opened successfully!" << std::endl;
   }
+  std::cout << "Database opened successfully!" << std::endl;
 
   // Execute the SQL statement
   rc = sqlite3_exec(database, createQuery, nullptr, nullptr, nullptr);
@@ -86,9 +85,8 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
   if (rc != SQLITE_OK) {
     std::cerr << "SQL error: " << sqlite3_errmsg(database) << std::endl;
     return;
-  } else {
-    std::cout << "Table created successfully!" << std::endl;
   }
+  std::cout << "Table created successfully!" << std::endl;
 
   // Query data from the table
   const char *selectSQL = "SELECT * FROM library;";
