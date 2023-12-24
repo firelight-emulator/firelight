@@ -247,7 +247,7 @@ Window {
 
         anchors.topMargin: 20
 
-        initialItem: libraryPage
+        initialItem: gamePage
 
         popEnter: Transition {
         }

@@ -82,7 +82,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_ROTATION:
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_ROTATION");
     //    this->video->setRotation(*(unsigned *)data);
-    return false;
+    return true;
   case (3 | 0x800000): {
     this->environmentCalls.push_back(
         "RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB");
@@ -131,6 +131,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
+    printf("pixelformat: %p\n", (retro_pixel_format *)data);
     //    this->video->setPixelFormat((retro_pixel_format *)data);
     return true;
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS: {
@@ -180,9 +181,26 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_HW_RENDER: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
     // TODO I think this is actually mostly stuff informing the frontend
-    //    this->video->setHardwareRenderCallback((retro_hw_render_callback
-    //    *)data);
-    return false;
+    auto *renderCallback = static_cast<retro_hw_render_callback *>(data);
+
+    renderCallback->get_proc_address =
+        [](const char *sym) -> retro_proc_address_t {
+      auto add = currentCore->videoReceiver->get_proc_address(sym);
+      // printf("address for %s: %p\n", sym, add);
+      return add;
+    };
+
+    renderCallback->get_current_framebuffer = []() {
+      printf("calling get current framebuffer\n");
+      auto val = currentCore->videoReceiver->get_current_framebuffer_id();
+      printf("framebuffer: %llu\n", val);
+      return val;
+    };
+
+    currentCore->videoReceiver->set_reset_context_func(
+        renderCallback->context_reset);
+
+    return true;
   }
   case RETRO_ENVIRONMENT_GET_VARIABLE: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_VARIABLE");
@@ -229,7 +247,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     this->environmentCalls.push_back(
         "RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK");
     //    this->video->setFrameTimeCallback((retro_frame_time_callback *)data);
-    return false;
+    return true;
   }
   case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK");
@@ -574,7 +592,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
     this->environmentCalls.push_back(
         "RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
-    *(unsigned *)data = RETRO_HW_CONTEXT_OPENGL_CORE;
+    *(unsigned *)data = RETRO_HW_CONTEXT_OPENGL;
     return true;
   case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
     this->environmentCalls.push_back(
@@ -934,6 +952,8 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
       return frames;
     }
 
+    printf("got audio frames: %d\n", frames);
+
     SDL_QueueAudio(core->audioDevice, data, frames * 4);
 
     return frames;
@@ -947,7 +967,7 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
   SDL_AudioSpec want, have;
 
   SDL_memset(&want, 0, sizeof(want));
-  want.freq = 32000;       // Sample rate (e.g., 44.1 kHz)
+  want.freq = 44100;       // Sample rate (e.g., 44.1 kHz)
   want.format = AUDIO_S16; // Audio format (16-bit signed)
   want.channels = 2;       // Number of audio channels (stereo)
   want.samples = 1024;     // Audio buffer size (samples)

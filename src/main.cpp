@@ -4,15 +4,14 @@
 #include "src/app/db/sqlite_content_database.hpp"
 #include "src/app/emulation_manager.hpp"
 #include "src/app/library/library_manager.hpp"
-#include "src/app/libretro/core.hpp"
 #include "src/gui/QLibEntryModelShort.hpp"
 #include "src/gui/QLibraryManager.hpp"
 #include "src/gui/emulator_view.hpp"
-#include "src/gui/fl_game.hpp"
 #include <QGuiApplication>
 #include <QOpenGLFunctions>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickGraphicsConfiguration>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QWindow>
@@ -23,14 +22,14 @@ const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
 
 int main(int argc, char *argv[]) {
-  // SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
-  // SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
-  //
-  // if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_EVENTS |
-  //              SDL_INIT_HAPTIC | SDL_INIT_JOYSTICK | SDL_INIT_TIMER) < 0) {
-  //   printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-  //   return 1;
-  // }
+  SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
+  SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
+
+  if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_EVENTS |
+               SDL_INIT_HAPTIC | SDL_INIT_JOYSTICK | SDL_INIT_TIMER) < 0) {
+    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    return 1;
+  }
 
   // **** Load Content Database ****
   SqliteContentDatabase content_database("content.db");
@@ -54,11 +53,20 @@ int main(int argc, char *argv[]) {
   //   EmulationManager
   //
 
+  QSurfaceFormat format;
+  // asks for a OpenGL 3.2 debug context using the Core profile
+  format.setMajorVersion(3);
+  format.setMinorVersion(2);
+  format.setRenderableType(QSurfaceFormat::OpenGL);
+  format.setProfile(QSurfaceFormat::CoreProfile);
+  format.setOption(QSurfaceFormat::DebugContext);
+  QSurfaceFormat::setDefaultFormat(format);
+
+  QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
   QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-  qmlRegisterType<FLGame>("Firelight", 1, 0, "FLGame");
   qmlRegisterType<EmulatorView>("Firelight", 1, 0, "EmulatorView");
 
   QQmlApplicationEngine engine;

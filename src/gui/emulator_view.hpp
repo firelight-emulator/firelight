@@ -13,6 +13,7 @@ class EmulatorView : public QQuickFramebufferObject {
 
 public:
   explicit EmulatorView(QQuickItem *parent = nullptr);
+  ~EmulatorView() override = default;
   [[nodiscard]] Renderer *createRenderer() const override;
 
   Q_INVOKABLE void init();

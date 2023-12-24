@@ -24,9 +24,7 @@ if (CMAKE_VERSION VERSION_LESS "3.7.0")
 endif ()
 
 find_package(SDL2 REQUIRED)
-find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(Freetype REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D REQUIRED)
@@ -59,11 +57,12 @@ add_library(firelight_lib
         src/app/emulation_manager.cpp
         src/app/db/content_database.hpp
         src/app/db/sqlite_content_database.cpp
-        src/app/db/sqlite_content_database.hpp)
+        src/app/db/sqlite_content_database.hpp
+        src/app/libretro/FramebufferHandleProvider.hpp)
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
-        ${FREETYPE_INCLUDE_DIRS} ${SQLite3_INCLUDE_DIRS})
-target_link_libraries(firelight_lib mingw32 SDL2main SDL2 glew32 opengl32 freetype ssl crypto ${SQLite3_LIBRARIES}
+        ${SQLite3_INCLUDE_DIRS})
+target_link_libraries(firelight_lib mingw32 SDL2main SDL2 opengl32 ssl crypto ${SQLite3_LIBRARIES}
         Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D)
 
 # main code
@@ -71,8 +70,6 @@ qt_add_executable(firelight
         Main.qml
         src/main.cpp
         src/logo.ico
-        src/gui/fl_game.cpp
-        src/gui/fl_game.hpp
         src/gui/emulator_view.cpp
         src/gui/emulator_view.hpp
         src/gui/emulator_renderer.cpp
@@ -91,7 +88,7 @@ qt_add_qml_module(firelight
         QML_FILES Main.qml
 )
 
-target_include_directories(firelight PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS}
+target_include_directories(firelight PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
 target_link_libraries(firelight PRIVATE firelight_lib)
 
