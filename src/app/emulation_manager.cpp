@@ -17,6 +17,7 @@ EmulationManager *EmulationManager::getInstance() {
 }
 
 void EmulationManager::initialize() {
+  printf("initializing\n");
   SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
   conManager.scanGamepads();
 
@@ -29,43 +30,41 @@ void EmulationManager::initialize() {
   core->setVideoStuff(this);
   core->init();
 
-  libretro::Game game("./roms/papermario.z64");
+  libretro::Game game("./roms/mariokart.z64");
   core->loadGame(&game);
 
   running = true;
-
-  // GLuint otherTex;
-  // glGenTextures(1, &otherTex);
-  // glBindTexture(GL_TEXTURE_2D, otherTex);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA,
-  //              GL_UNSIGNED_BYTE, nullptr);
-  //
-  // GLuint framebufferobject;
-  // glGenFramebuffers(1, &framebufferobject);
-  // glBindFramebuffer(GL_FRAMEBUFFER, framebufferobject);
-  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-  //                        otherTex, 0);
-  //
-  // GLuint renderBuffer;
-  // glGenRenderbuffers(1, &renderBuffer);
-  // glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-  // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 1280, 720);
-  // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-  //                           GL_RENDERBUFFER, renderBuffer);
-  //
-  // auto s = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-  // if (s != GL_FRAMEBUFFER_COMPLETE) {
-  //   printf("frame buffer not complete %d\n", s);
-  // }
 }
 
 void EmulationManager::runOneFrame() {
   if (running) {
     if (reset_context) {
+      initializeOpenGLFunctions();
+      glGenTextures(1, &otherTex);
+      glBindTexture(GL_TEXTURE_2D, otherTex);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA,
+                   GL_UNSIGNED_BYTE, nullptr);
+
+      glGenFramebuffers(1, &framebufferobject);
+      glBindFramebuffer(GL_FRAMEBUFFER, framebufferobject);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                             GL_TEXTURE_2D, otherTex, 0);
+
+      glGenRenderbuffers(1, &renderBuffer);
+      glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 1280, 720);
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                GL_RENDERBUFFER, renderBuffer);
+
+      auto s = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+      if (s != GL_FRAMEBUFFER_COMPLETE) {
+        printf("frame buffer not complete %d\n", s);
+      }
+
       reset_context();
       reset_context = nullptr;
     }
@@ -82,7 +81,12 @@ void EmulationManager::runOneFrame() {
 
     //    printf("delta time: %f\n", deltaTime);
     //    if (dumb == 0) {
+    m_window->beginExternalCommands();
+    glViewport(0, 0, m_window->width(), m_window->height());
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     core->run(deltaTime);
+    m_window->endExternalCommands();
+
     //    if (deltaTime > 20) {
     //      printf("delta time: %f\n", deltaTime);
     //    }
@@ -93,28 +97,29 @@ void EmulationManager::runOneFrame() {
     numFrames++;
 
     if (numFrames == 300) {
-      //      printf("Average frame work duration: %fms\n",
-      //             totalFrameWorkDurationMillis / numFrames);
+      printf("Average frame work duration: %fms\n",
+             totalFrameWorkDurationMillis / numFrames);
       totalFrameWorkDurationMillis = 0;
       numFrames = 0;
-    }
-
-    if (frameDiff > 3) {
-      printf("frame diff: %f\n", frameDiff);
     }
     //      dumb++;
     //    } else {
     //      dumb = 0;
     //    }
+    if (m_window) {
+      m_window->update();
+    }
   }
 }
 
 void EmulationManager::receive(const void *data, unsigned int width,
                                unsigned int height, size_t pitch) {
-  m_data = const_cast<void *>(data);
-  m_width = width;
-  m_height = height;
-  m_pitch = pitch;
+  if (data != nullptr) {
+    m_data = const_cast<void *>(data);
+    m_width = width;
+    m_height = height;
+    m_pitch = pitch;
+  }
 }
 
 proc_address_t EmulationManager::get_proc_address(const char *sym) {
@@ -126,9 +131,7 @@ proc_address_t EmulationManager::get_proc_address(const char *sym) {
 void EmulationManager::set_reset_context_func(context_reset_func reset) {
   reset_context = reset;
 }
-uintptr_t EmulationManager::get_current_framebuffer_id() {
-  return framebufferProvider->get_framebuffer_handle();
-}
+uintptr_t EmulationManager::get_current_framebuffer_id() { return 0; }
 
 void EmulationManager::set_framebuffer_thing(
     FramebufferHandleProvider *provider) {
@@ -143,3 +146,4 @@ std::unique_ptr<QImage> EmulationManager::getImage() {
   image->mirror();
   return image;
 }
+void EmulationManager::setWindow(QQuickWindow *window) { m_window = window; }

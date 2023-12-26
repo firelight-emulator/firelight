@@ -44,6 +44,8 @@ int main(int argc, char *argv[]) {
 
   libraryManager.refresh();
 
+  auto emulator = EmulationManager::getInstance();
+
   // Load:
   //   SDL2 Event Loop
   //   ControllerManager
@@ -73,6 +75,8 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("libraryEntryModelShort",
                                            &shortModel);
 
+  engine.rootContext()->setContextProperty("emulator", emulator);
+
   QObject::connect(
       &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
       []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
@@ -80,6 +84,11 @@ int main(int argc, char *argv[]) {
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
+  emulator->setWindow(window);
+
+  QObject::connect(window, &QQuickWindow::beforeRenderPassRecording, emulator,
+                   &EmulationManager::runOneFrame, Qt::DirectConnection);
+
   //  window->setFlag(Qt::FramelessWindowHint, true);
   //  window->setFlag(Qt::WindowTitleHint, false);
 

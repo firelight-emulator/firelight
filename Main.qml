@@ -13,7 +13,8 @@ Window {
     minimumHeight: 480
     visible: true
     title: qsTr("Firelight")
-    color: "#1c1b1f"
+    // color: "#1c1b1f"
+    // color: "transparent"
     Material.theme: Material.Dark
     Material.accent: Material.color("#ff704f")
 
@@ -104,39 +105,39 @@ Window {
     //     anchors.top: parent.top
     // }
     //
-    Rectangle {
-        id: blackScreen
-        anchors.fill: parent
-        opacity: 0
-        color: "black"
-    }
-
-    SequentialAnimation {
-        id: startGame
-        NumberAnimation {
-            target: blackScreen
-            properties: "opacity"
-            from: 0
-            to: 1.0
-            duration: 1000
-            easing {
-                type: Easing.OutQuad
-            }
-        }
-        ScriptAction {
-            script: content.replace(gamePage)
-        }
-        NumberAnimation {
-            target: blackScreen
-            properties: "opacity"
-            from: 1.0
-            to: 0
-            duration: 400
-            easing {
-                type: Easing.OutQuad
-            }
-        }
-    }
+    // Rectangle {
+    //     id: blackScreen
+    //     anchors.fill: parent
+    //     opacity: 0
+    //     color: "black"
+    // }
+    //
+    // SequentialAnimation {
+    //     id: startGame
+    //     NumberAnimation {
+    //         target: blackScreen
+    //         properties: "opacity"
+    //         from: 0
+    //         to: 1.0
+    //         duration: 1000
+    //         easing {
+    //             type: Easing.OutQuad
+    //         }
+    //     }
+    //     ScriptAction {
+    //         script: content.replace(gamePage)
+    //     }
+    //     NumberAnimation {
+    //         target: blackScreen
+    //         properties: "opacity"
+    //         from: 1.0
+    //         to: 0
+    //         duration: 400
+    //         easing {
+    //             type: Easing.OutQuad
+    //         }
+    //     }
+    // }
 
     TabBar {
         id: bar
@@ -279,23 +280,22 @@ Window {
         //     beforeRendering.connect(window.update)
         // }
     }
-
+    //
     Component {
         id: gamePage
 
         Item {
             id: wrapper
-            EmulatorView {
-                id: emulator
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.top: parent.top
-            }
+            // EmulatorView {
+            //     id: emulator
+            //     anchors.left: parent.left
+            //     anchors.right: parent.right
+            //     anchors.bottom: parent.bottom
+            //     anchors.top: parent.top
+            // }
 
             Component.onCompleted: {
-                emulator.init()
-                beforeRendering.connect(window.update)
+                emulator.initialize()
             }
         }
     }

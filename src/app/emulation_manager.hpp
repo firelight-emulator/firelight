@@ -10,6 +10,7 @@
 #include <QImage>
 #include <QObject>
 #include <QOpenGLFunctions>
+#include <QQuickWindow>
 #include <qopenglcontext.h>
 
 class EmulationManager : public QObject,
@@ -22,7 +23,6 @@ class EmulationManager : public QObject,
 public:
   static EmulationManager *getInstance();
 
-  void initialize();
   void receive(const void *data, unsigned int width, unsigned int height,
                size_t pitch) override;
   proc_address_t get_proc_address(const char *sym) override;
@@ -33,10 +33,17 @@ public:
 
   std::unique_ptr<QImage> getImage();
 
+  void setWindow(QQuickWindow *window);
+
 public slots:
+  void initialize();
   void runOneFrame();
 
 private:
+  GLuint otherTex;
+  GLuint framebufferobject;
+  GLuint renderBuffer;
+  QQuickWindow *m_window = nullptr;
   FramebufferHandleProvider *framebufferProvider = nullptr;
   context_reset_func reset_context = nullptr;
   //  FL::GameLoopMetrics loopMetrics;

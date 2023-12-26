@@ -952,8 +952,6 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
       return frames;
     }
 
-    printf("got audio frames: %d\n", frames);
-
     SDL_QueueAudio(core->audioDevice, data, frames * 4);
 
     return frames;
@@ -970,7 +968,7 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
   want.freq = 44100;       // Sample rate (e.g., 44.1 kHz)
   want.format = AUDIO_S16; // Audio format (16-bit signed)
   want.channels = 2;       // Number of audio channels (stereo)
-  want.samples = 1024;     // Audio buffer size (samples)
+  want.samples = 2048;     // Audio buffer size (samples)
   want.callback = nullptr;
 
   this->audioDevice = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);

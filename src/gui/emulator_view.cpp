@@ -21,6 +21,6 @@ QQuickFramebufferObject::Renderer *EmulatorView::createRenderer() const {
 void EmulatorView::init() {
   EmulationManager::getInstance()->initialize();
   printf("called init\n");
-  window()->update();
+  // window()->update();
 }
 void EmulatorView::updateThing() { window()->update(); }
