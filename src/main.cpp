@@ -55,16 +55,7 @@ int main(int argc, char *argv[]) {
   //   EmulationManager
   //
 
-  QSurfaceFormat format;
-  // asks for a OpenGL 3.2 debug context using the Core profile
-  format.setMajorVersion(3);
-  format.setMinorVersion(2);
-  format.setRenderableType(QSurfaceFormat::OpenGL);
-  format.setProfile(QSurfaceFormat::CoreProfile);
-  format.setOption(QSurfaceFormat::DebugContext);
-  QSurfaceFormat::setDefaultFormat(format);
-
-  QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+  // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
   QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
@@ -85,6 +76,7 @@ int main(int argc, char *argv[]) {
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   emulator->setWindow(window);
+  window->setColor(Qt::black);
 
   QObject::connect(window, &QQuickWindow::beforeRenderPassRecording, emulator,
                    &EmulationManager::runOneFrame, Qt::DirectConnection);

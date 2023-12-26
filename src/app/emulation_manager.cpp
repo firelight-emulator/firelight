@@ -82,7 +82,9 @@ void EmulationManager::runOneFrame() {
     //    printf("delta time: %f\n", deltaTime);
     //    if (dumb == 0) {
     m_window->beginExternalCommands();
-    glViewport(0, 0, m_window->width(), m_window->height());
+    // glClearColor(0, 0, 0, 1);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, 1280, 720);
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     core->run(deltaTime);
     m_window->endExternalCommands();

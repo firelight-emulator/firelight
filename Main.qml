@@ -139,164 +139,168 @@ Window {
     //     }
     // }
 
-    TabBar {
-        id: bar
-        anchors.horizontalCenter: parent.horizontalCenter
-        height: 50
-
-        currentIndex: 2
-
-        TabButton {
-            width: 125
-            height: bar.height
-            enabled: false
-            text: qsTr("Home")
-        }
-        TabButton {
-            width: 125
-            height: bar.height
-            enabled: false
-            text: qsTr("Explore")
-        }
-        TabButton {
-            width: 125
-            height: bar.height
-            text: qsTr("Library")
-            onClicked: content.replace(libraryPage)
-        }
-        TabButton {
-            width: 125
-            height: bar.height
-            enabled: false
-            text: qsTr("Controllers")
-        }
-        TabButton {
-            width: 125
-            height: bar.height
-            text: qsTr("Settings")
-            enabled: false
-        }
-    }
-
-    Component {
-        id: libraryPage
-        Item {
-            id: wrapper
-            ListView {
-                id: libraryList
-                focus: true
-                clip: true
-
-                anchors.fill: parent
-                model: libraryEntryModelShort
-                boundsBehavior: Flickable.StopAtBounds
-                delegate: gameListItem
-                // preferredHighlightBegin: height / 3
-                // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
-            }
-
-            Component {
-                id: gameListItem
-
-                Rectangle {
-                    id: wrapper
-
-                    width: ListView.view.width
-                    height: 50
-
-                    color: mouseArea.containsMouse ? "#353438" : "transparent"
-
-                    MouseArea {
-                        id: mouseArea
-                        hoverEnabled: true
-                        anchors.fill: parent
-
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            console.log(model.entryId)
-                            // startGame.start()
-                        }
-                    }
-
-                    Item {
-                        id: picture
-                        width: 100
-                        height: parent.height
-                    }
-                    Text {
-                        id: labels
-                        x: picture.width + 20
-                        anchors.verticalCenter: parent.verticalCenter
-                        font.family: "Helvetica"
-                        font.pointSize: 14
-                        text: model.displayName
-                        color: "white"
-                    }
-                }
-            }
-        }
-
-    }
-
-    StackView {
-        id: content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: bar.bottom
-        anchors.bottom: parent.bottom
-
-        anchors.topMargin: 20
-
-        initialItem: gamePage
-
-        popEnter: Transition {
-        }
-        popExit: Transition {
-        }
-        pushEnter: Transition {
-        }
-        pushExit: Transition {
-        }
-
-
-        // StackLayout {
-        //     id: pageStack
-        // }
-
-
-        // FLGame {
-        //     id: game
-        //     // width: 400
-        //     // height: 400
-        //     anchors.left: parent.left
-        //     anchors.top: parent.top
-        //     anchors.right: parent.right
-        //     height: parent.height / 2
-        // }
-
-        // Component.onCompleted: {
-        //     emulator.init()
-        //     beforeRendering.connect(window.update)
-        // }
-    }
+    // TabBar {
+    //     id: bar
+    //     anchors.horizontalCenter: parent.horizontalCenter
+    //     height: 50
     //
-    Component {
-        id: gamePage
+    //     currentIndex: 2
+    //
+    //     TabButton {
+    //         width: 125
+    //         height: bar.height
+    //         enabled: false
+    //         text: qsTr("Home")
+    //     }
+    //     TabButton {
+    //         width: 125
+    //         height: bar.height
+    //         enabled: false
+    //         text: qsTr("Explore")
+    //     }
+    //     TabButton {
+    //         width: 125
+    //         height: bar.height
+    //         text: qsTr("Library")
+    //         onClicked: content.replace(libraryPage)
+    //     }
+    //     TabButton {
+    //         width: 125
+    //         height: bar.height
+    //         enabled: false
+    //         text: qsTr("Controllers")
+    //     }
+    //     TabButton {
+    //         width: 125
+    //         height: bar.height
+    //         text: qsTr("Settings")
+    //         enabled: false
+    //     }
+    // }
+    //
+    // Component {
+    //     id: libraryPage
+    //     Item {
+    //         id: wrapper
+    //         ListView {
+    //             id: libraryList
+    //             focus: true
+    //             clip: true
+    //
+    //             anchors.fill: parent
+    //             model: libraryEntryModelShort
+    //             boundsBehavior: Flickable.StopAtBounds
+    //             delegate: gameListItem
+    //             // preferredHighlightBegin: height / 3
+    //             // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
+    //         }
+    //
+    //         Component {
+    //             id: gameListItem
+    //
+    //             Rectangle {
+    //                 id: wrapper
+    //
+    //                 width: ListView.view.width
+    //                 height: 50
+    //
+    //                 color: mouseArea.containsMouse ? "#353438" : "transparent"
+    //
+    //                 MouseArea {
+    //                     id: mouseArea
+    //                     hoverEnabled: true
+    //                     anchors.fill: parent
+    //
+    //                     cursorShape: Qt.PointingHandCursor
+    //                     onClicked: {
+    //                         console.log(model.entryId)
+    //                         // startGame.start()
+    //                     }
+    //                 }
+    //
+    //                 Item {
+    //                     id: picture
+    //                     width: 100
+    //                     height: parent.height
+    //                 }
+    //                 Text {
+    //                     id: labels
+    //                     x: picture.width + 20
+    //                     anchors.verticalCenter: parent.verticalCenter
+    //                     font.family: "Helvetica"
+    //                     font.pointSize: 14
+    //                     text: model.displayName
+    //                     color: "white"
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    // }
 
-        Item {
-            id: wrapper
-            // EmulatorView {
-            //     id: emulator
-            //     anchors.left: parent.left
-            //     anchors.right: parent.right
-            //     anchors.bottom: parent.bottom
-            //     anchors.top: parent.top
-            // }
+    // StackView {
+    //     id: content
+    //
+    //     anchors.left: parent.left
+    //     anchors.right: parent.right
+    //     anchors.top: bar.bottom
+    //     anchors.bottom: parent.bottom
+    //
+    //     anchors.topMargin: 20
+    //
+    //     initialItem: gamePage
+    //
+    //     popEnter: Transition {
+    //     }
+    //     popExit: Transition {
+    //     }
+    //     pushEnter: Transition {
+    //     }
+    //     pushExit: Transition {
+    //     }
 
-            Component.onCompleted: {
-                emulator.initialize()
-            }
-        }
+
+    // StackLayout {
+    //     id: pageStack
+    // }
+
+
+    // FLGame {
+    //     id: game
+    //     // width: 400
+    //     // height: 400
+    //     anchors.left: parent.left
+    //     anchors.top: parent.top
+    //     anchors.right: parent.right
+    //     height: parent.height / 2
+    // }
+
+    // Component.onCompleted: {
+    //     emulator.init()
+    //     beforeRendering.connect(window.update)
+    // }
+    // }
+    //
+    // Component {
+    //     id: gamePage
+    //
+    //     Item {
+    //         id: wrapper
+    //         // EmulatorView {
+    //         //     id: emulator
+    //         //     anchors.left: parent.left
+    //         //     anchors.right: parent.right
+    //         //     anchors.bottom: parent.bottom
+    //         //     anchors.top: parent.top
+    //         // }
+    //
+    //         Component.onCompleted: {
+    //             emulator.initialize()
+    //         }
+    //     }
+    // }
+
+    Component.onCompleted: {
+        emulator.initialize()
     }
 }
