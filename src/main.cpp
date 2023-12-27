@@ -6,7 +6,6 @@
 #include "src/app/library/library_manager.hpp"
 #include "src/gui/QLibEntryModelShort.hpp"
 #include "src/gui/QLibraryManager.hpp"
-#include "src/gui/emulator_view.hpp"
 #include <QGuiApplication>
 #include <QOpenGLFunctions>
 #include <QQmlApplicationEngine>
@@ -44,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   libraryManager.refresh();
 
-  auto emulator = EmulationManager::getInstance();
+  // auto emulator = EmulationManager::getInstance();
 
   // Load:
   //   SDL2 Event Loop
@@ -60,13 +59,13 @@ int main(int argc, char *argv[]) {
   QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-  qmlRegisterType<EmulatorView>("Firelight", 1, 0, "EmulatorView");
+  qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
 
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("libraryEntryModelShort",
                                            &shortModel);
 
-  engine.rootContext()->setContextProperty("emulator", emulator);
+  // engine.rootContext()->setContextProperty("emulator", emulator);
 
   QObject::connect(
       &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
@@ -75,11 +74,12 @@ int main(int argc, char *argv[]) {
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
-  emulator->setWindow(window);
-  window->setColor(Qt::black);
-
-  QObject::connect(window, &QQuickWindow::beforeRenderPassRecording, emulator,
-                   &EmulationManager::runOneFrame, Qt::DirectConnection);
+  // emulator->setWindow(window);
+  // // window->setColor(Qt::black);
+  //
+  // QObject::connect(window, &QQuickWindow::beforeRenderPassRecording,
+  // emulator,
+  //                  &EmulationManager::runOneFrame, Qt::DirectConnection);
 
   //  window->setFlag(Qt::FramelessWindowHint, true);
   //  window->setFlag(Qt::WindowTitleHint, false);

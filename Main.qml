@@ -18,6 +18,29 @@ Window {
     Material.theme: Material.Dark
     Material.accent: Material.color("#ff704f")
 
+    Loader {
+        id: emulatorLoader
+        anchors.centerIn: parent
+    }
+
+    EmulatorView {
+        id: emulatorView
+        anchors.centerIn: parent
+        width: 640
+        height: 480
+
+        Component.onCompleted: {
+            // emulator.setWidth(width)
+            // emulator.setHeight(height)
+            this.initialize()
+        }
+    }
+
+    // Component {
+    //     id: emulator
+    //
+    // }
+
     // Rectangle {
     //     id: navBar
     //
@@ -299,8 +322,4 @@ Window {
     //         }
     //     }
     // }
-
-    Component.onCompleted: {
-        emulator.initialize()
-    }
 }

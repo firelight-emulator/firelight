@@ -70,10 +70,6 @@ qt_add_executable(firelight
         Main.qml
         src/main.cpp
         src/logo.ico
-        src/gui/emulator_view.cpp
-        src/gui/emulator_view.hpp
-        src/gui/emulator_renderer.cpp
-        src/gui/emulator_renderer.hpp
         src/gui/QLibraryManager.cpp
         src/gui/QLibraryManager.hpp
         src/gui/QLibEntryModelShort.cpp

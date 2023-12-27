@@ -9,11 +9,14 @@
 #include "libretro/core.hpp"
 #include <QImage>
 #include <QObject>
+#include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
+#include <QQuickItem>
 #include <QQuickWindow>
+#include <QSGDynamicTexture>
 #include <qopenglcontext.h>
 
-class EmulationManager : public QObject,
+class EmulationManager : public QQuickItem,
                          public CoreVideoDataReceiver,
                          public QOpenGLFunctions {
   Q_OBJECT
@@ -22,6 +25,13 @@ class EmulationManager : public QObject,
 
 public:
   static EmulationManager *getInstance();
+
+protected:
+  QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+
+public:
+  explicit EmulationManager(QQuickItem *parent = nullptr);
+  static void registerInstance(EmulationManager *manager);
 
   void receive(const void *data, unsigned int width, unsigned int height,
                size_t pitch) override;
@@ -33,17 +43,13 @@ public:
 
   std::unique_ptr<QImage> getImage();
 
-  void setWindow(QQuickWindow *window);
-
 public slots:
   void initialize();
   void runOneFrame();
 
 private:
-  GLuint otherTex;
-  GLuint framebufferobject;
-  GLuint renderBuffer;
-  QQuickWindow *m_window = nullptr;
+  std::unique_ptr<QSGDynamicTexture> gameTexture = nullptr;
+  std::unique_ptr<QOpenGLFramebufferObject> gameFbo = nullptr;
   FramebufferHandleProvider *framebufferProvider = nullptr;
   context_reset_func reset_context = nullptr;
   //  FL::GameLoopMetrics loopMetrics;
