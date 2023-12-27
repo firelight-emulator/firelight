@@ -16,6 +16,8 @@
 #include <SDL.h>
 #include <SDL_error.h>
 
+#include "app/controller/fps_multiplier.hpp"
+
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
 
@@ -60,6 +62,7 @@ int main(int argc, char *argv[]) {
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
+  qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
 
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("libraryEntryModelShort",

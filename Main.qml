@@ -205,11 +205,16 @@ Window {
                     this.initialize()
                 }
             }
-
-            // Slider {
-            //     value: 1
-            //     to: 100
-            // }
+            FpsMultiplier {
+                id: fpsMultiplierView
+            }
+            Slider {
+                id: fpsMultiplier
+                onMoved: { fpsMultiplierView.setSliderValue(value) }
+                stepSize: 0.5
+                value: 1
+                to: 10
+            }
         }
     }
 

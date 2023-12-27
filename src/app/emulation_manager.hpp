@@ -41,6 +41,7 @@ public:
   std::unique_ptr<QImage> getImage();
 
 public slots:
+
   void initialize();
   void loadLibraryEntry(int entryId);
   void runOneFrame();
@@ -69,6 +70,8 @@ private:
   FL::Input::ControllerManager conManager;
   double totalFrameWorkDurationMillis = 0;
   long numFrames = 0;
+  int numSkipFrames = 0;
+  int currentSkippedFrames = 0;
 };
 
 #endif // FIRELIGHT_EMULATION_MANAGER_HPP

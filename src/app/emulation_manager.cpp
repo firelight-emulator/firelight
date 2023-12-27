@@ -3,6 +3,8 @@
 //
 
 #include "emulation_manager.hpp"
+
+#include <QGuiApplication>
 #include <QSGSimpleTextureNode>
 #include <SDL_gamecontroller.h>
 #include <qopenglcontext.h>
@@ -58,6 +60,11 @@ void EmulationManager::initialize() {
   libretro::Game game(entry->content_path);
   core->loadGame(&game);
 
+  long refresh = QGuiApplication::primaryScreen()->refreshRate();
+  if(refresh > 61) {
+    numSkipFrames = 1;
+  }
+
   // setFlag(ItemHasContents);
   auto win = window();
 
@@ -85,6 +92,13 @@ void EmulationManager::runOneFrame() {
       reset_context();
       reset_context = nullptr;
     }
+
+    if(currentSkippedFrames == numSkipFrames) {
+      currentSkippedFrames = 0;
+      window() -> update();
+      return;
+    }
+    currentSkippedFrames++;
 
     frameBegin = SDL_GetPerformanceCounter();
     lastTick = thisTick;
