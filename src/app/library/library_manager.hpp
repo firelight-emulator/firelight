@@ -24,6 +24,8 @@ public:
    */
   void scanNow();
 
+  std::optional<Entry> getEntryById(int id);
+
   /**
    * Add a path to be scanned and continually watched for ROM files.
    * @param romPath The path to a directory which contains ROM files.
@@ -50,6 +52,7 @@ private:
   void insertEntry(Entry &entry);
   sqlite3 *getOrCreateDbConnection() const;
 
+  Entry entryFromDbRow(sqlite3_stmt *stmt);
   std::filesystem::path libraryDbFile;
   std::vector<std::filesystem::path> watchedRomDirs;
   std::vector<Entry> entries;

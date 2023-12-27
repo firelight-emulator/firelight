@@ -30,10 +30,24 @@ void EmulationManager::initialize() {
   SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
   conManager.scanGamepads();
 
-  // core = std::make_unique<libretro::Core>(
-  // "./system/_cores/mupen64plus_next_libretro.dll", &conManager);
-  core = std::make_unique<libretro::Core>(
-      "./system/_cores/mupen64plus_next_libretro.dll", &conManager);
+  if (current_lib_entry_id_ == -1) {
+    printf("oh noooooo\n");
+  }
+
+  auto entry = library_manager_->getEntryById(current_lib_entry_id_);
+
+  if (!entry.has_value()) {
+    printf("OH NOOOOO no entry with id %d\n", current_lib_entry_id_);
+  }
+
+  std::string corePath;
+  if (entry->platform == "n64") {
+    corePath = "./system/_cores/mupen64plus_next_libretro.dll";
+  } else {
+    printf("ok\n");
+  }
+
+  core = std::make_unique<libretro::Core>(corePath, &conManager);
 
   core->setSystemDirectory(".");
   core->setSaveDirectory(".");
@@ -41,7 +55,7 @@ void EmulationManager::initialize() {
   core->setVideoStuff(this);
   core->init();
 
-  libretro::Game game("./roms/mariokart.z64");
+  libretro::Game game(entry->content_path);
   core->loadGame(&game);
 
   // setFlag(ItemHasContents);

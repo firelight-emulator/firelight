@@ -189,6 +189,38 @@ void LibraryManager::scanNow() {
     }
   }
 }
+std::optional<Entry> LibraryManager::getEntryById(int id) {
+  sqlite3_stmt *stmt = nullptr;
+  auto query = "SELECT * FROM library WHERE id = ?";
+
+  if (sqlite3_prepare_v2(database, query, -1, &stmt, nullptr) != SQLITE_OK) {
+    printf("prepare didn't work\n");
+    // TODO: error handle
+    sqlite3_finalize(stmt);
+    return {};
+  }
+
+  if (sqlite3_bind_int(stmt, 1, id) != SQLITE_OK) {
+    printf("bind didn't work: %s\n", sqlite3_errmsg(database));
+    // TODO: Handle error
+    sqlite3_finalize(stmt);
+    return {};
+  }
+
+  std::optional<Entry> result;
+
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    result.emplace(entryFromDbRow(stmt));
+  }
+
+  if (sqlite3_step(stmt) == SQLITE_DONE) {
+    // TODO: log the error (opposite) somehow
+  }
+
+  sqlite3_finalize(stmt);
+
+  return result;
+}
 
 void LibraryManager::addWatchedRomDirectory(
     const std::filesystem::path &romPath) {
@@ -279,5 +311,49 @@ sqlite3 *LibraryManager::getOrCreateDbConnection() const {
   }
 
   return nullptr;
+}
+
+//    "CREATE TABLE IF NOT EXISTS library("
+// "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+// "display_name NVARCHAR(999) NOT NULL,"
+// "verified INTEGER,"
+// "platform NVARCHAR(999) NOT NULL,"
+// "md5 NVARCHAR(999) NOT NULL UNIQUE,"
+// "game INTEGER,"
+// "rom INTEGER,"
+// "romhack INTEGER,"
+// "content_path NVARCHAR(999) NOT NULL);"
+// "CREATE UNIQUE INDEX IF NOT EXISTS idx_md5 ON library (md5);";
+
+Entry LibraryManager::entryFromDbRow(sqlite3_stmt *stmt) {
+  int id = sqlite3_column_int(stmt, 0);
+
+  std::string display_name = reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 1)));
+
+  const int verified = sqlite3_column_int(stmt, 2);
+
+  std::string platform = reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 3)));
+
+  std::string md5 = reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 4)));
+
+  const int game = sqlite3_column_int(stmt, 5);
+  const int rom = sqlite3_column_int(stmt, 6);
+  const int romhack = sqlite3_column_int(stmt, 7);
+
+  std::string content_path = reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 8)));
+
+  return {.id = id,
+          .display_name = display_name,
+          .verified = static_cast<bool>(verified),
+          .platform = platform,
+          .md5 = md5,
+          .game = game,
+          .rom = rom,
+          .romhack = romhack,
+          .content_path = content_path};
 }
 } // namespace FL::Library

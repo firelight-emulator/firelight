@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
   QLibraryManager libraryManager(&library_manager, &shortModel);
 
   libraryManager.refresh();
+  EmulationManager::setLibraryManager(&library_manager);
 
   // auto emulator = EmulationManager::getInstance();
 
