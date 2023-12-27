@@ -60,9 +60,11 @@ void EmulationManager::initialize() {
   libretro::Game game(entry->content_path);
   core->loadGame(&game);
 
-  long refresh = QGuiApplication::primaryScreen()->refreshRate();
+  const double refresh = QGuiApplication::primaryScreen()->refreshRate();
+  std::printf("Refresh Rate: %f \r\n", refresh);
   if(refresh > 61) {
-    numSkipFrames = 1;
+    numSkipFrames = ((refresh / 60.0) + 0.5) - 1.0;
+    std::printf("Number of skipped frames: %d \r\n", numSkipFrames);
   }
 
   // setFlag(ItemHasContents);
@@ -93,7 +95,7 @@ void EmulationManager::runOneFrame() {
       reset_context = nullptr;
     }
 
-    if(currentSkippedFrames == numSkipFrames) {
+    if(currentSkippedFrames == numSkipFrames && numSkipFrames != 0) {
       currentSkippedFrames = 0;
       window() -> update();
       return;
