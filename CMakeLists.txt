@@ -58,7 +58,7 @@ add_library(firelight_lib
         src/app/db/content_database.hpp
         src/app/db/sqlite_content_database.cpp
         src/app/db/sqlite_content_database.hpp
-        src/app/libretro/FramebufferHandleProvider.hpp)
+)
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})

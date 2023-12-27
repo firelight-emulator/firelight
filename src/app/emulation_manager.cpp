@@ -16,25 +16,13 @@ EmulationManager *EmulationManager::getInstance() {
 
   return instance;
 }
-QSGNode *
-EmulationManager::updatePaintNode(QSGNode *qsg_node,
-                                  UpdatePaintNodeData *update_paint_node_data) {
-  printf("updating paint node\n");
-  // auto *n = dynamic_cast<QSGSimpleTextureNode *>(qsg_node);
-  // if (!n) {
-  //   n = new QSGSimpleTextureNode();
-  // }
-  //
-  // n->setTexture(gameTexture.get());
-  // n->setRect(boundingRect());
-  // return n;
-  //
-  // update();
-  return QQuickItem::updatePaintNode(qsg_node, update_paint_node_data);
+
+void EmulationManager::setLibraryManager(FL::Library::LibraryManager *manager) {
+  library_manager_ = manager;
 }
-EmulationManager::EmulationManager(QQuickItem *parent) : QQuickItem(parent) {
-  printf("constructor\n");
-}
+
+EmulationManager::EmulationManager(QQuickItem *parent) : QQuickItem(parent) {}
+
 void EmulationManager::registerInstance(EmulationManager *manager) {}
 
 void EmulationManager::initialize() {
@@ -56,25 +44,21 @@ void EmulationManager::initialize() {
   libretro::Game game("./roms/mariokart.z64");
   core->loadGame(&game);
 
-  setFlag(ItemHasContents);
+  // setFlag(ItemHasContents);
   auto win = window();
-
-  connect(win, &QQuickWindow::sceneGraphInitialized, this,
-          [this]() { running = true; });
 
   connect(win, &QQuickWindow::beforeRenderPassRecording, this,
           &EmulationManager::runOneFrame, Qt::DirectConnection);
+
+  running = true;
+}
+
+void EmulationManager::loadLibraryEntry(int entryId) {
+  current_lib_entry_id_ = entryId;
+  printf("Setting library entry: %d\n", current_lib_entry_id_);
 }
 
 void EmulationManager::runOneFrame() {
-  printf("running frame\n");
-  auto context = QOpenGLContext::currentContext();
-
-  if (!context) {
-    printf("no context\n");
-    return;
-  }
-
   if (running) {
     if (reset_context) {
       initializeOpenGLFunctions();
@@ -86,33 +70,6 @@ void EmulationManager::runOneFrame() {
         printf("gameFbo is not valid :(\n");
       }
 
-      const auto context = QOpenGLContext::currentContext();
-
-      // glGenTextures(1, &otherTex);
-      // glBindTexture(GL_TEXTURE_2D, otherTex);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA,
-      //              GL_UNSIGNED_BYTE, nullptr);
-      //
-      // glGenFramebuffers(1, &framebufferobject);
-      // glBindFramebuffer(GL_FRAMEBUFFER, framebufferobject);
-      // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      //                        GL_TEXTURE_2D, otherTex, 0);
-      //
-      // glGenRenderbuffers(1, &renderBuffer);
-      // glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-      // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 1280,
-      // 720); glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-      //                           GL_RENDERBUFFER, renderBuffer);
-      //
-      // auto s = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-      // if (s != GL_FRAMEBUFFER_COMPLETE) {
-      //   printf("frame buffer not complete %d\n", s);
-      // }
-
       reset_context();
       reset_context = nullptr;
     }
@@ -122,14 +79,7 @@ void EmulationManager::runOneFrame() {
     thisTick = SDL_GetPerformanceCounter();
 
     auto deltaTime =
-        ((thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency());
-    //    if (deltaTime > 27 || deltaTime < 10) {
-    //      printf("delta time: %f\n", deltaTime);
-    //    }
-
-    //    printf("delta time: %f\n", deltaTime);
-    //    if (dumb == 0) {
-    printf("x y w h: %f %f %f %f\n", x(), y(), width(), height());
+        (thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency();
 
     window()->beginExternalCommands();
     glClearColor(0, 0, 0, 1);
@@ -151,7 +101,7 @@ void EmulationManager::runOneFrame() {
     //    }
     frameEnd = SDL_GetPerformanceCounter();
     frameDiff = ((frameEnd - frameBegin) * 1000 /
-                 (double)SDL_GetPerformanceFrequency());
+                 static_cast<double>(SDL_GetPerformanceFrequency()));
     totalFrameWorkDurationMillis += frameDiff;
     numFrames++;
 
@@ -161,14 +111,8 @@ void EmulationManager::runOneFrame() {
       totalFrameWorkDurationMillis = 0;
       numFrames = 0;
     }
-    //      dumb++;
-    //    } else {
-    //      dumb = 0;
-    //    }
 
-    // if (window()) {
     window()->update();
-    // }
   }
 }
 
@@ -194,11 +138,6 @@ void EmulationManager::set_reset_context_func(context_reset_func reset) {
 
 uintptr_t EmulationManager::get_current_framebuffer_id() {
   return gameFbo->handle();
-}
-
-void EmulationManager::set_framebuffer_thing(
-    FramebufferHandleProvider *provider) {
-  framebufferProvider = provider;
 }
 
 std::unique_ptr<QImage> EmulationManager::getImage() {

@@ -3,27 +3,28 @@
 //
 
 #include "library_manager.hpp"
+#include "../platforms/platform.hpp"
 #include <fstream>
 #include <iostream>
 #include <openssl/evp.h>
 #include <sqlite3.h>
 #include <utility>
 #include <vector>
-#include "../platforms/platform.hpp"
 
 namespace FL::Library {
-  constexpr int MAX_FILESIZE_BYTES = 50000000;
-  const char *createQuery = "CREATE TABLE IF NOT EXISTS library("
-                            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                            "display_name NVARCHAR(999) NOT NULL,"
-                            "verified INTEGER,"
-                            "platform NVARCHAR(999) NOT NULL,"
-                            "md5 NVARCHAR(999) NOT NULL UNIQUE,"
-                            "game INTEGER,"
-                            "rom INTEGER,"
-                            "romhack INTEGER,"
-                            "content_path NVARCHAR(999) NOT NULL);"
-                            " CREATE UNIQUE INDEX IF NOT EXISTS idx_display_name ON library (display_name);";
+constexpr int MAX_FILESIZE_BYTES = 50000000;
+const char *createQuery =
+    "CREATE TABLE IF NOT EXISTS library("
+    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    "display_name NVARCHAR(999) NOT NULL,"
+    "verified INTEGER,"
+    "platform NVARCHAR(999) NOT NULL,"
+    "md5 NVARCHAR(999) NOT NULL UNIQUE,"
+    "game INTEGER,"
+    "rom INTEGER,"
+    "romhack INTEGER,"
+    "content_path NVARCHAR(999) NOT NULL);"
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_md5 ON library (md5);";
 
 static std::string calculateMD5(const char *input, int size) {
   unsigned char md5Hash[EVP_MAX_MD_SIZE];
@@ -127,8 +128,9 @@ void LibraryManager::scanNow() {
       }
 
       auto ext = entry.path().extension();
-      std::string platform_display_name = get_display_name_by_extension(ext.string());
-      if(platform_display_name.empty()) {
+      std::string platform_display_name =
+          get_display_name_by_extension(ext.string());
+      if (platform_display_name.empty()) {
         continue;
       }
 
@@ -168,7 +170,8 @@ void LibraryManager::scanNow() {
         Entry e = {.id = -1,
                    .display_name = entry.path().stem().string(),
                    .verified = false,
-                   .platform = platform_display_name, // TODO: Based on file extension
+                   .platform =
+                       platform_display_name, // TODO: Based on file extension
                    .md5 = md5,
                    .game = -1,
                    .rom = -1,
