@@ -63,8 +63,6 @@ void EmulationManager::initialize() {
 
   connect(win, &QQuickWindow::beforeRenderPassRecording, this,
           &EmulationManager::runOneFrame, Qt::DirectConnection);
-
-  running = true;
 }
 
 void EmulationManager::loadLibraryEntry(int entryId) {
@@ -101,13 +99,6 @@ void EmulationManager::runOneFrame() {
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     core->run(deltaTime);
 
-    if (gameFbo) {
-      QOpenGLFramebufferObject::blitFramebuffer(
-          nullptr, QRect(x(), y(), width(), height()), gameFbo.get(),
-          boundingRect().toRect(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
-          GL_NEAREST, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0);
-    }
-
     window()->endExternalCommands();
 
     //    if (deltaTime > 20) {
@@ -125,10 +116,21 @@ void EmulationManager::runOneFrame() {
       totalFrameWorkDurationMillis = 0;
       numFrames = 0;
     }
-
     window()->update();
   }
+
+  window()->beginExternalCommands();
+
+  if (gameFbo) {
+    QOpenGLFramebufferObject::blitFramebuffer(
+        nullptr, QRect(x(), y(), width(), height()), gameFbo.get(),
+        boundingRect().toRect(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
+        GL_NEAREST, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0);
+  }
+  window()->endExternalCommands();
 }
+void EmulationManager::pause() { running = false; }
+void EmulationManager::resume() { running = true; }
 
 void EmulationManager::receive(const void *data, unsigned int width,
                                unsigned int height, size_t pitch) {

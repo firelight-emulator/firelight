@@ -44,6 +44,8 @@ public slots:
   void initialize();
   void loadLibraryEntry(int entryId);
   void runOneFrame();
+  void pause();
+  void resume();
 
 private:
   int current_lib_entry_id_ = -1;

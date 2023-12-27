@@ -10,7 +10,6 @@
 #include <QOpenGLFunctions>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QQuickGraphicsConfiguration>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QWindow>

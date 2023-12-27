@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Window
 import QtQuick.Layouts
+import QtQuick.Effects
 import Firelight 1.0
 
 Window {
@@ -21,6 +22,7 @@ Window {
     StackView {
         id: everything
         anchors.fill: parent
+        focus: true
 
         initialItem: mainMenu
 
@@ -32,7 +34,6 @@ Window {
         }
         pushExit: Transition {
         }
-
     }
 
     Component {
@@ -161,9 +162,37 @@ Window {
     }
 
     Component {
+        id: quickMenu
+        Rectangle {
+            id: lol
+            opacity: 0.8
+            color: "black"
+
+            Keys.onEscapePressed: {
+                everything.pop()
+            }
+        }
+    }
+
+    Component {
         id: emulatorPage
         Item {
             property int currentLibraryEntryId
+            focus: true
+
+            StackView.visible: true
+
+            StackView.onActivated: function () {
+                emulatorView.resume()
+            }
+
+            StackView.onDeactivating: function () {
+                emulatorView.pause()
+            }
+
+            Keys.onEscapePressed: {
+                everything.push(quickMenu)
+            }
 
             EmulatorView {
                 id: emulatorView
@@ -176,6 +205,11 @@ Window {
                     this.initialize()
                 }
             }
+
+            // Slider {
+            //     value: 1
+            //     to: 100
+            // }
         }
     }
 
