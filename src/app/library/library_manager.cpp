@@ -9,20 +9,21 @@
 #include <sqlite3.h>
 #include <utility>
 #include <vector>
+#include "../platforms/platform.hpp"
 
 namespace FL::Library {
-const int MAX_FILESIZE_BYTES = 50000000;
-
-const char *createQuery = "CREATE TABLE IF NOT EXISTS library("
-                          "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                          "display_name TEXT NOT NULL,"
-                          "verified INTEGER,"
-                          "platform TEXT NOT NULL,"
-                          "md5 TEXT NOT NULL UNIQUE,"
-                          "game INTEGER,"
-                          "rom INTEGER,"
-                          "romhack INTEGER,"
-                          "content_path TEXT NOT NULL);";
+  constexpr int MAX_FILESIZE_BYTES = 50000000;
+  const char *createQuery = "CREATE TABLE IF NOT EXISTS library("
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                            "display_name NVARCHAR(999) NOT NULL,"
+                            "verified INTEGER,"
+                            "platform NVARCHAR(999) NOT NULL,"
+                            "md5 NVARCHAR(999) NOT NULL UNIQUE,"
+                            "game INTEGER,"
+                            "rom INTEGER,"
+                            "romhack INTEGER,"
+                            "content_path NVARCHAR(999) NOT NULL);"
+                            " CREATE UNIQUE INDEX IF NOT EXISTS idx_display_name ON library (display_name);";
 
 static std::string calculateMD5(const char *input, int size) {
   unsigned char md5Hash[EVP_MAX_MD_SIZE];
@@ -66,12 +67,6 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
                                ContentDatabase *contentDb)
     : libraryDbFile(std::move(libraryDb)), contentDatabase(contentDb) {
   // read from library file, validate entries, add to list
-
-  romFileExtensions[".gb"] = "gameboy";
-  romFileExtensions[".gbc"] = "gameboy color";
-  romFileExtensions[".gba"] = "gameboy";
-  romFileExtensions[".z64"] = "gameboy";
-  romFileExtensions[".smc"] = "gameboy";
   addWatchedRomDirectory(defaultRomPath);
 
   // Open a new SQLite database (or create if not exists)
@@ -81,9 +76,8 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
     std::cerr << "Cannot open database: " << sqlite3_errmsg(database)
               << std::endl;
     return;
-  } else {
-    std::cout << "Database opened successfully!" << std::endl;
   }
+  std::cout << "Database opened successfully!" << std::endl;
 
   // Execute the SQL statement
   rc = sqlite3_exec(database, createQuery, nullptr, nullptr, nullptr);
@@ -91,9 +85,8 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
   if (rc != SQLITE_OK) {
     std::cerr << "SQL error: " << sqlite3_errmsg(database) << std::endl;
     return;
-  } else {
-    std::cout << "Table created successfully!" << std::endl;
   }
+  std::cout << "Table created successfully!" << std::endl;
 
   // Query data from the table
   const char *selectSQL = "SELECT * FROM library;";
@@ -134,7 +127,8 @@ void LibraryManager::scanNow() {
       }
 
       auto ext = entry.path().extension();
-      if (romFileExtensions.find(ext.string()) == romFileExtensions.end()) {
+      std::string platform_display_name = get_display_name_by_extension(ext.string());
+      if(platform_display_name.empty()) {
         continue;
       }
 
@@ -172,9 +166,9 @@ void LibraryManager::scanNow() {
         insertEntry(e);
       } else {
         Entry e = {.id = -1,
-                   .display_name = entry.path().string(),
+                   .display_name = entry.path().stem().string(),
                    .verified = false,
-                   .platform = "n64", // TODO: Based on file extension
+                   .platform = platform_display_name, // TODO: Based on file extension
                    .md5 = md5,
                    .game = -1,
                    .rom = -1,
@@ -199,10 +193,6 @@ void LibraryManager::addWatchedRomDirectory(
   watchedRomDirs.push_back(romPath);
 }
 
-std::weak_ptr<Entry> LibraryManager::getByRomId(std::string romId) {
-  return {};
-}
-
 bool LibraryManager::contains(int gameId) {
   // return std::any_of(entries.begin(), entries.end(),
   //                    [&gameId](const Entry &e) { return e.game == gameId; });
@@ -211,7 +201,7 @@ bool LibraryManager::contains(int gameId) {
 std::vector<Entry> LibraryManager::getEntries() { return entries; }
 
 void LibraryManager::insertEntry(Entry &entry) {
-  auto db = getOrCreateDbConnection();
+  const auto db = getOrCreateDbConnection();
   sqlite3_stmt *stmt = nullptr;
   const char *query = "INSERT OR IGNORE INTO library ("
                       "display_name, "
@@ -280,7 +270,7 @@ void LibraryManager::insertEntry(Entry &entry) {
   entries.push_back(entry);
 }
 
-sqlite3 *LibraryManager::getOrCreateDbConnection() {
+sqlite3 *LibraryManager::getOrCreateDbConnection() const {
   if (database) {
     return database;
   }

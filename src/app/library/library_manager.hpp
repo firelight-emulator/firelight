@@ -35,20 +35,20 @@ public:
    * @param romId
    * @return A pointer to the found Entry if it exists.
    */
-  std::weak_ptr<Entry> getByRomId(std::string romId);
+  static std::weak_ptr<Entry> getByRomId(std::string romId);
 
   /**
    * @param gameId
    * @return True if the Library contains an Entry with the given gameId.
    */
-  bool contains(int gameId);
+  static bool contains(int gameId);
 
   std::vector<Entry> getEntries();
 
 private:
   ContentDatabase *contentDatabase = nullptr;
   void insertEntry(Entry &entry);
-  sqlite3 *getOrCreateDbConnection();
+  sqlite3 *getOrCreateDbConnection() const;
 
   std::filesystem::path libraryDbFile;
   std::vector<std::filesystem::path> watchedRomDirs;
