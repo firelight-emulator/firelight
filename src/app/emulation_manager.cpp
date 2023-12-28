@@ -7,12 +7,17 @@
 #include <QOpenGLPaintDevice>
 #include <QPainter>
 #include <QSGImageNode>
-#include <QSGSimpleTextureNode>
 #include <QSGTexture>
 #include <SDL_gamecontroller.h>
 #include <qopenglcontext.h>
 
 EmulationManager *instance;
+
+void EmulationManager::set_system_av_info(retro_system_av_info *info) {
+  printf("got system av info fps: %f, sample rate: %f\n", info->timing.fps,
+         info->timing.sample_rate);
+  core_av_info_ = info;
+}
 
 QSGNode *
 EmulationManager::updatePaintNode(QSGNode *qsg_node,
@@ -85,6 +90,13 @@ void EmulationManager::initialize(int entryId) {
   libretro::Game game(entry->content_path);
   core->loadGame(&game);
 
+  auto targetFps = core_av_info_->timing.fps;
+  window()->setMinimumSize(QSize(core_av_info_->geometry.max_width,
+                                 core_av_info_->geometry.max_height));
+
+  setSize(QSize(core_av_info_->geometry.max_width,
+                core_av_info_->geometry.max_height));
+
   // const double refresh = QGuiApplication::primaryScreen()->refreshRate();
   // std::printf("Refresh Rate: %f \r\n", refresh);
   // if (refresh > 61) {
@@ -109,7 +121,9 @@ void EmulationManager::runOneFrame() {
     if (reset_context) {
       usingHwRendering = true;
 
-      gameFbo = std::make_unique<QOpenGLFramebufferObject>(640, 480);
+      gameFbo = std::make_unique<QOpenGLFramebufferObject>(
+          core_av_info_->geometry.max_width,
+          core_av_info_->geometry.max_height);
       gameFbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 
       gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(

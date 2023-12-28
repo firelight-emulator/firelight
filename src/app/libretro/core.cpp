@@ -398,7 +398,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
     this->environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
-    this->retroSystemAVInfo = (retro_system_av_info *)data;
+    videoReceiver->set_system_av_info((retro_system_av_info *)data);
     //    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
     return true;
   }
@@ -1001,6 +1001,7 @@ bool Core::loadGame(Game *game) {
 
   this->symRetroGetSystemInfo(this->retroSystemInfo);
   this->symRetroGetSystemAVInfo(this->retroSystemAVInfo);
+  videoReceiver->set_system_av_info(this->retroSystemAVInfo);
   //  this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
 
   return result;

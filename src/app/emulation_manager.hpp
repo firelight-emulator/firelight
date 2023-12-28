@@ -18,6 +18,9 @@ static FL::Library::LibraryManager *library_manager_ = nullptr;
 class EmulationManager : public QQuickItem,
                          public CoreVideoDataReceiver,
                          public QOpenGLFunctions {
+public:
+  void set_system_av_info(retro_system_av_info *info) override;
+
 protected:
   QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
@@ -48,6 +51,7 @@ public slots:
   void resume();
 
 private:
+  retro_system_av_info *core_av_info_;
   bool glInitialized = false;
   std::vector<uchar> softwareBuffer;
   QImage *softwareImage = nullptr;
