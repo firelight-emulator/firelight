@@ -72,7 +72,7 @@ void EmulationManager::initialize(int entryId) {
   core->setSystemDirectory(".");
   core->setSaveDirectory(".");
 
-  core->setVideoStuff(this);
+  core->set_video_receiver(this);
   core->init();
 
   libretro::Game game(entry->content_path);
@@ -83,8 +83,9 @@ void EmulationManager::initialize(int entryId) {
   setSize(QSize(core_av_info_->geometry.max_width,
                 core_av_info_->geometry.max_height));
 
-  auto targetFrameTime = 1 / core_av_info_->timing.fps;
-  auto actualFrameTime = 1 / QGuiApplication::primaryScreen()->refreshRate();
+  const auto targetFrameTime = 1 / core_av_info_->timing.fps;
+  const auto actualFrameTime =
+      1 / QGuiApplication::primaryScreen()->refreshRate();
 
   frameSkipRatio = std::floor(targetFrameTime / actualFrameTime);
   printf("setting frame skip ratio to %d\n", frameSkipRatio);

@@ -62,8 +62,6 @@ private:
   long long int frameCount = 0;
   int frameSkipRatio = 0;
   long numFrames = 0;
-  int numSkipFrames = 0;
-  int currentSkippedFrames = 0;
 };
 
 #endif // FIRELIGHT_EMULATION_MANAGER_HPP

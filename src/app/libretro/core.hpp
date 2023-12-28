@@ -49,7 +49,7 @@ public:
 
   virtual ~Core();
 
-  void setVideoStuff(CoreVideoDataReceiver *receiver);
+  void set_video_receiver(CoreVideoDataReceiver *receiver);
 
   bool handleEnvironmentCall(unsigned cmd, void *data);
 
