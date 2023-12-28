@@ -9,6 +9,7 @@
 #include "libretro/core.hpp"
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
+#include <QOpenGLTexture>
 #include <QQuickItem>
 #include <QSGDynamicTexture>
 
@@ -47,7 +48,12 @@ public slots:
   void resume();
 
 private:
+  bool glInitialized = false;
+  std::vector<uchar> softwareBuffer;
+  QImage *softwareImage = nullptr;
   QSGTexture *gameTexture = nullptr;
+  QOpenGLTexture *softwareRenderTex = nullptr;
+  bool usingHwRendering = false;
   std::unique_ptr<QOpenGLFramebufferObject> gameFbo = nullptr;
   context_reset_func reset_context = nullptr;
   Uint64 frameBegin;

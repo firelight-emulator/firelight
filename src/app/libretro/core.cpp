@@ -965,7 +965,7 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
   SDL_AudioSpec want, have;
 
   SDL_memset(&want, 0, sizeof(want));
-  want.freq = 48000;       // Sample rate (e.g., 44.1 kHz)
+  want.freq = 32000;       // Sample rate (e.g., 44.1 kHz)
   want.format = AUDIO_S16; // Audio format (16-bit signed)
   want.channels = 2;       // Number of audio channels (stereo)
   want.samples = 2048;     // Audio buffer size (samples)

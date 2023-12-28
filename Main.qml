@@ -205,16 +205,16 @@ Window {
                     this.initialize(currentLibraryEntryId)
                 }
             }
-            FpsMultiplier {
-                id: fpsMultiplierView
-            }
-            Slider {
-                id: fpsMultiplier
-                onMoved: { fpsMultiplierView.setSliderValue(value) }
-                stepSize: 0.5
-                value: 1
-                to: 10
-            }
+            // FpsMultiplier {
+            //     id: fpsMultiplierView
+            // }
+            // Slider {
+            //     id: fpsMultiplier
+            //     onMoved: { fpsMultiplierView.setSliderValue(value) }
+            //     stepSize: 0.5
+            //     value: 1
+            //     to: 10
+            // }
         }
     }
 

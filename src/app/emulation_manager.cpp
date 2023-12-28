@@ -4,6 +4,8 @@
 
 #include "emulation_manager.hpp"
 #include <QGuiApplication>
+#include <QOpenGLPaintDevice>
+#include <QPainter>
 #include <QSGImageNode>
 #include <QSGSimpleTextureNode>
 #include <QSGTexture>
@@ -26,13 +28,18 @@ EmulationManager::updatePaintNode(QSGNode *qsg_node,
     texNode = window()->createImageNode();
   }
 
-  printf("setting tex!");
+  // if (usingHwRendering) {
+  //   printf("setting HARDWARE tex!");
+  // } else {
+  //   texNode->setTexture(gameTexture);
+  // }
   texNode->setTexture(gameTexture);
   texNode->setTextureCoordinatesTransform(QSGImageNode::MirrorVertically);
   texNode->setRect(boundingRect());
 
   return texNode;
 }
+
 EmulationManager *EmulationManager::getInstance() {
   if (!instance) {
     instance = new EmulationManager();
@@ -63,8 +70,8 @@ void EmulationManager::initialize(int entryId) {
   std::string corePath;
   if (entry->platform == "n64") {
     corePath = "./system/_cores/mupen64plus_next_libretro.dll";
-  } else {
-    printf("ok\n");
+  } else if (entry->platform == "snes") {
+    corePath = "./system/_cores/snes9x_libretro.dll";
   }
 
   core = std::make_unique<libretro::Core>(corePath, &conManager);
@@ -78,12 +85,12 @@ void EmulationManager::initialize(int entryId) {
   libretro::Game game(entry->content_path);
   core->loadGame(&game);
 
-  const double refresh = QGuiApplication::primaryScreen()->refreshRate();
-  std::printf("Refresh Rate: %f \r\n", refresh);
-  if (refresh > 61) {
-    numSkipFrames = ((refresh / 60.0) + 0.5) - 1.0;
-    std::printf("Number of skipped frames: %d \r\n", numSkipFrames);
-  }
+  // const double refresh = QGuiApplication::primaryScreen()->refreshRate();
+  // std::printf("Refresh Rate: %f \r\n", refresh);
+  // if (refresh > 61) {
+  //   numSkipFrames = ((refresh / 60.0) + 0.5) - 1.0;
+  //   std::printf("Number of skipped frames: %d \r\n", numSkipFrames);
+  // }
 
   setFlag(ItemHasContents);
   auto win = window();
@@ -93,9 +100,14 @@ void EmulationManager::initialize(int entryId) {
 }
 
 void EmulationManager::runOneFrame() {
+  if (!glInitialized) {
+    initializeOpenGLFunctions();
+    glInitialized = true;
+  }
+
   if (running) {
     if (reset_context) {
-      initializeOpenGLFunctions();
+      usingHwRendering = true;
 
       gameFbo = std::make_unique<QOpenGLFramebufferObject>(640, 480);
       gameFbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
@@ -111,12 +123,12 @@ void EmulationManager::runOneFrame() {
       reset_context = nullptr;
     }
 
-    if (currentSkippedFrames == numSkipFrames && numSkipFrames != 0) {
-      currentSkippedFrames = 0;
-      window()->update();
-      return;
-    }
-    currentSkippedFrames++;
+    // if (currentSkippedFrames == numSkipFrames && numSkipFrames != 0) {
+    //   currentSkippedFrames = 0;
+    //   window()->update();
+    //   return;
+    // }
+    // currentSkippedFrames++;
 
     frameBegin = SDL_GetPerformanceCounter();
     lastTick = thisTick;
@@ -164,11 +176,25 @@ void EmulationManager::resume() { running = true; }
 
 void EmulationManager::receive(const void *data, unsigned int width,
                                unsigned int height, size_t pitch) {
-  if (data != nullptr) {
-    m_data = const_cast<void *>(data);
-    m_width = width;
-    m_height = height;
-    m_pitch = pitch;
+  if (data != nullptr && !usingHwRendering) {
+    if (!gameFbo) {
+      printf("creating fbo and texture\n");
+      gameFbo = std::make_unique<QOpenGLFramebufferObject>(width, height);
+
+      gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
+          gameFbo->texture(), window(), gameFbo->size());
+    }
+
+    QOpenGLPaintDevice paint_device;
+    paint_device.setSize(gameFbo->size());
+    QPainter painter(&paint_device);
+
+    gameFbo->bind();
+    QImage image((uchar *)data, width, height, pitch, QImage::Format_RGB16);
+
+    painter.drawImage(QRect(0, 0, gameFbo->width(), gameFbo->height()), image,
+                      image.rect());
+    gameFbo->release();
   }
 }
 
