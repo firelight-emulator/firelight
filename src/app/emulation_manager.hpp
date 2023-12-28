@@ -7,20 +7,20 @@
 
 #include "library/library_manager.hpp"
 #include "libretro/core.hpp"
-#include <QImage>
-#include <QObject>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QQuickItem>
-#include <QQuickWindow>
 #include <QSGDynamicTexture>
-#include <qopenglcontext.h>
 
 static FL::Library::LibraryManager *library_manager_ = nullptr;
 
 class EmulationManager : public QQuickItem,
                          public CoreVideoDataReceiver,
                          public QOpenGLFunctions {
+protected:
+  QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+
+private:
   Q_OBJECT
 
   typedef uintptr_t (*get_framebuffer_func)();
@@ -41,24 +41,19 @@ public:
   std::unique_ptr<QImage> getImage();
 
 public slots:
-
-  void initialize();
-  void loadLibraryEntry(int entryId);
+  void initialize(int entryId);
   void runOneFrame();
   void pause();
   void resume();
 
 private:
-  int current_lib_entry_id_ = -1;
-  std::unique_ptr<QSGDynamicTexture> gameTexture = nullptr;
+  QSGTexture *gameTexture = nullptr;
   std::unique_ptr<QOpenGLFramebufferObject> gameFbo = nullptr;
   context_reset_func reset_context = nullptr;
-  //  FL::GameLoopMetrics loopMetrics;
   Uint64 frameBegin;
   Uint64 frameEnd;
   double frameDiff;
   float framerate = 60; // Shouldn't need a default, but eh.
-  int dumb = 0;
   void *m_data;
   unsigned m_width;
   unsigned m_height;

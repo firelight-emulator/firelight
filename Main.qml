@@ -199,10 +199,10 @@ Window {
                 anchors.centerIn: parent
                 width: 640
                 height: 480
+                // layer.enabled: true
 
                 Component.onCompleted: {
-                    this.loadLibraryEntry(currentLibraryEntryId)
-                    this.initialize()
+                    this.initialize(currentLibraryEntryId)
                 }
             }
             FpsMultiplier {
