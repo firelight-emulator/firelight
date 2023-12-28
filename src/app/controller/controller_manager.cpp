@@ -25,12 +25,12 @@ void ControllerManager::handleControllerAddedEvent(int32_t sdlJoystickIndex) {
     }
   }
 
-  for (int i = 0; i < unassignedControllers.size(); ++i) {
-    if (unassignedControllers[i]) {
-      if (unassignedControllers[i].get()->sdlJoystickIndex ==
+  for (auto & unassignedController : unassignedControllers) {
+    if (unassignedController) {
+      if (unassignedController->sdlJoystickIndex ==
           sdlJoystickIndex) {
-        SDL_GameControllerClose(unassignedControllers[i]->sdlController);
-        unassignedControllers[i].reset();
+        SDL_GameControllerClose(unassignedController->sdlController);
+        unassignedController.reset();
       }
     }
   }
@@ -54,9 +54,9 @@ void ControllerManager::handleControllerAddedEvent(int32_t sdlJoystickIndex) {
   // if desired
 }
 
-void ControllerManager::handleControllerRemovedEvent(int32_t sdlInstanceId) {
+void ControllerManager::handleControllerRemovedEvent(const int32_t sdlInstanceId) {
   auto con = SDL_GameControllerFromInstanceID(sdlInstanceId);
-  auto joystickIndex = SDL_JoystickGetDeviceInstanceID(sdlInstanceId);
+  const auto joystickIndex = SDL_JoystickGetDeviceInstanceID(sdlInstanceId);
 
   for (int i = 0; i < portAssignedControllers.max_size(); ++i) {
     if (portAssignedControllers[i]) {
@@ -67,20 +67,20 @@ void ControllerManager::handleControllerRemovedEvent(int32_t sdlInstanceId) {
     }
   }
 
-  for (int i = 0; i < unassignedControllers.size(); ++i) {
-    if (unassignedControllers[i]) {
-      if (unassignedControllers[i].get()->sdlJoystickIndex == joystickIndex) {
-        SDL_GameControllerClose(unassignedControllers[i]->sdlController);
-        unassignedControllers[i].reset();
+  for (auto & unassignedController : unassignedControllers) {
+    if (unassignedController) {
+      if (unassignedController->sdlJoystickIndex == joystickIndex) {
+        SDL_GameControllerClose(unassignedController->sdlController);
+        unassignedController.reset();
       }
     }
   }
 }
 
 void ControllerManager::scanGamepads() {
-  auto numJoys = SDL_NumJoysticks();
+  const auto numJoys = SDL_NumJoysticks();
   for (int i = 0; i < numJoys; ++i) {
-    auto controller = SDL_GameControllerOpen(i);
+    const auto controller = SDL_GameControllerOpen(i);
     if (controller == nullptr) {
       continue;
     }

@@ -30,14 +30,14 @@ std::vector<char> SaveManager::read(const std::string &gameId) {
     saveFile.read(data, size);
     saveFile.close();
 
-    return std::vector<char>(data, data + sizeof data / sizeof data[0]);
+    return std::vector(data, data + sizeof data / sizeof data[0]);
   }
 
   return {};
 }
 
 void SaveManager::write(const std::string &gameId, std::vector<char> data) {
-  std::filesystem::create_directories(getSaveFileDirectory());
+  create_directories(getSaveFileDirectory());
   std::ofstream saveFile(getSaveFilePath(gameId), std::ios::binary);
   saveFile.write(data.data(), data.size());
   saveFile.close();
