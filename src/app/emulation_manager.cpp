@@ -13,16 +13,9 @@
 
 EmulationManager *instance;
 
-void EmulationManager::set_system_av_info(retro_system_av_info *info) {
-  printf("got system av info fps: %f, sample rate: %f\n", info->timing.fps,
-         info->timing.sample_rate);
-  core_av_info_ = info;
-}
-
 QSGNode *
 EmulationManager::updatePaintNode(QSGNode *qsg_node,
                                   UpdatePaintNodeData *update_paint_node_data) {
-  printf("updating paint node\n");
   if (!gameTexture) {
     update();
     return nullptr;
@@ -33,11 +26,6 @@ EmulationManager::updatePaintNode(QSGNode *qsg_node,
     texNode = window()->createImageNode();
   }
 
-  // if (usingHwRendering) {
-  //   printf("setting HARDWARE tex!");
-  // } else {
-  //   texNode->setTexture(gameTexture);
-  // }
   texNode->setTexture(gameTexture);
   texNode->setTextureCoordinatesTransform(QSGImageNode::MirrorVertically);
   texNode->setRect(boundingRect());
@@ -99,14 +87,7 @@ void EmulationManager::initialize(int entryId) {
   auto actualFrameTime = 1 / QGuiApplication::primaryScreen()->refreshRate();
 
   frameSkipRatio = std::floor(targetFrameTime / actualFrameTime);
-  printf("setting frame skip ratio to %d", frameSkipRatio);
-
-  // const double refresh = QGuiApplication::primaryScreen()->refreshRate();
-  // std::printf("Refresh Rate: %f \r\n", refresh);
-  // if (refresh > 61) {
-  //   numSkipFrames = ((refresh / 60.0) + 0.5) - 1.0;
-  //   std::printf("Number of skipped frames: %d \r\n", numSkipFrames);
-  // }
+  printf("setting frame skip ratio to %d\n", frameSkipRatio);
 
   setFlag(ItemHasContents);
   auto win = window();
@@ -141,14 +122,7 @@ void EmulationManager::runOneFrame() {
       reset_context = nullptr;
     }
 
-    // if (currentSkippedFrames == numSkipFrames && numSkipFrames != 0) {
-    //   currentSkippedFrames = 0;
-    //   window()->update();
-    //   return;
-    // }
-    // currentSkippedFrames++;
-
-    frameBegin = SDL_GetPerformanceCounter();
+    auto frameBegin = SDL_GetPerformanceCounter();
     lastTick = thisTick;
     thisTick = SDL_GetPerformanceCounter();
 
@@ -164,9 +138,9 @@ void EmulationManager::runOneFrame() {
     if (frameSkipRatio == 0 || (frameCount % frameSkipRatio == 0)) {
       core->run(deltaTime);
 
-      frameEnd = SDL_GetPerformanceCounter();
-      frameDiff = ((frameEnd - frameBegin) * 1000 /
-                   static_cast<double>(SDL_GetPerformanceFrequency()));
+      auto frameEnd = SDL_GetPerformanceCounter();
+      auto frameDiff = ((frameEnd - frameBegin) * 1000 /
+                        static_cast<double>(SDL_GetPerformanceFrequency()));
       totalFrameWorkDurationMillis += frameDiff;
       numFrames++;
 
@@ -181,16 +155,6 @@ void EmulationManager::runOneFrame() {
     window()->endExternalCommands();
     window()->update();
   }
-
-  // window()->beginExternalCommands();
-
-  // if (gameFbo) {
-  //   QOpenGLFramebufferObject::blitFramebuffer(
-  //       nullptr, QRect(x(), y(), width(), height()), gameFbo.get(),
-  //       boundingRect().toRect(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
-  //       GL_NEAREST, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0);
-  // }
-  // window()->endExternalCommands();
 }
 void EmulationManager::pause() { running = false; }
 void EmulationManager::resume() { running = true; }
@@ -199,7 +163,6 @@ void EmulationManager::receive(const void *data, unsigned int width,
                                unsigned int height, size_t pitch) {
   if (data != nullptr && !usingHwRendering) {
     if (!gameFbo) {
-      printf("creating fbo and texture\n");
       gameFbo = std::make_unique<QOpenGLFramebufferObject>(width, height);
 
       gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
@@ -220,9 +183,11 @@ void EmulationManager::receive(const void *data, unsigned int width,
 }
 
 proc_address_t EmulationManager::get_proc_address(const char *sym) {
-  const auto context = QOpenGLContext::currentContext();
-  auto addr = context->getProcAddress(sym);
-  return addr;
+  return QOpenGLContext::currentContext()->getProcAddress(sym);
+}
+
+void EmulationManager::set_system_av_info(retro_system_av_info *info) {
+  core_av_info_ = info;
 }
 
 void EmulationManager::set_reset_context_func(context_reset_func reset) {
@@ -231,13 +196,4 @@ void EmulationManager::set_reset_context_func(context_reset_func reset) {
 
 uintptr_t EmulationManager::get_current_framebuffer_id() {
   return gameFbo->handle();
-}
-
-std::unique_ptr<QImage> EmulationManager::getImage() {
-  return nullptr;
-  auto image = std::make_unique<QImage>((uchar *)m_data, m_width, m_height,
-                                        m_pitch, QImage::Format_RGB16);
-
-  image->mirror();
-  return image;
 }
