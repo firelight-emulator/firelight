@@ -141,12 +141,6 @@ void EmulationManager::runOneFrame() {
       reset_context = nullptr;
     }
 
-    frameCount++;
-    if (frameSkipRatio != 0 && (frameCount % frameSkipRatio != 0)) {
-      window()->update();
-      return;
-    }
-
     // if (currentSkippedFrames == numSkipFrames && numSkipFrames != 0) {
     //   currentSkippedFrames = 0;
     //   window()->update();
@@ -166,22 +160,25 @@ void EmulationManager::runOneFrame() {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    core->run(deltaTime);
+    frameCount++;
+    if (frameSkipRatio == 0 || (frameCount % frameSkipRatio == 0)) {
+      core->run(deltaTime);
+
+      frameEnd = SDL_GetPerformanceCounter();
+      frameDiff = ((frameEnd - frameBegin) * 1000 /
+                   static_cast<double>(SDL_GetPerformanceFrequency()));
+      totalFrameWorkDurationMillis += frameDiff;
+      numFrames++;
+
+      if (numFrames == 300) {
+        printf("Average frame work duration: %fms\n",
+               totalFrameWorkDurationMillis / numFrames);
+        totalFrameWorkDurationMillis = 0;
+        numFrames = 0;
+      }
+    }
 
     window()->endExternalCommands();
-
-    frameEnd = SDL_GetPerformanceCounter();
-    frameDiff = ((frameEnd - frameBegin) * 1000 /
-                 static_cast<double>(SDL_GetPerformanceFrequency()));
-    totalFrameWorkDurationMillis += frameDiff;
-    numFrames++;
-
-    if (numFrames == 300) {
-      printf("Average frame work duration: %fms\n",
-             totalFrameWorkDurationMillis / numFrames);
-      totalFrameWorkDurationMillis = 0;
-      numFrames = 0;
-    }
     window()->update();
   }
 
