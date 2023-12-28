@@ -74,6 +74,9 @@ private:
   std::unique_ptr<libretro::Core> core;
   FL::Input::ControllerManager conManager;
   double totalFrameWorkDurationMillis = 0;
+
+  long long int frameCount = 0;
+  int frameSkipRatio = 0;
   long numFrames = 0;
   int numSkipFrames = 0;
   int currentSkippedFrames = 0;

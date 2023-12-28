@@ -89,13 +89,17 @@ void EmulationManager::initialize(int entryId) {
 
   libretro::Game game(entry->content_path);
   core->loadGame(&game);
-
-  auto targetFps = core_av_info_->timing.fps;
   window()->setMinimumSize(QSize(core_av_info_->geometry.max_width,
                                  core_av_info_->geometry.max_height));
 
   setSize(QSize(core_av_info_->geometry.max_width,
                 core_av_info_->geometry.max_height));
+
+  auto targetFrameTime = 1 / core_av_info_->timing.fps;
+  auto actualFrameTime = 1 / QGuiApplication::primaryScreen()->refreshRate();
+
+  frameSkipRatio = std::floor(targetFrameTime / actualFrameTime);
+  printf("setting frame skip ratio to %d", frameSkipRatio);
 
   // const double refresh = QGuiApplication::primaryScreen()->refreshRate();
   // std::printf("Refresh Rate: %f \r\n", refresh);
@@ -135,6 +139,12 @@ void EmulationManager::runOneFrame() {
 
       reset_context();
       reset_context = nullptr;
+    }
+
+    frameCount++;
+    if (frameSkipRatio != 0 && (frameCount % frameSkipRatio != 0)) {
+      window()->update();
+      return;
     }
 
     // if (currentSkippedFrames == numSkipFrames && numSkipFrames != 0) {
