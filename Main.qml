@@ -199,12 +199,20 @@ Window {
                 anchors.centerIn: parent
                 width: 640
                 height: 480
+                // layer.enabled: true
 
                 Component.onCompleted: {
-                    this.loadLibraryEntry(currentLibraryEntryId)
-                    this.initialize()
+                    this.initialize(currentLibraryEntryId)
                 }
             }
+
+            // MultiEffect {
+            //     source: emulatorView
+            //     anchors.fill: emulatorView
+            //     // blurEnabled: true
+            //     // blurMax: 64
+            //     // blur: 1.0
+            // }
 
             // Slider {
             //     value: 1

@@ -3,12 +3,35 @@
 //
 
 #include "emulation_manager.hpp"
+#include <QSGImageNode>
 #include <QSGSimpleTextureNode>
+#include <QSGTexture>
 #include <SDL_gamecontroller.h>
 #include <qopenglcontext.h>
 
 EmulationManager *instance;
 
+QSGNode *
+EmulationManager::updatePaintNode(QSGNode *qsg_node,
+                                  UpdatePaintNodeData *update_paint_node_data) {
+  printf("updating paint node\n");
+  if (!gameTexture) {
+    update();
+    return nullptr;
+  }
+
+  auto texNode = dynamic_cast<QSGImageNode *>(qsg_node);
+  if (!texNode) {
+    texNode = window()->createImageNode();
+  }
+
+  printf("setting tex!");
+  texNode->setTexture(gameTexture);
+  texNode->setTextureCoordinatesTransform(QSGImageNode::MirrorVertically);
+  texNode->setRect(boundingRect());
+
+  return texNode;
+}
 EmulationManager *EmulationManager::getInstance() {
   if (!instance) {
     instance = new EmulationManager();
@@ -25,19 +48,15 @@ EmulationManager::EmulationManager(QQuickItem *parent) : QQuickItem(parent) {}
 
 void EmulationManager::registerInstance(EmulationManager *manager) {}
 
-void EmulationManager::initialize() {
+void EmulationManager::initialize(int entryId) {
   printf("initializing\n");
   SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
   conManager.scanGamepads();
 
-  if (current_lib_entry_id_ == -1) {
-    printf("oh noooooo\n");
-  }
-
-  auto entry = library_manager_->getEntryById(current_lib_entry_id_);
+  auto entry = library_manager_->getEntryById(entryId);
 
   if (!entry.has_value()) {
-    printf("OH NOOOOO no entry with id %d\n", current_lib_entry_id_);
+    printf("OH NOOOOO no entry with id %d\n", entryId);
   }
 
   std::string corePath;
@@ -58,16 +77,11 @@ void EmulationManager::initialize() {
   libretro::Game game(entry->content_path);
   core->loadGame(&game);
 
-  // setFlag(ItemHasContents);
+  setFlag(ItemHasContents);
   auto win = window();
 
   connect(win, &QQuickWindow::beforeRenderPassRecording, this,
           &EmulationManager::runOneFrame, Qt::DirectConnection);
-}
-
-void EmulationManager::loadLibraryEntry(int entryId) {
-  current_lib_entry_id_ = entryId;
-  printf("Setting library entry: %d\n", current_lib_entry_id_);
 }
 
 void EmulationManager::runOneFrame() {
@@ -77,6 +91,9 @@ void EmulationManager::runOneFrame() {
 
       gameFbo = std::make_unique<QOpenGLFramebufferObject>(640, 480);
       gameFbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+
+      gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
+          gameFbo->texture(), window(), gameFbo->size());
 
       if (!gameFbo->isValid()) {
         printf("gameFbo is not valid :(\n");
@@ -94,16 +111,14 @@ void EmulationManager::runOneFrame() {
         (thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency();
 
     window()->beginExternalCommands();
+
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     core->run(deltaTime);
 
     window()->endExternalCommands();
 
-    //    if (deltaTime > 20) {
-    //      printf("delta time: %f\n", deltaTime);
-    //    }
     frameEnd = SDL_GetPerformanceCounter();
     frameDiff = ((frameEnd - frameBegin) * 1000 /
                  static_cast<double>(SDL_GetPerformanceFrequency()));
@@ -119,15 +134,15 @@ void EmulationManager::runOneFrame() {
     window()->update();
   }
 
-  window()->beginExternalCommands();
+  // window()->beginExternalCommands();
 
-  if (gameFbo) {
-    QOpenGLFramebufferObject::blitFramebuffer(
-        nullptr, QRect(x(), y(), width(), height()), gameFbo.get(),
-        boundingRect().toRect(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
-        GL_NEAREST, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0);
-  }
-  window()->endExternalCommands();
+  // if (gameFbo) {
+  //   QOpenGLFramebufferObject::blitFramebuffer(
+  //       nullptr, QRect(x(), y(), width(), height()), gameFbo.get(),
+  //       boundingRect().toRect(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
+  //       GL_NEAREST, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0);
+  // }
+  // window()->endExternalCommands();
 }
 void EmulationManager::pause() { running = false; }
 void EmulationManager::resume() { running = true; }
