@@ -17,6 +17,8 @@
 #include <vector>
 #include <windows.h>
 
+#include "audio_data_receiver.hpp"
+
 using std::array;
 using std::string;
 using std::vector;
@@ -51,6 +53,8 @@ public:
 
   void set_video_receiver(CoreVideoDataReceiver *receiver);
 
+  void set_audio_receiver(CoreAudioDataReceiver *receiver);
+
   bool handleEnvironmentCall(unsigned cmd, void *data);
 
   void init();
@@ -71,10 +75,10 @@ public:
 
   void writeMemoryData(MemoryType memType, char *data);
   CoreVideoDataReceiver *videoReceiver;
+  CoreAudioDataReceiver *audioReceiver;
 
 private:
   FL::Input::ControllerManager *controllerManager;
-  SDL_AudioDeviceID audioDevice;
 
   //  Video *video;
 

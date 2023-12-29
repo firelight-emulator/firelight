@@ -5,6 +5,8 @@
 #include "core.hpp"
 #include "SDL2/SDL.h"
 #include <cstdarg>
+
+#include "../audio_manager.hpp"
 // #include "nlohmann/json.hpp"
 
 // using json = nlohmann::json;
@@ -952,7 +954,7 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
       return frames;
     }
 
-    SDL_QueueAudio(core->audioDevice, data, frames * 4);
+    SDL_QueueAudio(core->audioReceiver->getAudioDevice(), data, frames * 4);
 
     return frames;
   };
@@ -962,21 +964,6 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
   loadRetroFunc<RetroInputPoll>(dll, "retro_set_input_poll")([]() {});
   loadRetroFunc<RetroInputState>(dll,
                                  "retro_set_input_state")(inputStateCallback);
-  SDL_AudioSpec want, have;
-
-  SDL_memset(&want, 0, sizeof(want));
-  want.freq = 32000;       // Sample rate (e.g., 44.1 kHz)
-  want.format = AUDIO_S16; // Audio format (16-bit signed)
-  want.channels = 2;       // Number of audio channels (stereo)
-  want.samples = 2048;     // Audio buffer size (samples)
-  want.callback = nullptr;
-
-  this->audioDevice = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
-  if (audioDevice == 0) {
-    printf("SDL_OpenAudioDevice failed: %s\n", SDL_GetError());
-  }
-
-  SDL_PauseAudioDevice(audioDevice, 0); // Start audio playback
 
   //  symRetroSetControllerPortDevice(0, RETRO_DEVICE_ANALOG);
 }
@@ -1003,7 +990,8 @@ bool Core::loadGame(Game *game) {
   this->symRetroGetSystemAVInfo(this->retroSystemAVInfo);
   videoReceiver->set_system_av_info(this->retroSystemAVInfo);
   //  this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
-
+  printf("New Audio Sample Rate: %f \n", retroSystemAVInfo->timing.sample_rate);
+  audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
   return result;
 }
 
@@ -1053,6 +1041,10 @@ FL::Input::ControllerManager *Core::getControllerManager() {
 }
 void Core::set_video_receiver(CoreVideoDataReceiver *receiver) {
   videoReceiver = receiver;
+}
+
+  void Core::set_audio_receiver(CoreAudioDataReceiver *receiver) {
+  audioReceiver = receiver;
 }
 
 } // namespace libretro
