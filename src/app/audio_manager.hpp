@@ -13,7 +13,11 @@ class AudioManager: public CoreAudioDataReceiver {
     SDL_AudioDeviceID audioDevice = 0;
 public:
     void initialize(double new_freq) override;
-    SDL_AudioDeviceID getAudioDevice() override;
+    SDL_AudioDeviceID get_audio_device() override;
+    bool is_muted() override;
+    void toggle_mute() override;
+private:
+    bool muted;
 };
 
 

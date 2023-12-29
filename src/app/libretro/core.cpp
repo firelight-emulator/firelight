@@ -954,7 +954,7 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
       return frames;
     }
 
-    SDL_QueueAudio(core->audioReceiver->getAudioDevice(), data, frames * 4);
+    SDL_QueueAudio(core->audioReceiver->get_audio_device(), data, frames * 4);
 
     return frames;
   };

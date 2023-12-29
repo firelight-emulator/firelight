@@ -7,7 +7,7 @@
 #include <SDL_audio.h>
 
 
-void AudioManager::initialize(double new_freq) {
+void AudioManager::initialize(const double new_freq) {
 
     SDL_AudioSpec want, have;
 
@@ -24,11 +24,20 @@ void AudioManager::initialize(double new_freq) {
         printf("SDL_OpenAudioDevice failed: %s\n", SDL_GetError());
     }
 
-    SDL_PauseAudioDevice(audioDevice, 0); // Start audio playback
+    SDL_PauseAudioDevice(audioDevice, muted); // Start audio playback
 
 }
 
-SDL_AudioDeviceID AudioManager::getAudioDevice() {
+SDL_AudioDeviceID AudioManager::get_audio_device() {
     return audioDevice;
+}
+
+bool AudioManager::is_muted() {
+    return muted;
+}
+
+void AudioManager::toggle_mute() {
+    muted = !muted;
+    SDL_PauseAudioDevice(audioDevice, muted);
 }
 
