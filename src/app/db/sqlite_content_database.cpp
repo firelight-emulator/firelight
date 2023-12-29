@@ -80,6 +80,18 @@ SqliteContentDatabase::SqliteContentDatabase(std::filesystem::path dbFile)
   // TODO: throw error
   getOrCreateDbConnection();
 }
+
+std::optional<Platform>
+SqliteContentDatabase::getPlatformByExtension(std::string ext) {
+  std::optional<Platform> result;
+
+  if (ext == ".z64") {
+    result.emplace(Platform{.id = 0});
+  }
+
+  return result;
+}
+
 sqlite3 *SqliteContentDatabase::getOrCreateDbConnection() {
   if (sqlite3_open(databaseFile.string().c_str(), &database)) {
     std::cerr << "Cannot open database: " << sqlite3_errmsg(database)

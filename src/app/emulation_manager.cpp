@@ -87,7 +87,7 @@ void EmulationManager::initialize(int entryId) {
   const auto actualFrameTime =
       1 / QGuiApplication::primaryScreen()->refreshRate();
 
-  frameSkipRatio = std::floor(targetFrameTime / actualFrameTime);
+  frameSkipRatio = std::lround(targetFrameTime / actualFrameTime);
   printf("setting frame skip ratio to %d\n", frameSkipRatio);
 
   setFlag(ItemHasContents);
@@ -175,7 +175,8 @@ void EmulationManager::receive(const void *data, unsigned int width,
     QPainter painter(&paint_device);
 
     gameFbo->bind();
-    QImage image((uchar *)data, width, height, pitch, QImage::Format_RGB16);
+    const QImage image((uchar *)data, width, height, pitch,
+                       QImage::Format_RGB16);
 
     painter.drawImage(QRect(0, 0, gameFbo->width(), gameFbo->height()), image,
                       image.rect());

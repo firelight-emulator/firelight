@@ -60,6 +60,9 @@ add_library(firelight_lib
         src/app/db/sqlite_content_database.hpp
         src/app/controller/fps_multiplier.cpp
         src/app/controller/fps_multiplier.hpp
+        src/app/db/library_database.hpp
+        src/app/db/sqlite_library_database.cpp
+        src/app/db/sqlite_library_database.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
@@ -78,8 +81,8 @@ qt_add_executable(firelight
         src/gui/QLibEntryModelShort.hpp
         src/app/db/daos/rom.hpp
         src/app/db/daos/game.hpp
-        src/app/platforms/platform.hpp
-        src/app/platforms/platform.cpp
+        src/app/db/daos/lib_entry.hpp
+        src/app/db/daos/platform.hpp
 )
 
 qt_add_qml_module(firelight

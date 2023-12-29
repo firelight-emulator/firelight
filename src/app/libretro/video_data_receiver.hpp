@@ -6,7 +6,6 @@
 #define FIRELIGHT_VIDEO_DATA_RECEIVER_HPP
 
 #include <cstddef>
-#include <functional>
 typedef void (*proc_address_t)();
 typedef void (*context_reset_func)();
 

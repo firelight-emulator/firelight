@@ -17,6 +17,7 @@ public:
   ~SqliteContentDatabase() override = default;
   std::optional<ROM> getRomByMd5(const std::string &md5) override;
   std::optional<Game> getGameByRomId(int romId) override;
+  std::optional<Platform> getPlatformByExtension(std::string ext) override;
 
 private:
   sqlite3 *getOrCreateDbConnection();

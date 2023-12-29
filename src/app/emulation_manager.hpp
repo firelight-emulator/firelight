@@ -52,7 +52,7 @@ private:
   bool usingHwRendering = false;
   std::unique_ptr<QOpenGLFramebufferObject> gameFbo = nullptr;
   context_reset_func reset_context = nullptr;
-  boolean running = false;
+  bool running = false;
   Uint64 thisTick;
   Uint64 lastTick;
   std::unique_ptr<libretro::Core> core;
