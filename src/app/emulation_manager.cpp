@@ -87,7 +87,7 @@ void EmulationManager::initialize(int entryId) {
   const auto actualFrameTime =
       1 / QGuiApplication::primaryScreen()->refreshRate();
 
-  frameSkipRatio = std::floor(targetFrameTime / actualFrameTime);
+  frameSkipRatio = std::lround(targetFrameTime / actualFrameTime);
   printf("setting frame skip ratio to %d\n", frameSkipRatio);
 
   setFlag(ItemHasContents);
