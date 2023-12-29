@@ -14,13 +14,16 @@ class QLibraryManager final : public QObject {
   Q_OBJECT
 
 public:
+  struct ScanResults {
+    std::vector<std::string> all_md5s;
+    std::vector<LibEntry> existing_entries;
+    std::vector<LibEntry> new_entries;
+  };
+
   explicit QLibraryManager(LibraryDatabase *lib_database,
                            std::filesystem::path default_rom_path,
                            ContentDatabase *content_database,
                            QLibEntryModelShort *shortModel);
-
-  void refresh() const;
-  // TODO: refresh slot
 
 public slots:
   void startScan();

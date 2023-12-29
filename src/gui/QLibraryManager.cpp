@@ -3,11 +3,16 @@
 //
 
 #include "QLibraryManager.hpp"
+
+#include <fstream>
 #include <qfuture.h>
 #include <qtconcurrentrun.h>
 
 #include <openssl/evp.h>
+#include <spdlog/spdlog.h>
 #include <utility>
+
+constexpr int MAX_FILESIZE_BYTES = 50000000;
 
 static std::string calculateMD5(const char *input, int size) {
   unsigned char md5Hash[EVP_MAX_MD_SIZE];
@@ -57,108 +62,89 @@ QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
   scanner_thread_pool_->setMaxThreadCount(thread_pool_size_);
 }
 
-void QLibraryManager::refresh() const {
-  // m_shortModel->setEntries(m_library_manager->getEntries());
-}
-
 void QLibraryManager::startScan() {
-  QFuture<QString> future =
+  QFuture<ScanResults> future =
       QtConcurrent::run(scanner_thread_pool_.get(), [this] {
         emit scanStarted();
-        for (const auto &file : std::filesystem::recursive_directory_iterator(
-                 default_rom_path_)) {
-          if (file.is_directory()) {
+        ScanResults scan_results;
+
+        for (const auto &entry :
+             std::filesystem::recursive_directory_iterator(default_rom_path_)) {
+          if (entry.is_directory()) {
             continue;
           }
 
           // TODO: Recognize patch types too
-          // Get Platform from extension
-          auto ext = file.path().extension();
+          auto ext = entry.path().extension();
           auto platform =
               content_database_->getPlatformByExtension(ext.string());
 
-          if (!platform.has_value()) {
-            printf("not a game bruh\n");
-          } else {
-            printf("found game: %s\n", file.path().string().c_str());
+          auto size = entry.file_size();
+          if (size > MAX_FILESIZE_BYTES) {
+            spdlog::info("File %s too large; skipping\n",
+                         entry.path().filename().string().c_str());
+            continue;
           }
+
+          if (!platform.has_value()) {
+            printf("File extension not recognized: %s\n", ext.string().c_str());
+            continue;
+          }
+
+          std::vector<char> thing(size);
+          std::ifstream file(entry.path(), std::ios::binary);
+
+          file.read(thing.data(), size);
+          file.close();
+
+          auto md5 = calculateMD5(thing.data(), size);
+          if (library_database_->get_entry_by_md5(md5).has_value()) {
+            // TODO: implement
+            scan_results.existing_entries.emplace_back();
+            continue;
+          }
+
+          auto display_name = entry.path().filename().string();
+          auto verified = false;
+          auto game_id = -1;
+          auto rom_id = -1;
+
+          auto rom = content_database_->getRomByMd5(md5);
+          if (rom.has_value()) {
+            auto game = content_database_->getGameByRomId(rom->id);
+            if (game.has_value()) {
+              display_name = game->name;
+            }
+
+            verified = true;
+            game_id = game->id;
+            rom_id = rom->id;
+          }
+
+          LibEntry e = {.id = -1,
+                        .display_name = display_name,
+                        .verified = verified,
+                        .platform_id = platform->id,
+                        .md5 = md5,
+                        .game = game_id,
+                        .rom = rom_id,
+                        .romhack = -1,
+                        .content_path = absolute(entry.path()).string()};
+
+          scan_results.new_entries.emplace_back(e);
+        }
+
+        printf("Summary of scan results:\n");
+        printf("\tNew entries:\n");
+        for (const auto &e : scan_results.new_entries) {
+          printf("\t\t%s\n", e.display_name.c_str());
+        }
+        printf("\tExisting entries:\n");
+        for (const auto &e : scan_results.existing_entries) {
+          printf("\t\t%s\n", e.display_name.c_str());
         }
 
         emit scanFinished();
-        // std::vector<Entry> results;
-        //
-        // for (const auto &path : watchedRomDirs) {
-        //   for (const auto &entry :
-        //        std::filesystem::recursive_directory_iterator(path)) {
-        //     if (entry.is_directory()) {
-        //       continue;
-        //     }
-        //
-        //     auto ext = entry.path().extension();
-        //     std::string platform_display_name =
-        //         get_display_name_by_extension(ext.string());
-        //     if (platform_display_name.empty()) {
-        //       continue;
-        //     }
-        //
-        //     auto size = entry.file_size();
-        //     if (size > MAX_FILESIZE_BYTES) {
-        //       continue;
-        //     }
-        //
-        //     std::vector<char> thing(size);
-        //     std::ifstream file(entry.path(), std::ios::binary);
-        //
-        //     file.read(thing.data(), size);
-        //     file.close();
-        //
-        //     auto md5 = calculateMD5(thing.data(), size);
-        //
-        //     auto result = contentDatabase->getRomByMd5(md5);
-        //     if (result.has_value()) {
-        //       auto game = contentDatabase->getGameByRomId(result->id);
-        //
-        //       auto displayName = result->filename;
-        //       if (game.has_value()) {
-        //         displayName = game->name;
-        //       }
-        //       // TODO: Will need to do a game lookup here as well.
-        //       Entry e = {.id = -1,
-        //                  .display_name = displayName,
-        //                  .verified = true,
-        //                  .platform = result->platform,
-        //                  .md5 = md5,
-        //                  .game = result->game,
-        //                  .rom = result->id,
-        //                  .romhack = -1,
-        //                  .content_path = entry.path().string()};
-        //       insertEntry(e);
-        //     } else {
-        //       Entry e = {.id = -1,
-        //                  .display_name = entry.path().stem().string(),
-        //                  .verified = false,
-        //                  .platform =
-        //                      platform_display_name, // TODO: Based on file
-        //                      extension
-        //                  .md5 = md5,
-        //                  .game = -1,
-        //                  .rom = -1,
-        //                  .romhack = -1,
-        //                  .content_path = entry.path().string()};
-        //       insertEntry(e);
-        //       // TODO: Start trying other stuff
-        //     }
-        //
-        //     // Check for MD5 match. If a match, it's verified!
-        //     // Otherwise, it's unverified.
-        //     // If unverified, match the filename against the known filenames
-        //     or
-        //     // game name.
-        //     // If THAT fails, add it to a list that the user needs to
-        //     manually
-        //     // assign.
-        //   }
-        // }
-        return QString();
+        return scan_results;
       });
 }

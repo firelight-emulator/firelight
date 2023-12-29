@@ -58,5 +58,13 @@ bool SqliteLibraryDatabase::initialize() {
   return true;
 }
 
-LibEntry SqliteLibraryDatabase::get_entry_by_id(int id) {}
-LibEntry SqliteLibraryDatabase::get_entry_by_rom_id(int id) {}
+std::optional<LibEntry> SqliteLibraryDatabase::get_entry_by_id(int id) {
+  return {};
+}
+std::optional<LibEntry>
+SqliteLibraryDatabase::get_entry_by_md5(std::string md5) {
+  return {};
+}
+std::optional<LibEntry> SqliteLibraryDatabase::get_entry_by_rom_id(int id) {
+  return {};
+}

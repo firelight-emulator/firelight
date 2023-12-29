@@ -90,6 +90,12 @@ int main(int argc, char *argv[]) {
   QLibEntryModelShort shortModel;
   QLibraryManager libraryManager(&library_database, roms_dir, &content_database,
                                  &shortModel);
+
+  QObject::connect(&libraryManager, &QLibraryManager::scanStarted,
+                   [] { printf("scan started!\n"); });
+  QObject::connect(&libraryManager, &QLibraryManager::scanFinished,
+                   [] { printf("scan finished!\n"); });
+
   libraryManager.startScan();
 
   // libraryManager.refresh();
