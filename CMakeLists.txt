@@ -60,6 +60,9 @@ add_library(firelight_lib
         src/app/db/sqlite_content_database.hpp
         src/app/controller/fps_multiplier.cpp
         src/app/controller/fps_multiplier.hpp
+        src/app/libretro/audio_data_receiver.hpp
+        src/app/audio_manager.cpp
+        src/app/audio_manager.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
