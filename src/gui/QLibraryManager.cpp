@@ -12,7 +12,7 @@
 #include <spdlog/spdlog.h>
 #include <utility>
 
-constexpr int MAX_FILESIZE_BYTES = 50000000;
+constexpr int MAX_FILESIZE_BYTES = 75000000;
 
 static std::string calculateMD5(const char *input, int size) {
   unsigned char md5Hash[EVP_MAX_MD_SIZE];
@@ -65,6 +65,7 @@ QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
 void QLibraryManager::startScan() {
   QFuture<ScanResults> future =
       QtConcurrent::run(scanner_thread_pool_.get(), [this] {
+        // TODO: prob should lock the db from write access lol
         emit scanStarted();
         ScanResults scan_results;
 
@@ -81,8 +82,8 @@ void QLibraryManager::startScan() {
 
           auto size = entry.file_size();
           if (size > MAX_FILESIZE_BYTES) {
-            spdlog::info("File %s too large; skipping\n",
-                         entry.path().filename().string().c_str());
+            spdlog::info("File {} too large; skipping",
+                         entry.path().filename().string());
             continue;
           }
 
@@ -147,4 +148,11 @@ void QLibraryManager::startScan() {
         emit scanFinished();
         return scan_results;
       });
+
+  // TODO: With scan results...
+  // TODO: For each new entry, add it to the database.
+  // TODO: For each existing entry, the main difference, if any, should be the
+  // TODO:  filename, but there could be updated links too
+  // TODO: Get a list of all md5s from the db. For each one, check if it's in
+  // TODO:  the list of md5s we found when we scanned. If not, remove the entry
 }
