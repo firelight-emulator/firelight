@@ -27,7 +27,7 @@ find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(SQLite3 REQUIRED)
-find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D REQUIRED)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
 find_package(GTest)
 
 qt_standard_project_setup(REQUIRES 6.5)
@@ -68,7 +68,7 @@ add_library(firelight_lib
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
 target_link_libraries(firelight_lib mingw32 SDL2main SDL2 opengl32 ssl crypto ${SQLite3_LIBRARIES}
-        Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D)
+        Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D Qt6::Sql)
 
 # main code
 qt_add_executable(firelight
@@ -77,8 +77,8 @@ qt_add_executable(firelight
         src/logo.ico
         src/gui/QLibraryManager.cpp
         src/gui/QLibraryManager.hpp
-        src/gui/QLibEntryModelShort.cpp
-        src/gui/QLibEntryModelShort.hpp
+        src/gui/QLibraryViewModel.cpp
+        src/gui/QLibraryViewModel.hpp
         src/app/db/daos/rom.hpp
         src/app/db/daos/game.hpp
         src/app/db/daos/lib_entry.hpp

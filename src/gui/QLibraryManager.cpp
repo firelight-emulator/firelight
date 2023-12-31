@@ -5,11 +5,9 @@
 #include "QLibraryManager.hpp"
 
 #include <fstream>
+#include <openssl/evp.h>
 #include <qfuture.h>
 #include <qtconcurrentrun.h>
-
-#include <openssl/evp.h>
-#include <spdlog/spdlog.h>
 #include <utility>
 
 constexpr int MAX_FILESIZE_BYTES = 75000000;
@@ -54,12 +52,20 @@ static std::string calculateMD5(const char *input, int size) {
 QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
                                  std::filesystem::path default_rom_path,
                                  ContentDatabase *content_database,
-                                 QLibEntryModelShort *shortModel)
+                                 QLibraryViewModel *model)
     : default_rom_path_(std::move(default_rom_path)),
       library_database_(lib_database), content_database_(content_database),
-      m_shortModel(shortModel) {
+      model_(model) {
   scanner_thread_pool_ = std::make_unique<QThreadPool>();
   scanner_thread_pool_->setMaxThreadCount(thread_pool_size_);
+  directory_watcher_.addPath("./roms");
+
+  connect(&directory_watcher_, &QFileSystemWatcher::directoryChanged,
+          [&](const QString &) { startScan(); });
+  connect(
+      this, &QLibraryManager::scanFinished, model,
+      [this, model] { model->set_items(get_model_items_()); },
+      Qt::QueuedConnection);
 }
 
 void QLibraryManager::startScan() {
@@ -82,8 +88,8 @@ void QLibraryManager::startScan() {
 
           auto size = entry.file_size();
           if (size > MAX_FILESIZE_BYTES) {
-            spdlog::info("File {} too large; skipping",
-                         entry.path().filename().string());
+            // spdlog::info("File {} too large; skipping",
+            //              entry.path().filename().string());
             continue;
           }
 
@@ -135,14 +141,12 @@ void QLibraryManager::startScan() {
           scan_results.new_entries.emplace_back(e);
         }
 
-        printf("Summary of scan results:\n");
-        printf("\tNew entries:\n");
-        for (const auto &e : scan_results.new_entries) {
-          printf("\t\t%s\n", e.display_name.c_str());
+        for (const auto &new_entry : scan_results.new_entries) {
+          library_database_->add_or_update_entry(new_entry);
         }
-        printf("\tExisting entries:\n");
-        for (const auto &e : scan_results.existing_entries) {
-          printf("\t\t%s\n", e.display_name.c_str());
+
+        for (const auto &existing_entry : scan_results.existing_entries) {
+          library_database_->add_or_update_entry(existing_entry);
         }
 
         emit scanFinished();
@@ -155,4 +159,19 @@ void QLibraryManager::startScan() {
   // TODO:  filename, but there could be updated links too
   // TODO: Get a list of all md5s from the db. For each one, check if it's in
   // TODO:  the list of md5s we found when we scanned. If not, remove the entry
+}
+std::vector<QLibraryViewModel::Item> QLibraryManager::get_model_items_() const {
+  const auto all = library_database_->get_all_entries();
+
+  std::vector<QLibraryViewModel::Item> items;
+  for (const auto &e : all) {
+    QLibraryViewModel::Item item;
+
+    item.id = e.id;
+    item.display_name = e.display_name;
+
+    items.emplace_back(item);
+  }
+
+  return items;
 }

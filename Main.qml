@@ -109,8 +109,9 @@ Window {
                             focus: true
                             clip: true
 
+                            currentIndex: 0
                             anchors.fill: parent
-                            model: libraryEntryModelShort
+                            model: library_short_model
                             boundsBehavior: Flickable.StopAtBounds
                             delegate: gameListItem
                             // preferredHighlightBegin: height / 3
@@ -135,7 +136,7 @@ Window {
 
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        everything.push(emulatorPage, {"currentLibraryEntryId": model.entryId})
+                                        everything.push(emulatorPage, {"currentLibraryEntryId": model.id})
                                     }
                                 }
 
@@ -150,7 +151,7 @@ Window {
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: "Helvetica"
                                     font.pointSize: 14
-                                    text: model.displayName
+                                    text: model.display_name
                                     color: "white"
                                 }
                             }

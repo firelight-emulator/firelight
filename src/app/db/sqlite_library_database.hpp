@@ -13,12 +13,17 @@
 class SqliteLibraryDatabase : public LibraryDatabase {
 public:
   explicit SqliteLibraryDatabase(std::filesystem::path db_file_path);
+  ~SqliteLibraryDatabase() override = default;
+
   bool initialize();
   std::optional<LibEntry> get_entry_by_id(int id) override;
   std::optional<LibEntry> get_entry_by_md5(std::string md5) override;
   std::optional<LibEntry> get_entry_by_rom_id(int id) override;
+  void add_or_update_entry(LibEntry entry) override;
+  std::vector<LibEntry> get_all_entries() override;
 
 private:
+  void insert_entry_into_db(LibEntry entry) const;
   std::filesystem::path database_file_path_;
   sqlite3 *database_ = nullptr;
 };

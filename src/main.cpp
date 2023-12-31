@@ -1,12 +1,11 @@
 
 
-#include "spdlog/spdlog.h"
 #include "src/app/controller/controller_manager.hpp"
 #include "src/app/db/sqlite_content_database.hpp"
 #include "src/app/emulation_manager.hpp"
 #include "src/app/library/library_manager.hpp"
-#include "src/gui/QLibEntryModelShort.hpp"
 #include "src/gui/QLibraryManager.hpp"
+#include "src/gui/QLibraryViewModel.hpp"
 #include <QFileSystemWatcher>
 #include <QGuiApplication>
 #include <QOpenGLFunctions>
@@ -14,6 +13,9 @@
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlQueryModel>
 #include <QWindow>
 #include <SDL.h>
 #include <SDL_error.h>
@@ -30,8 +32,8 @@ bool create_dirs(const std::filesystem::path &paths...) {
 
   for (const auto &p : paths) {
     if (!exists(p) && !create_directories(p, error_code)) {
-      spdlog::error("Unable to create directory {}; Error code: {}\n",
-                    p.string(), error_code.message());
+      // spdlog::error("Unable to create directory {}; Error code: {}\n",
+      //               p.string(), error_code.message());
       return false;
     }
   }
@@ -53,18 +55,18 @@ int main(int argc, char *argv[]) {
   const std::filesystem::path installation_dir = ".";
 
   if (!exists(installation_dir)) {
-    spdlog::error("Installation directory {} somehow does not exist. Please "
-                  "reinstall the application\n",
-                  installation_dir.string());
+    // spdlog::error("Installation directory {} somehow does not exist. Please "
+    //               "reinstall the application\n",
+    //               installation_dir.string());
     return 1;
   }
 
   // Verify system directory for cores
   const auto system_dir = installation_dir / "system";
   if (!exists(system_dir)) {
-    spdlog::error("System directory {} does not exist. Please reinstall the "
-                  "application\n",
-                  system_dir.string());
+    // spdlog::error("System directory {} does not exist. Please reinstall the "
+    //               "application\n",
+    //               system_dir.string());
     return 1;
   }
 
@@ -80,31 +82,24 @@ int main(int argc, char *argv[]) {
   // **** Load Content Database ****
   SqliteContentDatabase content_database(system_dir / "content.db");
 
-  // **** Load Library Manager ****
-  // FL::Library::LibraryManager library_manager(userdata_dir / "library.db",
-  //                                             roms_dir, &content_database);
-  // library_manager.scanNow();
-
   SqliteLibraryDatabase library_database(userdata_dir / "library.db");
-
-  QLibEntryModelShort shortModel;
-  QLibraryManager libraryManager(&library_database, roms_dir, &content_database,
-                                 &shortModel);
-
-  QObject::connect(&libraryManager, &QLibraryManager::scanStarted,
-                   [] { printf("scan started!\n"); });
-  QObject::connect(&libraryManager, &QLibraryManager::scanFinished,
-                   [] { printf("scan finished!\n"); });
-
-  libraryManager.startScan();
+  library_database.initialize();
+  //
+  // QObject::connect(&libraryManager, &QLibraryManager::scanStarted,
+  //                  [] { printf("scan started!\n"); });
+  // QObject::connect(&libraryManager, &QLibraryManager::scanFinished, [&] {
+  //   printf("setting entries\n");
+  //   shortModel.setEntries(library_database.get_all_entries());
+  // });
+  //
 
   // libraryManager.refresh();
   // EmulationManager::setLibraryManager(&library_manager);
 
   // QFileSystemWatcher watcher;
   // watcher.addPath(QString::fromStdString(roms_dir.string()));
-  // QObject::connect(&watcher, &QFileSystemWatcher::fileChanged, [](auto s) {
-  // printf("file changed: %s\n", s.toStdString().c_str());
+  // QObject::connect(&watcher, &QFileSystemWatcher::fileChanged, [](auto s)
+  // { printf("file changed: %s\n", s.toStdString().c_str());
   // });
   // QObject::connect(&watcher, &QFileSystemWatcher::directoryChanged,
   // [](const QString &s) {
@@ -127,12 +122,29 @@ int main(int argc, char *argv[]) {
   QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
+  auto db = QSqlDatabase::addDatabase("QSQLITE");
+  db.setDatabaseName("./userdata/library.db");
+  db.open();
+
+  QLibraryViewModel shortModel;
+
+  QLibraryManager libraryManager(&library_database, roms_dir, &content_database,
+                                 &shortModel);
+  QObject::connect(&libraryManager, &QLibraryManager::scanFinished, [&] {
+    // shortModel.setQuery(shortModel.query());
+  });
+  libraryManager.startScan();
+
+  // auto *model = new QSqlQueryModel;
+  // model->setQuery("SELECT id, display_name FROM library");
+
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
 
   QQmlApplicationEngine engine;
-  engine.rootContext()->setContextProperty("libraryEntryModelShort",
-                                           &shortModel);
+  engine.rootContext()->setContextProperty("library_short_model", &shortModel);
+
+  // engine.rootContext()->setContextProperty("library_short_model", model);
 
   // engine.rootContext()->setContextProperty("emulator", emulator);
 
