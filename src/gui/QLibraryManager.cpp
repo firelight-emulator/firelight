@@ -60,6 +60,7 @@ QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
   scanner_thread_pool_->setMaxThreadCount(thread_pool_size_);
   directory_watcher_.addPath("./roms");
 
+  // TODO: Probably don't need to scan everything every time
   connect(&directory_watcher_, &QFileSystemWatcher::directoryChanged,
           [&](const QString &) { startScan(); });
   connect(
