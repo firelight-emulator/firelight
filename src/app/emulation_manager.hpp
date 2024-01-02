@@ -5,6 +5,7 @@
 #ifndef FIRELIGHT_EMULATION_MANAGER_HPP
 #define FIRELIGHT_EMULATION_MANAGER_HPP
 
+#include "../gui/QLibraryManager.hpp"
 #include "library/library_manager.hpp"
 #include "libretro/core.hpp"
 #include <QOpenGLFramebufferObject>
@@ -13,7 +14,7 @@
 #include <QQuickItem>
 #include <QSGDynamicTexture>
 
-static FL::Library::LibraryManager *library_manager_ = nullptr;
+static QLibraryManager *library_manager_ = nullptr;
 
 class EmulationManager : public QQuickItem,
                          public CoreVideoDataReceiver,
@@ -24,7 +25,7 @@ class EmulationManager : public QQuickItem,
 
 public:
   static EmulationManager *getInstance();
-  static void setLibraryManager(FL::Library::LibraryManager *manager);
+  static void setLibraryManager(QLibraryManager *manager);
 
   explicit EmulationManager(QQuickItem *parent = nullptr);
   static void registerInstance(EmulationManager *manager);

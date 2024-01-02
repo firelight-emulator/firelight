@@ -104,6 +104,10 @@ Window {
                     id: libraryPage
                     Item {
                         id: wrapper
+                        BusyIndicator {
+                            anchors.centerIn: parent
+                            running: library_manager.scanning
+                        }
                         ListView {
                             id: libraryList
                             focus: true

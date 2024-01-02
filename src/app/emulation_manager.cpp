@@ -41,7 +41,7 @@ EmulationManager *EmulationManager::getInstance() {
   return instance;
 }
 
-void EmulationManager::setLibraryManager(FL::Library::LibraryManager *manager) {
+void EmulationManager::setLibraryManager(QLibraryManager *manager) {
   library_manager_ = manager;
 }
 
@@ -54,16 +54,16 @@ void EmulationManager::initialize(int entryId) {
   SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
   conManager.scanGamepads();
 
-  auto entry = library_manager_->getEntryById(entryId);
+  auto entry = library_manager_->get_by_id(entryId);
 
   if (!entry.has_value()) {
     printf("OH NOOOOO no entry with id %d\n", entryId);
   }
 
   std::string corePath;
-  if (entry->platform == "n64") {
+  if (entry->platform == 0) {
     corePath = "./system/_cores/mupen64plus_next_libretro.dll";
-  } else if (entry->platform == "snes") {
+  } else if (entry->platform == 1) {
     corePath = "./system/_cores/snes9x_libretro.dll";
   }
 

@@ -21,9 +21,12 @@ public:
   std::optional<LibEntry> get_entry_by_rom_id(int id) override;
   void add_or_update_entry(LibEntry entry) override;
   std::vector<LibEntry> get_all_entries() override;
+  void match_md5s(std::string source_directory,
+                  std::vector<std::string> md5s) override;
 
 private:
   void insert_entry_into_db(LibEntry entry) const;
+  LibEntry entry_from_stmt(sqlite3_stmt *stmt);
   std::filesystem::path database_file_path_;
   sqlite3 *database_ = nullptr;
 };

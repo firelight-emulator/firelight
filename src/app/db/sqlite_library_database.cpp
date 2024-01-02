@@ -4,6 +4,7 @@
 
 #include "sqlite_library_database.hpp"
 
+#include <spdlog/spdlog.h>
 #include <utility>
 
 const char *create_query =
@@ -11,11 +12,12 @@ const char *create_query =
     "id INTEGER PRIMARY KEY AUTOINCREMENT,"
     "display_name NVARCHAR(999) NOT NULL,"
     "verified INTEGER,"
-    "platform NVARCHAR(999) NOT NULL,"
     "md5 NVARCHAR(999) NOT NULL UNIQUE,"
+    "platform INTEGER NOT NULL,"
     "game INTEGER,"
     "rom INTEGER,"
     "romhack INTEGER,"
+    "source_directory NVARCHAR(999) NOT NULL,"
     "content_path NVARCHAR(999) NOT NULL);"
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_md5 ON library (md5);";
 
@@ -40,26 +42,30 @@ bool SqliteLibraryDatabase::initialize() {
     // std::cerr << "SQL error: " << sqlite3_errmsg(database) << std::endl;
     return false;
   }
-  // std::cout << "Table created successfully!" << std::endl;
 
-  // Query data from the table
-  const char *selectSQL = "SELECT * FROM library;";
-
-  //**********************************************
-  sqlite3_stmt *stmt;
-  if (sqlite3_prepare_v2(database_, selectSQL, -1, &stmt, nullptr) !=
-      SQLITE_OK) {
-    // std::cerr << "SQL error: " << sqlite3_errmsg(database) << std::endl;
-    sqlite3_finalize(stmt);
-    return false;
-  }
-
-  sqlite3_finalize(stmt);
   return true;
 }
 
 std::optional<LibEntry> SqliteLibraryDatabase::get_entry_by_id(int id) {
-  return {};
+  std::optional<LibEntry> result;
+
+  sqlite3_stmt *stmt = nullptr;
+  const auto query = "SELECT * FROM library WHERE id = ?;";
+  if (sqlite3_prepare_v2(database_, query, -1, &stmt, nullptr) != SQLITE_OK) {
+    printf("prepare didn't work: %s\n", sqlite3_errmsg(database_));
+    // Handle error (use sqlite3_errmsg(db) to get the error message)
+    sqlite3_finalize(
+        stmt); // Always finalize a prepared statement to avoid resource leaks
+    return result;
+  }
+
+  sqlite3_bind_int(stmt, 1, id);
+
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    return {entry_from_stmt(stmt)};
+  }
+
+  return result;
 }
 std::optional<LibEntry>
 SqliteLibraryDatabase::get_entry_by_md5(std::string md5) {
@@ -87,26 +93,36 @@ std::vector<LibEntry> SqliteLibraryDatabase::get_all_entries() {
   }
 
   while (sqlite3_step(stmt) != SQLITE_DONE) {
-    LibEntry entry;
-    entry.id = sqlite3_column_int(stmt, 0);
-    entry.display_name = std::string(reinterpret_cast<char *>(
-        const_cast<unsigned char *>(sqlite3_column_text(stmt, 1))));
-    entry.verified = sqlite3_column_int(stmt, 2);
-    entry.platform_id = sqlite3_column_int(stmt, 3);
-    entry.md5 = std::string(reinterpret_cast<char *>(
-        const_cast<unsigned char *>(sqlite3_column_text(stmt, 4))));
-    entry.game = sqlite3_column_int(stmt, 5);
-    entry.rom = sqlite3_column_int(stmt, 6);
-    entry.romhack = sqlite3_column_int(stmt, 7);
-    entry.content_path = std::string(reinterpret_cast<char *>(
-        const_cast<unsigned char *>(sqlite3_column_text(stmt, 8))));
-
-    printf("added entry: %s\n", entry.display_name.c_str());
-    results.emplace_back(entry);
+    results.emplace_back(entry_from_stmt(stmt));
     // TODO: Handle error
   }
 
   return results;
+}
+void SqliteLibraryDatabase::match_md5s(std::string source_directory,
+                                       std::vector<std::string> md5s) {
+  // TODO: Select all from DB with matching source
+  // LibraryDatabase::match_md5s(source_directory, md5s);
+}
+
+LibEntry SqliteLibraryDatabase::entry_from_stmt(sqlite3_stmt *stmt) {
+  LibEntry entry;
+  entry.id = sqlite3_column_int(stmt, 0);
+  entry.display_name = std::string(reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 1))));
+  entry.verified = sqlite3_column_int(stmt, 2);
+  entry.md5 = std::string(reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 3))));
+  entry.platform = sqlite3_column_int(stmt, 4);
+  entry.game = sqlite3_column_int(stmt, 5);
+  entry.rom = sqlite3_column_int(stmt, 6);
+  entry.romhack = sqlite3_column_int(stmt, 7);
+  entry.source_directory = std::string(reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 8))));
+  entry.content_path = std::string(reinterpret_cast<char *>(
+      const_cast<unsigned char *>(sqlite3_column_text(stmt, 9))));
+
+  return entry;
 }
 
 void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
@@ -115,13 +131,14 @@ void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
   const char *query = "INSERT OR IGNORE INTO library ("
                       "display_name, "
                       "verified, "
-                      "platform,"
                       "md5, "
+                      "platform,"
                       "game, "
                       "rom, "
                       "romhack, "
+                      "source_directory, "
                       "content_path) "
-                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
   if (sqlite3_prepare_v2(database_, query, -1, &stmt, nullptr) != SQLITE_OK) {
     printf("prepare didn't work: %s\n", sqlite3_errmsg(database_));
@@ -133,12 +150,13 @@ void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
 
   sqlite3_bind_text(stmt, 1, entry.display_name.c_str(), -1, SQLITE_STATIC);
   sqlite3_bind_int(stmt, 2, entry.verified ? 1 : 0);
-  sqlite3_bind_text(stmt, 3, entry.platform.c_str(), -1, SQLITE_STATIC);
-  sqlite3_bind_text(stmt, 4, entry.md5.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 3, entry.md5.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_int(stmt, 4, entry.platform);
   sqlite3_bind_int(stmt, 5, entry.game);
   sqlite3_bind_int(stmt, 6, entry.rom);
   sqlite3_bind_int(stmt, 7, entry.romhack);
-  sqlite3_bind_text(stmt, 8, entry.content_path.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 8, entry.source_directory.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 9, entry.content_path.c_str(), -1, SQLITE_STATIC);
 
   if (sqlite3_step(stmt) != SQLITE_DONE) {
     printf("insert didn't work: %s\n", sqlite3_errmsg(database_));

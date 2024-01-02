@@ -5,9 +5,6 @@
 #ifndef FIRELIGHT_QLIBENTRYMODELSHORT_HPP
 #define FIRELIGHT_QLIBENTRYMODELSHORT_HPP
 
-#include "src/app/db/daos/lib_entry.hpp"
-#include "src/app/library/entry.hpp"
-
 #include <qabstractitemmodel.h>
 
 class QLibraryViewModel final : public QAbstractListModel {

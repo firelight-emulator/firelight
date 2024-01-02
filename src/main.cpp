@@ -20,6 +20,7 @@
 #include <SDL.h>
 #include <SDL_error.h>
 #include <filesystem>
+#include <spdlog/spdlog.h>
 
 #include "app/controller/fps_multiplier.hpp"
 #include "app/db/sqlite_library_database.hpp"
@@ -55,18 +56,18 @@ int main(int argc, char *argv[]) {
   const std::filesystem::path installation_dir = ".";
 
   if (!exists(installation_dir)) {
-    // spdlog::error("Installation directory {} somehow does not exist. Please "
-    //               "reinstall the application\n",
-    //               installation_dir.string());
+    spdlog::error("Installation directory {} somehow does not exist. Please "
+                  "reinstall the application\n",
+                  installation_dir.string());
     return 1;
   }
 
   // Verify system directory for cores
   const auto system_dir = installation_dir / "system";
   if (!exists(system_dir)) {
-    // spdlog::error("System directory {} does not exist. Please reinstall the "
-    //               "application\n",
-    //               system_dir.string());
+    spdlog::error("System directory {} does not exist. Please reinstall the "
+                  "application\n",
+                  system_dir.string());
     return 1;
   }
 
@@ -122,18 +123,13 @@ int main(int argc, char *argv[]) {
   QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-  auto db = QSqlDatabase::addDatabase("QSQLITE");
-  db.setDatabaseName("./userdata/library.db");
-  db.open();
-
   QLibraryViewModel shortModel;
 
   QLibraryManager libraryManager(&library_database, roms_dir, &content_database,
                                  &shortModel);
-  QObject::connect(&libraryManager, &QLibraryManager::scanFinished, [&] {
-    // shortModel.setQuery(shortModel.query());
-  });
   libraryManager.startScan();
+
+  EmulationManager::setLibraryManager(&libraryManager);
 
   // auto *model = new QSqlQueryModel;
   // model->setQuery("SELECT id, display_name FROM library");
@@ -143,6 +139,7 @@ int main(int argc, char *argv[]) {
 
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("library_short_model", &shortModel);
+  engine.rootContext()->setContextProperty("library_manager", &libraryManager);
 
   // engine.rootContext()->setContextProperty("library_short_model", model);
 

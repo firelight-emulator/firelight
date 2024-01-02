@@ -17,6 +17,8 @@ public:
   virtual std::optional<LibEntry> get_entry_by_rom_id(int id) = 0;
   virtual void add_or_update_entry(LibEntry entry) = 0;
   virtual std::vector<LibEntry> get_all_entries() = 0;
+  virtual void match_md5s(std::string source_directory,
+                          std::vector<std::string> md5s) = 0;
 };
 
 #endif // LIBRARY_DATABASE_HPP

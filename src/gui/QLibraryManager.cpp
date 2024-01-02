@@ -58,7 +58,8 @@ QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
       model_(model) {
   scanner_thread_pool_ = std::make_unique<QThreadPool>();
   scanner_thread_pool_->setMaxThreadCount(thread_pool_size_);
-  directory_watcher_.addPath("./roms");
+  directory_watcher_.addPath(
+      QString::fromStdString(default_rom_path_.string()));
 
   // TODO: Probably don't need to scan everything every time
   connect(&directory_watcher_, &QFileSystemWatcher::directoryChanged,
@@ -68,12 +69,17 @@ QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
       [this, model] { model->set_items(get_model_items_()); },
       Qt::QueuedConnection);
 }
+std::optional<LibEntry> QLibraryManager::get_by_id(int id) const {
+  return library_database_->get_entry_by_id(id);
+}
 
 void QLibraryManager::startScan() {
   QFuture<ScanResults> future =
       QtConcurrent::run(scanner_thread_pool_.get(), [this] {
         // TODO: prob should lock the db from write access lol
         emit scanStarted();
+        emit scanningChanged();
+        scanning_ = true;
         ScanResults scan_results;
 
         for (const auto &entry :
@@ -106,6 +112,8 @@ void QLibraryManager::startScan() {
           file.close();
 
           auto md5 = calculateMD5(thing.data(), size);
+          scan_results.all_md5s.emplace_back(md5);
+
           if (library_database_->get_entry_by_md5(md5).has_value()) {
             // TODO: implement
             scan_results.existing_entries.emplace_back();
@@ -132,11 +140,12 @@ void QLibraryManager::startScan() {
           LibEntry e = {.id = -1,
                         .display_name = display_name,
                         .verified = verified,
-                        .platform_id = platform->id,
                         .md5 = md5,
+                        .platform = platform->id,
                         .game = game_id,
                         .rom = rom_id,
                         .romhack = -1,
+                        .source_directory = entry.path().parent_path().string(),
                         .content_path = absolute(entry.path()).string()};
 
           scan_results.new_entries.emplace_back(e);
@@ -150,7 +159,9 @@ void QLibraryManager::startScan() {
           library_database_->add_or_update_entry(existing_entry);
         }
 
+        emit scanningChanged();
         emit scanFinished();
+        scanning_ = false;
         return scan_results;
       });
 
@@ -161,6 +172,8 @@ void QLibraryManager::startScan() {
   // TODO: Get a list of all md5s from the db. For each one, check if it's in
   // TODO:  the list of md5s we found when we scanned. If not, remove the entry
 }
+bool QLibraryManager::scanning() { return scanning_; }
+
 std::vector<QLibraryViewModel::Item> QLibraryManager::get_model_items_() const {
   const auto all = library_database_->get_all_entries();
 
