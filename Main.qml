@@ -19,6 +19,11 @@ Window {
     Material.theme: Material.Dark
     Material.accent: Material.color("#ff704f")
 
+    FontLoader {
+        id: localFont
+        source: "./Lexend-Light.ttf"
+    }
+
     StackView {
         id: everything
         anchors.fill: parent
@@ -33,6 +38,45 @@ Window {
         pushEnter: Transition {
         }
         pushExit: Transition {
+        }
+    }
+
+    Rectangle {
+        id: loadingIndicator
+        parent: Overlay.overlay
+        visible: library_manager.scanning
+
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 30
+        anchors.leftMargin: 30
+
+        color: "yellow"
+        width: 200
+        height: 50
+        radius: 50
+
+        BusyIndicator {
+            id: spinner
+            width: 40
+            height: 40
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            running: library_manager.scanning
+            // running: true
+        }
+
+        Text {
+            text: "Gettin ur games"
+            font.family: localFont
+            font.pointSize: 12
+            color: "red"
+            anchors.left: spinner.right
+            anchors.leftMargin: 15
+            anchors.verticalCenter: parent.verticalCenter
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
         }
     }
 
@@ -104,10 +148,7 @@ Window {
                     id: libraryPage
                     Item {
                         id: wrapper
-                        BusyIndicator {
-                            anchors.centerIn: parent
-                            running: library_manager.scanning
-                        }
+
                         ListView {
                             id: libraryList
                             focus: true
@@ -153,7 +194,7 @@ Window {
                                     id: labels
                                     x: picture.width + 20
                                     anchors.verticalCenter: parent.verticalCenter
-                                    font.family: "Helvetica"
+                                    font.family: localFont
                                     font.pointSize: 14
                                     text: model.display_name
                                     color: "white"

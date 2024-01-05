@@ -8,6 +8,7 @@
 #include <openssl/evp.h>
 #include <qfuture.h>
 #include <qtconcurrentrun.h>
+#include <spdlog/spdlog.h>
 #include <utility>
 
 constexpr int MAX_FILESIZE_BYTES = 75000000;
@@ -70,7 +71,19 @@ QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
       Qt::QueuedConnection);
 }
 std::optional<LibEntry> QLibraryManager::get_by_id(int id) const {
-  return library_database_->get_entry_by_id(id);
+  auto result = library_database_->get_matching(LibraryDatabase::Filter({
+      .id = id,
+  }));
+
+  if (result.empty()) {
+    return {};
+  }
+
+  if (result.size() > 1) {
+    spdlog::debug("uhhh??");
+  }
+
+  return {result.at(0)};
 }
 
 void QLibraryManager::startScan() {
@@ -105,6 +118,19 @@ void QLibraryManager::startScan() {
             continue;
           }
 
+          auto filename = entry.path().relative_path().string();
+          auto libEntry =
+              library_database_->get_matching(LibraryDatabase::Filter({
+                  .content_path = filename,
+              }));
+          if (!libEntry.empty()) {
+            spdlog::debug("Found library entry with filename {}; skipping",
+                          filename);
+            continue; // TODO: For now let's assume no change.
+          }
+
+          // check against filename and size and source
+
           std::vector<char> thing(size);
           std::ifstream file(entry.path(), std::ios::binary);
 
@@ -114,7 +140,11 @@ void QLibraryManager::startScan() {
           auto md5 = calculateMD5(thing.data(), size);
           scan_results.all_md5s.emplace_back(md5);
 
-          if (library_database_->get_entry_by_md5(md5).has_value()) {
+          if (!library_database_
+                   ->get_matching(LibraryDatabase::Filter({
+                       .md5 = md5,
+                   }))
+                   .empty()) {
             // TODO: implement
             scan_results.existing_entries.emplace_back();
             continue;
@@ -146,7 +176,7 @@ void QLibraryManager::startScan() {
                         .rom = rom_id,
                         .romhack = -1,
                         .source_directory = entry.path().parent_path().string(),
-                        .content_path = absolute(entry.path()).string()};
+                        .content_path = entry.path().relative_path().string()};
 
           scan_results.new_entries.emplace_back(e);
         }

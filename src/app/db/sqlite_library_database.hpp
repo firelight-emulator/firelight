@@ -6,6 +6,7 @@
 #define SQLITE_LIBRARY_DATABASE_HPP
 #include "library_database.hpp"
 
+#include <QSqlDatabase>
 #include <filesystem>
 #include <optional>
 #include <sqlite3.h>
@@ -16,13 +17,11 @@ public:
   ~SqliteLibraryDatabase() override = default;
 
   bool initialize();
-  std::optional<LibEntry> get_entry_by_id(int id) override;
-  std::optional<LibEntry> get_entry_by_md5(std::string md5) override;
-  std::optional<LibEntry> get_entry_by_rom_id(int id) override;
   void add_or_update_entry(LibEntry entry) override;
   std::vector<LibEntry> get_all_entries() override;
   void match_md5s(std::string source_directory,
                   std::vector<std::string> md5s) override;
+  std::vector<LibEntry> get_matching(Filter filter) override;
 
 private:
   void insert_entry_into_db(LibEntry entry) const;

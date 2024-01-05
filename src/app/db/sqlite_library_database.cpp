@@ -4,6 +4,9 @@
 
 #include "sqlite_library_database.hpp"
 
+#include <QSqlError>
+#include <QSqlQuery>
+#include <QSqlTableModel>
 #include <spdlog/spdlog.h>
 #include <utility>
 
@@ -25,6 +28,21 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(std::filesystem::path db_file_path)
     : database_file_path_(std::move(db_file_path)) {}
 
 bool SqliteLibraryDatabase::initialize() {
+  QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "library");
+  db.setDatabaseName(QString::fromStdString(database_file_path_.string()));
+  if (!db.open()) {
+    printf("couldn't connect for some reason\n");
+  }
+
+  QSqlQuery create(create_query, db);
+  create.exec();
+
+  // qdatabase_.setDatabaseName(
+  //     QString::fromStdString(database_file_path_.string()));
+  // if (!qdatabase_.open()) {
+  //   printf("couldn't connect for some reason\n");
+  // }
+
   // read from library file, validate entries, add to list
   // addWatchedRomDirectory(defaultRomPath);
 
@@ -44,35 +62,6 @@ bool SqliteLibraryDatabase::initialize() {
   }
 
   return true;
-}
-
-std::optional<LibEntry> SqliteLibraryDatabase::get_entry_by_id(int id) {
-  std::optional<LibEntry> result;
-
-  sqlite3_stmt *stmt = nullptr;
-  const auto query = "SELECT * FROM library WHERE id = ?;";
-  if (sqlite3_prepare_v2(database_, query, -1, &stmt, nullptr) != SQLITE_OK) {
-    printf("prepare didn't work: %s\n", sqlite3_errmsg(database_));
-    // Handle error (use sqlite3_errmsg(db) to get the error message)
-    sqlite3_finalize(
-        stmt); // Always finalize a prepared statement to avoid resource leaks
-    return result;
-  }
-
-  sqlite3_bind_int(stmt, 1, id);
-
-  if (sqlite3_step(stmt) == SQLITE_ROW) {
-    return {entry_from_stmt(stmt)};
-  }
-
-  return result;
-}
-std::optional<LibEntry>
-SqliteLibraryDatabase::get_entry_by_md5(std::string md5) {
-  return {};
-}
-std::optional<LibEntry> SqliteLibraryDatabase::get_entry_by_rom_id(int id) {
-  return {};
 }
 
 void SqliteLibraryDatabase::add_or_update_entry(const LibEntry entry) {
@@ -103,6 +92,98 @@ void SqliteLibraryDatabase::match_md5s(std::string source_directory,
                                        std::vector<std::string> md5s) {
   // TODO: Select all from DB with matching source
   // LibraryDatabase::match_md5s(source_directory, md5s);
+}
+std::vector<LibEntry> SqliteLibraryDatabase::get_matching(Filter filter) {
+  std::vector<LibEntry> result;
+
+  QString queryString = "SELECT * FROM library";
+
+  auto db = QSqlDatabase::database("library");
+  if (!db.isValid()) {
+    // TODO: Give each thread its own connection name?
+    db = QSqlDatabase::addDatabase("QSQLITE", "library");
+    db.setDatabaseName(QString::fromStdString(database_file_path_.string()));
+    db.open();
+  }
+
+  QString whereClause;
+  bool needAND = false;
+
+  if (filter.id != -1) {
+    whereClause += " WHERE id = :id";
+    needAND = true;
+  }
+
+  if (!filter.display_name.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "display_name = :display_name";
+  }
+
+  if (!filter.md5.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "md5 = :md5";
+  }
+
+  if (!filter.content_path.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "content_path = :content_path";
+  }
+
+  queryString += whereClause;
+  QSqlQuery query(db);
+  query.prepare(queryString);
+
+  if (filter.id != -1) {
+    query.bindValue(":id", filter.id);
+  }
+  if (!filter.display_name.empty()) {
+    query.bindValue(":display_name",
+                    QString::fromStdString(filter.display_name));
+  }
+  if (!filter.md5.empty()) {
+    query.bindValue(":md5", QString::fromStdString(filter.md5));
+  }
+  if (!filter.content_path.empty()) {
+    query.bindValue(":content_path",
+                    QString::fromStdString(filter.content_path));
+  }
+
+  if (!query.exec()) {
+    spdlog::error("ruh roh raggy\n");
+  }
+
+  while (query.next()) {
+    LibEntry nextEntry;
+    nextEntry.id = query.value(0).toInt();
+    nextEntry.display_name = query.value(1).toString().toStdString();
+    nextEntry.verified = query.value(2).toBool();
+    nextEntry.md5 = query.value(3).toString().toStdString();
+    nextEntry.platform = query.value(4).toBool();
+    nextEntry.game = query.value(5).toBool();
+    nextEntry.rom = query.value(6).toBool();
+    nextEntry.romhack = query.value(7).toBool();
+    nextEntry.source_directory = query.value(8).toString().toStdString();
+    nextEntry.content_path = query.value(9).toString().toStdString();
+
+    result.emplace_back(nextEntry);
+  }
+
+  return result;
 }
 
 LibEntry SqliteLibraryDatabase::entry_from_stmt(sqlite3_stmt *stmt) {

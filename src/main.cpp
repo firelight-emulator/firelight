@@ -43,6 +43,8 @@ bool create_dirs(const std::filesystem::path &paths...) {
 }
 
 int main(int argc, char *argv[]) {
+  spdlog::set_level(spdlog::level::debug);
+
   SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
   SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 
@@ -79,12 +81,6 @@ int main(int argc, char *argv[]) {
   if (!create_dirs(appdata_dir, userdata_dir, roms_dir)) {
     return 1;
   }
-
-  // **** Load Content Database ****
-  SqliteContentDatabase content_database(system_dir / "content.db");
-
-  SqliteLibraryDatabase library_database(userdata_dir / "library.db");
-  library_database.initialize();
   //
   // QObject::connect(&libraryManager, &QLibraryManager::scanStarted,
   //                  [] { printf("scan started!\n"); });
@@ -123,6 +119,11 @@ int main(int argc, char *argv[]) {
   QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
+  // **** Load Content Database ****
+  SqliteContentDatabase content_database(system_dir / "content.db");
+
+  SqliteLibraryDatabase library_database(userdata_dir / "library.db");
+  library_database.initialize();
   QLibraryViewModel shortModel;
 
   QLibraryManager libraryManager(&library_database, roms_dir, &content_database,

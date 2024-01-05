@@ -8,7 +8,7 @@
 #include <string>
 
 struct LibEntry {
-  int id{};
+  int id = -1;
   std::string display_name;
   bool verified;
   std::string md5;
