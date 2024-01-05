@@ -17,11 +17,11 @@ public:
   ~SqliteLibraryDatabase() override = default;
 
   bool initialize();
-  void add_or_update_entry(LibEntry entry) override;
-  std::vector<LibEntry> get_all_entries() override;
+  void addOrRenameEntry(LibEntry entry) override;
+  std::vector<LibEntry> getAllEntries() override;
   void match_md5s(std::string source_directory,
                   std::vector<std::string> md5s) override;
-  std::vector<LibEntry> get_matching(Filter filter) override;
+  std::vector<LibEntry> getMatching(Filter filter) override;
 
 private:
   void insert_entry_into_db(LibEntry entry) const;

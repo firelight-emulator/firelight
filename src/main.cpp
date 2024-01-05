@@ -7,6 +7,7 @@
 #include "src/gui/QLibraryManager.hpp"
 #include "src/gui/QLibraryViewModel.hpp"
 #include <QFileSystemWatcher>
+#include <QFontDatabase>
 #include <QGuiApplication>
 #include <QOpenGLFunctions>
 #include <QQmlApplicationEngine>
@@ -116,6 +117,19 @@ int main(int argc, char *argv[]) {
 
   // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
+  // qint32 fontId =
+  //     QFontDatabase::addApplicationFont("/assets/Lexend-Regular.ttf");
+  // if (fontId == -1) {
+  //   return 1;
+  //
+  for (const auto &s : QFontDatabase::families()) {
+    printf("%s\n", s.toStdString().c_str());
+  }
+
+  //
+  // QString family = fontList.first();
+  // QGuiApplication::setFont(QFont(family));
+
   QQuickStyle::setStyle("Material");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 

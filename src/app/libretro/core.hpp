@@ -49,7 +49,7 @@ public:
 
   virtual ~Core();
 
-  void set_video_receiver(CoreVideoDataReceiver *receiver);
+  void set_video_receiver(IVideoDataReceiver *receiver);
 
   bool handleEnvironmentCall(unsigned cmd, void *data);
 
@@ -70,7 +70,7 @@ public:
   std::vector<char> getMemoryData(MemoryType memType);
 
   void writeMemoryData(MemoryType memType, char *data);
-  CoreVideoDataReceiver *videoReceiver;
+  IVideoDataReceiver *videoReceiver;
 
 private:
   FL::Input::ControllerManager *controllerManager;

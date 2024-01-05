@@ -17,7 +17,7 @@
 static QLibraryManager *library_manager_ = nullptr;
 
 class EmulationManager : public QQuickItem,
-                         public CoreVideoDataReceiver,
+                         public IVideoDataReceiver,
                          public QOpenGLFunctions {
   Q_OBJECT
 

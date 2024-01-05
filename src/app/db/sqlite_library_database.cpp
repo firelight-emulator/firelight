@@ -64,11 +64,11 @@ bool SqliteLibraryDatabase::initialize() {
   return true;
 }
 
-void SqliteLibraryDatabase::add_or_update_entry(const LibEntry entry) {
+void SqliteLibraryDatabase::addOrRenameEntry(const LibEntry entry) {
   insert_entry_into_db(entry);
 }
 
-std::vector<LibEntry> SqliteLibraryDatabase::get_all_entries() {
+std::vector<LibEntry> SqliteLibraryDatabase::getAllEntries() {
   std::vector<LibEntry> results;
   sqlite3_stmt *stmt = nullptr;
   const auto query = "SELECT * FROM library;";
@@ -93,7 +93,7 @@ void SqliteLibraryDatabase::match_md5s(std::string source_directory,
   // TODO: Select all from DB with matching source
   // LibraryDatabase::match_md5s(source_directory, md5s);
 }
-std::vector<LibEntry> SqliteLibraryDatabase::get_matching(Filter filter) {
+std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
   std::vector<LibEntry> result;
 
   QString queryString = "SELECT * FROM library";

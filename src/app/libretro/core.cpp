@@ -1051,7 +1051,7 @@ void Core::writeMemoryData(MemoryType memType, char *data) {
 FL::Input::ControllerManager *Core::getControllerManager() {
   return controllerManager;
 }
-void Core::set_video_receiver(CoreVideoDataReceiver *receiver) {
+void Core::set_video_receiver(IVideoDataReceiver *receiver) {
   videoReceiver = receiver;
 }
 

@@ -71,7 +71,7 @@ QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
       Qt::QueuedConnection);
 }
 std::optional<LibEntry> QLibraryManager::get_by_id(int id) const {
-  auto result = library_database_->get_matching(LibraryDatabase::Filter({
+  auto result = library_database_->getMatching(LibraryDatabase::Filter({
       .id = id,
   }));
 
@@ -120,7 +120,7 @@ void QLibraryManager::startScan() {
 
           auto filename = entry.path().relative_path().string();
           auto libEntry =
-              library_database_->get_matching(LibraryDatabase::Filter({
+              library_database_->getMatching(LibraryDatabase::Filter({
                   .content_path = filename,
               }));
           if (!libEntry.empty()) {
@@ -141,7 +141,7 @@ void QLibraryManager::startScan() {
           scan_results.all_md5s.emplace_back(md5);
 
           if (!library_database_
-                   ->get_matching(LibraryDatabase::Filter({
+                   ->getMatching(LibraryDatabase::Filter({
                        .md5 = md5,
                    }))
                    .empty()) {
@@ -182,11 +182,11 @@ void QLibraryManager::startScan() {
         }
 
         for (const auto &new_entry : scan_results.new_entries) {
-          library_database_->add_or_update_entry(new_entry);
+          library_database_->addOrRenameEntry(new_entry);
         }
 
         for (const auto &existing_entry : scan_results.existing_entries) {
-          library_database_->add_or_update_entry(existing_entry);
+          library_database_->addOrRenameEntry(existing_entry);
         }
 
         emit scanningChanged();
@@ -205,7 +205,7 @@ void QLibraryManager::startScan() {
 bool QLibraryManager::scanning() { return scanning_; }
 
 std::vector<QLibraryViewModel::Item> QLibraryManager::get_model_items_() const {
-  const auto all = library_database_->get_all_entries();
+  const auto all = library_database_->getAllEntries();
 
   std::vector<QLibraryViewModel::Item> items;
   for (const auto &e : all) {

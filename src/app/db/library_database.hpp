@@ -25,11 +25,11 @@ public:
   };
 
   virtual ~LibraryDatabase() = default;
-  virtual void add_or_update_entry(LibEntry entry) = 0;
-  virtual std::vector<LibEntry> get_all_entries() = 0;
-  virtual void match_md5s(std::string source_directory,
-                          std::vector<std::string> md5s) = 0;
-  virtual std::vector<LibEntry> get_matching(Filter filter) = 0;
+  virtual void addOrRenameEntry(LibEntry entry) = 0;
+  virtual std::vector<LibEntry> getAllEntries() = 0;
+  virtual void match_md5s(std::string t_sourceDirectory,
+                          std::vector<std::string> t_md5List) = 0;
+  virtual std::vector<LibEntry> getMatching(Filter filter) = 0;
 };
 
 #endif // LIBRARY_DATABASE_HPP

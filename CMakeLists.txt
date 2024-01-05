@@ -64,6 +64,10 @@ add_library(firelight_lib
         src/app/db/library_database.hpp
         src/app/db/sqlite_library_database.cpp
         src/app/db/sqlite_library_database.hpp
+        src/app/db/daos/rom.hpp
+        src/app/db/daos/game.hpp
+        src/app/db/daos/lib_entry.hpp
+        src/app/db/daos/platform.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
@@ -74,16 +78,13 @@ target_link_libraries(firelight_lib mingw32 SDL2main SDL2 opengl32 ssl crypto ${
 # main code
 qt_add_executable(firelight
         Main.qml
+        resources.qrc
         src/main.cpp
         src/logo.ico
         src/gui/QLibraryManager.cpp
         src/gui/QLibraryManager.hpp
         src/gui/QLibraryViewModel.cpp
         src/gui/QLibraryViewModel.hpp
-        src/app/db/daos/rom.hpp
-        src/app/db/daos/game.hpp
-        src/app/db/daos/lib_entry.hpp
-        src/app/db/daos/platform.hpp
 )
 
 qt_add_qml_module(firelight

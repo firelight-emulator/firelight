@@ -6,7 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
-Window {
+ApplicationWindow {
     id: window
     width: 1280
     height: 720
@@ -18,11 +18,6 @@ Window {
     // color: "transparent"
     Material.theme: Material.Dark
     Material.accent: Material.color("#ff704f")
-
-    FontLoader {
-        id: localFont
-        source: "./Lexend-Light.ttf"
-    }
 
     StackView {
         id: everything
@@ -44,7 +39,7 @@ Window {
     Rectangle {
         id: loadingIndicator
         parent: Overlay.overlay
-        visible: library_manager.scanning
+        visible: true
 
         anchors.left: parent.left
         anchors.bottom: parent.bottom
@@ -63,13 +58,12 @@ Window {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: 10
-            running: library_manager.scanning
-            // running: true
+            // running: library_manager.scanning
+            running: true
         }
 
         Text {
             text: "Gettin ur games"
-            font.family: localFont
             font.pointSize: 12
             color: "red"
             anchors.left: spinner.right
@@ -194,7 +188,6 @@ Window {
                                     id: labels
                                     x: picture.width + 20
                                     anchors.verticalCenter: parent.verticalCenter
-                                    font.family: localFont
                                     font.pointSize: 14
                                     text: model.display_name
                                     color: "white"
