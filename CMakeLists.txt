@@ -68,6 +68,10 @@ add_library(firelight_lib
         src/app/db/daos/game.hpp
         src/app/db/daos/lib_entry.hpp
         src/app/db/daos/platform.hpp
+        src/app/libretro/retropad.hpp
+        src/app/controller/controller.hpp
+        src/app/controller/controller.cpp
+        src/app/libretro/retropad_provider.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
@@ -78,6 +82,7 @@ target_link_libraries(firelight_lib mingw32 SDL2main SDL2 opengl32 ssl crypto ${
 # main code
 qt_add_executable(firelight
         Main.qml
+        Notification.qml
         resources.qrc
         src/main.cpp
         src/logo.ico
@@ -85,12 +90,18 @@ qt_add_executable(firelight
         src/gui/QLibraryManager.hpp
         src/gui/QLibraryViewModel.cpp
         src/gui/QLibraryViewModel.hpp
+        src/gui/controller_manager.cpp
+        src/gui/controller_manager.hpp
+        src/gui/sdl_event_loop.cpp
+        src/gui/sdl_event_loop.hpp
 )
 
 qt_add_qml_module(firelight
         URI QtFirelight
         VERSION 1.0
-        QML_FILES Main.qml
+        QML_FILES
+        Main.qml
+        Notification.qml
 )
 
 target_include_directories(firelight PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}

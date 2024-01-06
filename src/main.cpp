@@ -25,6 +25,8 @@
 
 #include "app/controller/fps_multiplier.hpp"
 #include "app/db/sqlite_library_database.hpp"
+#include "gui/controller_manager.hpp"
+#include "gui/sdl_event_loop.hpp"
 
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
@@ -44,16 +46,7 @@ bool create_dirs(const std::filesystem::path &paths...) {
 }
 
 int main(int argc, char *argv[]) {
-  spdlog::set_level(spdlog::level::debug);
-
-  SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
-  SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
-
-  if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
-               SDL_INIT_TIMER) < 0) {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-    return 1;
-  }
+  spdlog::set_level(spdlog::level::info);
 
   // **** Make sure installation directories are all good ****
   const std::filesystem::path installation_dir = ".";
@@ -122,9 +115,13 @@ int main(int argc, char *argv[]) {
   // if (fontId == -1) {
   //   return 1;
   //
-  for (const auto &s : QFontDatabase::families()) {
-    printf("%s\n", s.toStdString().c_str());
-  }
+
+  firelight::input::ControllerManager controllerManager;
+
+  firelight::SdlEventLoop sdlEventLoop(&controllerManager);
+  sdlEventLoop.start();
+
+  // controllerManager.moveToThread(sdlEventThread);
 
   //
   // QString family = fontList.first();
