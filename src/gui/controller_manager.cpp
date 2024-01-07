@@ -70,6 +70,8 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
 
   for (int i = 0; i < m_controllers.max_size(); ++i) {
     if (m_controllers[i] == nullptr) {
+      SDL_GameControllerSetPlayerIndex(controller, i);
+
       m_controllers[i] =
           std::make_unique<Controller>(controller, t_deviceIndex);
       break;
