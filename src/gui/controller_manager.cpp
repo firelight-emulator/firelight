@@ -11,16 +11,7 @@ namespace firelight::input {
 void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
   switch (event.type) {
   case SDL_CONTROLLERDEVICEADDED: {
-    spdlog::info("Controller connected");
-    auto joystickDeviceIndex = event.cdevice.which;
-    spdlog::info("Controller device added with joystick id {}",
-                 joystickDeviceIndex);
-
-    // Index refers to N'th controller, so only shows order
-    // InstanceID refers to a specific controller for the duration of its
-    // session
-    openControllerWithDeviceIndex(joystickDeviceIndex);
-
+    openControllerWithDeviceIndex(event.cdevice.which);
     emit controllerConnected();
     break;
   }
@@ -61,6 +52,15 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
   // Index refers to N'th controller, so only shows order
   // InstanceID refers to a specific controller for the duration of its
   // session
+
+  for (int i = 0; i < m_controllers.max_size(); ++i) {
+    if (m_controllers[i] != nullptr &&
+        m_controllers[i]->getDeviceIndex() == t_deviceIndex) {
+      spdlog::info("found a dupe lol");
+      return;
+    }
+  }
+
   auto controller = SDL_GameControllerOpen(t_deviceIndex);
   if (controller == nullptr) {
     return;

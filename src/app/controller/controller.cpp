@@ -82,5 +82,6 @@ int16_t Controller::getRightStickYPosition() {
   return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
 }
 int32_t Controller::getInstanceId() const { return m_SDLJoystickInstanceId; }
+int32_t Controller::getDeviceIndex() const { return m_SDLJoystickDeviceIndex; }
 
 } // namespace firelight::input

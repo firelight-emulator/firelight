@@ -21,6 +21,7 @@ public:
   int16_t getRightStickYPosition() override;
 
   [[nodiscard]] int32_t getInstanceId() const;
+  [[nodiscard]] int32_t getDeviceIndex() const;
 
 private:
   int m_playerNumber = -1;
