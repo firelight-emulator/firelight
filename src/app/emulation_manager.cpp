@@ -14,6 +14,8 @@
 
 #include "audio_manager.hpp"
 
+#include <spdlog/spdlog.h>
+
 EmulationManager *instance;
 
 QSGNode *
@@ -77,6 +79,16 @@ void EmulationManager::initialize(int entryId) {
   core->set_audio_receiver(new AudioManager());
   core->init();
 
+  const auto saveData = getSaveManager()->readSaveDataForEntry(*entry);
+  if (saveData.has_value()) {
+    if (saveData->getSaveRamData().empty()) {
+      spdlog::warn("Save data was present but there are no bytes");
+    } else {
+      core->writeMemoryData(
+          libretro::SAVE_RAM,
+          reinterpret_cast<char *>(saveData->getSaveRamData().data()));
+    }
+  }
 
   libretro::Game game(entry->content_path);
   core->loadGame(&game);

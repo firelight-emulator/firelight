@@ -81,6 +81,10 @@ add_library(firelight_lib
         src/app/libretro/audio_data_receiver.hpp
         src/app/audio_manager.cpp
         src/app/audio_manager.hpp
+        src/gui/save_manager.cpp
+        src/gui/save_manager.hpp
+        src/app/saves/save_data.hpp
+        src/app/saves/save_data.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}

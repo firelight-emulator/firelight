@@ -70,7 +70,7 @@ QLibraryManager::QLibraryManager(LibraryDatabase *lib_database,
       [this, model] { model->set_items(get_model_items_()); },
       Qt::QueuedConnection);
 }
-std::optional<LibEntry> QLibraryManager::get_by_id(int id) const {
+std::optional<LibEntry> QLibraryManager::get_by_id(const int id) const {
   auto result = library_database_->getMatching(LibraryDatabase::Filter({
       .id = id,
   }));
