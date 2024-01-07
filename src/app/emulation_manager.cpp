@@ -12,6 +12,8 @@
 #include <SDL_gamecontroller.h>
 #include <qopenglcontext.h>
 
+#include "audio_manager.hpp"
+
 EmulationManager *instance;
 
 QSGNode *
@@ -72,7 +74,9 @@ void EmulationManager::initialize(int entryId) {
   core->setSaveDirectory(".");
 
   core->set_video_receiver(this);
+  core->set_audio_receiver(new AudioManager());
   core->init();
+
 
   libretro::Game game(entry->content_path);
   core->loadGame(&game);

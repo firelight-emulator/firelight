@@ -78,6 +78,9 @@ add_library(firelight_lib
         src/gui/sdl_event_loop.hpp
         src/app/manager_accessor.hpp
         src/app/manager_accessor.cpp
+        src/app/libretro/audio_data_receiver.hpp
+        src/app/audio_manager.cpp
+        src/app/audio_manager.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}

@@ -18,6 +18,8 @@
 #include <vector>
 #include <windows.h>
 
+#include "audio_data_receiver.hpp"
+
 using std::array;
 using std::string;
 using std::vector;
@@ -52,6 +54,8 @@ public:
   void setRetropadProvider(IRetropadProvider *provider);
   IRetropadProvider *getRetropadProvider();
 
+  void set_audio_receiver(CoreAudioDataReceiver *receiver);
+
   bool handleEnvironmentCall(unsigned cmd, void *data);
 
   void init();
@@ -76,6 +80,7 @@ public:
 private:
   IRetropadProvider *m_retropadProvider;
   SDL_AudioDeviceID audioDevice;
+  CoreAudioDataReceiver *audioReceiver;
 
   //  Video *video;
 
