@@ -3,6 +3,7 @@
 //
 
 #include "emulation_manager.hpp"
+#include "../gui/controller_manager.hpp"
 #include <QGuiApplication>
 #include <QOpenGLPaintDevice>
 #include <QPainter>
@@ -43,7 +44,7 @@ EmulationManager *EmulationManager::getInstance() {
   return instance;
 }
 
-void EmulationManager::setLibraryManager(FL::Library::LibraryManager *manager) {
+void EmulationManager::setLibraryManager(QLibraryManager *manager) {
   library_manager_ = manager;
 }
 
@@ -53,23 +54,21 @@ void EmulationManager::registerInstance(EmulationManager *manager) {}
 
 void EmulationManager::initialize(int entryId) {
   printf("initializing\n");
-  SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
-  conManager.scanGamepads();
-
-  auto entry = library_manager_->getEntryById(entryId);
+  auto entry = library_manager_->get_by_id(entryId);
 
   if (!entry.has_value()) {
     printf("OH NOOOOO no entry with id %d\n", entryId);
   }
 
   std::string corePath;
-  if (entry->platform == "n64") {
+  if (entry->platform == 0) {
     corePath = "./system/_cores/mupen64plus_next_libretro.dll";
-  } else if (entry->platform == "snes") {
+  } else if (entry->platform == 1) {
     corePath = "./system/_cores/snes9x_libretro.dll";
   }
 
-  core = std::make_unique<libretro::Core>(corePath, &conManager);
+  core = std::make_unique<libretro::Core>(corePath);
+  core->setRetropadProvider(getControllerManager());
 
   core->setSystemDirectory(".");
   core->setSaveDirectory(".");
@@ -179,7 +178,8 @@ void EmulationManager::receive(const void *data, unsigned int width,
     QPainter painter(&paint_device);
 
     gameFbo->bind();
-    QImage image((uchar *)data, width, height, pitch, QImage::Format_RGB16);
+    const QImage image((uchar *)data, width, height, pitch,
+                       QImage::Format_RGB16);
 
     painter.drawImage(QRect(0, 0, gameFbo->width(), gameFbo->height()), image,
                       image.rect());

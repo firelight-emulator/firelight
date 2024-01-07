@@ -3,7 +3,7 @@
 //
 
 #include "library_manager.hpp"
-#include "../platforms/platform.hpp"
+#include <QtConcurrent>
 #include <fstream>
 #include <iostream>
 #include <openssl/evp.h>
@@ -70,6 +70,9 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
   // read from library file, validate entries, add to list
   addWatchedRomDirectory(defaultRomPath);
 
+  thread_pool_ = new QThreadPool();
+  thread_pool_->setMaxThreadCount(4);
+
   // Open a new SQLite database (or create if not exists)
   int rc = sqlite3_open(libraryDbFile.string().c_str(), &database);
 
@@ -118,77 +121,79 @@ LibraryManager::LibraryManager(std::filesystem::path libraryDb,
 }
 
 void LibraryManager::scanNow() {
-  std::vector<FL::Library::Entry> results;
+  QFuture<QString> future = QtConcurrent::run(thread_pool_, [this] {
+    std::vector<Entry> results;
 
-  for (const auto &path : watchedRomDirs) {
-    for (const auto &entry :
-         std::filesystem::recursive_directory_iterator(path)) {
-      if (entry.is_directory()) {
-        continue;
-      }
-
-      auto ext = entry.path().extension();
-      std::string platform_display_name =
-          get_display_name_by_extension(ext.string());
-      if (platform_display_name.empty()) {
-        continue;
-      }
-
-      auto size = entry.file_size();
-      if (size > MAX_FILESIZE_BYTES) {
-        continue;
-      }
-
-      std::vector<char> thing(size);
-      std::ifstream file(entry.path(), std::ios::binary);
-
-      file.read(thing.data(), size);
-      file.close();
-
-      auto md5 = calculateMD5(thing.data(), size);
-
-      auto result = contentDatabase->getRomByMd5(md5);
-      if (result.has_value()) {
-        auto game = contentDatabase->getGameByRomId(result->id);
-
-        auto displayName = result->filename;
-        if (game.has_value()) {
-          displayName = game->name;
+    for (const auto &path : watchedRomDirs) {
+      for (const auto &entry :
+           std::filesystem::recursive_directory_iterator(path)) {
+        if (entry.is_directory()) {
+          continue;
         }
-        // TODO: Will need to do a game lookup here as well.
-        Entry e = {.id = -1,
-                   .display_name = displayName,
-                   .verified = true,
-                   .platform = result->platform,
-                   .md5 = md5,
-                   .game = result->game,
-                   .rom = result->id,
-                   .romhack = -1,
-                   .content_path = entry.path().string()};
-        insertEntry(e);
-      } else {
-        Entry e = {.id = -1,
-                   .display_name = entry.path().stem().string(),
-                   .verified = false,
-                   .platform =
-                       platform_display_name, // TODO: Based on file extension
-                   .md5 = md5,
-                   .game = -1,
-                   .rom = -1,
-                   .romhack = -1,
-                   .content_path = entry.path().string()};
-        insertEntry(e);
-        // TODO: Start trying other stuff
-      }
 
-      // Check for MD5 match. If a match, it's verified!
-      // Otherwise, it's unverified.
-      // If unverified, match the filename against the known filenames or
-      // game name.
-      // If THAT fails, add it to a list that the user needs to manually assign.
+        auto ext = entry.path().extension();
+
+        auto size = entry.file_size();
+        if (size > MAX_FILESIZE_BYTES) {
+          continue;
+        }
+
+        std::vector<char> thing(size);
+        std::ifstream file(entry.path(), std::ios::binary);
+
+        file.read(thing.data(), size);
+        file.close();
+
+        auto md5 = calculateMD5(thing.data(), size);
+
+        auto result = contentDatabase->getRomByMd5(md5);
+        if (result.has_value()) {
+          auto game = contentDatabase->getGameByRomId(result->id);
+
+          auto displayName = result->filename;
+          if (game.has_value()) {
+            displayName = game->name;
+          }
+          // TODO: Will need to do a game lookup here as well.
+          Entry e = {.id = -1,
+                     .display_name = displayName,
+                     .verified = true,
+                     .platform = result->platform,
+                     .md5 = md5,
+                     .game = result->game,
+                     .rom = result->id,
+                     .romhack = -1,
+                     .content_path = entry.path().string()};
+          insertEntry(e);
+        } else {
+          Entry e = {.id = -1,
+                     .display_name = entry.path().stem().string(),
+                     .verified = false,
+                     .platform = "n64", // TODO: Based on file extension
+                     .md5 = md5,
+                     .game = -1,
+                     .rom = -1,
+                     .romhack = -1,
+                     .content_path = entry.path().string()};
+          insertEntry(e);
+          // TODO: Start trying other stuff
+        }
+
+        // Check for MD5 match. If a match, it's verified!
+        // Otherwise, it's unverified.
+        // If unverified, match the filename against the known filenames or
+        // game name.
+        // If THAT fails, add it to a list that the user needs to manually
+        // assign.
+      }
     }
-  }
+
+    printf("done!\n");
+
+    return QString();
+  });
 }
+
 std::optional<Entry> LibraryManager::getEntryById(int id) {
   sqlite3_stmt *stmt = nullptr;
   auto query = "SELECT * FROM library WHERE id = ?";

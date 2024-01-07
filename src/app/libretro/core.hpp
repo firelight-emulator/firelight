@@ -10,6 +10,7 @@
 #include "coreoption.hpp"
 #include "game.hpp"
 #include "libretro.h"
+#include "retropad_provider.hpp"
 #include "video_data_receiver.hpp"
 #include <iostream>
 #include <mutex>
@@ -43,15 +44,15 @@ typedef void (*RetroRunFunc)();
 class Core {
 
 public:
-  FL::Input::ControllerManager *getControllerManager();
-
   std::basic_string<char> dumpJson();
 
-  Core(const std::string &libPath, FL::Input::ControllerManager *conManager);
+  Core(const std::string &libPath);
 
   virtual ~Core();
 
-  void set_video_receiver(CoreVideoDataReceiver *receiver);
+  void set_video_receiver(IVideoDataReceiver *receiver);
+  void setRetropadProvider(IRetropadProvider *provider);
+  IRetropadProvider *getRetropadProvider();
 
   void set_audio_receiver(CoreAudioDataReceiver *receiver);
 
@@ -74,11 +75,12 @@ public:
   std::vector<char> getMemoryData(MemoryType memType);
 
   void writeMemoryData(MemoryType memType, char *data);
-  CoreVideoDataReceiver *videoReceiver;
-  CoreAudioDataReceiver *audioReceiver;
+  IVideoDataReceiver *videoReceiver;
 
 private:
-  FL::Input::ControllerManager *controllerManager;
+  IRetropadProvider *m_retropadProvider;
+  SDL_AudioDeviceID audioDevice;
+  CoreAudioDataReceiver *audioReceiver;
 
   //  Video *video;
 

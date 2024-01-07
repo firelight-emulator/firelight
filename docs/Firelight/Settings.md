@@ -1,1 +1,0 @@
-- Show localized game names if available

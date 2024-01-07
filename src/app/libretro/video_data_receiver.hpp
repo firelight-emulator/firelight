@@ -6,14 +6,13 @@
 #define FIRELIGHT_VIDEO_DATA_RECEIVER_HPP
 
 #include <cstddef>
-#include <functional>
 typedef void (*proc_address_t)();
 typedef void (*context_reset_func)();
 
-class CoreVideoDataReceiver {
+class IVideoDataReceiver {
 
 public:
-  virtual ~CoreVideoDataReceiver() = default;
+  virtual ~IVideoDataReceiver() = default;
   virtual void receive(const void *data, unsigned width, unsigned height,
                        size_t pitch) = 0;
   virtual proc_address_t get_proc_address(const char *sym) = 0;

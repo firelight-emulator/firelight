@@ -6,7 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
-Window {
+ApplicationWindow {
     id: window
     width: 1280
     height: 720
@@ -36,10 +36,85 @@ Window {
         }
     }
 
+    // Notification {
+    // }
+
+    // Rectangle {
+    //     id: loadingIndicator
+    //     parent: Overlay.overlay
+    //     visible: true
+    //
+    //     anchors.left: parent.left
+    //     anchors.bottom: parent.bottom
+    //     anchors.bottomMargin: 30
+    //     anchors.leftMargin: 30
+    //
+    //     color: "yellow"
+    //     width: 200
+    //     height: 50
+    //     radius: 50
+    //
+    //     BusyIndicator {
+    //         id: spinner
+    //         width: 40
+    //         height: 40
+    //         anchors.verticalCenter: parent.verticalCenter
+    //         anchors.left: parent.left
+    //         anchors.leftMargin: 10
+    //         // running: library_manager.scanning
+    //         running: true
+    //     }
+    //
+    //     Text {
+    //         text: "Gettin ur games"
+    //         font.pointSize: 12
+    //         color: "red"
+    //         anchors.left: spinner.right
+    //         anchors.leftMargin: 15
+    //         anchors.verticalCenter: parent.verticalCenter
+    //         horizontalAlignment: Text.AlignHCenter
+    //         verticalAlignment: Text.AlignVCenter
+    //     }
+    // }
+
     Component {
         id: mainMenu
 
         Item {
+            // Text {
+            //     x: 20
+            //     y: 20
+            //     text: qsTr("Library")
+            //     font.pointSize: 24
+            //     color: "white"
+            //     horizontalAlignment: Text.AlignLeft
+            //     verticalAlignment: Text.AlignTop
+            // }
+
+            // Rectangle {
+            //     id: bar
+            //
+            //     height: 70
+            //     anchors.top: parent.top
+            //     anchors.left: parent.left
+            //     anchors.right: parent.right
+            //
+            //     color: "transparent"
+            //
+            //     Button {
+            //         id: cool
+            //         width: 200
+            //         height: 50
+            //         // cursorShape: Qt.PointingHandCursor
+            //
+            //         anchors.centerIn: parent
+            //
+            //         text: "hey there"
+            //     }
+
+
+            // }
+
             TabBar {
                 id: bar
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -104,17 +179,39 @@ Window {
                     id: libraryPage
                     Item {
                         id: wrapper
-                        ListView {
-                            id: libraryList
-                            focus: true
-                            clip: true
 
-                            anchors.fill: parent
-                            model: libraryEntryModelShort
-                            boundsBehavior: Flickable.StopAtBounds
-                            delegate: gameListItem
-                            // preferredHighlightBegin: height / 3
-                            // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
+                        Item {
+                            id: filters
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: 200
+                        }
+
+                        ScrollView {
+                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                            ScrollBar.vertical.interactive: true
+
+                            anchors.left: filters.right
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.right: parent.right
+
+                            ListView {
+                                id: libraryList
+                                focus: true
+                                clip: true
+
+                                currentIndex: 0
+                                anchors.fill: parent
+
+                                model: library_short_model
+                                boundsBehavior: Flickable.StopAtBounds
+                                delegate: gameListItem
+                                // preferredHighlightBegin: height / 3
+                                // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
+                            }
                         }
 
                         Component {
@@ -124,7 +221,7 @@ Window {
                                 id: wrapper
 
                                 width: ListView.view.width
-                                height: 50
+                                height: 60
 
                                 color: mouseArea.containsMouse ? "#353438" : "transparent"
 
@@ -135,23 +232,44 @@ Window {
 
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        everything.push(emulatorPage, {"currentLibraryEntryId": model.entryId})
+                                        everything.push(emulatorPage, {"currentLibraryEntryId": model.id})
                                     }
                                 }
 
-                                Item {
-                                    id: picture
-                                    width: 100
-                                    height: parent.height
-                                }
+                                // Item {
+                                //     id: picture
+                                //     width: 100
+                                //     height: parent.height
+                                // }
+
                                 Text {
-                                    id: labels
-                                    x: picture.width + 20
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    font.family: "Helvetica"
-                                    font.pointSize: 14
-                                    text: model.displayName
+                                    id: label
+                                    anchors.top: parent.top
+                                    anchors.topMargin: 5
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 10
+
+                                    height: parent.height / 2
+                                    font.pointSize: 16
+                                    text: model.display_name
                                     color: "white"
+                                    horizontalAlignment: Text.AlignLeft
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+
+                                Text {
+                                    id: bottomLabel
+                                    anchors.top: label.bottom
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 10
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 10
+
+                                    font.pointSize: 12
+                                    text: "Nintendo 64"
+                                    color: "#989898"
+                                    horizontalAlignment: Text.AlignLeft
+                                    verticalAlignment: Text.AlignVCenter
                                 }
                             }
                         }

@@ -9,6 +9,7 @@
 #include "entry.hpp"
 #include <sqlite3.h>
 #include <unordered_map>
+#include <QThreadPool>
 #include <vector>
 
 namespace FL::Library {
@@ -51,6 +52,8 @@ private:
   ContentDatabase *contentDatabase = nullptr;
   void insertEntry(Entry &entry);
   sqlite3 *getOrCreateDbConnection() const;
+
+  QThreadPool *thread_pool_ = nullptr;
 
   Entry entryFromDbRow(sqlite3_stmt *stmt);
   std::filesystem::path libraryDbFile;

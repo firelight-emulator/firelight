@@ -4,6 +4,7 @@
 
 #include "core.hpp"
 #include "SDL2/SDL.h"
+#include "retropad.hpp"
 #include <cstdarg>
 
 #include "../audio_manager.hpp"
@@ -34,38 +35,35 @@ static int16_t inputStateCallback(unsigned port, unsigned device,
     return 0;
   }
 
-  auto manager = currentCore->getControllerManager();
-  auto controller = manager->getGamepad(port);
-  if (controller == nullptr) {
+  const auto manager = currentCore->getRetropadProvider();
+  const auto controllerOpt = manager->getRetropadForPlayer(port);
+  if (!controllerOpt.has_value()) {
     return 0;
   }
+
+  IRetroPad *controller = controllerOpt.value();
 
   if (device == RETRO_DEVICE_ANALOG) {
     if (index == RETRO_DEVICE_INDEX_ANALOG_LEFT) {
       if (id == RETRO_DEVICE_ID_ANALOG_X) {
         return controller->getLeftStickXPosition();
-      } else if (id == RETRO_DEVICE_ID_ANALOG_Y) {
+      }
+      if (id == RETRO_DEVICE_ID_ANALOG_Y) {
         return controller->getLeftStickYPosition();
       }
     } else if (index == RETRO_DEVICE_INDEX_ANALOG_RIGHT) {
       if (id == RETRO_DEVICE_ID_ANALOG_X) {
         return controller->getRightStickXPosition();
-      } else if (id == RETRO_DEVICE_ID_ANALOG_Y) {
+      }
+      if (id == RETRO_DEVICE_ID_ANALOG_Y) {
         return controller->getRightStickYPosition();
       }
     }
   } else if (device == RETRO_DEVICE_JOYPAD) {
-    return controller->isLibretroButtonPressed(id);
+    return controller->isButtonPressed(static_cast<IRetroPad::Button>(id));
   }
 
   return 0;
-
-  //  if (currentCore->getInput() == nullptr) {
-  //    // TODO: Some other error
-  //    return 0;
-  //  }
-
-  //  return currentCore->getInput()->getInputState(port, device, index, id);
 }
 
 static void videoCallback(const void *data, unsigned width, unsigned height,
@@ -248,7 +246,8 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK: {
     this->environmentCalls.push_back(
         "RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK");
-    //    this->video->setFrameTimeCallback((retro_frame_time_callback *)data);
+    //    this->video->setFrameTimeCallback((retro_frame_time_callback
+    //    *)data);
     return true;
   }
   case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK: {
@@ -366,8 +365,9 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       printf("Stopping counter: %s\n", counter->ident);
     };
 
-    /* Asks frontend to log and/or display the state of performance counters.
-     * Performance counters can always be poked into manually as well.
+    /* Asks frontend to log and/or display the state of performance
+     * counters. Performance counters can always be poked into manually as
+     * well.
      */
     ptr->perf_log = []() { printf("Logging performance counters\n"); };
 
@@ -500,8 +500,8 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   case RETRO_ENVIRONMENT_GET_VFS_INTERFACE: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_VFS_INTERFACE");
-    // TODO: Do something here to ensure this was called before we give the core
-    // any paths
+    // TODO: Do something here to ensure this was called before we give the
+    // core any paths
     auto ptr = (retro_vfs_interface_info *)data;
     printf("Required VFS interface version: %d\n",
            ptr->required_interface_version);
@@ -680,8 +680,8 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
         "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK");
     auto ptr = (retro_core_options_update_display_callback *)data;
     ptr->callback = []() {
-      return true; // TODO I think I actually need to store the callback instead
-                   // lol
+      return true; // TODO I think I actually need to store the callback
+                   // instead lol
     };
     return true;
   }
@@ -711,7 +711,8 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_GET_THROTTLE_STATE: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_THROTTLE_STATE");
     auto ptr = (retro_throttle_state *)data;
-    /* During normal operation. Rate will be equal to the core's internal FPS.
+    /* During normal operation. Rate will be equal to the core's internal
+     * FPS.
      */
 #define RETRO_THROTTLE_NONE 0
 
@@ -722,16 +723,19 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
      * Rate will be 0 if not specifically limited to a maximum speed. */
 #define RETRO_THROTTLE_FAST_FORWARD 2
 
-    /* During slow motion. Rate will be less than the core's internal FPS. */
+    /* During slow motion. Rate will be less than the core's internal FPS.
+     */
 #define RETRO_THROTTLE_SLOW_MOTION 3
 
     /* While rewinding recorded save states. Rate can vary depending on the
-     * rewind speed or be 0 if the frontend is not aiming for a specific rate.
+     * rewind speed or be 0 if the frontend is not aiming for a specific
+     * rate.
      */
 #define RETRO_THROTTLE_REWINDING 4
 
-    /* While vsync is active in the video driver and the target refresh rate is
-     * lower than the core's internal FPS. Rate is the target refresh rate. */
+    /* While vsync is active in the video driver and the target refresh
+     * rate is lower than the core's internal FPS. Rate is the target
+     * refresh rate. */
 #define RETRO_THROTTLE_VSYNC 5
 
     /* When the frontend does not throttle in any way. Rate will be 0.
@@ -840,8 +844,8 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 ////        if (this->hardwareRenderCallback) {
 ////            json hwRender;
 ////            hwRender["context_type"] =
-/// this->hardwareRenderCallback->context_type; /            hwRender["depth"] =
-/// this->hardwareRenderCallback->depth; /            hwRender["stencil"] =
+/// this->hardwareRenderCallback->context_type; /            hwRender["depth"]
+/// = this->hardwareRenderCallback->depth; /            hwRender["stencil"] =
 /// this->hardwareRenderCallback->stencil; / hwRender["bottom_left_origin"] =
 /// this->hardwareRenderCallback->bottom_left_origin; /
 /// hwRender["version_major"] = this->hardwareRenderCallback->version_major; /
@@ -883,8 +887,7 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 //        return j.dump();
 //    }
 
-Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
-    : controllerManager(conManager) {
+Core::Core(const std::string &libPath) {
   this->dll = SDL_LoadObject(libPath.c_str());
   if (this->dll == nullptr) {
     // Check error
@@ -938,8 +941,8 @@ Core::Core(const std::string &libPath, FL::Input::ControllerManager *conManager)
 
   currentCore = this; // todo prob different namespace
 
-  // The next several methods load the callback symbols from the library and set
-  // them to our methods defined above. Since we never change those
+  // The next several methods load the callback symbols from the library and
+  // set them to our methods defined above. Since we never change those
   // callbacks, we don't need to store the symbols.
   loadRetroFunc<RetroSetEnvironment>(dll, "retro_set_environment")(envCallback);
   loadRetroFunc<RetroSetVideoRefresh>(dll,
@@ -1036,14 +1039,18 @@ void Core::writeMemoryData(MemoryType memType, char *data) {
 
   memcpy((byte *)ptr, data, size);
 }
-FL::Input::ControllerManager *Core::getControllerManager() {
-  return controllerManager;
-}
-void Core::set_video_receiver(CoreVideoDataReceiver *receiver) {
+
+void Core::set_video_receiver(IVideoDataReceiver *receiver) {
   videoReceiver = receiver;
 }
 
-  void Core::set_audio_receiver(CoreAudioDataReceiver *receiver) {
+void Core::setRetropadProvider(IRetropadProvider *provider) {
+  m_retropadProvider = provider;
+}
+
+IRetropadProvider *Core::getRetropadProvider() { return m_retropadProvider; }
+
+void Core::set_audio_receiver(CoreAudioDataReceiver *receiver) {
   audioReceiver = receiver;
 }
 

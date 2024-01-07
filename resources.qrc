@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/Lexend-Regular.ttf</file>
+    </qresource>
+</RCC>

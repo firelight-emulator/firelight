@@ -5,26 +5,29 @@
 #ifndef FIRELIGHT_EMULATION_MANAGER_HPP
 #define FIRELIGHT_EMULATION_MANAGER_HPP
 
+#include "../gui/QLibraryManager.hpp"
 #include "library/library_manager.hpp"
 #include "libretro/core.hpp"
+#include "manager_accessor.hpp"
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
 #include <QQuickItem>
 #include <QSGDynamicTexture>
 
-static FL::Library::LibraryManager *library_manager_ = nullptr;
+static QLibraryManager *library_manager_ = nullptr;
 
 class EmulationManager : public QQuickItem,
-                         public CoreVideoDataReceiver,
-                         public QOpenGLFunctions {
+                         public IVideoDataReceiver,
+                         public QOpenGLFunctions,
+                         public Firelight::ManagerAccessor {
   Q_OBJECT
 
   typedef uintptr_t (*get_framebuffer_func)();
 
 public:
   static EmulationManager *getInstance();
-  static void setLibraryManager(FL::Library::LibraryManager *manager);
+  static void setLibraryManager(QLibraryManager *manager);
 
   explicit EmulationManager(QQuickItem *parent = nullptr);
   static void registerInstance(EmulationManager *manager);
@@ -52,11 +55,10 @@ private:
   bool usingHwRendering = false;
   std::unique_ptr<QOpenGLFramebufferObject> gameFbo = nullptr;
   context_reset_func reset_context = nullptr;
-  boolean running = false;
+  bool running = false;
   Uint64 thisTick;
   Uint64 lastTick;
   std::unique_ptr<libretro::Core> core;
-  FL::Input::ControllerManager conManager;
   double totalFrameWorkDurationMillis = 0;
 
   long long int frameCount = 0;
