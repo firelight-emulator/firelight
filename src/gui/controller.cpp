@@ -4,7 +4,7 @@
 
 #include "controller.hpp"
 
-namespace firelight::input {
+namespace Firelight::Input {
 Controller::~Controller() = default;
 Controller::Controller(SDL_GameController *t_controller,
                        const int32_t t_joystickIndex)
@@ -84,4 +84,4 @@ int16_t Controller::getRightStickYPosition() {
 int32_t Controller::getInstanceId() const { return m_SDLJoystickInstanceId; }
 int32_t Controller::getDeviceIndex() const { return m_SDLJoystickDeviceIndex; }
 
-} // namespace firelight::input
+} // namespace Firelight::Input

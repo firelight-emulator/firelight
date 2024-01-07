@@ -3,6 +3,7 @@
 //
 
 #include "emulation_manager.hpp"
+#include "../gui/controller_manager.hpp"
 #include <QGuiApplication>
 #include <QOpenGLPaintDevice>
 #include <QPainter>
@@ -51,9 +52,6 @@ void EmulationManager::registerInstance(EmulationManager *manager) {}
 
 void EmulationManager::initialize(int entryId) {
   printf("initializing\n");
-  SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
-  conManager.scanGamepads();
-
   auto entry = library_manager_->get_by_id(entryId);
 
   if (!entry.has_value()) {
@@ -67,7 +65,8 @@ void EmulationManager::initialize(int entryId) {
     corePath = "./system/_cores/snes9x_libretro.dll";
   }
 
-  core = std::make_unique<libretro::Core>(corePath, &conManager);
+  core = std::make_unique<libretro::Core>(corePath);
+  core->setRetropadProvider(getControllerManager());
 
   core->setSystemDirectory(".");
   core->setSaveDirectory(".");

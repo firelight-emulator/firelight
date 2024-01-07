@@ -69,9 +69,15 @@ add_library(firelight_lib
         src/app/db/daos/lib_entry.hpp
         src/app/db/daos/platform.hpp
         src/app/libretro/retropad.hpp
-        src/app/controller/controller.hpp
-        src/app/controller/controller.cpp
+        src/gui/controller.hpp
+        src/gui/controller.cpp
         src/app/libretro/retropad_provider.hpp
+        src/gui/controller_manager.cpp
+        src/gui/controller_manager.hpp
+        src/gui/sdl_event_loop.cpp
+        src/gui/sdl_event_loop.hpp
+        src/app/manager_accessor.hpp
+        src/app/manager_accessor.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
@@ -90,10 +96,6 @@ qt_add_executable(firelight
         src/gui/QLibraryManager.hpp
         src/gui/QLibraryViewModel.cpp
         src/gui/QLibraryViewModel.hpp
-        src/gui/controller_manager.cpp
-        src/gui/controller_manager.hpp
-        src/gui/sdl_event_loop.cpp
-        src/gui/sdl_event_loop.hpp
 )
 
 qt_add_qml_module(firelight

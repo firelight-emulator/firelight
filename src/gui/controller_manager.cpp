@@ -6,7 +6,7 @@
 
 #include <spdlog/spdlog.h>
 
-namespace firelight::input {
+namespace Firelight::Input {
 
 void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
   switch (event.type) {
@@ -87,4 +87,4 @@ ControllerManager::getControllerForPlayer(const int t_player) const {
 
   return {};
 }
-} // namespace firelight::input
+} // namespace Firelight::Input

@@ -8,9 +8,9 @@
 #include <SDL_hints.h>
 #include <spdlog/spdlog.h>
 
-namespace firelight {
+namespace Firelight {
 
-SdlEventLoop::SdlEventLoop(input::ControllerManager *manager)
+SdlEventLoop::SdlEventLoop(Input::ControllerManager *manager)
     : m_controllerManager(manager) {
   SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
   SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
@@ -41,4 +41,4 @@ void SdlEventLoop::run() {
   }
 }
 
-} // namespace firelight
+} // namespace Firelight

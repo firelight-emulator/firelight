@@ -4,11 +4,11 @@
 
 #ifndef CONTROLLER_HPP
 #define CONTROLLER_HPP
-#include "../libretro/retropad.hpp"
+#include "../app/libretro/retropad.hpp"
 
 #include <SDL_gamecontroller.h>
 
-namespace firelight::input {
+namespace Firelight::Input {
 
 class Controller final : public libretro::IRetroPad {
 public:
@@ -30,6 +30,6 @@ private:
   int32_t m_SDLJoystickInstanceId = -1;
 };
 
-} // namespace firelight::input
+} // namespace Firelight::Input
 
 #endif // CONTROLLER_HPP

@@ -5,12 +5,12 @@
 #ifndef CONTROLLER_MANAGER_HPP
 #define CONTROLLER_MANAGER_HPP
 #include "../app/libretro/retropad_provider.hpp"
-#include "src/app/controller/controller.hpp"
+#include "controller.hpp"
 
 #include <QObject>
 #include <SDL_events.h>
 
-namespace firelight::input {
+namespace Firelight::Input {
 
 class ControllerManager final : public QObject,
                                 public libretro::IRetropadProvider {
@@ -21,7 +21,8 @@ public:
   void handleSDLControllerEvent(const SDL_Event &event);
   void refreshControllerList();
 
-  std::optional<Controller *> getControllerForPlayer(int t_player) const;
+  [[nodiscard]] std::optional<Controller *>
+  getControllerForPlayer(int t_player) const;
   std::optional<libretro::IRetroPad *>
   getRetropadForPlayer(int t_player) override;
 
@@ -35,6 +36,6 @@ private:
   void openControllerWithDeviceIndex(int32_t t_deviceIndex);
 };
 
-} // namespace firelight::input
+} // namespace Firelight::Input
 
 #endif // CONTROLLER_MANAGER_HPP

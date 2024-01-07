@@ -14,8 +14,8 @@ public:
   enum Button {
     SouthFace = RETRO_DEVICE_ID_JOYPAD_B,
     EastFace = RETRO_DEVICE_ID_JOYPAD_A,
-    WestFace = RETRO_DEVICE_ID_JOYPAD_X,
-    NorthFace = RETRO_DEVICE_ID_JOYPAD_Y,
+    WestFace = RETRO_DEVICE_ID_JOYPAD_Y,
+    NorthFace = RETRO_DEVICE_ID_JOYPAD_X,
     DpadLeft = RETRO_DEVICE_ID_JOYPAD_LEFT,
     DpadRight = RETRO_DEVICE_ID_JOYPAD_RIGHT,
     DpadUp = RETRO_DEVICE_ID_JOYPAD_UP,

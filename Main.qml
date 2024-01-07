@@ -188,22 +188,30 @@ ApplicationWindow {
                             width: 200
                         }
 
-                        ListView {
-                            id: libraryList
-                            focus: true
-                            clip: true
+                        ScrollView {
+                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                            ScrollBar.vertical.interactive: true
 
-                            currentIndex: 0
                             anchors.left: filters.right
                             anchors.top: parent.top
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
 
-                            model: library_short_model
-                            boundsBehavior: Flickable.StopAtBounds
-                            delegate: gameListItem
-                            // preferredHighlightBegin: height / 3
-                            // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
+                            ListView {
+                                id: libraryList
+                                focus: true
+                                clip: true
+
+                                currentIndex: 0
+                                anchors.fill: parent
+
+                                model: library_short_model
+                                boundsBehavior: Flickable.StopAtBounds
+                                delegate: gameListItem
+                                // preferredHighlightBegin: height / 3
+                                // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
+                            }
                         }
 
                         Component {

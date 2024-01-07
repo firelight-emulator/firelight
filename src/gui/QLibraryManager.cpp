@@ -202,7 +202,7 @@ void QLibraryManager::startScan() {
   // TODO: Get a list of all md5s from the db. For each one, check if it's in
   // TODO:  the list of md5s we found when we scanned. If not, remove the entry
 }
-bool QLibraryManager::scanning() { return scanning_; }
+bool QLibraryManager::scanning() const { return scanning_; }
 
 std::vector<QLibraryViewModel::Item> QLibraryManager::get_model_items_() const {
   const auto all = library_database_->getAllEntries();

@@ -8,11 +8,11 @@
 
 #include <qthread.h>
 
-namespace firelight {
+namespace Firelight {
 
 class SdlEventLoop final : public QThread {
 public:
-  explicit SdlEventLoop(input::ControllerManager *manager);
+  explicit SdlEventLoop(Input::ControllerManager *manager);
   void stop();
 
 protected:
@@ -20,9 +20,9 @@ protected:
 
 private:
   bool m_running = true;
-  input::ControllerManager *m_controllerManager;
+  Input::ControllerManager *m_controllerManager;
 };
 
-} // namespace firelight
+} // namespace Firelight
 
 #endif // SDL_EVENT_LOOP_HPP

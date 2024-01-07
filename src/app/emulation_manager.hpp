@@ -8,6 +8,7 @@
 #include "../gui/QLibraryManager.hpp"
 #include "library/library_manager.hpp"
 #include "libretro/core.hpp"
+#include "manager_accessor.hpp"
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
@@ -18,7 +19,8 @@ static QLibraryManager *library_manager_ = nullptr;
 
 class EmulationManager : public QQuickItem,
                          public IVideoDataReceiver,
-                         public QOpenGLFunctions {
+                         public QOpenGLFunctions,
+                         public Firelight::ManagerAccessor {
   Q_OBJECT
 
   typedef uintptr_t (*get_framebuffer_func)();
@@ -57,7 +59,6 @@ private:
   Uint64 thisTick;
   Uint64 lastTick;
   std::unique_ptr<libretro::Core> core;
-  FL::Input::ControllerManager conManager;
   double totalFrameWorkDurationMillis = 0;
 
   long long int frameCount = 0;

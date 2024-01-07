@@ -29,11 +29,11 @@ public:
                            ContentDatabase *content_database,
                            QLibraryViewModel *model);
 
-  std::optional<LibEntry> get_by_id(int id) const;
+  [[nodiscard]] std::optional<LibEntry> get_by_id(int id) const;
 
 public slots:
   void startScan();
-  bool scanning();
+  bool scanning() const;
 
 signals:
   void entryAdded(int entryId);
@@ -54,7 +54,7 @@ private:
   QFileSystemWatcher directory_watcher_;
   QLibraryViewModel *model_;
 
-  std::vector<QLibraryViewModel::Item> get_model_items_() const;
+  [[nodiscard]] std::vector<QLibraryViewModel::Item> get_model_items_() const;
 
   std::unique_ptr<QThreadPool> scanner_thread_pool_ = nullptr;
 };
