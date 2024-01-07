@@ -12,41 +12,71 @@ void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
   switch (event.type) {
   case SDL_CONTROLLERDEVICEADDED: {
     spdlog::info("Controller connected");
-    auto joystickIndex = event.cdevice.which;
-    spdlog::debug("Controller device added with joystick id {}", joystickIndex);
+    auto joystickDeviceIndex = event.cdevice.which;
+    spdlog::info("Controller device added with joystick id {}",
+                 joystickDeviceIndex);
 
     // Index refers to N'th controller, so only shows order
     // InstanceID refers to a specific controller for the duration of its
     // session
-    auto controller = SDL_GameControllerOpen(joystickIndex);
-    if (controller == nullptr) {
-      return;
-    }
-
-    for (int i = 0; i < m_controllers.max_size(); ++i) {
-      if (m_controllers[i] == nullptr) {
-        m_controllers[i] =
-            std::make_unique<Controller>(controller, joystickIndex);
-        break;
-      }
-    }
+    openControllerWithDeviceIndex(joystickDeviceIndex);
 
     emit controllerConnected();
     break;
   }
-  case SDL_CONTROLLERDEVICEREMOVED:
+  case SDL_CONTROLLERDEVICEREMOVED: {
     spdlog::info("Controller disconnected");
+    const auto joystickInstanceId = event.cdevice.which;
+
+    for (int i = 0; i < m_controllers.max_size(); ++i) {
+      if (m_controllers[i] != nullptr &&
+          m_controllers[i]->getInstanceId() == joystickInstanceId) {
+        m_controllers[i].reset();
+        spdlog::debug("We found it and we're unplugging it");
+      }
+    }
+
     emit controllerDisconnected();
     break;
+  }
   default:
     // spdlog::debug("Got an unhandled SDL event {}", ev.type);
     break;
+  }
+}
+void ControllerManager::refreshControllerList() {
+  const auto numJoys = SDL_NumJoysticks();
+  spdlog::info("number of joysticks: {}", numJoys);
+  for (int i = 0; i < numJoys; ++i) {
+    openControllerWithDeviceIndex(i);
   }
 }
 
 std::optional<libretro::IRetroPad *>
 ControllerManager::getRetropadForPlayer(const int t_player) {
   return getControllerForPlayer(t_player);
+}
+
+void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
+  // Index refers to N'th controller, so only shows order
+  // InstanceID refers to a specific controller for the duration of its
+  // session
+  auto controller = SDL_GameControllerOpen(t_deviceIndex);
+  if (controller == nullptr) {
+    return;
+  }
+
+  // TODO: Check if any controllers have the same joystick id.
+
+  for (int i = 0; i < m_controllers.max_size(); ++i) {
+    if (m_controllers[i] == nullptr) {
+      m_controllers[i] =
+          std::make_unique<Controller>(controller, t_deviceIndex);
+      break;
+    }
+  }
+
+  spdlog::info("Controller device added with device index {}", t_deviceIndex);
 }
 
 std::optional<Controller *>

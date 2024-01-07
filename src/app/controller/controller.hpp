@@ -20,9 +20,13 @@ public:
   int16_t getRightStickXPosition() override;
   int16_t getRightStickYPosition() override;
 
+  [[nodiscard]] int32_t getInstanceId() const;
+
 private:
+  int m_playerNumber = -1;
   SDL_GameController *m_SDLController = nullptr;
-  int32_t m_SDLJoystickIndex = -1;
+  int32_t m_SDLJoystickDeviceIndex = -1;
+  int32_t m_SDLJoystickInstanceId = -1;
 };
 
 } // namespace firelight::input

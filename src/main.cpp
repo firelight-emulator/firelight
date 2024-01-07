@@ -117,8 +117,10 @@ int main(int argc, char *argv[]) {
   //
 
   firelight::input::ControllerManager controllerManager;
-
   firelight::SdlEventLoop sdlEventLoop(&controllerManager);
+
+  controllerManager.refreshControllerList();
+
   sdlEventLoop.start();
 
   // controllerManager.moveToThread(sdlEventThread);

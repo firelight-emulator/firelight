@@ -19,6 +19,8 @@ class ControllerManager final : public QObject,
 public:
   ControllerManager() = default;
   void handleSDLControllerEvent(const SDL_Event &event);
+  void refreshControllerList();
+
   std::optional<Controller *> getControllerForPlayer(int t_player) const;
   std::optional<libretro::IRetroPad *>
   getRetropadForPlayer(int t_player) override;
@@ -29,6 +31,8 @@ signals:
 
 private:
   std::array<std::unique_ptr<Controller>, 32> m_controllers{};
+
+  void openControllerWithDeviceIndex(int32_t t_deviceIndex);
 };
 
 } // namespace firelight::input

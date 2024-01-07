@@ -5,10 +5,14 @@
 #include "controller.hpp"
 
 namespace firelight::input {
-Controller::~Controller(){};
+Controller::~Controller() = default;
 Controller::Controller(SDL_GameController *t_controller,
                        const int32_t t_joystickIndex)
-    : m_SDLController(t_controller), m_SDLJoystickIndex(t_joystickIndex) {}
+    : m_SDLController(t_controller), m_SDLJoystickDeviceIndex(t_joystickIndex) {
+
+  const auto joystick = SDL_GameControllerGetJoystick(t_controller);
+  m_SDLJoystickInstanceId = SDL_JoystickInstanceID(joystick);
+}
 
 bool Controller::isButtonPressed(const Button t_button) {
   switch (t_button) {
@@ -77,5 +81,6 @@ int16_t Controller::getRightStickXPosition() {
 int16_t Controller::getRightStickYPosition() {
   return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
 }
+int32_t Controller::getInstanceId() const { return m_SDLJoystickInstanceId; }
 
 } // namespace firelight::input
