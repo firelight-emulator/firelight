@@ -15,7 +15,7 @@ public:
   SaveData(const SaveData &other);
   [[nodiscard]] std::vector<char> getSaveRamData() const;
   void setImage(QImage image);
-  QImage &getImage();
+  [[nodiscard]] QImage getImage() const;
 
 private:
   std::string m_contentMd5{};

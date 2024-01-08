@@ -19,5 +19,5 @@ SaveData::SaveData(const SaveData &other) {
 
 std::vector<char> SaveData::getSaveRamData() const { return m_saveRamData; }
 void SaveData::setImage(QImage image) { m_screenshot = std::move(image); }
-QImage &SaveData::getImage() { return m_screenshot; }
+QImage SaveData::getImage() const { return m_screenshot; }
 } // namespace Firelight::Saves
