@@ -45,6 +45,7 @@ public slots:
   void pause();
   void resume();
 
+
 protected:
   QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 

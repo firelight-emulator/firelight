@@ -82,19 +82,24 @@ void EmulationManager::initialize(int entryId) {
   core->set_audio_receiver(new AudioManager());
   core->init();
 
+  libretro::Game game(entry->content_path);
+  core->loadGame(&game);
+
+  // const auto saveData = getSaveManager()->getStuff(*entry);
+  // if (!saveData.empty()) {
+  //   core->writeMemoryData(libretro::SAVE_RAM, saveData);
+  // }
+
   const auto saveData = getSaveManager()->readSaveDataForEntry(*entry);
   if (saveData.has_value()) {
     if (saveData->getSaveRamData().empty()) {
       spdlog::warn("Save data was present but there are no bytes");
     } else {
-      core->writeMemoryData(
-          libretro::SAVE_RAM,
-          reinterpret_cast<char *>(saveData->getSaveRamData().data()));
+      auto d = saveData->getSaveRamData();
+      core->writeMemoryData(libretro::SAVE_RAM, d);
     }
   }
 
-  libretro::Game game(entry->content_path);
-  core->loadGame(&game);
   window()->setMinimumSize(QSize(core_av_info_->geometry.max_width,
                                  core_av_info_->geometry.max_height));
 
@@ -150,7 +155,7 @@ void EmulationManager::runOneFrame() {
 
     m_millisSinceLastSave += static_cast<int>(deltaTime);
     if (m_millisSinceLastSave < 0) {
-      m_millisSinceLastSave = SAVE_FREQUENCY_MILLIS;
+      m_millisSinceLastSave = 0;
     }
 
     if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {

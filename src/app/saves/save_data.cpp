@@ -6,10 +6,11 @@
 
 namespace Firelight::Saves {
 
-SaveData::SaveData(const std::vector<std::byte> &saveRamData)
-    : m_saveRamData(saveRamData) {}
+SaveData::SaveData(const std::vector<char> &saveRamData) {
+  m_saveRamData = std::vector(saveRamData.begin(), saveRamData.end());
 
-std::vector<std::byte> SaveData::getSaveRamData() const {
-  return m_saveRamData;
+  printf("hey");
 }
+
+std::vector<char> SaveData::getSaveRamData() const { return m_saveRamData; }
 } // namespace Firelight::Saves

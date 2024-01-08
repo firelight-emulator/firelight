@@ -3,11 +3,8 @@
 //
 
 #include "save_manager.hpp"
-
 #include <fstream>
 #include <spdlog/spdlog.h>
-
-#include <utility>
 
 namespace Firelight::Saves {
 
@@ -22,9 +19,8 @@ void SaveManager::writeSaveDataForEntry(LibEntry &entry,
   const auto saveFile = directory / "savedata.sram";
 
   std::ofstream saveFileStream(saveFile, std::ios::binary);
-  saveFileStream.write(
-      reinterpret_cast<const char *>(saveData.getSaveRamData().data()),
-      saveData.getSaveRamData().size());
+  saveFileStream.write(saveData.getSaveRamData().data(),
+                       saveData.getSaveRamData().size());
   saveFileStream.close();
 
   spdlog::info("writing save data for entry {}", entry.content_path);
@@ -38,16 +34,40 @@ SaveManager::readSaveDataForEntry(LibEntry &entry) const {
   }
 
   const auto saveFile = directory / "savedata.sram";
-  const auto fileSize = file_size(saveFile);
+
   std::ifstream saveFileStream(saveFile, std::ios::binary);
 
-  std::vector<std::byte> fileContents(fileSize);
-  saveFileStream.read(reinterpret_cast<char *>(fileContents.data()), fileSize);
+  auto size = file_size(saveFile);
+
+  std::vector<char> data(size);
+
+  saveFileStream.read(data.data(), size);
   saveFileStream.close();
+
+  auto fileContents = std::vector(data.data(), data.data() + size);
 
   SaveData saveData(fileContents);
 
   return {saveData};
+}
+std::vector<char> SaveManager::getStuff(LibEntry &entry) const {
+  const auto directory = m_saveDir / entry.md5;
+  if (!exists(directory)) {
+    return {};
+  }
+
+  const auto saveFile = directory / "savedata.sram";
+
+  std::ifstream saveFileStream(saveFile, std::ios::binary);
+
+  auto size = file_size(saveFile);
+
+  std::vector<char> data(size);
+
+  saveFileStream.read(data.data(), size);
+  saveFileStream.close();
+
+  return data;
 }
 
 } // namespace Firelight::Saves

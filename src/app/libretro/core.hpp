@@ -72,9 +72,9 @@ public:
 
   void setSaveDirectory(const string &);
 
-  [[nodiscard]] std::vector<std::byte> getMemoryData(MemoryType memType) const;
+  [[nodiscard]] std::vector<char> getMemoryData(MemoryType memType) const;
 
-  void writeMemoryData(MemoryType memType, char *data);
+  void writeMemoryData(MemoryType memType, const std::vector<char> &data);
   IVideoDataReceiver *videoReceiver;
 
 private:

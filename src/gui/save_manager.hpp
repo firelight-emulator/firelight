@@ -22,6 +22,8 @@ public:
   void writeSaveDataForEntry(LibEntry &entry, const SaveData &saveData) const;
   std::optional<SaveData> readSaveDataForEntry(LibEntry &entry) const;
 
+  std::vector<char> getStuff(LibEntry &entry) const;
+
 private:
   std::filesystem::path m_saveDir;
 };
