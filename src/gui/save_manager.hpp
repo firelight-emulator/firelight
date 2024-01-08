@@ -7,6 +7,7 @@
 #include "../app/db/daos/lib_entry.hpp"
 #include "../app/saves/save_data.hpp"
 #include <QObject>
+#include <QThreadPool>
 #include <filesystem>
 
 namespace Firelight::Saves {
@@ -19,13 +20,12 @@ signals:
 
 public:
   explicit SaveManager(std::filesystem::path saveDir);
-  void writeSaveDataForEntry(LibEntry &entry, const SaveData &saveData) const;
+  void writeSaveDataForEntry(LibEntry &entry, SaveData &saveData) const;
   std::optional<SaveData> readSaveDataForEntry(LibEntry &entry) const;
-
-  std::vector<char> getStuff(LibEntry &entry) const;
 
 private:
   std::filesystem::path m_saveDir;
+  std::unique_ptr<QThreadPool> m_ioThreadPool = nullptr;
 };
 
 } // namespace Firelight::Saves

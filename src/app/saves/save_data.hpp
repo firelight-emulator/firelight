@@ -12,7 +12,10 @@ namespace Firelight::Saves {
 class SaveData {
 public:
   explicit SaveData(const std::vector<char> &saveRamData);
+  SaveData(const SaveData &other);
   [[nodiscard]] std::vector<char> getSaveRamData() const;
+  void setImage(QImage image);
+  QImage &getImage();
 
 private:
   std::string m_contentMd5{};

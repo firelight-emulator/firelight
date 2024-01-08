@@ -17,7 +17,7 @@
 
 EmulationManager *instance;
 
-constexpr int SAVE_FREQUENCY_MILLIS = 5000;
+constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 QSGNode *
 EmulationManager::updatePaintNode(QSGNode *qsg_node,
@@ -85,18 +85,12 @@ void EmulationManager::initialize(int entryId) {
   libretro::Game game(entry->content_path);
   core->loadGame(&game);
 
-  // const auto saveData = getSaveManager()->getStuff(*entry);
-  // if (!saveData.empty()) {
-  //   core->writeMemoryData(libretro::SAVE_RAM, saveData);
-  // }
-
   const auto saveData = getSaveManager()->readSaveDataForEntry(*entry);
   if (saveData.has_value()) {
     if (saveData->getSaveRamData().empty()) {
       spdlog::warn("Save data was present but there are no bytes");
     } else {
-      auto d = saveData->getSaveRamData();
-      core->writeMemoryData(libretro::SAVE_RAM, d);
+      core->writeMemoryData(libretro::SAVE_RAM, saveData->getSaveRamData());
     }
   }
 
@@ -160,8 +154,9 @@ void EmulationManager::runOneFrame() {
 
     if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
       m_millisSinceLastSave = 0;
-      const Firelight::Saves::SaveData saveData(
+      Firelight::Saves::SaveData saveData(
           core->getMemoryData(libretro::SAVE_RAM));
+      saveData.setImage(gameFbo->toImage());
 
       getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
     }
