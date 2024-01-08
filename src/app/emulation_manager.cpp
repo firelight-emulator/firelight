@@ -9,7 +9,6 @@
 #include <QPainter>
 #include <QSGImageNode>
 #include <QSGTexture>
-#include <SDL_gamecontroller.h>
 #include <qopenglcontext.h>
 
 #include "audio_manager.hpp"
@@ -17,6 +16,8 @@
 #include <spdlog/spdlog.h>
 
 EmulationManager *instance;
+
+constexpr int SAVE_FREQUENCY_MILLIS = 5000;
 
 QSGNode *
 EmulationManager::updatePaintNode(QSGNode *qsg_node,
@@ -61,6 +62,8 @@ void EmulationManager::initialize(int entryId) {
   if (!entry.has_value()) {
     printf("OH NOOOOO no entry with id %d\n", entryId);
   }
+
+  m_currentEntry = entry.value();
 
   std::string corePath;
   if (entry->platform == 0) {
@@ -144,6 +147,16 @@ void EmulationManager::runOneFrame() {
 
     auto deltaTime =
         (thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency();
+
+    m_millisSinceLastSave += deltaTime;
+
+    if (m_millisSinceLastSave > SAVE_FREQUENCY_MILLIS) {
+      m_millisSinceLastSave = 0;
+      Firelight::Saves::SaveData saveData(
+          core->getMemoryData(libretro::SAVE_RAM));
+
+      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
+    }
 
     window()->beginExternalCommands();
 

@@ -11,7 +11,7 @@ namespace Firelight::Saves {
 
 class SaveData {
 public:
-  SaveData() = default;
+  explicit SaveData(const std::vector<std::byte> &saveRamData);
   [[nodiscard]] std::vector<std::byte> getSaveRamData() const;
 
 private:

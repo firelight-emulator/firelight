@@ -49,6 +49,8 @@ protected:
   QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 private:
+  LibEntry m_currentEntry;
+  int m_millisSinceLastSave = 0;
   retro_system_av_info *core_av_info_;
   bool glInitialized = false;
   QSGTexture *gameTexture = nullptr;

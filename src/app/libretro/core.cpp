@@ -1010,7 +1010,7 @@ void Core::setSystemDirectory(string frontendSystemDirectory) {
   this->systemDirectory = frontendSystemDirectory;
 }
 
-void Core::setSaveDirectory(string frontendSaveDirectory) {
+void Core::setSaveDirectory(const string &frontendSaveDirectory) {
   this->saveDirectory = frontendSaveDirectory;
 }
 
@@ -1018,13 +1018,13 @@ void Core::recordPotentialAPIViolation(const std::string &msg) {
   printf("Potential API violation: %s\n", msg.c_str());
 }
 
-std::vector<char> Core::getMemoryData(MemoryType memType) {
-  auto size = symRetroGetMemoryDataSize((unsigned)memType);
-  auto ptr = symRetroGetMemoryData((unsigned)memType);
+std::vector<std::byte> Core::getMemoryData(const MemoryType memType) const {
+  const auto size = symRetroGetMemoryDataSize(static_cast<unsigned>(memType));
+  const auto ptr = symRetroGetMemoryData(static_cast<unsigned>(memType));
 
-  auto end = ((char *)ptr) + size;
+  const auto end = static_cast<std::byte *>(ptr) + size;
 
-  vector<char> memData((char *)ptr, end);
+  vector memData(static_cast<std::byte *>(ptr), end);
   return memData;
 }
 
