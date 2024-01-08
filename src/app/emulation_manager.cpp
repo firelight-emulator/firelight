@@ -148,11 +148,14 @@ void EmulationManager::runOneFrame() {
     auto deltaTime =
         (thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency();
 
-    m_millisSinceLastSave += deltaTime;
+    m_millisSinceLastSave += static_cast<int>(deltaTime);
+    if (m_millisSinceLastSave < 0) {
+      m_millisSinceLastSave = SAVE_FREQUENCY_MILLIS;
+    }
 
-    if (m_millisSinceLastSave > SAVE_FREQUENCY_MILLIS) {
+    if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
       m_millisSinceLastSave = 0;
-      Firelight::Saves::SaveData saveData(
+      const Firelight::Saves::SaveData saveData(
           core->getMemoryData(libretro::SAVE_RAM));
 
       getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);

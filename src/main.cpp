@@ -119,7 +119,11 @@ int main(int argc, char *argv[]) {
   Firelight::Input::ControllerManager controllerManager;
   Firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
+  Firelight::Saves::SaveManager saveManager(userdata_dir / "savedata");
+
   Firelight::ManagerAccessor::setControllerManager(&controllerManager);
+  Firelight::ManagerAccessor::setSaveManager(&saveManager);
+
   controllerManager.refreshControllerList();
 
   sdlEventLoop.start();

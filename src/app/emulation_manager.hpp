@@ -50,7 +50,7 @@ protected:
 
 private:
   LibEntry m_currentEntry;
-  int m_millisSinceLastSave = 0;
+  int m_millisSinceLastSave{};
   retro_system_av_info *core_av_info_;
   bool glInitialized = false;
   QSGTexture *gameTexture = nullptr;
