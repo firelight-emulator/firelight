@@ -16,9 +16,9 @@ SaveManager::SaveManager(std::filesystem::path saveDir)
   m_ioThreadPool->setMaxThreadCount(4);
 }
 
-void SaveManager::writeSaveDataForEntry(LibEntry &entry,
-                                        SaveData &saveData) const {
-  QFuture<bool> future = QtConcurrent::run([this, entry, saveData] {
+QFuture<bool> SaveManager::writeSaveDataForEntry(LibEntry &entry,
+                                                 SaveData &saveData) const {
+  return QtConcurrent::run([this, entry, saveData] {
     auto md5 = entry.md5;
     auto bytes = saveData.getSaveRamData();
     auto image = saveData.getImage();

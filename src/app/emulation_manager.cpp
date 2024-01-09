@@ -52,6 +52,13 @@ void EmulationManager::setLibraryManager(QLibraryManager *manager) {
 }
 
 EmulationManager::EmulationManager(QQuickItem *parent) : QQuickItem(parent) {}
+EmulationManager::~EmulationManager() {
+  running = false;
+  save(true);
+  if (m_renderConnection) {
+    disconnect(m_renderConnection);
+  }
+}
 
 void EmulationManager::registerInstance(EmulationManager *manager) {}
 
@@ -110,8 +117,9 @@ void EmulationManager::initialize(int entryId) {
   setFlag(ItemHasContents);
   auto win = window();
 
-  connect(win, &QQuickWindow::beforeRenderPassRecording, this,
-          &EmulationManager::runOneFrame, Qt::DirectConnection);
+  m_renderConnection =
+      connect(win, &QQuickWindow::beforeRenderPassRecording, this,
+              &EmulationManager::runOneFrame, Qt::DirectConnection);
 }
 
 void EmulationManager::runOneFrame() {
@@ -154,11 +162,8 @@ void EmulationManager::runOneFrame() {
 
     if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
       m_millisSinceLastSave = 0;
-      Firelight::Saves::SaveData saveData(
-          core->getMemoryData(libretro::SAVE_RAM));
-      saveData.setImage(gameFbo->toImage());
-
-      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
+      gameImage = gameFbo->toImage();
+      save();
     }
 
     window()->beginExternalCommands();
@@ -190,6 +195,18 @@ void EmulationManager::runOneFrame() {
 }
 void EmulationManager::pause() { running = false; }
 void EmulationManager::resume() { running = true; }
+void EmulationManager::save(const bool waitForFinish) {
+  spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
+  Firelight::Saves::SaveData saveData(core->getMemoryData(libretro::SAVE_RAM));
+  saveData.setImage(gameImage);
+
+  QFuture<bool> result =
+      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
+
+  if (waitForFinish) {
+    result.waitForFinished();
+  }
+}
 
 void EmulationManager::receive(const void *data, unsigned int width,
                                unsigned int height, size_t pitch) {

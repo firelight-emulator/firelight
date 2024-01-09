@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QThreadPool>
 #include <filesystem>
+#include <qfuture.h>
 
 namespace Firelight::Saves {
 
@@ -20,7 +21,7 @@ signals:
 
 public:
   explicit SaveManager(std::filesystem::path saveDir);
-  void writeSaveDataForEntry(LibEntry &entry, SaveData &saveData) const;
+  QFuture<bool> writeSaveDataForEntry(LibEntry &entry, SaveData &saveData) const;
   std::optional<SaveData> readSaveDataForEntry(LibEntry &entry) const;
 
 private:

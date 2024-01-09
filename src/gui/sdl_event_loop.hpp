@@ -13,7 +13,8 @@ namespace Firelight {
 class SdlEventLoop final : public QThread {
 public:
   explicit SdlEventLoop(Input::ControllerManager *manager);
-  void stop();
+  ~SdlEventLoop() override;
+  void stopProcessing();
 
 protected:
   void run() override;

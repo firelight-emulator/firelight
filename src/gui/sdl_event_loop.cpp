@@ -22,7 +22,19 @@ SdlEventLoop::SdlEventLoop(Input::ControllerManager *manager)
 
   SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 }
-void SdlEventLoop::stop() { m_running = false; }
+SdlEventLoop::~SdlEventLoop() {
+  m_running = false;
+  SDL_Event quitEvent;
+  quitEvent.type = SDL_QUIT;
+  SDL_PushEvent(&quitEvent);
+}
+
+void SdlEventLoop::stopProcessing() {
+  m_running = false;
+  SDL_Event quitEvent;
+  quitEvent.type = SDL_QUIT;
+  SDL_PushEvent(&quitEvent);
+}
 
 void SdlEventLoop::run() {
   while (m_running) {
@@ -33,12 +45,26 @@ void SdlEventLoop::run() {
       case SDL_CONTROLLERDEVICEREMOVED:
         m_controllerManager->handleSDLControllerEvent(ev);
         break;
+      case SDL_JOYAXISMOTION:
+      case SDL_CONTROLLERAXISMOTION:
+      case SDL_JOYBUTTONUP:
+      case SDL_JOYBUTTONDOWN:
+      case SDL_CONTROLLERBUTTONUP:
+      case SDL_CONTROLLERBUTTONDOWN:
+        break;
+      case SDL_QUIT:
+        spdlog::info("Got shut down signal; stopping SDL event loop");
+        return;
       default:
         spdlog::debug("Got an unhandled SDL event {}", ev.type);
         break;
       }
     }
   }
+
+  SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
+                    SDL_INIT_TIMER);
+  SDL_Quit();
 }
 
 } // namespace Firelight
