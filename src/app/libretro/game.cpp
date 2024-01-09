@@ -3,6 +3,7 @@
 //
 
 #include "game.hpp"
+#include <filesystem>
 #include <fstream>
 #include <vector>
 
@@ -11,29 +12,23 @@ using std::vector;
 using std::string;
 
 namespace libretro {
-static std::vector<unsigned char> ReadAllBytes(const string &filename) {
-  std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
-  std::ifstream::pos_type pos = ifs.tellg();
-
-  if (pos == 0) {
-    return std::vector<unsigned char>{};
-  }
-
-  vector<unsigned char> result(pos);
-
-  ifs.seekg(0, std::ios::beg);
-  ifs.read(reinterpret_cast<char *>(&result[0]), pos);
-
-  return result;
-}
-
 Game::Game(const std::vector<unsigned char> &data) {
   this->data = data; // todo
 }
 
 Game::Game(const string &filePath) {
   this->path = filePath;
-  this->data = ReadAllBytes(filePath);
+
+  const auto path = std::filesystem::path(filePath);
+  const auto size = file_size(path);
+  std::ifstream file(path, std::ios::binary);
+
+  this->data.clear();
+  this->data.resize(size);
+
+  file.read(reinterpret_cast<char *>(this->data.data()), size);
+  file.close();
+
   if (this->data.empty()) {
     // TODO
   }

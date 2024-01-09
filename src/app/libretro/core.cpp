@@ -1010,7 +1010,7 @@ void Core::setSystemDirectory(string frontendSystemDirectory) {
   this->systemDirectory = frontendSystemDirectory;
 }
 
-void Core::setSaveDirectory(string frontendSaveDirectory) {
+void Core::setSaveDirectory(const string &frontendSaveDirectory) {
   this->saveDirectory = frontendSaveDirectory;
 }
 
@@ -1018,26 +1018,28 @@ void Core::recordPotentialAPIViolation(const std::string &msg) {
   printf("Potential API violation: %s\n", msg.c_str());
 }
 
-std::vector<char> Core::getMemoryData(MemoryType memType) {
-  auto size = symRetroGetMemoryDataSize((unsigned)memType);
-  auto ptr = symRetroGetMemoryData((unsigned)memType);
+std::vector<char> Core::getMemoryData(const MemoryType memType) const {
+  const auto size = symRetroGetMemoryDataSize(static_cast<unsigned>(memType));
+  const auto ptr = symRetroGetMemoryData(static_cast<unsigned>(memType));
 
-  auto end = ((char *)ptr) + size;
+  const auto end = static_cast<char *>(ptr) + size;
 
-  vector<char> memData((char *)ptr, end);
+  vector memData(static_cast<char *>(ptr), end);
+  memData.resize(size);
   return memData;
 }
 
-void Core::writeMemoryData(MemoryType memType, char *data) {
-  auto size = symRetroGetMemoryDataSize((unsigned)memType);
-  auto ptr = symRetroGetMemoryData((unsigned)memType);
+void Core::writeMemoryData(const MemoryType memType,
+                           const std::vector<char> &data) {
+  const auto size = symRetroGetMemoryDataSize(static_cast<unsigned>(memType));
+  const auto ptr = symRetroGetMemoryData(static_cast<unsigned>(memType));
 
   //  if (data.size() != size) {
   //    printf("um sizes don't match. data: %zu, size: %zu\n", data.size(),
   //    size);
   //  }
 
-  memcpy((byte *)ptr, data, size);
+  memcpy(ptr, data.data(), size);
 }
 
 void Core::set_video_receiver(IVideoDataReceiver *receiver) {

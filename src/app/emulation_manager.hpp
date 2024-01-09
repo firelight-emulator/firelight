@@ -30,6 +30,7 @@ public:
   static void setLibraryManager(QLibraryManager *manager);
 
   explicit EmulationManager(QQuickItem *parent = nullptr);
+  ~EmulationManager() override;
   static void registerInstance(EmulationManager *manager);
 
   void receive(const void *data, unsigned int width, unsigned int height,
@@ -44,16 +45,21 @@ public slots:
   void runOneFrame();
   void pause();
   void resume();
+  void save(bool waitForFinish = false);
 
 protected:
   QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 private:
+  QMetaObject::Connection m_renderConnection;
+  LibEntry m_currentEntry;
+  int m_millisSinceLastSave{};
   retro_system_av_info *core_av_info_;
   bool glInitialized = false;
   QSGTexture *gameTexture = nullptr;
   bool usingHwRendering = false;
   std::unique_ptr<QOpenGLFramebufferObject> gameFbo = nullptr;
+  QImage gameImage;
   context_reset_func reset_context = nullptr;
   bool running = false;
   Uint64 thisTick;

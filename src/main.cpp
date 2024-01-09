@@ -46,7 +46,11 @@ bool create_dirs(const std::filesystem::path &paths...) {
 }
 
 int main(int argc, char *argv[]) {
-  spdlog::set_level(spdlog::level::info);
+  if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
+    spdlog::set_level(spdlog::level::debug);
+  } else {
+    spdlog::set_level(spdlog::level::info);
+  }
 
   // **** Make sure installation directories are all good ****
   const std::filesystem::path installation_dir = ".";
@@ -119,7 +123,11 @@ int main(int argc, char *argv[]) {
   Firelight::Input::ControllerManager controllerManager;
   Firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
+  Firelight::Saves::SaveManager saveManager(userdata_dir / "savedata");
+
   Firelight::ManagerAccessor::setControllerManager(&controllerManager);
+  Firelight::ManagerAccessor::setSaveManager(&saveManager);
+
   controllerManager.refreshControllerList();
 
   sdlEventLoop.start();
@@ -177,5 +185,12 @@ int main(int argc, char *argv[]) {
   //  window->setFlag(Qt::FramelessWindowHint, true);
   //  window->setFlag(Qt::WindowTitleHint, false);
 
-  return QGuiApplication::exec();
+  int exitCode = QGuiApplication::exec();
+
+  sdlEventLoop.stopProcessing();
+
+  sdlEventLoop.quit();
+  sdlEventLoop.wait();
+
+  return exitCode;
 }

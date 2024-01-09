@@ -70,11 +70,11 @@ public:
 
   void setSystemDirectory(string);
 
-  void setSaveDirectory(string);
+  void setSaveDirectory(const string &);
 
-  std::vector<char> getMemoryData(MemoryType memType);
+  [[nodiscard]] std::vector<char> getMemoryData(MemoryType memType) const;
 
-  void writeMemoryData(MemoryType memType, char *data);
+  void writeMemoryData(MemoryType memType, const std::vector<char> &data);
   IVideoDataReceiver *videoReceiver;
 
 private:
