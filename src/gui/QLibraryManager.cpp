@@ -87,6 +87,17 @@ std::optional<LibEntry> QLibraryManager::get_by_id(const int id) const {
 
   return {result.at(0)};
 }
+std::optional<LibEntry> QLibraryManager::getByRomId(int id) const {
+  auto libEntry = library_database_->getMatching(LibraryDatabase::Filter({
+      .rom = id,
+  }));
+
+  if (libEntry.empty()) {
+    return {};
+  }
+
+  return {libEntry.at(0)};
+}
 
 void QLibraryManager::startScan() {
   QFuture<ScanResults> future =

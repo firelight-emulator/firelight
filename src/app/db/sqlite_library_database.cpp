@@ -109,6 +109,16 @@ std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
     whereClause += "content_path = :content_path";
   }
 
+  if (filter.rom != -1) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "rom = :rom";
+  }
+
   queryString += whereClause;
   QSqlQuery query(db);
   query.prepare(queryString);
@@ -126,6 +136,9 @@ std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
   if (!filter.content_path.empty()) {
     query.bindValue(":content_path",
                     QString::fromStdString(filter.content_path));
+  }
+  if (filter.rom != -1) {
+    query.bindValue(":rom", filter.rom);
   }
 
   if (!query.exec()) {

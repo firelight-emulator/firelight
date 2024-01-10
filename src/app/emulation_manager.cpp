@@ -126,6 +126,47 @@ void EmulationManager::initialize(int entryId) {
       connect(win, &QQuickWindow::beforeRenderPassRecording, this,
               &EmulationManager::runOneFrame, Qt::DirectConnection);
 }
+void EmulationManager::load(int entryId, QByteArray gameData,
+                            QByteArray saveData, QString corePath) {
+  m_currentEntry = library_manager_->get_by_id(entryId).value();
+
+  core = std::make_unique<libretro::Core>(corePath.toStdString());
+  core->setRetropadProvider(getControllerManager());
+
+  core->setSystemDirectory(".");
+  core->setSaveDirectory(".");
+
+  core->set_video_receiver(this);
+  core->set_audio_receiver(new AudioManager());
+  core->init();
+
+  libretro::Game game(vector<unsigned char>(gameData.begin(), gameData.end()));
+  core->loadGame(&game);
+
+  if (saveData.size() > 0) {
+    core->writeMemoryData(libretro::SAVE_RAM,
+                          vector(saveData.begin(), saveData.end()));
+  }
+
+  window()->setMinimumSize(QSize(core_av_info_->geometry.max_width,
+                                 core_av_info_->geometry.max_height));
+
+  setSize(QSize(core_av_info_->geometry.max_width,
+                core_av_info_->geometry.max_height));
+
+  const auto targetFrameTime = 1 / core_av_info_->timing.fps;
+  const auto actualFrameTime =
+      1 / QGuiApplication::primaryScreen()->refreshRate();
+
+  frameSkipRatio = std::lround(targetFrameTime / actualFrameTime);
+
+  setFlag(ItemHasContents);
+  auto win = window();
+
+  m_renderConnection =
+      connect(win, &QQuickWindow::beforeRenderPassRecording, this,
+              &EmulationManager::runOneFrame, Qt::DirectConnection);
+}
 
 void EmulationManager::runOneFrame() {
   if (!glInitialized) {

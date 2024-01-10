@@ -30,6 +30,7 @@ public:
                            QLibraryViewModel *model);
 
   [[nodiscard]] std::optional<LibEntry> get_by_id(int id) const;
+  [[nodiscard]] std::optional<LibEntry> getByRomId(int id) const;
 
 public slots:
   void startScan();

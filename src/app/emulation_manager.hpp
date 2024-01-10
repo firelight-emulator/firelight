@@ -41,6 +41,8 @@ public:
 
 public slots:
   void initialize(int entryId);
+  void load(int entryId, QByteArray gameData, QByteArray saveData,
+            QString corePath);
   void runOneFrame();
   void pause();
   void resume();
