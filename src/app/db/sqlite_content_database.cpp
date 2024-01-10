@@ -9,6 +9,12 @@
 #include <iostream>
 #include <utility>
 
+SqliteContentDatabase::SqliteContentDatabase(std::filesystem::path dbFile)
+    : databaseFile(std::move(dbFile)) {
+  // TODO: throw error
+  getOrCreateDbConnection();
+}
+
 std::optional<ROM> SqliteContentDatabase::getRomByMd5(const std::string &md5) {
   sqlite3_stmt *stmt = nullptr;
   auto query = "SELECT * FROM roms WHERE md5 = ?";
@@ -74,11 +80,11 @@ std::optional<Game> SqliteContentDatabase::getGameByRomId(int romId) {
 
   return result;
 }
+std::optional<Romhack>
+SqliteContentDatabase::getRomhackByMd5(const std::string &md5) {
+  std::optional<Romhack> result;
 
-SqliteContentDatabase::SqliteContentDatabase(std::filesystem::path dbFile)
-    : databaseFile(std::move(dbFile)) {
-  // TODO: throw error
-  getOrCreateDbConnection();
+  return result;
 }
 
 std::optional<Platform>

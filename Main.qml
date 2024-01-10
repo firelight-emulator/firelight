@@ -10,8 +10,6 @@ ApplicationWindow {
     id: window
     width: 1280
     height: 720
-    minimumWidth: 640
-    minimumHeight: 480
     visible: true
     title: qsTr("Firelight")
     color: "#1c1b1f"
@@ -188,30 +186,27 @@ ApplicationWindow {
                             width: 200
                         }
 
-                        ScrollView {
-                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-                            ScrollBar.vertical.interactive: true
+                        ListView {
+                            id: libraryList
+                            focus: true
+                            clip: true
 
+                            ScrollBar.vertical: ScrollBar {
+                                width: 15
+                                interactive: true
+                            }
+
+                            currentIndex: 0
                             anchors.left: filters.right
                             anchors.top: parent.top
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
 
-                            ListView {
-                                id: libraryList
-                                focus: true
-                                clip: true
-
-                                currentIndex: 0
-                                anchors.fill: parent
-
-                                model: library_short_model
-                                boundsBehavior: Flickable.StopAtBounds
-                                delegate: gameListItem
-                                // preferredHighlightBegin: height / 3
-                                // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
-                            }
+                            model: library_short_model
+                            boundsBehavior: Flickable.StopAtBounds
+                            delegate: gameListItem
+                            // preferredHighlightBegin: height / 3
+                            // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
                         }
 
                         Component {
@@ -232,7 +227,7 @@ ApplicationWindow {
 
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        everything.push(emulatorPage, {"currentLibraryEntryId": model.id})
+                                        gameLoader.loadGame(model.id)
                                     }
                                 }
 
@@ -279,6 +274,30 @@ ApplicationWindow {
         }
     }
 
+    GameLoader {
+        id: gameLoader
+
+        onGameLoaded: function (entryId, romData, saveData, corePath) {
+            console.log("Game loaded with entry ID:", entryId);
+            everything.push(emulatorPage, {currentLibraryEntryId: entryId})
+        }
+
+        onGameLoadFailedOrphanedPatch: function (entryId) {
+            dialog.open()
+        }
+    }
+
+    Dialog {
+        id: dialog
+        title: "Title"
+        modal: true
+        anchors.centerIn: parent
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        onAccepted: console.log("Ok clicked")
+        onRejected: console.log("Cancel clicked")
+    }
+
     Component {
         id: quickMenu
         Rectangle {
@@ -318,6 +337,11 @@ ApplicationWindow {
                 width: 640
                 height: 480
                 // layer.enabled: true
+
+                // onOrphanPatchDetected: {
+                //     console.log("orphan patch detected")
+                //     everything.pop()
+                // }
 
                 Component.onCompleted: {
                     this.initialize(currentLibraryEntryId)

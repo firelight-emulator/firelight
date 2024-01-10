@@ -57,6 +57,10 @@ private:
   [[nodiscard]] std::vector<QLibraryViewModel::Item> get_model_items_() const;
 
   std::unique_ptr<QThreadPool> scanner_thread_pool_ = nullptr;
+  void handleScannedPatchFile(const std::filesystem::directory_entry &entry,
+                              ScanResults &scan_results) const;
+  void handleScannedRomFile(const std::filesystem::directory_entry &entry,
+                            ScanResults &scan_results) const;
 };
 
 #endif // FIRELIGHT_QLIBRARYMANAGER_HPP

@@ -2,6 +2,7 @@
 
 #include "src/app/db/sqlite_content_database.hpp"
 #include "src/app/emulation_manager.hpp"
+#include "src/app/game_loader.hpp"
 #include "src/gui/QLibraryManager.hpp"
 #include "src/gui/QLibraryViewModel.hpp"
 #include <QFileSystemWatcher>
@@ -149,6 +150,7 @@ int main(int argc, char *argv[]) {
   QLibraryManager libraryManager(&library_database, roms_dir, &content_database,
                                  &shortModel);
   libraryManager.startScan();
+  Firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
   EmulationManager::setLibraryManager(&libraryManager);
 
@@ -157,6 +159,7 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
+  qmlRegisterType<Firelight::GameLoader>("Firelight", 1, 0, "GameLoader");
 
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("library_short_model", &shortModel);

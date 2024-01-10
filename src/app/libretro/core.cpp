@@ -8,13 +8,8 @@
 #include <cstdarg>
 
 #include "../audio_manager.hpp"
-// #include "nlohmann/json.hpp"
-
-// using json = nlohmann::json;
 
 namespace libretro {
-
-static const int THINGY = 5;
 
 void log(enum retro_log_level level, const char *fmt, ...) {
   char msg[4096] = {0};
@@ -35,8 +30,8 @@ static int16_t inputStateCallback(unsigned port, unsigned device,
     return 0;
   }
 
-  const auto manager = currentCore->getRetropadProvider();
-  const auto controllerOpt = manager->getRetropadForPlayer(port);
+  const auto controllerOpt =
+      currentCore->getRetropadProvider()->getRetropadForPlayer(port);
   if (!controllerOpt.has_value()) {
     return 0;
   }
@@ -68,9 +63,8 @@ static int16_t inputStateCallback(unsigned port, unsigned device,
 
 static void videoCallback(const void *data, unsigned width, unsigned height,
                           size_t pitch) {
+  // TODO: Check if video receiver is set
   currentCore->videoReceiver->receive(data, width, height, pitch);
-  //  printf("video callback w: %u, h: %u\n", width, height);
-  //  currentCore->getVideo()->refreshCoreVideo(data, width, height, pitch);
 }
 
 static bool envCallback(unsigned cmd, void *data) {
@@ -97,27 +91,27 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_OVERSCAN");
     this->recordPotentialAPIViolation(
         "Using deprecated environment call GET_OVERSCAN");
-    *(bool *)data = false;
+    *static_cast<bool *>(data) = false;
     return true;
   case RETRO_ENVIRONMENT_GET_CAN_DUPE: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_CAN_DUPE");
-    *(bool *)data = true;
+    *static_cast<bool *>(data) = true;
     return true;
   }
   case RETRO_ENVIRONMENT_SET_MESSAGE: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_MESSAGE");
-    auto ptr = (retro_message *)data;
+    auto ptr = static_cast<retro_message *>(data);
     // TODO: Do something to queue message
     printf("Got message for %d frames: %s\n", ptr->frames, ptr->msg);
     return true;
   }
   case RETRO_ENVIRONMENT_SHUTDOWN:
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SHUTDOWN");
-    this->shutdown = *(bool *)data;
+    this->shutdown = *static_cast<bool *>(data);
     break;
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL");
-    this->performanceLevel = *(unsigned *)data;
+    this->performanceLevel = *static_cast<unsigned *>(data);
     break;
   case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY");
@@ -125,32 +119,28 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       return false;
     }
 
-    auto ptr = (const char **)data;
+    auto ptr = static_cast<const char **>(data);
     *ptr = &this->systemDirectory[0];
     return true;
   }
   case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
-    printf("pixelformat: %p\n", (retro_pixel_format *)data);
+    printf("pixelformat: %p\n", static_cast<retro_pixel_format *>(data));
     //    this->video->setPixelFormat((retro_pixel_format *)data);
     return true;
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS: {
     this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS");
-    auto ptr = (retro_input_descriptor *)data;
+    auto ptr = static_cast<retro_input_descriptor *>(data);
     // TODO sane default
     for (int i = 0; i < 100; ++i) {
       auto descriptor = ptr[i];
-
-      printf("description: %s, port: %d, device: %d, index: %d, id: %d\n",
-             descriptor.description, descriptor.port, descriptor.device,
-             descriptor.index, descriptor.id);
       if (descriptor.description == nullptr) {
         break;
       }
 
       this->inputDescriptors.push_back(descriptor);
 
-      if (i == 100) {
+      if (i == 99) {
         this->recordPotentialAPIViolation("Over 100 input descriptors");
       }
     }

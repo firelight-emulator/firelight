@@ -78,6 +78,8 @@ add_library(firelight_lib
         src/gui/save_manager.hpp
         src/app/saves/save_data.hpp
         src/app/saves/save_data.cpp
+        src/app/game_loader.cpp
+        src/app/game_loader.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}

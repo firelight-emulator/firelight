@@ -70,6 +70,11 @@ void EmulationManager::initialize(int entryId) {
     printf("OH NOOOOO no entry with id %d\n", entryId);
   }
 
+  // TODO: Check type of entry and patch if necessary
+  if (entry->type == EntryType::ROMHACK) {
+    return;
+  }
+
   m_currentEntry = entry.value();
 
   std::string corePath;
