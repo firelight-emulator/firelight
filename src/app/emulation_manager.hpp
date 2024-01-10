@@ -6,7 +6,6 @@
 #define FIRELIGHT_EMULATION_MANAGER_HPP
 
 #include "../gui/QLibraryManager.hpp"
-#include "library/library_manager.hpp"
 #include "libretro/core.hpp"
 #include "manager_accessor.hpp"
 #include <QOpenGLFramebufferObject>

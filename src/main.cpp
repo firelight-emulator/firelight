@@ -1,9 +1,7 @@
 
 
-#include "src/app/controller/controller_manager.hpp"
 #include "src/app/db/sqlite_content_database.hpp"
 #include "src/app/emulation_manager.hpp"
-#include "src/app/library/library_manager.hpp"
 #include "src/gui/QLibraryManager.hpp"
 #include "src/gui/QLibraryViewModel.hpp"
 #include <QFileSystemWatcher>

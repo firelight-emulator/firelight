@@ -25,7 +25,6 @@ public:
 
 private:
   void insert_entry_into_db(LibEntry entry) const;
-  LibEntry entry_from_stmt(sqlite3_stmt *stmt);
   std::filesystem::path database_file_path_;
   sqlite3 *database_ = nullptr;
 };

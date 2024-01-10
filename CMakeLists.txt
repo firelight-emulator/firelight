@@ -41,19 +41,12 @@ add_library(firelight_lib
         src/app/libretro/coreoption.hpp
         src/app/libretro/game.cpp
         src/app/libretro/game.hpp
-        src/app/controller/controller_manager.cpp
-        src/app/controller/controller_manager.hpp
-        src/app/library/entry.hpp
         src/app/saves/save_manager.cpp
         src/app/saves/save_manager.hpp
         src/app/patching/pm_star_rod_mod_patch.cpp
         src/app/patching/yay_0_codec.cpp
         src/app/patching/yay_0_codec.hpp
         src/app/patching/pm_star_rod_mod_patch.hpp
-        src/app/controller/sdl_controller.cpp
-        src/app/controller/sdl_controller.hpp
-        src/app/library/library_manager.cpp
-        src/app/library/library_manager.hpp
         src/app/libretro/video_data_receiver.hpp
         src/app/emulation_manager.cpp
         src/app/db/content_database.hpp
@@ -103,6 +96,8 @@ qt_add_executable(firelight
         src/gui/QLibraryManager.hpp
         src/gui/QLibraryViewModel.cpp
         src/gui/QLibraryViewModel.hpp
+        src/app/db/daos/romhack.hpp
+        src/app/db/daos/romhack_release.hpp
 )
 
 qt_add_qml_module(firelight

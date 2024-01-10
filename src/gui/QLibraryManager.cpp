@@ -4,6 +4,8 @@
 
 #include "QLibraryManager.hpp"
 
+#include "src/app/db/daos/romhack.hpp"
+
 #include <fstream>
 #include <openssl/evp.h>
 #include <qfuture.h>
@@ -103,6 +105,54 @@ void QLibraryManager::startScan() {
 
           // TODO: Recognize patch types too
           auto ext = entry.path().extension();
+
+          // TODO: Check if extension is for a game or a patch
+          if (ext.string() == ".mod") {
+
+            auto size = entry.file_size();
+            if (size > MAX_FILESIZE_BYTES) {
+              // spdlog::info("File {} too large; skipping",
+              //              entry.path().filename().string());
+              continue;
+            }
+
+            auto filename = entry.path().relative_path().string();
+            auto libEntry =
+                library_database_->getMatching(LibraryDatabase::Filter({
+                    .content_path = filename,
+                }));
+            if (!libEntry.empty()) {
+              spdlog::debug("Found library entry with filename {}; skipping",
+                            filename);
+              continue; // TODO: For now let's assume no change.
+            }
+
+            std::vector<char> thing(size);
+            std::ifstream file(entry.path(), std::ios::binary);
+
+            file.read(thing.data(), size);
+            file.close();
+
+            auto md5 = calculateMD5(thing.data(), size);
+            scan_results.all_md5s.emplace_back(md5);
+
+            LibEntry e = {
+                .id = -1,
+                .display_name = "",
+                .type = EntryType::ROMHACK,
+                .verified = 0,
+                .md5 = "",
+                .platform = 1,
+                .game = -1,
+                .rom = -1,
+                .romhack = -1,
+                .romhack_release = -1,
+                .source_directory = entry.path().parent_path().string(),
+                .content_path = entry.path().relative_path().string()};
+
+            scan_results.new_entries.emplace_back(e);
+          }
+
           auto platform =
               content_database_->getPlatformByExtension(ext.string());
 
@@ -169,12 +219,14 @@ void QLibraryManager::startScan() {
 
           LibEntry e = {.id = -1,
                         .display_name = display_name,
+                        .type = EntryType::ROM,
                         .verified = verified,
                         .md5 = md5,
                         .platform = platform->id,
                         .game = game_id,
                         .rom = rom_id,
                         .romhack = -1,
+                        .romhack_release = -1,
                         .source_directory = entry.path().parent_path().string(),
                         .content_path = entry.path().relative_path().string()};
 
