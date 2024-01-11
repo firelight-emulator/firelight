@@ -10,8 +10,6 @@ ApplicationWindow {
     id: window
     width: 1280
     height: 720
-    minimumWidth: 640
-    minimumHeight: 480
     visible: true
     title: qsTr("Firelight")
     color: "#1c1b1f"
@@ -188,30 +186,27 @@ ApplicationWindow {
                             width: 200
                         }
 
-                        ScrollView {
-                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-                            ScrollBar.vertical.interactive: true
+                        ListView {
+                            id: libraryList
+                            focus: true
+                            clip: true
 
+                            ScrollBar.vertical: ScrollBar {
+                                width: 15
+                                interactive: true
+                            }
+
+                            currentIndex: 0
                             anchors.left: filters.right
                             anchors.top: parent.top
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
 
-                            ListView {
-                                id: libraryList
-                                focus: true
-                                clip: true
-
-                                currentIndex: 0
-                                anchors.fill: parent
-
-                                model: library_short_model
-                                boundsBehavior: Flickable.StopAtBounds
-                                delegate: gameListItem
-                                // preferredHighlightBegin: height / 3
-                                // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
-                            }
+                            model: library_short_model
+                            boundsBehavior: Flickable.StopAtBounds
+                            delegate: gameListItem
+                            // preferredHighlightBegin: height / 3
+                            // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
                         }
 
                         Component {
@@ -232,7 +227,7 @@ ApplicationWindow {
 
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        everything.push(emulatorPage, {"currentLibraryEntryId": model.id})
+                                        gameLoader.loadGame(model.id)
                                     }
                                 }
 
@@ -279,6 +274,39 @@ ApplicationWindow {
         }
     }
 
+    GameLoader {
+        id: gameLoader
+
+        onGameLoaded: function (entryId, romData, saveData, corePath) {
+            console.log("Game loaded with entry ID:", entryId)
+            console.log("Rom data: " + romData)
+            console.log("Save data: " + saveData)
+            console.log("Core path: " + corePath)
+
+            everything.push(emulatorPage, {
+                currentLibraryEntryId: entryId,
+                romData: romData,
+                saveData: saveData,
+                corePath: corePath
+            })
+        }
+
+        onGameLoadFailedOrphanedPatch: function (entryId) {
+            dialog.open()
+        }
+    }
+
+    Dialog {
+        id: dialog
+        title: "Title"
+        modal: true
+        anchors.centerIn: parent
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        onAccepted: console.log("Ok clicked")
+        onRejected: console.log("Cancel clicked")
+    }
+
     Component {
         id: quickMenu
         Rectangle {
@@ -296,6 +324,10 @@ ApplicationWindow {
         id: emulatorPage
         Item {
             property int currentLibraryEntryId
+            property var romData
+            property var saveData
+            property string corePath
+
             focus: true
 
             StackView.visible: true
@@ -309,20 +341,31 @@ ApplicationWindow {
             }
 
             Keys.onEscapePressed: {
-                everything.push(quickMenu)
+                emulatorView.pause()
+                // everything.push(quickMenu)
             }
 
-            EmulatorView {
-                id: emulatorView
-                anchors.centerIn: parent
-                width: 640
-                height: 480
-                // layer.enabled: true
+            Item {
+                id: emulatorContainer
+                anchors.fill: parent
 
-                Component.onCompleted: {
-                    this.initialize(currentLibraryEntryId)
+                EmulatorView {
+                    id: emulatorView
+                    anchors.centerIn: parent
+                    width: 640
+                    height: 480
+
+                    // onOrphanPatchDetected: {
+                    //     console.log("orphan patch detected")
+                    //     everything.pop()
+                    // }
+
+                    Component.onCompleted: {
+                        this.load(currentLibraryEntryId, romData, saveData, corePath)
+                    }
                 }
             }
+
             // FpsMultiplier {
             //     id: fpsMultiplierView
             // }
@@ -340,131 +383,4 @@ ApplicationWindow {
         id: emulatorLoader
         anchors.centerIn: parent
     }
-
-
-    // Component {
-    //     id: emulator
-    //
-    // }
-
-    // Rectangle {
-    //     id: navBar
-    //
-    //     anchors.left: parent.left
-    //     anchors.top: parent.top
-    //     anchors.bottom: parent.bottom
-    //     width: parent.width / 5
-    //
-    //     color: "#af1414"
-    //
-    //     Text {
-    //         text: "under construction"
-    //         font.family: "Helvetica"; font.pointSize: 13; font.bold: true
-    //         color: "#FFFFFF"
-    //     }
-    // }
-    //
-    // Rectangle {
-    //     id: contentRect
-    //
-    //     anchors.left: navBar.right
-    //     anchors.top: parent.top
-    //     width: (parent.width / 5) * 2
-    //     anchors.bottom: parent.bottom
-    //
-    //     color: "#1f1f1f"
-    //     ListView {
-    //         id: listThing
-    //         // clip: true
-    //         focus: true
-    //
-    //
-    //         anchors.fill: parent
-    //
-    //
-    //         model: RomModel {
-    //         }
-    //         boundsBehavior: Flickable.StopAtBounds
-    //         delegate: gameListItem
-    //         preferredHighlightBegin: height / 3
-    //         preferredHighlightEnd: 2 * (height / 3) + currentItem.height
-    //     }
-    //
-    //     Component {
-    //         id: gameListItem
-    //
-    //         Rectangle {
-    //             id: wrapper
-    //
-    //             width: ListView.view.width
-    //             height: 40
-    //
-    //             color: ListView.isCurrentItem ? "#f0f0f0" : (mouseArea.containsMouse ? Qt.lighter(1.1) : "transparent")
-    //
-    //             Text {
-    //                 anchors.left: parent.left
-    //                 anchors.leftMargin: 20
-    //                 anchors.verticalCenter: parent.verticalCenter
-    //
-    //                 color: wrapper.ListView.isCurrentItem ? "#1f1f1f" : "#f1f1f1"
-    //
-    //                 font.pixelSize: 16
-    //
-    //                 text: "testing " + model.filename
-    //             }
-    //
-    //             MouseArea {
-    //                 id: mouseArea
-    //                 hoverEnabled: true
-    //
-    //                 anchors.fill: parent
-    //                 cursorShape: Qt.PointingHandCursor
-    //                 onClicked: {
-    //                     listThing.currentIndex = index
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    // EmulatorView {
-    //     id: emulator
-    //     anchors.left: parent.left
-    //     anchors.right: parent.right
-    //     anchors.bottom: parent.bottom
-    //     anchors.top: parent.top
-    // }
-    //
-    // Rectangle {
-    //     id: blackScreen
-    //     anchors.fill: parent
-    //     opacity: 0
-    //     color: "black"
-    // }
-    //
-    // SequentialAnimation {
-    //     id: startGame
-    //     NumberAnimation {
-    //         target: blackScreen
-    //         properties: "opacity"
-    //         from: 0
-    //         to: 1.0
-    //         duration: 1000
-    //         easing {
-    //             type: Easing.OutQuad
-    //         }
-    //     }
-    //     ScriptAction {
-    //         script: content.replace(gamePage)
-    //     }
-    //     NumberAnimation {
-    //         target: blackScreen
-    //         properties: "opacity"
-    //         from: 1.0
-    //         to: 0
-    //         duration: 400
-    //         easing {
-    //             type: Easing.OutQuad
-    //         }
-    //     }
-    // }
 }

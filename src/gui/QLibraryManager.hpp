@@ -30,6 +30,7 @@ public:
                            QLibraryViewModel *model);
 
   [[nodiscard]] std::optional<LibEntry> get_by_id(int id) const;
+  [[nodiscard]] std::optional<LibEntry> getByRomId(int id) const;
 
 public slots:
   void startScan();
@@ -57,6 +58,10 @@ private:
   [[nodiscard]] std::vector<QLibraryViewModel::Item> get_model_items_() const;
 
   std::unique_ptr<QThreadPool> scanner_thread_pool_ = nullptr;
+  void handleScannedPatchFile(const std::filesystem::directory_entry &entry,
+                              ScanResults &scan_results) const;
+  void handleScannedRomFile(const std::filesystem::directory_entry &entry,
+                            ScanResults &scan_results) const;
 };
 
 #endif // FIRELIGHT_QLIBRARYMANAGER_HPP

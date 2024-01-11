@@ -5,7 +5,6 @@
 #ifndef FIRELIGHT_CORE_HPP
 #define FIRELIGHT_CORE_HPP
 
-#include "../controller/controller_manager.hpp"
 #include "SDL2/SDL.h"
 #include "coreoption.hpp"
 #include "game.hpp"

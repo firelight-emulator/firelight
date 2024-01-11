@@ -4,6 +4,8 @@
 
 #include "QLibraryManager.hpp"
 
+#include "src/app/db/daos/romhack.hpp"
+
 #include <fstream>
 #include <openssl/evp.h>
 #include <qfuture.h>
@@ -85,6 +87,17 @@ std::optional<LibEntry> QLibraryManager::get_by_id(const int id) const {
 
   return {result.at(0)};
 }
+std::optional<LibEntry> QLibraryManager::getByRomId(int id) const {
+  auto libEntry = library_database_->getMatching(LibraryDatabase::Filter({
+      .rom = id,
+  }));
+
+  if (libEntry.empty()) {
+    return {};
+  }
+
+  return {libEntry.at(0)};
+}
 
 void QLibraryManager::startScan() {
   QFuture<ScanResults> future =
@@ -101,84 +114,19 @@ void QLibraryManager::startScan() {
             continue;
           }
 
-          // TODO: Recognize patch types too
-          auto ext = entry.path().extension();
-          auto platform =
-              content_database_->getPlatformByExtension(ext.string());
-
-          auto size = entry.file_size();
-          if (size > MAX_FILESIZE_BYTES) {
+          if (entry.file_size() > MAX_FILESIZE_BYTES) {
             // spdlog::info("File {} too large; skipping",
             //              entry.path().filename().string());
             continue;
           }
 
-          if (!platform.has_value()) {
-            printf("File extension not recognized: %s\n", ext.string().c_str());
-            continue;
+          if (auto ext = entry.path().extension(); ext.string() == ".mod") {
+            handleScannedPatchFile(entry, scan_results);
+          } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
+                     ext.string() == ".gb" || ext.string() == ".gbc" ||
+                     ext.string() == ".gba") {
+            handleScannedRomFile(entry, scan_results);
           }
-
-          auto filename = entry.path().relative_path().string();
-          auto libEntry =
-              library_database_->getMatching(LibraryDatabase::Filter({
-                  .content_path = filename,
-              }));
-          if (!libEntry.empty()) {
-            spdlog::debug("Found library entry with filename {}; skipping",
-                          filename);
-            continue; // TODO: For now let's assume no change.
-          }
-
-          // check against filename and size and source
-
-          std::vector<char> thing(size);
-          std::ifstream file(entry.path(), std::ios::binary);
-
-          file.read(thing.data(), size);
-          file.close();
-
-          auto md5 = calculateMD5(thing.data(), size);
-          scan_results.all_md5s.emplace_back(md5);
-
-          if (!library_database_
-                   ->getMatching(LibraryDatabase::Filter({
-                       .md5 = md5,
-                   }))
-                   .empty()) {
-            // TODO: implement
-            scan_results.existing_entries.emplace_back();
-            continue;
-          }
-
-          auto display_name = entry.path().filename().string();
-          auto verified = false;
-          auto game_id = -1;
-          auto rom_id = -1;
-
-          auto rom = content_database_->getRomByMd5(md5);
-          if (rom.has_value()) {
-            auto game = content_database_->getGameByRomId(rom->id);
-            if (game.has_value()) {
-              display_name = game->name;
-            }
-
-            verified = true;
-            game_id = game->id;
-            rom_id = rom->id;
-          }
-
-          LibEntry e = {.id = -1,
-                        .display_name = display_name,
-                        .verified = verified,
-                        .md5 = md5,
-                        .platform = platform->id,
-                        .game = game_id,
-                        .rom = rom_id,
-                        .romhack = -1,
-                        .source_directory = entry.path().parent_path().string(),
-                        .content_path = entry.path().relative_path().string()};
-
-          scan_results.new_entries.emplace_back(e);
         }
 
         for (const auto &new_entry : scan_results.new_entries) {
@@ -218,4 +166,131 @@ std::vector<QLibraryViewModel::Item> QLibraryManager::get_model_items_() const {
   }
 
   return items;
+}
+
+void QLibraryManager::handleScannedPatchFile(
+    const std::filesystem::directory_entry &entry,
+    ScanResults &scan_results) const {
+  auto size = entry.file_size();
+  if (size > MAX_FILESIZE_BYTES) {
+    // spdlog::info("File {} too large; skipping",
+    //              entry.path().filename().string());
+    return;
+  }
+
+  auto filename = entry.path().relative_path().string();
+  auto libEntry = library_database_->getMatching(LibraryDatabase::Filter({
+      .content_path = filename,
+  }));
+
+  if (!libEntry.empty()) {
+    spdlog::debug("Found library entry with filename {}; skipping", filename);
+    return; // TODO: For now let's assume no change.
+  }
+
+  std::vector<char> thing(size);
+  std::ifstream file(entry.path(), std::ios::binary);
+
+  file.read(thing.data(), size);
+  file.close();
+
+  auto md5 = calculateMD5(thing.data(), size);
+  scan_results.all_md5s.emplace_back(md5);
+
+  // auto romhack = content_database_->getRomhackByMd5(md5);
+  // if (romhack.has_value()) {
+  // }
+
+  // TODO: Check content database for romhack with this md5
+  // TODO: If not found, then user needs to select a rom to patch
+
+  LibEntry e = {.id = -1,
+                .display_name = entry.path().filename().string(),
+                .type = EntryType::ROMHACK,
+                .verified = false,
+                .md5 = md5,
+                .platform = 1,
+                .game = -1,
+                .rom = -1,
+                .romhack = -1,
+                .romhack_release = -1,
+                .source_directory = entry.path().parent_path().string(),
+                .content_path = entry.path().relative_path().string()};
+
+  scan_results.new_entries.emplace_back(e);
+}
+
+void QLibraryManager::handleScannedRomFile(
+    const std::filesystem::directory_entry &entry,
+    ScanResults &scan_results) const {
+  auto ext = entry.path().extension();
+  auto size = entry.file_size();
+
+  auto platform = content_database_->getPlatformByExtension(ext.string());
+
+  if (!platform.has_value()) {
+    printf("File extension not recognized: %s\n", ext.string().c_str());
+    return;
+  }
+
+  auto filename = entry.path().relative_path().string();
+  auto libEntry = library_database_->getMatching(LibraryDatabase::Filter({
+      .content_path = filename,
+  }));
+  if (!libEntry.empty()) {
+    spdlog::debug("Found library entry with filename {}; skipping", filename);
+    return; // TODO: For now let's assume no change.
+  }
+
+  // check against filename and size and source
+
+  std::vector<char> thing(size);
+  std::ifstream file(entry.path(), std::ios::binary);
+
+  file.read(thing.data(), size);
+  file.close();
+
+  auto md5 = calculateMD5(thing.data(), size);
+  scan_results.all_md5s.emplace_back(md5);
+
+  if (!library_database_
+           ->getMatching(LibraryDatabase::Filter({
+               .md5 = md5,
+           }))
+           .empty()) {
+    // TODO: implement
+    scan_results.existing_entries.emplace_back();
+    return;
+  }
+
+  auto display_name = entry.path().filename().string();
+  auto verified = false;
+  auto game_id = -1;
+  auto rom_id = -1;
+
+  if (auto rom = content_database_->getRomByMd5(md5); rom.has_value()) {
+    auto game = content_database_->getGameByRomId(rom->id);
+    if (game.has_value()) {
+      display_name = game->name;
+    }
+
+    verified = true;
+    game_id = game->id;
+    rom_id = rom->id;
+  }
+
+  LibEntry e = {.id = -1,
+                .display_name = display_name,
+                .type = EntryType::ROM,
+                .verified = verified,
+                .md5 = md5,
+                .platform = platform->id,
+                .game = game_id,
+                .rom = rom_id,
+                .romhack = -1,
+                .romhack_release = -1,
+                .source_directory = entry.path().parent_path().string(),
+                .content_path = entry.path().relative_path().string()};
+
+  scan_results.new_entries.emplace_back(e);
 }
