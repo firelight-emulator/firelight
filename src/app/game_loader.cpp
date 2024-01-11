@@ -4,6 +4,9 @@
 
 #include "game_loader.hpp"
 
+#include "patching/pm_star_rod_mod_patch.hpp"
+#include "patching/yay_0_codec.hpp"
+
 #include <fstream>
 #include <spdlog/spdlog.h>
 
@@ -58,15 +61,34 @@ void GameLoader::loadGame(int entryId) {
       corePath = "./system/_cores/snes9x_libretro.dll";
     }
 
-    size = std::filesystem::file_size(romEntry->content_path);
-    std::vector<char> gameDataVec(size);
-    std::ifstream file(romEntry->content_path, std::ios::binary);
+    size = std::filesystem::file_size(entry->content_path);
+    std::vector<char> patchData(size);
+    std::ifstream file(entry->content_path, std::ios::binary);
     // std::ifstream file(entry->content_path, std::ios::binary);
 
-    file.read(gameDataVec.data(), size);
+    file.read(patchData.data(), size);
     file.close();
 
-    gameData = QByteArray(gameDataVec.data(), gameDataVec.size());
+    // gameData = QByteArray(gameDataVec.data(), gameDataVec.size());
+
+    FL::Patching::Yay0Codec codec;
+
+    auto decompressed =
+        codec.decompress(reinterpret_cast<uint8_t *>(patchData.data()));
+
+    FL::Patching::PMStarRodModPatch patch(decompressed);
+
+    std::filesystem::path gamePath = romEntry->content_path;
+    std::ifstream game(gamePath, std::ios::binary);
+
+    auto gameSize = file_size(gamePath);
+    std::vector<uint8_t> romData(gameSize);
+
+    game.read(reinterpret_cast<char *>(romData.data()), gameSize);
+
+    auto patchedGame = patch.patchRom(romData);
+    gameData = QByteArray(reinterpret_cast<char *>(patchedGame.data()),
+                          patchedGame.size());
 
     // Check if the rom field has a value
     // If so, check the library for it
