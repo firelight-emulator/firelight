@@ -82,6 +82,7 @@ add_library(firelight_lib
         src/app/game_loader.hpp
         src/app/patching/ips_patch.cpp
         src/app/patching/ips_patch.hpp
+        src/app/patching/rom_patch.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}

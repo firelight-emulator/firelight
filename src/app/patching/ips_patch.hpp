@@ -4,6 +4,8 @@
 
 #ifndef IPS_PATCH_HPP
 #define IPS_PATCH_HPP
+#include "rom_patch.hpp"
+
 #include <cstdint>
 #include <vector>
 
@@ -14,14 +16,15 @@ struct IPSPatchRecord {
   uint32_t offset;
   std::vector<uint8_t> data;
 
-  // Some patches are RLE encoded
-  uint16_t numTimesToWrite = 0;
+  // Some patches are RLE encoded, but otherwise we just write the data once
+  uint16_t numTimesToWrite = 1;
 };
 
-class IPSPatch {
+class IPSPatch final : public IRomPatch {
 public:
   explicit IPSPatch(const std::vector<uint8_t> &data);
-  std::vector<uint8_t> patchRom(std::vector<uint8_t> &data);
+  [[nodiscard]] std::vector<uint8_t>
+  patchRom(const std::vector<uint8_t> &data) const override;
   std::vector<IPSPatchRecord> getRecords();
 
 private:

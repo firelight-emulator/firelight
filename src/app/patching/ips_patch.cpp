@@ -21,8 +21,6 @@ void printHex(const std::vector<uint8_t> &data) {
 }
 
 IPSPatch::IPSPatch(const std::vector<uint8_t> &data) {
-  // printHex(data);
-
   auto cursor = data.data();
   // Skip PATCH header
   cursor += 5;
@@ -69,6 +67,40 @@ IPSPatch::IPSPatch(const std::vector<uint8_t> &data) {
 
   spdlog::info("Number of bytes read: {}", numBytesRead);
 }
+std::vector<uint8_t>
+IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
+  const auto last = records[records.size() - 1];
+
+  const auto totalLen = last.offset + last.data.size();
+
+  auto size = data.size();
+  if (totalLen > data.size()) {
+    size = totalLen;
+  }
+
+  std::vector<uint8_t> result(size);
+  memcpy(result.data(), data.data(), data.size());
+
+  const auto begin = result.data();
+  auto cursor = begin;
+  for (const auto &record : records) {
+    cursor = begin + record.offset;
+
+    std::vector<uint8_t> dataToWrite;
+
+    for (int i = 0; i < record.numTimesToWrite; ++i) {
+      dataToWrite.insert(dataToWrite.end(), record.data.begin(),
+                         record.data.end());
+    }
+
+    memcpy(cursor, dataToWrite.data(), dataToWrite.size());
+
+    dataToWrite.clear();
+  }
+
+  return result;
+}
+
 std::vector<IPSPatchRecord> IPSPatch::getRecords() { return records; }
 } // namespace Firelight::Patching
   // Firelight

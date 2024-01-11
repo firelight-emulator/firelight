@@ -37,10 +37,11 @@ PMStarRodModPatch::PMStarRodModPatch(const std::vector<uint8_t> &data) {
   }
 }
 
-std::vector<uint8_t> PMStarRodModPatch::patchRom(std::vector<uint8_t> &data) {
-  auto last = records[records.size() - 1];
+std::vector<uint8_t>
+PMStarRodModPatch::patchRom(const std::vector<uint8_t> &data) const {
+  const auto last = records[records.size() - 1];
 
-  auto totalLen = last.offset + last.data.size();
+  const auto totalLen = last.offset + last.data.size();
 
   auto size = data.size();
   if (totalLen > data.size()) {
@@ -50,7 +51,7 @@ std::vector<uint8_t> PMStarRodModPatch::patchRom(std::vector<uint8_t> &data) {
   std::vector<uint8_t> result(size);
   memcpy(result.data(), data.data(), data.size());
 
-  auto begin = result.data();
+  const auto begin = result.data();
   auto cursor = begin;
   for (auto r : records) {
     cursor = begin + r.offset;
