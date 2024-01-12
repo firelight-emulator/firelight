@@ -10,7 +10,7 @@
 class IRomPatch {
 public:
   virtual ~IRomPatch() = default;
-  virtual std::vector<uint8_t>
+  [[nodiscard]] virtual std::vector<uint8_t>
   patchRom(const std::vector<uint8_t> &data) const = 0;
 };
 

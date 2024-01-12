@@ -22,7 +22,7 @@ struct IPSPatchRecord {
 
 class IPSPatch final : public IRomPatch {
 public:
-  explicit IPSPatch(const std::vector<uint8_t> &data);
+  explicit IPSPatch(std::vector<uint8_t> &data);
   [[nodiscard]] std::vector<uint8_t>
   patchRom(const std::vector<uint8_t> &data) const override;
   std::vector<IPSPatchRecord> getRecords();

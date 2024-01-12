@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <spdlog/spdlog.h>
@@ -20,7 +21,7 @@ void printHex(const std::vector<uint8_t> &data) {
   std::cout << std::dec << std::endl; // Reset back to decimal format
 }
 
-IPSPatch::IPSPatch(const std::vector<uint8_t> &data) {
+IPSPatch::IPSPatch(std::vector<uint8_t> &data) {
   auto cursor = data.data();
   // Skip PATCH header
   cursor += 5;
@@ -69,9 +70,14 @@ IPSPatch::IPSPatch(const std::vector<uint8_t> &data) {
 }
 std::vector<uint8_t>
 IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
+
+  std::ofstream out1("before.txt", std::ios::binary);
+  out1.write(reinterpret_cast<char *>(const_cast<uint8_t *>(data.data())),
+             data.size());
+  out1.close();
   const auto last = records[records.size() - 1];
 
-  const auto totalLen = last.offset + last.data.size();
+  const auto totalLen = last.offset + (last.data.size() * last.numTimesToWrite);
 
   auto size = data.size();
   if (totalLen > data.size()) {
@@ -92,11 +98,14 @@ IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
       dataToWrite.insert(dataToWrite.end(), record.data.begin(),
                          record.data.end());
     }
-
     memcpy(cursor, dataToWrite.data(), dataToWrite.size());
 
     dataToWrite.clear();
   }
+
+  std::ofstream out("after.txt", std::ios::binary);
+  out.write(reinterpret_cast<char *>(result.data()), result.size());
+  out.close();
 
   return result;
 }

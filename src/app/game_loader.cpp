@@ -4,6 +4,7 @@
 
 #include "game_loader.hpp"
 
+#include "patching/ips_patch.hpp"
 #include "patching/pm_star_rod_mod_patch.hpp"
 #include "patching/yay_0_codec.hpp"
 
@@ -62,33 +63,51 @@ void GameLoader::loadGame(int entryId) {
     }
 
     size = std::filesystem::file_size(entry->content_path);
-    std::vector<char> patchData(size);
+    std::vector<uint8_t> patchData(size);
     std::ifstream file(entry->content_path, std::ios::binary);
     // std::ifstream file(entry->content_path, std::ios::binary);
 
-    file.read(patchData.data(), size);
+    file.read(reinterpret_cast<char *>(patchData.data()), size);
     file.close();
 
     // gameData = QByteArray(gameDataVec.data(), gameDataVec.size());
 
-    FL::Patching::Yay0Codec codec;
+    auto ext = std::filesystem::path(entry->content_path).extension();
 
-    auto decompressed =
-        codec.decompress(reinterpret_cast<uint8_t *>(patchData.data()));
+    if (ext == ".mod") {
+      FL::Patching::Yay0Codec codec;
 
-    FL::Patching::PMStarRodModPatch patch(decompressed);
+      auto decompressed = codec.decompress(patchData.data());
 
-    std::filesystem::path gamePath = romEntry->content_path;
-    std::ifstream game(gamePath, std::ios::binary);
+      FL::Patching::PMStarRodModPatch patch(decompressed);
 
-    auto gameSize = file_size(gamePath);
-    std::vector<uint8_t> romData(gameSize);
+      std::filesystem::path gamePath = romEntry->content_path;
+      std::ifstream game(gamePath, std::ios::binary);
 
-    game.read(reinterpret_cast<char *>(romData.data()), gameSize);
+      auto gameSize = file_size(gamePath);
+      std::vector<uint8_t> romData(gameSize);
 
-    auto patchedGame = patch.patchRom(romData);
-    gameData = QByteArray(reinterpret_cast<char *>(patchedGame.data()),
-                          patchedGame.size());
+      game.read(reinterpret_cast<char *>(romData.data()), gameSize);
+
+      auto patchedGame = patch.patchRom(romData);
+      gameData = QByteArray(reinterpret_cast<char *>(patchedGame.data()),
+                            patchedGame.size());
+    } else if (ext == ".ips") {
+
+      Patching::IPSPatch patch(patchData);
+
+      std::filesystem::path gamePath = romEntry->content_path;
+      std::ifstream game(gamePath, std::ios::binary);
+
+      auto gameSize = file_size(gamePath);
+      std::vector<uint8_t> romData(gameSize);
+
+      game.read(reinterpret_cast<char *>(romData.data()), gameSize);
+
+      auto patchedGame = patch.patchRom(romData);
+      gameData = QByteArray(reinterpret_cast<char *>(patchedGame.data()),
+                            patchedGame.size());
+    }
 
     // Check if the rom field has a value
     // If so, check the library for it
