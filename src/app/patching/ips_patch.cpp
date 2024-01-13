@@ -70,11 +70,6 @@ IPSPatch::IPSPatch(std::vector<uint8_t> &data) {
 }
 std::vector<uint8_t>
 IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
-
-  std::ofstream out1("before.txt", std::ios::binary);
-  out1.write(reinterpret_cast<char *>(const_cast<uint8_t *>(data.data())),
-             data.size());
-  out1.close();
   const auto last = records[records.size() - 1];
 
   const auto totalLen = last.offset + (last.data.size() * last.numTimesToWrite);
@@ -102,10 +97,6 @@ IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
 
     dataToWrite.clear();
   }
-
-  std::ofstream out("after.txt", std::ios::binary);
-  out.write(reinterpret_cast<char *>(result.data()), result.size());
-  out.close();
 
   return result;
 }

@@ -278,11 +278,6 @@ ApplicationWindow {
         id: gameLoader
 
         onGameLoaded: function (entryId, romData, saveData, corePath) {
-            console.log("Game loaded with entry ID:", entryId)
-            console.log("Rom data: " + romData)
-            console.log("Save data: " + saveData)
-            console.log("Core path: " + corePath)
-
             everything.push(emulatorPage, {
                 currentLibraryEntryId: entryId,
                 romData: romData,

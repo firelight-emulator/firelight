@@ -44,13 +44,14 @@ void GameLoader::loadGame(int entryId) {
 
   QByteArray gameData;
 
-  if (entry->type == EntryType::ROMHACK) {
-    if (entry->rom == -1) {
+  if (entry->type == EntryType::PATCH) {
+    if (entry->parent_entry == -1) {
+      // TODO: This is probably where we should try to find the rom in the library
       emit gameLoadFailedOrphanedPatch(entryId);
       return;
     }
 
-    auto romEntry = getLibraryManager()->getByRomId(entry->rom);
+    auto romEntry = getLibraryManager()->get_by_id(entry->parent_entry);
     if (!romEntry.has_value()) {
       emit gameLoadFailedOrphanedPatch(entryId);
       return;
@@ -93,7 +94,6 @@ void GameLoader::loadGame(int entryId) {
       gameData = QByteArray(reinterpret_cast<char *>(patchedGame.data()),
                             patchedGame.size());
     } else if (ext == ".ips") {
-
       Patching::IPSPatch patch(patchData);
 
       std::filesystem::path gamePath = romEntry->content_path;

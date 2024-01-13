@@ -120,9 +120,10 @@ void QLibraryManager::startScan() {
             continue;
           }
 
-          if (auto ext = entry.path().extension(); ext.string() == ".mod") {
+          if (auto ext = entry.path().extension();
+              ext.string() == ".mod" || ext.string() == ".ips") {
             handleScannedPatchFile(entry, scan_results);
-          } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
+          } else if (ext.string() == ".smc" || ext.string() == ".z64" ||
                      ext.string() == ".gb" || ext.string() == ".gbc" ||
                      ext.string() == ".gba") {
             handleScannedRomFile(entry, scan_results);
@@ -206,12 +207,13 @@ void QLibraryManager::handleScannedPatchFile(
 
   LibEntry e = {.id = -1,
                 .display_name = entry.path().filename().string(),
-                .type = EntryType::ROMHACK,
+                .type = EntryType::PATCH,
                 .verified = false,
                 .md5 = md5,
                 .platform = 1,
                 .game = -1,
                 .rom = -1,
+                .parent_entry = -1,
                 .romhack = -1,
                 .romhack_release = -1,
                 .source_directory = entry.path().parent_path().string(),
@@ -287,6 +289,7 @@ void QLibraryManager::handleScannedRomFile(
                 .platform = platform->id,
                 .game = game_id,
                 .rom = rom_id,
+                .parent_entry = -1,
                 .romhack = -1,
                 .romhack_release = -1,
                 .source_directory = entry.path().parent_path().string(),

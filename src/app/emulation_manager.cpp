@@ -71,7 +71,7 @@ void EmulationManager::initialize(int entryId) {
   }
 
   // TODO: Check type of entry and patch if necessary
-  if (entry->type == EntryType::ROMHACK) {
+  if (entry->type == EntryType::PATCH) {
     return;
   }
 
