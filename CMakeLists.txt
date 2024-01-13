@@ -80,6 +80,9 @@ add_library(firelight_lib
         src/app/saves/save_data.cpp
         src/app/game_loader.cpp
         src/app/game_loader.hpp
+        src/app/patching/ips_patch.cpp
+        src/app/patching/ips_patch.hpp
+        src/app/patching/rom_patch.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
@@ -122,9 +125,23 @@ install(TARGETS firelight
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+set(SOURCE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/test_resources")
+set(DEST_RESOURCES_DIR "${CMAKE_BINARY_DIR}/test_resources")
+
+add_custom_target(copy_resources ALL
+        COMMAND ${CMAKE_COMMAND} -E echo "Copying test resources from ${SOURCE_RESOURCES_DIR} to ${DEST_RESOURCES_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${DEST_RESOURCES_DIR}  # Ensure destination directory exists
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOURCE_RESOURCES_DIR} ${DEST_RESOURCES_DIR}
+        COMMAND ${CMAKE_COMMAND} -E echo "Copy completed"
+        COMMENT "Copying test resources to build directory"
+)
+
 add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
+        tests/app/patching/ips_patch_test.cpp
 )
+
+add_dependencies(fl_test copy_resources)
 
 target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS})
 target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES})

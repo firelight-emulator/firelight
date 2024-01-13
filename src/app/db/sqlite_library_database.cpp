@@ -19,6 +19,7 @@ const char *create_query = "CREATE TABLE IF NOT EXISTS library("
                            "platform INTEGER NOT NULL,"
                            "game INTEGER,"
                            "rom INTEGER,"
+                           "parent_entry INTEGER,"
                            "romhack INTEGER,"
                            "romhack_release INTEGER,"
                            "source_directory NVARCHAR(999) NOT NULL,"
@@ -155,10 +156,11 @@ std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
     nextEntry.platform = query.value(5).toInt();
     nextEntry.game = query.value(6).toInt();
     nextEntry.rom = query.value(7).toInt();
-    nextEntry.romhack = query.value(8).toInt();
-    nextEntry.romhack_release = query.value(9).toInt();
-    nextEntry.source_directory = query.value(10).toString().toStdString();
-    nextEntry.content_path = query.value(11).toString().toStdString();
+    nextEntry.parent_entry = query.value(8).toInt();
+    nextEntry.romhack = query.value(9).toInt();
+    nextEntry.romhack_release = query.value(10).toInt();
+    nextEntry.source_directory = query.value(11).toString().toStdString();
+    nextEntry.content_path = query.value(12).toString().toStdString();
 
     result.emplace_back(nextEntry);
   }
@@ -176,12 +178,14 @@ void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
       "platform,"
       "game, "
       "rom, "
+      "parent_entry, "
       "romhack, "
       "romhack_release, "
       "source_directory, "
       "content_path) "
       "VALUES (:display_name, :type, :verified, :md5, :platform, :game, "
-      ":rom, :romhack, :romhack_release, :source_directory, :content_path);";
+      ":rom, :parent_entry, :romhack, :romhack_release, :source_directory, "
+      ":content_path);";
 
   auto db = QSqlDatabase::database("library");
   if (!db.isValid()) {
@@ -201,6 +205,7 @@ void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
   query.bindValue(":platform", entry.platform);
   query.bindValue(":game", entry.game);
   query.bindValue(":rom", entry.rom);
+  query.bindValue(":parent_entry", entry.parent_entry);
   query.bindValue(":romhack", entry.romhack);
   query.bindValue(":romhack_release", entry.romhack_release);
   query.bindValue(":source_directory",

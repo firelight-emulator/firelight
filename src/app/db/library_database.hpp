@@ -19,6 +19,7 @@ public:
     int platform;
     int game = -1;
     int rom = -1;
+    int parent_entry = -1;
     int romhack = -1;
     std::string source_directory;
     std::string content_path;

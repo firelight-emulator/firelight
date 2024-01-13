@@ -93,6 +93,8 @@ SqliteContentDatabase::getPlatformByExtension(std::string ext) {
 
   if (ext == ".z64") {
     result.emplace(Platform{.id = 0});
+  } else if (ext == ".smc") {
+    result.emplace(Platform{.id = 1});
   }
 
   return result;
