@@ -42,6 +42,9 @@ jobs:
           
     - uses: actions/checkout@v3
 
+    - name: do
+      run: ls -lR
+
     - name: CMake Action
       uses: threeal/cmake-action@v1.3.0
       with:
