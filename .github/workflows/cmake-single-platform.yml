@@ -14,6 +14,7 @@ env:
   CMAKE_GENERATOR: MinGW Makefiles
   CMAKE_MODULE_PATH: |
     C:/mingw64/lib/cmake/SDL2
+  CMAKE_SDL2_PATH: C:/mingw64/lib/cmake/SDL2
 
   
 # defaults:
@@ -52,7 +53,7 @@ jobs:
         c-compiler: gcc
         cxx-compiler: g++
         run-build: true
-        args: "-DCMAKE_MODULE_PATH=${{env.CMAKE_MODULE_PATH}}"
+        args: "-DSDL2_DIR=${{env.CMAKE_SDL2_PATH}}"
 
     # - name: Configure CMake
     #   # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
