@@ -13,9 +13,9 @@ env:
   BUILD_TYPE: Release
 
   
-defaults:
-  run:
-    shell: msys2 {0}
+# defaults:
+#   run:
+#     shell: msys2 {0}
 
 jobs:
   build:
@@ -31,11 +31,11 @@ jobs:
         install: >-
           cmake
           openssl
-          qt6
+          mingw-w64-x86_64-qt6
           gcc
-          SDL2
-          sqlite3
-          gtest
+          mingw-w64-x86_64-SDL2
+          mingw-w64-x86_64-sqlite3
+          mingw-w64-x86_64-gtest
           curl
           git
           
