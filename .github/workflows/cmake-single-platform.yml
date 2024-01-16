@@ -17,9 +17,9 @@ env:
   CMAKE_SDL2_PATH: C:/mingw64/lib/cmake/SDL2
 
   
-defaults:
-  run:
-    shell: msys2 {0}
+# defaults:
+#   run:
+#     shell: msys2 {0}
 
 jobs:
   build:
@@ -54,6 +54,9 @@ jobs:
     #     cxx-compiler: g++
     #     run-build: true
     #     args: "-DSDL2_DIR=${{env.CMAKE_SDL2_PATH}}"
+
+    - name: do
+      run: Get-ChildItem -Recurse C:/mingw64
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
