@@ -29,6 +29,13 @@ jobs:
       with:
         update: true
         install: >-
+          cmake
+          openssl
+          qt6
+          gcc
+          SDL2
+          sqlite3
+          gtest
           curl
           git
           
