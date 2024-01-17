@@ -29,21 +29,21 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Get latest CMake
-      uses: lukka/get-cmake@latest
-    # - uses: msys2/setup-msys2@v2
-    #   with:
-    #     update: true
-    #     install: >-
-    #       cmake
-    #       openssl
-    #       mingw-w64-x86_64-qt6
-    #       gcc
-    #       mingw-w64-x86_64-SDL2
-    #       mingw-w64-x86_64-sqlite3
-    #       mingw-w64-x86_64-gtest
-    #       curl
-    #       git
+    # - name: Get latest CMake
+    #   uses: lukka/get-cmake@latest
+    - uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          make
+          git
+        pacboy: >-
+          qt6:p
+          gtest:p
+          SDL2:p
+          toolchain:p
+          openssl:p
+          sqlite3:p
           
     - uses: actions/checkout@v3
 
