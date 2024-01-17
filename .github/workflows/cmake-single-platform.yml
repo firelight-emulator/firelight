@@ -27,6 +27,9 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
 
     steps:
     # - name: Get latest CMake
@@ -44,6 +47,9 @@ jobs:
           toolchain:p
           openssl:p
           sqlite3:p
+
+    - name: ok
+      run: ls -lR D:/
           
     - uses: actions/checkout@v3
 
