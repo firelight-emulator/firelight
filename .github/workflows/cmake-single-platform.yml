@@ -49,9 +49,6 @@ jobs:
           toolchain:p
           openssl:p
           sqlite3:p
-
-    - name: ok
-      run: ls -lR D:/
           
     - uses: actions/checkout@v3
 
@@ -71,7 +68,7 @@ jobs:
       run: cmake -B build -G "${{env.CMAKE_GENERATOR}}" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
-      run: cd build && make
+      run: cmake --build build
 
     # - name: Build
     #   # Build your program with the given configuration
