@@ -45,6 +45,7 @@ jobs:
           qt6:p
           gtest:p
           SDL2:p
+          spdlog:p
           toolchain:p
           openssl:p
           sqlite3:p
