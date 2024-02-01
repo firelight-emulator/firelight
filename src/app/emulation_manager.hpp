@@ -11,15 +11,19 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
-#include <QQuickItem>
+#include <QQuickFramebufferObject>
 #include <QSGDynamicTexture>
 
 static QLibraryManager *library_manager_ = nullptr;
 
-class EmulationManager : public QQuickItem,
+class EmulationManager : public QQuickFramebufferObject,
                          public IVideoDataReceiver,
                          public QOpenGLFunctions,
                          public Firelight::ManagerAccessor {
+public:
+  [[nodiscard]] Renderer *createRenderer() const override;
+
+private:
   Q_OBJECT
 
   typedef uintptr_t (*get_framebuffer_func)();
@@ -40,18 +44,22 @@ public:
   void set_system_av_info(retro_system_av_info *info) override;
 
 public slots:
-  void initialize(int entryId);
-  void load(int entryId, QByteArray gameData, QByteArray saveData,
-            QString corePath);
+  void load(int entryId, const QByteArray &gameData, const QByteArray &saveData,
+            const QString &corePath);
   void runOneFrame();
   void pause();
   void resume();
   void save(bool waitForFinish = false);
 
 protected:
-  QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+  // QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 private:
+  int m_entryId;
+  QByteArray m_gameData;
+  QByteArray m_saveData;
+  QString m_corePath;
+
   QMetaObject::Connection m_renderConnection;
   LibEntry m_currentEntry;
   int m_millisSinceLastSave{};

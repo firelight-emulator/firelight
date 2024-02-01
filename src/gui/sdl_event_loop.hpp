@@ -20,6 +20,7 @@ protected:
   void run() override;
 
 private:
+  void processEvents() const;
   bool m_running = true;
   Input::ControllerManager *m_controllerManager;
 };
