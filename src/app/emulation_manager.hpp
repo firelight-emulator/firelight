@@ -17,31 +17,22 @@
 static QLibraryManager *library_manager_ = nullptr;
 
 class EmulationManager : public QQuickFramebufferObject,
-                         public IVideoDataReceiver,
                          public QOpenGLFunctions,
                          public Firelight::ManagerAccessor {
-public:
-  [[nodiscard]] Renderer *createRenderer() const override;
-
-private:
   Q_OBJECT
+  Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
 
   typedef uintptr_t (*get_framebuffer_func)();
 
 public:
+  [[nodiscard]] Renderer *createRenderer() const override;
   static EmulationManager *getInstance();
   static void setLibraryManager(QLibraryManager *manager);
 
   explicit EmulationManager(QQuickItem *parent = nullptr);
   ~EmulationManager() override;
   static void registerInstance(EmulationManager *manager);
-
-  void receive(const void *data, unsigned int width, unsigned int height,
-               size_t pitch) override;
-  proc_address_t get_proc_address(const char *sym) override;
-  void set_reset_context_func(context_reset_func reset) override;
-  uintptr_t get_current_framebuffer_id() override;
-  void set_system_av_info(retro_system_av_info *info) override;
+  [[nodiscard]] bool paused() const;
 
 public slots:
   void load(int entryId, const QByteArray &gameData, const QByteArray &saveData,
@@ -49,10 +40,10 @@ public slots:
   void runOneFrame();
   void pause();
   void resume();
-  void save(bool waitForFinish = false);
+  void setPaused(bool paused);
 
-protected:
-  // QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+signals:
+  void pausedChanged();
 
 private:
   int m_entryId;

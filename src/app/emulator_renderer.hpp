@@ -14,6 +14,9 @@ class EmulatorRenderer : public QQuickFramebufferObject::Renderer,
                          public IVideoDataReceiver,
                          public QOpenGLFunctions,
                          public Firelight::ManagerAccessor {
+protected:
+  void synchronize(QQuickFramebufferObject *fbo) override;
+
 public:
   void receive(const void *data, unsigned width, unsigned height,
                size_t pitch) override;
@@ -21,6 +24,7 @@ public:
   void set_reset_context_func(context_reset_func) override;
   uintptr_t get_current_framebuffer_id() override;
   void set_system_av_info(retro_system_av_info *info) override;
+  void save(bool waitForFinish = false);
 
 protected:
   QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;

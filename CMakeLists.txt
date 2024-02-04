@@ -92,10 +92,27 @@ target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_
 target_link_libraries(firelight_lib mingw32 SDL2main SDL2 opengl32 ssl crypto ${SQLite3_LIBRARIES}
         Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D Qt6::Sql spdlog::spdlog)
 
+
+file(GLOB QML_FILES
+        qml/*.qml
+)
+
+foreach (QML_FILE ${QML_FILES})
+    get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
+    set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
+endforeach ()
+
+file(GLOB_RECURSE QML_STYLE_FILES
+        qml/FirelightStyle/**/*.qml
+)
+
+foreach (QML_FILE ${QML_STYLE_FILES})
+    get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
+    set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
+endforeach ()
+
 # main code
 qt_add_executable(firelight
-        Main.qml
-        Notification.qml
         resources.qrc
         src/main.cpp
         src/logo.ico
@@ -106,13 +123,22 @@ qt_add_executable(firelight
         src/app/db/daos/romhack.hpp
         src/app/db/daos/romhack_release.hpp
 )
+configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
 
 qt_add_qml_module(firelight
-        URI QtFirelight
+        URI QMLFirelight
         VERSION 1.0
         QML_FILES
-        Main.qml
-        Notification.qml
+        ${QML_FILES}
+)
+
+set_source_files_properties(qml/FirelightStyle/import/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+qt_add_qml_module(firelight_style
+        URI FirelightStyle
+        VERSION 1.0
+        QML_FILES
+        ${QML_STYLE_FILES}
+        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/FirelightStyle"
 )
 
 target_include_directories(firelight PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}

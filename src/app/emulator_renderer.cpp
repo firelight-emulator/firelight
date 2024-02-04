@@ -5,10 +5,19 @@
 #include "emulator_renderer.hpp"
 
 #include "audio_manager.hpp"
+#include "emulation_manager.hpp"
 
 #include <QOpenGLFramebufferObject>
+#include <spdlog/spdlog.h>
 
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
+
+void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
+  const auto manager = reinterpret_cast<EmulationManager *>(fbo);
+  running = !manager->paused();
+
+  Renderer::synchronize(fbo);
+}
 
 void EmulatorRenderer::receive(const void *data, unsigned width,
                                unsigned height, size_t pitch) {}
@@ -25,6 +34,18 @@ uintptr_t EmulatorRenderer::get_current_framebuffer_id() {
   return m_fbo->handle();
 }
 void EmulatorRenderer::set_system_av_info(retro_system_av_info *info) {}
+void EmulatorRenderer::save(bool waitForFinish) {
+  spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
+  Firelight::Saves::SaveData saveData(core->getMemoryData(libretro::SAVE_RAM));
+  saveData.setImage(m_fbo->toImage());
+
+  QFuture<bool> result =
+      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
+
+  if (waitForFinish) {
+    result.waitForFinished();
+  }
+}
 
 QOpenGLFramebufferObject *
 EmulatorRenderer::createFramebufferObject(const QSize &size) {
@@ -70,15 +91,6 @@ EmulatorRenderer::EmulatorRenderer(int entryId, QByteArray gameData,
 }
 
 void EmulatorRenderer::render() {
-  // printf("Frame #: %lld\n", frameCount);
-  // frameCount++;
-  // if (frameCount % 2 == 0) {
-  //   glClearColor(1, 0, 0, 1);
-  // } else {
-  //   glClearColor(0, 1, 0, 1);
-  // }
-  //
-  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   if (reset_context) {
     usingHwRendering = true;
 
@@ -99,42 +111,45 @@ void EmulatorRenderer::render() {
     reset_context = nullptr;
   }
 
-  auto frameBegin = SDL_GetPerformanceCounter();
-  lastTick = thisTick;
-  thisTick = SDL_GetPerformanceCounter();
+  if (running) {
 
-  auto deltaTime =
-      (thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency();
+    auto frameBegin = SDL_GetPerformanceCounter();
+    lastTick = thisTick;
+    thisTick = SDL_GetPerformanceCounter();
 
-  m_millisSinceLastSave += static_cast<int>(deltaTime);
-  if (m_millisSinceLastSave < 0) {
-    m_millisSinceLastSave = 0;
-  }
+    auto deltaTime =
+        (thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency();
 
-  if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
-    m_millisSinceLastSave = 0;
-    printf("Pretending to save\n");
-    // gameImage = gameFbo->toImage();
-    // save();
-  }
-
-  frameCount++;
-  if (frameSkipRatio == 0 || (frameCount % frameSkipRatio == 0)) {
-    core->run(deltaTime);
-
-    auto frameEnd = SDL_GetPerformanceCounter();
-    auto frameDiff = ((frameEnd - frameBegin) * 1000 /
-                      static_cast<double>(SDL_GetPerformanceFrequency()));
-    totalFrameWorkDurationMillis += frameDiff;
-    numFrames++;
-
-    if (numFrames == 300) {
-      printf("Average frame work duration: %fms\n",
-             totalFrameWorkDurationMillis / numFrames);
-      totalFrameWorkDurationMillis = 0;
-      numFrames = 0;
+    m_millisSinceLastSave += static_cast<int>(deltaTime);
+    if (m_millisSinceLastSave < 0) {
+      m_millisSinceLastSave = 0;
     }
-  }
 
-  update();
+    if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
+      m_millisSinceLastSave = 0;
+      printf("Pretending to save\n");
+      // gameImage = gameFbo->toImage();
+      // save();
+    }
+
+    frameCount++;
+    if (frameSkipRatio == 0 || (frameCount % frameSkipRatio == 0)) {
+      core->run(deltaTime);
+
+      auto frameEnd = SDL_GetPerformanceCounter();
+      auto frameDiff = ((frameEnd - frameBegin) * 1000 /
+                        static_cast<double>(SDL_GetPerformanceFrequency()));
+      totalFrameWorkDurationMillis += frameDiff;
+      numFrames++;
+
+      if (numFrames == 300) {
+        printf("Average frame work duration: %fms\n",
+               totalFrameWorkDurationMillis / numFrames);
+        totalFrameWorkDurationMillis = 0;
+        numFrames = 0;
+      }
+    }
+
+    update();
+  }
 }

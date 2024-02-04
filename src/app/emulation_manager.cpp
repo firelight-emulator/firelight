@@ -40,6 +40,7 @@ EmulationManager::EmulationManager(QQuickItem *parent)
     : QQuickFramebufferObject(parent) {
   setTextureFollowsItemSize(false);
   setMirrorVertically(true);
+  setFlag(ItemHasContents);
 }
 EmulationManager::~EmulationManager() {
   running = false;
@@ -58,44 +59,6 @@ void EmulationManager::load(int entryId, const QByteArray &gameData,
   m_gameData = gameData;
   m_saveData = saveData;
   m_corePath = corePath;
-  // m_currentEntry = library_manager_->get_by_id(entryId).value();
-  //
-  // core = std::make_unique<libretro::Core>(corePath.toStdString());
-  // core->setRetropadProvider(getControllerManager());
-  //
-  // core->setSystemDirectory(".");
-  // core->setSaveDirectory(".");
-  //
-  // core->set_video_receiver(this);
-  // core->set_audio_receiver(new AudioManager());
-  // core->init();
-  //
-  // libretro::Game game(vector<unsigned char>(gameData.begin(),
-  // gameData.end())); core->loadGame(&game);
-  //
-  // if (saveData.size() > 0) {
-  //   core->writeMemoryData(libretro::SAVE_RAM,
-  //                         vector(saveData.begin(), saveData.end()));
-  // }
-  //
-  // // window()->setMinimumSize(QSize(core_av_info_->geometry.max_width,
-  // //                                core_av_info_->geometry.max_height));
-  //
-  // // setSize(QSize(core_av_info_->geometry.max_width,
-  // //               core_av_info_->geometry.max_height));
-  //
-  // const auto targetFrameTime = 1 / core_av_info_->timing.fps;
-  // const auto actualFrameTime =
-  //     1 / QGuiApplication::primaryScreen()->refreshRate();
-  //
-  // frameSkipRatio = std::lround(targetFrameTime / actualFrameTime);
-  //
-  // setFlag(ItemHasContents);
-  // auto win = window();
-
-  // m_renderConnection =
-  //     connect(win, &QQuickWindow::beforeRendering, this,
-  //             &EmulationManager::runOneFrame, Qt::DirectConnection);
 }
 
 void EmulationManager::runOneFrame() {
@@ -142,7 +105,7 @@ void EmulationManager::runOneFrame() {
     if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
       m_millisSinceLastSave = 0;
       gameImage = gameFbo->toImage();
-      save();
+      // save();
     }
 
     glClearColor(0, 0, 0, 1);
@@ -175,59 +138,38 @@ void EmulationManager::runOneFrame() {
     window()->update();
   }
 }
+
 void EmulationManager::pause() { running = false; }
 void EmulationManager::resume() { running = true; }
-void EmulationManager::save(const bool waitForFinish) {
-  spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
-  Firelight::Saves::SaveData saveData(core->getMemoryData(libretro::SAVE_RAM));
-  saveData.setImage(gameImage);
 
-  QFuture<bool> result =
-      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
-
-  if (waitForFinish) {
-    result.waitForFinished();
-  }
+void EmulationManager::setPaused(bool paused) {
+  running = !paused;
+  update();
 }
 
-void EmulationManager::receive(const void *data, unsigned int width,
-                               unsigned int height, size_t pitch) {
-  if (data != nullptr && !usingHwRendering) {
-    if (!gameFbo) {
-      gameFbo = std::make_unique<QOpenGLFramebufferObject>(width, height);
+bool EmulationManager::paused() const { return !running; }
 
-      gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
-          gameFbo->texture(), window(), gameFbo->size());
-    }
-
-    QOpenGLPaintDevice paint_device;
-    paint_device.setSize(gameFbo->size());
-    QPainter painter(&paint_device);
-
-    gameFbo->bind();
-    const QImage image((uchar *)data, width, height, pitch,
-                       QImage::Format_RGB16);
-
-    painter.drawImage(QRect(0, 0, gameFbo->width(), gameFbo->height()), image,
-                      image.rect());
-    gameFbo->release();
-  }
-}
-
-proc_address_t EmulationManager::get_proc_address(const char *sym) {
-  return QOpenGLContext::currentContext()->getProcAddress(sym);
-}
-
-void EmulationManager::set_system_av_info(retro_system_av_info *info) {
-  core_av_info_ = info;
-}
-
-void EmulationManager::set_reset_context_func(context_reset_func reset) {
-  reset_context = reset;
-}
-
-uintptr_t EmulationManager::get_current_framebuffer_id() {
-  GLuint fboId;
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, reinterpret_cast<GLint *>(&fboId));
-  return fboId;
-}
+// void EmulationManager::receive(const void *data, unsigned int width,
+//                                unsigned int height, size_t pitch) {
+//   if (data != nullptr && !usingHwRendering) {
+//     if (!gameFbo) {
+//       gameFbo = std::make_unique<QOpenGLFramebufferObject>(width, height);
+//
+//       gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
+//           gameFbo->texture(), window(), gameFbo->size());
+//     }
+//
+//     QOpenGLPaintDevice paint_device;
+//     paint_device.setSize(gameFbo->size());
+//     QPainter painter(&paint_device);
+//
+//     gameFbo->bind();
+//     const QImage image((uchar *)data, width, height, pitch,
+//                        QImage::Format_RGB16);
+//
+//     painter.drawImage(QRect(0, 0, gameFbo->width(), gameFbo->height()),
+//     image,
+//                       image.rect());
+//     gameFbo->release();
+//   }
+// }
