@@ -6,7 +6,7 @@ import FirelightStyle 1.0
 Item {
     id: control
     property string fontFamily: "Arial"
-    readonly property int buttonWidth: 188
+    readonly property int buttonWidth: 200
 
     signal homeClicked()
 
