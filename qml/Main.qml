@@ -14,11 +14,96 @@ ApplicationWindow {
     height: 720
     visible: true
     title: qsTr("Firelight")
-    color: Constants.color_surfaceContainer
+    color: Constants.colorTestBackground
     // color: "transparent"
     // Material.theme: Material.Light
     // Material.accent: Material.DeepOrange
     // Material.primary: Material.Indigo
+
+    Component {
+        id: homePage
+
+        Item {
+            Rectangle {
+                radius: 12
+                anchors.fill: parent
+                color: Constants.colorTestSurface
+            }
+
+            Text {
+                text: "Here's where the Home menu will go!"
+                anchors.centerIn: parent
+                color: Constants.colorTestTextMuted
+                font.pointSize: 16
+                font.family: localFont.name
+            }
+        }
+    }
+
+    Component {
+        id: explorePage
+
+        Item {
+            Rectangle {
+                radius: 12
+                anchors.fill: parent
+                color: Constants.colorTestSurface
+            }
+
+            Text {
+                text: "Here's where the Explore menu will go!"
+                anchors.centerIn: parent
+                color: Constants.colorTestTextMuted
+                font.pointSize: 16
+                font.family: localFont.name
+            }
+        }
+    }
+
+    Component {
+        id: libraryPage
+        LibraryPage {
+            fontFamilyName: localFont.name
+        }
+    }
+
+    Component {
+        id: controllersPage
+        Item {
+            Rectangle {
+                radius: 12
+                anchors.fill: parent
+                color: Constants.colorTestSurface
+            }
+
+            Text {
+                text: "Here's where the Controllers menu will go!"
+                anchors.centerIn: parent
+                color: Constants.colorTestTextMuted
+                font.pointSize: 16
+                font.family: localFont.name
+            }
+        }
+    }
+
+    Component {
+        id: settingsPage
+        Item {
+            Rectangle {
+                radius: 12
+                anchors.fill: parent
+                color: Constants.colorTestSurface
+            }
+
+            Text {
+                text: "Here's where the Settings menu will go!"
+                anchors.centerIn: parent
+                color: Constants.colorTestTextMuted
+                font.pointSize: 16
+                font.family: localFont.name
+            }
+        }
+    }
 
     Pane {
         id: fullPane
@@ -38,31 +123,140 @@ ApplicationWindow {
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: 160
-            }
+                width: 200
 
-            Pane {
-                id: content
-                background: Rectangle {
-                    color: Constants.color_surface
-                    radius: 12
+                onHomeClicked: {
+                    if (content.newIndex === 0 || content.currentIndex === 0) {
+                        return
+                    }
+                    content.newIndex = 0
+                    content.replace(homePage)
                 }
 
-                padding: 12
+                onExploreClicked: {
+                    if (content.newIndex === 1 || content.currentIndex === 1) {
+                        return
+                    }
+                    content.newIndex = 1
+                    content.replace(explorePage)
+                }
 
-                anchors.leftMargin: 12
-                anchors.left: navRail.right
-                anchors.right: parent.right
+                onLibraryClicked: {
+                    if (content.newIndex === 2 || content.currentIndex === 2) {
+                        return
+                    }
+                    content.newIndex = 2
+                    content.replace(libraryPage)
+                }
+
+                onControllersClicked: {
+                    if (content.newIndex === 3 || content.currentIndex === 3) {
+                        return
+                    }
+                    content.newIndex = 3
+                    content.replace(controllersPage)
+                }
+
+                onSettingsClicked: {
+                    if (content.newIndex === 4 || content.currentIndex === 4) {
+                        return
+                    }
+                    content.newIndex = 4
+                    content.replace(settingsPage)
+                }
+            }
+
+            Rectangle {
+                id: header
+                height: 28
                 anchors.top: parent.top
+                anchors.left: navRail.right
+                anchors.leftMargin: 12
+                anchors.right: parent.right
+                color: "transparent"
+
+                Text {
+                    text: "6:30pm"
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignRight
+                    verticalAlignment: Text.AlignVCenter
+                    color: Constants.colorTestText
+                    font.pointSize: 12
+                    font.family: localFont.name
+                }
+            }
+
+            StackView {
+                id: content
+                property int currentIndex: 0
+                property int newIndex: 0
+
+                clip: true
+
+                anchors.topMargin: 12
+                anchors.top: header.bottom
+                anchors.left: navRail.right
+                anchors.leftMargin: 12
+                anchors.right: parent.right
                 anchors.bottom: footer.top
                 anchors.bottomMargin: 12
 
-                Rectangle {
-                    id: testItem
-                    width: 200
-                    height: 160
-                    color: Constants.color_surfaceContainer
-                    radius: 12
+                initialItem: homePage
+
+                popEnter: Transition {
+                }
+                popExit: Transition {
+                }
+                pushEnter: Transition {
+                }
+                pushExit: Transition {
+                }
+
+                replaceEnter: Transition {
+                    SequentialAnimation {
+                        ParallelAnimation {
+                            PropertyAnimation {
+                                property: "y"
+                                from: (content.newIndex > content.currentIndex) ? 50 : -50
+                                to: 0
+                                duration: 300
+                                easing.type: Easing.InOutQuad
+                            }
+                            PropertyAnimation {
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: 300
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                        ScriptAction {
+                            script: {
+                                content.currentIndex = content.newIndex
+                            }
+                        }
+                    }
+                }
+
+                replaceExit: Transition {
+                    SequentialAnimation {
+                        ParallelAnimation {
+                            PropertyAnimation {
+                                property: "y"
+                                from: 0
+                                to: (content.newIndex > content.currentIndex) ? -50 : 50
+                                duration: 300
+                                easing.type: Easing.InOutQuad
+                            }
+                            PropertyAnimation {
+                                property: "opacity"
+                                from: 1
+                                to: 0
+                                duration: 300
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                    }
                 }
             }
 
@@ -77,14 +271,12 @@ ApplicationWindow {
                 Text {
                     text: "Firelight is made with love by BiscuitCakes"
                     anchors.centerIn: parent
-                    color: Constants.color_outlineVariant
+                    color: Constants.colorTestTextMuted
                     font.pointSize: 8
-                    font.family: localFont.name
+                    font.family: lexendLight.name
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-
-
             }
         }
 

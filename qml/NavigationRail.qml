@@ -6,6 +6,17 @@ import FirelightStyle 1.0
 Item {
     id: control
     property string fontFamily: "Arial"
+    readonly property int buttonWidth: 188
+
+    signal homeClicked()
+
+    signal exploreClicked()
+
+    signal libraryClicked()
+
+    signal controllersClicked()
+
+    signal settingsClicked()
 
     FontLoader {
         id: symbols
@@ -24,23 +35,23 @@ Item {
         width: navPositionGroup.checkedButton.width
         height: navPositionGroup.checkedButton.height
 
-        Behavior on x {
-            NumberAnimation {
-                duration: 120
-                easing.type: Easing.InOutQuad;
-            }
-        }
-
-        Behavior on y {
-            NumberAnimation {
-                duration: 120
-                easing.type: Easing.InOutQuad;
-            }
-        }
+        // Behavior on x {
+        //     NumberAnimation {
+        //         duration: 100
+        //         easing.type: Easing.InOutQuad;
+        //     }
+        // }
+        //
+        // Behavior on y {
+        //     NumberAnimation {
+        //         duration: 100
+        //         easing.type: Easing.InOutQuad;
+        //     }
+        // }
 
         radius: 12
 
-        color: Constants.color_secondaryContainer
+        color: Constants.colorTestCardActive
     }
 
     ColumnLayout {
@@ -52,10 +63,14 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 64
-            Layout.preferredWidth: 160
+            Layout.preferredHeight: 48
+            Layout.preferredWidth: buttonWidth
 
             checked: true
+
+            onClicked: {
+                homeClicked()
+            }
 
             labelText: "Home"
             labelIcon: "\ue88a"
@@ -63,8 +78,12 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 64
-            Layout.preferredWidth: 160
+            Layout.preferredHeight: 48
+            Layout.preferredWidth: buttonWidth
+
+            onClicked: {
+                exploreClicked()
+            }
 
             labelText: "Explore"
             labelIcon: "\ue8d0"
@@ -72,8 +91,12 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 64
-            Layout.preferredWidth: 160
+            Layout.preferredHeight: 48
+            Layout.preferredWidth: buttonWidth
+
+            onClicked: {
+                libraryClicked()
+            }
 
             labelText: "Library"
             labelIcon: "\uf53e"
@@ -81,8 +104,12 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 64
-            Layout.preferredWidth: 160
+            Layout.preferredHeight: 48
+            Layout.preferredWidth: buttonWidth
+
+            onClicked: {
+                controllersClicked()
+            }
 
             labelText: "Controllers"
             labelIcon: "\uf135"
@@ -90,8 +117,12 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 64
-            Layout.preferredWidth: 160
+            Layout.preferredHeight: 48
+            Layout.preferredWidth: buttonWidth
+
+            onClicked: {
+                settingsClicked()
+            }
 
             labelText: "Settings"
             labelIcon: "\ue8b8"
@@ -129,7 +160,7 @@ Item {
 
                 font.family: symbols.name
                 font.pixelSize: 24
-                color: navButtonComponent.checked ? Constants.color_onSecondaryContainer : Constants.color_onSurfaceVariant
+                color: navButtonComponent.checked ? Constants.colorTestTextActive : Constants.colorTestText
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 // Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -143,7 +174,7 @@ Item {
                 anchors.right: parent.right
                 font.pointSize: 12
                 font.family: control.fontFamily
-                color: navButtonComponent.checked ? Constants.color_onSecondaryContainer : Constants.color_onSurfaceVariant
+                color: navButtonComponent.checked ? Constants.colorTestTextActive : Constants.colorTestText
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
                 // Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -156,7 +187,7 @@ Item {
         // }
 
         background: Rectangle {
-            color: navButtonComponent.checked ? "transparent" : mouse.hovered ? Constants.color_surfaceContainerHigh : "transparent"
+            color: navButtonComponent.checked ? "transparent" : mouse.hovered ? Constants.colorTestCard : "transparent"
             // color: navButtonComponent.checked ? Constants.color_secondaryContainer : "transparent"
             radius: 12
             // color: "transparent"

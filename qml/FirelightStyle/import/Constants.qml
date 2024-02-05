@@ -3,6 +3,17 @@ import QtQuick
 pragma Singleton
 
 QtObject {
+    readonly property color colorTestSurface: "#161616"
+    readonly property color colorTestBackground: "#212020"
+    readonly property color colorTestSurfaceContainerLowest: "#282727"
+    readonly property color colorTestSurfaceVariant: "#373636"
+    readonly property color colorTestTextActive: "#f0f0f0"
+    readonly property color colorTestText: "#c2c2c2"
+    readonly property color colorTestTextMuted: "#737373"
+    readonly property color colorTestCard: "#48240c"
+    readonly property color colorTestCardActive: "#833800"
+
+
     readonly property color color_primary: "#FFB787"
     readonly property color color_surfaceTint: "#FFB787"
     readonly property color color_onPrimary: "#502400"
