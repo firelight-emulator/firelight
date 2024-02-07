@@ -12,14 +12,8 @@ Rectangle {
     property var romData
     property var saveData
     property string corePath
-    color: "black"
-
     focus: true
-
-    // Keys.onEscapePressed: {
-    //     // background.visible = false
-    //     everything.push(mainMenu)
-    // }
+    color: "black"
 
     StackView.visible: true
 
@@ -31,28 +25,24 @@ Rectangle {
         emulatorContainer.state = "Blurred";
     }
 
-    Keys.onDigit1Pressed: {
+    function loadTheThing() {
         emulatorView.loadGame(currentLibraryEntryId, romData, saveData, corePath)
     }
 
-    Keys.onDigit2Pressed: {
+    function startEmulation() {
         emulatorView.startEmulation()
     }
 
-    // Keys.onEscapePressed: {
-    //     emulatorView.pause()
-    //     // everything.push(quickMenu)
-    // }
-
+    Keys.onDigit2Pressed: {
+        console.log("pressed 2")
+        emulatorView.startEmulation()
+    }
 
     Item {
         id: emulatorContainer
-        anchors.fill: parent
-
-        // color: "black"
-
         property bool blurred: false
         property var blurAmount: 0.0
+        anchors.fill: parent
 
         layer.enabled: true
         layer.effect: MultiEffect {
@@ -193,4 +183,7 @@ Rectangle {
             console.log("back clicked")
         }
     }
+    // color: "black"
+
+
 }

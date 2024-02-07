@@ -44,21 +44,27 @@ void EmulationManager::loadGame(int entryId, const QByteArray &gameData,
   m_gameData = gameData;
   m_saveData = saveData;
   m_corePath = corePath;
+  update();
+
+  printf("DOING IT\n");
 }
 
 void EmulationManager::pauseGame() {
   m_shouldPauseGame = true;
   update();
 }
+
 void EmulationManager::resumeGame() {
   m_shouldResumeGame = true;
   update();
 }
+
 void EmulationManager::startEmulation() {
   m_shouldStartEmulation = true;
   update();
   printf("starting emulation\n");
 }
+
 void EmulationManager::stopEmulation() {
   m_shouldStopEmulation = true;
   update();

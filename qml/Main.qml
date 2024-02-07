@@ -114,12 +114,63 @@ ApplicationWindow {
 
     Component {
         id: emulatorPage
+
         EmulatorPage {
             Keys.onEscapePressed: {
-                // background.visible = false
                 everything.push(mainMenu)
             }
         }
+    }
+
+    SequentialAnimation {
+        id: startGameAnimation
+        running: false
+        property int currentLibraryEntryId
+        property var romData
+        property var saveData
+        property string corePath
+
+        PropertyAnimation {
+            target: overlayThing
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 300
+            easing.type: Easing.InOutQuad
+        }
+
+        ScriptAction {
+            script: {
+                everything.replace(emulatorPage, {
+                    currentLibraryEntryId: startGameAnimation.currentLibraryEntryId,
+                    romData: startGameAnimation.romData,
+                    saveData: startGameAnimation.saveData,
+                    corePath: startGameAnimation.corePath
+                })
+                everything.get(0).loadTheThing()
+            }
+        }
+
+        PropertyAnimation {
+            target: overlayThing
+            property: "opacity"
+            from: 1
+            to: 0
+            duration: 300
+            easing.type: Easing.InOutQuad
+        }
+
+        ScriptAction {
+            script: {
+                everything.get(0).startEmulation()
+            }
+        }
+
+        // TODO: fade to black
+        // TODO: swap to emulator page
+        // TODO: fade in
+        // TODO: load game
+        // TODO: start emulation
     }
 
     StackView {
@@ -175,6 +226,13 @@ ApplicationWindow {
         }
     }
 
+    Rectangle {
+        id: overlayThing
+        anchors.fill: parent
+        color: "black"
+        opacity: 0
+    }
+
     Component {
         id: mainMenu
         Pane {
@@ -183,9 +241,9 @@ ApplicationWindow {
 
             Keys.onEscapePressed: {
                 if (StackView.index > 0) {
-                    var me = everything.get(1)
-                    everything.replace(null, me)
-                    // everything.pop()
+                    // var me = everything.get(1)
+                    // everything.replace(null, me)
+                    everything.pop()
                 }
             }
 
@@ -385,12 +443,12 @@ ApplicationWindow {
         id: gameLoader
 
         onGameLoaded: function (entryId, romData, saveData, corePath) {
-            everything.replace(emulatorPage, {
-                currentLibraryEntryId: entryId,
-                romData: romData,
-                saveData: saveData,
-                corePath: corePath
-            })
+            startGameAnimation.currentLibraryEntryId = entryId
+            startGameAnimation.romData = romData
+            startGameAnimation.saveData = saveData
+            startGameAnimation.corePath = corePath
+            startGameAnimation.start()
+            // everything.clear()
         }
 
         onGameLoadFailedOrphanedPatch: function (entryId) {
