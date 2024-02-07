@@ -20,36 +20,53 @@ class EmulationManager : public QQuickFramebufferObject,
                          public QOpenGLFunctions,
                          public Firelight::ManagerAccessor {
   Q_OBJECT
-  Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
 
   typedef uintptr_t (*get_framebuffer_func)();
 
 public:
   [[nodiscard]] Renderer *createRenderer() const override;
-  static EmulationManager *getInstance();
-  static void setLibraryManager(QLibraryManager *manager);
 
   explicit EmulationManager(QQuickItem *parent = nullptr);
-  ~EmulationManager() override;
-  static void registerInstance(EmulationManager *manager);
-  [[nodiscard]] bool paused() const;
+
+  int getEntryId() const;
+  QByteArray getGameData();
+  QByteArray getSaveData();
+  QString getCorePath();
 
 public slots:
-  void load(int entryId, const QByteArray &gameData, const QByteArray &saveData,
-            const QString &corePath);
-  void runOneFrame();
-  void pause();
-  void resume();
-  void setPaused(bool paused);
+  void loadGame(int entryId, const QByteArray &gameData,
+                const QByteArray &saveData, const QString &corePath);
+  void pauseGame();
+  void resumeGame();
+  void startEmulation();
+  void stopEmulation();
+
+  bool takeShouldLoadGameFlag();
+  bool takeShouldPauseGameFlag();
+  bool takeShouldResumeGameFlag();
+  bool takeShouldStartEmulationFlag();
+  bool takeShouldStopEmulationFlag();
 
 signals:
-  void pausedChanged();
+  void gameLoaded();
+  void gamePaused();
+  void gameResumed();
+  void emulationStarted();
+  void emulationStopped();
 
 private:
+  bool m_shouldLoadGame = false;
+  bool m_shouldPauseGame = false;
+  bool m_shouldResumeGame = false;
+  bool m_shouldStartEmulation = false;
+  bool m_shouldStopEmulation = false;
+
   int m_entryId;
   QByteArray m_gameData;
   QByteArray m_saveData;
   QString m_corePath;
+
+  bool m_shouldShutdown = false;
 
   QMetaObject::Connection m_renderConnection;
   LibEntry m_currentEntry;

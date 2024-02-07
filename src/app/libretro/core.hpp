@@ -67,6 +67,8 @@ public:
 
   bool loadGame(Game *game);
 
+  void unloadGame();
+
   void setSystemDirectory(string);
 
   void setSaveDirectory(const string &);

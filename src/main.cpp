@@ -152,8 +152,6 @@ int main(int argc, char *argv[]) {
   libraryManager.startScan();
   Firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  EmulationManager::setLibraryManager(&libraryManager);
-
   // auto *model = new QSqlQueryModel;
   // model->setQuery("SELECT id, display_name FROM library");
 

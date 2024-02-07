@@ -4,6 +4,7 @@
 
 #ifndef EMULATOR_RENDERER_HPP
 #define EMULATOR_RENDERER_HPP
+#include "emulation_manager.hpp"
 #include "libretro/core.hpp"
 #include "manager_accessor.hpp"
 
@@ -30,13 +31,27 @@ protected:
   QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
 
 public:
-  EmulatorRenderer(int entryId, QByteArray gameData, QByteArray saveData,
-                   QString corePath);
+  EmulatorRenderer();
 
 protected:
   void render() override;
 
 private:
+  bool m_shouldLoadGame = false;
+  bool m_shouldPauseGame = false;
+  bool m_shouldResumeGame = false;
+  bool m_shouldStartEmulation = false;
+  bool m_shouldStopEmulation = false;
+
+  bool m_running = false;
+  bool m_paused = true;
+
+  int m_entryId;
+  QByteArray m_gameData;
+  QByteArray m_saveData;
+  QString m_corePath;
+
+  bool m_shouldShutdown = false;
   bool running = false;
   Uint64 thisTick;
   Uint64 lastTick;

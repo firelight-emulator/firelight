@@ -16,24 +16,12 @@
 
 #include <spdlog/spdlog.h>
 
-EmulationManager *instance;
-
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
-  return new EmulatorRenderer(m_entryId, m_gameData, m_saveData, m_corePath);
-}
-
-EmulationManager *EmulationManager::getInstance() {
-  if (!instance) {
-    instance = new EmulationManager();
-  }
-
-  return instance;
-}
-
-void EmulationManager::setLibraryManager(QLibraryManager *manager) {
-  library_manager_ = manager;
+  printf("trying to load the renderer\n");
+  return new EmulatorRenderer();
+  // return new EmulatorRenderer(m_entryId, m_gameData, m_saveData, m_corePath);
 }
 
 EmulationManager::EmulationManager(QQuickItem *parent)
@@ -42,112 +30,81 @@ EmulationManager::EmulationManager(QQuickItem *parent)
   setMirrorVertically(true);
   setFlag(ItemHasContents);
 }
-EmulationManager::~EmulationManager() {
-  running = false;
-  // save(true);
-  // if (m_renderConnection) {
-  //   disconnect(m_renderConnection);
-  // }
-}
 
-void EmulationManager::registerInstance(EmulationManager *manager) {}
+int EmulationManager::getEntryId() const { return m_entryId; }
+QByteArray EmulationManager::getGameData() { return m_gameData; }
+QByteArray EmulationManager::getSaveData() { return m_saveData; }
+QString EmulationManager::getCorePath() { return m_corePath; }
 
-void EmulationManager::load(int entryId, const QByteArray &gameData,
-                            const QByteArray &saveData,
-                            const QString &corePath) {
+void EmulationManager::loadGame(int entryId, const QByteArray &gameData,
+                                const QByteArray &saveData,
+                                const QString &corePath) {
+  m_shouldLoadGame = true;
   m_entryId = entryId;
   m_gameData = gameData;
   m_saveData = saveData;
   m_corePath = corePath;
 }
 
-void EmulationManager::runOneFrame() {
-  if (!glInitialized) {
-    window()->beginExternalCommands();
-    initializeOpenGLFunctions();
-    glInitialized = true;
-    window()->endExternalCommands();
-  }
-
-  if (running) {
-    window()->beginExternalCommands();
-    if (reset_context) {
-      usingHwRendering = true;
-
-      gameFbo = std::make_unique<QOpenGLFramebufferObject>(
-          core_av_info_->geometry.max_width,
-          core_av_info_->geometry.max_height);
-      gameFbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-
-      gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
-          gameFbo->texture(), window(), gameFbo->size());
-
-      if (!gameFbo->isValid()) {
-        printf("gameFbo is not valid :(\n");
-      }
-
-      reset_context();
-      reset_context = nullptr;
-    }
-
-    auto frameBegin = SDL_GetPerformanceCounter();
-    lastTick = thisTick;
-    thisTick = SDL_GetPerformanceCounter();
-
-    auto deltaTime =
-        (thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency();
-
-    m_millisSinceLastSave += static_cast<int>(deltaTime);
-    if (m_millisSinceLastSave < 0) {
-      m_millisSinceLastSave = 0;
-    }
-
-    if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
-      m_millisSinceLastSave = 0;
-      gameImage = gameFbo->toImage();
-      // save();
-    }
-
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    frameCount++;
-    if (frameSkipRatio == 0 || (frameCount % frameSkipRatio == 0)) {
-      // glEnable(GL_BLEND);
-      // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      // gameFbo->bind();
-      core->run(deltaTime);
-      // gameFbo->release();
-      // glDisable(GL_BLEND);
-
-      auto frameEnd = SDL_GetPerformanceCounter();
-      auto frameDiff = ((frameEnd - frameBegin) * 1000 /
-                        static_cast<double>(SDL_GetPerformanceFrequency()));
-      totalFrameWorkDurationMillis += frameDiff;
-      numFrames++;
-
-      if (numFrames == 300) {
-        printf("Average frame work duration: %fms\n",
-               totalFrameWorkDurationMillis / numFrames);
-        totalFrameWorkDurationMillis = 0;
-        numFrames = 0;
-      }
-    }
-
-    window()->endExternalCommands();
-    window()->update();
-  }
+void EmulationManager::pauseGame() {
+  m_shouldPauseGame = true;
+  update();
 }
-
-void EmulationManager::pause() { running = false; }
-void EmulationManager::resume() { running = true; }
-
-void EmulationManager::setPaused(bool paused) {
-  running = !paused;
+void EmulationManager::resumeGame() {
+  m_shouldResumeGame = true;
+  update();
+}
+void EmulationManager::startEmulation() {
+  m_shouldStartEmulation = true;
+  update();
+  printf("starting emulation\n");
+}
+void EmulationManager::stopEmulation() {
+  m_shouldStopEmulation = true;
   update();
 }
 
-bool EmulationManager::paused() const { return !running; }
+bool EmulationManager::takeShouldLoadGameFlag() {
+  if (m_shouldLoadGame) {
+    m_shouldLoadGame = false;
+    return true;
+  }
+
+  return false;
+}
+
+bool EmulationManager::takeShouldPauseGameFlag() {
+  if (m_shouldPauseGame) {
+    m_shouldPauseGame = false;
+    return true;
+  }
+
+  return false;
+}
+bool EmulationManager::takeShouldResumeGameFlag() {
+  if (m_shouldResumeGame) {
+    m_shouldResumeGame = false;
+    return true;
+  }
+
+  return false;
+}
+bool EmulationManager::takeShouldStartEmulationFlag() {
+  if (m_shouldStartEmulation) {
+    m_shouldStartEmulation = false;
+    return true;
+  }
+
+  return false;
+}
+bool EmulationManager::takeShouldStopEmulationFlag() {
+  if (m_shouldStopEmulation) {
+    m_shouldStopEmulation = false;
+    return true;
+  }
+
+  return false;
+}
 
 // void EmulationManager::receive(const void *data, unsigned int width,
 //                                unsigned int height, size_t pitch) {

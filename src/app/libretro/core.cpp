@@ -987,6 +987,7 @@ bool Core::loadGame(Game *game) {
   audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
   return result;
 }
+void Core::unloadGame() { symRetroUnloadGame(); }
 
 void Core::init() { symRetroInit(); }
 
