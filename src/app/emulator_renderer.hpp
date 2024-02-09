@@ -32,19 +32,20 @@ protected:
 
 public:
   EmulatorRenderer();
+  ~EmulatorRenderer() override;
 
 protected:
   void render() override;
 
 private:
   bool m_shouldLoadGame = false;
-  bool m_shouldPauseGame = false;
-  bool m_shouldResumeGame = false;
   bool m_shouldStartEmulation = false;
   bool m_shouldStopEmulation = false;
 
   bool m_running = false;
   bool m_paused = true;
+
+  bool m_ranLastFrame = false;
 
   int m_entryId;
   QByteArray m_gameData;

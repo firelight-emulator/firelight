@@ -27,11 +27,20 @@ public:
   [[nodiscard]] Renderer *createRenderer() const override;
 
   explicit EmulationManager(QQuickItem *parent = nullptr);
+  ~EmulationManager() override;
 
   int getEntryId() const;
   QByteArray getGameData();
   QByteArray getSaveData();
   QString getCorePath();
+
+  bool takeShouldLoadGameFlag();
+  bool takeShouldPauseGameFlag();
+  bool takeShouldResumeGameFlag();
+  bool takeShouldStartEmulationFlag();
+  bool takeShouldStopEmulationFlag();
+
+  void setIsRunning(bool isRunning);
 
 public slots:
   void loadGame(int entryId, const QByteArray &gameData,
@@ -40,12 +49,7 @@ public slots:
   void resumeGame();
   void startEmulation();
   void stopEmulation();
-
-  bool takeShouldLoadGameFlag();
-  bool takeShouldPauseGameFlag();
-  bool takeShouldResumeGameFlag();
-  bool takeShouldStartEmulationFlag();
-  bool takeShouldStopEmulationFlag();
+  bool isRunning();
 
 signals:
   void gameLoaded();
@@ -67,6 +71,7 @@ private:
   QString m_corePath;
 
   bool m_shouldShutdown = false;
+  bool m_isRunning = false;
 
   QMetaObject::Connection m_renderConnection;
   LibEntry m_currentEntry;

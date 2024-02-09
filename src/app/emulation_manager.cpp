@@ -19,7 +19,6 @@
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
-  printf("trying to load the renderer\n");
   return new EmulatorRenderer();
   // return new EmulatorRenderer(m_entryId, m_gameData, m_saveData, m_corePath);
 }
@@ -29,6 +28,9 @@ EmulationManager::EmulationManager(QQuickItem *parent)
   setTextureFollowsItemSize(false);
   setMirrorVertically(true);
   setFlag(ItemHasContents);
+}
+EmulationManager::~EmulationManager() {
+  printf("DESTROYING EMULATION MANAGER\n");
 }
 
 int EmulationManager::getEntryId() const { return m_entryId; }
@@ -69,6 +71,7 @@ void EmulationManager::stopEmulation() {
   m_shouldStopEmulation = true;
   update();
 }
+bool EmulationManager::isRunning() { return m_isRunning; }
 
 bool EmulationManager::takeShouldLoadGameFlag() {
   if (m_shouldLoadGame) {
@@ -111,6 +114,8 @@ bool EmulationManager::takeShouldStopEmulationFlag() {
 
   return false;
 }
+
+void EmulationManager::setIsRunning(bool isRunning) { m_isRunning = isRunning; }
 
 // void EmulationManager::receive(const void *data, unsigned int width,
 //                                unsigned int height, size_t pitch) {

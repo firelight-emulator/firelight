@@ -136,7 +136,6 @@ Rectangle {
             anchors.right: parent.right
             anchors.top: horizontalRule.bottom
             anchors.topMargin: 12
-            focus: true
             clip: true
 
             ScrollBar.vertical: ScrollBar {

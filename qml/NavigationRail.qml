@@ -8,15 +8,12 @@ Item {
     property string fontFamily: "Arial"
     readonly property int buttonWidth: 200
 
-    signal homeClicked()
+    property int currentIndex: 0
+    property bool showNowRunning: true
 
-    signal exploreClicked()
+    signal indexSelected(int index)
 
-    signal libraryClicked()
-
-    signal controllersClicked()
-
-    signal settingsClicked()
+    signal closeGameClicked()
 
     FontLoader {
         id: symbols
@@ -25,51 +22,33 @@ Item {
 
     ButtonGroup {
         id: navPositionGroup
-        buttons: column.children
-    }
-
-    Rectangle {
-        id: activeIndicator
-        x: column.x + navPositionGroup.checkedButton.x
-        y: column.y + navPositionGroup.checkedButton.y
-        width: navPositionGroup.checkedButton.width
-        height: navPositionGroup.checkedButton.height
-
-        // Behavior on x {
-        //     NumberAnimation {
-        //         duration: 100
-        //         easing.type: Easing.InOutQuad;
-        //     }
-        // }
-        //
-        // Behavior on y {
-        //     NumberAnimation {
-        //         duration: 100
-        //         easing.type: Easing.InOutQuad;
-        //     }
-        // }
-
-        radius: 12
-
-        color: Constants.colorTestCardActive
+        buttons: column.children.filter(function (child) {
+            return child instanceof Button;
+        });
     }
 
     ColumnLayout {
         id: column
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.fill: parent
         spacing: 0
+
+        Rectangle {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredHeight: 160
+            Layout.minimumHeight: 160
+            Layout.preferredWidth: buttonWidth
+            color: "transparent"
+        }
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredHeight: 48
             Layout.preferredWidth: buttonWidth
 
-            checked: true
+            checked: control.currentIndex === 0
 
             onClicked: {
-                homeClicked()
+                indexSelected(0)
             }
 
             labelText: "Home"
@@ -81,8 +60,10 @@ Item {
             Layout.preferredHeight: 48
             Layout.preferredWidth: buttonWidth
 
+            checked: control.currentIndex === 1
+
             onClicked: {
-                exploreClicked()
+                indexSelected(1)
             }
 
             labelText: "Explore"
@@ -94,8 +75,10 @@ Item {
             Layout.preferredHeight: 48
             Layout.preferredWidth: buttonWidth
 
+            checked: control.currentIndex === 2
+
             onClicked: {
-                libraryClicked()
+                indexSelected(2)
             }
 
             labelText: "Library"
@@ -107,8 +90,10 @@ Item {
             Layout.preferredHeight: 48
             Layout.preferredWidth: buttonWidth
 
+            checked: control.currentIndex === 3
+
             onClicked: {
-                controllersClicked()
+                indexSelected(3)
             }
 
             labelText: "Controllers"
@@ -120,12 +105,86 @@ Item {
             Layout.preferredHeight: 48
             Layout.preferredWidth: buttonWidth
 
+            checked: control.currentIndex === 4
+
             onClicked: {
-                settingsClicked()
+                indexSelected(4)
             }
 
             labelText: "Settings"
             labelIcon: "\ue8b8"
+        }
+
+        Rectangle {
+            id: spacerOne
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredHeight: 12
+            Layout.minimumHeight: 12
+            Layout.maximumHeight: 12
+            Layout.fillWidth: true
+            color: "transparent"
+
+            visible: control.showNowRunning
+        }
+
+        Rectangle {
+            id: horizontalRule
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredHeight: 1
+            Layout.fillWidth: true
+            color: Constants.colorTestTextMuted
+
+            visible: control.showNowRunning
+        }
+
+        Rectangle {
+            id: spacerTwo
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredHeight: 12
+            Layout.minimumHeight: 12
+            Layout.maximumHeight: 12
+            Layout.fillWidth: true
+            color: "transparent"
+
+            visible: control.showNowRunning
+        }
+
+        NavButton {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredHeight: 48
+            Layout.preferredWidth: buttonWidth
+
+            checked: control.currentIndex === 5
+
+            onClicked: {
+                indexSelected(5)
+            }
+
+            labelText: "Now Playing"
+            labelIcon: "\ue037"
+
+            visible: control.showNowRunning
+        }
+
+        NavButton {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredHeight: 48
+            Layout.preferredWidth: buttonWidth
+
+            checkable: false
+
+            onClicked: {
+                closeGameClicked()
+            }
+
+            labelText: "Close Game"
+            labelIcon: "\ue5cd"
+
+            visible: control.showNowRunning
+        }
+
+        Item {
+            Layout.fillHeight: true
         }
     }
 
@@ -187,7 +246,7 @@ Item {
         // }
 
         background: Rectangle {
-            color: navButtonComponent.checked ? "transparent" : mouse.hovered ? Constants.colorTestCard : "transparent"
+            color: navButtonComponent.checked ? Constants.colorTestCardActive : mouse.hovered ? Constants.colorTestCard : "transparent"
             // color: navButtonComponent.checked ? Constants.color_secondaryContainer : "transparent"
             radius: 12
             // color: "transparent"

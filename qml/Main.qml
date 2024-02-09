@@ -15,326 +15,626 @@ ApplicationWindow {
     visible: true
     title: qsTr("Firelight")
 
-    Component {
-        id: homePage
-
-        Item {
-            // Rectangle {
-            //     radius: 12
-            //     anchors.fill: parent
-            //     color: Constants.colorTestSurface
-            // }
-
-            Text {
-                text: "Here's where the Home menu will go!"
-                anchors.centerIn: parent
-                color: Constants.colorTestTextMuted
-                font.pointSize: 16
-                font.family: localFont.name
-            }
-        }
-    }
-
-    Component {
-        id: explorePage
-
-        Item {
-            Rectangle {
-                radius: 12
-                anchors.fill: parent
-                color: Constants.colorTestSurface
-            }
-
-            Text {
-                text: "Here's where the Explore menu will go!"
-                anchors.centerIn: parent
-                color: Constants.colorTestTextMuted
-                font.pointSize: 16
-                font.family: localFont.name
-            }
-        }
-    }
-
-    Component {
-        id: libraryPage
-        LibraryPage {
-            fontFamilyName: localFont.name
-            onEntryClicked: function (entryId) {
-                if (emulatorPage.doingAThing) {
-                    console.log("already doing a thing!!!!!!")
-                } else {
-                    gameLoader.loadGame(entryId)
-                }
-
-                console.log(emulatorPage)
-                // // background.visible = !background.visible
-                // console.log("entry clicked: " + entryId)
-                // gameLoader.loadGame(entryId)
-            }
-        }
-    }
-
-    Component {
-        id: controllersPage
-        Item {
-            Rectangle {
-                radius: 12
-                anchors.fill: parent
-                color: Constants.colorTestSurface
-            }
-
-            Text {
-                text: "Here's where the Controllers menu will go!"
-                anchors.centerIn: parent
-                color: Constants.colorTestTextMuted
-                font.pointSize: 16
-                font.family: localFont.name
-            }
-        }
-    }
-
-    Component {
-        id: settingsPage
-        Item {
-            Rectangle {
-                radius: 12
-                anchors.fill: parent
-                color: Constants.colorTestSurface
-            }
-
-            Text {
-                text: "Here's where the Settings menu will go!"
-                anchors.centerIn: parent
-                color: Constants.colorTestTextMuted
-                font.pointSize: 16
-                font.family: localFont.name
-            }
-        }
-    }
-
-    Component {
-        id: emulatorPage
-
-        EmulatorPage {
-            Keys.onEscapePressed: {
-                everything.push(mainMenu)
-            }
-        }
-    }
-
-    SequentialAnimation {
-        id: startGameAnimation
-        running: false
-        property int currentLibraryEntryId
-        property var romData
-        property var saveData
-        property string corePath
-
-        PropertyAnimation {
-            target: overlayThing
-            property: "opacity"
-            from: 0
-            to: 1
-            duration: 300
-            easing.type: Easing.InOutQuad
-        }
-
-        ScriptAction {
-            script: {
-                everything.replace(emulatorPage, {
-                    currentLibraryEntryId: startGameAnimation.currentLibraryEntryId,
-                    romData: startGameAnimation.romData,
-                    saveData: startGameAnimation.saveData,
-                    corePath: startGameAnimation.corePath
-                })
-                everything.get(0).loadTheThing()
-            }
-        }
-
-        PropertyAnimation {
-            target: overlayThing
-            property: "opacity"
-            from: 1
-            to: 0
-            duration: 300
-            easing.type: Easing.InOutQuad
-        }
-
-        ScriptAction {
-            script: {
-                everything.get(0).startEmulation()
-            }
-        }
-
-        // TODO: fade to black
-        // TODO: swap to emulator page
-        // TODO: fade in
-        // TODO: load game
-        // TODO: start emulation
-    }
-
-    StackView {
-        id: everything
+    Rectangle {
+        id: appRoot
         anchors.fill: parent
         focus: true
+        color: Constants.colorTestBackground
 
-        initialItem: mainMenu
+        signal customStateChanged(string newState)
 
-        popEnter: Transition {
-        }
-        popExit: Transition {
-            ParallelAnimation {
-                PropertyAnimation {
-                    property: "scale"
-                    from: 1
-                    to: 1.2
-                    duration: 300
-                    easing.type: Easing.InOutQuad
-                }
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: 300
-                    easing.type: Easing.InOutQuad
-                }
+        state: "notPlayingGame"
+
+        Keys.onEscapePressed: function () {
+            if (state === "gameSuspended") {
+                state = "playingGame"
             }
         }
-        pushEnter: Transition {
-            ParallelAnimation {
-                PropertyAnimation {
-                    property: "scale"
-                    from: 1.2
-                    to: 1
-                    duration: 300
-                    easing.type: Easing.InOutQuad
+
+        states: [
+            State {
+                name: "notPlayingGame"
+                PropertyChanges {
+                    target: mainMenu
+                    enabled: true
+                    focus: true
                 }
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: 300
-                    easing.type: Easing.InOutQuad
+                PropertyChanges {
+                    target: emulator
+                    enabled: false
+                    focus: false
                 }
-            }
-        }
-        pushExit: Transition {
-        }
-        replaceEnter: Transition {
-        }
-        replaceExit: Transition {
-        }
-    }
-
-    Rectangle {
-        id: overlayThing
-        anchors.fill: parent
-        color: "black"
-        opacity: 0
-    }
-
-    Component {
-        id: mainMenu
-        Pane {
-            id: fullPane
-            // padding: 12
-
-            Keys.onEscapePressed: {
-                if (StackView.index > 0) {
-                    // var me = everything.get(1)
-                    // everything.replace(null, me)
-                    everything.pop()
+            },
+            State {
+                name: "playingGame"
+                PropertyChanges {
+                    target: mainMenu
+                    enabled: false
+                    focus: false
+                }
+                PropertyChanges {
+                    target: emulator
+                    enabled: true
+                    focus: true
+                }
+            },
+            State {
+                name: "gameSuspended"
+                PropertyChanges {
+                    target: mainMenu
+                    enabled: true
+                    focus: true
+                }
+                PropertyChanges {
+                    target: emulator
+                    enabled: false
+                    focus: false
                 }
             }
+        ]
 
-            StackView.onActivating: function () {
-                background.visible = everything.depth <= 1;
+        transitions: [
+            Transition {
+                from: "notPlayingGame"
+                to: "playingGame"
+                SequentialAnimation {
+                    PropertyAnimation {
+                        target: overlayThing
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 300
+                        easing.type: Easing.InOutQuad
+                    }
+                    PropertyAction {
+                        target: mainMenu
+                        property: "visible"
+                        value: false
+                    }
+                    PropertyAction {
+                        target: mainMenu
+                        property: "playingGame"
+                        value: true
+                    }
+                    ScriptAction {
+                        script: {
+                            emulator.layer.enabled = false
+                        }
+                    }
+                    PropertyAction {
+                        target: emulator
+                        property: "visible"
+                        value: true
+                    }
+                    ScriptAction {
+                        script: {
+                            emulator.resumeGame()
+                        }
+                    }
+                    PropertyAnimation {
+                        target: overlayThing
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 300
+                        easing.type: Easing.InOutQuad
+                    }
+                    ScriptAction {
+                        script: {
+                            emulator.startEmulation()
+                        }
+                    }
+                    ScriptAction {
+                        script: {
+                            appRoot.customStateChanged("playingGame")
+                        }
+                    }
+                }
+            },
+            Transition {
+                from: "playingGame"
+                to: "gameSuspended"
+                SequentialAnimation {
+                    PropertyAction {
+                        target: mainMenu
+                        property: "index"
+                        value: -1
+                    }
+                    PropertyAction {
+                        target: mainMenu
+                        property: "index"
+                        value: 5
+                    }
+                    ScriptAction {
+                        script: {
+                            emulator.pauseGame()
+                            emulator.layer.enabled = true
+                        }
+                    }
+                    PropertyAction {
+                        target: mainMenu
+                        property: "opacity"
+                        value: 0
+                    }
+                    PropertyAction {
+                        target: mainMenu
+                        property: "visible"
+                        value: true
+                    }
+                    ParallelAnimation {
+                        PropertyAnimation {
+                            target: mainMenu
+                            property: "opacity"
+                            from: 0
+                            to: 1
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
+                        PropertyAnimation {
+                            target: mainMenu
+                            property: "scale"
+                            from: 1.2
+                            to: 1
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
+                        PropertyAnimation {
+                            target: emulator
+                            property: "blurAmount"
+                            from: 0
+                            to: 1
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+                    ScriptAction {
+                        script: {
+                            appRoot.customStateChanged("gameSuspended")
+                        }
+                    }
+                }
+            },
+            Transition {
+                from: "gameSuspended"
+                to: "playingGame"
+                SequentialAnimation {
+                    ParallelAnimation {
+                        PropertyAnimation {
+                            target: mainMenu
+                            property: "opacity"
+                            from: 1
+                            to: 0
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
+                        PropertyAnimation {
+                            target: mainMenu
+                            property: "scale"
+                            from: 1
+                            to: 1.2
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
+                        PropertyAnimation {
+                            target: emulator
+                            property: "blurAmount"
+                            from: 1
+                            to: 0
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+                    ScriptAction {
+                        script: {
+                            emulator.layer.enabled = false
+                            emulator.resumeGame()
+                            // emulator.blurry = true
+                        }
+                    }
+                    PropertyAction {
+                        target: mainMenu
+                        property: "visible"
+                        value: false
+                    }
+                    ScriptAction {
+                        script: {
+                            appRoot.customStateChanged("playingGame")
+                        }
+                    }
+                }
+            },
+            Transition {
+                from: "gameSuspended"
+                to: "notPlayingGame"
+                SequentialAnimation {
+                    ScriptAction {
+                        script: {
+                            waitingDialog.open()
+                        }
+                    }
+                    PauseAnimation {
+                        duration: 300
+                    }
+                    PropertyAnimation {
+                        target: emulator
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 300
+                        easing.type: Easing.InOutQuad
+                    }
+                    ScriptAction {
+                        script: {
+                            emulator.stopEmulation()
+                        }
+                    }
+                    PropertyAction {
+                        target: emulator
+                        property: "visible"
+                        value: false
+                    }
+                    PropertyAction {
+                        target: emulator
+                        property: "opacity"
+                        value: 1
+                    }
+                    PropertyAction {
+                        target: mainMenu
+                        property: "playingGame"
+                        value: false
+                    }
+                    ScriptAction {
+                        script: {
+                            if (mainMenu.index === 5) {
+                                mainMenu.index = 0
+                            }
+                        }
+                    }
+                    PauseAnimation {
+                        duration: 300
+                    }
+                    ScriptAction {
+                        script: {
+                            waitingDialog.accept()
+                        }
+                    }
+                    ScriptAction {
+                        script: {
+                            appRoot.customStateChanged("notPlayingGame")
+                        }
+                    }
+                }
             }
+        ]
 
-            StackView.onDeactivating: function () {
-            }
+        Dialog {
+            id: waitingDialog
+            modal: true
+            // title: "doing a thing"
+            standardButtons: Dialog.NoButton
+
+            parent: Overlay.overlay
+            anchors.centerIn: parent
 
             background: Rectangle {
-                color: Constants.colorTestBackground
+                color: Constants.colorTestSurfaceContainerLowest
+                radius: 12
+                implicitWidth: 300
+                implicitHeight: 200
             }
 
-            contentItem: Rectangle {
-                color: "transparent"
+            contentItem: Item {
+                Text {
+                    anchors.centerIn: parent
+                    color: Constants.colorTestText
+                    text: "Please wait while I do the thing"
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    font.pointSize: 14
+                }
+            }
+            //
+            // background: Rectangle {
+            //     implicitWidth: 200
+            //     implicitHeight: 200
+            //     border.color: "#444"
+            // }
 
+            Overlay.modal: Rectangle {
+                id: backdropDim
+
+                color: "black"
+                anchors.fill: parent
+                opacity: 0.4
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 200
+                    }
+                }
+
+            }
+
+            enter: Transition {
+                NumberAnimation {
+                    property: "opacity";
+                    from: 0.0;
+                    to: 1.0
+                    duration: 200
+                }
+                NumberAnimation {
+                    property: "scale";
+                    from: 0.9;
+                    to: 1.0
+                    duration: 200
+                }
+                // NumberAnimation {
+                //     property: "y";
+                //     from: (waitingDialog.parent.height / 2) + (waitingDialog.height / 2);
+                //     to: (waitingDialog.parent.height / 2) - (waitingDialog.height / 2);
+                //     duration: 200
+                // }
+            }
+
+            exit: Transition {
+                NumberAnimation {
+                    property: "opacity";
+                    from: 1.0;
+                    to: 0.0;
+                    duration: 200
+                }
+                NumberAnimation {
+                    property: "scale";
+                    from: 1.0;
+                    to: 0.9
+                    duration: 200
+                }
+            }
+        }
+
+        Component {
+            id: homePage
+
+            Item {
+                Text {
+                    text: "Here's where the Home menu will go!"
+                    anchors.centerIn: parent
+                    color: Constants.colorTestTextMuted
+                    font.pointSize: 16
+                    font.family: localFont.name
+                }
+            }
+        }
+
+
+        Component {
+            id: explorePage
+
+            Item {
+                Rectangle {
+                    radius: 12
+                    anchors.fill: parent
+                    color: Constants.colorTestSurface
+                }
+
+                Text {
+                    text: "Here's where the Explore menu will go!"
+                    anchors.centerIn: parent
+                    color: Constants.colorTestTextMuted
+                    font.pointSize: 16
+                    font.family: localFont.name
+                }
+            }
+        }
+
+        Component {
+            id: libraryPage
+            LibraryPage {
+                id: thisLibraryPage
+                property int nextEntryId
+
+                fontFamilyName: localFont.name
+                onEntryClicked: function (entryId) {
+                    // gameLoader.loadGame(entryId)
+                    // fullPane.loadGame(entryId)
+                    if (emulator.isRunning()) {
+                        thisLibraryPage.nextEntryId = entryId
+                        appRoot.state = "notPlayingGame"
+                    } else {
+                        gameLoader.loadGame(entryId)
+                    }
+                }
+
+                Connections {
+                    target: appRoot
+
+                    function onCustomStateChanged(newState) {
+                        if (newState === "notPlayingGame" && thisLibraryPage.nextEntryId !== -1) {
+                            var entryId = thisLibraryPage.nextEntryId
+                            thisLibraryPage.nextEntryId = -1
+
+                            console.log("GONNA LOAD: " + entryId)
+
+                            gameLoader.loadGame(entryId)
+                        }
+                    }
+                }
+
+            }
+        }
+
+        Component {
+            id: controllersPage
+            Item {
+                Rectangle {
+                    radius: 12
+                    anchors.fill: parent
+                    color: Constants.colorTestSurface
+                }
+
+                Text {
+                    text: "Here's where the Controllers menu will go!"
+                    anchors.centerIn: parent
+                    color: Constants.colorTestTextMuted
+                    font.pointSize: 16
+                    font.family: localFont.name
+                }
+            }
+        }
+
+        Component {
+            id: settingsPage
+            Item {
+                Rectangle {
+                    radius: 12
+                    anchors.fill: parent
+                    color: Constants.colorTestSurface
+                }
+
+                Text {
+                    text: "Here's where the Settings menu will go!"
+                    anchors.centerIn: parent
+                    color: Constants.colorTestTextMuted
+                    font.pointSize: 16
+                    font.family: localFont.name
+                }
+            }
+        }
+
+        Component {
+            id: nowPlayingPage
+            Item {
+                Text {
+                    text: "Here's where the Now Playing menu will go!"
+                    anchors.centerIn: parent
+                    color: Constants.colorTestTextMuted
+                    font.pointSize: 16
+                    font.family: localFont.name
+                }
+            }
+        }
+
+        GameLoader {
+            id: gameLoader
+
+            onGameLoaded: function (entryId, romData, saveData, corePath) {
+                emulator.loadTheThing(entryId, romData, saveData, corePath)
+            }
+
+            onGameLoadFailedOrphanedPatch: function (entryId) {
+                dialog.open()
+            }
+        }
+
+        EmulatorPage {
+            id: emulator
+            anchors.fill: parent
+            visible: false
+
+            property double blurAmount: 0
+
+            layer.enabled: false
+            layer.effect: MultiEffect {
+                source: emulator
+                anchors.fill: emulator
+                blurEnabled: true
+                blurMultiplier: 1.0
+                blurMax: 64
+                blur: emulator.blurAmount
+            }
+
+            Keys.onEscapePressed: {
+                appRoot.state = "gameSuspended"
+            }
+
+            onGameLoaded: {
+                appRoot.state = "playingGame"
+            }
+        }
+
+        Pane {
+            id: mainMenu
+            property int index: 0
+            property int lastIndex: 0
+            property bool playingGame: false
+
+            anchors.fill: parent
+
+            visible: true
+
+            onIndexChanged: function () {
+                console.log("CHANGING INDEX: " + index)
+                if (index === -1) {
+                    console.log("its negative")
+                    content.clear()
+                    return
+                }
+                content.index = index
+                //
+                // console.log("current index: " + content.currentIndex + " new index: " + content.newIndex)
+                // if (content.newIndex === index || content.currentIndex === index) {
+                //     return
+                // }
+
+                var method = content.depth > 0 ? content.replace : content.push
+
+                if (index === 0) {
+                    method(homePage)
+                } else if (index === 1) {
+                    method(explorePage)
+                } else if (index === 2) {
+                    method(libraryPage)
+                } else if (index === 3) {
+                    method(controllersPage)
+                } else if (index === 4) {
+                    method(settingsPage)
+                } else if (index === 5) {
+                    method(nowPlayingPage)
+                }
+            }
+
+            padding: 12
+
+            background: Rectangle {
+                color: "transparent"
+            }
+
+            contentItem: Item {
                 NavigationRail {
                     id: navRail
                     fontFamily: localFont.name
+
+                    currentIndex: mainMenu.index
+
+                    showNowRunning: mainMenu.playingGame
 
                     anchors.left: parent.left
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     width: 200
 
-                    onHomeClicked: {
-                        if (content.newIndex === 0 || content.currentIndex === 0) {
-                            return
-                        }
-                        content.newIndex = 0
-                        content.replace(homePage)
+                    onIndexSelected: function (index) {
+                        mainMenu.index = index
                     }
 
-                    onExploreClicked: {
-                        if (content.newIndex === 1 || content.currentIndex === 1) {
-                            return
-                        }
-                        content.newIndex = 1
-                        content.replace(explorePage)
-                    }
-
-                    onLibraryClicked: {
-                        if (content.newIndex === 2 || content.currentIndex === 2) {
-                            return
-                        }
-                        content.newIndex = 2
-                        content.replace(libraryPage)
-                    }
-
-                    onControllersClicked: {
-                        if (content.newIndex === 3 || content.currentIndex === 3) {
-                            return
-                        }
-                        content.newIndex = 3
-                        content.replace(controllersPage)
-                    }
-
-                    onSettingsClicked: {
-                        if (content.newIndex === 4 || content.currentIndex === 4) {
-                            return
-                        }
-                        content.newIndex = 4
-                        content.replace(settingsPage)
+                    onCloseGameClicked: {
+                        closeGameDialog.open()
                     }
                 }
 
-                Rectangle {
+                Header {
                     id: header
                     height: 28
                     anchors.top: parent.top
                     anchors.left: navRail.right
                     anchors.leftMargin: 12
                     anchors.right: parent.right
-                    color: "transparent"
-
-                    Text {
-                        text: "6:30pm"
-                        anchors.fill: parent
-                        horizontalAlignment: Text.AlignRight
-                        verticalAlignment: Text.AlignVCenter
-                        color: Constants.colorTestText
-                        font.pointSize: 12
-                        font.family: localFont.name
-                    }
                 }
 
                 StackView {
                     id: content
-                    property int currentIndex: 0
-                    property int newIndex: 0
+                    property int lastIndex: 0
+                    property int index: 0
 
                     clip: true
 
@@ -359,10 +659,15 @@ ApplicationWindow {
 
                     replaceEnter: Transition {
                         SequentialAnimation {
+                            ScriptAction {
+                                script: {
+                                    console.log("REPLACING: " + content.lastIndex + " -> " + content.index)
+                                }
+                            }
                             ParallelAnimation {
                                 PropertyAnimation {
                                     property: "y"
-                                    from: (content.newIndex > content.currentIndex) ? 50 : -50
+                                    from: (content.index > content.lastIndex) ? 50 : -50
                                     to: 0
                                     duration: 300
                                     easing.type: Easing.InOutQuad
@@ -377,7 +682,7 @@ ApplicationWindow {
                             }
                             ScriptAction {
                                 script: {
-                                    content.currentIndex = content.newIndex
+                                    content.lastIndex = content.index
                                 }
                             }
                         }
@@ -389,7 +694,7 @@ ApplicationWindow {
                                 PropertyAnimation {
                                     property: "y"
                                     from: 0
-                                    to: (content.newIndex > content.currentIndex) ? -50 : 50
+                                    to: (content.index > content.lastIndex) ? -50 : 50
                                     duration: 300
                                     easing.type: Easing.InOutQuad
                                 }
@@ -405,54 +710,61 @@ ApplicationWindow {
                     }
                 }
 
-                Rectangle {
+                Footer {
                     id: footer
                     height: 8
                     anchors.bottom: parent.bottom
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    color: "transparent"
-
-                    Text {
-                        text: "Firelight is made with ❤️ by BiscuitCakes"
-                        anchors.centerIn: parent
-                        color: Constants.colorTestTextMuted
-                        font.pointSize: 8
-                        font.family: lexendLight.name
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
                 }
             }
-
-        }
-    }
-
-
-    FontLoader {
-        id: localFont
-        source: "qrc:/fonts/lexend"
-    }
-
-    FontLoader {
-        id: lexendLight
-        source: "qrc:/fonts/lexend-light"
-    }
-
-    GameLoader {
-        id: gameLoader
-
-        onGameLoaded: function (entryId, romData, saveData, corePath) {
-            startGameAnimation.currentLibraryEntryId = entryId
-            startGameAnimation.romData = romData
-            startGameAnimation.saveData = saveData
-            startGameAnimation.corePath = corePath
-            startGameAnimation.start()
-            // everything.clear()
         }
 
-        onGameLoadFailedOrphanedPatch: function (entryId) {
-            dialog.open()
+        Dialog {
+            id: closeGameDialog
+
+            title: "Exit game?"
+            Label {
+                text: "Are you sure you want to close the game?"
+            }
+            standardButtons: Dialog.Ok | Dialog.Cancel
+            onAccepted: {
+                appRoot.state = "notPlayingGame"
+                // closeGameAnimation.startWith(outPage, inPage)
+            }
         }
+
+        Dialog {
+            id: dialog
+            title: "Game Load Failed"
+            Label {
+                text: "The game you tried to load is missing or incomplete. Please try another game."
+            }
+            standardButtons: Dialog.Ok
+            onAccepted: {
+                console.log("accepted")
+            }
+        }
+
+
+        FontLoader {
+            id: localFont
+            source: "qrc:/fonts/lexend"
+        }
+
+        FontLoader {
+            id: lexendLight
+            source: "qrc:/fonts/lexend-light"
+        }
+
     }
+
+    Rectangle {
+        id: overlayThing
+        anchors.fill: parent
+        color: "black"
+        opacity: 0
+    }
+
+
 }
