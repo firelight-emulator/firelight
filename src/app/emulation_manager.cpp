@@ -10,6 +10,7 @@
 #include <QSGImageNode>
 #include <QSGTexture>
 #include <qopenglcontext.h>
+#include <utility>
 
 #include "audio_manager.hpp"
 #include "emulator_renderer.hpp"
@@ -37,6 +38,9 @@ int EmulationManager::getEntryId() const { return m_entryId; }
 QByteArray EmulationManager::getGameData() { return m_gameData; }
 QByteArray EmulationManager::getSaveData() { return m_saveData; }
 QString EmulationManager::getCorePath() { return m_corePath; }
+QString EmulationManager::currentGameName() const {
+  return QString::fromStdString(m_currentEntry.display_name);
+}
 
 void EmulationManager::loadGame(int entryId, const QByteArray &gameData,
                                 const QByteArray &saveData,
@@ -116,6 +120,13 @@ bool EmulationManager::takeShouldStopEmulationFlag() {
 }
 
 void EmulationManager::setIsRunning(bool isRunning) { m_isRunning = isRunning; }
+
+void EmulationManager::setCurrentEntry(LibEntry entry) {
+  if (entry.display_name != m_currentEntry.display_name) {
+    m_currentEntry = std::move(entry);
+    emit currentGameNameChanged();
+  }
+}
 
 // void EmulationManager::receive(const void *data, unsigned int width,
 //                                unsigned int height, size_t pitch) {

@@ -14,6 +14,8 @@ constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   const auto manager = reinterpret_cast<EmulationManager *>(fbo);
+  manager->setCurrentEntry(m_currentEntry);
+
   if (manager->takeShouldLoadGameFlag()) {
     m_entryId = manager->getEntryId();
     m_gameData = manager->getGameData();

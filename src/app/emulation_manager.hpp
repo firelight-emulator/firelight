@@ -20,6 +20,8 @@ class EmulationManager : public QQuickFramebufferObject,
                          public QOpenGLFunctions,
                          public Firelight::ManagerAccessor {
   Q_OBJECT
+  Q_PROPERTY(QString currentGameName READ currentGameName NOTIFY
+                 currentGameNameChanged)
 
   typedef uintptr_t (*get_framebuffer_func)();
 
@@ -34,6 +36,8 @@ public:
   QByteArray getSaveData();
   QString getCorePath();
 
+  QString currentGameName() const;
+
   bool takeShouldLoadGameFlag();
   bool takeShouldPauseGameFlag();
   bool takeShouldResumeGameFlag();
@@ -41,6 +45,7 @@ public:
   bool takeShouldStopEmulationFlag();
 
   void setIsRunning(bool isRunning);
+  void setCurrentEntry(LibEntry entry);
 
 public slots:
   void loadGame(int entryId, const QByteArray &gameData,
@@ -57,6 +62,8 @@ signals:
   void gameResumed();
   void emulationStarted();
   void emulationStopped();
+
+  void currentGameNameChanged();
 
 private:
   bool m_shouldLoadGame = false;

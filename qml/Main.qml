@@ -14,6 +14,7 @@ ApplicationWindow {
     height: 720
     visible: true
     title: qsTr("Firelight")
+    color: "black"
 
     Rectangle {
         id: appRoot
@@ -29,6 +30,10 @@ ApplicationWindow {
             if (state === "gameSuspended") {
                 state = "playingGame"
             }
+        }
+
+        Keys.onDigit1Pressed: {
+            console.log(emulator.currentGameName)
         }
 
         states: [
@@ -148,6 +153,7 @@ ApplicationWindow {
                     ScriptAction {
                         script: {
                             emulator.pauseGame()
+                            emulator.blurAmount = 0
                             emulator.layer.enabled = true
                         }
                     }
@@ -183,6 +189,14 @@ ApplicationWindow {
                             property: "blurAmount"
                             from: 0
                             to: 1
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
+                        PropertyAnimation {
+                            target: emulatorOverlay
+                            property: "opacity"
+                            from: 0
+                            to: 0.4
                             duration: 300
                             easing.type: Easing.InOutQuad
                         }
@@ -223,6 +237,14 @@ ApplicationWindow {
                             duration: 300
                             easing.type: Easing.InOutQuad
                         }
+                        PropertyAnimation {
+                            target: emulatorOverlay
+                            property: "opacity"
+                            from: 0.4
+                            to: 0
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
                     }
                     ScriptAction {
                         script: {
@@ -255,13 +277,22 @@ ApplicationWindow {
                     PauseAnimation {
                         duration: 300
                     }
-                    PropertyAnimation {
-                        target: emulator
-                        property: "opacity"
-                        from: 1
-                        to: 0
-                        duration: 300
-                        easing.type: Easing.InOutQuad
+                    ParallelAnimation {
+                        PropertyAnimation {
+                            target: emulator
+                            property: "opacity"
+                            from: 1
+                            to: 0
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
+                        PropertyAnimation {
+                            target: emulatorOverlay
+                            property: "opacity"
+                            to: 0
+                            duration: 300
+                            easing.type: Easing.InOutQuad
+                        }
                     }
                     ScriptAction {
                         script: {
@@ -307,89 +338,10 @@ ApplicationWindow {
             }
         ]
 
-        Dialog {
+        FirelightDialog {
             id: waitingDialog
-            modal: true
-            // title: "doing a thing"
-            standardButtons: Dialog.NoButton
-
-            parent: Overlay.overlay
-            anchors.centerIn: parent
-
-            background: Rectangle {
-                color: Constants.colorTestSurfaceContainerLowest
-                radius: 12
-                implicitWidth: 300
-                implicitHeight: 200
-            }
-
-            contentItem: Item {
-                Text {
-                    anchors.centerIn: parent
-                    color: Constants.colorTestText
-                    text: "Please wait while I do the thing"
-                    wrapMode: Text.WordWrap
-                    horizontalAlignment: Text.AlignHCenter
-                    font.pointSize: 14
-                }
-            }
-            //
-            // background: Rectangle {
-            //     implicitWidth: 200
-            //     implicitHeight: 200
-            //     border.color: "#444"
-            // }
-
-            Overlay.modal: Rectangle {
-                id: backdropDim
-
-                color: "black"
-                anchors.fill: parent
-                opacity: 0.4
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 200
-                    }
-                }
-
-            }
-
-            enter: Transition {
-                NumberAnimation {
-                    property: "opacity";
-                    from: 0.0;
-                    to: 1.0
-                    duration: 200
-                }
-                NumberAnimation {
-                    property: "scale";
-                    from: 0.9;
-                    to: 1.0
-                    duration: 200
-                }
-                // NumberAnimation {
-                //     property: "y";
-                //     from: (waitingDialog.parent.height / 2) + (waitingDialog.height / 2);
-                //     to: (waitingDialog.parent.height / 2) - (waitingDialog.height / 2);
-                //     duration: 200
-                // }
-            }
-
-            exit: Transition {
-                NumberAnimation {
-                    property: "opacity";
-                    from: 1.0;
-                    to: 0.0;
-                    duration: 200
-                }
-                NumberAnimation {
-                    property: "scale";
-                    from: 1.0;
-                    to: 0.9
-                    duration: 200
-                }
-            }
+            text: "Please wait..."
+            showButtons: false
         }
 
         Component {
@@ -431,17 +383,31 @@ ApplicationWindow {
             id: libraryPage
             LibraryPage {
                 id: thisLibraryPage
-                property int nextEntryId
+                property int nextEntryId: -1
 
                 fontFamilyName: localFont.name
                 onEntryClicked: function (entryId) {
                     // gameLoader.loadGame(entryId)
                     // fullPane.loadGame(entryId)
                     if (emulator.isRunning()) {
-                        thisLibraryPage.nextEntryId = entryId
-                        appRoot.state = "notPlayingGame"
+                        dialog.entryId = entryId
+                        dialog.open()
                     } else {
                         gameLoader.loadGame(entryId)
+                    }
+                }
+
+                FirelightDialog {
+                    id: dialog
+                    property int entryId
+                    parent: Overlay.overlay
+                    anchors.centerIn: parent
+                    text: "You need to close the current game before loading another one.\n Are you sure you want to close the current game?"
+
+                    onAccepted: {
+                        thisLibraryPage.nextEntryId = entryId
+                        appRoot.state = "notPlayingGame"
+                        console.log("accepted")
                     }
                 }
 
@@ -504,12 +470,55 @@ ApplicationWindow {
         Component {
             id: nowPlayingPage
             Item {
-                Text {
-                    text: "Here's where the Now Playing menu will go!"
-                    anchors.centerIn: parent
-                    color: Constants.colorTestTextMuted
-                    font.pointSize: 16
-                    font.family: localFont.name
+                Rectangle {
+                    anchors.left: parent.left
+                    width: 1
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    color: Constants.colorTestText
+                }
+
+                Column {
+                    spacing: 12
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+
+                    anchors.leftMargin: 24
+                    anchors.topMargin: 24
+                    Text {
+                        text: "You're playing"
+                        color: Constants.colorTestTextActive
+                        font.pointSize: 14
+                        font.family: localFont.name
+                    }
+                    Text {
+                        text: emulator.currentGameName
+                        color: Constants.colorTestTextActive
+                        font.pointSize: 24
+                        font.family: localFont.name
+                    }
+                    Rectangle {
+                        height: 200
+                        width: 10
+                    }
+                    Text {
+                        text: "Resume Game"
+                        color: Constants.colorTestTextActive
+                        font.pointSize: 12
+                        font.family: localFont.name
+                    }
+                    Text {
+                        text: "Restart Game"
+                        color: Constants.colorTestTextActive
+                        font.pointSize: 12
+                        font.family: localFont.name
+                    }
+                    Text {
+                        text: "Quit Game"
+                        color: Constants.colorTestTextActive
+                        font.pointSize: 12
+                        font.family: localFont.name
+                    }
                 }
             }
         }
@@ -552,6 +561,13 @@ ApplicationWindow {
             }
         }
 
+        Rectangle {
+            id: emulatorOverlay
+            anchors.fill: emulator
+            color: "black"
+            opacity: 0
+        }
+
         Pane {
             id: mainMenu
             property int index: 0
@@ -563,18 +579,11 @@ ApplicationWindow {
             visible: true
 
             onIndexChanged: function () {
-                console.log("CHANGING INDEX: " + index)
                 if (index === -1) {
-                    console.log("its negative")
                     content.clear()
                     return
                 }
                 content.index = index
-                //
-                // console.log("current index: " + content.currentIndex + " new index: " + content.newIndex)
-                // if (content.newIndex === index || content.currentIndex === index) {
-                //     return
-                // }
 
                 var method = content.depth > 0 ? content.replace : content.push
 
@@ -659,11 +668,6 @@ ApplicationWindow {
 
                     replaceEnter: Transition {
                         SequentialAnimation {
-                            ScriptAction {
-                                script: {
-                                    console.log("REPLACING: " + content.lastIndex + " -> " + content.index)
-                                }
-                            }
                             ParallelAnimation {
                                 PropertyAnimation {
                                     property: "y"
@@ -720,32 +724,14 @@ ApplicationWindow {
             }
         }
 
-        Dialog {
+        FirelightDialog {
             id: closeGameDialog
+            text: "Are you sure you want \nto close the game?"
 
-            title: "Exit game?"
-            Label {
-                text: "Are you sure you want to close the game?"
-            }
-            standardButtons: Dialog.Ok | Dialog.Cancel
             onAccepted: {
                 appRoot.state = "notPlayingGame"
-                // closeGameAnimation.startWith(outPage, inPage)
             }
         }
-
-        Dialog {
-            id: dialog
-            title: "Game Load Failed"
-            Label {
-                text: "The game you tried to load is missing or incomplete. Please try another game."
-            }
-            standardButtons: Dialog.Ok
-            onAccepted: {
-                console.log("accepted")
-            }
-        }
-
 
         FontLoader {
             id: localFont
@@ -756,7 +742,6 @@ ApplicationWindow {
             id: lexendLight
             source: "qrc:/fonts/lexend-light"
         }
-
     }
 
     Rectangle {
@@ -765,6 +750,4 @@ ApplicationWindow {
         color: "black"
         opacity: 0
     }
-
-
 }

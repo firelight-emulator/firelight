@@ -13,6 +13,8 @@ Rectangle {
     // property var blurAmount: 0.0
     color: "black"
 
+    property string currentGameName: emulatorView.currentGameName
+
     signal gameLoaded()
 
     function loadTheThing(currentLibraryEntryId, romData, saveData, corePath) {

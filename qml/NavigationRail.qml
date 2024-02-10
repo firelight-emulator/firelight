@@ -30,7 +30,7 @@ Item {
     ColumnLayout {
         id: column
         anchors.fill: parent
-        spacing: 0
+        spacing: 2
 
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
@@ -42,7 +42,7 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 40
             Layout.preferredWidth: buttonWidth
 
             checked: control.currentIndex === 0
@@ -57,7 +57,7 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 40
             Layout.preferredWidth: buttonWidth
 
             checked: control.currentIndex === 1
@@ -72,7 +72,7 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 40
             Layout.preferredWidth: buttonWidth
 
             checked: control.currentIndex === 2
@@ -87,7 +87,7 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 40
             Layout.preferredWidth: buttonWidth
 
             checked: control.currentIndex === 3
@@ -102,7 +102,7 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 40
             Layout.preferredWidth: buttonWidth
 
             checked: control.currentIndex === 4
@@ -151,7 +151,7 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 40
             Layout.preferredWidth: buttonWidth
 
             checked: control.currentIndex === 5
@@ -168,7 +168,7 @@ Item {
 
         NavButton {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 40
             Layout.preferredWidth: buttonWidth
 
             checkable: false
@@ -248,7 +248,7 @@ Item {
         background: Rectangle {
             color: navButtonComponent.checked ? Constants.colorTestCardActive : mouse.hovered ? Constants.colorTestCard : "transparent"
             // color: navButtonComponent.checked ? Constants.color_secondaryContainer : "transparent"
-            radius: 12
+            radius: 8
             // color: "transparent"
         }
 
