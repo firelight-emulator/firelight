@@ -135,7 +135,10 @@ void QLibraryManager::startScan() {
         }
 
         for (const auto &existing_entry : scan_results.existing_entries) {
-          library_database_->addOrRenameEntry(existing_entry);
+          library_database_->updateEntryContentPath(
+              existing_entry.id, existing_entry.source_directory,
+              existing_entry.content_path);
+          printf("Updated entry: %s\n", existing_entry.display_name.c_str());
         }
 
         emit scanningChanged();
@@ -244,8 +247,6 @@ void QLibraryManager::handleScannedRomFile(
     return; // TODO: For now let's assume no change.
   }
 
-  // check against filename and size and source
-
   std::vector<char> thing(size);
   std::ifstream file(entry.path(), std::ios::binary);
 
@@ -255,13 +256,15 @@ void QLibraryManager::handleScannedRomFile(
   auto md5 = calculateMD5(thing.data(), size);
   scan_results.all_md5s.emplace_back(md5);
 
-  if (!library_database_
-           ->getMatching(LibraryDatabase::Filter({
-               .md5 = md5,
-           }))
-           .empty()) {
-    // TODO: implement
-    scan_results.existing_entries.emplace_back();
+  auto matchingRoms = library_database_->getMatching(LibraryDatabase::Filter({
+      .md5 = md5,
+  }));
+
+  if (!matchingRoms.empty()) {
+    auto matching = matchingRoms.at(0);
+    matching.source_directory = entry.path().parent_path().string();
+    matching.content_path = entry.path().relative_path().string();
+    scan_results.existing_entries.emplace_back(matching);
     return;
   }
 

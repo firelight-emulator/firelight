@@ -32,10 +32,6 @@ ApplicationWindow {
             }
         }
 
-        Keys.onDigit1Pressed: {
-            console.log(emulator.currentGameName)
-        }
-
         states: [
             State {
                 name: "notPlayingGame"
@@ -348,16 +344,97 @@ ApplicationWindow {
             id: homePage
 
             Item {
-                Text {
-                    text: "Here's where the Home menu will go!"
-                    anchors.centerIn: parent
-                    color: Constants.colorTestTextMuted
-                    font.pointSize: 16
-                    font.family: localFont.name
+                Rectangle {
+                    id: homeTop
+                    anchors.top: parent.top
+                    anchors.topMargin: 12
+                    anchors.leftMargin: 12
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    radius: 12
+                    height: 120
+                    color: "transparent"
+
+                    Text {
+                        anchors.fill: parent
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                        font.pointSize: 24
+                        text: "Thanks for trying out Firelight!"
+                        font.family: Constants.regularFontFamily
+                        color: Constants.colorTestTextActive
+                    }
+                }
+
+                Rectangle {
+                    id: homeLeft
+                    anchors.topMargin: 12
+                    anchors.top: homeTop.bottom
+                    anchors.left: parent.left
+                    anchors.leftMargin: 12
+                    width: parent.width / 2
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 12
+                    radius: 12
+                    color: Constants.colorTestSurface
+
+                    Text {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.margins: 12
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                        font.pointSize: 12
+                        text: "<p>Seriously, thanks so much :) This is a passion project of mine, and I'm excited to
+                         share it with you. This build is a little rough around the edges, but I hope you enjoy it
+                         anyway.</p>
+
+                         <p>Here's some of the stuff I'm hoping to get done next:</p>
+
+                         <ul>
+                         <li>Save states and rewind</li>
+                         <li>Controller profiles</li>
+                         <li>Playlists</li>
+                         </ul>
+
+                         <p>There's a lot to look forward to, so keep an eye on the Discord for updates and to take
+                         part in the discussions!</p>"
+                        font.family: Constants.lightFontFamily
+                        color: Constants.colorTestTextActive
+                    }
+                }
+
+                Rectangle {
+                    id: homeRight
+                    anchors.top: homeTop.bottom
+                    anchors.topMargin: 12
+                    anchors.left: homeLeft.right
+                    anchors.leftMargin: 12
+                    anchors.right: parent.right
+                    anchors.bottomMargin: 12
+                    anchors.bottom: parent.bottom
+                    radius: 12
+                    color: Constants.colorTestSurface
+
+                    Text {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.margins: 12
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                        font.pointSize: 12
+                        text: "<p>I promise there will actually be cool stuff here soon.</p>"
+                        font.family: Constants.lightFontFamily
+                        color: Constants.colorTestTextActive
+                    }
                 }
             }
         }
-
 
         Component {
             id: explorePage
@@ -374,7 +451,7 @@ ApplicationWindow {
                     anchors.centerIn: parent
                     color: Constants.colorTestTextMuted
                     font.pointSize: 16
-                    font.family: localFont.name
+                    font.family: Constants.regularFontFamily
                 }
             }
         }
@@ -385,7 +462,7 @@ ApplicationWindow {
                 id: thisLibraryPage
                 property int nextEntryId: -1
 
-                fontFamilyName: localFont.name
+                fontFamilyName: Constants.regularFontFamily
                 onEntryClicked: function (entryId) {
                     // gameLoader.loadGame(entryId)
                     // fullPane.loadGame(entryId)
@@ -402,12 +479,12 @@ ApplicationWindow {
                     property int entryId
                     parent: Overlay.overlay
                     anchors.centerIn: parent
-                    text: "You need to close the current game before loading another one.\n Are you sure you want to close the current game?"
+                    text: "<p>You need to close the current game before loading another one. Are you sure you want
+                     to close the current game?</p>"
 
                     onAccepted: {
                         thisLibraryPage.nextEntryId = entryId
                         appRoot.state = "notPlayingGame"
-                        console.log("accepted")
                     }
                 }
 
@@ -418,8 +495,6 @@ ApplicationWindow {
                         if (newState === "notPlayingGame" && thisLibraryPage.nextEntryId !== -1) {
                             var entryId = thisLibraryPage.nextEntryId
                             thisLibraryPage.nextEntryId = -1
-
-                            console.log("GONNA LOAD: " + entryId)
 
                             gameLoader.loadGame(entryId)
                         }
@@ -432,18 +507,107 @@ ApplicationWindow {
         Component {
             id: controllersPage
             Item {
-                Rectangle {
-                    radius: 12
-                    anchors.fill: parent
-                    color: Constants.colorTestSurface
-                }
+                GridView {
+                    id: root
+                    width: parent.width
+                    height: parent.height
+                    cellWidth: parent.width
+                    cellHeight: parent.height / 4
 
-                Text {
-                    text: "Here's where the Controllers menu will go!"
-                    anchors.centerIn: parent
-                    color: Constants.colorTestTextMuted
-                    font.pointSize: 16
-                    font.family: localFont.name
+                    displaced: Transition {
+                        NumberAnimation {
+                            properties: "x,y"
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+
+                    model: DelegateModel {
+                        id: visualModel
+                        model: ListModel {
+                            id: colorModel
+                            ListElement {
+                                color: "blue"
+                            }
+                            ListElement {
+                                color: "green"
+                            }
+                            ListElement {
+                                color: "red"
+                            }
+                            ListElement {
+                                color: "yellow"
+                            }
+                        }
+
+                        component Thing: Rectangle {
+                            id: icon
+                            required property Item dragParent
+
+                            property int visualIndex: 0
+                            width: 72
+                            height: 72
+
+                            anchors {
+                                horizontalCenter: parent.horizontalCenter
+                                verticalCenter: parent.verticalCenter
+                            }
+                            radius: 12
+
+                            Text {
+                                anchors.centerIn: parent
+                                color: "white"
+                                text: parent.visualIndex
+                            }
+
+                            DragHandler {
+                                id: dragHandler
+                            }
+
+                            Drag.active: dragHandler.active
+                            Drag.source: icon
+                            Drag.hotSpot.x: 36
+                            Drag.hotSpot.y: 36
+
+                            states: [
+                                State {
+                                    when: dragHandler.active
+                                    ParentChange {
+                                        target: icon
+                                        parent: icon.dragParent
+                                    }
+
+                                    AnchorChanges {
+                                        target: icon
+                                        anchors {
+                                            horizontalCenter: undefined
+                                            verticalCenter: undefined
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+
+                        delegate: DropArea {
+                            id: delegateRoot
+                            required property color color
+
+                            width: 80
+                            height: 80
+
+                            onEntered: function (drag) {
+                                visualModel.items.move(drag.source.visualIndex, icon2.visualIndex)
+                            }
+
+                            property int visualIndex: DelegateModel.itemsIndex
+
+                            Thing {
+                                id: icon2
+                                dragParent: root
+                                visualIndex: delegateRoot.visualIndex
+                                color: delegateRoot.color
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -451,18 +615,12 @@ ApplicationWindow {
         Component {
             id: settingsPage
             Item {
-                Rectangle {
-                    radius: 12
-                    anchors.fill: parent
-                    color: Constants.colorTestSurface
-                }
-
                 Text {
                     text: "Here's where the Settings menu will go!"
                     anchors.centerIn: parent
-                    color: Constants.colorTestTextMuted
+                    color: Constants.colorTestTextActive
                     font.pointSize: 16
-                    font.family: localFont.name
+                    font.family: Constants.regularFontFamily
                 }
             }
         }
@@ -479,6 +637,7 @@ ApplicationWindow {
                 }
 
                 Column {
+                    id: topPart
                     spacing: 12
                     anchors.left: parent.left
                     anchors.top: parent.top
@@ -486,38 +645,64 @@ ApplicationWindow {
                     anchors.leftMargin: 24
                     anchors.topMargin: 24
                     Text {
-                        text: "You're playing"
+                        text: "You're playing:"
                         color: Constants.colorTestTextActive
                         font.pointSize: 14
-                        font.family: localFont.name
+                        font.family: Constants.regularFontFamily
                     }
                     Text {
                         text: emulator.currentGameName
                         color: Constants.colorTestTextActive
                         font.pointSize: 24
-                        font.family: localFont.name
+                        font.family: Constants.regularFontFamily
                     }
-                    Rectangle {
-                        height: 200
+                    Item {
+                        height: 60
                         width: 10
                     }
-                    Text {
-                        text: "Resume Game"
-                        color: Constants.colorTestTextActive
-                        font.pointSize: 12
-                        font.family: localFont.name
+                }
+                Column {
+                    spacing: 2
+                    anchors.left: parent.left
+                    anchors.top: topPart.bottom
+
+                    anchors.leftMargin: 24
+
+                    FirelightMenuItem {
+                        labelText: "Resume Game"
+                        labelIcon: "\uf7d0"
+                        height: 40
+                        width: 200
+                        checkable: false
+
+                        onClicked: function () {
+                            appRoot.state = "playingGame"
+                        }
                     }
-                    Text {
-                        text: "Restart Game"
-                        color: Constants.colorTestTextActive
-                        font.pointSize: 12
-                        font.family: localFont.name
+
+                    FirelightMenuItem {
+                        labelText: "Restart Game"
+                        labelIcon: "\uf053"
+                        height: 40
+                        width: 200
+                        checkable: false
+
+                        onClicked: function () {
+                            emulator.resetGame()
+                            appRoot.state = "playingGame"
+                        }
                     }
-                    Text {
-                        text: "Quit Game"
-                        color: Constants.colorTestTextActive
-                        font.pointSize: 12
-                        font.family: localFont.name
+
+                    FirelightMenuItem {
+                        labelText: "Quit Game"
+                        labelIcon: "\ue5cd"
+                        height: 40
+                        width: 200
+                        checkable: false
+
+                        onClicked: function () {
+                            closeGameDialog.open()
+                        }
                     }
                 }
             }
@@ -539,6 +724,7 @@ ApplicationWindow {
             id: emulator
             anchors.fill: parent
             visible: false
+            // smooth: false
 
             property double blurAmount: 0
 
@@ -611,7 +797,7 @@ ApplicationWindow {
             contentItem: Item {
                 NavigationRail {
                     id: navRail
-                    fontFamily: localFont.name
+                    fontFamily: Constants.regularFontFamily
 
                     currentIndex: mainMenu.index
 
@@ -624,10 +810,6 @@ ApplicationWindow {
 
                     onIndexSelected: function (index) {
                         mainMenu.index = index
-                    }
-
-                    onCloseGameClicked: {
-                        closeGameDialog.open()
                     }
                 }
 
@@ -732,16 +914,6 @@ ApplicationWindow {
                 appRoot.state = "notPlayingGame"
             }
         }
-
-        FontLoader {
-            id: localFont
-            source: "qrc:/fonts/lexend"
-        }
-
-        FontLoader {
-            id: lexendLight
-            source: "qrc:/fonts/lexend-light"
-        }
     }
 
     Rectangle {
@@ -749,5 +921,13 @@ ApplicationWindow {
         anchors.fill: parent
         color: "black"
         opacity: 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.InOutQuad
+            }
+
+        }
     }
 }

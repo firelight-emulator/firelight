@@ -9,7 +9,7 @@ Rectangle {
         anchors.centerIn: parent
         color: Constants.colorTestTextMuted
         font.pointSize: 8
-        font.family: lexendLight.name
+        font.family: Constants.lightFontFamily
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

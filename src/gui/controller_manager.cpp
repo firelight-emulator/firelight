@@ -12,7 +12,6 @@ void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
   switch (event.type) {
   case SDL_CONTROLLERDEVICEADDED: {
     openControllerWithDeviceIndex(event.cdevice.which);
-    emit controllerConnected();
     break;
   }
   case SDL_CONTROLLERDEVICEREMOVED: {
@@ -23,11 +22,11 @@ void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
       if (m_controllers[i] != nullptr &&
           m_controllers[i]->getInstanceId() == joystickInstanceId) {
         m_controllers[i].reset();
+        emit controllerDisconnected();
         spdlog::debug("We found it and we're unplugging it");
       }
     }
 
-    emit controllerDisconnected();
     break;
   }
   default:
@@ -79,6 +78,7 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
   }
 
   spdlog::info("Controller device added with device index {}", t_deviceIndex);
+  emit controllerConnected();
 }
 
 std::optional<Controller *>

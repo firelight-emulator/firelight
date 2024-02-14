@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt/qml/QMLFirelight">
+    <file alias="qmldir">C:/Users/alexs/git/firelight/cmake-build-mingw/QMLFirelight/qmldir</file>
+  </qresource>
+</RCC>
+

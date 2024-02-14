@@ -30,6 +30,8 @@ public:
   virtual std::vector<LibEntry> getAllEntries() = 0;
   virtual void match_md5s(std::string t_sourceDirectory,
                           std::vector<std::string> t_md5List) = 0;
+  virtual void updateEntryContentPath(int entryId, std::string sourceDirectory,
+                                      std::string contentPath) = 0;
   virtual std::vector<LibEntry> getMatching(Filter filter) = 0;
 };
 

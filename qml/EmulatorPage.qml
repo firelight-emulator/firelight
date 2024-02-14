@@ -22,6 +22,10 @@ Rectangle {
         gameLoaded()
     }
 
+    function resetGame() {
+        emulatorView.resetEmulation()
+    }
+
     function pauseGame() {
         emulatorView.pauseGame()
     }
@@ -58,6 +62,7 @@ Rectangle {
 
         property bool isFullScreen: false
         anchors.centerIn: parent
+        smooth: false
 
         // onOrphanPatchDetected: {
         //     console.log("orphan patch detected")
@@ -74,7 +79,7 @@ Rectangle {
                 when: emulatorView.isFullScreen
                 PropertyChanges {
                     target: emulatorView
-                    width: parent.height * 1.333
+                    width: emulatorView.nativeAspectRatio > 0 ? parent.height * emulatorView.nativeAspectRatio : parent.width
                     height: parent.height
                 }
             },
@@ -83,8 +88,8 @@ Rectangle {
                 when: !emulatorView.isFullScreen
                 PropertyChanges {
                     target: emulatorView
-                    width: 640
-                    height: 480
+                    width: emulatorView.nativeWidth > 0 ? emulatorView.nativeWidth : 640
+                    height: emulatorView.nativeHeight > 0 ? emulatorView.nativeHeight : 480
                 }
             }
         ]

@@ -1,0 +1,9 @@
+module FirelightStyle
+linktarget firelight_styleplugin
+optional plugin firelight_styleplugin
+classname FirelightStylePlugin
+typeinfo firelight_style.qmltypes
+prefer :/qt/qml/FirelightStyle/
+Button 1.0 Button.qml
+singleton Constants 1.0 Constants.qml
+

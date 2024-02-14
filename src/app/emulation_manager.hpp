@@ -14,14 +14,15 @@
 #include <QQuickFramebufferObject>
 #include <QSGDynamicTexture>
 
-static QLibraryManager *library_manager_ = nullptr;
-
 class EmulationManager : public QQuickFramebufferObject,
-                         public QOpenGLFunctions,
                          public Firelight::ManagerAccessor {
   Q_OBJECT
   Q_PROPERTY(QString currentGameName READ currentGameName NOTIFY
                  currentGameNameChanged)
+  Q_PROPERTY(int nativeWidth READ nativeWidth NOTIFY nativeWidthChanged)
+  Q_PROPERTY(int nativeHeight READ nativeHeight NOTIFY nativeHeightChanged)
+  Q_PROPERTY(float nativeAspectRatio READ nativeAspectRatio NOTIFY
+                 nativeAspectRatioChanged)
 
   typedef uintptr_t (*get_framebuffer_func)();
 
@@ -29,7 +30,6 @@ public:
   [[nodiscard]] Renderer *createRenderer() const override;
 
   explicit EmulationManager(QQuickItem *parent = nullptr);
-  ~EmulationManager() override;
 
   int getEntryId() const;
   QByteArray getGameData();
@@ -37,15 +37,22 @@ public:
   QString getCorePath();
 
   QString currentGameName() const;
+  int nativeWidth() const;
+  int nativeHeight() const;
+  float nativeAspectRatio() const;
 
   bool takeShouldLoadGameFlag();
   bool takeShouldPauseGameFlag();
   bool takeShouldResumeGameFlag();
   bool takeShouldStartEmulationFlag();
   bool takeShouldStopEmulationFlag();
+  bool takeShouldResetEmulationFlag();
 
   void setIsRunning(bool isRunning);
   void setCurrentEntry(LibEntry entry);
+  void setNativeWidth(int nativeWidth);
+  void setNativeHeight(int nativeHeight);
+  void setNativeAspectRatio(float nativeAspectRatio);
 
 public slots:
   void loadGame(int entryId, const QByteArray &gameData,
@@ -54,6 +61,7 @@ public slots:
   void resumeGame();
   void startEmulation();
   void stopEmulation();
+  void resetEmulation();
   bool isRunning();
 
 signals:
@@ -64,6 +72,9 @@ signals:
   void emulationStopped();
 
   void currentGameNameChanged();
+  void nativeWidthChanged();
+  void nativeHeightChanged();
+  void nativeAspectRatioChanged();
 
 private:
   bool m_shouldLoadGame = false;
@@ -71,6 +82,7 @@ private:
   bool m_shouldResumeGame = false;
   bool m_shouldStartEmulation = false;
   bool m_shouldStopEmulation = false;
+  bool m_shouldResetEmulation = false;
 
   int m_entryId;
   QByteArray m_gameData;
@@ -82,23 +94,10 @@ private:
 
   QMetaObject::Connection m_renderConnection;
   LibEntry m_currentEntry;
-  int m_millisSinceLastSave{};
-  retro_system_av_info *core_av_info_;
-  bool glInitialized = false;
-  QSGTexture *gameTexture = nullptr;
-  bool usingHwRendering = false;
-  std::unique_ptr<QOpenGLFramebufferObject> gameFbo = nullptr;
-  QImage gameImage;
-  context_reset_func reset_context = nullptr;
+  int m_nativeWidth = 0;
+  int m_nativeHeight = 0;
+  float m_nativeAspectRatio = 0;
   bool running = false;
-  Uint64 thisTick;
-  Uint64 lastTick;
-  std::unique_ptr<libretro::Core> core;
-  double totalFrameWorkDurationMillis = 0;
-
-  long long int frameCount = 0;
-  int frameSkipRatio = 0;
-  long numFrames = 0;
 };
 
 #endif // FIRELIGHT_EMULATION_MANAGER_HPP

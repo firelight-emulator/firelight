@@ -2,7 +2,26 @@ import QtQuick
 
 pragma Singleton
 
-QtObject {
+Item {
+    FontLoader {
+        id: symbols
+        source: "qrc:/fonts/symbols"
+    }
+
+    FontLoader {
+        id: localFont
+        source: "qrc:/fonts/lexend"
+    }
+
+    FontLoader {
+        id: lexendLight
+        source: "qrc:/fonts/lexend-light"
+    }
+    
+    readonly property string symbolFontFamily: symbols.name
+    readonly property string regularFontFamily: localFont.name
+    readonly property string lightFontFamily: lexendLight.name
+
     readonly property color colorTestSurface: "#161616"
     readonly property color colorTestBackground: "#212020"
     readonly property color colorTestSurfaceContainerLowest: "#282727"

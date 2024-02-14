@@ -3,16 +3,10 @@
 //
 
 #include "emulation_manager.hpp"
-#include "../gui/controller_manager.hpp"
 #include <QGuiApplication>
 #include <QOpenGLPaintDevice>
-#include <QPainter>
-#include <QSGImageNode>
-#include <QSGTexture>
-#include <qopenglcontext.h>
 #include <utility>
 
-#include "audio_manager.hpp"
 #include "emulator_renderer.hpp"
 
 #include <spdlog/spdlog.h>
@@ -30,9 +24,6 @@ EmulationManager::EmulationManager(QQuickItem *parent)
   setMirrorVertically(true);
   setFlag(ItemHasContents);
 }
-EmulationManager::~EmulationManager() {
-  printf("DESTROYING EMULATION MANAGER\n");
-}
 
 int EmulationManager::getEntryId() const { return m_entryId; }
 QByteArray EmulationManager::getGameData() { return m_gameData; }
@@ -40,6 +31,11 @@ QByteArray EmulationManager::getSaveData() { return m_saveData; }
 QString EmulationManager::getCorePath() { return m_corePath; }
 QString EmulationManager::currentGameName() const {
   return QString::fromStdString(m_currentEntry.display_name);
+}
+int EmulationManager::nativeWidth() const { return m_nativeWidth; }
+int EmulationManager::nativeHeight() const { return m_nativeHeight; }
+float EmulationManager::nativeAspectRatio() const {
+  return m_nativeAspectRatio;
 }
 
 void EmulationManager::loadGame(int entryId, const QByteArray &gameData,
@@ -51,8 +47,6 @@ void EmulationManager::loadGame(int entryId, const QByteArray &gameData,
   m_saveData = saveData;
   m_corePath = corePath;
   update();
-
-  printf("DOING IT\n");
 }
 
 void EmulationManager::pauseGame() {
@@ -68,13 +62,18 @@ void EmulationManager::resumeGame() {
 void EmulationManager::startEmulation() {
   m_shouldStartEmulation = true;
   update();
-  printf("starting emulation\n");
 }
 
 void EmulationManager::stopEmulation() {
   m_shouldStopEmulation = true;
   update();
 }
+
+void EmulationManager::resetEmulation() {
+  m_shouldResetEmulation = true;
+  update();
+}
+
 bool EmulationManager::isRunning() { return m_isRunning; }
 
 bool EmulationManager::takeShouldLoadGameFlag() {
@@ -119,6 +118,15 @@ bool EmulationManager::takeShouldStopEmulationFlag() {
   return false;
 }
 
+bool EmulationManager::takeShouldResetEmulationFlag() {
+  if (m_shouldResetEmulation) {
+    m_shouldResetEmulation = false;
+    return true;
+  }
+
+  return false;
+}
+
 void EmulationManager::setIsRunning(bool isRunning) { m_isRunning = isRunning; }
 
 void EmulationManager::setCurrentEntry(LibEntry entry) {
@@ -127,28 +135,24 @@ void EmulationManager::setCurrentEntry(LibEntry entry) {
     emit currentGameNameChanged();
   }
 }
+void EmulationManager::setNativeWidth(int nativeWidth) {
+  if (m_nativeWidth != nativeWidth) {
+    emit nativeWidthChanged();
+  }
 
-// void EmulationManager::receive(const void *data, unsigned int width,
-//                                unsigned int height, size_t pitch) {
-//   if (data != nullptr && !usingHwRendering) {
-//     if (!gameFbo) {
-//       gameFbo = std::make_unique<QOpenGLFramebufferObject>(width, height);
-//
-//       gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
-//           gameFbo->texture(), window(), gameFbo->size());
-//     }
-//
-//     QOpenGLPaintDevice paint_device;
-//     paint_device.setSize(gameFbo->size());
-//     QPainter painter(&paint_device);
-//
-//     gameFbo->bind();
-//     const QImage image((uchar *)data, width, height, pitch,
-//                        QImage::Format_RGB16);
-//
-//     painter.drawImage(QRect(0, 0, gameFbo->width(), gameFbo->height()),
-//     image,
-//                       image.rect());
-//     gameFbo->release();
-//   }
-// }
+  m_nativeWidth = nativeWidth;
+}
+void EmulationManager::setNativeHeight(int nativeHeight) {
+  if (m_nativeHeight != nativeHeight) {
+    emit nativeHeightChanged();
+  }
+
+  m_nativeHeight = nativeHeight;
+}
+void EmulationManager::setNativeAspectRatio(float nativeAspectRatio) {
+  if (m_nativeAspectRatio != nativeAspectRatio) {
+    emit nativeAspectRatioChanged();
+  }
+
+  m_nativeAspectRatio = nativeAspectRatio;
+}

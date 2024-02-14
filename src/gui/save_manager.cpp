@@ -21,7 +21,7 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(LibEntry &entry,
   return QtConcurrent::run([this, entry, saveData] {
     auto md5 = entry.md5;
     auto bytes = saveData.getSaveRamData();
-    auto image = saveData.getImage();
+    // auto image = saveData.getImage();
     // spdlog::info("md5: {}, bytesLength: {}, imageWidth: {}, imageHeight: {}",
     //              md5, bytes.size(), image.width(), image.height());
     // return true;
@@ -36,12 +36,12 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(LibEntry &entry,
 
     // if (image != nullptr) {
     // }
-    const auto screenshotFile = directory / "screenshot.png";
-    if (!image.save(QString::fromStdString(screenshotFile.string()))) {
-      spdlog::warn("Unable to save screenshot for entry {}", md5);
-    }
+    // const auto screenshotFile = directory / "screenshot.png";
+    // if (!image.save(QString::fromStdString(screenshotFile.string()))) {
+    //   spdlog::warn("Unable to save screenshot for entry {}", md5);
+    // }
 
-    spdlog::info("writing save data for entry {}", md5);
+    // spdlog::info("writing save data for entry {}", md5);
     return true;
   });
 

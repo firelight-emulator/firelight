@@ -27,7 +27,7 @@ Dialog {
     contentItem: Text {
         // anchors.centerIn: parent
         color: Constants.colorTestTextActive
-        font.family: localFont.name
+        font.family: Constants.regularFontFamily
         text: control.text
         wrapMode: Text.WordWrap
         horizontalAlignment: Text.AlignHCenter
@@ -48,7 +48,7 @@ Dialog {
                 text: qsTr("Cancel")
                 // anchors.centerIn: parent
                 color: Constants.colorTestTextActive
-                font.family: localFont.name
+                font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 font.pointSize: 12
@@ -70,7 +70,7 @@ Dialog {
                 text: qsTr("Yes")
                 anchors.centerIn: parent
                 color: Constants.colorTestBackground
-                font.family: localFont.name
+                font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 font.pointSize: 12

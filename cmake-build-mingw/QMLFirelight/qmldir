@@ -1,0 +1,13 @@
+module QMLFirelight
+typeinfo firelight.qmltypes
+prefer :/qt/qml/QMLFirelight/
+EmulatorPage 1.0 EmulatorPage.qml
+FirelightDialog 1.0 FirelightDialog.qml
+FirelightMenuItem 1.0 FirelightMenuItem.qml
+Footer 1.0 Footer.qml
+Header 1.0 Header.qml
+LibraryPage 1.0 LibraryPage.qml
+Main 1.0 Main.qml
+NavigationRail 1.0 NavigationRail.qml
+Notification 1.0 Notification.qml
+

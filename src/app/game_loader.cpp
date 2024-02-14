@@ -31,6 +31,10 @@ void GameLoader::loadGame(int entryId) {
     corePath = "./system/_cores/mupen64plus_next_libretro.dll";
   } else if (entry->platform == 1) {
     corePath = "./system/_cores/snes9x_libretro.dll";
+  } else if (entry->platform == 2) {
+    corePath = "./system/_cores/gambatte_libretro.dll";
+  } else if (entry->platform == 3) {
+    corePath = "./system/_cores/gambatte_libretro.dll";
   }
 
   auto size = std::filesystem::file_size(entry->content_path);
@@ -46,7 +50,8 @@ void GameLoader::loadGame(int entryId) {
 
   if (entry->type == EntryType::PATCH) {
     if (entry->parent_entry == -1) {
-      // TODO: This is probably where we should try to find the rom in the library
+      // TODO: This is probably where we should try to find the rom in the
+      // library
       emit gameLoadFailedOrphanedPatch(entryId);
       return;
     }
@@ -61,6 +66,10 @@ void GameLoader::loadGame(int entryId) {
       corePath = "./system/_cores/mupen64plus_next_libretro.dll";
     } else if (romEntry->platform == 1) {
       corePath = "./system/_cores/snes9x_libretro.dll";
+    } else if (romEntry->platform == 2) {
+      corePath = "./system/_cores/gambatte_libretro.dll";
+    } else if (romEntry->platform == 3) {
+      corePath = "./system/_cores/gambatte_libretro.dll";
     }
 
     size = std::filesystem::file_size(entry->content_path);

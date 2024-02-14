@@ -58,7 +58,7 @@ private:
   Uint64 lastTick;
   int m_millisSinceLastSave{};
   bool usingHwRendering = false;
-  retro_system_av_info *core_av_info_;
+  retro_system_av_info *core_av_info_ = nullptr;
   std::unique_ptr<libretro::Core> core;
   LibEntry m_currentEntry;
   QOpenGLFramebufferObject *m_fbo = nullptr;

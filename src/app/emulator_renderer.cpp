@@ -8,6 +8,9 @@
 #include "emulation_manager.hpp"
 
 #include <QOpenGLFramebufferObject>
+#include <QOpenGLPaintDevice>
+#include <QPainter>
+#include <QSGTextureProvider>
 #include <spdlog/spdlog.h>
 
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
@@ -21,6 +24,8 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     m_gameData = manager->getGameData();
     m_saveData = manager->getSaveData();
     m_corePath = manager->getCorePath();
+
+    core_av_info_ = nullptr;
 
     m_currentEntry = getLibraryManager()->get_by_id(m_entryId).value();
 
@@ -66,7 +71,10 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   if (manager->takeShouldStopEmulationFlag()) {
     m_running = false;
     m_ranLastFrame = false;
+    save(true);
     // save
+    core_av_info_ = nullptr;
+    usingHwRendering = false;
     core->unloadGame();
     core->deinit();
     core = nullptr;
@@ -74,12 +82,45 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     invalidateFramebufferObject();
     update();
   }
+  if (manager->takeShouldResetEmulationFlag()) {
+    if (core) {
+      m_paused = true;
+      core->reset();
+      update();
+    }
+  }
+
+  if (core_av_info_ != nullptr) {
+    const auto width = core_av_info_->geometry.max_width;
+    const auto height = core_av_info_->geometry.max_height;
+
+    if (width > 0 && height > 0) {
+      manager->setNativeWidth(width);
+      manager->setNativeHeight(height);
+      manager->setNativeAspectRatio(static_cast<float>(width) /
+                                    static_cast<float>(height));
+    }
+  }
 
   Renderer::synchronize(fbo);
 }
 
 void EmulatorRenderer::receive(const void *data, unsigned width,
-                               unsigned height, size_t pitch) {}
+                               unsigned height, size_t pitch) {
+  if (!usingHwRendering && data != nullptr && m_fbo) {
+    QOpenGLPaintDevice paint_device;
+    paint_device.setSize(m_fbo->size());
+    QPainter painter(&paint_device);
+
+    m_fbo->bind();
+    const QImage image((uchar *)data, width, height, pitch,
+                       QImage::Format_RGB16);
+
+    painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), image,
+                      image.rect());
+    m_fbo->release();
+  }
+}
 
 proc_address_t EmulatorRenderer::get_proc_address(const char *sym) {
   return QOpenGLContext::currentContext()->getProcAddress(sym);
@@ -92,7 +133,10 @@ void EmulatorRenderer::set_reset_context_func(context_reset_func reset) {
 uintptr_t EmulatorRenderer::get_current_framebuffer_id() {
   return m_fbo->handle();
 }
-void EmulatorRenderer::set_system_av_info(retro_system_av_info *info) {}
+void EmulatorRenderer::set_system_av_info(retro_system_av_info *info) {
+  core_av_info_ = info;
+}
+
 void EmulatorRenderer::save(bool waitForFinish) {
   spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
   Firelight::Saves::SaveData saveData(core->getMemoryData(libretro::SAVE_RAM));
@@ -108,13 +152,36 @@ void EmulatorRenderer::save(bool waitForFinish) {
 
 QOpenGLFramebufferObject *
 EmulatorRenderer::createFramebufferObject(const QSize &size) {
-  printf("Creating new fbo: %d, %d\n", 640, 480);
-  m_fbo = Renderer::createFramebufferObject(QSize(640, 480));
+  if (core_av_info_ != nullptr) {
+    auto width = core_av_info_->geometry.max_width;
+    auto height = core_av_info_->geometry.max_height;
+
+    if (width > 0 && height > 0) {
+      m_fbo = Renderer::createFramebufferObject(QSize(width, height));
+      printf("ACTUAL SIZE: %d, %d\n", width, height);
+    }
+  } else {
+    m_fbo = Renderer::createFramebufferObject(size);
+  }
+
+  m_fbo->bind();
+
+  // Set the clear color to black
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+  // Clear the framebuffer to black
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // Unbind the framebuffer
+  m_fbo->release();
+
   return m_fbo;
 }
 EmulatorRenderer::EmulatorRenderer() { initializeOpenGLFunctions(); }
 EmulatorRenderer::~EmulatorRenderer() {
-  printf("DESTROYING EMULATION RENDERER\n");
+  if (core) {
+    save(true);
+  }
 }
 
 void EmulatorRenderer::render() {
@@ -143,9 +210,8 @@ void EmulatorRenderer::render() {
 
       if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
         m_millisSinceLastSave = 0;
-        printf("Pretending to save\n");
         // gameImage = gameFbo->toImage();
-        // save();
+        save(false);
       }
 
       frameCount++;

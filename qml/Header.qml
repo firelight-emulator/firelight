@@ -11,6 +11,6 @@ Rectangle {
         verticalAlignment: Text.AlignVCenter
         color: Constants.colorTestText
         font.pointSize: 12
-        font.family: localFont.name
+        font.family: Constants.regularFontFamily
     }
 }
