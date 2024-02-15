@@ -1,7 +1,0 @@
-<RCC>
-  <qresource prefix="/qt/qml/FirelightStyle/">
-    <file alias="Button.qml">C:/Users/alexs/git/firelight/qml/FirelightStyle/Controls/Button.qml</file>
-    <file alias="Constants.qml">C:/Users/alexs/git/firelight/qml/FirelightStyle/import/Constants.qml</file>
-  </qresource>
-</RCC>
-
