@@ -26,6 +26,7 @@
 #include "app/db/sqlite_library_database.hpp"
 #include "gui/controller_manager.hpp"
 #include "gui/sdl_event_loop.hpp"
+#include "gui/window_resize_handler.hpp"
 
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
@@ -163,6 +164,10 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("library_short_model", &shortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
 
+  auto resizeHandler = new Firelight::WindowResizeHandler();
+  engine.rootContext()->setContextProperty("window_resize_handler",
+                                           resizeHandler);
+
   // engine.rootContext()->setContextProperty("library_short_model", model);
 
   // engine.rootContext()->setContextProperty("emulator", emulator);
@@ -174,6 +179,8 @@ int main(int argc, char *argv[]) {
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
+  window->installEventFilter(resizeHandler);
+
   // emulator->setWindow(window);
   // // window->setColor(Qt::black);
   //

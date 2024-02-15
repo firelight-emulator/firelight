@@ -85,6 +85,8 @@ add_library(firelight_lib
         src/app/patching/rom_patch.hpp
         src/app/emulator_renderer.cpp
         src/app/emulator_renderer.hpp
+        src/gui/window_resize_handler.cpp
+        src/gui/window_resize_handler.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}

@@ -745,6 +745,18 @@ ApplicationWindow {
             onGameLoaded: {
                 appRoot.state = "playingGame"
             }
+
+            Connections {
+                target: window_resize_handler
+
+                function onWindowResizeStarted() {
+                    emulator.pauseGame()
+                }
+
+                function onWindowResizeFinished() {
+                    emulator.resumeGame()
+                }
+            }
         }
 
         Rectangle {
