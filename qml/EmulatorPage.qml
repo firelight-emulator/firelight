@@ -22,6 +22,10 @@ Rectangle {
         gameLoaded()
     }
 
+    function setPictureMode(pictureMode) {
+        emulatorView.pictureMode = pictureMode
+    }
+
     function resetGame() {
         emulatorView.resetEmulation()
     }
@@ -60,6 +64,7 @@ Rectangle {
     EmulatorView {
         id: emulatorView
 
+        property string pictureMode: "aspect-ratio"
         property bool isFullScreen: false
         anchors.centerIn: parent
         smooth: false
@@ -76,7 +81,7 @@ Rectangle {
         states: [
             State {
                 name: "FullScreenState"
-                when: emulatorView.isFullScreen
+                when: emulatorView.pictureMode === "aspect-ratio"
                 PropertyChanges {
                     target: emulatorView
                     width: emulatorView.nativeAspectRatio > 0 ? parent.height * emulatorView.nativeAspectRatio : parent.width
@@ -85,44 +90,42 @@ Rectangle {
             },
             State {
                 name: "CenterInState"
-                when: !emulatorView.isFullScreen
+                when: emulatorView.pictureMode === "original"
                 PropertyChanges {
                     target: emulatorView
                     width: emulatorView.nativeWidth > 0 ? emulatorView.nativeWidth : 640
                     height: emulatorView.nativeHeight > 0 ? emulatorView.nativeHeight : 480
+                }
+            },
+            State {
+                name: "StretchedState"
+                when: emulatorView.pictureMode === "stretched"
+                PropertyChanges {
+                    target: emulatorView
+                    width: parent.width
+                    height: parent.height
                 }
             }
         ]
 
         transitions: [
             Transition {
-                from: "FullScreenState"
-                to: "CenterInState"
-                NumberAnimation {
-                    properties: "width, height"
-                    duration: 100
-                    easing.type: Easing.InOutQuad
-                }
-            },
-            Transition {
-                from: "CenterInState"
-                to: "FullScreenState"
-                NumberAnimation {
-                    properties: "width, height"
-                    duration: 100
-                    easing.type: Easing.InOutQuad
+                from: "*"
+                to: "*"
+                ParallelAnimation {
+                    NumberAnimation {
+                        properties: "width"
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        properties: "height"
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
                 }
             }
         ]
-    }
-
-
-    Button {
-        text: "Back"
-        onClicked: function () {
-            emulatorView.isFullScreen = !emulatorView.isFullScreen;
-            console.log("back clicked")
-        }
     }
 }
 // color: "black"

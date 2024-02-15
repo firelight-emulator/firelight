@@ -14,6 +14,7 @@ public:
   struct Item {
     int id;
     std::string display_name;
+    std::string platformName;
   };
 
   QLibraryViewModel() = default;
@@ -27,7 +28,7 @@ public:
   void set_items(const std::vector<Item> &items);
 
 private:
-  enum Roles { DisplayName = Qt::UserRole + 1, EntryId };
+  enum Roles { DisplayName = Qt::UserRole + 1, EntryId, PlatformName };
 
   std::vector<Item> items_;
   QHash<int, QByteArray> roles_;

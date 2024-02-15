@@ -29,9 +29,6 @@ void QLibraryViewModel::set_items(const std::vector<Item> &items) {
   beginResetModel();
   items_ = items;
   endResetModel();
-
-  // emit dataChanged(index(0), index(items.size() - 1),
-  //                  QList<int>{EntryId, DisplayName});
 }
 
 QVariant QLibraryViewModel::data(const QModelIndex &index, int role) const {
@@ -46,6 +43,8 @@ QVariant QLibraryViewModel::data(const QModelIndex &index, int role) const {
     return item.id;
   case DisplayName:
     return QString::fromStdString(item.display_name);
+  case PlatformName:
+    return QString::fromStdString(item.platformName);
   default:
     return QVariant{};
   }
@@ -55,5 +54,6 @@ QHash<int, QByteArray> QLibraryViewModel::roleNames() const {
   QHash<int, QByteArray> roles;
   roles[EntryId] = "id";
   roles[DisplayName] = "display_name";
+  roles[PlatformName] = "platform_name";
   return roles;
 }

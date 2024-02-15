@@ -138,7 +138,6 @@ void QLibraryManager::startScan() {
           library_database_->updateEntryContentPath(
               existing_entry.id, existing_entry.source_directory,
               existing_entry.content_path);
-          printf("Updated entry: %s\n", existing_entry.display_name.c_str());
         }
 
         emit scanningChanged();
@@ -163,8 +162,28 @@ std::vector<QLibraryViewModel::Item> QLibraryManager::get_model_items_() const {
   for (const auto &e : all) {
     QLibraryViewModel::Item item;
 
+    auto platformName = "Unknown";
+    switch (e.platform) {
+    case 0:
+      platformName = "Nintendo 64";
+      break;
+    case 1:
+      platformName = "SNES";
+      break;
+    case 2:
+      platformName = "Gameboy Color";
+      break;
+    case 3:
+      platformName = "Gameboy";
+      break;
+    default:
+      platformName = "Unknown";
+      break;
+    }
+
     item.id = e.id;
     item.display_name = e.display_name;
+    item.platformName = platformName;
 
     items.emplace_back(item);
   }
@@ -273,16 +292,16 @@ void QLibraryManager::handleScannedRomFile(
   auto game_id = -1;
   auto rom_id = -1;
 
-  if (auto rom = content_database_->getRomByMd5(md5); rom.has_value()) {
-    auto game = content_database_->getGameByRomId(rom->id);
-    if (game.has_value()) {
-      display_name = game->name;
-    }
-
-    verified = true;
-    game_id = game->id;
-    rom_id = rom->id;
-  }
+  // if (auto rom = content_database_->getRomByMd5(md5); rom.has_value()) {
+  //   auto game = content_database_->getGameByRomId(rom->id);
+  //   if (game.has_value()) {
+  //     display_name = game->name;
+  //   }
+  //
+  //   verified = true;
+  //   game_id = game->id;
+  //   rom_id = rom->id;
+  // }
 
   LibEntry e = {.id = -1,
                 .display_name = display_name,

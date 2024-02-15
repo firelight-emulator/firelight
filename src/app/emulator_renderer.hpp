@@ -38,6 +38,9 @@ protected:
   void render() override;
 
 private:
+  long long sessionDuration = 0;
+  QElapsedTimer m_playtimeTimer;
+
   bool m_shouldLoadGame = false;
   bool m_shouldStartEmulation = false;
   bool m_shouldStopEmulation = false;

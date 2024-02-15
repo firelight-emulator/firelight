@@ -54,33 +54,49 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     update();
   }
   if (manager->takeShouldPauseGameFlag()) {
+    if (!m_paused) {
+      sessionDuration += m_playtimeTimer.restart();
+    }
     m_paused = true;
     update();
   }
   if (manager->takeShouldResumeGameFlag()) {
+    if (m_paused) {
+      m_playtimeTimer.restart();
+    }
     m_paused = false;
     update();
   }
   if (manager->takeShouldStartEmulationFlag()) {
-    m_shouldStartEmulation = true;
-    m_running = true;
-    m_paused = false;
-    manager->setIsRunning(true);
-    update();
+    if (!m_running) {
+      m_shouldStartEmulation = true;
+      m_running = true;
+      m_paused = false;
+      manager->setIsRunning(true);
+      update();
+      sessionDuration = 0;
+      m_playtimeTimer.start();
+    }
   }
   if (manager->takeShouldStopEmulationFlag()) {
-    m_running = false;
-    m_ranLastFrame = false;
-    save(true);
-    // save
-    core_av_info_ = nullptr;
-    usingHwRendering = false;
-    core->unloadGame();
-    core->deinit();
-    core = nullptr;
-    manager->setIsRunning(false);
-    invalidateFramebufferObject();
-    update();
+    if (m_running) {
+      if (!m_paused) {
+        sessionDuration += m_playtimeTimer.restart();
+      } else {
+        m_playtimeTimer.restart();
+      }
+      printf("session duration: %lld seconds\n", sessionDuration / 1000);
+      m_running = false;
+      m_ranLastFrame = false;
+      save(true);
+      core_av_info_ = nullptr;
+      usingHwRendering = false;
+      core->unloadGame();
+      core->deinit();
+      core = nullptr;
+      manager->setIsRunning(false);
+      update();
+    }
   }
   if (manager->takeShouldResetEmulationFlag()) {
     if (core) {
@@ -179,8 +195,24 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 }
 EmulatorRenderer::EmulatorRenderer() { initializeOpenGLFunctions(); }
 EmulatorRenderer::~EmulatorRenderer() {
-  if (core) {
-    save(true);
+  if (m_running) {
+    if (!m_paused) {
+      sessionDuration += m_playtimeTimer.restart();
+    } else {
+      m_playtimeTimer.restart();
+    }
+    printf("session duration: %lld seconds\n", sessionDuration / 1000);
+    m_running = false;
+    m_ranLastFrame = false;
+
+    if (core) {
+      save(true);
+      core->unloadGame();
+      core->deinit();
+      core = nullptr;
+    }
+    core_av_info_ = nullptr;
+    usingHwRendering = false;
   }
 }
 

@@ -79,46 +79,9 @@ int main(int argc, char *argv[]) {
   if (!create_dirs(appdata_dir, userdata_dir, roms_dir)) {
     return 1;
   }
-  //
-  // QObject::connect(&libraryManager, &QLibraryManager::scanStarted,
-  //                  [] { printf("scan started!\n"); });
-  // QObject::connect(&libraryManager, &QLibraryManager::scanFinished, [&] {
-  //   printf("setting entries\n");
-  //   shortModel.setEntries(library_database.get_all_entries());
-  // });
-  //
-
-  // libraryManager.refresh();
-  // EmulationManager::setLibraryManager(&library_manager);
-
-  // QFileSystemWatcher watcher;
-  // watcher.addPath(QString::fromStdString(roms_dir.string()));
-  // QObject::connect(&watcher, &QFileSystemWatcher::fileChanged, [](auto s)
-  // { printf("file changed: %s\n", s.toStdString().c_str());
-  // });
-  // QObject::connect(&watcher, &QFileSystemWatcher::directoryChanged,
-  // [](const QString &s) {
-  // printf("directory changed: %s\n", s.toStdString().c_str());
-  // });
-
-  // auto emulator = EmulationManager::getInstance();
-
-  // Load:
-  //   SDL2 Event Loop
-  //   ControllerManager
-  //   SaveManager
-  //   LibraryManager
-  //   ContentDatabase
-  //   EmulationManager
-  //
 
   // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
-  // qint32 fontId =
-  //     QFontDatabase::addApplicationFont("/assets/Lexend-Regular.ttf");
-  // if (fontId == -1) {
-  //   return 1;
-  //
 
   Firelight::Input::ControllerManager controllerManager;
   Firelight::SdlEventLoop sdlEventLoop(&controllerManager);
@@ -167,10 +130,6 @@ int main(int argc, char *argv[]) {
   auto resizeHandler = new Firelight::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",
                                            resizeHandler);
-
-  // engine.rootContext()->setContextProperty("library_short_model", model);
-
-  // engine.rootContext()->setContextProperty("emulator", emulator);
 
   QObject::connect(
       &engine, &QQmlApplicationEngine::objectCreationFailed, &app,

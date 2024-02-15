@@ -176,12 +176,6 @@ Rectangle {
                     }
                 }
 
-                // Item {
-                //     id: picture
-                //     width: 100
-                //     height: parent.height
-                // }
-
                 Text {
                     id: label
                     anchors.top: parent.top
@@ -208,7 +202,7 @@ Rectangle {
 
                     // font.family: lexendLight.name
                     font.pointSize: 10
-                    text: "Nintendo 64"
+                    text: model.platform_name
                     color: "#989898"
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
