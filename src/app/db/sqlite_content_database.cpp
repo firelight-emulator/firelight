@@ -95,7 +95,14 @@ SqliteContentDatabase::getPlatformByExtension(std::string ext) {
     result.emplace(Platform{.id = 0});
   } else if (ext == ".smc") {
     result.emplace(Platform{.id = 1});
+  } else if (ext == ".gbc") {
+    result.emplace(Platform{.id = 2});
+  } else if (ext == ".gb") {
+    result.emplace(Platform{.id = 3});
   }
+  // else if (ext == ".gba") {
+  //   result.emplace(Platform{.id = 4});
+  // }
 
   return result;
 }

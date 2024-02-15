@@ -13,6 +13,8 @@
 
 class SqliteLibraryDatabase : public LibraryDatabase {
 public:
+  void updateEntryContentPath(int entryId, std::string sourceDirectory,
+                              std::string contentPath) override;
   explicit SqliteLibraryDatabase(std::filesystem::path db_file_path);
   ~SqliteLibraryDatabase() override = default;
 

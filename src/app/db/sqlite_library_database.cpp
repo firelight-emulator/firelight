@@ -26,6 +26,34 @@ const char *create_query = "CREATE TABLE IF NOT EXISTS library("
                            "content_path NVARCHAR(999) NOT NULL);";
 // "CREATE UNIQUE INDEX IF NOT EXISTS idx_md5 ON library (md5);";
 
+void SqliteLibraryDatabase::updateEntryContentPath(
+    const int entryId, const std::string sourceDirectory,
+    const std::string contentPath) {
+  const QString queryString =
+      "UPDATE library "
+      "SET source_directory = :source_directory, content_path = :content_path "
+      "WHERE id = :id;";
+
+  auto db = QSqlDatabase::database("library");
+  if (!db.isValid()) {
+    // TODO: Give each thread its own connection name?
+    db = QSqlDatabase::addDatabase("QSQLITE", "library");
+    db.setDatabaseName(QString::fromStdString(database_file_path_.string()));
+    db.open();
+  }
+
+  auto query = QSqlQuery(db);
+  query.prepare(queryString);
+
+  query.bindValue(":id", entryId);
+  query.bindValue(":source_directory", QString::fromStdString(sourceDirectory));
+  query.bindValue(":content_path", QString::fromStdString(contentPath));
+
+  if (!query.exec()) {
+    spdlog::warn("Update failed: {}", query.lastError().text().toStdString());
+  }
+}
+
 SqliteLibraryDatabase::SqliteLibraryDatabase(std::filesystem::path db_file_path)
     : database_file_path_(std::move(db_file_path)) {}
 

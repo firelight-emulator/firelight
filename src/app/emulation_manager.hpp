@@ -11,66 +11,93 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
-#include <QQuickItem>
+#include <QQuickFramebufferObject>
 #include <QSGDynamicTexture>
 
-static QLibraryManager *library_manager_ = nullptr;
-
-class EmulationManager : public QQuickItem,
-                         public IVideoDataReceiver,
-                         public QOpenGLFunctions,
+class EmulationManager : public QQuickFramebufferObject,
                          public Firelight::ManagerAccessor {
   Q_OBJECT
+  Q_PROPERTY(QString currentGameName READ currentGameName NOTIFY
+                 currentGameNameChanged)
+  Q_PROPERTY(int nativeWidth READ nativeWidth NOTIFY nativeWidthChanged)
+  Q_PROPERTY(int nativeHeight READ nativeHeight NOTIFY nativeHeightChanged)
+  Q_PROPERTY(float nativeAspectRatio READ nativeAspectRatio NOTIFY
+                 nativeAspectRatioChanged)
 
   typedef uintptr_t (*get_framebuffer_func)();
 
 public:
-  static EmulationManager *getInstance();
-  static void setLibraryManager(QLibraryManager *manager);
+  [[nodiscard]] Renderer *createRenderer() const override;
 
   explicit EmulationManager(QQuickItem *parent = nullptr);
-  ~EmulationManager() override;
-  static void registerInstance(EmulationManager *manager);
 
-  void receive(const void *data, unsigned int width, unsigned int height,
-               size_t pitch) override;
-  proc_address_t get_proc_address(const char *sym) override;
-  void set_reset_context_func(context_reset_func reset) override;
-  uintptr_t get_current_framebuffer_id() override;
-  void set_system_av_info(retro_system_av_info *info) override;
+  int getEntryId() const;
+  QByteArray getGameData();
+  QByteArray getSaveData();
+  QString getCorePath();
+
+  QString currentGameName() const;
+  int nativeWidth() const;
+  int nativeHeight() const;
+  float nativeAspectRatio() const;
+
+  bool takeShouldLoadGameFlag();
+  bool takeShouldPauseGameFlag();
+  bool takeShouldResumeGameFlag();
+  bool takeShouldStartEmulationFlag();
+  bool takeShouldStopEmulationFlag();
+  bool takeShouldResetEmulationFlag();
+
+  void setIsRunning(bool isRunning);
+  void setCurrentEntry(LibEntry entry);
+  void setNativeWidth(int nativeWidth);
+  void setNativeHeight(int nativeHeight);
+  void setNativeAspectRatio(float nativeAspectRatio);
 
 public slots:
-  void initialize(int entryId);
-  void load(int entryId, QByteArray gameData, QByteArray saveData,
-            QString corePath);
-  void runOneFrame();
-  void pause();
-  void resume();
-  void save(bool waitForFinish = false);
+  void loadGame(int entryId, const QByteArray &gameData,
+                const QByteArray &saveData, const QString &corePath);
+  void pauseGame();
+  void resumeGame();
+  void startEmulation();
+  void stopEmulation();
+  void resetEmulation();
+  bool isRunning();
 
-protected:
-  QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+signals:
+  void gameLoaded();
+  void gamePaused();
+  void gameResumed();
+  void emulationStarted();
+  void emulationStopped();
+
+  void currentGameNameChanged();
+  void nativeWidthChanged();
+  void nativeHeightChanged();
+  void nativeAspectRatioChanged();
 
 private:
+  bool m_shouldLoadGame = false;
+  bool m_shouldPauseGame = false;
+  bool m_shouldResumeGame = false;
+  bool m_shouldStartEmulation = false;
+  bool m_shouldStopEmulation = false;
+  bool m_shouldResetEmulation = false;
+
+  int m_entryId;
+  QByteArray m_gameData;
+  QByteArray m_saveData;
+  QString m_corePath;
+
+  bool m_shouldShutdown = false;
+  bool m_isRunning = false;
+
   QMetaObject::Connection m_renderConnection;
   LibEntry m_currentEntry;
-  int m_millisSinceLastSave{};
-  retro_system_av_info *core_av_info_;
-  bool glInitialized = false;
-  QSGTexture *gameTexture = nullptr;
-  bool usingHwRendering = false;
-  std::unique_ptr<QOpenGLFramebufferObject> gameFbo = nullptr;
-  QImage gameImage;
-  context_reset_func reset_context = nullptr;
+  int m_nativeWidth = 0;
+  int m_nativeHeight = 0;
+  float m_nativeAspectRatio = 0;
   bool running = false;
-  Uint64 thisTick;
-  Uint64 lastTick;
-  std::unique_ptr<libretro::Core> core;
-  double totalFrameWorkDurationMillis = 0;
-
-  long long int frameCount = 0;
-  int frameSkipRatio = 0;
-  long numFrames = 0;
 };
 
 #endif // FIRELIGHT_EMULATION_MANAGER_HPP

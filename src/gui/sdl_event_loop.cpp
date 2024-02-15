@@ -37,6 +37,13 @@ void SdlEventLoop::stopProcessing() {
 }
 
 void SdlEventLoop::run() {
+  processEvents();
+  SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
+                    SDL_INIT_TIMER);
+  SDL_Quit();
+}
+
+void SdlEventLoop::processEvents() const {
   while (m_running) {
     SDL_Event ev;
     while (SDL_WaitEvent(&ev)) {
@@ -61,10 +68,6 @@ void SdlEventLoop::run() {
       }
     }
   }
-
-  SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
-                    SDL_INIT_TIMER);
-  SDL_Quit();
 }
 
 } // namespace Firelight

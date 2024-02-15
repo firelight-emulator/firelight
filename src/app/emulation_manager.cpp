@@ -3,293 +3,156 @@
 //
 
 #include "emulation_manager.hpp"
-#include "../gui/controller_manager.hpp"
 #include <QGuiApplication>
 #include <QOpenGLPaintDevice>
-#include <QPainter>
-#include <QSGImageNode>
-#include <QSGTexture>
-#include <qopenglcontext.h>
+#include <utility>
 
-#include "audio_manager.hpp"
+#include "emulator_renderer.hpp"
 
 #include <spdlog/spdlog.h>
 
-EmulationManager *instance;
-
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
-QSGNode *
-EmulationManager::updatePaintNode(QSGNode *qsg_node,
-                                  UpdatePaintNodeData *update_paint_node_data) {
-  if (!gameTexture) {
-    update();
-    return nullptr;
-  }
-
-  auto texNode = dynamic_cast<QSGImageNode *>(qsg_node);
-  if (!texNode) {
-    texNode = window()->createImageNode();
-  }
-
-  texNode->setTexture(gameTexture);
-  texNode->setTextureCoordinatesTransform(QSGImageNode::MirrorVertically);
-  texNode->setRect(boundingRect());
-
-  return texNode;
+QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
+  return new EmulatorRenderer();
+  // return new EmulatorRenderer(m_entryId, m_gameData, m_saveData, m_corePath);
 }
 
-EmulationManager *EmulationManager::getInstance() {
-  if (!instance) {
-    instance = new EmulationManager();
-  }
-
-  return instance;
-}
-
-void EmulationManager::setLibraryManager(QLibraryManager *manager) {
-  library_manager_ = manager;
-}
-
-EmulationManager::EmulationManager(QQuickItem *parent) : QQuickItem(parent) {}
-EmulationManager::~EmulationManager() {
-  running = false;
-  save(true);
-  if (m_renderConnection) {
-    disconnect(m_renderConnection);
-  }
-}
-
-void EmulationManager::registerInstance(EmulationManager *manager) {}
-
-void EmulationManager::initialize(int entryId) {
-  printf("initializing\n");
-  auto entry = library_manager_->get_by_id(entryId);
-
-  if (!entry.has_value()) {
-    printf("OH NOOOOO no entry with id %d\n", entryId);
-  }
-
-  // TODO: Check type of entry and patch if necessary
-  if (entry->type == EntryType::PATCH) {
-    return;
-  }
-
-  m_currentEntry = entry.value();
-
-  std::string corePath;
-  if (entry->platform == 0) {
-    corePath = "./system/_cores/mupen64plus_next_libretro.dll";
-  } else if (entry->platform == 1) {
-    corePath = "./system/_cores/snes9x_libretro.dll";
-  }
-
-  core = std::make_unique<libretro::Core>(corePath);
-  core->setRetropadProvider(getControllerManager());
-
-  core->setSystemDirectory(".");
-  core->setSaveDirectory(".");
-
-  core->set_video_receiver(this);
-  core->set_audio_receiver(new AudioManager());
-  core->init();
-
-  libretro::Game game(entry->content_path);
-  core->loadGame(&game);
-
-  const auto saveData = getSaveManager()->readSaveDataForEntry(*entry);
-  if (saveData.has_value()) {
-    if (saveData->getSaveRamData().empty()) {
-      spdlog::warn("Save data was present but there are no bytes");
-    } else {
-      core->writeMemoryData(libretro::SAVE_RAM, saveData->getSaveRamData());
-    }
-  }
-
-  window()->setMinimumSize(QSize(core_av_info_->geometry.max_width,
-                                 core_av_info_->geometry.max_height));
-
-  setSize(QSize(core_av_info_->geometry.max_width,
-                core_av_info_->geometry.max_height));
-
-  const auto targetFrameTime = 1 / core_av_info_->timing.fps;
-  const auto actualFrameTime =
-      1 / QGuiApplication::primaryScreen()->refreshRate();
-
-  frameSkipRatio = std::lround(targetFrameTime / actualFrameTime);
-  printf("setting frame skip ratio to %d\n", frameSkipRatio);
-
+EmulationManager::EmulationManager(QQuickItem *parent)
+    : QQuickFramebufferObject(parent) {
+  setTextureFollowsItemSize(false);
+  setMirrorVertically(true);
   setFlag(ItemHasContents);
-  auto win = window();
-
-  m_renderConnection =
-      connect(win, &QQuickWindow::beforeRenderPassRecording, this,
-              &EmulationManager::runOneFrame, Qt::DirectConnection);
 }
-void EmulationManager::load(int entryId, QByteArray gameData,
-                            QByteArray saveData, QString corePath) {
-  m_currentEntry = library_manager_->get_by_id(entryId).value();
 
-  core = std::make_unique<libretro::Core>(corePath.toStdString());
-  core->setRetropadProvider(getControllerManager());
+int EmulationManager::getEntryId() const { return m_entryId; }
+QByteArray EmulationManager::getGameData() { return m_gameData; }
+QByteArray EmulationManager::getSaveData() { return m_saveData; }
+QString EmulationManager::getCorePath() { return m_corePath; }
+QString EmulationManager::currentGameName() const {
+  return QString::fromStdString(m_currentEntry.display_name);
+}
+int EmulationManager::nativeWidth() const { return m_nativeWidth; }
+int EmulationManager::nativeHeight() const { return m_nativeHeight; }
+float EmulationManager::nativeAspectRatio() const {
+  return m_nativeAspectRatio;
+}
 
-  core->setSystemDirectory(".");
-  core->setSaveDirectory(".");
+void EmulationManager::loadGame(int entryId, const QByteArray &gameData,
+                                const QByteArray &saveData,
+                                const QString &corePath) {
+  m_shouldLoadGame = true;
+  m_entryId = entryId;
+  m_gameData = gameData;
+  m_saveData = saveData;
+  m_corePath = corePath;
+  update();
+}
 
-  core->set_video_receiver(this);
-  core->set_audio_receiver(new AudioManager());
-  core->init();
+void EmulationManager::pauseGame() {
+  m_shouldPauseGame = true;
+  update();
+}
 
-  libretro::Game game(vector<unsigned char>(gameData.begin(), gameData.end()));
-  core->loadGame(&game);
+void EmulationManager::resumeGame() {
+  m_shouldResumeGame = true;
+  update();
+}
 
-  if (saveData.size() > 0) {
-    core->writeMemoryData(libretro::SAVE_RAM,
-                          vector(saveData.begin(), saveData.end()));
+void EmulationManager::startEmulation() {
+  m_shouldStartEmulation = true;
+  update();
+}
+
+void EmulationManager::stopEmulation() {
+  m_shouldStopEmulation = true;
+  update();
+}
+
+void EmulationManager::resetEmulation() {
+  m_shouldResetEmulation = true;
+  update();
+}
+
+bool EmulationManager::isRunning() { return m_isRunning; }
+
+bool EmulationManager::takeShouldLoadGameFlag() {
+  if (m_shouldLoadGame) {
+    m_shouldLoadGame = false;
+    return true;
   }
 
-  window()->setMinimumSize(QSize(core_av_info_->geometry.max_width,
-                                 core_av_info_->geometry.max_height));
-
-  setSize(QSize(core_av_info_->geometry.max_width,
-                core_av_info_->geometry.max_height));
-
-  const auto targetFrameTime = 1 / core_av_info_->timing.fps;
-  const auto actualFrameTime =
-      1 / QGuiApplication::primaryScreen()->refreshRate();
-
-  frameSkipRatio = std::lround(targetFrameTime / actualFrameTime);
-
-  setFlag(ItemHasContents);
-  auto win = window();
-
-  m_renderConnection =
-      connect(win, &QQuickWindow::beforeRenderPassRecording, this,
-              &EmulationManager::runOneFrame, Qt::DirectConnection);
+  return false;
 }
 
-void EmulationManager::runOneFrame() {
-  if (!glInitialized) {
-    initializeOpenGLFunctions();
-    glInitialized = true;
+bool EmulationManager::takeShouldPauseGameFlag() {
+  if (m_shouldPauseGame) {
+    m_shouldPauseGame = false;
+    return true;
   }
 
-  if (running) {
-    if (reset_context) {
-      usingHwRendering = true;
+  return false;
+}
+bool EmulationManager::takeShouldResumeGameFlag() {
+  if (m_shouldResumeGame) {
+    m_shouldResumeGame = false;
+    return true;
+  }
 
-      gameFbo = std::make_unique<QOpenGLFramebufferObject>(
-          core_av_info_->geometry.max_width,
-          core_av_info_->geometry.max_height);
-      gameFbo->setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+  return false;
+}
+bool EmulationManager::takeShouldStartEmulationFlag() {
+  if (m_shouldStartEmulation) {
+    m_shouldStartEmulation = false;
+    return true;
+  }
 
-      gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
-          gameFbo->texture(), window(), gameFbo->size());
+  return false;
+}
+bool EmulationManager::takeShouldStopEmulationFlag() {
+  if (m_shouldStopEmulation) {
+    m_shouldStopEmulation = false;
+    return true;
+  }
 
-      if (!gameFbo->isValid()) {
-        printf("gameFbo is not valid :(\n");
-      }
+  return false;
+}
 
-      reset_context();
-      reset_context = nullptr;
-    }
+bool EmulationManager::takeShouldResetEmulationFlag() {
+  if (m_shouldResetEmulation) {
+    m_shouldResetEmulation = false;
+    return true;
+  }
 
-    auto frameBegin = SDL_GetPerformanceCounter();
-    lastTick = thisTick;
-    thisTick = SDL_GetPerformanceCounter();
+  return false;
+}
 
-    auto deltaTime =
-        (thisTick - lastTick) * 1000 / (double)SDL_GetPerformanceFrequency();
+void EmulationManager::setIsRunning(bool isRunning) { m_isRunning = isRunning; }
 
-    m_millisSinceLastSave += static_cast<int>(deltaTime);
-    if (m_millisSinceLastSave < 0) {
-      m_millisSinceLastSave = 0;
-    }
-
-    if (m_millisSinceLastSave >= SAVE_FREQUENCY_MILLIS) {
-      m_millisSinceLastSave = 0;
-      gameImage = gameFbo->toImage();
-      save();
-    }
-
-    window()->beginExternalCommands();
-
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    frameCount++;
-    if (frameSkipRatio == 0 || (frameCount % frameSkipRatio == 0)) {
-      core->run(deltaTime);
-
-      auto frameEnd = SDL_GetPerformanceCounter();
-      auto frameDiff = ((frameEnd - frameBegin) * 1000 /
-                        static_cast<double>(SDL_GetPerformanceFrequency()));
-      totalFrameWorkDurationMillis += frameDiff;
-      numFrames++;
-
-      if (numFrames == 300) {
-        printf("Average frame work duration: %fms\n",
-               totalFrameWorkDurationMillis / numFrames);
-        totalFrameWorkDurationMillis = 0;
-        numFrames = 0;
-      }
-    }
-
-    window()->endExternalCommands();
-    window()->update();
+void EmulationManager::setCurrentEntry(LibEntry entry) {
+  if (entry.display_name != m_currentEntry.display_name) {
+    m_currentEntry = std::move(entry);
+    emit currentGameNameChanged();
   }
 }
-void EmulationManager::pause() { running = false; }
-void EmulationManager::resume() { running = true; }
-void EmulationManager::save(const bool waitForFinish) {
-  spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
-  Firelight::Saves::SaveData saveData(core->getMemoryData(libretro::SAVE_RAM));
-  saveData.setImage(gameImage);
-
-  QFuture<bool> result =
-      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
-
-  if (waitForFinish) {
-    result.waitForFinished();
+void EmulationManager::setNativeWidth(int nativeWidth) {
+  if (m_nativeWidth != nativeWidth) {
+    emit nativeWidthChanged();
   }
+
+  m_nativeWidth = nativeWidth;
 }
-
-void EmulationManager::receive(const void *data, unsigned int width,
-                               unsigned int height, size_t pitch) {
-  if (data != nullptr && !usingHwRendering) {
-    if (!gameFbo) {
-      gameFbo = std::make_unique<QOpenGLFramebufferObject>(width, height);
-
-      gameTexture = QNativeInterface::QSGOpenGLTexture::fromNative(
-          gameFbo->texture(), window(), gameFbo->size());
-    }
-
-    QOpenGLPaintDevice paint_device;
-    paint_device.setSize(gameFbo->size());
-    QPainter painter(&paint_device);
-
-    gameFbo->bind();
-    const QImage image((uchar *)data, width, height, pitch,
-                       QImage::Format_RGB16);
-
-    painter.drawImage(QRect(0, 0, gameFbo->width(), gameFbo->height()), image,
-                      image.rect());
-    gameFbo->release();
+void EmulationManager::setNativeHeight(int nativeHeight) {
+  if (m_nativeHeight != nativeHeight) {
+    emit nativeHeightChanged();
   }
-}
 
-proc_address_t EmulationManager::get_proc_address(const char *sym) {
-  return QOpenGLContext::currentContext()->getProcAddress(sym);
+  m_nativeHeight = nativeHeight;
 }
+void EmulationManager::setNativeAspectRatio(float nativeAspectRatio) {
+  if (m_nativeAspectRatio != nativeAspectRatio) {
+    emit nativeAspectRatioChanged();
+  }
 
-void EmulationManager::set_system_av_info(retro_system_av_info *info) {
-  core_av_info_ = info;
-}
-
-void EmulationManager::set_reset_context_func(context_reset_func reset) {
-  reset_context = reset;
-}
-
-uintptr_t EmulationManager::get_current_framebuffer_id() {
-  return gameFbo->handle();
+  m_nativeAspectRatio = nativeAspectRatio;
 }

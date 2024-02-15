@@ -26,6 +26,7 @@
 #include "app/db/sqlite_library_database.hpp"
 #include "gui/controller_manager.hpp"
 #include "gui/sdl_event_loop.hpp"
+#include "gui/window_resize_handler.hpp"
 
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
@@ -78,46 +79,9 @@ int main(int argc, char *argv[]) {
   if (!create_dirs(appdata_dir, userdata_dir, roms_dir)) {
     return 1;
   }
-  //
-  // QObject::connect(&libraryManager, &QLibraryManager::scanStarted,
-  //                  [] { printf("scan started!\n"); });
-  // QObject::connect(&libraryManager, &QLibraryManager::scanFinished, [&] {
-  //   printf("setting entries\n");
-  //   shortModel.setEntries(library_database.get_all_entries());
-  // });
-  //
-
-  // libraryManager.refresh();
-  // EmulationManager::setLibraryManager(&library_manager);
-
-  // QFileSystemWatcher watcher;
-  // watcher.addPath(QString::fromStdString(roms_dir.string()));
-  // QObject::connect(&watcher, &QFileSystemWatcher::fileChanged, [](auto s)
-  // { printf("file changed: %s\n", s.toStdString().c_str());
-  // });
-  // QObject::connect(&watcher, &QFileSystemWatcher::directoryChanged,
-  // [](const QString &s) {
-  // printf("directory changed: %s\n", s.toStdString().c_str());
-  // });
-
-  // auto emulator = EmulationManager::getInstance();
-
-  // Load:
-  //   SDL2 Event Loop
-  //   ControllerManager
-  //   SaveManager
-  //   LibraryManager
-  //   ContentDatabase
-  //   EmulationManager
-  //
 
   // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
-  // qint32 fontId =
-  //     QFontDatabase::addApplicationFont("/assets/Lexend-Regular.ttf");
-  // if (fontId == -1) {
-  //   return 1;
-  //
 
   Firelight::Input::ControllerManager controllerManager;
   Firelight::SdlEventLoop sdlEventLoop(&controllerManager);
@@ -137,7 +101,7 @@ int main(int argc, char *argv[]) {
   // QString family = fontList.first();
   // QGuiApplication::setFont(QFont(family));
 
-  QQuickStyle::setStyle("Material");
+  // QQuickStyle::setStyle("FirelightStyle");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   // **** Load Content Database ****
@@ -152,8 +116,6 @@ int main(int argc, char *argv[]) {
   libraryManager.startScan();
   Firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  EmulationManager::setLibraryManager(&libraryManager);
-
   // auto *model = new QSqlQueryModel;
   // model->setQuery("SELECT id, display_name FROM library");
 
@@ -165,17 +127,19 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("library_short_model", &shortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
 
-  // engine.rootContext()->setContextProperty("library_short_model", model);
-
-  // engine.rootContext()->setContextProperty("emulator", emulator);
+  auto resizeHandler = new Firelight::WindowResizeHandler();
+  engine.rootContext()->setContextProperty("window_resize_handler",
+                                           resizeHandler);
 
   QObject::connect(
       &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
       []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-  engine.loadFromModule("QtFirelight", "Main");
+  engine.loadFromModule("QMLFirelight", "Main");
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
+  window->installEventFilter(resizeHandler);
+
   // emulator->setWindow(window);
   // // window->setColor(Qt::black);
   //
