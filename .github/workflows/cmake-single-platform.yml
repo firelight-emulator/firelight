@@ -62,7 +62,7 @@ jobs:
       run: cmake --build build
 
     - name: Run unit tests
-      run: ./fl_test
+      run: ./fl_test.exe
 
     # - name: Build
     #   # Build your program with the given configuration
