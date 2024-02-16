@@ -40,7 +40,6 @@ jobs:
           git
         pacboy: >-
           cmake:p
-          # qt6:p
           gtest:p
           SDL2:p
           spdlog:p
