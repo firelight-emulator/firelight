@@ -123,7 +123,8 @@ void QLibraryManager::startScan() {
           if (auto ext = entry.path().extension();
               ext.string() == ".mod" || ext.string() == ".ips") {
             handleScannedPatchFile(entry, scan_results);
-          } else if (ext.string() == ".smc" || ext.string() == ".z64" ||
+          } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
+                     ext.string() == ".v64" || ext.string() == ".z64" ||
                      ext.string() == ".gb" || ext.string() == ".gbc" ||
                      ext.string() == ".gba") {
             handleScannedRomFile(entry, scan_results);

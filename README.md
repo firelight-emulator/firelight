@@ -71,9 +71,12 @@ make install  # install libs & headers
     * pacman -S mingw-w64-x86_64-cmake
     * pacman -S mingw-w64-x86_64-gcc
     * pacman -S make gettext base-devel
-3. Add the MSYS2 directory to the PATH environment variable in Windows (mine was C:\msys64\mingw64\bin)
-4. Make a folder called build in the root directory of the project
-5. Open a Linux Shell and run the following commands (start in the build directory)
+    * pacman -S mingw-w64-x86_64-make 
+    * pacman -S mingw-w64-x86_64-spdlog
+3. Go to your MSYS2 bin folder and copy mingw32-make.exe as make.exe
+4. Add the MSYS2 directory to the PATH environment variable in Windows (mine was C:\msys64\mingw64\bin)
+5. Make a folder called build in the root directory of the project
+6. Open a Linux Shell and run the following commands (start in the build directory)
     * apt install cmake
     * apt install make
     * cmake -G "MinGW Makefiles" ..
