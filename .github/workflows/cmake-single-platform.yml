@@ -67,6 +67,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_mingw'
+        modules: 'qt3d qtactiveqt qtcharts qtconnectivity qtdatavis3d qtgraphs qtgrpc qthttpserver qtimageformats qtlanguageserver qtlocation qtlottie qtmultimedia qtnetworkauth qtpdf qtpositioning qtquick3dphysics qtquickeffectmaker qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtvirtualkeyboard qtwebchannel qtwebsockets qtwebview debug_info qt5compat qtquick3d qtquicktimeline qtshadertools'
 
     - name: Prepare artifact
       run: |
