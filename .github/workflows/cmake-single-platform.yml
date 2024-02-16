@@ -64,9 +64,18 @@ jobs:
     - name: Run unit tests
       run: build/fl_test
 
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        aqtversion: '==3.1.*'
+        version: '6.6.1'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_mingw'
+
     - name: Prepare artifact
       run: |
-        ls -R / | grep qt
+        windeployqt build
         cp /mingw64/bin/SDL2.dll build/
         cp /mingw64/bin/libstdc++-6.dll build/
         cp /mingw64/bin/libgcc_s_seh-1.dll build/
