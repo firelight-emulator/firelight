@@ -66,7 +66,7 @@ jobs:
 
     - name: Prepare artifact
       run: |
-        windeployqt6 build/firelight.exe
+        "$QTDIR"/bin/windeployqt build/firelight.exe
         cp /mingw64/bin/SDL2.dll build/
         cp /mingw64/bin/libstdc++-6.dll build/
         cp /mingw64/bin/libgcc_s_seh-1.dll build/
