@@ -73,7 +73,7 @@ jobs:
       run: |
         cp /mingw64/bin/SDL2.dll build/
         cp /mingw64/bin/libcrypto-3-x64.dll build/
-        ${GITHUB_WORKSPACE}/../Qt/6.6.1/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
+        ${GITHUB_WORKSPACE}/../Qt/6.6.2/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
