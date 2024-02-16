@@ -66,18 +66,12 @@ jobs:
 
     - name: Prepare artifact
       run: |
+        windeployqt6 build/firelight.exe
         cp /mingw64/bin/SDL2.dll build/
         cp /mingw64/bin/libstdc++-6.dll build/
         cp /mingw64/bin/libgcc_s_seh-1.dll build/
         cp /mingw64/bin/libwinpthread-1.dll build/
         cp /mingw64/bin/libcrypto-3-x64.dll build/
-        cp /mingw64/bin/Qt6Core.dll build/
-        cp /mingw64/bin/Qt6Gui.dll build/
-        cp /mingw64/bin/Qt6OpenGL.dll build/
-        cp /mingw64/bin/Qt6Sql.dll build/
-        cp /mingw64/bin/Qt6Quick.dll build/
-        cp /mingw64/bin/Qt6Quick3D.dll build/
-        cp /mingw64/bin/Qt6QuickControls2.dll build/
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
