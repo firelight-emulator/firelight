@@ -36,6 +36,7 @@ jobs:
     #   uses: lukka/get-cmake@latest
     - uses: msys2/setup-msys2@v2
       with:
+        cache: true
         update: true
         install: >-
           make
@@ -52,16 +53,6 @@ jobs:
           
     - uses: actions/checkout@v3
 
-    # - name: CMake Action
-    #   uses: threeal/cmake-action@v1.3.0
-    #   with:
-    #     build-dir: ${{github.workspace}}/build
-    #     generator: "MinGW Makefiles"
-    #     c-compiler: gcc
-    #     cxx-compiler: g++
-    #     run-build: true
-    #     args: "-DSDL2_DIR=${{env.CMAKE_SDL2_PATH}}"
-
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -69,6 +60,9 @@ jobs:
 
     - name: Build
       run: cmake --build build
+
+    - name: Run unit tests
+      run: ./fl_test
 
     # - name: Build
     #   # Build your program with the given configuration
