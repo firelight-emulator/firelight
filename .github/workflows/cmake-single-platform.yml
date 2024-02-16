@@ -12,10 +12,6 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   CMAKE_GENERATOR: MinGW Makefiles
-  CMAKE_MODULE_PATH: |
-    C:/mingw64/lib/cmake/SDL2
-  CMAKE_SDL2_PATH: C:/mingw64/lib/cmake/SDL2
-
   
 # defaults:
 #   run:
@@ -75,7 +71,7 @@ jobs:
 
     - name: Prepare artifact
       run: |
-        windeployqt build
+        /Qt/6.6.1/mingw_64/bin/windeployqt build/firelight.exe
         cp /mingw64/bin/SDL2.dll build/
         cp /mingw64/bin/libstdc++-6.dll build/
         cp /mingw64/bin/libgcc_s_seh-1.dll build/
