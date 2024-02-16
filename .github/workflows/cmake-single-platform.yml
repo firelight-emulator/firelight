@@ -71,6 +71,12 @@ jobs:
         cp /mingw64/bin/libgcc_s_seh-1.dll build/
         cp /mingw64/bin/libwinpthread-1.dll build/
 
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: firelight
+        path: build/
+
     # - name: Build
     #   # Build your program with the given configuration
     #   run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
