@@ -4,8 +4,9 @@
 
 #ifndef CONTROLLER_MANAGER_HPP
 #define CONTROLLER_MANAGER_HPP
-#include "../app/libretro/retropad_provider.hpp"
+#include "../libretro/retropad_provider.hpp"
 #include "controller.hpp"
+#include "keyboard_controller.hpp"
 
 #include <QObject>
 #include <SDL_events.h>
@@ -31,6 +32,7 @@ signals:
   void controllerDisconnected();
 
 private:
+  KeyboardController m_keyboardController{};
   std::array<std::unique_ptr<Controller>, 32> m_controllers{};
 
   void openControllerWithDeviceIndex(int32_t t_deviceIndex);

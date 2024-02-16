@@ -52,8 +52,8 @@ add_library(firelight_lib
         src/app/db/content_database.hpp
         src/app/db/sqlite_content_database.cpp
         src/app/db/sqlite_content_database.hpp
-        src/app/controller/fps_multiplier.cpp
-        src/app/controller/fps_multiplier.hpp
+        src/app/fps_multiplier.cpp
+        src/app/fps_multiplier.hpp
         src/app/db/library_database.hpp
         src/app/db/sqlite_library_database.cpp
         src/app/db/sqlite_library_database.hpp
@@ -62,13 +62,13 @@ add_library(firelight_lib
         src/app/db/daos/lib_entry.hpp
         src/app/db/daos/platform.hpp
         src/app/libretro/retropad.hpp
-        src/gui/controller.hpp
-        src/gui/controller.cpp
+        src/app/input/controller.hpp
+        src/app/input/controller.cpp
         src/app/libretro/retropad_provider.hpp
-        src/gui/controller_manager.cpp
-        src/gui/controller_manager.hpp
-        src/gui/sdl_event_loop.cpp
-        src/gui/sdl_event_loop.hpp
+        src/app/input/controller_manager.cpp
+        src/app/input/controller_manager.hpp
+        src/app/input/sdl_event_loop.cpp
+        src/app/input/sdl_event_loop.hpp
         src/app/manager_accessor.hpp
         src/app/manager_accessor.cpp
         src/app/libretro/audio_data_receiver.hpp
@@ -87,6 +87,11 @@ add_library(firelight_lib
         src/app/emulator_renderer.hpp
         src/gui/window_resize_handler.cpp
         src/gui/window_resize_handler.hpp
+        src/app/input/keyboard_controller.cpp
+        src/app/input/keyboard_controller.hpp
+        src/app/db/userdata_database.hpp
+        src/app/db/sqlite_userdata_database.cpp
+        src/app/db/sqlite_userdata_database.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}

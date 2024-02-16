@@ -11,6 +11,7 @@
 #include <QOpenGLPaintDevice>
 #include <QPainter>
 #include <QSGTextureProvider>
+#include <qdatetime.h>
 #include <spdlog/spdlog.h>
 
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
@@ -69,6 +70,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   }
   if (manager->takeShouldStartEmulationFlag()) {
     if (!m_running) {
+      sessionStartTime = QDateTime::currentMSecsSinceEpoch();
       m_shouldStartEmulation = true;
       m_running = true;
       m_paused = false;
@@ -80,12 +82,15 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   }
   if (manager->takeShouldStopEmulationFlag()) {
     if (m_running) {
+      sessionEndTime = QDateTime::currentMSecsSinceEpoch();
       if (!m_paused) {
         sessionDuration += m_playtimeTimer.restart();
       } else {
         m_playtimeTimer.restart();
       }
-      printf("session duration: %lld seconds\n", sessionDuration / 1000);
+      getUserdataManager()->savePlaySession(m_currentEntry.md5,
+                                            sessionStartTime, sessionEndTime,
+                                            sessionDuration / 1000);
       m_running = false;
       m_ranLastFrame = false;
       save(true);

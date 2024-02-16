@@ -4,7 +4,7 @@
 
 #ifndef CONTROLLER_HPP
 #define CONTROLLER_HPP
-#include "../app/libretro/retropad.hpp"
+#include "../libretro/retropad.hpp"
 
 #include <SDL_gamecontroller.h>
 

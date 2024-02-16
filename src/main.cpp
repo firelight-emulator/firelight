@@ -22,10 +22,11 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
-#include "app/controller/fps_multiplier.hpp"
 #include "app/db/sqlite_library_database.hpp"
-#include "gui/controller_manager.hpp"
-#include "gui/sdl_event_loop.hpp"
+#include "app/db/sqlite_userdata_database.hpp"
+#include "app/fps_multiplier.hpp"
+#include "app/input/controller_manager.hpp"
+#include "app/input/sdl_event_loop.hpp"
 #include "gui/window_resize_handler.hpp"
 
 const int SCREEN_WIDTH = 1280;
@@ -103,6 +104,9 @@ int main(int argc, char *argv[]) {
 
   // QQuickStyle::setStyle("FirelightStyle");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+
+  SqliteUserdataDatabase userdata_database(userdata_dir / "userdata.db");
+  Firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
   // **** Load Content Database ****
   SqliteContentDatabase content_database(system_dir / "content.db");

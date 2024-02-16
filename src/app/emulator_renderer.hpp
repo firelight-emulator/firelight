@@ -38,6 +38,8 @@ protected:
   void render() override;
 
 private:
+  long long sessionStartTime = 0;
+  long long sessionEndTime = 0;
   long long sessionDuration = 0;
   QElapsedTimer m_playtimeTimer;
 

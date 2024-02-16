@@ -83,8 +83,6 @@ private:
   SDL_AudioDeviceID audioDevice;
   CoreAudioDataReceiver *audioReceiver;
 
-  //  Video *video;
-
   vector<string> environmentCalls;
 
   retro_system_info *retroSystemInfo;

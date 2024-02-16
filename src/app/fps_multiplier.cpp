@@ -4,7 +4,6 @@
 
 #include "fps_multiplier.hpp"
 
-
 void FpsMultiplier::stop() {
     std::printf("Stop!");
 }

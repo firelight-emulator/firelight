@@ -6,8 +6,9 @@
 #define MANAGER_ACCESSOR_HPP
 
 #include "../gui/QLibraryManager.hpp"
-#include "../gui/controller_manager.hpp"
 #include "../gui/save_manager.hpp"
+#include "db/userdata_database.hpp"
+#include "input/controller_manager.hpp"
 
 namespace Firelight {
 
@@ -20,16 +21,19 @@ public:
   static void setControllerManager(Input::ControllerManager *t_manager);
   static void setSaveManager(Saves::SaveManager *t_manager);
   static void setLibraryManager(QLibraryManager *t_libraryManager);
+  static void setUserdataManager(UserdataDatabase *t_userdataManager);
 
 protected:
   static Input::ControllerManager *getControllerManager();
   static Saves::SaveManager *getSaveManager();
   static QLibraryManager *getLibraryManager();
+  static UserdataDatabase *getUserdataManager();
 
 private:
   static Input::ControllerManager *m_controllerManager;
   static Saves::SaveManager *m_saveManager;
   static QLibraryManager *m_libraryManager;
+  static UserdataDatabase *m_userdataDatabase;
 };
 
 } // namespace Firelight
