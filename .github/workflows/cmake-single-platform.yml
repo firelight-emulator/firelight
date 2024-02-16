@@ -47,7 +47,6 @@ jobs:
           toolchain:p
           openssl:p
           sqlite3:p
-          
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -64,7 +63,7 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         aqtversion: '==3.1.*'
-        version: '6.6.1'
+        version: '6.6.2'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_mingw'
@@ -72,9 +71,6 @@ jobs:
     - name: Prepare artifact
       run: |
         cp /mingw64/bin/SDL2.dll build/
-        cp /mingw64/bin/libstdc++-6.dll build/
-        cp /mingw64/bin/libgcc_s_seh-1.dll build/
-        cp /mingw64/bin/libwinpthread-1.dll build/
         cp /mingw64/bin/libcrypto-3-x64.dll build/
         ${GITHUB_WORKSPACE}/../Qt/6.6.1/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
 
