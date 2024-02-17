@@ -5,20 +5,13 @@
 #include "src/app/game_loader.hpp"
 #include "src/gui/QLibraryManager.hpp"
 #include "src/gui/QLibraryViewModel.hpp"
-#include <QFileSystemWatcher>
-#include <QFontDatabase>
 #include <QGuiApplication>
 #include <QOpenGLFunctions>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QQuickStyle>
 #include <QQuickWindow>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlQueryModel>
 #include <QWindow>
 #include <SDL.h>
-#include <SDL_error.h>
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
@@ -32,17 +25,19 @@
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
 
-bool create_dirs(const std::filesystem::path &paths...) {
+bool create_dirs(const std::initializer_list<std::filesystem::path> list)
+{
   std::error_code error_code;
-
-  for (const auto &p : paths) {
-    if (!exists(p) && !create_directories(p, error_code)) {
-      // spdlog::error("Unable to create directory {}; Error code: {}\n",
-      //               p.string(), error_code.message());
-      return false;
+  for (const auto& path : list) {
+    if (!exists(path))
+    {
+      spdlog::info("Directory not found, creating: {}", path.string());
+      if (!create_directories(path, error_code)) {
+        spdlog::error("Unable to create directory {}; Error code: {}", path.string(), error_code.message());
+        return false;
+      }
     }
   }
-
   return true;
 }
 
@@ -53,33 +48,18 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::info);
   }
 
-  // **** Make sure installation directories are all good ****
-  const std::filesystem::path installation_dir = ".";
-
-  if (!exists(installation_dir)) {
-    spdlog::error("Installation directory {} somehow does not exist. Please "
-                  "reinstall the application\n",
-                  installation_dir.string());
-    return 1;
-  }
-
-  // Verify system directory for cores
-  const auto system_dir = installation_dir / "system";
-  if (!exists(system_dir)) {
-    spdlog::error("System directory {} does not exist. Please reinstall the "
-                  "application\n",
-                  system_dir.string());
-    return 1;
-  }
-
-  // **** Make sure appdata directories are all good ****
+  // **** Make sure all directories are good ****
   std::filesystem::path appdata_dir = ".";
+  auto system_dir = appdata_dir / "system";
   auto userdata_dir = appdata_dir / "userdata";
   auto roms_dir = appdata_dir / "roms";
+  auto save_dir = userdata_dir / "savedata";
 
-  if (!create_dirs(appdata_dir, userdata_dir, roms_dir)) {
+  if (!create_dirs({ appdata_dir, system_dir, userdata_dir, roms_dir, save_dir } )) {
     return 1;
   }
+
+
 
   // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
@@ -87,7 +67,7 @@ int main(int argc, char *argv[]) {
   Firelight::Input::ControllerManager controllerManager;
   Firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
-  Firelight::Saves::SaveManager saveManager(userdata_dir / "savedata");
+  Firelight::Saves::SaveManager saveManager(save_dir);
 
   Firelight::ManagerAccessor::setControllerManager(&controllerManager);
   Firelight::ManagerAccessor::setSaveManager(&saveManager);
