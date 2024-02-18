@@ -521,31 +521,38 @@ ApplicationWindow {
                         }
                     }
 
+                    // model: controller_manager
+                    // delegate: Rectangle {
+                    //     width: 300
+                    //     height: 72
+                    //     color: "black"
+                    //     radius: 12
+                    //
+                    //     Text {
+                    //         anchors.centerIn: parent
+                    //         color: "white"
+                    //         text: playerIndex + ": " + controllerName
+                    //     }
+                    //
+                    //     DragHandler {
+                    //         id: dragHandler
+                    //     }
+                    // }
+
                     model: DelegateModel {
                         id: visualModel
-                        model: ListModel {
-                            id: colorModel
-                            ListElement {
-                                color: "blue"
-                            }
-                            ListElement {
-                                color: "green"
-                            }
-                            ListElement {
-                                color: "red"
-                            }
-                            ListElement {
-                                color: "yellow"
-                            }
-                        }
+                        model: controller_manager
 
                         component Thing: Rectangle {
                             id: icon
                             required property Item dragParent
+                            required property string controllerName
+                            required property int playerIndex
 
                             property int visualIndex: 0
-                            width: 72
+                            width: 300
                             height: 72
+                            color: "black"
 
                             anchors {
                                 horizontalCenter: parent.horizontalCenter
@@ -556,11 +563,15 @@ ApplicationWindow {
                             Text {
                                 anchors.centerIn: parent
                                 color: "white"
-                                text: parent.visualIndex
+                                text: controllerName
                             }
 
                             DragHandler {
                                 id: dragHandler
+                            }
+
+                            HoverHandler {
+                                cursorShape: icon.state === "Dragging" ? Qt.ClosedHandCursor : Qt.OpenHandCursor
                             }
 
                             Drag.active: dragHandler.active
@@ -570,6 +581,11 @@ ApplicationWindow {
 
                             states: [
                                 State {
+                                    name: "NotDragging"
+                                    when: !dragHandler.active
+                                },
+                                State {
+                                    name: "Dragging"
                                     when: dragHandler.active
                                     ParentChange {
                                         target: icon
@@ -585,17 +601,46 @@ ApplicationWindow {
                                     }
                                 }
                             ]
+
+                            transitions: [
+                                Transition {
+                                    from: "Dragging"
+                                    to: "NotDragging"
+                                    ScriptAction {
+                                        script: {
+                                            var newOrder = {};
+                                            for (var i = 0; i < visualModel.items.count; i++) {
+                                                newOrder[i] = visualModel.items.get(i).model.playerIndex
+                                                // console.log("playerIndex: " + visualModel.items.get(i).model.playerIndex)
+                                            }
+                                            // for (const key in visualModel.items) {
+                                            //     if (myObject.hasOwnProperty(key)) {
+                                            //         newOrder[visualModel.items[key].model.visualIndex] = visualModel.items[key].model.playerIndex;
+                                            //     }
+                                            // }
+
+                                            controller_manager.updateControllerOrder(newOrder)
+                                            // for (var i = 0; i < visualModel.items.count; i++) {
+                                            //     console.log("playerIndex: " + visualModel.items.get(i).model.playerIndex)
+                                            // }
+                                        }
+
+                                    }
+                                }
+                            ]
                         }
 
                         delegate: DropArea {
                             id: delegateRoot
-                            required property color color
+                            required property string controllerName
+                            required property int playerIndex
 
-                            width: 80
+                            width: 300
                             height: 80
 
                             onEntered: function (drag) {
                                 visualModel.items.move(drag.source.visualIndex, icon2.visualIndex)
+                                controller_manager.swap(drag.source.visualIndex, icon2.visualIndex)
                             }
 
                             property int visualIndex: DelegateModel.itemsIndex
@@ -604,7 +649,8 @@ ApplicationWindow {
                                 id: icon2
                                 dragParent: root
                                 visualIndex: delegateRoot.visualIndex
-                                color: delegateRoot.color
+                                controllerName: delegateRoot.controllerName
+                                playerIndex: delegateRoot.playerIndex
                             }
                         }
                     }

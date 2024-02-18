@@ -130,6 +130,8 @@ int main(int argc, char *argv[]) {
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("library_short_model", &shortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
+  engine.rootContext()->setContextProperty("controller_manager",
+                                           &controllerManager);
 
   auto resizeHandler = new Firelight::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",

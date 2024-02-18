@@ -8,17 +8,16 @@
 #include "controller.hpp"
 #include "keyboard_controller.hpp"
 
+#include <QAbstractListModel>
 #include <QObject>
 #include <SDL_events.h>
 
 namespace Firelight::Input {
 
-class ControllerManager final : public QObject,
+class ControllerManager final : public QAbstractListModel,
                                 public libretro::IRetropadProvider {
   Q_OBJECT
-
 public:
-  ControllerManager() = default;
   void handleSDLControllerEvent(const SDL_Event &event);
   void refreshControllerList();
 
@@ -26,13 +25,23 @@ public:
   getControllerForPlayer(int t_player) const;
   std::optional<libretro::IRetroPad *>
   getRetropadForPlayer(int t_player) override;
+  [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index,
+                              int role) const override;
+  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
+
+public slots:
+  void swap(int firstIndex, int secondIndex);
+  void updateControllerOrder(const QVariantMap &map);
 
 signals:
   void controllerConnected();
   void controllerDisconnected();
 
 private:
-  KeyboardController m_keyboardController{};
+  enum Roles { PlayerIndex = Qt::UserRole + 1, ControllerName };
+
+  int m_numControllers = 0;
   std::array<std::unique_ptr<Controller>, 32> m_controllers{};
 
   void openControllerWithDeviceIndex(int32_t t_deviceIndex);

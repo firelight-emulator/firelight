@@ -7,6 +7,7 @@
 #include "../libretro/retropad.hpp"
 
 #include <SDL_gamecontroller.h>
+#include <string>
 
 namespace Firelight::Input {
 
@@ -23,8 +24,11 @@ public:
   [[nodiscard]] int32_t getInstanceId() const;
   [[nodiscard]] int32_t getDeviceIndex() const;
 
+  [[nodiscard]] std::string getControllerName() const;
+  void setPlayerIndex(int t_newPlayerIndex) const;
+  [[nodiscard]] int getPlayerIndex() const;
+
 private:
-  int m_playerNumber = -1;
   SDL_GameController *m_SDLController = nullptr;
   int32_t m_SDLJoystickDeviceIndex = -1;
   int32_t m_SDLJoystickInstanceId = -1;

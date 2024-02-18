@@ -5,6 +5,7 @@
 #include "controller_manager.hpp"
 
 #include <spdlog/spdlog.h>
+#include <string>
 
 namespace Firelight::Input {
 
@@ -22,6 +23,7 @@ void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
       if (m_controllers[i] != nullptr &&
           m_controllers[i]->getInstanceId() == joystickInstanceId) {
         m_controllers[i].reset();
+        m_numControllers--;
         emit controllerDisconnected();
         spdlog::debug("We found it and we're unplugging it");
       }
@@ -34,9 +36,9 @@ void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
     break;
   }
 }
+
 void ControllerManager::refreshControllerList() {
   const auto numJoys = SDL_NumJoysticks();
-  spdlog::info("number of joysticks: {}", numJoys);
   for (int i = 0; i < numJoys; ++i) {
     openControllerWithDeviceIndex(i);
   }
@@ -55,7 +57,6 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
   for (int i = 0; i < m_controllers.max_size(); ++i) {
     if (m_controllers[i] != nullptr &&
         m_controllers[i]->getDeviceIndex() == t_deviceIndex) {
-      spdlog::info("found a dupe lol");
       return;
     }
   }
@@ -71,6 +72,7 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
     if (m_controllers[i] == nullptr) {
       SDL_GameControllerSetPlayerIndex(controller, i);
 
+      m_numControllers++;
       m_controllers[i] =
           std::make_unique<Controller>(controller, t_deviceIndex);
       break;
@@ -89,4 +91,78 @@ ControllerManager::getControllerForPlayer(const int t_player) const {
 
   return {};
 }
+
+int ControllerManager::rowCount(const QModelIndex &parent) const {
+  return m_numControllers;
+}
+
+QVariant ControllerManager::data(const QModelIndex &index, int role) const {
+  if (role < Qt::UserRole || index.row() >= m_controllers.size()) {
+    return QVariant{};
+  }
+
+  auto item = m_controllers.at(index.row()).get();
+
+  if (!item) {
+    return QVariant{};
+  }
+
+  switch (role) {
+  case PlayerIndex:
+    return item->getPlayerIndex();
+  case ControllerName:
+    return QString::fromStdString(item->getControllerName());
+  default:
+    return QVariant{};
+  }
+}
+
+QHash<int, QByteArray> ControllerManager::roleNames() const {
+  QHash<int, QByteArray> roles;
+  roles[PlayerIndex] = "playerIndex";
+  roles[ControllerName] = "controllerName";
+  return roles;
+}
+void ControllerManager::swap(int firstIndex, int secondIndex) {
+  for (auto i : persistentIndexList()) {
+    printf("%d: %d\n", i.row(), i.column());
+  }
+
+  if (firstIndex == secondIndex) {
+    return;
+  }
+
+  printf("Swapping: %d, %d\n", firstIndex, secondIndex);
+}
+
+void ControllerManager::updateControllerOrder(const QVariantMap &map) {
+  std::unique_ptr<Controller> tempCon[map.size()];
+
+  auto emittedSignal = false;
+  for (auto it = map.constBegin(); it != map.constEnd(); ++it) {
+    const auto to = it.key().toInt();
+    const auto from = it.value().toInt();
+    if (from == to) {
+      continue;
+    }
+
+    if (!emittedSignal) {
+      emittedSignal = true;
+      emit layoutAboutToBeChanged();
+    }
+
+    tempCon[to] = std::move(m_controllers[from]);
+    tempCon[to]->setPlayerIndex(-1);
+  }
+
+  for (auto i = 0; i < map.size(); ++i) {
+    if (tempCon[i] != nullptr) {
+      m_controllers[i] = std::move(tempCon[i]);
+      m_controllers[i]->setPlayerIndex(i);
+    }
+  }
+
+  emit layoutChanged();
+}
+
 } // namespace Firelight::Input

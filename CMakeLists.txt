@@ -92,6 +92,8 @@ add_library(firelight_lib
         src/app/db/userdata_database.hpp
         src/app/db/sqlite_userdata_database.cpp
         src/app/db/sqlite_userdata_database.hpp
+        src/app/input/controller_list_model.cpp
+        src/app/input/controller_list_model.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
