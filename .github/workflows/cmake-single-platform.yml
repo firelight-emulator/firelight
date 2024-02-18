@@ -40,13 +40,24 @@ jobs:
           git
         pacboy: >-
           cmake:p
-          qt6:p
           gtest:p
+          qt6:p
           SDL2:p
           spdlog:p
           toolchain:p
           openssl:p
           sqlite3:p
+          
+    # - name: Install Qt
+    #   uses: jurplel/install-qt-action@v3
+    #   with:
+    #     aqtversion: '==3.1.*'
+    #     version: '6.6.2'
+    #     host: 'windows'
+    #     target: 'desktop'
+    #     arch: 'win64_mingw'
+    #     modules: 'qt3d qtactiveqt qtcharts qtconnectivity qtdatavis3d qtgraphs qtgrpc qthttpserver qtimageformats qtlanguageserver qtlocation qtlottie qtmultimedia qtnetworkauth qtpdf qtpositioning qtquick3dphysics qtquickeffectmaker qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtvirtualkeyboard qtwebchannel qtwebsockets qtwebview debug_info qt5compat qtquick3d qtquicktimeline qtshadertools'
+
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -59,27 +70,17 @@ jobs:
     - name: Run unit tests
       run: build/fl_test
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        aqtversion: '==3.1.*'
-        version: '6.6.2'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_mingw'
-        modules: 'qt3d qtactiveqt qtcharts qtconnectivity qtdatavis3d qtgraphs qtgrpc qthttpserver qtimageformats qtlanguageserver qtlocation qtlottie qtmultimedia qtnetworkauth qtpdf qtpositioning qtquick3dphysics qtquickeffectmaker qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtvirtualkeyboard qtwebchannel qtwebsockets qtwebview debug_info qt5compat qtquick3d qtquicktimeline qtshadertools'
+    # - name: Prepare artifact
+    #   run: |
+    #     cp /mingw64/bin/SDL2.dll build/
+    #     cp /mingw64/bin/libcrypto-3-x64.dll build/
+    #     ${GITHUB_WORKSPACE}/../Qt/6.6.2/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
 
-    - name: Prepare artifact
-      run: |
-        cp /mingw64/bin/SDL2.dll build/
-        cp /mingw64/bin/libcrypto-3-x64.dll build/
-        ${GITHUB_WORKSPACE}/../Qt/6.6.2/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: firelight
-        path: build/
+    # - name: Upload artifact
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: firelight
+    #     path: build/
 
     # - name: Build
     #   # Build your program with the given configuration
