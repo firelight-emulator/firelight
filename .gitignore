@@ -9,6 +9,10 @@ artifact
 .gitbak
 out
 build
+release
+userdata
+system
+roms
 build-old
 
 .obsidian

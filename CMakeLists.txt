@@ -36,6 +36,7 @@ qt_standard_project_setup(REQUIRES 6.5)
 set(CMAKE_CXX_STANDARD 17)
 
 add_library(firelight_lib
+        #        ${DISCORD_SOURCES}
         src/app/libretro/core.cpp
         src/app/libretro/coreoption.cpp
         src/app/libretro/coreoption.hpp
@@ -96,7 +97,7 @@ add_library(firelight_lib
         src/app/input/controller_list_model.hpp
 )
 
-target_include_directories(firelight_lib PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
+target_include_directories(firelight_lib PRIVATE includes ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
 target_link_libraries(firelight_lib mingw32 SDL2main SDL2 opengl32 ssl crypto ${SQLite3_LIBRARIES}
         Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D Qt6::Sql spdlog::spdlog)
@@ -150,7 +151,7 @@ qt_add_qml_module(firelight_style
         OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/FirelightStyle"
 )
 
-target_include_directories(firelight PRIVATE includes includes/imgui ${SDL2_INCLUDE_DIRS}
+target_include_directories(firelight PRIVATE includes ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
 target_link_libraries(firelight PRIVATE firelight_lib)
 
@@ -186,3 +187,8 @@ target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES})
 #
 #add_test(NAME firelight_test COMMAND firelight)
 
+qt_generate_deploy_qml_app_script(
+        TARGET firelight
+        OUTPUT_SCRIPT deploy_script
+)
+install(SCRIPT ${deploy_script})

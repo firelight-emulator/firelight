@@ -25,15 +25,14 @@
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
 
-bool create_dirs(const std::initializer_list<std::filesystem::path> list)
-{
+bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
-  for (const auto& path : list) {
-    if (!exists(path))
-    {
+  for (const auto &path : list) {
+    if (!exists(path)) {
       spdlog::info("Directory not found, creating: {}", path.string());
       if (!create_directories(path, error_code)) {
-        spdlog::error("Unable to create directory {}; Error code: {}", path.string(), error_code.message());
+        spdlog::error("Unable to create directory {}; Error code: {}",
+                      path.string(), error_code.message());
         return false;
       }
     }
@@ -55,11 +54,10 @@ int main(int argc, char *argv[]) {
   auto roms_dir = appdata_dir / "roms";
   auto save_dir = userdata_dir / "savedata";
 
-  if (!create_dirs({ appdata_dir, system_dir, userdata_dir, roms_dir, save_dir } )) {
+  if (!create_dirs(
+          {appdata_dir, system_dir, userdata_dir, roms_dir, save_dir})) {
     return 1;
   }
-
-
 
   // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
