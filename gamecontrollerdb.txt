@@ -1,0 +1,1 @@
+030000007e050000192000001202680c,NSO N64 Controller,a:b0,b:a5,x:b1,y:b2,back:b15,guide:b5,start:b6,leftshoulder:b9,rightshoulder:b10,dpup:b11,dpleft:b13,dpdown:b12,dpright:b14,-leftx:-a0,+leftx:+a0,-lefty:-a1,+lefty:+a1,-rightx:b2,+rightx:b4,-righty:b3,+righty:a5,lefttrigger:+a4,platform:Windows,
