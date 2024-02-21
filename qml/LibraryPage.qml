@@ -26,52 +26,6 @@ Rectangle {
         // minimumWidth: 200
         // maximumWidth: 400
 
-
-        Rectangle {
-            id: buttonsAtTop2Lol
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 48
-            color: "transparent"
-
-            RowLayout {
-                anchors.fill: parent
-                Button {
-                    Layout.alignment: Qt.AlignVCenter
-                    text: "All"
-                    background: Rectangle {
-                        color: "white"
-                        radius: 24
-                    }
-                }
-                Button {
-                    Layout.alignment: Qt.AlignVCenter
-                    text: "Favorites"
-                    background: Rectangle {
-                        color: "white"
-                        radius: 24
-                    }
-                }
-                Button {
-                    Layout.alignment: Qt.AlignVCenter
-                    text: "Recently Played"
-                    background: Rectangle {
-                        color: "white"
-                        radius: 24
-                    }
-                }
-            }
-        }
-
-        Rectangle {
-            id: horizontalRule2
-            width: parent.width
-            height: 1
-            anchors.top: buttonsAtTop2Lol.bottom
-            color: Constants.colorTestTextMuted
-        }
-
         // Rectangle {
         //     id: testItem
         //     width: 200
@@ -96,45 +50,12 @@ Rectangle {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
 
-        Rectangle {
-            id: buttonsAtTopLol
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            height: 36
-            color: "transparent"
-
-            RowLayout {
-                anchors.fill: parent
-                Button {
-                    Layout.alignment: Qt.AlignTop | Qt.AlignRight
-                    Layout.fillHeight: true
-                    text: "Recently Played"
-                    background: Rectangle {
-                        color: "white"
-                        radius: 24
-                    }
-                }
-            }
-        }
-
-        Rectangle {
-            id: horizontalRule
-            width: parent.width
-            height: 1
-            anchors.top: buttonsAtTopLol.bottom
-            anchors.topMargin: 12
-            color: Constants.colorTestTextMuted
-        }
-
-
         ListView {
             id: libraryList
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.top: horizontalRule.bottom
+            anchors.top: parent.top
             anchors.topMargin: 12
             clip: true
 

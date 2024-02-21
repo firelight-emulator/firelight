@@ -389,16 +389,20 @@ ApplicationWindow {
                         wrapMode: Text.WordWrap
                         font.pointSize: 12
                         text: "<p>Seriously, thanks so much :) This is a passion project of mine, and I'm excited to
-                         share it with you. This build is a little rough around the edges, but I hope you enjoy it
-                         anyway.</p>
-
-                         <p>Here's some of the stuff I'm hoping to get done next:</p>
-
-                         <ul>
-                         <li>Save states and rewind</li>
-                         <li>Controller profiles</li>
-                         <li>Playlists</li>
-                         </ul>
+                         share it with you. Here's some of the stuff you can look forward to next:</p>
+                        <br />
+                         <b>Content matching</b>: <p>We'll scan your ROMs and determine which game each of
+                          them is. That'll open up the way for box art and metadata downloading in a future
+                           update!</p>
+                        <br />
+                        <b>Suspend points and rewind</b>: <p>Save states! You'll be able to save an exact
+                          point in a game and go back to it anytime. And don't worry - it'll be really easy to
+                           get back to where you were in case you load one by mistake.</p>
+                        <br />
+                        <b>Controller profiles</b>: <p>Want to easily remap your controllers AND be able
+                          to see exactly which button you're \"pressing\" on the emulated controller? You'll be
+                           able to do that! </p>
+                        <br />
 
                          <p>There's a lot to look forward to, so keep an eye on the Discord for updates and to take
                          part in the discussions!</p>"
@@ -428,7 +432,13 @@ ApplicationWindow {
                         verticalAlignment: Text.AlignVCenter
                         wrapMode: Text.WordWrap
                         font.pointSize: 12
-                        text: "<p>I promise there will actually be cool stuff here soon.</p>"
+                        text: "<p><b>Known Issues<b>:</p>
+                        <ul>
+                        <li>Slight delay opening pause menu for the first time</li>
+                        <li>Some audio crackling</li>
+                        <li>Graphical glitches in N64 games</li>
+                        <li>Picture mode button doesn't accurately reflect state</li>
+                        </ul>"
                         font.family: Constants.lightFontFamily
                         color: Constants.colorTestTextActive
                     }
@@ -800,8 +810,14 @@ ApplicationWindow {
             }
 
             onGameLoadFailedOrphanedPatch: function (entryId) {
-                dialog.open()
+                patchClickedDialog.open()
             }
+        }
+
+        FirelightDialog {
+            id: patchClickedDialog
+            text: "<p>Sorry, hot-patching is currently disabled as I build out the \"patches\" portion of the content
+             database - it's coming soon!</p>"
         }
 
         EmulatorPage {

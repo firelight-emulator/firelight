@@ -186,9 +186,16 @@ target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES})
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #
 #add_test(NAME firelight_test COMMAND firelight)
+include(CPack)
 
 qt_generate_deploy_qml_app_script(
         TARGET firelight
         OUTPUT_SCRIPT deploy_script
+        POST_INCLUDE_FILES
+        ${CMAKE_SOURCE_DIR}/lib/SDL2.dll
 )
-install(SCRIPT ${deploy_script})
+
+install(
+        SCRIPT ${deploy_script}
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/installation
+)
