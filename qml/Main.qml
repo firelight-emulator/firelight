@@ -448,18 +448,11 @@ ApplicationWindow {
 
         Component {
             id: explorePage
-
             Item {
-                Rectangle {
-                    radius: 12
-                    anchors.fill: parent
-                    color: Constants.colorTestSurface
-                }
-
                 Text {
                     text: "Here's where the Explore menu will go!"
                     anchors.centerIn: parent
-                    color: Constants.colorTestTextMuted
+                    color: Constants.colorTestTextActive
                     font.pointSize: 16
                     font.family: Constants.regularFontFamily
                 }

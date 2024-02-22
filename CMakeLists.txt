@@ -3,16 +3,17 @@ project(firelight)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message("This is a Windows platform.")
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    message("This is a Linux platform.")
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    message("This is a macOS platform.")
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Android")
-    message("This is a Android platform.")
-elseif (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
-    message("This is a FreeBSD platform.")
+    #elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    #    message("This is a Linux platform.")
+    #elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    #    message("This is a macOS platform.")
+    #elseif (CMAKE_SYSTEM_NAME STREQUAL "Android")
+    #    message("This is a Android platform.")
+    #elseif (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    #    message("This is a FreeBSD platform.")
 else ()
-    message("This is an unknown platform. :(")
+    message("This CMake file is not set up to work on anything but Windows at the moment. Feel free to tinker!")
+    return()
 endif ()
 
 set(CMAKE_AUTOMOC ON)
@@ -99,9 +100,8 @@ add_library(firelight_lib
 
 target_include_directories(firelight_lib PRIVATE includes ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
-target_link_libraries(firelight_lib mingw32 SDL2main SDL2 opengl32 ssl crypto ${SQLite3_LIBRARIES}
+target_link_libraries(firelight_lib mingw32 SDL2 opengl32 ssl crypto ${SQLite3_LIBRARIES}
         Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D Qt6::Sql spdlog::spdlog)
-
 
 file(GLOB QML_FILES
         qml/*.qml
@@ -133,6 +133,8 @@ qt_add_executable(firelight
         src/app/db/daos/romhack.hpp
         src/app/db/daos/romhack_release.hpp
 )
+
+
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
 
 qt_add_qml_module(firelight
@@ -142,6 +144,14 @@ qt_add_qml_module(firelight
         ${QML_FILES}
 )
 
+target_include_directories(firelight PRIVATE includes ${SDL2_INCLUDE_DIRS}
+        ${SQLite3_INCLUDE_DIRS})
+target_link_libraries(firelight PRIVATE firelight_lib)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
+endif ()
+
 set_source_files_properties(qml/FirelightStyle/import/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 qt_add_qml_module(firelight_style
         URI FirelightStyle
@@ -150,10 +160,6 @@ qt_add_qml_module(firelight_style
         ${QML_STYLE_FILES}
         OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/FirelightStyle"
 )
-
-target_include_directories(firelight PRIVATE includes ${SDL2_INCLUDE_DIRS}
-        ${SQLite3_INCLUDE_DIRS})
-target_link_libraries(firelight PRIVATE firelight_lib)
 
 
 include(GNUInstallDirs)
@@ -174,6 +180,15 @@ add_custom_target(copy_resources ALL
         COMMENT "Copying test resources to build directory"
 )
 
+#file(GET_RUNTIME_DEPENDENCIES
+#        RESOLVED_DEPENDENCIES_VAR _r_deps
+#        UNRESOLVED_DEPENDENCIES_VAR _u_deps
+#        EXECUTABLES firelight
+#        PRE_BUILD)
+#
+#message("Resolved Dependencies: ${_r_deps}")
+#message("Unresolved Dependencies: ${_u_deps}")
+
 add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
         tests/app/patching/ips_patch_test.cpp
@@ -186,16 +201,52 @@ target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES})
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #
 #add_test(NAME firelight_test COMMAND firelight)
-include(CPack)
+set(CPACK_PACKAGE_NAME "Firelight")
+set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 
+include(CPack)
 qt_generate_deploy_qml_app_script(
         TARGET firelight
         OUTPUT_SCRIPT deploy_script
-        POST_INCLUDE_FILES
-        ${CMAKE_SOURCE_DIR}/lib/SDL2.dll
 )
 
 install(
         SCRIPT ${deploy_script}
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/installation
+)
+
+set(SHARED_LIB_DIR "C:/msys64/mingw64/bin")
+install(
+        PROGRAMS
+        ${CMAKE_BINARY_DIR}/firelight_style.dll
+        ${SHARED_LIB_DIR}/libb2-1.dll
+        ${SHARED_LIB_DIR}/libbrotlicommon.dll
+        ${SHARED_LIB_DIR}/libbrotlidec.dll
+        ${SHARED_LIB_DIR}/libbz2-1.dll
+        ${SHARED_LIB_DIR}/libcrypto-3-x64.dll
+        ${SHARED_LIB_DIR}/libdouble-conversion.dll
+        ${SHARED_LIB_DIR}/libfmt.dll
+        ${SHARED_LIB_DIR}/libfreetype-6.dll
+        ${SHARED_LIB_DIR}/libgcc_s_seh-1.dll
+        ${SHARED_LIB_DIR}/libglib-2.0-0.dll
+        ${SHARED_LIB_DIR}/libgraphite2.dll
+        ${SHARED_LIB_DIR}/libharfbuzz-0.dll
+        ${SHARED_LIB_DIR}/libicudt74.dll
+        ${SHARED_LIB_DIR}/libicuin74.dll
+        ${SHARED_LIB_DIR}/libicuuc74.dll
+        ${SHARED_LIB_DIR}/libmd4c.dll
+        ${SHARED_LIB_DIR}/libpcre2-8-0.dll
+        ${SHARED_LIB_DIR}/libpcre2-16-0.dll
+        ${SHARED_LIB_DIR}/libpng16-16.dll
+        ${SHARED_LIB_DIR}/libspdlog.dll
+        ${SHARED_LIB_DIR}/libsqlite3-0.dll
+        ${SHARED_LIB_DIR}/libssl-3-x64.dll
+        ${SHARED_LIB_DIR}/libstdc++-6.dll
+        ${SHARED_LIB_DIR}/libwinpthread-1.dll
+        ${SHARED_LIB_DIR}/SDL2.dll
+        TYPE BIN
+)
+install(
+        DIRECTORY
+        ${CMAKE_SOURCE_DIR}/_cores
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )

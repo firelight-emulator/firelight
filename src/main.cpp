@@ -1,4 +1,4 @@
-
+#define SDL_MAIN_HANDLED
 
 #include "src/app/db/sqlite_content_database.hpp"
 #include "src/app/emulation_manager.hpp"
@@ -11,7 +11,6 @@
 #include <QQmlContext>
 #include <QQuickWindow>
 #include <QWindow>
-#include <SDL.h>
 #include <filesystem>
 #include <spdlog/spdlog.h>
 

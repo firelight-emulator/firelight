@@ -33,7 +33,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     core = std::make_unique<libretro::Core>(m_corePath.toStdString());
     core->setRetropadProvider(getControllerManager());
 
-    core->setSystemDirectory(".");
+    core->setSystemDirectory("./system");
     core->setSaveDirectory(".");
 
     core->set_video_receiver(this);
@@ -201,12 +201,15 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 EmulatorRenderer::EmulatorRenderer() { initializeOpenGLFunctions(); }
 EmulatorRenderer::~EmulatorRenderer() {
   if (m_running) {
+    sessionEndTime = QDateTime::currentMSecsSinceEpoch();
     if (!m_paused) {
       sessionDuration += m_playtimeTimer.restart();
     } else {
       m_playtimeTimer.restart();
     }
-    printf("session duration: %lld seconds\n", sessionDuration / 1000);
+    getUserdataManager()->savePlaySession(m_currentEntry.md5, sessionStartTime,
+                                          sessionEndTime,
+                                          sessionDuration / 1000);
     m_running = false;
     m_ranLastFrame = false;
 

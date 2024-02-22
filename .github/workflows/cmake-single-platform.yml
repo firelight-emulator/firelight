@@ -5,14 +5,14 @@ name: CMake on a single platform
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+#  pull_request:
+#    branches: [ "main" ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   CMAKE_GENERATOR: MinGW Makefiles
-  
+
 # defaults:
 #   run:
 #     shell: msys2 {0}
@@ -28,67 +28,66 @@ jobs:
         shell: msys2 {0}
 
     steps:
-    - uses: actions/checkout@v3
-    # - name: Get latest CMake
-    #   uses: lukka/get-cmake@latest
-    - uses: msys2/setup-msys2@v2
-      with:
-        cache: true
-        update: true
-        install: >-
-          make
-          git
-        pacboy: >-
-          cmake:p
-          gtest:p
-          qt6:p
-          SDL2:p
-          spdlog:p
-          toolchain:p
-          openssl:p
-          sqlite3:p
-          
-    # - name: Install Qt
-    #   uses: jurplel/install-qt-action@v3
-    #   with:
-    #     aqtversion: '==3.1.*'
-    #     version: '6.6.2'
-    #     host: 'windows'
-    #     target: 'desktop'
-    #     arch: 'win64_mingw'
-    #     modules: 'qt3d qtactiveqt qtcharts qtconnectivity qtdatavis3d qtgraphs qtgrpc qthttpserver qtimageformats qtlanguageserver qtlocation qtlottie qtmultimedia qtnetworkauth qtpdf qtpositioning qtquick3dphysics qtquickeffectmaker qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtvirtualkeyboard qtwebchannel qtwebsockets qtwebview debug_info qt5compat qtquick3d qtquicktimeline qtshadertools'
+      - uses: actions/checkout@v3
+      - uses: msys2/setup-msys2@v2
+        with:
+          cache: true
+          update: true
+          install: >-
+            make
+            git
+          pacboy: >-
+            cmake:p
+            gtest:p
+            qt6:p
+            SDL2:p
+            spdlog:p
+            toolchain:p
+            openssl:p
+            sqlite3:p
+            nsis:p
+
+      # - name: Install Qt
+      #   uses: jurplel/install-qt-action@v3
+      #   with:
+      #     aqtversion: '==3.1.*'
+      #     version: '6.6.2'
+      #     host: 'windows'
+      #     target: 'desktop'
+      #     arch: 'win64_mingw'
+      #     modules: 'qt3d qtactiveqt qtcharts qtconnectivity qtdatavis3d qtgraphs qtgrpc qthttpserver qtimageformats qtlanguageserver qtlocation qtlottie qtmultimedia qtnetworkauth qtpdf qtpositioning qtquick3dphysics qtquickeffectmaker qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtvirtualkeyboard qtwebchannel qtwebsockets qtwebview debug_info qt5compat qtquick3d qtquicktimeline qtshadertools'
 
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B build -G "${{env.CMAKE_GENERATOR}}" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -B build -G "${{env.CMAKE_GENERATOR}}" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
-    - name: Build
-      run: cmake --build build
+      - name: Build
+        run: cmake --build build
 
-    - name: Run unit tests
-      run: build/fl_test
+      - name: Run unit tests
+        run: build/fl_test
 
-    # - name: Prepare artifact
-    #   run: |
-    #     cp /mingw64/bin/SDL2.dll build/
-    #     cp /mingw64/bin/libcrypto-3-x64.dll build/
-    #     ${GITHUB_WORKSPACE}/../Qt/6.6.2/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
+        # - name: Prepare artifact
+        #   run: |
+        #     cp /mingw64/bin/SDL2.dll build/
+        #     cp /mingw64/bin/libcrypto-3-x64.dll build/
+        #     ${GITHUB_WORKSPACE}/../Qt/6.6.2/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
 
-    # - name: Upload artifact
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: firelight
-    #     path: build/
+        # - name: Upload artifact
+        #   uses: actions/upload-artifact@v2
+        #   with:
+        #     name: firelight
+        #     path: build/
 
-    # - name: Build
-    #   # Build your program with the given configuration
-    #   run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        # - name: Build
+        #   # Build your program with the given configuration
+        #   run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    # - name: Test
-    #   working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      # run: ctest -C ${{env.BUILD_TYPE}}
+        # - name: Test
+        #   working-directory: ${{github.workspace}}/build
+        # Execute tests defined by the CMake configuration.
+        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+        # run: ctest -C ${{env.BUILD_TYPE}}
 

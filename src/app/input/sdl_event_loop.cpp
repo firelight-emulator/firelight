@@ -4,6 +4,7 @@
 
 #include "sdl_event_loop.hpp"
 
+#define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_hints.h>
 #include <spdlog/spdlog.h>

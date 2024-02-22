@@ -5,7 +5,7 @@ Rectangle {
     color: "transparent"
 
     Text {
-        text: "6:30pm"
+        text: "😎 clock"
         anchors.fill: parent
         horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
