@@ -36,6 +36,7 @@ jobs:
           install: >-
             make
             git
+            mingw-w64-x86_64-qt6-tools
           pacboy: >-
             cmake:p
             gtest:p
@@ -62,6 +63,9 @@ jobs:
       - name: Build zip
         run: |
           cd build
+          which qtpaths
+          echo "$PATH"
+          which qt6
           export SHARED_LIB_DIR=/mingw64/bin
           cpack -G ZIP
 
