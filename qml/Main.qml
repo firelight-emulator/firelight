@@ -434,6 +434,7 @@ ApplicationWindow {
                         font.pointSize: 12
                         text: "<p><b>Known Issues<b>:</p>
                         <ul>
+                        <li>Doesn't work correctly at anything other than 60Hz</li>
                         <li>Slight delay opening pause menu for the first time</li>
                         <li>Some audio crackling</li>
                         <li>Graphical glitches in N64 games</li>

@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.22.1)
-project(firelight)
+project(firelight
+        VERSION 0.2.0
+        DESCRIPTION "An emulation frontend that just works"
+        #    HOMEPAGE_URL ""
+        LANGUAGES CXX
+)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message("This is a Windows platform.")
@@ -201,8 +206,16 @@ target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES})
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #
 #add_test(NAME firelight_test COMMAND firelight)
+
+file(COPY LICENSE.txt README.md DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+install(FILES LICENSE.txt README.md DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 set(CPACK_PACKAGE_NAME "Firelight")
 set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY, "Firelight")
+#set(CPACK_RESOURCE_FILE_LICENSE, "C:/msys64/mingw64/share/cmake/Templates/ALEX.txt")
+#set(CPACK_RESOURCE_FILE_README, "${CMAKE_CURRENT_BINARY_DIR}/README.md")
+#set(CPACK_RESOURCE_FILE_WELCOME, "Firelight")
 
 include(CPack)
 qt_generate_deploy_qml_app_script(
@@ -210,11 +223,15 @@ qt_generate_deploy_qml_app_script(
         OUTPUT_SCRIPT deploy_script
 )
 
+
 install(
         SCRIPT ${deploy_script}
 )
 
-set(SHARED_LIB_DIR "C:/msys64/mingw64/bin")
+if (NOT DEFINED ENV{SHARED_LIB_DIR})
+    set(ENV{SHARED_LIB_DIR} "C:/msys64/mingw64/bin")
+endif ()
+
 install(
         PROGRAMS
         ${CMAKE_BINARY_DIR}/firelight_style.dll

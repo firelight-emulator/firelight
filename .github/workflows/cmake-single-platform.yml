@@ -47,17 +47,6 @@ jobs:
             sqlite3:p
             nsis:p
 
-      # - name: Install Qt
-      #   uses: jurplel/install-qt-action@v3
-      #   with:
-      #     aqtversion: '==3.1.*'
-      #     version: '6.6.2'
-      #     host: 'windows'
-      #     target: 'desktop'
-      #     arch: 'win64_mingw'
-      #     modules: 'qt3d qtactiveqt qtcharts qtconnectivity qtdatavis3d qtgraphs qtgrpc qthttpserver qtimageformats qtlanguageserver qtlocation qtlottie qtmultimedia qtnetworkauth qtpdf qtpositioning qtquick3dphysics qtquickeffectmaker qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtvirtualkeyboard qtwebchannel qtwebsockets qtwebview debug_info qt5compat qtquick3d qtquicktimeline qtshadertools'
-
-
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -68,6 +57,12 @@ jobs:
 
       - name: Run unit tests
         run: build/fl_test
+
+      - name: Build zip
+        run: |
+          cd build
+          export SHARED_LIB_DIR=/mingw64/bin
+          cpack -G ZIP
 
         # - name: Prepare artifact
         #   run: |
