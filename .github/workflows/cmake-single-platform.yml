@@ -46,7 +46,6 @@ jobs:
             openssl:p
             sqlite3:p
             nsis:p
-            libb2:p
 
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
@@ -65,8 +64,20 @@ jobs:
       - name: Build zip
         run: |
           cd build
-          export SHARED_LIB_DIR=/mingw64/bin
-          cpack -G ZIP
+          
+          output=$(cpack -G ZIP)
+          
+          last_line=$(echo "$output" | tail -n1)
+          full_path=$(echo "$last_line" | awk -F': ' '{print $2}')
+          filename=$(basename "$full_path")
+          
+          echo "ZIP_FILENAME=${filename}" >> $GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: firelight-zip-win-x64
+          path: build/${{ env.ZIP_FILENAME }}
 
         # - name: Prepare artifact
         #   run: |
@@ -74,11 +85,6 @@ jobs:
         #     cp /mingw64/bin/libcrypto-3-x64.dll build/
         #     ${GITHUB_WORKSPACE}/../Qt/6.6.2/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
 
-        # - name: Upload artifact
-        #   uses: actions/upload-artifact@v2
-        #   with:
-        #     name: firelight
-        #     path: build/
 
         # - name: Build
         #   # Build your program with the given configuration
