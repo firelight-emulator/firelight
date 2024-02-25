@@ -228,9 +228,14 @@ install(
         SCRIPT ${deploy_script}
 )
 
-if (NOT DEFINED ENV{SHARED_LIB_DIR})
-    set(SHARED_LIB_DIR "C:/msys64/mingw64/bin")
-endif ()
+find_program(MINGW_PATH gcc)
+get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)
+set(SHARED_LIB_DIR "${MINGW_DIR}")
+message("Shared Library Directory: ${SHARED_LIB_DIR}")
+
+#if (NOT DEFINED ENV{SHARED_LIB_DIR})
+#    set(ENV{SHARED_LIB_DIR} "C:/msys64/mingw64/bin")
+#endif ()
 
 install(
         PROGRAMS
