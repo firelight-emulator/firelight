@@ -13,9 +13,9 @@ env:
   BUILD_TYPE: Release
   CMAKE_GENERATOR: MinGW Makefiles
 
-# defaults:
-#   run:
-#     shell: msys2 {0}
+defaults:
+  run:
+    shell: msys2 {0}
 
 jobs:
   build:
