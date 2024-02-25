@@ -48,7 +48,7 @@ jobs:
             nsis:p
 
       - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -64,14 +64,22 @@ jobs:
       - name: Build zip
         run: |
           cd build
-          
+
           output=$(cpack -G ZIP)
           
           last_line=$(echo "$output" | tail -n1)
           full_path=$(echo "$last_line" | awk -F': ' '{print $2}')
-          filename=$(basename "$full_path")
           
-          echo "ZIP_FILENAME=${filename}" >> $GITHUB_ENV
+          if [[ -n "$full_path" ]]; then
+            filename=$(basename "$full_path")
+            if [[ -n "$filename" ]]; then
+              echo "ZIP_FILENAME=${filename}" >> $GITHUB_ENV
+            else
+              echo "Error: filename is empty"
+            fi
+          else
+            echo "Error: full_path is empty"
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
