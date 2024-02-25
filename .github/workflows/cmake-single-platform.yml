@@ -28,9 +28,11 @@ jobs:
         shell: msys2 {0}
 
     steps:
+      - run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
       - uses: msys2/setup-msys2@v2
         with:
+          msystem: 'MINGW64'
           cache: true
           update: true
           install: >-
@@ -63,9 +65,6 @@ jobs:
       - name: Build zip
         run: |
           cd build
-          which qtpaths
-          echo "$PATH"
-          which qt6
           export SHARED_LIB_DIR=/mingw64/bin
           cpack -G ZIP
 
