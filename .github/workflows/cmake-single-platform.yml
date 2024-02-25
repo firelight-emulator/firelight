@@ -28,8 +28,6 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v3
       - uses: msys2/setup-msys2@v2
         with:
           msystem: 'MINGW64'
@@ -50,6 +48,9 @@ jobs:
             openssl:p
             sqlite3:p
             nsis:p
+            
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v3
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
