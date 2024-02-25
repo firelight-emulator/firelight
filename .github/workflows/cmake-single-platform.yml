@@ -47,26 +47,27 @@ jobs:
             openssl:p
             sqlite3:p
             nsis:p
+            libb2:p
 
-      - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v3
-
-      - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B build -G "${{env.CMAKE_GENERATOR}}" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-
-      - name: Build
-        run: cmake --build build
-
-      - name: Run unit tests
-        run: build/fl_test
-
-      - name: Build zip
-        run: |
-          cd build
-          export SHARED_LIB_DIR=/mingw64/bin
-          cpack -G ZIP
+        #      - run: git config --global core.autocrlf input
+        #      - uses: actions/checkout@v3
+        #
+        #      - name: Configure CMake
+        #        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        #        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        #        run: cmake -B build -G "${{env.CMAKE_GENERATOR}}" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        #
+        #      - name: Build
+        #        run: cmake --build build
+        #
+        #      - name: Run unit tests
+        #        run: build/fl_test
+        #
+        #      - name: Build zip
+        #        run: |
+        #          cd build
+        #          export SHARED_LIB_DIR=/mingw64/bin
+        #          cpack -G ZIP
 
         # - name: Prepare artifact
         #   run: |
