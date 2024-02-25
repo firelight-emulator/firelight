@@ -64,28 +64,13 @@ jobs:
       - name: Build zip
         run: |
           cd build
-
-          output=$(cpack -G ZIP)
-          
-          last_line=$(echo "$output" | tail -n1)
-          full_path=$(echo "$last_line" | awk -F': ' '{print $2}')
-          
-          if [[ -n "$full_path" ]]; then
-            filename=$(basename "$full_path")
-            if [[ -n "$filename" ]]; then
-              echo "ZIP_FILENAME=${filename}" >> $GITHUB_ENV
-            else
-              echo "Error: filename is empty"
-            fi
-          else
-            echo "Error: full_path is empty"
-          fi
+          cpack -G ZIP
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: firelight-zip-win-x64
-          path: build/${{ env.ZIP_FILENAME }}
+          path: build/Firelight-0.1.1-win64.zip
 
         # - name: Prepare artifact
         #   run: |
