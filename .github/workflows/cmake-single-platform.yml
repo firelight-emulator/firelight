@@ -32,7 +32,6 @@ jobs:
         with:
           msystem: 'MINGW64'
           cache: true
-          update: true
           install: >-
             make
             git
@@ -48,7 +47,7 @@ jobs:
             openssl:p
             sqlite3:p
             nsis:p
-            
+
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
 

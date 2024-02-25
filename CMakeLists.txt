@@ -37,7 +37,7 @@ find_package(spdlog REQUIRED)
 find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
 find_package(GTest)
 
-qt_standard_project_setup(REQUIRES 6.5)
+qt6_standard_project_setup(REQUIRES 6.5)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -127,7 +127,7 @@ foreach (QML_FILE ${QML_STYLE_FILES})
 endforeach ()
 
 # main code
-qt_add_executable(firelight
+qt6_add_executable(firelight
         resources.qrc
         src/main.cpp
         src/logo.ico
@@ -142,7 +142,7 @@ qt_add_executable(firelight
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
 
-qt_add_qml_module(firelight
+qt6_add_qml_module(firelight
         URI QMLFirelight
         VERSION 1.0
         QML_FILES
@@ -158,7 +158,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 
 set_source_files_properties(qml/FirelightStyle/import/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-qt_add_qml_module(firelight_style
+qt6_add_qml_module(firelight_style
         URI FirelightStyle
         VERSION 1.0
         QML_FILES
@@ -218,7 +218,7 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY, "Firelight")
 #set(CPACK_RESOURCE_FILE_WELCOME, "Firelight")
 
 include(CPack)
-qt_generate_deploy_qml_app_script(
+qt6_generate_deploy_qml_app_script(
         TARGET firelight
         OUTPUT_SCRIPT deploy_script
 )
@@ -229,7 +229,7 @@ install(
 )
 
 if (NOT DEFINED ENV{SHARED_LIB_DIR})
-    set(ENV{SHARED_LIB_DIR} "C:/msys64/mingw64/bin")
+    set(SHARED_LIB_DIR "C:/msys64/mingw64/bin")
 endif ()
 
 install(
