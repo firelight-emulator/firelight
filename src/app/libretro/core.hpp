@@ -15,7 +15,6 @@
 #include <mutex>
 #include <queue>
 #include <vector>
-#include <windows.h>
 
 #include "audio_data_receiver.hpp"
 
