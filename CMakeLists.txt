@@ -266,6 +266,7 @@ install(
         ${SHARED_LIB_DIR}/libzstd.dll
         ${SHARED_LIB_DIR}/zlib1.dll
         ${SHARED_LIB_DIR}/libintl-8.dll
+        ${SHARED_LIB_DIR}/libiconv-2.dll
         ${SHARED_LIB_DIR}/SDL2.dll
         TYPE BIN
 )
