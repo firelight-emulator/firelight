@@ -989,6 +989,8 @@ bool Core::loadGame(Game *game) {
 }
 void Core::unloadGame() { symRetroUnloadGame(); }
 
+size_t Core::getSerializeSize() const { return this->symRetroSerializeSize(); }
+
 void Core::init() { symRetroInit(); }
 
 void Core::deinit() { this->symRetroDeinit(); }

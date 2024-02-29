@@ -91,7 +91,6 @@ add_library(firelight_lib
         src/app/patching/rom_patch.hpp
         src/app/emulator_renderer.cpp
         src/app/emulator_renderer.hpp
-        src/gui/window_resize_handler.cpp
         src/gui/window_resize_handler.hpp
         src/app/input/keyboard_controller.cpp
         src/app/input/keyboard_controller.hpp
@@ -104,7 +103,7 @@ add_library(firelight_lib
 
 target_include_directories(firelight_lib PRIVATE includes ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
-target_link_libraries(firelight_lib mingw32 SDL2 opengl32 ssl crypto ${SQLite3_LIBRARIES}
+target_link_libraries(firelight_lib mingw32 SDL2 opengl32 ssl crypto z ${SQLite3_LIBRARIES}
         Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D Qt6::Sql spdlog::spdlog)
 
 file(GLOB QML_FILES
@@ -136,6 +135,10 @@ qt6_add_executable(firelight
         src/gui/QLibraryViewModel.hpp
         src/app/db/daos/romhack.hpp
         src/app/db/daos/romhack_release.hpp
+        src/gui/library_item_model.cpp
+        src/gui/library_item_model.hpp
+        src/gui/library_sort_filter_model.cpp
+        src/gui/library_sort_filter_model.hpp
 )
 
 

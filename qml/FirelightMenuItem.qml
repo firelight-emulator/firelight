@@ -20,7 +20,7 @@ Button {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             leftPadding: 12
-            rightPadding: 12
+            visible: labelIcon !== ""
             // width: 24
 
             font.family: Constants.symbolFontFamily
@@ -32,10 +32,11 @@ Button {
         Text {
             id: buttonText
             text: control.labelText
-            anchors.left: buttonIcon.right
+            anchors.left: labelIcon !== "" ? buttonIcon.right : parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
+            leftPadding: 12
             font.pointSize: 12
             font.family: Constants.regularFontFamily
             color: control.checked ? Constants.colorTestTextActive : Constants.colorTestTextActive

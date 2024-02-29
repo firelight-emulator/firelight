@@ -39,6 +39,7 @@ jobs:
             cmake:p
             gtest:p
             qt6:p
+            gettext:p
             qt6-tools:p
             SDL2:p
             spdlog:p
