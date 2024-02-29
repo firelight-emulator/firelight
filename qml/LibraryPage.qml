@@ -32,7 +32,7 @@ Rectangle {
             id: libraryLabel
             text: "LIBRARY"
             color: Constants.colorTestText
-            font.pointSize: 10
+            font.pointSize: 8
             font.family: fontFamilyName
             anchors.top: parent.top
             anchors.left: parent.left
@@ -44,7 +44,7 @@ Rectangle {
             spacing: 2
             anchors.left: parent.left
             anchors.top: libraryLabel.bottom
-            anchors.topMargin: 6
+            anchors.topMargin: 4
             anchors.right: parent.right
             height: model.count * 40
             model: ListModel {
@@ -83,9 +83,9 @@ Rectangle {
             id: divider
             text: "PLAYLISTS"
             color: Constants.colorTestText
-            font.pointSize: 10
+            font.pointSize: 8
             font.family: fontFamilyName
-            anchors.topMargin: 12
+            anchors.topMargin: 18
             anchors.top: mainCategoryList.bottom
             anchors.left: parent.left
             anchors.right: parent.right
@@ -95,7 +95,7 @@ Rectangle {
             id: categoryList
             spacing: 2
             anchors.left: parent.left
-            anchors.topMargin: 6
+            anchors.topMargin: 4
             anchors.top: divider.bottom
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -258,7 +258,7 @@ Rectangle {
                 id: wrapper
 
                 width: ListView.view.width
-                height: 60
+                height: 40
                 radius: 12
 
                 color: mouseArea.containsMouse ? Constants.colorTestCard : "transparent"
@@ -277,12 +277,12 @@ Rectangle {
 
                 Text {
                     id: label
-                    anchors.top: parent.top
-                    anchors.topMargin: 5
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: 12
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: (parent.width / 3) * 2
 
-                    height: parent.height / 2
                     font.pointSize: 12
                     font.family: fontFamilyName
                     text: model.display_name
@@ -292,12 +292,10 @@ Rectangle {
                 }
 
                 Text {
-                    id: bottomLabel
-                    anchors.top: label.bottom
+                    id: platformLabel
+                    anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 10
-                    anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.left: label.right
 
                     // font.family: lexendLight.name
                     font.pointSize: 10

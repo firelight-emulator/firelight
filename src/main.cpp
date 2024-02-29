@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
   libraryManager.startScan();
   Firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  Firelight::LibraryItemModel libModel;
+  Firelight::LibraryItemModel libModel(&library_database);
   Firelight::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);
 

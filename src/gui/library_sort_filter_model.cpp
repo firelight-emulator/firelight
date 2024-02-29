@@ -4,6 +4,8 @@
 
 #include "library_sort_filter_model.hpp"
 
+#include "library_item_model.hpp"
+
 namespace Firelight {
 
 void LibrarySortFilterModel::filterOnPlaylistId(int playlistId) {
@@ -17,9 +19,15 @@ bool LibrarySortFilterModel::filterAcceptsRow(
     return true;
   }
 
-  // QModelIndex index0 = sourceModel()->index(sourceRow, 0, sourceParent);
+  QModelIndex index0 = sourceModel()->index(sourceRow, 0, sourceParent);
+  auto data = sourceModel()->data(index0, LibraryItemModel::Playlists).toList();
+  for (const auto &playlistId : data) {
+    if (playlistId.toInt() == m_playlistId) {
+      return true;
+    }
+  }
 
-  return sourceRow == m_playlistId;
+  return false;
 }
 
 } // namespace Firelight

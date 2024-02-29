@@ -5,14 +5,24 @@
 #include "library_item_model.hpp"
 
 namespace Firelight {
-LibraryItemModel::LibraryItemModel() {
-  m_items.emplace_back("Item 1");
-  m_items.emplace_back("Item 2");
-  m_items.emplace_back("Item 3");
-  m_items.emplace_back("Item 4");
-  m_items.emplace_back("Item 5");
+LibraryItemModel::LibraryItemModel(LibraryDatabase *libraryDatabase)
+    : m_libraryDatabase(libraryDatabase) {
+
+  const auto entries = m_libraryDatabase->getAllEntries();
+  auto i = 0;
+  for (const auto &entry : entries) {
+    m_items.emplace_back(
+        Item({entry.id, QString::fromStdString(entry.display_name), {i}}));
+    i++;
+    if (i > 4) {
+      i = 0;
+    }
+  }
 }
-int LibraryItemModel::rowCount(const QModelIndex &parent) const { return 5; }
+
+int LibraryItemModel::rowCount(const QModelIndex &parent) const {
+  return m_items.size();
+}
 
 QVariant LibraryItemModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -23,11 +33,13 @@ QVariant LibraryItemModel::data(const QModelIndex &index, int role) const {
 
   switch (role) {
   case EntryId:
-    return index.row();
+    return item.m_entryId;
   case DisplayName:
-    return item;
+    return item.displayName;
   case PlatformName:
-    return "testing";
+    return "Nintendo 64";
+  case Playlists:
+    return QVariant::fromValue(item.m_playlists);
   default:
     return QVariant{};
   }
