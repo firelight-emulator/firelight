@@ -30,7 +30,7 @@ Rectangle {
 
         Text {
             id: libraryLabel
-            text: "Library"
+            text: "LIBRARY"
             color: Constants.colorTestText
             font.pointSize: 10
             font.family: fontFamilyName
@@ -81,7 +81,7 @@ Rectangle {
 
         Text {
             id: divider
-            text: "Playlists"
+            text: "PLAYLISTS"
             color: Constants.colorTestText
             font.pointSize: 10
             font.family: fontFamilyName
