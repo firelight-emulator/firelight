@@ -35,6 +35,7 @@ Dialog {
     contentItem: Rectangle {
         color: "green"
         radius: 12
+        clip: true
 
         HoverHandler {
             acceptedDevices: PointerDevice.Mouse

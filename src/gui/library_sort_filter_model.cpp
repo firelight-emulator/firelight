@@ -29,5 +29,20 @@ bool LibrarySortFilterModel::filterAcceptsRow(
 
   return false;
 }
+bool LibrarySortFilterModel::lessThan(const QModelIndex &source_left,
+                                      const QModelIndex &source_right) const {
+  const QString leftDisplayName =
+      sourceModel()
+          ->data(source_left, LibraryItemModel::DisplayName)
+          .toString();
+  const QString rightDisplayName =
+      sourceModel()
+          ->data(source_right, LibraryItemModel::DisplayName)
+          .toString();
+
+  // Compare the display names
+  return QString::compare(leftDisplayName, rightDisplayName,
+                          Qt::CaseInsensitive) < 0;
+}
 
 } // namespace Firelight

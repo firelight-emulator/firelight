@@ -139,6 +139,13 @@ Rectangle {
 
                 onClicked: function () {
                     library_short_model.filterOnPlaylistId(model.playlistId)
+                    library_short_model.sort(0)
+                }
+
+                onRightClicked: function () {
+                    playlistRightClickMenu.playlistName = model.name
+                    playlistRightClickMenu.playlistId = model.playlistId
+                    playlistRightClickMenu.popup()
                 }
 
                 ButtonGroup.group: buttonGroup
@@ -242,9 +249,30 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.topMargin: 12
             clip: true
 
+            section.criteria: ViewSection.FirstCharacter
+            section.property: "display_name"
+            section.delegate: Item {
+                width: libraryList.width
+                height: 42
+
+                Rectangle {
+                    width: libraryList.width
+                    height: 30
+                    anchors.centerIn: parent
+                    color: Constants.colorTestBackground
+                    Text {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        text: section
+                        color: Constants.colorTestText
+                        font.pointSize: 12
+                        font.family: fontFamilyName
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
             ScrollBar.vertical: ScrollBar {
                 width: 15
                 interactive: true
@@ -323,4 +351,86 @@ Rectangle {
             categoryList.model.append({name: createPlaylistDialog.text, icon: "\ue892", playlistId: 5})
         }
     }
+
+    FirelightDialog {
+        id: deletePlaylistDialog
+
+        property string playlistName: ""
+        property int playlistId: -1
+
+        text: "Are you sure you want to delete the playlist \"" + playlistName + "\"?"
+        visible: false
+
+        onAccepted: {
+            console.log("gonna remove playlist: " + playlistName)
+        }
+    }
+
+    Menu {
+        id: playlistRightClickMenu
+        property string playlistName: ""
+        property int playlistId: -1
+
+        padding: 4
+
+        background: Rectangle {
+            implicitWidth: 200
+            implicitHeight: playlistRightClickMenu.count * 40
+            color: Constants.colorTestSurfaceContainerLowest
+            radius: 6
+        }
+
+        MenuItem {
+            background: Rectangle {
+                implicitWidth: 200
+                implicitHeight: 40
+                radius: 6
+                color: renameHover.hovered ? Constants.colorTestSurfaceVariant : "transparent"
+
+                HoverHandler {
+                    id: renameHover
+                    acceptedDevices: PointerDevice.Mouse
+                }
+            }
+
+            contentItem: Text {
+                text: "Rename"
+                color: Constants.colorTestTextActive
+                font.pointSize: 12
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        MenuItem {
+            onTriggered: {
+                deletePlaylistDialog.playlistName = playlistRightClickMenu.playlistName
+                deletePlaylistDialog.playlistId = playlistRightClickMenu.playlistId
+                deletePlaylistDialog.open()
+            }
+
+            background: Rectangle {
+                implicitWidth: 200
+                implicitHeight: 40
+                radius: 6
+                color: deleteHover.hovered ? Constants.colorTestSurfaceVariant : "transparent"
+
+                HoverHandler {
+                    id: deleteHover
+                    acceptedDevices: PointerDevice.Mouse
+                }
+            }
+
+            contentItem: Text {
+                text: "Delete Playlist"
+                color: deleteHover.hovered ? Constants.color_errorContainer : Constants.colorTestTextActive
+                font.pointSize: 12
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+    }
+
 }

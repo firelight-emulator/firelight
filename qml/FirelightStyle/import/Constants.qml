@@ -17,7 +17,7 @@ Item {
         id: lexendLight
         source: "qrc:/fonts/lexend-light"
     }
-    
+
     readonly property string symbolFontFamily: symbols.name
     readonly property string regularFontFamily: localFont.name
     readonly property string lightFontFamily: lexendLight.name
@@ -48,7 +48,7 @@ Item {
     readonly property color color_onTertiaryContainer: "#E6E6AD"
     readonly property color color_error: "#FFB4AB"
     readonly property color color_onError: "#690005"
-    readonly property color color_errorContainer: "#93000A"
+    readonly property color color_errorContainer: "#c01d1d"
     readonly property color color_onErrorContainer: "#FFDAD6"
     readonly property color color_background: "#19120D"
     readonly property color color_onBackground: "#F0DFD7"
