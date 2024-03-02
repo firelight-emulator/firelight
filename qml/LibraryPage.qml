@@ -41,6 +41,7 @@ Rectangle {
 
         ListView {
             id: mainCategoryList
+            interactive: false
             spacing: 2
             anchors.left: parent.left
             anchors.top: libraryLabel.bottom
@@ -94,6 +95,9 @@ Rectangle {
         ListView {
             id: categoryList
             spacing: 2
+
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
             anchors.left: parent.left
             anchors.topMargin: 4
             anchors.top: divider.bottom
@@ -161,7 +165,11 @@ Rectangle {
                 }
             }
 
-            scale: pressed ? 0.90 : 1
+            onClicked: {
+                createPlaylistDialog.open()
+            }
+
+            scale: pressed ? 0.93 : 1
 
             Text {
                 id: buttonIcon
@@ -305,6 +313,14 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
+        }
+    }
+
+    FirelightCreatePlaylistDialog {
+        id: createPlaylistDialog
+        visible: false
+        onAccepted: {
+            categoryList.model.append({name: createPlaylistDialog.text, icon: "\ue892", playlistId: 5})
         }
     }
 }
