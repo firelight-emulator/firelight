@@ -12,7 +12,9 @@
 #include <QPainter>
 #include <QSGTextureProvider>
 #include <qdatetime.h>
+#include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
+#include <zlib.h>
 
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
@@ -274,5 +276,39 @@ void EmulatorRenderer::render() {
       update();
     }
     m_ranLastFrame = true;
+
+    // printf("Serialize size: %lu\n", core->getSerializeSize());
+
+    if (m_fbo != nullptr) {
+      const auto image = m_fbo->toImage();
+      // printf("image size bytes: %lld\n", image.sizeInBytes());
+
+      // Get a pointer to the raw data
+      // auto future = QtConcurrent::run([image] {
+      //   const uchar *data = image.constBits();
+      //   // Compress the image data using zlib
+      //   uLongf compressedDataSize = compressBound(image.sizeInBytes());
+      //   auto *compressedData = new uchar[compressedDataSize];
+      //   if (compress2(compressedData, &compressedDataSize, data,
+      //                 image.sizeInBytes(), Z_BEST_COMPRESSION) != Z_OK) {
+      //     // printf("Failed to compress image data\n");
+      //   } else {
+      //     printf("Compressed image size bytes: %lu\n", compressedDataSize);
+      //     // Now you can use 'compressedData' to transmit the compressed
+      //     // image
+      //     //     // over a network connection Be sure to also transmit the
+      //     size
+      //     //     of the
+      //     // compressed data, which is compressedDataSize
+      //   }
+      //
+      //   delete[] compressedData;
+      // });
+
+      // Now you can use 'data' to transmit the image over a network
+      // connection
+      // Be sure to also transmit the size of the data, which is
+      // image.sizeInBytes()
+    }
   }
 }

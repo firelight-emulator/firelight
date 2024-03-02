@@ -665,12 +665,89 @@ ApplicationWindow {
         Component {
             id: settingsPage
             Item {
-                Text {
-                    text: "Here's where the Settings menu will go!"
-                    anchors.centerIn: parent
-                    color: Constants.colorTestTextActive
-                    font.pointSize: 16
-                    font.family: Constants.regularFontFamily
+                Rectangle {
+                    id: person
+                    width: 800
+                    height: 600
+
+                    property var pages: [page1, page2, page3]
+
+                    ListView {
+                        id: categoryList
+                        width: parent.width / 2
+                        height: parent.height
+                        model: ListModel {
+                            ListElement {
+                                name: "Category 1"
+                            }
+                            ListElement {
+                                name: "Category 2"
+                            }
+                            ListElement {
+                                name: "Category 3"
+                            }
+                        }
+                        clip: true
+                        delegate: Rectangle {
+                            width: categoryList.width
+                            height: 50
+                            color: "lightgray"
+
+                            Text {
+                                text: model.name
+                                font.pixelSize: 20
+                                color: "black"
+                                anchors.centerIn: parent
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    stackView.push(person.pages[model.index])
+                                }
+                            }
+                        }
+                    }
+
+                    StackView {
+                        id: stackView
+                        width: parent.width / 2
+                        height: parent.height
+                        anchors.left: categoryList.right
+                    }
+
+                    Component {
+                        id: page1
+                        Rectangle {
+                            color: "red"
+                            Text {
+                                text: "This is Category 1"
+                                anchors.centerIn: parent
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: page2
+                        Rectangle {
+                            color: "green"
+                            Text {
+                                text: "This is Category 2"
+                                anchors.centerIn: parent
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: page3
+                        Rectangle {
+                            color: "blue"
+                            Text {
+                                text: "This is Category 3"
+                                anchors.centerIn: parent
+                            }
+                        }
+                    }
                 }
             }
         }

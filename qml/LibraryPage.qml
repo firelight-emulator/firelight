@@ -23,6 +23,199 @@ Rectangle {
 
         width: 300
 
+        ButtonGroup {
+            id: buttonGroup
+            exclusive: true
+        }
+
+        Text {
+            id: libraryLabel
+            text: "LIBRARY"
+            color: Constants.colorTestText
+            font.pointSize: 8
+            font.family: fontFamilyName
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+        }
+
+        ListView {
+            id: mainCategoryList
+            interactive: false
+            spacing: 2
+            anchors.left: parent.left
+            anchors.top: libraryLabel.bottom
+            anchors.topMargin: 4
+            anchors.right: parent.right
+            height: model.count * 40
+            model: ListModel {
+                ListElement {
+                    name: "All Games"
+                    icon: "\uf53e"
+                    playlistId: -1
+                }
+                ListElement {
+                    name: "Recently Played"
+                    icon: "\ue889"
+                    playlistId: -1
+                }
+                ListElement {
+                    name: "Newly Added"
+                    icon: "\ue838"
+                    playlistId: -1
+                }
+            }
+
+            delegate: FirelightMenuItem {
+                labelText: model.name
+                labelIcon: model.icon
+                height: 40
+                width: mainCategoryList.width
+
+                onClicked: function () {
+                    library_short_model.filterOnPlaylistId(model.playlistId)
+                }
+
+                ButtonGroup.group: buttonGroup
+            }
+        }
+
+        Text {
+            id: divider
+            text: "PLAYLISTS"
+            color: Constants.colorTestText
+            font.pointSize: 8
+            font.family: fontFamilyName
+            anchors.topMargin: 18
+            anchors.top: mainCategoryList.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+        }
+
+        ListView {
+            id: categoryList
+            spacing: 2
+
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            anchors.left: parent.left
+            anchors.topMargin: 4
+            anchors.top: divider.bottom
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            model: ListModel {
+                ListElement {
+                    name: "GameCube"
+                    icon: "\ue892"
+                    playlistId: 0
+                }
+                ListElement {
+                    name: "Game Boy Advance"
+                    icon: "\ue892"
+                    playlistId: 1
+                }
+                ListElement {
+                    name: "Super Nintendo"
+                    icon: "\ue892"
+                    playlistId: 2
+                }
+                ListElement {
+                    name: "NES"
+                    icon: "\ue892"
+                    playlistId: 3
+                }
+                ListElement {
+                    name: "Sega Genesis"
+                    icon: "\ue892"
+                    playlistId: 4
+                }
+            }
+
+            delegate: FirelightMenuItem {
+                labelText: model.name
+                labelIcon: ""
+                height: 40
+                width: categoryList.width
+
+                onClicked: function () {
+                    library_short_model.filterOnPlaylistId(model.playlistId)
+                    library_short_model.sort(0)
+                }
+
+                onRightClicked: function () {
+                    playlistRightClickMenu.playlistName = model.name
+                    playlistRightClickMenu.playlistId = model.playlistId
+                    playlistRightClickMenu.popup()
+                }
+
+                ButtonGroup.group: buttonGroup
+            }
+        }
+
+        Button {
+            id: testItem
+            width: 160
+            height: 48
+
+            background: Rectangle {
+                color: Constants.colorTestCardActive
+                radius: 50
+            }
+
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+
+            Behavior on scale {
+                NumberAnimation {
+                    duration: 100
+                    easing.type: Easing.OutBounce
+                }
+            }
+
+            onClicked: {
+                createPlaylistDialog.open()
+            }
+
+            scale: pressed ? 0.93 : 1
+
+            Text {
+                id: buttonIcon
+                text: "\ue03b"
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                leftPadding: 12
+                rightPadding: 12
+                // width: 24
+
+                font.family: Constants.symbolFontFamily
+                font.pixelSize: 24
+                color: Constants.colorTestTextActive
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            Text {
+                id: buttonText
+                text: "New Playlist"
+                anchors.left: buttonIcon.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                font.pointSize: 12
+                font.family: Constants.regularFontFamily
+                color: Constants.colorTestTextActive
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            HoverHandler {
+                id: mouse
+                acceptedDevices: PointerDevice.Mouse
+                cursorShape: Qt.PointingHandCursor
+            }
+
+        }
+
         // minimumWidth: 200
         // maximumWidth: 400
 
@@ -56,9 +249,30 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.topMargin: 12
             clip: true
 
+            section.criteria: ViewSection.FirstCharacter
+            section.property: "display_name"
+            section.delegate: Item {
+                width: libraryList.width
+                height: 42
+
+                Rectangle {
+                    width: libraryList.width
+                    height: 30
+                    anchors.centerIn: parent
+                    color: Constants.colorTestBackground
+                    Text {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        text: section
+                        color: Constants.colorTestText
+                        font.pointSize: 12
+                        font.family: fontFamilyName
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
             ScrollBar.vertical: ScrollBar {
                 width: 15
                 interactive: true
@@ -80,7 +294,7 @@ Rectangle {
                 id: wrapper
 
                 width: ListView.view.width
-                height: 60
+                height: 40
                 radius: 12
 
                 color: mouseArea.containsMouse ? Constants.colorTestCard : "transparent"
@@ -99,12 +313,12 @@ Rectangle {
 
                 Text {
                     id: label
-                    anchors.top: parent.top
-                    anchors.topMargin: 5
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: 12
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: (parent.width / 3) * 2
 
-                    height: parent.height / 2
                     font.pointSize: 12
                     font.family: fontFamilyName
                     text: model.display_name
@@ -114,12 +328,10 @@ Rectangle {
                 }
 
                 Text {
-                    id: bottomLabel
-                    anchors.top: label.bottom
+                    id: platformLabel
+                    anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 10
-                    anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.left: label.right
 
                     // font.family: lexendLight.name
                     font.pointSize: 10
@@ -131,4 +343,94 @@ Rectangle {
             }
         }
     }
+
+    FirelightCreatePlaylistDialog {
+        id: createPlaylistDialog
+        visible: false
+        onAccepted: {
+            categoryList.model.append({name: createPlaylistDialog.text, icon: "\ue892", playlistId: 5})
+        }
+    }
+
+    FirelightDialog {
+        id: deletePlaylistDialog
+
+        property string playlistName: ""
+        property int playlistId: -1
+
+        text: "Are you sure you want to delete the playlist \"" + playlistName + "\"?"
+        visible: false
+
+        onAccepted: {
+            console.log("gonna remove playlist: " + playlistName)
+        }
+    }
+
+    Menu {
+        id: playlistRightClickMenu
+        property string playlistName: ""
+        property int playlistId: -1
+
+        padding: 4
+
+        background: Rectangle {
+            implicitWidth: 200
+            implicitHeight: playlistRightClickMenu.count * 40
+            color: Constants.colorTestSurfaceContainerLowest
+            radius: 6
+        }
+
+        MenuItem {
+            background: Rectangle {
+                implicitWidth: 200
+                implicitHeight: 40
+                radius: 6
+                color: renameHover.hovered ? Constants.colorTestSurfaceVariant : "transparent"
+
+                HoverHandler {
+                    id: renameHover
+                    acceptedDevices: PointerDevice.Mouse
+                }
+            }
+
+            contentItem: Text {
+                text: "Rename"
+                color: Constants.colorTestTextActive
+                font.pointSize: 12
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        MenuItem {
+            onTriggered: {
+                deletePlaylistDialog.playlistName = playlistRightClickMenu.playlistName
+                deletePlaylistDialog.playlistId = playlistRightClickMenu.playlistId
+                deletePlaylistDialog.open()
+            }
+
+            background: Rectangle {
+                implicitWidth: 200
+                implicitHeight: 40
+                radius: 6
+                color: deleteHover.hovered ? Constants.colorTestSurfaceVariant : "transparent"
+
+                HoverHandler {
+                    id: deleteHover
+                    acceptedDevices: PointerDevice.Mouse
+                }
+            }
+
+            contentItem: Text {
+                text: "Delete Playlist"
+                color: deleteHover.hovered ? Constants.color_errorContainer : Constants.colorTestTextActive
+                font.pointSize: 12
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+    }
+
 }

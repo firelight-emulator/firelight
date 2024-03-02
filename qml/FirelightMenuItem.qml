@@ -6,6 +6,8 @@ import FirelightStyle 1.0
 Button {
     id: control
 
+    signal rightClicked()
+
     autoExclusive: true
     checkable: true
     property string labelText
@@ -20,7 +22,7 @@ Button {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             leftPadding: 12
-            rightPadding: 12
+            visible: labelIcon !== ""
             // width: 24
 
             font.family: Constants.symbolFontFamily
@@ -32,10 +34,10 @@ Button {
         Text {
             id: buttonText
             text: control.labelText
-            anchors.left: buttonIcon.right
+            anchors.left: labelIcon !== "" ? buttonIcon.right : parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            anchors.right: parent.right
+            leftPadding: 12
             font.pointSize: 12
             font.family: Constants.regularFontFamily
             color: control.checked ? Constants.colorTestTextActive : Constants.colorTestTextActive
@@ -45,13 +47,20 @@ Button {
     }
 
     background: Rectangle {
-        color: control.checked ? Constants.colorTestCardActive : mouse.hovered ? Constants.colorTestCard : "transparent"
+        color: control.checked ? Constants.colorTestCardActive : mouse.containsMouse ? Constants.colorTestCard : "transparent"
         radius: 8
     }
 
-    HoverHandler {
+    MouseArea {
         id: mouse
-        acceptedDevices: PointerDevice.Mouse
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        hoverEnabled: true
+        onClicked: function (event) {
+            if (event.button === Qt.RightButton) {
+                control.rightClicked()
+            }
+        }
         cursorShape: Qt.PointingHandCursor
     }
 }

@@ -19,6 +19,8 @@
 #include "app/fps_multiplier.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
+#include "gui/library_item_model.hpp"
+#include "gui/library_sort_filter_model.hpp"
 #include "gui/window_resize_handler.hpp"
 
 const int SCREEN_WIDTH = 1280;
@@ -97,6 +99,10 @@ int main(int argc, char *argv[]) {
   libraryManager.startScan();
   Firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
+  Firelight::LibraryItemModel libModel(&library_database);
+  Firelight::LibrarySortFilterModel libSortModel;
+  libSortModel.setSourceModel(&libModel);
+
   // auto *model = new QSqlQueryModel;
   // model->setQuery("SELECT id, display_name FROM library");
 
@@ -105,7 +111,8 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<Firelight::GameLoader>("Firelight", 1, 0, "GameLoader");
 
   QQmlApplicationEngine engine;
-  engine.rootContext()->setContextProperty("library_short_model", &shortModel);
+  engine.rootContext()->setContextProperty("library_short_model",
+                                           &libSortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
   engine.rootContext()->setContextProperty("controller_manager",
                                            &controllerManager);

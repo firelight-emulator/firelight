@@ -68,6 +68,8 @@ public:
 
   void unloadGame();
 
+  size_t getSerializeSize() const;
+
   void setSystemDirectory(string);
 
   void setSaveDirectory(const string &);
