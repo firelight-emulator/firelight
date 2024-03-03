@@ -122,5 +122,5 @@ TEST_F(IPSPatchTest, PatchRomTest) {
 
   const Firelight::Patching::IPSPatch patch(patchData);
 
-  patch.patchRom(romData);
+  ASSERT_FALSE(patch.patchRom(romData).empty());
 }

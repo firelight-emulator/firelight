@@ -99,6 +99,19 @@ add_library(firelight_lib
         src/app/db/sqlite_userdata_database.hpp
         src/app/input/controller_list_model.cpp
         src/app/input/controller_list_model.hpp
+        src/gui/QLibraryManager.cpp
+        src/gui/QLibraryManager.hpp
+        src/gui/QLibraryViewModel.cpp
+        src/gui/QLibraryViewModel.hpp
+        src/app/db/daos/romhack.hpp
+        src/app/db/daos/romhack_release.hpp
+        src/gui/library_item_model.cpp
+        src/gui/library_item_model.hpp
+        src/gui/library_sort_filter_model.cpp
+        src/gui/library_sort_filter_model.hpp
+        src/app/db/daos/playlist.hpp
+        src/app/db/daos/playlist_entry.hpp
+        src/app/db/daos/library_entry.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes ${SDL2_INCLUDE_DIRS}
@@ -129,16 +142,6 @@ qt6_add_executable(firelight
         resources.qrc
         src/main.cpp
         src/logo.ico
-        src/gui/QLibraryManager.cpp
-        src/gui/QLibraryManager.hpp
-        src/gui/QLibraryViewModel.cpp
-        src/gui/QLibraryViewModel.hpp
-        src/app/db/daos/romhack.hpp
-        src/app/db/daos/romhack_release.hpp
-        src/gui/library_item_model.cpp
-        src/gui/library_item_model.hpp
-        src/gui/library_sort_filter_model.cpp
-        src/gui/library_sort_filter_model.hpp
 )
 
 
@@ -199,6 +202,7 @@ add_custom_target(copy_resources ALL
 add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
         tests/app/patching/ips_patch_test.cpp
+        tests/app/db/sqlite_library_database_test.cpp
 )
 
 add_dependencies(fl_test copy_resources)

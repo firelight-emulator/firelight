@@ -1,30 +1,100 @@
-//
-// Created by alexs on 12/29/2023.
-//
-
 #include "sqlite_library_database.hpp"
 
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlTableModel>
 #include <spdlog/spdlog.h>
-#include <utility>
 
-const char *create_query = "CREATE TABLE IF NOT EXISTS library("
-                           "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                           "display_name NVARCHAR(999) NOT NULL,"
-                           "type INTEGER NOT NULL,"
-                           "verified INTEGER,"
-                           "md5 NVARCHAR(999) NOT NULL UNIQUE,"
-                           "platform INTEGER NOT NULL,"
-                           "game INTEGER,"
-                           "rom INTEGER,"
-                           "parent_entry INTEGER,"
-                           "romhack INTEGER,"
-                           "romhack_release INTEGER,"
-                           "source_directory NVARCHAR(999) NOT NULL,"
-                           "content_path NVARCHAR(999) NOT NULL);";
-// "CREATE UNIQUE INDEX IF NOT EXISTS idx_md5 ON library (md5);";
+namespace Firelight::Databases {
+SqliteLibraryDatabase::SqliteLibraryDatabase(
+    const std::filesystem::path &db_file_path) {
+  m_database = QSqlDatabase::addDatabase("QSQLITE", "library");
+  m_database.setDatabaseName(QString::fromStdString(db_file_path.string()));
+  m_database.open();
+
+  QSqlQuery createLibraryEntries(m_database);
+  createLibraryEntries.prepare("CREATE TABLE IF NOT EXISTS library_entries("
+                               "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                               "display_name TEXT NOT NULL);");
+
+  if (!createLibraryEntries.exec()) {
+    spdlog::error("Table creation failed: {}",
+                  createLibraryEntries.lastError().text().toStdString());
+  }
+
+  QSqlQuery createPlaylists(m_database);
+  createPlaylists.prepare("CREATE TABLE IF NOT EXISTS playlists("
+                          "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                          "display_name TEXT NOT NULL);");
+
+  if (!createPlaylists.exec()) {
+    spdlog::error("Table creation failed: {}",
+                  createPlaylists.lastError().text().toStdString());
+  }
+
+  QSqlQuery createPlaylistEntries(m_database);
+  createPlaylistEntries.prepare(
+      "CREATE TABLE IF NOT EXISTS playlist_entries("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "playlist_id INTEGER NOT NULL,"
+      "library_entry_id INTEGER NOT NULL,"
+      "FOREIGN KEY(playlist_id) REFERENCES playlists(id),"
+      "FOREIGN KEY(library_entry_id) REFERENCES library_entries(id));");
+
+  if (!createPlaylistEntries.exec()) {
+    spdlog::error("Table creation failed: {}",
+                  createPlaylistEntries.lastError().text().toStdString());
+  }
+}
+
+SqliteLibraryDatabase::~SqliteLibraryDatabase() {
+  m_database.close();
+  QSqlDatabase::removeDatabase(m_database.connectionName());
+}
+
+bool SqliteLibraryDatabase::createPlaylist(
+    Firelight::Databases::Playlist &playlist) {
+  if (!m_database.open()) {
+    spdlog::error("Couldn't open database: {}",
+                  m_database.lastError().text().toStdString());
+    return false;
+  }
+
+  const QString queryString =
+      "INSERT INTO playlists (display_name) VALUES (:name);";
+  QSqlQuery query(m_database);
+  query.prepare(queryString);
+  query.bindValue(":name", QString::fromStdString(playlist.displayName));
+
+  if (!query.exec()) {
+    query.finish();
+    return false;
+  }
+
+  playlist.id = query.lastInsertId().toInt();
+
+  query.finish();
+  return true;
+}
+
+bool SqliteLibraryDatabase::addEntryToPlaylist(const int playlistId,
+                                               const int entryId) {
+  if (!m_database.open()) {
+    spdlog::error("Couldn't open database: {}",
+                  m_database.lastError().text().toStdString());
+    return false;
+  }
+
+  QSqlQuery query(m_database);
+  query.prepare(
+      "INSERT INTO playlist_entries (playlist_id, library_entry_id) VALUES "
+      "(:playlistId, :libraryEntryId);");
+  query.bindValue(":playlistId", playlistId);
+  query.bindValue(":libraryEntryId", entryId);
+
+  query.finish();
+  return query.exec();
+}
 
 void SqliteLibraryDatabase::updateEntryContentPath(
     const int entryId, const std::string sourceDirectory,
@@ -34,15 +104,7 @@ void SqliteLibraryDatabase::updateEntryContentPath(
       "SET source_directory = :source_directory, content_path = :content_path "
       "WHERE id = :id;";
 
-  auto db = QSqlDatabase::database("library");
-  if (!db.isValid()) {
-    // TODO: Give each thread its own connection name?
-    db = QSqlDatabase::addDatabase("QSQLITE", "library");
-    db.setDatabaseName(QString::fromStdString(database_file_path_.string()));
-    db.open();
-  }
-
-  auto query = QSqlQuery(db);
+  auto query = QSqlQuery(m_database);
   query.prepare(queryString);
 
   query.bindValue(":id", entryId);
@@ -52,26 +114,6 @@ void SqliteLibraryDatabase::updateEntryContentPath(
   if (!query.exec()) {
     spdlog::warn("Update failed: {}", query.lastError().text().toStdString());
   }
-}
-
-SqliteLibraryDatabase::SqliteLibraryDatabase(std::filesystem::path db_file_path)
-    : database_file_path_(std::move(db_file_path)) {}
-
-bool SqliteLibraryDatabase::initialize() {
-  QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "library");
-  db.setDatabaseName(QString::fromStdString(database_file_path_.string()));
-  if (!db.open()) {
-    printf("couldn't connect for some reason\n");
-  }
-
-  QSqlQuery create(db);
-  create.prepare(create_query);
-  if (!create.exec()) {
-    spdlog::error("Table creation failed: {}",
-                  create.lastError().text().toStdString());
-  }
-
-  return true;
 }
 
 void SqliteLibraryDatabase::addOrRenameEntry(const LibEntry entry) {
@@ -91,14 +133,6 @@ std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
   std::vector<LibEntry> result;
 
   QString queryString = "SELECT * FROM library";
-
-  auto db = QSqlDatabase::database("library");
-  if (!db.isValid()) {
-    // TODO: Give each thread its own connection name?
-    db = QSqlDatabase::addDatabase("QSQLITE", "library");
-    db.setDatabaseName(QString::fromStdString(database_file_path_.string()));
-    db.open();
-  }
 
   QString whereClause;
   bool needAND = false;
@@ -149,7 +183,7 @@ std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
   }
 
   queryString += whereClause;
-  QSqlQuery query(db);
+  QSqlQuery query(m_database);
   query.prepare(queryString);
 
   if (filter.id != -1) {
@@ -195,6 +229,35 @@ std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
 
   return result;
 }
+bool SqliteLibraryDatabase::tableExists(const std::string &tableName) {
+  QSqlQuery query(m_database);
+  query.prepare("SELECT 1 FROM " + QString::fromStdString(tableName) +
+                " LIMIT 1;");
+
+  return query.exec();
+}
+
+std::vector<Firelight::Databases::Playlist>
+SqliteLibraryDatabase::getAllPlaylists() const {
+  QSqlQuery q(m_database);
+  q.prepare("SELECT * FROM playlists");
+
+  if (!q.exec()) {
+    spdlog::error("Failed to get playlists: {}",
+                  q.lastError().text().toStdString());
+  }
+
+  std::vector<Firelight::Databases::Playlist> playlists;
+  while (q.next()) {
+    Firelight::Databases::Playlist playlist;
+    playlist.id = q.value(0).toInt();
+    playlist.displayName = q.value(1).toString().toStdString();
+
+    playlists.emplace_back(playlist);
+  }
+
+  return playlists;
+}
 
 void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
   QString queryString =
@@ -215,15 +278,7 @@ void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
       ":rom, :parent_entry, :romhack, :romhack_release, :source_directory, "
       ":content_path);";
 
-  auto db = QSqlDatabase::database("library");
-  if (!db.isValid()) {
-    // TODO: Give each thread its own connection name?
-    db = QSqlDatabase::addDatabase("QSQLITE", "library");
-    db.setDatabaseName(QString::fromStdString(database_file_path_.string()));
-    db.open();
-  }
-
-  QSqlQuery query = QSqlQuery(db);
+  QSqlQuery query = QSqlQuery(m_database);
   query.prepare(queryString);
 
   query.bindValue(":display_name", QString::fromStdString(entry.display_name));
@@ -250,7 +305,7 @@ void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
     entry.id = query.lastInsertId().toInt();
   } else {
     // The row already exists, retrieve its ID
-    QSqlQuery selectQuery(db);
+    QSqlQuery selectQuery(m_database);
     selectQuery.prepare("SELECT id FROM library WHERE md5 = :md5");
     selectQuery.bindValue(":md5", QString::fromStdString(entry.md5));
 
@@ -262,3 +317,5 @@ void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
     }
   }
 }
+
+} // namespace Firelight::Databases

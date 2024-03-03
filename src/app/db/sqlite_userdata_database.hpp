@@ -9,7 +9,7 @@
 #include <QSqlDatabase>
 #include <filesystem>
 
-class SqliteUserdataDatabase final : public UserdataDatabase {
+class SqliteUserdataDatabase final : public IUserdataDatabase {
 public:
   explicit SqliteUserdataDatabase(const std::filesystem::path &dbFile);
   void savePlaySession(std::string romMd5, long long startTime,

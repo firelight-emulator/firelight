@@ -4,7 +4,7 @@
 
 #ifndef LIBRARY_ITEM_MODEL_HPP
 #define LIBRARY_ITEM_MODEL_HPP
-#include "src/app/db/library_database.hpp"
+#include "../app/db/library_database.hpp"
 
 #include <QAbstractListModel>
 
@@ -21,7 +21,7 @@ public:
     Playlists
   };
 
-  explicit LibraryItemModel(LibraryDatabase *libraryDatabase);
+  explicit LibraryItemModel(ILibraryDatabase *libraryDatabase);
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant data(const QModelIndex &index,
@@ -34,7 +34,7 @@ private:
     QString displayName;
     QVector<int> m_playlists;
   };
-  LibraryDatabase *m_libraryDatabase;
+  ILibraryDatabase *m_libraryDatabase;
   std::vector<Item> m_items;
 };
 

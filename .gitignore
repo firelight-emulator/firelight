@@ -2,6 +2,9 @@
 cmake-build-debug
 .idea
 
+.codeql
+codeql-db
+
 cmake-build-debug-event-trace
 cmake-build-mingw
 artifact

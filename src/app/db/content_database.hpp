@@ -13,9 +13,9 @@
 #include <memory>
 #include <optional>
 
-class ContentDatabase {
+class IContentDatabase {
 public:
-  virtual ~ContentDatabase() = default;
+  virtual ~IContentDatabase() = default;
   virtual std::optional<ROM> getRomByMd5(const std::string &md5) = 0;
   virtual std::optional<Game> getGameByRomId(int romId) = 0;
   virtual std::optional<Romhack> getRomhackByMd5(const std::string &md5) = 0;

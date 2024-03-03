@@ -6,9 +6,9 @@
 #define USERDATA_DATABASE_HPP
 #include <string>
 
-class UserdataDatabase {
+class IUserdataDatabase {
 protected:
-  ~UserdataDatabase() = default;
+  ~IUserdataDatabase() = default;
 
 public:
   virtual void savePlaySession(std::string romMd5, long long startTime,

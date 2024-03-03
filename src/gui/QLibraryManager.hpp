@@ -24,9 +24,9 @@ public:
     std::vector<LibEntry> new_entries;
   };
 
-  explicit QLibraryManager(LibraryDatabase *lib_database,
+  explicit QLibraryManager(Firelight::Databases::ILibraryDatabase *lib_database,
                            std::filesystem::path default_rom_path,
-                           ContentDatabase *content_database,
+                           IContentDatabase *content_database,
                            QLibraryViewModel *model);
 
   [[nodiscard]] std::optional<LibEntry> get_by_id(int id) const;
@@ -50,8 +50,8 @@ private:
   bool scanning_ = false;
   std::filesystem::path default_rom_path_;
   const int thread_pool_size_ = 1;
-  LibraryDatabase *library_database_;
-  ContentDatabase *content_database_;
+  Firelight::Databases::ILibraryDatabase *library_database_;
+  IContentDatabase *content_database_;
   QFileSystemWatcher directory_watcher_;
   QLibraryViewModel *model_;
 

@@ -1,8 +1,8 @@
 #define SDL_MAIN_HANDLED
 
-#include "src/app/db/sqlite_content_database.hpp"
-#include "src/app/emulation_manager.hpp"
-#include "src/app/game_loader.hpp"
+#include "app/db/sqlite_content_database.hpp"
+#include "app/emulation_manager.hpp"
+#include "app/game_loader.hpp"
 #include "src/gui/QLibraryManager.hpp"
 #include "src/gui/QLibraryViewModel.hpp"
 #include <QGuiApplication>
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+  QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
 
   Firelight::Input::ControllerManager controllerManager;
@@ -88,18 +88,18 @@ int main(int argc, char *argv[]) {
   Firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
   // **** Load Content Database ****
-  SqliteContentDatabase content_database(system_dir / "content.db");
+  SqliteContentDatabase contentDatabase(system_dir / "content.db");
 
-  SqliteLibraryDatabase library_database(userdata_dir / "library.db");
-  library_database.initialize();
+  Firelight::Databases::SqliteLibraryDatabase libraryDatabase(userdata_dir /
+                                                              "library.db");
   QLibraryViewModel shortModel;
 
-  QLibraryManager libraryManager(&library_database, roms_dir, &content_database,
+  QLibraryManager libraryManager(&libraryDatabase, roms_dir, &contentDatabase,
                                  &shortModel);
   libraryManager.startScan();
   Firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  Firelight::LibraryItemModel libModel(&library_database);
+  Firelight::LibraryItemModel libModel(&libraryDatabase);
   Firelight::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);
 
@@ -129,16 +129,6 @@ int main(int argc, char *argv[]) {
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
-
-  // emulator->setWindow(window);
-  // // window->setColor(Qt::black);
-  //
-  // QObject::connect(window, &QQuickWindow::beforeRenderPassRecording,
-  // emulator,
-  //                  &EmulationManager::runOneFrame, Qt::DirectConnection);
-
-  //  window->setFlag(Qt::FramelessWindowHint, true);
-  //  window->setFlag(Qt::WindowTitleHint, false);
 
   int exitCode = QGuiApplication::exec();
 

@@ -21,19 +21,19 @@ public:
   static void setControllerManager(Input::ControllerManager *t_manager);
   static void setSaveManager(Saves::SaveManager *t_manager);
   static void setLibraryManager(QLibraryManager *t_libraryManager);
-  static void setUserdataManager(UserdataDatabase *t_userdataManager);
+  static void setUserdataManager(IUserdataDatabase *t_userdataManager);
 
 protected:
   static Input::ControllerManager *getControllerManager();
   static Saves::SaveManager *getSaveManager();
   static QLibraryManager *getLibraryManager();
-  static UserdataDatabase *getUserdataManager();
+  static IUserdataDatabase *getUserdataManager();
 
 private:
   static Input::ControllerManager *m_controllerManager;
   static Saves::SaveManager *m_saveManager;
   static QLibraryManager *m_libraryManager;
-  static UserdataDatabase *m_userdataDatabase;
+  static IUserdataDatabase *m_userdataDatabase;
 };
 
 } // namespace Firelight

@@ -1,15 +1,14 @@
-//
-// Created by alexs on 12/29/2023.
-//
-
-#ifndef LIBRARY_DATABASE_HPP
-#define LIBRARY_DATABASE_HPP
+#pragma once
 
 #include "daos/lib_entry.hpp"
-#include <optional>
+#include "daos/library_entry.hpp"
+#include "daos/playlist.hpp"
+
 #include <vector>
 
-class LibraryDatabase {
+namespace Firelight::Databases {
+
+class ILibraryDatabase {
 public:
   struct Filter {
     int id = -1;
@@ -25,7 +24,7 @@ public:
     std::string content_path;
   };
 
-  virtual ~LibraryDatabase() = default;
+  virtual ~ILibraryDatabase() = default;
   virtual void addOrRenameEntry(LibEntry entry) = 0;
   virtual std::vector<LibEntry> getAllEntries() = 0;
   virtual void match_md5s(std::string t_sourceDirectory,
@@ -33,6 +32,11 @@ public:
   virtual void updateEntryContentPath(int entryId, std::string sourceDirectory,
                                       std::string contentPath) = 0;
   virtual std::vector<LibEntry> getMatching(Filter filter) = 0;
-};
 
-#endif // LIBRARY_DATABASE_HPP
+  virtual bool createPlaylist(Firelight::Databases::Playlist &playlist) = 0;
+  virtual bool addEntryToPlaylist(int playlistId, int entryId) = 0;
+  virtual bool tableExists(const std::string &tableName) = 0;
+  [[nodiscard]] virtual std::vector<Firelight::Databases::Playlist>
+  getAllPlaylists() const = 0;
+};
+} // namespace Firelight::Databases

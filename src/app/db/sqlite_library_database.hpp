@@ -2,33 +2,34 @@
 // Created by alexs on 12/29/2023.
 //
 
-#ifndef SQLITE_LIBRARY_DATABASE_HPP
-#define SQLITE_LIBRARY_DATABASE_HPP
+#pragma once
+
 #include "library_database.hpp"
 
 #include <QSqlDatabase>
 #include <filesystem>
-#include <optional>
-#include <sqlite3.h>
 
-class SqliteLibraryDatabase : public LibraryDatabase {
+namespace Firelight::Databases {
+
+class SqliteLibraryDatabase final : public ILibraryDatabase {
 public:
+  bool createPlaylist(Playlist &playlist) override;
+  bool addEntryToPlaylist(int playlistId, int entryId) override;
   void updateEntryContentPath(int entryId, std::string sourceDirectory,
                               std::string contentPath) override;
-  explicit SqliteLibraryDatabase(std::filesystem::path db_file_path);
-  ~SqliteLibraryDatabase() override = default;
+  explicit SqliteLibraryDatabase(const std::filesystem::path &db_file_path);
+  ~SqliteLibraryDatabase() override;
 
-  bool initialize();
   void addOrRenameEntry(LibEntry entry) override;
   std::vector<LibEntry> getAllEntries() override;
   void match_md5s(std::string source_directory,
                   std::vector<std::string> md5s) override;
   std::vector<LibEntry> getMatching(Filter filter) override;
+  bool tableExists(const std::string &tableName) override;
+  [[nodiscard]] std::vector<Playlist> getAllPlaylists() const override;
 
 private:
   void insert_entry_into_db(LibEntry entry) const;
-  std::filesystem::path database_file_path_;
-  sqlite3 *database_ = nullptr;
+  QSqlDatabase m_database;
 };
-
-#endif // SQLITE_LIBRARY_DATABASE_HPP
+} // namespace Firelight::Databases

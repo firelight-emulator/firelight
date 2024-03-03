@@ -11,7 +11,7 @@
 #include <sqlite3.h>
 #include <string>
 
-class SqliteContentDatabase final : public ContentDatabase {
+class SqliteContentDatabase final : public IContentDatabase {
 public:
   explicit SqliteContentDatabase(std::filesystem::path dbFile);
   ~SqliteContentDatabase() override = default;
