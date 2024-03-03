@@ -6,7 +6,7 @@
 
 #include <utility>
 
-namespace Firelight::Saves {
+namespace firelight::Saves {
 
 SaveData::SaveData(const std::vector<char> &saveRamData) {
   m_saveRamData = std::vector(saveRamData.begin(), saveRamData.end());

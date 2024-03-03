@@ -5,10 +5,10 @@
 #pragma once
 #include <string>
 
-namespace Firelight::Databases {
+namespace firelight::db {
 struct Playlist {
   int id = -1;
   std::string displayName;
 };
 
-} // namespace Firelight::Databases
+} // namespace firelight::db

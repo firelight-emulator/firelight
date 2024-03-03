@@ -162,7 +162,7 @@ void EmulatorRenderer::set_system_av_info(retro_system_av_info *info) {
 
 void EmulatorRenderer::save(bool waitForFinish) {
   spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
-  Firelight::Saves::SaveData saveData(core->getMemoryData(libretro::SAVE_RAM));
+  firelight::Saves::SaveData saveData(core->getMemoryData(libretro::SAVE_RAM));
   saveData.setImage(m_fbo->toImage());
 
   QFuture<bool> result =

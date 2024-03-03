@@ -21,6 +21,7 @@
 #include "app/input/sdl_event_loop.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
+#include "gui/playlist_item_model.hpp"
 #include "gui/window_resize_handler.hpp"
 
 const int SCREEN_WIDTH = 1280;
@@ -63,13 +64,13 @@ int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
 
-  Firelight::Input::ControllerManager controllerManager;
-  Firelight::SdlEventLoop sdlEventLoop(&controllerManager);
+  firelight::Input::ControllerManager controllerManager;
+  firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
-  Firelight::Saves::SaveManager saveManager(save_dir);
+  firelight::Saves::SaveManager saveManager(save_dir);
 
-  Firelight::ManagerAccessor::setControllerManager(&controllerManager);
-  Firelight::ManagerAccessor::setSaveManager(&saveManager);
+  firelight::ManagerAccessor::setControllerManager(&controllerManager);
+  firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   controllerManager.refreshControllerList();
 
@@ -85,39 +86,44 @@ int main(int argc, char *argv[]) {
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   SqliteUserdataDatabase userdata_database(userdata_dir / "userdata.db");
-  Firelight::ManagerAccessor::setUserdataManager(&userdata_database);
+  firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
   // **** Load Content Database ****
   SqliteContentDatabase contentDatabase(system_dir / "content.db");
 
-  Firelight::Databases::SqliteLibraryDatabase libraryDatabase(userdata_dir /
-                                                              "library.db");
+  firelight::db::SqliteLibraryDatabase libraryDatabase(userdata_dir /
+                                                       "library.db");
+  firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
+
   QLibraryViewModel shortModel;
 
   QLibraryManager libraryManager(&libraryDatabase, roms_dir, &contentDatabase,
                                  &shortModel);
   libraryManager.startScan();
-  Firelight::ManagerAccessor::setLibraryManager(&libraryManager);
+  firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  Firelight::LibraryItemModel libModel(&libraryDatabase);
-  Firelight::LibrarySortFilterModel libSortModel;
+  firelight::LibraryItemModel libModel(&libraryDatabase);
+  firelight::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);
+
+  firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
 
   // auto *model = new QSqlQueryModel;
   // model->setQuery("SELECT id, display_name FROM library");
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
-  qmlRegisterType<Firelight::GameLoader>("Firelight", 1, 0, "GameLoader");
+  qmlRegisterType<firelight::GameLoader>("Firelight", 1, 0, "GameLoader");
 
   QQmlApplicationEngine engine;
+  engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
   engine.rootContext()->setContextProperty("library_short_model",
                                            &libSortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
   engine.rootContext()->setContextProperty("controller_manager",
                                            &controllerManager);
 
-  auto resizeHandler = new Firelight::WindowResizeHandler();
+  auto resizeHandler = new firelight::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",
                                            resizeHandler);
 

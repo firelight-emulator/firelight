@@ -9,7 +9,7 @@
 #include <QSqlDatabase>
 #include <filesystem>
 
-namespace Firelight::Databases {
+namespace firelight::db {
 
 class SqliteLibraryDatabase final : public ILibraryDatabase {
 public:
@@ -27,9 +27,12 @@ public:
   std::vector<LibEntry> getMatching(Filter filter) override;
   bool tableExists(const std::string &tableName) override;
   [[nodiscard]] std::vector<Playlist> getAllPlaylists() const override;
+  bool deletePlaylist(int playlistId) override;
 
 private:
   void insert_entry_into_db(LibEntry entry) const;
+
+private:
   QSqlDatabase m_database;
 };
-} // namespace Firelight::Databases
+} // namespace firelight::db

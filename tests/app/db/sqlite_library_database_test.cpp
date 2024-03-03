@@ -2,6 +2,8 @@
 #include "filesystem"
 #include "gtest/gtest.h"
 
+namespace firelight::db {
+
 class SqliteLibraryDatabaseTest : public testing::Test {
 protected:
   std::filesystem::path temp_file_path;
@@ -23,8 +25,7 @@ TEST_F(SqliteLibraryDatabaseTest, ConstructorTest) {
 
 TEST_F(SqliteLibraryDatabaseTest, CreatePlaylistSetsId) {
   SqliteLibraryDatabase db(temp_file_path.string());
-  Firelight::Databases::Playlist playlist{.id = -1,
-                                          .displayName = "Test Playlist"};
+  Playlist playlist{.id = -1, .displayName = "Test Playlist"};
 
   ASSERT_TRUE(db.createPlaylist(playlist));
   ASSERT_NE(playlist.id, -1);
@@ -34,3 +35,4 @@ TEST_F(SqliteLibraryDatabaseTest, CreatePlaylistSetsId) {
   ASSERT_EQ(playlists[0].id, playlist.id);
   ASSERT_EQ(playlists[0].displayName, playlist.displayName);
 }
+} // namespace firelight::db

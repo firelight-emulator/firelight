@@ -4,8 +4,8 @@
 
 #include "library_item_model.hpp"
 
-namespace Firelight {
-LibraryItemModel::LibraryItemModel(ILibraryDatabase *libraryDatabase)
+namespace firelight {
+LibraryItemModel::LibraryItemModel(db::ILibraryDatabase *libraryDatabase)
     : m_libraryDatabase(libraryDatabase) {
 
   const auto entries = m_libraryDatabase->getAllEntries();

@@ -7,7 +7,7 @@
 #include <qimage.h>
 #include <vector>
 
-namespace Firelight::Saves {
+namespace firelight::Saves {
 
 class SaveData {
 public:

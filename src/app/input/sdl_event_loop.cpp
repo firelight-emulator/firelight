@@ -9,7 +9,7 @@
 #include <SDL_hints.h>
 #include <spdlog/spdlog.h>
 
-namespace Firelight {
+namespace firelight {
 
 SdlEventLoop::SdlEventLoop(Input::ControllerManager *manager)
     : m_controllerManager(manager) {

@@ -7,7 +7,7 @@
 #include <spdlog/spdlog.h>
 #include <string>
 
-namespace Firelight::Input {
+namespace firelight::Input {
 
 void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
   switch (event.type) {

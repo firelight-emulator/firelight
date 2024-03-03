@@ -6,7 +6,7 @@
 #define LIBRARY_SORT_FILTER_MODEL_HPP
 #include <QSortFilterProxyModel>
 
-namespace Firelight {
+namespace firelight {
 
 class LibrarySortFilterModel final : public QSortFilterProxyModel {
   Q_OBJECT

@@ -8,7 +8,7 @@
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
 
-namespace Firelight::Saves {
+namespace firelight::Saves {
 
 SaveManager::SaveManager(std::filesystem::path saveDir)
     : m_saveDir(std::move(saveDir)) {

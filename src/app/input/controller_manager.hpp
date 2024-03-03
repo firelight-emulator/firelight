@@ -12,7 +12,7 @@
 #include <QObject>
 #include <SDL_events.h>
 
-namespace Firelight::Input {
+namespace firelight::Input {
 
 class ControllerManager final : public QAbstractListModel,
                                 public libretro::IRetropadProvider {

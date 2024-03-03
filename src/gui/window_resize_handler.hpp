@@ -8,7 +8,7 @@
 #include <qevent.h>
 #include <qtmetamacros.h>
 
-namespace Firelight {
+namespace firelight {
 
 class WindowResizeHandler : public QObject {
   Q_OBJECT

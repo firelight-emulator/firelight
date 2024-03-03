@@ -14,7 +14,7 @@
 class EmulatorRenderer : public QQuickFramebufferObject::Renderer,
                          public IVideoDataReceiver,
                          public QOpenGLFunctions,
-                         public Firelight::ManagerAccessor {
+                         public firelight::ManagerAccessor {
 protected:
   void synchronize(QQuickFramebufferObject *fbo) override;
 

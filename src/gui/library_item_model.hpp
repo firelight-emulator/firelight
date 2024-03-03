@@ -8,7 +8,7 @@
 
 #include <QAbstractListModel>
 
-namespace Firelight {
+namespace firelight {
 
 class LibraryItemModel final : public QAbstractListModel {
   Q_OBJECT
@@ -21,7 +21,7 @@ public:
     Playlists
   };
 
-  explicit LibraryItemModel(ILibraryDatabase *libraryDatabase);
+  explicit LibraryItemModel(db::ILibraryDatabase *libraryDatabase);
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant data(const QModelIndex &index,
@@ -34,10 +34,10 @@ private:
     QString displayName;
     QVector<int> m_playlists;
   };
-  ILibraryDatabase *m_libraryDatabase;
+  db::ILibraryDatabase *m_libraryDatabase;
   std::vector<Item> m_items;
 };
 
-} // namespace Firelight
+} // namespace firelight
 
 #endif // LIBRARY_ITEM_MODEL_HPP

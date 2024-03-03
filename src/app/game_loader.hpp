@@ -8,7 +8,7 @@
 
 #include <QObject>
 
-namespace Firelight {
+namespace firelight {
 
 class GameLoader : public QObject, public ManagerAccessor {
   Q_OBJECT

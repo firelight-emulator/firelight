@@ -5,7 +5,7 @@
 #pragma once
 #include <string>
 
-namespace Firelight::Databases {
+namespace firelight::db {
 struct PlaylistEntry {
   long playlistId;
   long libraryEntryId;

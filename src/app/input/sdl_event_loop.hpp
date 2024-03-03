@@ -8,7 +8,7 @@
 
 #include <qthread.h>
 
-namespace Firelight {
+namespace firelight {
 
 class SdlEventLoop final : public QThread {
 public:

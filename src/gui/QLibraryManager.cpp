@@ -50,10 +50,10 @@ static std::string calculateMD5(const char *input, int size) {
   return output;
 }
 
-QLibraryManager::QLibraryManager(
-    Firelight::Databases::ILibraryDatabase *lib_database,
-    std::filesystem::path default_rom_path, IContentDatabase *content_database,
-    QLibraryViewModel *model)
+QLibraryManager::QLibraryManager(firelight::db::ILibraryDatabase *lib_database,
+                                 std::filesystem::path default_rom_path,
+                                 IContentDatabase *content_database,
+                                 QLibraryViewModel *model)
     : default_rom_path_(std::move(default_rom_path)),
       library_database_(lib_database), content_database_(content_database),
       model_(model) {
@@ -71,8 +71,8 @@ QLibraryManager::QLibraryManager(
       Qt::QueuedConnection);
 }
 std::optional<LibEntry> QLibraryManager::get_by_id(const int id) const {
-  auto result = library_database_->getMatching(
-      Firelight::Databases::ILibraryDatabase::Filter({
+  auto result =
+      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
           .id = id,
       }));
 
@@ -87,8 +87,8 @@ std::optional<LibEntry> QLibraryManager::get_by_id(const int id) const {
   return {result.at(0)};
 }
 std::optional<LibEntry> QLibraryManager::getByRomId(int id) const {
-  auto libEntry = library_database_->getMatching(
-      Firelight::Databases::ILibraryDatabase::Filter({
+  auto libEntry =
+      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
           .rom = id,
       }));
 
@@ -203,8 +203,8 @@ void QLibraryManager::handleScannedPatchFile(
   }
 
   auto filename = entry.path().relative_path().string();
-  auto libEntry = library_database_->getMatching(
-      Firelight::Databases::ILibraryDatabase::Filter({
+  auto libEntry =
+      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
           .content_path = filename,
       }));
 
@@ -260,8 +260,8 @@ void QLibraryManager::handleScannedRomFile(
   }
 
   auto filename = entry.path().relative_path().string();
-  auto libEntry = library_database_->getMatching(
-      Firelight::Databases::ILibraryDatabase::Filter({
+  auto libEntry =
+      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
           .content_path = filename,
       }));
   if (!libEntry.empty()) {
@@ -278,8 +278,8 @@ void QLibraryManager::handleScannedRomFile(
   auto md5 = calculateMD5(thing.data(), size);
   scan_results.all_md5s.emplace_back(md5);
 
-  auto matchingRoms = library_database_->getMatching(
-      Firelight::Databases::ILibraryDatabase::Filter({
+  auto matchingRoms =
+      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
           .md5 = md5,
       }));
 

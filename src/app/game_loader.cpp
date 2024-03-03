@@ -11,7 +11,7 @@
 #include <fstream>
 #include <spdlog/spdlog.h>
 
-namespace Firelight {
+namespace firelight {
 void GameLoader::loadGame(int entryId) {
   spdlog::info("Loading entry with id {}", entryId);
   auto entry = getLibraryManager()->get_by_id(entryId);

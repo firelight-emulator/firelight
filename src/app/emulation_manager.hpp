@@ -15,7 +15,7 @@
 #include <QSGDynamicTexture>
 
 class EmulationManager : public QQuickFramebufferObject,
-                         public Firelight::ManagerAccessor {
+                         public firelight::ManagerAccessor {
   Q_OBJECT
   Q_PROPERTY(QString currentGameName READ currentGameName NOTIFY
                  currentGameNameChanged)

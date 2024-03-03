@@ -112,6 +112,8 @@ add_library(firelight_lib
         src/app/db/daos/playlist.hpp
         src/app/db/daos/playlist_entry.hpp
         src/app/db/daos/library_entry.hpp
+        src/gui/playlist_item_model.cpp
+        src/gui/playlist_item_model.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE includes ${SDL2_INCLUDE_DIRS}

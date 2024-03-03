@@ -7,7 +7,7 @@
 
 #include "../libretro/retropad.hpp"
 
-namespace Firelight::Input {
+namespace firelight::Input {
 
 class KeyboardController final : public libretro::IRetroPad {
 public:

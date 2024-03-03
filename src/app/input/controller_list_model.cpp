@@ -4,7 +4,7 @@
 
 #include "controller_list_model.hpp"
 
-namespace Firelight::Input {
+namespace firelight::Input {
 bool ControllerListModel::insertRows(int row, int count,
                                      const QModelIndex &parent) {
   return QAbstractListModel::insertRows(row, count, parent);

@@ -4,7 +4,7 @@
 
 #include "controller.hpp"
 
-namespace Firelight::Input {
+namespace firelight::Input {
 Controller::~Controller() = default;
 Controller::Controller(SDL_GameController *t_controller,
                        const int32_t t_joystickIndex)

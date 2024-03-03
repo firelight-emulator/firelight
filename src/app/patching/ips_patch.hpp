@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace Firelight::Patching {
+namespace firelight::Patching {
 
 // https://zerosoft.zophar.net/ips.php
 struct IPSPatchRecord {

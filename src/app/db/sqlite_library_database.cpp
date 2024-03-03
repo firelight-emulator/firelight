@@ -5,7 +5,7 @@
 #include <QSqlTableModel>
 #include <spdlog/spdlog.h>
 
-namespace Firelight::Databases {
+namespace firelight::db {
 SqliteLibraryDatabase::SqliteLibraryDatabase(
     const std::filesystem::path &db_file_path) {
   m_database = QSqlDatabase::addDatabase("QSQLITE", "library");
@@ -52,8 +52,7 @@ SqliteLibraryDatabase::~SqliteLibraryDatabase() {
   QSqlDatabase::removeDatabase(m_database.connectionName());
 }
 
-bool SqliteLibraryDatabase::createPlaylist(
-    Firelight::Databases::Playlist &playlist) {
+bool SqliteLibraryDatabase::createPlaylist(firelight::db::Playlist &playlist) {
   if (!m_database.open()) {
     spdlog::error("Couldn't open database: {}",
                   m_database.lastError().text().toStdString());
@@ -100,7 +99,7 @@ void SqliteLibraryDatabase::updateEntryContentPath(
     const int entryId, const std::string sourceDirectory,
     const std::string contentPath) {
   const QString queryString =
-      "UPDATE library "
+      "UPDATE library_entries "
       "SET source_directory = :source_directory, content_path = :content_path "
       "WHERE id = :id;";
 
@@ -132,7 +131,7 @@ void SqliteLibraryDatabase::match_md5s(std::string source_directory,
 std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
   std::vector<LibEntry> result;
 
-  QString queryString = "SELECT * FROM library";
+  QString queryString = "SELECT * FROM library_entries";
 
   QString whereClause;
   bool needAND = false;
@@ -237,8 +236,7 @@ bool SqliteLibraryDatabase::tableExists(const std::string &tableName) {
   return query.exec();
 }
 
-std::vector<Firelight::Databases::Playlist>
-SqliteLibraryDatabase::getAllPlaylists() const {
+std::vector<Playlist> SqliteLibraryDatabase::getAllPlaylists() const {
   QSqlQuery q(m_database);
   q.prepare("SELECT * FROM playlists");
 
@@ -247,9 +245,9 @@ SqliteLibraryDatabase::getAllPlaylists() const {
                   q.lastError().text().toStdString());
   }
 
-  std::vector<Firelight::Databases::Playlist> playlists;
+  std::vector<Playlist> playlists;
   while (q.next()) {
-    Firelight::Databases::Playlist playlist;
+    Playlist playlist;
     playlist.id = q.value(0).toInt();
     playlist.displayName = q.value(1).toString().toStdString();
 
@@ -259,7 +257,22 @@ SqliteLibraryDatabase::getAllPlaylists() const {
   return playlists;
 }
 
+bool SqliteLibraryDatabase::deletePlaylist(const int playlistId) {
+  QSqlQuery query(m_database);
+  query.prepare("DELETE FROM playlists WHERE id = :id");
+  query.bindValue(":id", playlistId);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to delete playlist: {}",
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  return true;
+}
+
 void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
+  return;
   QString queryString =
       "INSERT OR IGNORE INTO library ("
       "display_name, "
@@ -318,4 +331,4 @@ void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
   }
 }
 
-} // namespace Firelight::Databases
+} // namespace firelight::db

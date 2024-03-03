@@ -7,7 +7,7 @@
 
 #include <QAbstractListModel>
 
-namespace Firelight::Input {
+namespace firelight::Input {
 
 class ControllerListModel final : public QAbstractListModel {
 public:

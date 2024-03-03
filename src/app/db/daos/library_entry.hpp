@@ -5,11 +5,11 @@
 #pragma once
 #include <string>
 
-namespace Firelight::Databases {
-
-enum class EntryType { ROM, PATCH };
+namespace firelight::db {
 
 struct LibraryEntry {
+
+  enum class EntryType { ROM, PATCH };
   long id;
   std::string displayName;
   std::string contentMd5;
@@ -18,4 +18,4 @@ struct LibraryEntry {
   std::string sourceDirectory;
   std::string contentPath;
 };
-} // namespace Firelight::Databases
+} // namespace firelight::db

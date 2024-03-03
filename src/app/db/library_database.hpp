@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace Firelight::Databases {
+namespace firelight::db {
 
 class ILibraryDatabase {
 public:
@@ -33,10 +33,10 @@ public:
                                       std::string contentPath) = 0;
   virtual std::vector<LibEntry> getMatching(Filter filter) = 0;
 
-  virtual bool createPlaylist(Firelight::Databases::Playlist &playlist) = 0;
+  virtual bool createPlaylist(Playlist &playlist) = 0;
+  virtual bool deletePlaylist(int playlistId) = 0;
   virtual bool addEntryToPlaylist(int playlistId, int entryId) = 0;
   virtual bool tableExists(const std::string &tableName) = 0;
-  [[nodiscard]] virtual std::vector<Firelight::Databases::Playlist>
-  getAllPlaylists() const = 0;
+  [[nodiscard]] virtual std::vector<Playlist> getAllPlaylists() const = 0;
 };
-} // namespace Firelight::Databases
+} // namespace firelight::db

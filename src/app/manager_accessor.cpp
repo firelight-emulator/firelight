@@ -4,12 +4,13 @@
 
 #include "manager_accessor.hpp"
 
-namespace Firelight {
+namespace firelight {
 
 Input::ControllerManager *ManagerAccessor::m_controllerManager;
 Saves::SaveManager *ManagerAccessor::m_saveManager;
 QLibraryManager *ManagerAccessor::m_libraryManager;
 IUserdataDatabase *ManagerAccessor::m_userdataDatabase;
+db::ILibraryDatabase *ManagerAccessor::m_libraryDatabase;
 
 void ManagerAccessor::setControllerManager(
     Input::ControllerManager *t_manager) {
@@ -24,6 +25,10 @@ void ManagerAccessor::setLibraryManager(QLibraryManager *t_libraryManager) {
 void ManagerAccessor::setUserdataManager(IUserdataDatabase *t_userdataManager) {
   m_userdataDatabase = t_userdataManager;
 }
+void ManagerAccessor::setLibraryDatabase(
+    db::ILibraryDatabase *t_libraryDatabase) {
+  m_libraryDatabase = t_libraryDatabase;
+}
 
 Input::ControllerManager *ManagerAccessor::getControllerManager() {
   // TODO: Check for nullptr and throw exception or something
@@ -36,4 +41,7 @@ QLibraryManager *ManagerAccessor::getLibraryManager() {
 IUserdataDatabase *ManagerAccessor::getUserdataManager() {
   return m_userdataDatabase;
 }
-} // namespace Firelight
+db::ILibraryDatabase *ManagerAccessor::getLibraryDatabase() {
+  return m_libraryDatabase;
+}
+} // namespace firelight

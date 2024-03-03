@@ -9,7 +9,7 @@
 #include <SDL_gamecontroller.h>
 #include <string>
 
-namespace Firelight::Input {
+namespace firelight::Input {
 
 class Controller final : public libretro::IRetroPad {
 public:

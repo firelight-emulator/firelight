@@ -6,7 +6,7 @@
 
 #include <SDL_keyboard.h>
 
-namespace Firelight::Input {
+namespace firelight::Input {
 
 bool KeyboardController::isButtonPressed(Button t_button) {
   const uint8_t *currentKeyStates = SDL_GetKeyboardState(nullptr);

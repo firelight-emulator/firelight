@@ -6,7 +6,7 @@
 
 #include "library_item_model.hpp"
 
-namespace Firelight {
+namespace firelight {
 
 void LibrarySortFilterModel::filterOnPlaylistId(int playlistId) {
   m_playlistId = playlistId;

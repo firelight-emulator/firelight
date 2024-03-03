@@ -103,48 +103,22 @@ Rectangle {
             anchors.top: divider.bottom
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            model: ListModel {
-                ListElement {
-                    name: "GameCube"
-                    icon: "\ue892"
-                    playlistId: 0
-                }
-                ListElement {
-                    name: "Game Boy Advance"
-                    icon: "\ue892"
-                    playlistId: 1
-                }
-                ListElement {
-                    name: "Super Nintendo"
-                    icon: "\ue892"
-                    playlistId: 2
-                }
-                ListElement {
-                    name: "NES"
-                    icon: "\ue892"
-                    playlistId: 3
-                }
-                ListElement {
-                    name: "Sega Genesis"
-                    icon: "\ue892"
-                    playlistId: 4
-                }
-            }
+            model: playlist_model
 
             delegate: FirelightMenuItem {
-                labelText: model.name
+                labelText: model.display_name
                 labelIcon: ""
                 height: 40
                 width: categoryList.width
 
                 onClicked: function () {
-                    library_short_model.filterOnPlaylistId(model.playlistId)
+                    library_short_model.filterOnPlaylistId(model.id)
                     library_short_model.sort(0)
                 }
 
                 onRightClicked: function () {
-                    playlistRightClickMenu.playlistName = model.name
-                    playlistRightClickMenu.playlistId = model.playlistId
+                    playlistRightClickMenu.playlistName = model.display_name
+                    playlistRightClickMenu.playlistId = model.id
                     playlistRightClickMenu.popup()
                 }
 
@@ -348,7 +322,7 @@ Rectangle {
         id: createPlaylistDialog
         visible: false
         onAccepted: {
-            categoryList.model.append({name: createPlaylistDialog.text, icon: "\ue892", playlistId: 5})
+            playlist_model.addPlaylist(createPlaylistDialog.text)
         }
     }
 
@@ -362,7 +336,7 @@ Rectangle {
         visible: false
 
         onAccepted: {
-            console.log("gonna remove playlist: " + playlistName)
+            playlist_model.removePlaylist(playlistId)
         }
     }
 

@@ -1,0 +1,34 @@
+#pragma once
+#include "../app/db/library_database.hpp"
+#include "QLibraryViewModel.hpp"
+
+namespace firelight::gui {
+
+class PlaylistItemModel final : public QAbstractListModel {
+  Q_OBJECT
+
+public:
+  enum Roles {
+    PlaylistId = Qt::UserRole + 1,
+    DisplayName,
+  };
+
+  explicit PlaylistItemModel(db::ILibraryDatabase *libraryDatabase);
+
+  [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index,
+                              int role) const override;
+  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
+  Q_INVOKABLE void addPlaylist(const QString &displayName);
+  Q_INVOKABLE void removePlaylist(int playlistId);
+
+private:
+  struct Item {
+    int playlistId;
+    QString displayName;
+  };
+
+  db::ILibraryDatabase *m_libraryDatabase;
+  std::vector<Item> m_items;
+};
+} // namespace firelight::gui
