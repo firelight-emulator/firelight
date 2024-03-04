@@ -15,7 +15,12 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
   QSqlQuery createLibraryEntries(m_database);
   createLibraryEntries.prepare("CREATE TABLE IF NOT EXISTS library_entries("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                               "display_name TEXT NOT NULL);");
+                               "display_name TEXT NOT NULL,"
+                               "content_md5 TEXT UNIQUE NOT NULL,"
+                               "platform_id INTEGER NOT NULL,"
+                               "type INTEGER NOT NULL,"
+                               "source_directory TEXT NOT NULL,"
+                               "content_path TEXT NOT NULL);");
 
   if (!createLibraryEntries.exec()) {
     spdlog::error("Table creation failed: {}",
@@ -39,7 +44,8 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
       "playlist_id INTEGER NOT NULL,"
       "library_entry_id INTEGER NOT NULL,"
       "FOREIGN KEY(playlist_id) REFERENCES playlists(id),"
-      "FOREIGN KEY(library_entry_id) REFERENCES library_entries(id));");
+      "FOREIGN KEY(library_entry_id) REFERENCES library_entries(id),"
+      "UNIQUE(playlist_id, library_entry_id));");
 
   if (!createPlaylistEntries.exec()) {
     spdlog::error("Table creation failed: {}",
@@ -50,6 +56,14 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
 SqliteLibraryDatabase::~SqliteLibraryDatabase() {
   m_database.close();
   QSqlDatabase::removeDatabase(m_database.connectionName());
+}
+
+bool SqliteLibraryDatabase::tableExists(const std::string &tableName) {
+  QSqlQuery query(m_database);
+  query.prepare("SELECT 1 FROM " + QString::fromStdString(tableName) +
+                " LIMIT 1;");
+
+  return query.exec();
 }
 
 bool SqliteLibraryDatabase::createPlaylist(Playlist &playlist) {
@@ -229,15 +243,80 @@ std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
 
   return result;
 }
-bool SqliteLibraryDatabase::tableExists(const std::string &tableName) {
-  QSqlQuery query(m_database);
-  query.prepare("SELECT 1 FROM " + QString::fromStdString(tableName) +
-                " LIMIT 1;");
 
-  return query.exec();
+bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
+  if (!m_database.open()) {
+    spdlog::error("Couldn't open database: {}",
+                  m_database.lastError().text().toStdString());
+    return false;
+  }
+
+  const QString queryString =
+      "INSERT INTO library_entries (display_name, content_md5, platform_id, "
+      "type, source_directory, content_path) VALUES (:displayName, "
+      ":contentMd5, :platformId, :type, :sourceDirectory, :contentPath);";
+  QSqlQuery query(m_database);
+  query.prepare(queryString);
+  query.bindValue(":displayName", QString::fromStdString(entry.displayName));
+  query.bindValue(":contentMd5", QString::fromStdString(entry.contentMd5));
+  query.bindValue(":platformId", entry.platformId);
+  query.bindValue(":type", static_cast<int>(entry.type));
+  query.bindValue(":sourceDirectory",
+                  QString::fromStdString(entry.sourceDirectory));
+  query.bindValue(":contentPath", QString::fromStdString(entry.contentPath));
+
+  if (!query.exec()) {
+    query.finish();
+    return false;
+  }
+
+  entry.id = query.lastInsertId().toInt();
+
+  query.finish();
+  return true;
 }
 
-std::vector<Playlist> SqliteLibraryDatabase::getAllPlaylists() const {
+bool SqliteLibraryDatabase::deleteLibraryEntry(int entryId) {
+  QSqlQuery query(m_database);
+  query.prepare("DELETE FROM library_entries WHERE id = :id");
+  query.bindValue(":id", entryId);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to delete library entry: {}",
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  return true;
+}
+
+std::vector<LibraryEntry> SqliteLibraryDatabase::getAllLibraryEntries() {
+  QSqlQuery q(m_database);
+  q.prepare("SELECT * FROM library_entries");
+
+  if (!q.exec()) {
+    spdlog::error("Failed to get library entries: {}",
+                  q.lastError().text().toStdString());
+  }
+
+  std::vector<LibraryEntry> entries;
+  while (q.next()) {
+    LibraryEntry entry;
+    entry.id = q.value(0).toInt();
+    entry.displayName = q.value(1).toString().toStdString();
+    entry.contentMd5 = q.value(2).toString().toStdString();
+    entry.platformId = q.value(3).toInt();
+    entry.type = static_cast<LibraryEntry::EntryType>(q.value(4).toInt());
+    entry.sourceDirectory = q.value(5).toString().toStdString();
+    entry.contentPath = q.value(6).toString().toStdString();
+
+    entries.emplace_back(entry);
+  }
+
+  return entries;
+}
+
+std::vector<Playlist> SqliteLibraryDatabase::getAllPlaylists() {
   QSqlQuery q(m_database);
   q.prepare("SELECT * FROM playlists");
 
@@ -265,6 +344,41 @@ bool SqliteLibraryDatabase::deletePlaylist(const int playlistId) {
 
   if (!query.exec()) {
     spdlog::error("Failed to delete playlist: {}",
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  return true;
+}
+
+bool SqliteLibraryDatabase::renamePlaylist(const int playlistId,
+                                           const std::string newName) {
+  QSqlQuery checkQuery(m_database);
+  checkQuery.prepare("SELECT 1 FROM playlists WHERE id = :id");
+  checkQuery.bindValue(":id", playlistId);
+  if (!checkQuery.exec()) {
+    spdlog::error("Error retrieving playlists: {}",
+                  checkQuery.lastError().text().toStdString());
+    return false;
+  }
+
+  int numRows = 0;
+  while (checkQuery.next()) {
+    numRows++;
+  }
+
+  if (numRows == 0) {
+    spdlog::warn("Playlist with ID {} does not exist", playlistId);
+    return false;
+  }
+
+  QSqlQuery query(m_database);
+  query.prepare("UPDATE playlists SET display_name = :name WHERE id = :id");
+  query.bindValue(":name", QString::fromStdString(newName));
+  query.bindValue(":id", playlistId);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to rename playlist: {}",
                   query.lastError().text().toStdString());
     return false;
   }

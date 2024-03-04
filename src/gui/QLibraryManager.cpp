@@ -120,15 +120,15 @@ void QLibraryManager::startScan() {
           }
         }
 
-        for (const auto &new_entry : scan_results.new_entries) {
-          library_database_->addOrRenameEntry(new_entry);
+        for (auto &new_entry : scan_results.new_entries) {
+          library_database_->createLibraryEntry(new_entry);
         }
 
-        for (const auto &existing_entry : scan_results.existing_entries) {
-          library_database_->updateEntryContentPath(
-              existing_entry.id, existing_entry.source_directory,
-              existing_entry.content_path);
-        }
+        // for (const auto &existing_entry : scan_results.existing_entries) {
+        //   library_database_->updateEntryContentPath(
+        //       existing_entry.id, existing_entry.source_directory,
+        //       existing_entry.content_path);
+        // }
 
         emit scanningChanged();
         emit scanFinished();
@@ -182,21 +182,21 @@ void QLibraryManager::handleScannedPatchFile(
   // TODO: Check content database for romhack with this md5
   // TODO: If not found, then user needs to select a rom to patch
 
-  LibEntry e = {.id = -1,
-                .display_name = entry.path().filename().string(),
-                .type = EntryType::PATCH,
-                .verified = false,
-                .md5 = md5,
-                .platform = 1,
-                .game = -1,
-                .rom = -1,
-                .parent_entry = -1,
-                .romhack = -1,
-                .romhack_release = -1,
-                .source_directory = entry.path().parent_path().string(),
-                .content_path = entry.path().relative_path().string()};
-
-  scan_results.new_entries.emplace_back(e);
+  // LibEntry e = {.id = -1,
+  //               .display_name = entry.path().filename().string(),
+  //               .type = EntryType::PATCH,
+  //               .verified = false,
+  //               .md5 = md5,
+  //               .platform = 1,
+  //               .game = -1,
+  //               .rom = -1,
+  //               .parent_entry = -1,
+  //               .romhack = -1,
+  //               .romhack_release = -1,
+  //               .source_directory = entry.path().parent_path().string(),
+  //               .content_path = entry.path().relative_path().string()};
+  //
+  // scan_results.new_entries.emplace_back(e);
 }
 
 void QLibraryManager::handleScannedRomFile(
@@ -236,13 +236,13 @@ void QLibraryManager::handleScannedRomFile(
           .md5 = md5,
       }));
 
-  if (!matchingRoms.empty()) {
-    auto matching = matchingRoms.at(0);
-    matching.source_directory = entry.path().parent_path().string();
-    matching.content_path = entry.path().relative_path().string();
-    scan_results.existing_entries.emplace_back(matching);
-    return;
-  }
+  // if (!matchingRoms.empty()) {
+  //   auto matching = matchingRoms.at(0);
+  //   matching.source_directory = entry.path().parent_path().string();
+  //   matching.content_path = entry.path().relative_path().string();
+  //   scan_results.existing_entries.emplace_back(matching);
+  //   return;
+  // }
 
   auto display_name = entry.path().filename().string();
   auto verified = false;
@@ -260,19 +260,28 @@ void QLibraryManager::handleScannedRomFile(
   //   rom_id = rom->id;
   // }
 
-  LibEntry e = {.id = -1,
-                .display_name = display_name,
-                .type = EntryType::ROM,
-                .verified = verified,
-                .md5 = md5,
-                .platform = platform->id,
-                .game = game_id,
-                .rom = rom_id,
-                .parent_entry = -1,
-                .romhack = -1,
-                .romhack_release = -1,
-                .source_directory = entry.path().parent_path().string(),
-                .content_path = entry.path().relative_path().string()};
+  // LibEntry e = {.id = -1,
+  //               .display_name = display_name,
+  //               .type = EntryType::ROM,
+  //               .verified = verified,
+  //               .md5 = md5,
+  //               .platform = platform->id,
+  //               .game = game_id,
+  //               .rom = rom_id,
+  //               .parent_entry = -1,
+  //               .romhack = -1,
+  //               .romhack_release = -1,
+  //               .source_directory = entry.path().parent_path().string(),
+  //               .content_path = entry.path().relative_path().string()};
+
+  firelight::db::LibraryEntry e = {
+      .id = -1,
+      .displayName = display_name,
+      .contentMd5 = md5,
+      .platformId = platform->id,
+      .type = firelight::db::LibraryEntry::EntryType::ROM,
+      .sourceDirectory = entry.path().parent_path().string(),
+      .contentPath = entry.path().relative_path().string()};
 
   scan_results.new_entries.emplace_back(e);
 }

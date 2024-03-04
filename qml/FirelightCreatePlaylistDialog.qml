@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-// import QtQuick.Controls.Material
 import QtQuick.Dialogs
 import QtQuick.Window
 import QtQuick.Layouts
@@ -33,8 +32,8 @@ Dialog {
     }
 
     contentItem: Rectangle {
-        color: "green"
-        radius: 12
+        color: Constants.colorTestSurface
+        radius: 4
         clip: true
 
         HoverHandler {
@@ -45,12 +44,24 @@ Dialog {
         TextInput {
             id: playlistNameInput
             anchors.fill: parent
+            focus: true
             text: "text"
             color: Constants.colorTestTextActive
             padding: 12
             font.pointSize: 12
             font.family: Constants.lightFontFamily
+            validator: RegularExpressionValidator {
+                regularExpression: /^(?!\s*$).+/
+            }
+
+            onAccepted: function () {
+                control.accept()
+            }
         }
+    }
+
+    onAboutToShow: function () {
+        playlistNameInput.clear()
     }
 
     footer: DialogButtonBox {
@@ -61,11 +72,12 @@ Dialog {
         }
         Button {
             background: Rectangle {
-                color: "white"
+                color: enabled ? "white" : "grey"
                 radius: 50
                 implicitWidth: 160
                 implicitHeight: 48
             }
+            enabled: playlistNameInput.acceptableInput
             contentItem: Text {
                 text: qsTr("Create")
                 color: Constants.colorTestBackground

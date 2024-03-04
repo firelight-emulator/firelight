@@ -13,10 +13,15 @@ public:
 
   bool tableExists(const std::string &tableName) override;
 
+  bool createLibraryEntry(LibraryEntry &entry) override;
+  bool deleteLibraryEntry(int entryId) override;
+  std::vector<LibraryEntry> getAllLibraryEntries() override;
+
   // Playlists
   bool createPlaylist(Playlist &playlist) override;
   bool deletePlaylist(int playlistId) override;
-  [[nodiscard]] std::vector<Playlist> getAllPlaylists() const override;
+  bool renamePlaylist(int playlistId, std::string newName) override;
+  [[nodiscard]] std::vector<Playlist> getAllPlaylists() override;
   bool addEntryToPlaylist(int playlistId, int entryId) override;
 
   void updateEntryContentPath(int entryId, std::string sourceDirectory,
@@ -30,6 +35,8 @@ public:
 
 private:
   void insert_entry_into_db(LibEntry entry) const;
+
+private:
   QSqlDatabase m_database;
 };
 

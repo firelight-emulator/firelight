@@ -7,10 +7,10 @@ namespace firelight::db {
 struct LibraryEntry {
   enum class EntryType { ROM, PATCH };
 
-  long id;
+  int id;
   std::string displayName;
   std::string contentMd5;
-  long platformId;
+  int platformId;
   EntryType type;
   std::string sourceDirectory;
   std::string contentPath;

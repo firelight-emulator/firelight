@@ -14,8 +14,8 @@ class QLibraryManager final : public QObject {
 public:
   struct ScanResults {
     std::vector<std::string> all_md5s;
-    std::vector<LibEntry> existing_entries;
-    std::vector<LibEntry> new_entries;
+    std::vector<firelight::db::LibraryEntry> existing_entries;
+    std::vector<firelight::db::LibraryEntry> new_entries;
   };
 
   explicit QLibraryManager(firelight::db::ILibraryDatabase *lib_database,

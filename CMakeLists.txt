@@ -188,25 +188,17 @@ add_custom_target(copy_resources ALL
         COMMENT "Copying test resources to build directory"
 )
 
-#file(GET_RUNTIME_DEPENDENCIES
-#        RESOLVED_DEPENDENCIES_VAR _r_deps
-#        UNRESOLVED_DEPENDENCIES_VAR _u_deps
-#        EXECUTABLES firelight
-#        PRE_BUILD)
-#
-#message("Resolved Dependencies: ${_r_deps}")
-#message("Unresolved Dependencies: ${_u_deps}")
-
 add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
         tests/app/patching/ips_patch_test.cpp
         tests/app/db/sqlite_library_database_test.cpp
+        tests/mocks/mock_library_database.hpp
 )
 
 add_dependencies(fl_test copy_resources)
 
 target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS})
-target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES})
+target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES} gmock)
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #
 #add_test(NAME firelight_test COMMAND firelight)

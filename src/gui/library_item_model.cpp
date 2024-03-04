@@ -5,11 +5,11 @@ namespace firelight::gui {
 LibraryItemModel::LibraryItemModel(db::ILibraryDatabase *libraryDatabase)
     : m_libraryDatabase(libraryDatabase) {
 
-  const auto entries = m_libraryDatabase->getAllEntries();
+  const auto entries = m_libraryDatabase->getAllLibraryEntries();
   auto i = 0;
   for (const auto &entry : entries) {
     m_items.emplace_back(
-        Item({entry.id, QString::fromStdString(entry.display_name), {i}}));
+        Item({entry.id, QString::fromStdString(entry.displayName), {i}}));
     i++;
     if (i > 4) {
       i = 0;
