@@ -4,7 +4,6 @@
 #include "app/emulation_manager.hpp"
 #include "app/game_loader.hpp"
 #include "src/gui/QLibraryManager.hpp"
-#include "src/gui/QLibraryViewModel.hpp"
 #include <QGuiApplication>
 #include <QOpenGLFunctions>
 #include <QQmlApplicationEngine>
@@ -49,6 +48,8 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::info);
   }
 
+  // If missing system directory, throw an error
+
   // **** Make sure all directories are good ****
   std::filesystem::path appdata_dir = ".";
   auto system_dir = appdata_dir / "system";
@@ -75,14 +76,6 @@ int main(int argc, char *argv[]) {
   controllerManager.refreshControllerList();
 
   sdlEventLoop.start();
-
-  // controllerManager.moveToThread(sdlEventThread);
-
-  //
-  // QString family = fontList.first();
-  // QGuiApplication::setFont(QFont(family));
-
-  // QQuickStyle::setStyle("FirelightStyle");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   SqliteUserdataDatabase userdata_database(userdata_dir / "userdata.db");
@@ -95,21 +88,15 @@ int main(int argc, char *argv[]) {
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
-  QLibraryViewModel shortModel;
-
-  QLibraryManager libraryManager(&libraryDatabase, roms_dir, &contentDatabase,
-                                 &shortModel);
+  QLibraryManager libraryManager(&libraryDatabase, roms_dir, &contentDatabase);
   libraryManager.startScan();
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  firelight::LibraryItemModel libModel(&libraryDatabase);
-  firelight::LibrarySortFilterModel libSortModel;
-  libSortModel.setSourceModel(&libModel);
-
+  // Set up the models for QML ***********************************************
   firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
-
-  // auto *model = new QSqlQueryModel;
-  // model->setQuery("SELECT id, display_name FROM library");
+  firelight::gui::LibraryItemModel libModel(&libraryDatabase);
+  firelight::gui::LibrarySortFilterModel libSortModel;
+  libSortModel.setSourceModel(&libModel);
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
@@ -123,7 +110,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("controller_manager",
                                            &controllerManager);
 
-  auto resizeHandler = new firelight::WindowResizeHandler();
+  auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",
                                            resizeHandler);
 

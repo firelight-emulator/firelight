@@ -1,16 +1,19 @@
-//
-// Created by alexs on 2/15/2024.
-//
+#pragma once
 
-#ifndef WINDOW_RESIZE_HANDLER_HPP
-#define WINDOW_RESIZE_HANDLER_HPP
+#include <QEvent>
 #include <QTimer>
-#include <qevent.h>
-#include <qtmetamacros.h>
 
-namespace firelight {
+namespace firelight::gui {
 
-class WindowResizeHandler : public QObject {
+/**
+ * @class WindowResizeHandler
+ * @brief Emits signals when the window is resized.
+ *
+ * This class emits signals when the window starts resizing and when it finishes
+ * (after a short delay). It is intended to be used as an event filter for the
+ * main window.
+ */
+class WindowResizeHandler final : public QObject {
   Q_OBJECT
 
   QTimer *resizeTimer;
@@ -43,6 +46,4 @@ inline bool WindowResizeHandler::eventFilter(QObject *obj, QEvent *event) {
   return QObject::eventFilter(obj, event);
 }
 
-} // namespace Firelight
-
-#endif // WINDOW_RESIZE_HANDLER_HPP
+} // namespace firelight::gui

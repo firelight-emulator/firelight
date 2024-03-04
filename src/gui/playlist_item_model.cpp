@@ -1,7 +1,3 @@
-//
-// Created by alexs on 3/3/2024.
-//
-
 #include "playlist_item_model.hpp"
 
 namespace firelight::gui {
@@ -59,20 +55,15 @@ void PlaylistItemModel::addPlaylist(const QString &displayName) {
 }
 void PlaylistItemModel::removePlaylist(const int playlistId) {
   m_libraryDatabase->deletePlaylist(playlistId);
+
   for (int i = 0; i < m_items.size(); ++i) {
     if (m_items[i].playlistId == playlistId) {
-      // Notify the view that a row will be removed
       beginRemoveRows(QModelIndex(), i, i);
-
-      // Remove the playlist from the list
       m_items.erase(m_items.begin() + i);
-
-      // Notify the view that the row has been removed
       endRemoveRows();
-
-      // Break the loop as we've found and removed the playlist
       break;
     }
   }
 }
+
 } // namespace firelight::gui

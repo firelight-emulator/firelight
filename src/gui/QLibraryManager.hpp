@@ -1,18 +1,12 @@
-//
-// Created by alexs on 12/22/2023.
-//
-
-#ifndef FIRELIGHT_QLIBRARYMANAGER_HPP
-#define FIRELIGHT_QLIBRARYMANAGER_HPP
+#pragma once
 
 #include "../app/db/content_database.hpp"
 #include "../app/db/library_database.hpp"
-#include "QLibraryViewModel.hpp"
 #include <QFileSystemWatcher>
-#include <filesystem>
-
 #include <QObject>
 #include <QThreadPool>
+#include <filesystem>
+
 class QLibraryManager final : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool scanning READ scanning NOTIFY scanningChanged)
@@ -26,8 +20,7 @@ public:
 
   explicit QLibraryManager(firelight::db::ILibraryDatabase *lib_database,
                            std::filesystem::path default_rom_path,
-                           IContentDatabase *content_database,
-                           QLibraryViewModel *model);
+                           IContentDatabase *content_database);
 
   [[nodiscard]] std::optional<LibEntry> get_by_id(int id) const;
   [[nodiscard]] std::optional<LibEntry> getByRomId(int id) const;
@@ -53,9 +46,6 @@ private:
   firelight::db::ILibraryDatabase *library_database_;
   IContentDatabase *content_database_;
   QFileSystemWatcher directory_watcher_;
-  QLibraryViewModel *model_;
-
-  [[nodiscard]] std::vector<QLibraryViewModel::Item> get_model_items_() const;
 
   std::unique_ptr<QThreadPool> scanner_thread_pool_ = nullptr;
   void handleScannedPatchFile(const std::filesystem::directory_entry &entry,
@@ -63,5 +53,3 @@ private:
   void handleScannedRomFile(const std::filesystem::directory_entry &entry,
                             ScanResults &scan_results) const;
 };
-
-#endif // FIRELIGHT_QLIBRARYMANAGER_HPP

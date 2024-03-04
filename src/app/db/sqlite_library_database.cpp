@@ -25,7 +25,7 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
   QSqlQuery createPlaylists(m_database);
   createPlaylists.prepare("CREATE TABLE IF NOT EXISTS playlists("
                           "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                          "display_name TEXT NOT NULL);");
+                          "display_name TEXT UNIQUE NOT NULL);");
 
   if (!createPlaylists.exec()) {
     spdlog::error("Table creation failed: {}",
@@ -52,7 +52,7 @@ SqliteLibraryDatabase::~SqliteLibraryDatabase() {
   QSqlDatabase::removeDatabase(m_database.connectionName());
 }
 
-bool SqliteLibraryDatabase::createPlaylist(firelight::db::Playlist &playlist) {
+bool SqliteLibraryDatabase::createPlaylist(Playlist &playlist) {
   if (!m_database.open()) {
     spdlog::error("Couldn't open database: {}",
                   m_database.lastError().text().toStdString());

@@ -1,9 +1,4 @@
-//
-// Created by alexs on 12/22/2023.
-//
-
 #include "QLibraryManager.hpp"
-
 #include <fstream>
 #include <openssl/evp.h>
 #include <qfuture.h>
@@ -52,11 +47,9 @@ static std::string calculateMD5(const char *input, int size) {
 
 QLibraryManager::QLibraryManager(firelight::db::ILibraryDatabase *lib_database,
                                  std::filesystem::path default_rom_path,
-                                 IContentDatabase *content_database,
-                                 QLibraryViewModel *model)
+                                 IContentDatabase *content_database)
     : default_rom_path_(std::move(default_rom_path)),
-      library_database_(lib_database), content_database_(content_database),
-      model_(model) {
+      library_database_(lib_database), content_database_(content_database) {
   scanner_thread_pool_ = std::make_unique<QThreadPool>();
   scanner_thread_pool_->setMaxThreadCount(thread_pool_size_);
   directory_watcher_.addPath(
@@ -65,10 +58,6 @@ QLibraryManager::QLibraryManager(firelight::db::ILibraryDatabase *lib_database,
   // TODO: Probably don't need to scan everything every time
   connect(&directory_watcher_, &QFileSystemWatcher::directoryChanged,
           [&](const QString &) { startScan(); });
-  connect(
-      this, &QLibraryManager::scanFinished, model,
-      [this, model] { model->set_items(get_model_items_()); },
-      Qt::QueuedConnection);
 }
 std::optional<LibEntry> QLibraryManager::get_by_id(const int id) const {
   auto result =
@@ -155,42 +144,6 @@ void QLibraryManager::startScan() {
   // TODO:  the list of md5s we found when we scanned. If not, remove the entry
 }
 bool QLibraryManager::scanning() const { return scanning_; }
-
-std::vector<QLibraryViewModel::Item> QLibraryManager::get_model_items_() const {
-  const auto all = library_database_->getAllEntries();
-
-  std::vector<QLibraryViewModel::Item> items;
-  for (const auto &e : all) {
-    QLibraryViewModel::Item item;
-
-    auto platformName = "Unknown";
-    switch (e.platform) {
-    case 0:
-      platformName = "Nintendo 64";
-      break;
-    case 1:
-      platformName = "SNES";
-      break;
-    case 2:
-      platformName = "Gameboy Color";
-      break;
-    case 3:
-      platformName = "Gameboy";
-      break;
-    default:
-      platformName = "Unknown";
-      break;
-    }
-
-    item.id = e.id;
-    item.display_name = e.display_name;
-    item.platformName = platformName;
-
-    items.emplace_back(item);
-  }
-
-  return items;
-}
 
 void QLibraryManager::handleScannedPatchFile(
     const std::filesystem::directory_entry &entry,

@@ -1,12 +1,7 @@
-//
-// Created by alexs on 2/29/2024.
-//
-
 #include "library_sort_filter_model.hpp"
-
 #include "library_item_model.hpp"
 
-namespace firelight {
+namespace firelight::gui {
 
 void LibrarySortFilterModel::filterOnPlaylistId(int playlistId) {
   m_playlistId = playlistId;
@@ -29,6 +24,7 @@ bool LibrarySortFilterModel::filterAcceptsRow(
 
   return false;
 }
+
 bool LibrarySortFilterModel::lessThan(const QModelIndex &source_left,
                                       const QModelIndex &source_right) const {
   const QString leftDisplayName =
@@ -45,4 +41,4 @@ bool LibrarySortFilterModel::lessThan(const QModelIndex &source_left,
                           Qt::CaseInsensitive) < 0;
 }
 
-} // namespace Firelight
+} // namespace firelight::gui

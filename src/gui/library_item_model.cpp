@@ -1,10 +1,7 @@
-//
-// Created by alexs on 2/28/2024.
-//
-
 #include "library_item_model.hpp"
 
-namespace firelight {
+namespace firelight::gui {
+
 LibraryItemModel::LibraryItemModel(db::ILibraryDatabase *libraryDatabase)
     : m_libraryDatabase(libraryDatabase) {
 
@@ -52,4 +49,5 @@ QHash<int, QByteArray> LibraryItemModel::roleNames() const {
   roles[PlatformName] = "platform_name";
   return roles;
 }
-} // namespace Firelight
+
+} // namespace firelight::gui

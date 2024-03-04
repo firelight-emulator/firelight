@@ -101,8 +101,6 @@ add_library(firelight_lib
         src/app/input/controller_list_model.hpp
         src/gui/QLibraryManager.cpp
         src/gui/QLibraryManager.hpp
-        src/gui/QLibraryViewModel.cpp
-        src/gui/QLibraryViewModel.hpp
         src/app/db/daos/romhack.hpp
         src/app/db/daos/romhack_release.hpp
         src/gui/library_item_model.cpp
