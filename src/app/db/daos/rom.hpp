@@ -1,9 +1,5 @@
-//
-// Created by alexs on 12/22/2023.
-//
+#pragma once
 
-#ifndef ROM_HPP
-#define ROM_HPP
 #include <string>
 
 struct ROM {
@@ -16,5 +12,3 @@ struct ROM {
   std::string md5{};
   int size_bytes{};
 };
-
-#endif // ROM_HPP

@@ -11,7 +11,7 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 
-namespace firelight::Patching {
+namespace firelight::patching {
 
 void printHex(const std::vector<uint8_t> &data) {
   for (auto byte : data) {

@@ -1,11 +1,9 @@
-//
-// Created by alexs on 1/11/2024.
-//
+#pragma once
 
-#ifndef IROMPATCH_HPP
-#define IROMPATCH_HPP
 #include <cstdint>
 #include <vector>
+
+namespace firelight::patching {
 
 class IRomPatch {
 public:
@@ -14,4 +12,4 @@ public:
   patchRom(const std::vector<uint8_t> &data) const = 0;
 };
 
-#endif // IROMPATCH_HPP
+} // namespace firelight::patching

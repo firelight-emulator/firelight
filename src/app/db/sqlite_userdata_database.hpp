@@ -1,11 +1,6 @@
-//
-// Created by alexs on 2/16/2024.
-//
+#pragma once
 
-#ifndef SQLITE_USERDATA_DATABASE_HPP
-#define SQLITE_USERDATA_DATABASE_HPP
 #include "userdata_database.hpp"
-
 #include <QSqlDatabase>
 #include <filesystem>
 
@@ -20,5 +15,3 @@ private:
   std::filesystem::path m_database_path;
   QSqlDatabase m_database;
 };
-
-#endif // SQLITE_USERDATA_DATABASE_HPP

@@ -1,9 +1,4 @@
-//
-// Created by alexs on 12/29/2023.
-//
-
-#ifndef LIB_ENTRY_HPP
-#define LIB_ENTRY_HPP
+#pragma once
 
 #include <string>
 
@@ -24,5 +19,3 @@ struct LibEntry {
   std::string source_directory;
   std::string content_path;
 };
-
-#endif // LIB_ENTRY_HPP

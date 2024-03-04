@@ -1,7 +1,3 @@
-//
-// Created by alexs on 2/1/2024.
-//
-
 #include "emulator_renderer.hpp"
 
 #include "audio_manager.hpp"

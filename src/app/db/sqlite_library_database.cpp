@@ -130,6 +130,7 @@ void SqliteLibraryDatabase::match_md5s(std::string source_directory,
 }
 std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
   std::vector<LibEntry> result;
+  return result;
 
   QString queryString = "SELECT * FROM library_entries";
 

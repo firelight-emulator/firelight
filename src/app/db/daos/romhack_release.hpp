@@ -1,9 +1,5 @@
-//
-// Created by alexs on 1/9/2024.
-//
+#pragma once
 
-#ifndef ROMHACK_RELEASE_HPP
-#define ROMHACK_RELEASE_HPP
 #include <string>
 
 struct RomhackRelease {
@@ -15,5 +11,3 @@ struct RomhackRelease {
   std::string md5{};
   int size_bytes{};
 };
-
-#endif // ROMHACK_RELEASE_HPP

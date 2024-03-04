@@ -93,7 +93,7 @@ TEST_F(IPSPatchTest, ConstructorTest) {
 
   file.close();
 
-  firelight::Patching::IPSPatch patch(data);
+  firelight::patching::IPSPatch patch(data);
 
   constexpr int expectedNumRecords = 163;
   ASSERT_EQ(patch.getRecords().size(), expectedNumRecords);
@@ -120,7 +120,7 @@ TEST_F(IPSPatchTest, PatchRomTest) {
 
   file.close();
 
-  const firelight::Patching::IPSPatch patch(patchData);
+  const firelight::patching::IPSPatch patch(patchData);
 
   ASSERT_FALSE(patch.patchRom(romData).empty());
 }

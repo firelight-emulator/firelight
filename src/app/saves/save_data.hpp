@@ -1,9 +1,5 @@
-//
-// Created by alexs on 1/7/2024.
-//
+#pragma once
 
-#ifndef SAVE_DATA_HPP
-#define SAVE_DATA_HPP
 #include <qimage.h>
 #include <vector>
 
@@ -23,6 +19,4 @@ private:
   QImage m_screenshot{};
 };
 
-} // namespace Firelight::Saves
-
-#endif // SAVE_DATA_HPP
+} // namespace firelight::Saves

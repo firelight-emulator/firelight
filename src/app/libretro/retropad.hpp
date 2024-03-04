@@ -7,9 +7,9 @@
 #include "libretro.h"
 #include <cstdint>
 
-namespace libretro {
-class IRetroPad {
+namespace firelight::libretro {
 
+class IRetroPad {
 public:
   enum Button {
     SouthFace = RETRO_DEVICE_ID_JOYPAD_B,
@@ -37,6 +37,7 @@ public:
   virtual int16_t getRightStickXPosition() = 0;
   virtual int16_t getRightStickYPosition() = 0;
 };
-} // namespace libretro
+
+} // namespace firelight::libretro
 
 #endif // IRETROPAD_HPP

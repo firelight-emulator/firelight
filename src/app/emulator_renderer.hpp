@@ -1,24 +1,19 @@
-//
-// Created by alexs on 2/1/2024.
-//
+#pragma once
 
-#ifndef EMULATOR_RENDERER_HPP
-#define EMULATOR_RENDERER_HPP
 #include "emulation_manager.hpp"
 #include "libretro/core.hpp"
 #include "manager_accessor.hpp"
-
 #include <QOpenGLFunctions>
 #include <QQuickFramebufferObject>
 
-class EmulatorRenderer : public QQuickFramebufferObject::Renderer,
-                         public IVideoDataReceiver,
-                         public QOpenGLFunctions,
-                         public firelight::ManagerAccessor {
-protected:
-  void synchronize(QQuickFramebufferObject *fbo) override;
-
+class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,
+                               public firelight::libretro::IVideoDataReceiver,
+                               public QOpenGLFunctions,
+                               public firelight::ManagerAccessor {
 public:
+  EmulatorRenderer();
+  ~EmulatorRenderer() override;
+
   void receive(const void *data, unsigned width, unsigned height,
                size_t pitch) override;
   proc_address_t get_proc_address(const char *sym) override;
@@ -28,13 +23,8 @@ public:
   void save(bool waitForFinish = false);
 
 protected:
+  void synchronize(QQuickFramebufferObject *fbo) override;
   QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
-
-public:
-  EmulatorRenderer();
-  ~EmulatorRenderer() override;
-
-protected:
   void render() override;
 
 private:
@@ -74,5 +64,3 @@ private:
   int frameSkipRatio = 0;
   long numFrames = 0;
 };
-
-#endif // EMULATOR_RENDERER_HPP

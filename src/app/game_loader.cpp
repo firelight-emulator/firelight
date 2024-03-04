@@ -85,11 +85,9 @@ void GameLoader::loadGame(int entryId) {
     auto ext = std::filesystem::path(entry->content_path).extension();
 
     if (ext == ".mod") {
-      FL::Patching::Yay0Codec codec;
+      auto decompressed = patching::Yay0Codec::decompress(patchData.data());
 
-      auto decompressed = codec.decompress(patchData.data());
-
-      FL::Patching::PMStarRodModPatch patch(decompressed);
+      patching::PMStarRodModPatch patch(decompressed);
 
       std::filesystem::path gamePath = romEntry->content_path;
       std::ifstream game(gamePath, std::ios::binary);
@@ -103,7 +101,7 @@ void GameLoader::loadGame(int entryId) {
       gameData = QByteArray(reinterpret_cast<char *>(patchedGame.data()),
                             patchedGame.size());
     } else if (ext == ".ips") {
-      Patching::IPSPatch patch(patchData);
+      patching::IPSPatch patch(patchData);
 
       std::filesystem::path gamePath = romEntry->content_path;
       std::ifstream game(gamePath, std::ios::binary);
@@ -135,4 +133,4 @@ void GameLoader::loadGame(int entryId) {
   emit gameLoaded(entryId, gameData, saveDataBytes,
                   QString::fromStdString(corePath));
 }
-} // namespace Firelight
+} // namespace firelight

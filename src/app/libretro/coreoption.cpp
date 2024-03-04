@@ -1,11 +1,4 @@
-//
-// Created by alexs on 10/14/2023.
-//
-
-// #include <nlohmann/json.hpp>
 #include "coreoption.hpp"
-
-// using nlohmann::json;
 
 namespace libretro {
 CoreOption::CoreOption(retro_core_option_definition definition) {

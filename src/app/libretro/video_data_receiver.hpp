@@ -1,16 +1,12 @@
-//
-// Created by alexs on 12/19/2023.
-//
-
-#ifndef FIRELIGHT_VIDEO_DATA_RECEIVER_HPP
-#define FIRELIGHT_VIDEO_DATA_RECEIVER_HPP
+#pragma once
 
 #include <cstddef>
 typedef void (*proc_address_t)();
 typedef void (*context_reset_func)();
 
-class IVideoDataReceiver {
+namespace firelight::libretro {
 
+class IVideoDataReceiver {
 public:
   virtual ~IVideoDataReceiver() = default;
   virtual void receive(const void *data, unsigned width, unsigned height,
@@ -21,4 +17,4 @@ public:
   virtual void set_system_av_info(retro_system_av_info *info) = 0;
 };
 
-#endif // FIRELIGHT_VIDEO_DATA_RECEIVER_HPP
+} // namespace firelight::libretro

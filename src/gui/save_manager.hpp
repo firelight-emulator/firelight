@@ -1,13 +1,7 @@
-//
-// Created by alexs on 1/7/2024.
-//
+#pragma once
 
-#ifndef SAVE_MANAGER_HPP
-#define SAVE_MANAGER_HPP
 #include "../app/db/daos/lib_entry.hpp"
 #include "../app/saves/save_data.hpp"
-#include <QObject>
-#include <QThreadPool>
 #include <filesystem>
 #include <qfuture.h>
 
@@ -32,6 +26,4 @@ private:
   std::unique_ptr<QThreadPool> m_ioThreadPool = nullptr;
 };
 
-} // namespace Firelight::Saves
-
-#endif // SAVE_MANAGER_HPP
+} // namespace firelight::Saves

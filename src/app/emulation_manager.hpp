@@ -1,18 +1,11 @@
-//
-// Created by alexs on 12/20/2023.
-//
-
-#ifndef FIRELIGHT_EMULATION_MANAGER_HPP
-#define FIRELIGHT_EMULATION_MANAGER_HPP
+#pragma once
 
 #include "../gui/QLibraryManager.hpp"
 #include "libretro/core.hpp"
 #include "manager_accessor.hpp"
-#include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
 #include <QQuickFramebufferObject>
-#include <QSGDynamicTexture>
 
 class EmulationManager : public QQuickFramebufferObject,
                          public firelight::ManagerAccessor {
@@ -99,5 +92,3 @@ private:
   float m_nativeAspectRatio = 0;
   bool running = false;
 };
-
-#endif // FIRELIGHT_EMULATION_MANAGER_HPP

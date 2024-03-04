@@ -1,15 +1,9 @@
-//
-// Created by alexs on 12/20/2023.
-//
-
 #include "emulation_manager.hpp"
+#include "emulator_renderer.hpp"
 #include <QGuiApplication>
 #include <QOpenGLPaintDevice>
-#include <utility>
-
-#include "emulator_renderer.hpp"
-
 #include <spdlog/spdlog.h>
+#include <utility>
 
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 

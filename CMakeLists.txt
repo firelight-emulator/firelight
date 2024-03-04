@@ -47,8 +47,6 @@ add_library(firelight_lib
         src/app/libretro/coreoption.hpp
         src/app/libretro/game.cpp
         src/app/libretro/game.hpp
-        src/app/saves/save_manager.cpp
-        src/app/saves/save_manager.hpp
         src/app/patching/pm_star_rod_mod_patch.cpp
         src/app/patching/yay_0_codec.cpp
         src/app/patching/yay_0_codec.hpp
@@ -114,7 +112,7 @@ add_library(firelight_lib
         src/gui/playlist_item_model.hpp
 )
 
-target_include_directories(firelight_lib PRIVATE includes ${SDL2_INCLUDE_DIRS}
+target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
 target_link_libraries(firelight_lib mingw32 SDL2 opengl32 ssl crypto z ${SQLite3_LIBRARIES}
         Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D Qt6::Sql spdlog::spdlog)
@@ -154,7 +152,7 @@ qt6_add_qml_module(firelight
         ${QML_FILES}
 )
 
-target_include_directories(firelight PRIVATE includes ${SDL2_INCLUDE_DIRS}
+target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
 target_link_libraries(firelight PRIVATE firelight_lib)
 
@@ -238,10 +236,6 @@ find_program(MINGW_PATH gcc)
 get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)
 set(SHARED_LIB_DIR "${MINGW_DIR}")
 message("Shared Library Directory: ${SHARED_LIB_DIR}")
-
-#if (NOT DEFINED ENV{SHARED_LIB_DIR})
-#    set(ENV{SHARED_LIB_DIR} "C:/msys64/mingw64/bin")
-#endif ()
 
 install(
         PROGRAMS

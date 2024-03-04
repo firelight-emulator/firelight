@@ -1,9 +1,5 @@
-//
-// Created by alexs on 1/9/2024.
-//
+#pragma once
 
-#ifndef ROMHACK_HPP
-#define ROMHACK_HPP
 #include <string>
 
 struct Romhack {
@@ -11,5 +7,3 @@ struct Romhack {
   std::string name{};
   int rom{};
 };
-
-#endif // ROMHACK_HPP

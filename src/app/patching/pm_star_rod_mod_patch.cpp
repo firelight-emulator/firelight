@@ -6,7 +6,7 @@
 #include <cstring>
 #include <fstream>
 
-namespace FL::Patching {
+namespace firelight::patching {
 
 PMStarRodModPatch::PMStarRodModPatch(const std::vector<uint8_t> &data) {
   auto cursor = data.data();

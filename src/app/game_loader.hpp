@@ -1,11 +1,6 @@
-//
-// Created by alexs on 1/10/2024.
-//
+#pragma once
 
-#ifndef GAME_LOADER_HPP
-#define GAME_LOADER_HPP
 #include "manager_accessor.hpp"
-
 #include <QObject>
 
 namespace firelight {
@@ -24,6 +19,4 @@ signals:
   void gameLoadFailedContentMissing(int entryId);
 };
 
-} // namespace Firelight
-
-#endif // GAME_LOADER_HPP
+} // namespace firelight

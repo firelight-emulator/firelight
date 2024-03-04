@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <cstring>
 
-namespace FL::Patching {
+namespace firelight::patching {
 
 struct Header {
   uint32_t magic; // should just be ASCII 'Yay0'
@@ -17,11 +17,11 @@ struct Header {
 
 // algorithm from
 // https://github.com/pmret/papermario/blob/main/tools/splat/util/n64/Yay0decompress.c
-std::vector<uint8_t> Yay0Codec::decompress(uint8_t *data) {
+std::vector<uint8_t> Yay0Codec::decompress(const uint8_t *data) {
 
   // Fun little test that checks if the system is big or little endian.
   unsigned int num = 1;
-  char *test = (char *)&num;
+  const char *test = reinterpret_cast<char *>(&num);
 
   bool sysBigEndian = (*test != 1);
   // TODO: really just need to check
@@ -32,9 +32,8 @@ std::vector<uint8_t> Yay0Codec::decompress(uint8_t *data) {
   Header header{};
 
   header.magic = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-  header.uncompressedLength = ((uint8_t)data[4]) << 24 |
-                              ((uint8_t)data[5]) << 16 |
-                              ((uint8_t)data[6]) << 8 | ((uint8_t)data[7]);
+  header.uncompressedLength =
+      data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
   header.opsAddr = data[8] << 24 | data[9] << 16 | data[10] << 8 | data[11];
   header.dataAddr = data[12] << 24 | data[13] << 16 | data[14] << 8 | data[15];
 
@@ -43,19 +42,18 @@ std::vector<uint8_t> Yay0Codec::decompress(uint8_t *data) {
   printf("opPtr: %0x\n", header.opsAddr);
   printf("dataPtr: %0x\n", header.dataAddr);
 
-  auto dest = new uint8_t[header.uncompressedLength];
+  const auto dest = new uint8_t[header.uncompressedLength];
   auto dstPtr = dest;
 
-  auto srcPtr = data;
+  const auto srcPtr = data;
 
   uint8_t byte = 0, mask = 0;
-  uint8_t *ctrl, *ops, *uncData;
-  uint16_t copy, op;
+  uint16_t copy;
   uint32_t written = 0;
 
-  ctrl = srcPtr + sizeof(header);
-  ops = srcPtr + header.opsAddr;
-  uncData = srcPtr + header.dataAddr;
+  const uint8_t *ctrl = srcPtr + sizeof(header);
+  const uint8_t *ops = srcPtr + header.opsAddr;
+  const uint8_t *uncData = srcPtr + header.dataAddr;
 
   while (written < header.uncompressedLength) {
     if ((mask >>= 1) == 0) {
@@ -67,10 +65,11 @@ std::vector<uint8_t> Yay0Codec::decompress(uint8_t *data) {
       *dstPtr++ = *uncData++;
       written++;
     } else {
-      op = dataBigEndian ? (ops[0] << 8) | ops[1] : (ops[1] << 8) | ops[0];
+      const uint16_t op =
+          dataBigEndian ? ops[0] << 8 | ops[1] : ops[1] << 8 | ops[0];
       ops += 2;
 
-      written += copy = (op >> 12) ? (2 + (op >> 12)) : (18 + *uncData++);
+      written += copy = op >> 12 ? 2 + (op >> 12) : 18 + *uncData++;
 
       while (copy--) {
         *dstPtr = dstPtr[-(op & 0xfff) - 1];
@@ -84,4 +83,4 @@ std::vector<uint8_t> Yay0Codec::decompress(uint8_t *data) {
 
   return result;
 }
-} // namespace FL::Patching
+} // namespace firelight::patching

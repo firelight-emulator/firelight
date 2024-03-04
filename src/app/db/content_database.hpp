@@ -1,9 +1,4 @@
-//
-// Created by alexs on 12/22/2023.
-//
-
-#ifndef FIRELIGHT_CONTENT_DATABASE_HPP
-#define FIRELIGHT_CONTENT_DATABASE_HPP
+#pragma once
 
 #include "daos/game.hpp"
 #include "daos/platform.hpp"
@@ -21,5 +16,3 @@ public:
   virtual std::optional<Romhack> getRomhackByMd5(const std::string &md5) = 0;
   virtual std::optional<Platform> getPlatformByExtension(std::string ext) = 0;
 };
-
-#endif // FIRELIGHT_CONTENT_DATABASE_HPP

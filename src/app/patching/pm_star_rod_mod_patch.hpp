@@ -1,16 +1,10 @@
-//
-// Created by alexs on 11/25/2023.
-//
-
-#ifndef FIRELIGHT_PM_STAR_ROD_MOD_PATCH_HPP
-#define FIRELIGHT_PM_STAR_ROD_MOD_PATCH_HPP
+#pragma once
 
 #include "rom_patch.hpp"
-
 #include <cstdint>
 #include <vector>
 
-namespace FL::Patching {
+namespace firelight::patching {
 struct PMStarRodPatchRecord {
   uint32_t offset;
   std::vector<uint8_t> data;
@@ -26,6 +20,4 @@ public:
 private:
   std::vector<PMStarRodPatchRecord> records;
 };
-} // namespace FL::Patching
-
-#endif // FIRELIGHT_PM_STAR_ROD_MOD_PATCH_HPP
+} // namespace firelight::patching

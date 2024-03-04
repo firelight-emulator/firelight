@@ -33,7 +33,15 @@ public:
                                       std::string contentPath) = 0;
   virtual std::vector<LibEntry> getMatching(Filter filter) = 0;
 
+  /**
+   * @brief Constructs a new Playlist.
+   *
+   * @param playlist The playlist object to use when creating the playlist.
+   *
+   * @note The playlist object will be updated with the new playlist's ID.
+   */
   virtual bool createPlaylist(Playlist &playlist) = 0;
+
   virtual bool deletePlaylist(int playlistId) = 0;
   virtual bool addEntryToPlaylist(int playlistId, int entryId) = 0;
   virtual bool tableExists(const std::string &tableName) = 0;

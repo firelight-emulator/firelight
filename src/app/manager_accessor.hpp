@@ -1,9 +1,4 @@
-//
-// Created by alexs on 1/7/2024.
-//
-
-#ifndef MANAGER_ACCESSOR_HPP
-#define MANAGER_ACCESSOR_HPP
+#pragma once
 
 #include "../gui/QLibraryManager.hpp"
 #include "../gui/save_manager.hpp"
@@ -11,10 +6,6 @@
 #include "input/controller_manager.hpp"
 
 namespace firelight {
-
-namespace Input {
-class ControllerManager;
-}
 
 class ManagerAccessor {
 public:
@@ -40,5 +31,3 @@ private:
 };
 
 } // namespace firelight
-
-#endif // MANAGER_ACCESSOR_HPP

@@ -1,9 +1,4 @@
-//
-// Created by alexs on 12/22/2023.
-//
-
-#ifndef FIRELIGHT_SQLITE_CONTENT_DATABASE_HPP
-#define FIRELIGHT_SQLITE_CONTENT_DATABASE_HPP
+#pragma once
 
 #include "content_database.hpp"
 #include <filesystem>
@@ -28,5 +23,3 @@ private:
   std::filesystem::path databaseFile;
   sqlite3 *database = nullptr;
 };
-
-#endif // FIRELIGHT_SQLITE_CONTENT_DATABASE_HPP

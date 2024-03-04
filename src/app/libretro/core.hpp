@@ -1,9 +1,4 @@
-//
-// Created by alexs on 10/12/2023.
-//
-
-#ifndef FIRELIGHT_CORE_HPP
-#define FIRELIGHT_CORE_HPP
+#pragma once
 
 #include "SDL2/SDL.h"
 #include "coreoption.hpp"
@@ -13,7 +8,6 @@
 #include "video_data_receiver.hpp"
 #include <iostream>
 #include <mutex>
-#include <queue>
 #include <vector>
 
 #include "audio_data_receiver.hpp"
@@ -48,9 +42,9 @@ public:
 
   virtual ~Core();
 
-  void set_video_receiver(IVideoDataReceiver *receiver);
-  void setRetropadProvider(IRetropadProvider *provider);
-  IRetropadProvider *getRetropadProvider();
+  void set_video_receiver(firelight::libretro::IVideoDataReceiver *receiver);
+  void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
+  firelight::libretro::IRetropadProvider *getRetropadProvider();
 
   void set_audio_receiver(CoreAudioDataReceiver *receiver);
 
@@ -77,10 +71,10 @@ public:
   [[nodiscard]] std::vector<char> getMemoryData(MemoryType memType) const;
 
   void writeMemoryData(MemoryType memType, const std::vector<char> &data);
-  IVideoDataReceiver *videoReceiver;
+  firelight::libretro::IVideoDataReceiver *videoReceiver;
 
 private:
-  IRetropadProvider *m_retropadProvider;
+  firelight::libretro::IRetropadProvider *m_retropadProvider;
   SDL_AudioDeviceID audioDevice;
   CoreAudioDataReceiver *audioReceiver;
 
@@ -193,5 +187,3 @@ private:
 };
 
 } // namespace libretro
-
-#endif // FIRELIGHT_CORE_HPP

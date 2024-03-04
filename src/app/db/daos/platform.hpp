@@ -1,12 +1,5 @@
-//
-// Created by alexs on 12/29/2023.
-//
-
-#ifndef PLATFORM_HPP
-#define PLATFORM_HPP
+#pragma once
 
 struct Platform {
   int id{};
-
 };
-#endif // PLATFORM_HPP
