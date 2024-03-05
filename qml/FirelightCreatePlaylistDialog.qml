@@ -62,6 +62,7 @@ Dialog {
 
     onAboutToShow: function () {
         playlistNameInput.clear()
+        playlistNameInput.forceActiveFocus(Qt.PopupFocusReason)
     }
 
     footer: DialogButtonBox {

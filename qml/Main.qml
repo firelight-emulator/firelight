@@ -984,31 +984,124 @@ ApplicationWindow {
             contentItem: Item {
                 TabBar {
                     id: tabBar
-                    width: parent.width
-                    height: 48
+                    width: 500
+                    // height: 48
                     anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
+                    anchors.horizontalCenter: parent.horizontalCenter
                     currentIndex: mainMenu.index
 
+                    background: Item {
+                    }
+
                     TabButton {
-                        text: "Home"
+                        id: homeButton
+                        hoverEnabled: true
+                        contentItem: Text {
+                            // text: "Home"
+                            text: "\ue88a"
+                            color: (homeButton.hovered || homeButton.checked) ? "white" : "#b3b3b3"
+                            font.pixelSize: 28
+                            // font.family: Constants.strongFontFamily
+                            font.family: Constants.symbolFontFamily
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                        background: Item {
+                        }
+
+                        ToolTip.visible: homeButton.hovered
+                        ToolTip.text: "Home"
+                        ToolTip.delay: 400
+                        ToolTip.timeout: 5000
                         // icon: "\uf015"
                     }
                     TabButton {
-                        text: "Explore"
+                        id: exploreButton
+                        hoverEnabled: true
+                        contentItem: Text {
+                            // text: "Explore"
+                            text: "\ue8d0"
+                            color: (exploreButton.hovered || exploreButton.checked) ? "white" : "#b3b3b3"
+                            font.pixelSize: 28
+                            // font.family: Constants.strongFontFamily
+                            font.family: Constants.symbolFontFamily
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                        background: Item {
+                        }
+
+                        ToolTip.visible: exploreButton.hovered
+                        ToolTip.text: "Explore"
+                        ToolTip.delay: 400
+                        ToolTip.timeout: 5000
+
                         // icon: "\uf002"
                     }
                     TabButton {
-                        text: "Library"
+                        id: libButton
+                        hoverEnabled: true
+                        contentItem: Text {
+                            // text: "Library"
+                            text: "\uf53e"
+                            color: (libButton.hovered || libButton.checked) ? "white" : "#b3b3b3"
+                            font.pixelSize: 28
+                            // font.family: Constants.strongFontFamily
+                            font.family: Constants.symbolFontFamily
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                        background: Item {
+                        }
+
+                        ToolTip.visible: libButton.hovered
+                        ToolTip.text: "Library"
+                        ToolTip.delay: 400
+                        ToolTip.timeout: 5000
                         // icon: "\uf02d"
                     }
                     TabButton {
-                        text: "Controllers"
+                        id: controllerButton
+                        hoverEnabled: true
+                        contentItem: Text {
+                            // text: "Controllers"
+                            text: "\uf135"
+                            color: (controllerButton.hovered || controllerButton.checked) ? "white" : "#b3b3b3"
+                            font.pixelSize: 28
+                            // font.family: Constants.strongFontFamily
+                            font.family: Constants.symbolFontFamily
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                        background: Item {
+                        }
+
+                        ToolTip.visible: controllerButton.hovered
+                        ToolTip.text: "Controllers"
+                        ToolTip.delay: 400
+                        ToolTip.timeout: 5000
                         // icon: "\uf11b"
                     }
                     TabButton {
-                        text: "Settings"
+                        id: settingsButton
+                        hoverEnabled: true
+                        contentItem: Text {
+                            // text: "Settings"
+                            text: "\ue8b8"
+                            color: (settingsButton.hovered || settingsButton.checked) ? "white" : "#b3b3b3"
+                            font.pixelSize: 28
+                            // font.family: Constants.strongFontFamily
+                            font.family: Constants.symbolFontFamily
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                        background: Item {
+                        }
+
+                        ToolTip.visible: settingsButton.hovered
+                        ToolTip.text: "Settings"
+                        ToolTip.delay: 400
+                        ToolTip.timeout: 5000
                         // icon: "\uf013"
                     }
 

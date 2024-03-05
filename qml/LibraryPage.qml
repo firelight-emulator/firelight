@@ -69,17 +69,17 @@ Rectangle {
                     implicitHeight: model.count * 50
                     model: ListModel {
                         ListElement {
-                            name: "All Games"
+                            name: "All games"
                             icon: "\uf53e"
                             playlistId: -1
                         }
                         ListElement {
-                            name: "Recently Played"
+                            name: "Recently played"
                             icon: "\ue889"
                             playlistId: -1
                         }
                         ListElement {
-                            name: "Newly Added"
+                            name: "Newly added"
                             icon: "\ue838"
                             playlistId: -1
                         }
@@ -117,97 +117,134 @@ Rectangle {
                 anchors.top: content.bottom
                 anchors.bottom: parent.bottom
 
+                RowLayout {
+                    id: playlistHeader
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    height: 40
+
+                    Text {
+                        text: "Playlists"
+                        Layout.leftMargin: 8
+                        font.pointSize: 12
+                        font.family: Constants.strongFontFamily
+                        color: "#b3b3b3"
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                    }
+
+                    Button {
+                        id: createPlaylistButton
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        hoverEnabled: true
+
+                        background: Rectangle {
+                            color: createPlaylistButton.pressed ? "black" : (createPlaylistButton.hovered ? "#232323" : "transparent")
+                            radius: 50
+                        }
+
+                        implicitWidth: 32
+                        implicitHeight: 32
+
+                        contentItem: Text {
+                            text: "\ue145"
+                            font.pixelSize: 24
+                            font.family: Constants.symbolFontFamily
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            color: createPlaylistButton.pressed ? "#3e3e3e" : "#b3b3b3"
+                        }
+
+                        onClicked: {
+                            createPlaylistDialog.open()
+                        }
+
+                        ToolTip.visible: createPlaylistButton.hovered
+                        ToolTip.text: "Create new playlist"
+                        ToolTip.delay: 400
+                        ToolTip.timeout: 5000
+                    }
+                }
+
                 ListView {
                     id: categoryList
 
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
-                    anchors.fill: parent
+                    anchors.left: parent.left
+                    anchors.top: playlistHeader.bottom
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
                     model: playlist_model
 
-                    delegate: FirelightMenuItem {
-                        labelText: model.display_name
-                        labelIcon: ""
-                        height: 64
-                        width: categoryList.width
+                    delegate: Button {
+                        id: playlistItemButton
+                        background: Rectangle {
+                            color: playlistItemButton.checked ?
+                                (playlistItemMouse.pressed ?
+                                    "#2b2b2b"
+                                    : ((playlistItemMouse.containsMouse ?
+                                        "#393939"
+                                        : "#232323")))
+                                : (playlistItemMouse.pressed ?
+                                    "#020202"
+                                    : (playlistItemMouse.containsMouse ?
+                                        "#1a1a1a"
+                                        : "transparent"))
+                            radius: 4
+                        }
+
+                        ButtonGroup.group: buttonGroup
+
+                        width: ListView.view.width
+
+                        padding: 6
 
                         onClicked: function () {
                             library_short_model.filterOnPlaylistId(model.id)
                             library_short_model.sort(0)
                         }
 
-                        onRightClicked: function () {
-                            playlistRightClickMenu.playlistName = model.display_name
-                            playlistRightClickMenu.playlistId = model.id
-                            playlistRightClickMenu.popup()
+                        contentItem: Text {
+                            text: model.display_name
+                            font.pointSize: 12
+                            font.family: Constants.regularFontFamily
+                            color: "#ffffff"
                         }
 
-                        ButtonGroup.group: buttonGroup
-                    }
-                }
-
-                Button {
-                    id: testItem
-                    width: 160
-                    height: 48
-
-                    background: Rectangle {
-                        color: Constants.colorTestCardActive
-                        radius: 50
-                    }
-
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-
-                    Behavior on scale {
-                        NumberAnimation {
-                            duration: 100
-                            easing.type: Easing.OutBounce
+                        MouseArea {
+                            id: playlistItemMouse
+                            anchors.fill: parent
+                            acceptedButtons: Qt.RightButton
+                            hoverEnabled: true
+                            onClicked: function (event) {
+                                playlistRightClickMenu.playlistName = model.display_name
+                                playlistRightClickMenu.playlistId = model.id
+                                playlistRightClickMenu.popup()
+                            }
+                            cursorShape: Qt.PointingHandCursor
                         }
                     }
 
-                    onClicked: {
-                        createPlaylistDialog.open()
-                    }
-
-                    scale: pressed ? 0.93 : 1
-
-                    Text {
-                        id: buttonIcon
-                        text: "\ue03b"
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        leftPadding: 12
-                        rightPadding: 12
-                        // width: 24
-
-                        font.family: Constants.symbolFontFamily
-                        font.pixelSize: 24
-                        color: Constants.colorTestTextActive
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Text {
-                        id: buttonText
-                        text: "New Playlist"
-                        anchors.left: buttonIcon.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.right: parent.right
-                        font.pointSize: 12
-                        font.family: Constants.regularFontFamily
-                        color: Constants.colorTestTextActive
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    HoverHandler {
-                        id: mouse
-                        acceptedDevices: PointerDevice.Mouse
-                        cursorShape: Qt.PointingHandCursor
-                    }
-
+                    // delegate: FirelightMenuItem {
+                    //     labelText: model.display_name
+                    //     labelIcon: ""
+                    //     height: 64
+                    //     width: categoryList.width
+                    //
+                    //     onClicked: function () {
+                    //         library_short_model.filterOnPlaylistId(model.id)
+                    //         library_short_model.sort(0)
+                    //     }
+                    //
+                    //     onRightClicked: function () {
+                    //         playlistRightClickMenu.playlistName = model.display_name
+                    //         playlistRightClickMenu.playlistId = model.id
+                    //         playlistRightClickMenu.popup()
+                    //     }
+                    //
+                    //     ButtonGroup.group: buttonGroup
+                    // }
                 }
 
             }
@@ -226,28 +263,28 @@ Rectangle {
                 anchors.fill: parent
                 clip: true
 
-                section.criteria: ViewSection.FirstCharacter
-                section.property: "display_name"
-                section.delegate: Item {
-                    width: libraryList.width
-                    height: 42
-
-                    Rectangle {
-                        width: libraryList.width
-                        height: 30
-                        anchors.centerIn: parent
-                        color: Constants.colorTestBackground
-                        Text {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            text: section
-                            color: Constants.colorTestText
-                            font.pointSize: 12
-                            font.family: fontFamilyName
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                }
+                // section.criteria: ViewSection.FirstCharacter
+                // section.property: "display_name"
+                // section.delegate: Item {
+                //     width: libraryList.width
+                //     height: 42
+                //
+                //     Rectangle {
+                //         width: libraryList.width
+                //         height: 30
+                //         anchors.centerIn: parent
+                //         color: Constants.colorTestBackground
+                //         Text {
+                //             anchors.fill: parent
+                //             anchors.leftMargin: 12
+                //             text: section
+                //             color: Constants.colorTestText
+                //             font.pointSize: 12
+                //             font.family: fontFamilyName
+                //             verticalAlignment: Text.AlignVCenter
+                //         }
+                //     }
+                // }
                 ScrollBar.vertical: ScrollBar {
                     width: 15
                     interactive: true
@@ -257,7 +294,59 @@ Rectangle {
 
                 model: library_short_model
                 boundsBehavior: Flickable.StopAtBounds
-                delegate: gameListItem
+                // delegate: gameListItem
+                delegate: Button {
+                    id: libItemButton
+                    background: Rectangle {
+                        // color: libItemButton.checked ?
+                        //     (libItemMouse.pressed ?
+                        //         "#2b2b2b"
+                        //         : ((libItemMouse.containsMouse ?
+                        //             "#393939"
+                        //             : "#232323")))
+                        //     : (libItemMouse.pressed ?
+                        //         "#020202"
+                        //         : (libItemMouse.containsMouse ?
+                        //             "#1a1a1a"
+                        //             : "transparent"))
+                        color: "transparent"
+                        radius: 4
+                    }
+
+                    autoExclusive: true
+
+                    // ButtonGroup.group: buttonGroup
+
+                    width: ListView.view.width
+
+                    padding: 6
+
+                    onClicked: function () {
+                        entryClicked(model.id)
+                    }
+
+                    contentItem: Text {
+                        text: model.display_name
+                        font.pointSize: 12
+                        font.family: Constants.regularFontFamily
+                        color: "#ffffff"
+                    }
+
+                    // MouseArea {
+                    //     id: libItemMouse
+                    //     anchors.fill: parent
+                    //     acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    //     hoverEnabled: true
+                    //     onClicked: function (event) {
+                    //         if (event.button === Qt.LeftButton) {
+                    //             libItemButton.toggle()
+                    //         } else if (event.button === Qt.RightButton) {
+                    //             libraryEntryRightClickMenu.popup()
+                    //         }
+                    //     }
+                    //     cursorShape: Qt.PointingHandCursor
+                    // }
+                }
                 // preferredHighlightBegin: height / 3
                 // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
             }

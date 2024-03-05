@@ -92,6 +92,10 @@ Dialog {
         }
     }
 
+    onAboutToShow: function () {
+        playlistNameInput.forceActiveFocus(Qt.PopupFocusReason)
+    }
+
     // onAccepted: {
     //     appRoot.state = "notPlayingGame"
     //     // closeGameAnimation.startWith(outPage, inPage)
