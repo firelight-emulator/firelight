@@ -27,7 +27,7 @@ Button {
 
             font.family: Constants.symbolFontFamily
             font.pixelSize: 30
-            color: "#b3b3b3"
+            color: (mouse.containsMouse || control.checked) ? "white" : "#b3b3b3"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
@@ -41,24 +41,25 @@ Button {
             font.pointSize: 11
             font.family: Constants.strongFontFamily
             font.bold: true
-            color: "#b3b3b3"
+            color: (mouse.containsMouse || control.checked) ? "white" : "#b3b3b3"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
         }
     }
 
     background: Rectangle {
-        color: control.checked ?
-            (mouse.pressed ?
-                "#2b2b2b"
-                : ((mouse.containsMouse ?
-                    "#393939"
-                    : "#232323")))
-            : (mouse.pressed ?
-                "#000000"
-                : (mouse.containsMouse ?
-                    "#1a1a1a"
-                    : "transparent"))
+        // color: control.checked ?
+        //     (mouse.pressed ?
+        //         "#2b2b2b"
+        //         : ((mouse.containsMouse ?
+        //             "#393939"
+        //             : "#232323")))
+        //     : (mouse.pressed ?
+        //         "#000000"
+        //         : (mouse.containsMouse ?
+        //             "#1a1a1a"
+        //             : "transparent"))
+        color: "transparent"
         radius: 6
     }
 
