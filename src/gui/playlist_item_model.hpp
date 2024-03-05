@@ -6,6 +6,12 @@
 namespace firelight::gui {
 
 class PlaylistItemModel final : public QAbstractListModel {
+public:
+  bool setData(const QModelIndex &index, const QVariant &value,
+               int role) override;
+  [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+private:
   Q_OBJECT
 
 public:

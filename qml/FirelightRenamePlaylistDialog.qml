@@ -56,7 +56,6 @@ Dialog {
             }
 
             onAccepted: function () {
-                console.log("text: ", text)
                 control.accept()
             }
         }

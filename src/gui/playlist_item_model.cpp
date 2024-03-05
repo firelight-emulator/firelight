@@ -2,6 +2,32 @@
 
 namespace firelight::gui {
 
+bool PlaylistItemModel::setData(const QModelIndex &index, const QVariant &value,
+                                int role) {
+  if (index.row() < 0 || index.row() >= m_items.size())
+    return false;
+
+  Item &item = m_items[index.row()];
+
+  switch (role) {
+  case PlaylistId:
+    return false;
+  case DisplayName:
+    item.displayName = value.toString();
+    break;
+  default:
+    return false;
+  }
+
+  emit dataChanged(index, index, {role});
+
+  return true;
+}
+
+Qt::ItemFlags PlaylistItemModel::flags(const QModelIndex &index) const {
+  return QAbstractListModel::flags(index) | Qt::ItemIsEditable;
+}
+
 PlaylistItemModel::PlaylistItemModel(db::ILibraryDatabase *libraryDatabase)
     : m_libraryDatabase(libraryDatabase) {
   const auto entries = m_libraryDatabase->getAllPlaylists();
@@ -72,9 +98,7 @@ void PlaylistItemModel::renamePlaylist(const int playlistId,
 
   for (int i = 0; i < m_items.size(); ++i) {
     if (m_items.at(i).playlistId == playlistId) {
-      QMap<int, QVariant> data;
-      data.insert(DisplayName, newName);
-      setItemData(createIndex(i, 0), data);
+      setData(createIndex(i, 0), newName, DisplayName);
       break;
     }
   }
