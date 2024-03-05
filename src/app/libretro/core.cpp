@@ -176,14 +176,14 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
 
     renderCallback->get_proc_address =
         [](const char *sym) -> retro_proc_address_t {
-      return currentCore->videoReceiver->get_proc_address(sym);
+      return currentCore->videoReceiver->getProcAddress(sym);
     };
 
     renderCallback->get_current_framebuffer = [] {
-      return currentCore->videoReceiver->get_current_framebuffer_id();
+      return currentCore->videoReceiver->getCurrentFramebufferId();
     };
 
-    currentCore->videoReceiver->set_reset_context_func(
+    currentCore->videoReceiver->setResetContextFunc(
         renderCallback->context_reset);
 
     return true;
@@ -381,7 +381,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
     this->environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
-    videoReceiver->set_system_av_info(
+    videoReceiver->setSystemAVInfo(
         static_cast<retro_system_av_info *>(data));
     //    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
     return true;
@@ -974,7 +974,7 @@ bool Core::loadGame(Game *game) {
 
   this->symRetroGetSystemInfo(this->retroSystemInfo);
   this->symRetroGetSystemAVInfo(this->retroSystemAVInfo);
-  videoReceiver->set_system_av_info(this->retroSystemAVInfo);
+  videoReceiver->setSystemAVInfo(this->retroSystemAVInfo);
   //  this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
   printf("New Audio Sample Rate: %f \n", retroSystemAVInfo->timing.sample_rate);
   audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
@@ -1042,7 +1042,7 @@ firelight::libretro::IRetropadProvider *Core::getRetropadProvider() {
   return m_retropadProvider;
 }
 
-void Core::set_audio_receiver(CoreAudioDataReceiver *receiver) {
+void Core::set_audio_receiver(IAudioDataReceiver *receiver) {
   audioReceiver = receiver;
 }
 

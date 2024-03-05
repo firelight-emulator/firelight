@@ -109,6 +109,37 @@ TEST_F(SqliteLibraryDatabaseTest, CreateLibraryEntryFailsOnDuplicate) {
   ASSERT_EQ(db.getAllLibraryEntries().size(), 1);
 }
 
+TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntry) {
+  SqliteLibraryDatabase db(temp_file_path.string());
+  LibraryEntry entry{.id = -1,
+                     .displayName = "Test Playlist",
+                     .contentMd5 = "1234567890",
+                     .platformId = 1,
+                     .type = LibraryEntry::EntryType::ROM,
+                     .sourceDirectory = "source",
+                     .contentPath = "content"};
+
+  ASSERT_TRUE(db.createLibraryEntry(entry));
+  ASSERT_EQ(db.getAllLibraryEntries().size(), 1);
+
+  auto result = db.getLibraryEntry(entry.id);
+  ASSERT_TRUE(result.has_value());
+  ASSERT_EQ(result->id, entry.id);
+  ASSERT_EQ(result->displayName, entry.displayName);
+  ASSERT_EQ(result->contentMd5, entry.contentMd5);
+  ASSERT_EQ(result->platformId, entry.platformId);
+  ASSERT_EQ(result->type, entry.type);
+  ASSERT_EQ(result->sourceDirectory, entry.sourceDirectory);
+  ASSERT_EQ(result->contentPath, entry.contentPath);
+}
+
+TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntryWhenDoesntExist) {
+  SqliteLibraryDatabase db(temp_file_path.string());
+
+  ASSERT_TRUE(db.getAllLibraryEntries().empty());
+  ASSERT_FALSE(db.getLibraryEntry(1).has_value());
+}
+
 TEST_F(SqliteLibraryDatabaseTest, AddEntryToPlaylist) {
   SqliteLibraryDatabase db(temp_file_path.string());
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};

@@ -1,13 +1,8 @@
-//
-// Created by alexs on 1/6/2024.
-//
+#pragma once
 
-#ifndef CONTROLLER_MANAGER_HPP
-#define CONTROLLER_MANAGER_HPP
 #include "../libretro/retropad_provider.hpp"
 #include "controller.hpp"
 #include "keyboard_controller.hpp"
-
 #include <QAbstractListModel>
 #include <QObject>
 #include <SDL_events.h>
@@ -47,6 +42,4 @@ private:
   void openControllerWithDeviceIndex(int32_t t_deviceIndex);
 };
 
-} // namespace Firelight::Input
-
-#endif // CONTROLLER_MANAGER_HPP
+} // namespace firelight::Input

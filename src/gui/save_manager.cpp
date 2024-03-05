@@ -3,10 +3,12 @@
 //
 
 #include "save_manager.hpp"
+
+#include "../app/db/daos/library_entry.hpp"
+
 #include <fstream>
 #include <qfuture.h>
 #include <qtconcurrentrun.h>
-#include <spdlog/spdlog.h>
 
 namespace firelight::Saves {
 
@@ -16,11 +18,11 @@ SaveManager::SaveManager(std::filesystem::path saveDir)
   m_ioThreadPool->setMaxThreadCount(4);
 }
 
-QFuture<bool> SaveManager::writeSaveDataForEntry(LibEntry &entry,
+QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
                                                  SaveData &saveData) const {
   return QtConcurrent::run([this, entry, saveData] {
-    auto md5 = entry.md5;
-    auto bytes = saveData.getSaveRamData();
+    const auto md5 = entry.contentMd5;
+    const auto bytes = saveData.getSaveRamData();
     // auto image = saveData.getImage();
     // spdlog::info("md5: {}, bytesLength: {}, imageWidth: {}, imageHeight: {}",
     //              md5, bytes.size(), image.width(), image.height());
@@ -66,8 +68,8 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(LibEntry &entry,
 }
 
 std::optional<SaveData>
-SaveManager::readSaveDataForEntry(LibEntry &entry) const {
-  const auto directory = m_saveDir / entry.md5;
+SaveManager::readSaveDataForEntry(db::LibraryEntry &entry) const {
+  const auto directory = m_saveDir / entry.contentMd5;
   if (!exists(directory)) {
     return {};
   }
@@ -90,4 +92,4 @@ SaveManager::readSaveDataForEntry(LibEntry &entry) const {
   return {saveData};
 }
 
-} // namespace Firelight::Saves
+} // namespace firelight::Saves

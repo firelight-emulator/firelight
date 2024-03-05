@@ -66,4 +66,18 @@ void PlaylistItemModel::removePlaylist(const int playlistId) {
   }
 }
 
+void PlaylistItemModel::renamePlaylist(const int playlistId,
+                                       const QString &newName) {
+  m_libraryDatabase->renamePlaylist(playlistId, newName.toStdString());
+
+  for (int i = 0; i < m_items.size(); ++i) {
+    if (m_items.at(i).playlistId == playlistId) {
+      QMap<int, QVariant> data;
+      data.insert(DisplayName, newName);
+      setItemData(createIndex(i, 0), data);
+      break;
+    }
+  }
+}
+
 } // namespace firelight::gui

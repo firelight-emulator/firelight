@@ -326,6 +326,14 @@ Rectangle {
         }
     }
 
+    FirelightRenamePlaylistDialog {
+        id: renamePlaylistDialog
+        visible: false
+        onAccepted: {
+            playlist_model.renamePlaylist(renamePlaylistDialog.playlistId, renamePlaylistDialog.text)
+        }
+    }
+
     FirelightDialog {
         id: deletePlaylistDialog
 
@@ -355,6 +363,12 @@ Rectangle {
         }
 
         MenuItem {
+            onTriggered: {
+                renamePlaylistDialog.text = playlistRightClickMenu.playlistName
+                renamePlaylistDialog.playlistId = playlistRightClickMenu.playlistId
+                renamePlaylistDialog.open()
+            }
+
             background: Rectangle {
                 implicitWidth: 200
                 implicitHeight: 40

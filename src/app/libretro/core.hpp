@@ -46,7 +46,7 @@ public:
   void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
   firelight::libretro::IRetropadProvider *getRetropadProvider();
 
-  void set_audio_receiver(CoreAudioDataReceiver *receiver);
+  void set_audio_receiver(IAudioDataReceiver *receiver);
 
   bool handleEnvironmentCall(unsigned cmd, void *data);
 
@@ -76,7 +76,7 @@ public:
 private:
   firelight::libretro::IRetropadProvider *m_retropadProvider;
   SDL_AudioDeviceID audioDevice;
-  CoreAudioDataReceiver *audioReceiver;
+  IAudioDataReceiver *audioReceiver;
 
   vector<string> environmentCalls;
 

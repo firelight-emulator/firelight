@@ -5,7 +5,6 @@
 #include "app/game_loader.hpp"
 #include "src/gui/QLibraryManager.hpp"
 #include <QGuiApplication>
-#include <QOpenGLFunctions>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>

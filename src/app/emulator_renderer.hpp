@@ -16,10 +16,10 @@ public:
 
   void receive(const void *data, unsigned width, unsigned height,
                size_t pitch) override;
-  proc_address_t get_proc_address(const char *sym) override;
-  void set_reset_context_func(context_reset_func) override;
-  uintptr_t get_current_framebuffer_id() override;
-  void set_system_av_info(retro_system_av_info *info) override;
+  proc_address_t getProcAddress(const char *sym) override;
+  void setResetContextFunc(context_reset_func) override;
+  uintptr_t getCurrentFramebufferId() override;
+  void setSystemAVInfo(retro_system_av_info *info) override;
   void save(bool waitForFinish = false);
 
 protected:
@@ -55,7 +55,7 @@ private:
   bool usingHwRendering = false;
   retro_system_av_info *core_av_info_ = nullptr;
   std::unique_ptr<libretro::Core> core;
-  LibEntry m_currentEntry;
+  firelight::db::LibraryEntry m_currentEntry;
   QOpenGLFramebufferObject *m_fbo = nullptr;
   context_reset_func reset_context = nullptr;
   double totalFrameWorkDurationMillis = 0;

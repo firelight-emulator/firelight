@@ -1,9 +1,4 @@
-//
-// Created by alexs on 2/15/2024.
-//
-
-#ifndef KEYBOARD_CONTROLLER_HPP
-#define KEYBOARD_CONTROLLER_HPP
+#pragma once
 
 #include "../libretro/retropad.hpp"
 
@@ -18,6 +13,4 @@ public:
   int16_t getRightStickYPosition() override;
 };
 
-} // namespace Firelight::Input
-
-#endif // KEYBOARD_CONTROLLER_HPP
+} // namespace firelight::Input

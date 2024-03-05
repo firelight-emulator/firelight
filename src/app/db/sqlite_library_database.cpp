@@ -276,6 +276,34 @@ bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
   return true;
 }
 
+std::optional<LibraryEntry>
+SqliteLibraryDatabase::getLibraryEntry(const int entryId) {
+  QSqlQuery q(m_database);
+  q.prepare("SELECT * FROM library_entries WHERE id = :id");
+  q.bindValue(":id", entryId);
+
+  if (!q.exec()) {
+    spdlog::error("Failed to get library entry: {}",
+                  q.lastError().text().toStdString());
+    return std::nullopt;
+  }
+
+  if (!q.next()) {
+    return std::nullopt;
+  }
+
+  LibraryEntry entry;
+  entry.id = q.value(0).toInt();
+  entry.displayName = q.value(1).toString().toStdString();
+  entry.contentMd5 = q.value(2).toString().toStdString();
+  entry.platformId = q.value(3).toInt();
+  entry.type = static_cast<LibraryEntry::EntryType>(q.value(4).toInt());
+  entry.sourceDirectory = q.value(5).toString().toStdString();
+  entry.contentPath = q.value(6).toString().toStdString();
+
+  return entry;
+}
+
 bool SqliteLibraryDatabase::deleteLibraryEntry(int entryId) {
   QSqlQuery query(m_database);
   query.prepare("DELETE FROM library_entries WHERE id = :id");

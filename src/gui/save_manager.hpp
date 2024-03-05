@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../app/db/daos/lib_entry.hpp"
+#include "../app/db/daos/library_entry.hpp"
 #include "../app/saves/save_data.hpp"
 #include <filesystem>
 #include <qfuture.h>
@@ -17,9 +17,9 @@ signals:
 
 public:
   explicit SaveManager(std::filesystem::path saveDir);
-  QFuture<bool> writeSaveDataForEntry(LibEntry &entry,
+  QFuture<bool> writeSaveDataForEntry(db::LibraryEntry &entry,
                                       SaveData &saveData) const;
-  std::optional<SaveData> readSaveDataForEntry(LibEntry &entry) const;
+  std::optional<SaveData> readSaveDataForEntry(db::LibraryEntry &entry) const;
 
 private:
   std::filesystem::path m_saveDir;

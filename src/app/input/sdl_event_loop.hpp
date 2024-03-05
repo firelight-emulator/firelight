@@ -1,9 +1,5 @@
-//
-// Created by alexs on 1/6/2024.
-//
+#pragma once
 
-#ifndef SDL_EVENT_LOOP_HPP
-#define SDL_EVENT_LOOP_HPP
 #include "controller_manager.hpp"
 
 #include <qthread.h>
@@ -25,6 +21,4 @@ private:
   Input::ControllerManager *m_controllerManager;
 };
 
-} // namespace Firelight
-
-#endif // SDL_EVENT_LOOP_HPP
+} // namespace firelight

@@ -22,6 +22,7 @@ public:
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
   Q_INVOKABLE void addPlaylist(const QString &displayName);
   Q_INVOKABLE void removePlaylist(int playlistId);
+  Q_INVOKABLE void renamePlaylist(int playlistId, const QString &newName);
 
 private:
   struct Item {

@@ -1,11 +1,6 @@
-//
-// Created by alexs on 1/6/2024.
-//
+#pragma once
 
-#ifndef CONTROLLER_HPP
-#define CONTROLLER_HPP
 #include "../libretro/retropad.hpp"
-
 #include <SDL_gamecontroller.h>
 #include <string>
 
@@ -34,6 +29,4 @@ private:
   int32_t m_SDLJoystickInstanceId = -1;
 };
 
-} // namespace Firelight::Input
-
-#endif // CONTROLLER_HPP
+} // namespace firelight::Input

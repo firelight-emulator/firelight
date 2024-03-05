@@ -1,11 +1,6 @@
-//
-// Created by alexs on 1/11/2024.
-//
+#pragma once
 
-#ifndef IPS_PATCH_HPP
-#define IPS_PATCH_HPP
 #include "rom_patch.hpp"
-
 #include <cstdint>
 #include <vector>
 
@@ -31,7 +26,4 @@ private:
   std::vector<IPSPatchRecord> records;
 };
 
-} // namespace Firelight::Patching
-// Firelight
-
-#endif // IPS_PATCH_HPP
+} // namespace firelight::patching

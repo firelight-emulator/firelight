@@ -42,7 +42,7 @@ public:
   bool takeShouldResetEmulationFlag();
 
   void setIsRunning(bool isRunning);
-  void setCurrentEntry(LibEntry entry);
+  void setCurrentEntry(firelight::db::LibraryEntry entry);
   void setNativeWidth(int nativeWidth);
   void setNativeHeight(int nativeHeight);
   void setNativeAspectRatio(float nativeAspectRatio);
@@ -86,7 +86,7 @@ private:
   bool m_isRunning = false;
 
   QMetaObject::Connection m_renderConnection;
-  LibEntry m_currentEntry;
+  firelight::db::LibraryEntry m_currentEntry;
   int m_nativeWidth = 0;
   int m_nativeHeight = 0;
   float m_nativeAspectRatio = 0;

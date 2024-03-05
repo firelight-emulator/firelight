@@ -9,7 +9,7 @@
 #include "libretro/audio_data_receiver.hpp"
 
 
-class AudioManager: public CoreAudioDataReceiver {
+class AudioManager: public IAudioDataReceiver {
     SDL_AudioDeviceID audioDevice = 0;
 public:
     void initialize(double new_freq) override;

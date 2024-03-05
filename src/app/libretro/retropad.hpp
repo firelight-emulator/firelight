@@ -1,9 +1,5 @@
-//
-// Created by alexs on 1/6/2024.
-//
+#pragma once
 
-#ifndef IRETROPAD_HPP
-#define IRETROPAD_HPP
 #include "libretro.h"
 #include <cstdint>
 
@@ -39,5 +35,3 @@ public:
 };
 
 } // namespace firelight::libretro
-
-#endif // IRETROPAD_HPP

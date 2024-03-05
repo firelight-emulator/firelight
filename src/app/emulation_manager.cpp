@@ -9,7 +9,6 @@ constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
   return new EmulatorRenderer();
-  // return new EmulatorRenderer(m_entryId, m_gameData, m_saveData, m_corePath);
 }
 
 EmulationManager::EmulationManager(QQuickItem *parent)
@@ -24,7 +23,7 @@ QByteArray EmulationManager::getGameData() { return m_gameData; }
 QByteArray EmulationManager::getSaveData() { return m_saveData; }
 QString EmulationManager::getCorePath() { return m_corePath; }
 QString EmulationManager::currentGameName() const {
-  return QString::fromStdString(m_currentEntry.display_name);
+  return QString::fromStdString(m_currentEntry.displayName);
 }
 int EmulationManager::nativeWidth() const { return m_nativeWidth; }
 int EmulationManager::nativeHeight() const { return m_nativeHeight; }
@@ -121,10 +120,12 @@ bool EmulationManager::takeShouldResetEmulationFlag() {
   return false;
 }
 
-void EmulationManager::setIsRunning(bool isRunning) { m_isRunning = isRunning; }
+void EmulationManager::setIsRunning(const bool isRunning) {
+  m_isRunning = isRunning;
+}
 
-void EmulationManager::setCurrentEntry(LibEntry entry) {
-  if (entry.display_name != m_currentEntry.display_name) {
+void EmulationManager::setCurrentEntry(firelight::db::LibraryEntry entry) {
+  if (entry.displayName != m_currentEntry.displayName) {
     m_currentEntry = std::move(entry);
     emit currentGameNameChanged();
   }

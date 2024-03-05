@@ -4,6 +4,7 @@
 #include "daos/library_entry.hpp"
 #include "daos/playlist.hpp"
 
+#include <optional>
 #include <vector>
 
 namespace firelight::db {
@@ -47,6 +48,7 @@ public:
    * @note The entry object will be updated with the new entry's ID.
    */
   virtual bool createLibraryEntry(LibraryEntry &entry) = 0;
+  virtual std::optional<LibraryEntry> getLibraryEntry(int entryId) = 0;
   virtual bool deleteLibraryEntry(int entryId) = 0;
   virtual std::vector<LibraryEntry> getAllLibraryEntries() = 0;
 

@@ -26,7 +26,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
 
     core_av_info_ = nullptr;
 
-    m_currentEntry = getLibraryManager()->get_by_id(m_entryId).value();
+    m_currentEntry = getLibraryDatabase()->getLibraryEntry(m_entryId).value();
 
     core = std::make_unique<libretro::Core>(m_corePath.toStdString());
     core->setRetropadProvider(getControllerManager());
@@ -86,7 +86,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
       } else {
         m_playtimeTimer.restart();
       }
-      getUserdataManager()->savePlaySession(m_currentEntry.md5,
+      getUserdataManager()->savePlaySession(m_currentEntry.contentMd5,
                                             sessionStartTime, sessionEndTime,
                                             sessionDuration / 1000);
       m_running = false;
@@ -141,18 +141,18 @@ void EmulatorRenderer::receive(const void *data, unsigned width,
   }
 }
 
-proc_address_t EmulatorRenderer::get_proc_address(const char *sym) {
+proc_address_t EmulatorRenderer::getProcAddress(const char *sym) {
   return QOpenGLContext::currentContext()->getProcAddress(sym);
 }
 
-void EmulatorRenderer::set_reset_context_func(context_reset_func reset) {
+void EmulatorRenderer::setResetContextFunc(context_reset_func reset) {
   reset_context = reset;
 }
 
-uintptr_t EmulatorRenderer::get_current_framebuffer_id() {
+uintptr_t EmulatorRenderer::getCurrentFramebufferId() {
   return m_fbo->handle();
 }
-void EmulatorRenderer::set_system_av_info(retro_system_av_info *info) {
+void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
   core_av_info_ = info;
 }
 
@@ -205,8 +205,8 @@ EmulatorRenderer::~EmulatorRenderer() {
     } else {
       m_playtimeTimer.restart();
     }
-    getUserdataManager()->savePlaySession(m_currentEntry.md5, sessionStartTime,
-                                          sessionEndTime,
+    getUserdataManager()->savePlaySession(m_currentEntry.contentMd5,
+                                          sessionStartTime, sessionEndTime,
                                           sessionDuration / 1000);
     m_running = false;
     m_ranLastFrame = false;
