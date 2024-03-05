@@ -10,6 +10,7 @@ Button {
 
     autoExclusive: true
     checkable: true
+    padding: 6
     property string labelText
     property string labelIcon
     contentItem: Item {
@@ -21,13 +22,12 @@ Button {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            leftPadding: 12
             visible: labelIcon !== ""
             // width: 24
 
             font.family: Constants.symbolFontFamily
-            font.pixelSize: 24
-            color: control.checked ? Constants.colorTestTextActive : Constants.colorTestTextActive
+            font.pixelSize: 30
+            color: "#b3b3b3"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
@@ -37,27 +37,40 @@ Button {
             anchors.left: labelIcon !== "" ? buttonIcon.right : parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            leftPadding: 12
-            font.pointSize: 12
-            font.family: Constants.regularFontFamily
-            color: control.checked ? Constants.colorTestTextActive : Constants.colorTestTextActive
+            leftPadding: labelIcon !== "" ? 10 : 0
+            font.pointSize: 11
+            font.family: Constants.strongFontFamily
+            font.bold: true
+            color: "#b3b3b3"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
         }
     }
 
     background: Rectangle {
-        color: control.checked ? Constants.colorTestCardActive : mouse.containsMouse ? Constants.colorTestCard : "transparent"
-        radius: 8
+        color: control.checked ?
+            (mouse.pressed ?
+                "#2b2b2b"
+                : ((mouse.containsMouse ?
+                    "#393939"
+                    : "#232323")))
+            : (mouse.pressed ?
+                "#000000"
+                : (mouse.containsMouse ?
+                    "#1a1a1a"
+                    : "transparent"))
+        radius: 6
     }
 
     MouseArea {
         id: mouse
         anchors.fill: parent
-        acceptedButtons: Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         hoverEnabled: true
         onClicked: function (event) {
-            if (event.button === Qt.RightButton) {
+            if (event.button === Qt.LeftButton && !control.checked) {
+                control.toggle()
+            } else if (event.button === Qt.RightButton) {
                 control.rightClicked()
             }
         }

@@ -3,6 +3,21 @@ import QtQuick
 pragma Singleton
 
 Item {
+    // RIGHT-CLICK MENU
+    readonly property color rightClickMenu_BackgroundColor: "#282828"
+    readonly property int rightClickMenu_BackgroundRadius: 4
+    readonly property int rightClickMenu_Padding: 4
+
+    // RIGHT-CLICK MENU ITEM
+    readonly property int rightClickMenuItem_DefaultHeight: 40
+    readonly property color rightClickMenuItem_HoverColor: "#3a3a3a"
+    readonly property int rightClickMenuItem_BackgroundRadius: 4
+    readonly property color rightClickMenuItem_TextColor: "#f1f1f1"
+    readonly property int rightClickMenuItem_textPointSize: 12
+
+    readonly property color surface_color: "#121212"
+
+
     FontLoader {
         id: symbols
         source: "qrc:/fonts/symbols"
@@ -18,9 +33,15 @@ Item {
         source: "qrc:/fonts/lexend-light"
     }
 
+    FontLoader {
+        id: lexendBlack
+        source: "qrc:/fonts/lexend-black"
+    }
+
     readonly property string symbolFontFamily: symbols.name
     readonly property string regularFontFamily: localFont.name
     readonly property string lightFontFamily: lexendLight.name
+    readonly property string strongFontFamily: lexendBlack.name
 
     readonly property color colorTestSurface: "#161616"
     readonly property color colorTestBackground: "#212020"

@@ -3,8 +3,11 @@
         <file>qtquickcontrols2.conf</file>
     </qresource>
     <qresource prefix="/fonts">
-        <file alias="lexend">assets/Lexend-Regular.ttf</file>
-        <file alias="lexend-light">assets/Lexend-Light.ttf</file>
+        <!--        <file alias="lexend">assets/Lexend-Regular.ttf</file>-->
+        <!--        <file alias="lexend-light">assets/Lexend-Light.ttf</file>-->
+        <file alias="lexend">assets/NunitoSans_10pt-Regular.ttf</file>
+        <file alias="lexend-light">assets/NunitoSans_10pt-Regular.ttf</file>
+        <file alias="lexend-black">assets/NunitoSans_10pt-ExtraBold.ttf</file>
         <file alias="symbols">assets/MaterialSymbols.ttf</file>
     </qresource>
 </RCC>

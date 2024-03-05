@@ -20,7 +20,7 @@ ApplicationWindow {
         id: appRoot
         anchors.fill: parent
         focus: true
-        color: Constants.colorTestBackground
+        color: "black"
 
         signal customStateChanged(string newState)
 
@@ -975,39 +975,73 @@ ApplicationWindow {
                 }
             }
 
-            padding: 12
+            padding: 8
 
             background: Rectangle {
                 color: "transparent"
             }
 
             contentItem: Item {
-                NavigationRail {
-                    id: navRail
-                    fontFamily: Constants.regularFontFamily
-
+                TabBar {
+                    id: tabBar
+                    width: parent.width
+                    height: 48
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
                     currentIndex: mainMenu.index
 
-                    showNowRunning: mainMenu.playingGame
+                    TabButton {
+                        text: "Home"
+                        // icon: "\uf015"
+                    }
+                    TabButton {
+                        text: "Explore"
+                        // icon: "\uf002"
+                    }
+                    TabButton {
+                        text: "Library"
+                        // icon: "\uf02d"
+                    }
+                    TabButton {
+                        text: "Controllers"
+                        // icon: "\uf11b"
+                    }
+                    TabButton {
+                        text: "Settings"
+                        // icon: "\uf013"
+                    }
 
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: 200
-
-                    onIndexSelected: function (index) {
-                        mainMenu.index = index
+                    onCurrentIndexChanged: {
+                        mainMenu.index = tabBar.currentIndex
                     }
                 }
+                // NavigationRail {
+                //     id: navRail
+                //     fontFamily: Constants.regularFontFamily
+                //
+                //     currentIndex: mainMenu.index
+                //
+                //     showNowRunning: mainMenu.playingGame
+                //
+                //     anchors.left: parent.left
+                //     anchors.top: parent.top
+                //     anchors.bottom: parent.bottom
+                //     width: 200
+                //
+                //     onIndexSelected: function (index) {
+                //         mainMenu.index = index
+                //     }
+                // }
 
-                Header {
-                    id: header
-                    height: 28
-                    anchors.top: parent.top
-                    anchors.left: navRail.right
-                    anchors.leftMargin: 12
-                    anchors.right: parent.right
-                }
+                // Header {
+                //     id: header
+                //     height: 28
+                //     anchors.top: tabBar.bottom
+                //     anchors.topMargin: 6
+                //     anchors.left: parent.left
+                //     anchors.right: parent.right
+                // }
 
                 StackView {
                     id: content
@@ -1016,13 +1050,11 @@ ApplicationWindow {
 
                     clip: true
 
-                    anchors.topMargin: 12
-                    anchors.top: header.bottom
-                    anchors.left: navRail.right
-                    anchors.leftMargin: 12
+                    anchors.topMargin: 6
+                    anchors.top: tabBar.bottom
+                    anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.bottom: footer.top
-                    anchors.bottomMargin: 12
+                    anchors.bottom: parent.bottom
 
                     initialItem: homePage
 
@@ -1083,13 +1115,13 @@ ApplicationWindow {
                     }
                 }
 
-                Footer {
-                    id: footer
-                    height: 8
-                    anchors.bottom: parent.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                }
+                // Footer {
+                //     id: footer
+                //     height: 8
+                //     anchors.bottom: parent.bottom
+                //     anchors.left: parent.left
+                //     anchors.right: parent.right
+                // }
             }
         }
 
