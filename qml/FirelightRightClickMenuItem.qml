@@ -37,8 +37,8 @@ MenuItem {
     contentItem: Text {
         text: control.labelText
         color: Constants.rightClickMenuItem_TextColor
-        font.pointSize: 12
-        font.family: Constants.regularFontFamily
+        font.pointSize: 11
+        font.family: Constants.strongFontFamily
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }

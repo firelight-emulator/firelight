@@ -9,6 +9,8 @@
 
 #include "../audio_manager.hpp"
 
+#include <spdlog/spdlog.h>
+
 namespace libretro {
 
 void log(enum retro_log_level level, const char *fmt, ...) {
@@ -17,7 +19,11 @@ void log(enum retro_log_level level, const char *fmt, ...) {
   va_start(va, fmt);
   vsnprintf(msg, sizeof(msg), fmt, va);
   va_end(va);
-  printf("%s", msg);
+
+  msg[std::remove(msg, msg + strlen(msg), '\n') - msg] = 0;
+  msg[std::remove(msg, msg + strlen(msg), '\r') - msg] = 0;
+
+  spdlog::debug("{}", msg);
 }
 
 // Only supports one core at a time for now, but, eh.
@@ -381,8 +387,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
     this->environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
-    videoReceiver->setSystemAVInfo(
-        static_cast<retro_system_av_info *>(data));
+    videoReceiver->setSystemAVInfo(static_cast<retro_system_av_info *>(data));
     //    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
     return true;
   }

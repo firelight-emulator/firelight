@@ -194,6 +194,7 @@ Rectangle {
                             radius: 4
                         }
 
+                        checkable: true
                         ButtonGroup.group: buttonGroup
 
                         width: ListView.view.width
@@ -258,10 +259,20 @@ Rectangle {
 
             padding: 8
 
+            Text {
+                text: "no gams"
+                font.pointSize: 12
+                font.family: Constants.strongFontFamily
+                color: "#b3b3b3"
+                anchors.centerIn: parent
+                visible: libraryList.count === 0
+            }
+
             ListView {
                 id: libraryList
                 anchors.fill: parent
                 clip: true
+                focus: true
 
                 // section.criteria: ViewSection.FirstCharacter
                 // section.property: "display_name"
