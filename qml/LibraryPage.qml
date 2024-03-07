@@ -20,26 +20,7 @@ Rectangle {
         orientation: Qt.Horizontal
         anchors.fill: parent
 
-        handle: Item {
-            id: handle
-            implicitWidth: 9
-            implicitHeight: parent.height
-
-            Rectangle {
-                anchors.centerIn: parent
-                implicitWidth: 1
-                implicitHeight: parent.height - 10
-                color: handle.SplitHandle.pressed ? "#f1f1f1"
-                    : (handle.SplitHandle.hovered ? "#727272" : "transparent")
-
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 150
-                        easing.type: Easing.InOutQuad
-                    }
-
-                }
-            }
+        handle: FirelightSplitViewHandle {
         }
 
         Item {
@@ -48,7 +29,9 @@ Rectangle {
             Pane {
                 id: content
                 background: Rectangle {
-                    color: Constants.surface_color
+                    // color: Constants.surface_color
+                    color: "white"
+                    opacity: 0.1
                     radius: 8
                 }
 
@@ -105,7 +88,9 @@ Rectangle {
             Pane {
                 id: playlistPane
                 background: Rectangle {
-                    color: Constants.surface_color
+                    // color: Constants.surface_color
+                    color: "white"
+                    opacity: 0.1
                     radius: 8
                 }
 
@@ -180,17 +165,18 @@ Rectangle {
                     delegate: Button {
                         id: playlistItemButton
                         background: Rectangle {
-                            color: playlistItemButton.checked ?
+                            opacity: playlistItemButton.checked ?
                                 (playlistItemMouse.pressed ?
-                                    "#2b2b2b"
+                                    0.3
                                     : ((playlistItemMouse.containsMouse ?
-                                        "#393939"
-                                        : "#232323")))
+                                        0.2
+                                        : 0.2)))
                                 : (playlistItemMouse.pressed ?
-                                    "#020202"
+                                    0.2
                                     : (playlistItemMouse.containsMouse ?
-                                        "#1a1a1a"
+                                        0.1
                                         : "transparent"))
+                            color: "white"
                             radius: 4
                         }
 
@@ -253,16 +239,18 @@ Rectangle {
         Pane {
             id: contentRight
             background: Rectangle {
-                color: Constants.surface_color
+                // color: Constants.surface_color
+                color: "white"
+                opacity: 0.1
                 radius: 8
             }
 
             padding: 8
 
             Text {
-                text: "no gams"
+                text: "no gams here"
                 font.pointSize: 12
-                font.family: Constants.strongFontFamily
+                font.family: Constants.regularFontFamily
                 color: "#b3b3b3"
                 anchors.centerIn: parent
                 visible: libraryList.count === 0
@@ -320,13 +308,13 @@ Rectangle {
                         //         : (libItemMouse.containsMouse ?
                         //             "#1a1a1a"
                         //             : "transparent"))
-                        color: "transparent"
+                        color: hovered ? "white" : "transparent"
+                        opacity: 0.2
                         radius: 4
                     }
 
+                    hoverEnabled: true
                     autoExclusive: true
-
-                    // ButtonGroup.group: buttonGroup
 
                     width: ListView.view.width
 
@@ -339,7 +327,7 @@ Rectangle {
                     contentItem: Text {
                         text: model.display_name
                         font.pointSize: 12
-                        font.family: Constants.regularFontFamily
+                        font.family: Constants.strongFontFamily
                         color: "#ffffff"
                     }
 

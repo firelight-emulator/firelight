@@ -119,6 +119,8 @@ target_link_libraries(firelight_lib mingw32 SDL2 opengl32 ssl crypto z ${SQLite3
 
 file(GLOB QML_FILES
         qml/*.qml
+        qml/controllers/*.qml
+        qml/settings/*.qml
 )
 
 foreach (QML_FILE ${QML_FILES})

@@ -12,6 +12,9 @@ ApplicationWindow {
     id: window
     width: 1280
     height: 720
+
+    minimumWidth: 640
+    minimumHeight: 480
     visible: true
     title: qsTr("Firelight")
     color: "black"
@@ -145,6 +148,11 @@ ApplicationWindow {
                         target: mainMenu
                         property: "index"
                         value: 5
+                    }
+                    PropertyAction {
+                        target: nowPlayingButton
+                        property: "checked"
+                        value: true
                     }
                     ScriptAction {
                         script: {
@@ -510,259 +518,19 @@ ApplicationWindow {
 
         Component {
             id: controllersPage
-            Item {
-                GridView {
-                    id: root
-                    width: parent.width
-                    height: parent.height
-                    cellWidth: parent.width
-                    cellHeight: parent.height / 4
-
-                    displaced: Transition {
-                        NumberAnimation {
-                            properties: "x,y"
-                            easing.type: Easing.OutQuad
-                        }
-                    }
-
-                    // model: controller_manager
-                    // delegate: Rectangle {
-                    //     width: 300
-                    //     height: 72
-                    //     color: "black"
-                    //     radius: 12
-                    //
-                    //     Text {
-                    //         anchors.centerIn: parent
-                    //         color: "white"
-                    //         text: playerIndex + ": " + controllerName
-                    //     }
-                    //
-                    //     DragHandler {
-                    //         id: dragHandler
-                    //     }
-                    // }
-
-                    model: DelegateModel {
-                        id: visualModel
-                        model: controller_manager
-
-                        component Thing: Rectangle {
-                            id: icon
-                            required property Item dragParent
-                            required property string controllerName
-                            required property int playerIndex
-
-                            property int visualIndex: 0
-                            width: 300
-                            height: 72
-                            color: "black"
-
-                            anchors {
-                                horizontalCenter: parent.horizontalCenter
-                                verticalCenter: parent.verticalCenter
-                            }
-                            radius: 12
-
-                            Text {
-                                anchors.centerIn: parent
-                                color: "white"
-                                text: controllerName
-                            }
-
-                            DragHandler {
-                                id: dragHandler
-                            }
-
-                            HoverHandler {
-                                cursorShape: icon.state === "Dragging" ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-                            }
-
-                            Drag.active: dragHandler.active
-                            Drag.source: icon
-                            Drag.hotSpot.x: 36
-                            Drag.hotSpot.y: 36
-
-                            states: [
-                                State {
-                                    name: "NotDragging"
-                                    when: !dragHandler.active
-                                },
-                                State {
-                                    name: "Dragging"
-                                    when: dragHandler.active
-                                    ParentChange {
-                                        target: icon
-                                        parent: icon.dragParent
-                                    }
-
-                                    AnchorChanges {
-                                        target: icon
-                                        anchors {
-                                            horizontalCenter: undefined
-                                            verticalCenter: undefined
-                                        }
-                                    }
-                                }
-                            ]
-
-                            transitions: [
-                                Transition {
-                                    from: "Dragging"
-                                    to: "NotDragging"
-                                    ScriptAction {
-                                        script: {
-                                            var newOrder = {};
-                                            for (var i = 0; i < visualModel.items.count; i++) {
-                                                newOrder[i] = visualModel.items.get(i).model.playerIndex
-                                                // console.log("playerIndex: " + visualModel.items.get(i).model.playerIndex)
-                                            }
-                                            // for (const key in visualModel.items) {
-                                            //     if (myObject.hasOwnProperty(key)) {
-                                            //         newOrder[visualModel.items[key].model.visualIndex] = visualModel.items[key].model.playerIndex;
-                                            //     }
-                                            // }
-
-                                            controller_manager.updateControllerOrder(newOrder)
-                                            // for (var i = 0; i < visualModel.items.count; i++) {
-                                            //     console.log("playerIndex: " + visualModel.items.get(i).model.playerIndex)
-                                            // }
-                                        }
-
-                                    }
-                                }
-                            ]
-                        }
-
-                        delegate: DropArea {
-                            id: delegateRoot
-                            required property string controllerName
-                            required property int playerIndex
-
-                            width: 300
-                            height: 80
-
-                            onEntered: function (drag) {
-                                visualModel.items.move(drag.source.visualIndex, icon2.visualIndex)
-                                controller_manager.swap(drag.source.visualIndex, icon2.visualIndex)
-                            }
-
-                            property int visualIndex: DelegateModel.itemsIndex
-
-                            Thing {
-                                id: icon2
-                                dragParent: root
-                                visualIndex: delegateRoot.visualIndex
-                                controllerName: delegateRoot.controllerName
-                                playerIndex: delegateRoot.playerIndex
-                            }
-                        }
-                    }
-                }
+            ControllersPage {
             }
         }
 
         Component {
             id: settingsPage
-            Item {
-                Rectangle {
-                    id: person
-                    width: 800
-                    height: 600
-
-                    property var pages: [page1, page2, page3]
-
-                    ListView {
-                        id: categoryList
-                        width: parent.width / 2
-                        height: parent.height
-                        model: ListModel {
-                            ListElement {
-                                name: "Category 1"
-                            }
-                            ListElement {
-                                name: "Category 2"
-                            }
-                            ListElement {
-                                name: "Category 3"
-                            }
-                        }
-                        clip: true
-                        delegate: Rectangle {
-                            width: categoryList.width
-                            height: 50
-                            color: "lightgray"
-
-                            Text {
-                                text: model.name
-                                font.pixelSize: 20
-                                color: "black"
-                                anchors.centerIn: parent
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    stackView.push(person.pages[model.index])
-                                }
-                            }
-                        }
-                    }
-
-                    StackView {
-                        id: stackView
-                        width: parent.width / 2
-                        height: parent.height
-                        anchors.left: categoryList.right
-                    }
-
-                    Component {
-                        id: page1
-                        Rectangle {
-                            color: "red"
-                            Text {
-                                text: "This is Category 1"
-                                anchors.centerIn: parent
-                            }
-                        }
-                    }
-
-                    Component {
-                        id: page2
-                        Rectangle {
-                            color: "green"
-                            Text {
-                                text: "This is Category 2"
-                                anchors.centerIn: parent
-                            }
-                        }
-                    }
-
-                    Component {
-                        id: page3
-                        Rectangle {
-                            color: "blue"
-                            Text {
-                                text: "This is Category 3"
-                                anchors.centerIn: parent
-                            }
-                        }
-                    }
-                }
+            SettingsPage {
             }
         }
 
         Component {
             id: nowPlayingPage
             Item {
-                Rectangle {
-                    anchors.left: parent.left
-                    width: 1
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    color: Constants.colorTestText
-                }
-
                 Column {
                     id: topPart
                     spacing: 12
@@ -796,9 +564,9 @@ ApplicationWindow {
 
                     anchors.leftMargin: 24
 
-                    FirelightMenuItem {
-                        labelText: "Resume Game"
-                        labelIcon: "\uf7d0"
+                    Button {
+                        text: "Resume Game"
+                        // labelIcon: "\uf7d0"
                         height: 40
                         width: 200
                         checkable: false
@@ -808,9 +576,9 @@ ApplicationWindow {
                         }
                     }
 
-                    FirelightMenuItem {
-                        labelText: "Restart Game"
-                        labelIcon: "\uf053"
+                    Button {
+                        text: "Restart Game"
+                        // labelIcon: "\uf053"
                         height: 40
                         width: 200
                         checkable: false
@@ -821,9 +589,9 @@ ApplicationWindow {
                         }
                     }
 
-                    FirelightMenuItem {
-                        labelText: "Quit Game"
-                        labelIcon: "\ue5cd"
+                    Button {
+                        text: "Quit Game"
+                        // labelIcon: "\ue5cd"
                         height: 40
                         width: 200
                         checkable: false
@@ -833,42 +601,36 @@ ApplicationWindow {
                         }
                     }
 
-                    Rectangle {
-                        height: 1
-                        width: parent.width / 2
-                        color: Constants.colorTestTextMuted
-                    }
-
-                    Text {
-                        text: "This thing doesn't remember your setting when you leave this menu and go back in but it's fine for now."
-                        color: Constants.colorTestTextActive
-                        font.pointSize: 10
-                        font.family: Constants.regularFontFamily
-                    }
-
-                    SettingsItem {
-                        label: "Picture Mode"
-                        width: parent.width / 2
-                        height: 50
-                        thing: Component {
-                            ComboBox {
-                                model: ["Maintain Aspect Ratio", "Original", "Stretch"]
-                                onActivated: function (index) {
-                                    switch (index) {
-                                        case 0:
-                                            emulator.setPictureMode("aspect-ratio")
-                                            break
-                                        case 1:
-                                            emulator.setPictureMode("original")
-                                            break
-                                        case 2:
-                                            emulator.setPictureMode("stretched")
-                                            break
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // Text {
+                    //     text: "This thing doesn't remember your setting when you leave this menu and go back in but it's fine for now."
+                    //     color: Constants.colorTestTextActive
+                    //     font.pointSize: 10
+                    //     font.family: Constants.regularFontFamily
+                    // }
+                    //
+                    // SettingsItem {
+                    //     label: "Picture Mode"
+                    //     width: parent.width / 2
+                    //     height: 50
+                    //     thing: Component {
+                    //         ComboBox {
+                    //             model: ["Maintain Aspect Ratio", "Original", "Stretch"]
+                    //             onActivated: function (index) {
+                    //                 switch (index) {
+                    //                     case 0:
+                    //                         emulator.setPictureMode("aspect-ratio")
+                    //                         break
+                    //                     case 1:
+                    //                         emulator.setPictureMode("original")
+                    //                         break
+                    //                     case 2:
+                    //                         emulator.setPictureMode("stretched")
+                    //                         break
+                    //                 }
+                    //             }
+                    //         }
+                    //     }
+                    // }
                 }
             }
         }
@@ -981,11 +743,19 @@ ApplicationWindow {
                 color: "transparent"
             }
 
+            ButtonGroup {
+                id: buttonGroup
+                exclusive: true
+            }
+
             contentItem: Item {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+
                 TabBar {
                     id: tabBar
-                    width: 500
-                    // height: 48
+                    width: 300
                     anchors.top: parent.top
                     anchors.horizontalCenter: parent.horizontalCenter
                     currentIndex: mainMenu.index
@@ -993,120 +763,69 @@ ApplicationWindow {
                     background: Item {
                     }
 
-                    TabButton {
-                        id: homeButton
-                        hoverEnabled: true
-                        contentItem: Text {
-                            // text: "Home"
-                            text: "\ue88a"
-                            color: (homeButton.hovered || homeButton.checked) ? "white" : "#b3b3b3"
-                            font.pixelSize: 28
-                            // font.family: Constants.strongFontFamily
-                            font.family: Constants.symbolFontFamily
-                            verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        background: Item {
-                        }
-
-                        ToolTip.visible: homeButton.hovered
-                        ToolTip.text: "Home"
-                        ToolTip.delay: 400
-                        ToolTip.timeout: 5000
-                        // icon: "\uf015"
+                    NavigationButton {
+                        iconCode: "\ue88a"
+                        toolTipText: "Home"
+                        ButtonGroup.group: buttonGroup
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    TabButton {
-                        id: exploreButton
-                        hoverEnabled: true
-                        contentItem: Text {
-                            // text: "Explore"
-                            text: "\ue8d0"
-                            color: (exploreButton.hovered || exploreButton.checked) ? "white" : "#b3b3b3"
-                            font.pixelSize: 28
-                            // font.family: Constants.strongFontFamily
-                            font.family: Constants.symbolFontFamily
-                            verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        background: Item {
-                        }
 
-                        ToolTip.visible: exploreButton.hovered
-                        ToolTip.text: "Explore"
-                        ToolTip.delay: 400
-                        ToolTip.timeout: 5000
-
-                        // icon: "\uf002"
+                    NavigationButton {
+                        iconCode: "\ue87a"
+                        toolTipText: "Explore"
+                        ButtonGroup.group: buttonGroup
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    TabButton {
-                        id: libButton
-                        hoverEnabled: true
-                        contentItem: Text {
-                            // text: "Library"
-                            text: "\uf53e"
-                            color: (libButton.hovered || libButton.checked) ? "white" : "#b3b3b3"
-                            font.pixelSize: 28
-                            // font.family: Constants.strongFontFamily
-                            font.family: Constants.symbolFontFamily
-                            verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        background: Item {
-                        }
 
-                        ToolTip.visible: libButton.hovered
-                        ToolTip.text: "Library"
-                        ToolTip.delay: 400
-                        ToolTip.timeout: 5000
-                        // icon: "\uf02d"
+                    NavigationButton {
+                        iconCode: "\uf53e"
+                        toolTipText: "Library"
+                        ButtonGroup.group: buttonGroup
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    TabButton {
-                        id: controllerButton
-                        hoverEnabled: true
-                        contentItem: Text {
-                            // text: "Controllers"
-                            text: "\uf135"
-                            color: (controllerButton.hovered || controllerButton.checked) ? "white" : "#b3b3b3"
-                            font.pixelSize: 28
-                            // font.family: Constants.strongFontFamily
-                            font.family: Constants.symbolFontFamily
-                            verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        background: Item {
-                        }
 
-                        ToolTip.visible: controllerButton.hovered
-                        ToolTip.text: "Controllers"
-                        ToolTip.delay: 400
-                        ToolTip.timeout: 5000
-                        // icon: "\uf11b"
+                    NavigationButton {
+                        iconCode: "\uf135"
+                        toolTipText: "Controllers"
+                        ButtonGroup.group: buttonGroup
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    TabButton {
-                        id: settingsButton
-                        hoverEnabled: true
-                        contentItem: Text {
-                            // text: "Settings"
-                            text: "\ue8b8"
-                            color: (settingsButton.hovered || settingsButton.checked) ? "white" : "#b3b3b3"
-                            font.pixelSize: 28
-                            // font.family: Constants.strongFontFamily
-                            font.family: Constants.symbolFontFamily
-                            verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        background: Item {
-                        }
 
-                        ToolTip.visible: settingsButton.hovered
-                        ToolTip.text: "Settings"
-                        ToolTip.delay: 400
-                        ToolTip.timeout: 5000
-                        // icon: "\uf013"
+                    NavigationButton {
+                        iconCode: "\ue8b8"
+                        toolTipText: "Settings"
+                        ButtonGroup.group: buttonGroup
+                        Layout.alignment: Qt.AlignVCenter
                     }
 
                     onCurrentIndexChanged: {
                         mainMenu.index = tabBar.currentIndex
+                    }
+                }
+
+                Rectangle {
+                    id: line
+                    color: "#b3b3b3"
+                    height: tabBar.height - 20
+                    anchors.verticalCenter: tabBar.verticalCenter
+                    width: 1
+                    anchors.left: tabBar.right
+                    anchors.leftMargin: 8
+
+                    visible: mainMenu.playingGame
+                }
+
+                NowPlayingButton {
+                    id: nowPlayingButton
+                    ButtonGroup.group: buttonGroup
+                    anchors.left: line.right
+                    anchors.leftMargin: 8
+                    height: tabBar.height
+
+                    visible: mainMenu.playingGame
+
+                    onClicked: function () {
+                        mainMenu.index = 5
                     }
                 }
                 // NavigationRail {
@@ -1164,7 +883,7 @@ ApplicationWindow {
                         SequentialAnimation {
                             ParallelAnimation {
                                 PropertyAnimation {
-                                    property: "y"
+                                    property: "x"
                                     from: (content.index > content.lastIndex) ? 50 : -50
                                     to: 0
                                     duration: 300
@@ -1190,7 +909,7 @@ ApplicationWindow {
                         SequentialAnimation {
                             ParallelAnimation {
                                 PropertyAnimation {
-                                    property: "y"
+                                    property: "x"
                                     from: 0
                                     to: (content.index > content.lastIndex) ? -50 : 50
                                     duration: 300
@@ -1241,5 +960,167 @@ ApplicationWindow {
             }
 
         }
+    }
+
+    component NowPlayingButton: TabButton {
+        id: myButton
+
+        contentItem: RowLayout {
+            spacing: 8
+            Text {
+                // text: "Settings"
+                text: "\ue037"
+                color: (myHover.hovered || myButton.checked) ? "white" : "#b3b3b3"
+                font.pixelSize: 28
+                // font.family: Constants.strongFontFamily
+                font.family: Constants.symbolFontFamily
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+            }
+            Text {
+                text: "Now Playing"
+                color: (myHover.hovered || myButton.checked) ? "white" : "#b3b3b3"
+                font.pointSize: 12
+                // font.family: Constants.strongFontFamily
+                font.family: Constants.strongFontFamily
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignLeft
+                Layout.fillWidth: true
+            }
+        }
+
+        scale: checked ? 1.1 : 1.0
+        Behavior on scale {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        background: Rectangle {
+            color: "white"
+            opacity: myButton.checked ? 0.1 : 0.0
+            radius: 4
+
+            anchors.centerIn: parent
+            height: myButton.height * (2 / 3)
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
+        HoverHandler {
+            id: myHover
+            cursorShape: Qt.PointingHandCursor
+        }
+    }
+
+    component NavigationButton: TabButton {
+        id: myButton
+
+        required property string iconCode
+        required property string toolTipText
+
+        implicitHeight: width
+
+        contentItem: Text {
+            // text: "Settings"
+            text: iconCode
+            color: (myHover.hovered || myButton.checked) ? "white" : "#b3b3b3"
+            font.pixelSize: 28
+            // font.family: Constants.strongFontFamily
+            font.family: Constants.symbolFontFamily
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+        }
+        scale: checked ? 1.1 : 1.0
+        Behavior on scale {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        background: Rectangle {
+            color: "white"
+            opacity: myButton.checked ? 0.1 : 0.0
+            radius: 4
+
+            anchors.centerIn: parent
+
+            height: myButton.height * (2 / 3)
+            width: myButton.width * (2 / 3)
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
+        HoverHandler {
+            id: myHover
+            cursorShape: Qt.PointingHandCursor
+        }
+
+        ToolTip.visible: myHover.hovered
+        ToolTip.text: toolTipText
+        ToolTip.delay: 400
+        ToolTip.timeout: 5000
+
+        // ToolTip {
+        //     id: tool
+        //     visible: homeHover.hovered
+        //     delay: 400
+        //     timeout: 5000
+        //
+        //     ParallelAnimation {
+        //         id: fadeIn
+        //         NumberAnimation {
+        //             target: tool
+        //             property: "opacity"
+        //             to: 1
+        //             duration: 200
+        //             easing.type: Easing.InOutQuad
+        //         }
+        //         NumberAnimation {
+        //             target: tool
+        //             property: "y"
+        //             from: 43
+        //             to: 48
+        //             duration: 200
+        //             easing.type: Easing.InOutQuad
+        //         }
+        //     }
+        //
+        //     onVisibleChanged: function () {
+        //         if (visible) {
+        //             opacity = 0 // Start from fully transparent
+        //             y = 43
+        //             fadeIn.start()
+        //         }
+        //     }
+        //
+        //     height: 24
+        //
+        //     contentItem: Text {
+        //         text: "Home"
+        //         color: Constants.rightClickMenuItem_TextColor
+        //         font.pointSize: 12
+        //         font.family: Constants.regularFontFamily
+        //         horizontalAlignment: Text.AlignHCenter
+        //         verticalAlignment: Text.AlignVCenter
+        //     }
+        //
+        //     background: Rectangle {
+        //         color: Constants.rightClickMenu_BackgroundColor
+        //         radius: Constants.rightClickMenu_BackgroundRadius
+        //     }
+        // }
     }
 }
