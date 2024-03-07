@@ -749,9 +749,7 @@ ApplicationWindow {
             }
 
             contentItem: Item {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
+                anchors.fill: parent
 
                 TabBar {
                     id: tabBar

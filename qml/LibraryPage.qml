@@ -3,12 +3,14 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import FirelightStyle 1.0
 
-Rectangle {
+Pane {
     property string fontFamilyName
 
     signal entryClicked(string entryId)
 
-    color: "transparent"
+    background: Rectangle {
+        color: "transparent"
+    }
 
     ButtonGroup {
         id: buttonGroup
@@ -192,7 +194,8 @@ Rectangle {
                             library_short_model.sort(0)
                         }
 
-                        contentItem: Text {
+                        contentItem: CarouselText {
+                            hovered: playlistItemMouse.containsMouse
                             text: model.display_name
                             font.pointSize: 12
                             font.family: Constants.regularFontFamily
