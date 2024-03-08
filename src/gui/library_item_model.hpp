@@ -26,6 +26,7 @@ public:
     DisplayName = Qt::UserRole + 1,
     EntryId,
     PlatformName,
+    CreatedAt,
     Playlists
   };
 
@@ -57,6 +58,8 @@ public:
    */
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
+  Q_INVOKABLE void updatePlaylistsForEntry(int entryId);
+
 private:
   /**
    * @struct Item
@@ -65,7 +68,9 @@ private:
   struct Item {
     int m_entryId;
     QString displayName;
+    int platformId;
     QVector<int> m_playlists;
+    uint64_t createdAt;
   };
 
   db::ILibraryDatabase *m_libraryDatabase;

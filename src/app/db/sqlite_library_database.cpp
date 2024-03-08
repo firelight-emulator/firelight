@@ -1,5 +1,6 @@
 #include "sqlite_library_database.hpp"
 
+#include <QDateTime>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlTableModel>
@@ -20,7 +21,8 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
                                "platform_id INTEGER NOT NULL,"
                                "type INTEGER NOT NULL,"
                                "source_directory TEXT NOT NULL,"
-                               "content_path TEXT NOT NULL);");
+                               "content_path TEXT NOT NULL,"
+                               "created_at INTEGER NOT NULL);");
 
   if (!createLibraryEntries.exec()) {
     spdlog::error("Table creation failed: {}",
@@ -30,7 +32,8 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
   QSqlQuery createPlaylists(m_database);
   createPlaylists.prepare("CREATE TABLE IF NOT EXISTS playlists("
                           "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                          "display_name TEXT UNIQUE NOT NULL);");
+                          "display_name TEXT UNIQUE NOT NULL,"
+                          "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);");
 
   if (!createPlaylists.exec()) {
     spdlog::error("Table creation failed: {}",
@@ -43,6 +46,7 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
       "id INTEGER PRIMARY KEY AUTOINCREMENT,"
       "playlist_id INTEGER NOT NULL,"
       "library_entry_id INTEGER NOT NULL,"
+      "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
       "FOREIGN KEY(playlist_id) REFERENCES playlists(id),"
       "FOREIGN KEY(library_entry_id) REFERENCES library_entries(id),"
       "UNIQUE(playlist_id, library_entry_id));");
@@ -253,8 +257,9 @@ bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
 
   const QString queryString =
       "INSERT INTO library_entries (display_name, content_md5, platform_id, "
-      "type, source_directory, content_path) VALUES (:displayName, "
-      ":contentMd5, :platformId, :type, :sourceDirectory, :contentPath);";
+      "type, source_directory, content_path, created_at) VALUES (:displayName, "
+      ":contentMd5, :platformId, :type, :sourceDirectory, :contentPath, "
+      ":createdAt);";
   QSqlQuery query(m_database);
   query.prepare(queryString);
   query.bindValue(":displayName", QString::fromStdString(entry.displayName));
@@ -264,6 +269,10 @@ bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
   query.bindValue(":sourceDirectory",
                   QString::fromStdString(entry.sourceDirectory));
   query.bindValue(":contentPath", QString::fromStdString(entry.contentPath));
+  query.bindValue(":createdAt",
+                  std::chrono::duration_cast<std::chrono::milliseconds>(
+                      std::chrono::system_clock::now().time_since_epoch())
+                      .count());
 
   if (!query.exec()) {
     query.finish();
@@ -300,6 +309,7 @@ SqliteLibraryDatabase::getLibraryEntry(const int entryId) {
   entry.type = static_cast<LibraryEntry::EntryType>(q.value(4).toInt());
   entry.sourceDirectory = q.value(5).toString().toStdString();
   entry.contentPath = q.value(6).toString().toStdString();
+  entry.createdAt = q.value(7).toLongLong();
 
   return entry;
 }
@@ -337,6 +347,7 @@ std::vector<LibraryEntry> SqliteLibraryDatabase::getAllLibraryEntries() {
     entry.type = static_cast<LibraryEntry::EntryType>(q.value(4).toInt());
     entry.sourceDirectory = q.value(5).toString().toStdString();
     entry.contentPath = q.value(6).toString().toStdString();
+    entry.createdAt = q.value(7).toLongLong();
 
     entries.emplace_back(entry);
   }
@@ -358,6 +369,33 @@ std::vector<Playlist> SqliteLibraryDatabase::getAllPlaylists() {
     Playlist playlist;
     playlist.id = q.value(0).toInt();
     playlist.displayName = q.value(1).toString().toStdString();
+
+    playlists.emplace_back(playlist);
+  }
+
+  return playlists;
+}
+
+std::vector<Playlist>
+SqliteLibraryDatabase::getPlaylistsForEntry(const int entryId) {
+  QSqlQuery query(m_database);
+  query.prepare(
+      "SELECT playlists.* FROM playlists "
+      "JOIN playlist_entries ON playlists.id = playlist_entries.playlist_id "
+      "WHERE playlist_entries.library_entry_id = :entryId");
+  query.bindValue(":entryId", entryId);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to retrieve playlists: {}",
+                  query.lastError().text().toStdString());
+    return {};
+  }
+
+  std::vector<Playlist> playlists;
+  while (query.next()) {
+    Playlist playlist;
+    playlist.id = query.value(0).toInt();
+    playlist.displayName = query.value(1).toString().toStdString();
 
     playlists.emplace_back(playlist);
   }

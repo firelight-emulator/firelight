@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 namespace firelight::db {
@@ -14,6 +15,7 @@ struct LibraryEntry {
   EntryType type;
   std::string sourceDirectory;
   std::string contentPath;
+  uint64_t createdAt;
 };
 
 } // namespace firelight::db

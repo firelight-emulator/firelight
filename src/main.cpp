@@ -103,6 +103,7 @@ int main(int argc, char *argv[]) {
 
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
+  engine.rootContext()->setContextProperty("library_model", &libModel);
   engine.rootContext()->setContextProperty("library_short_model",
                                            &libSortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);

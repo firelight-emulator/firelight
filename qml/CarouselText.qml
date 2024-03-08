@@ -46,6 +46,7 @@ Text {
             to: "hovered"
             ScriptAction {
                 script: {
+                    root.originalX = root.x
                     if (root.contentWidth > root.width) {
                         scrollAnimation.running = true
                     }
@@ -57,7 +58,7 @@ Text {
             ScriptAction {
                 script: {
                     scrollAnimation.running = false
-                    root.x = originalX
+                    root.x = root.originalX
                 }
             }
         }

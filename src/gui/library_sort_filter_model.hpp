@@ -9,15 +9,20 @@ class LibrarySortFilterModel final : public QSortFilterProxyModel {
 
 public slots:
   void filterOnPlaylistId(int playlistId);
+  void sortByDisplayName();
+  void sortByCreatedAt();
 
 protected:
   [[nodiscard]] bool
   filterAcceptsRow(int source_row,
-                   const QModelIndex &source_parent) const override;
+                   const QModelIndex &sourceParent) const override;
   [[nodiscard]] bool lessThan(const QModelIndex &source_left,
                               const QModelIndex &source_right) const override;
 
 private:
+  enum class SortType { DisplayName, CreatedAt };
+
+  SortType m_sortType = SortType::DisplayName;
   int m_playlistId = -1;
 };
 

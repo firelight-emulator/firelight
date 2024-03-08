@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQml.Models
 import FirelightStyle 1.0
 
 Pane {
@@ -58,16 +59,16 @@ Pane {
                             icon: "\uf53e"
                             playlistId: -1
                         }
-                        ListElement {
-                            name: "Recently played"
-                            icon: "\ue889"
-                            playlistId: -1
-                        }
-                        ListElement {
-                            name: "Newly added"
-                            icon: "\ue838"
-                            playlistId: -1
-                        }
+                        // ListElement {
+                        //     name: "Recently played"
+                        //     icon: "\ue889"
+                        //     playlistId: -1
+                        // }
+                        // ListElement {
+                        //     name: "Newly added"
+                        //     icon: "\ue838"
+                        //     playlistId: -1
+                        // }
                     }
 
                     delegate: FirelightMenuItem {
@@ -80,6 +81,13 @@ Pane {
 
                         onClicked: function () {
                             library_short_model.filterOnPlaylistId(model.playlistId)
+                            // if (model.name === "All games") {
+                            //     library_short_model.sortByDisplayName()
+                            //     // } else if (model.name === "Recently played") {
+                            //     //     library_short_model.sortByLastPlayed()
+                            // } else if (model.name === "Newly added") {
+                            //     library_short_model.sortByCreatedAt()
+                            // }
                         }
 
                         ButtonGroup.group: buttonGroup
@@ -311,12 +319,10 @@ Pane {
                         //         : (libItemMouse.containsMouse ?
                         //             "#1a1a1a"
                         //             : "transparent"))
-                        color: hovered ? "white" : "transparent"
+                        color: libItemMouse.containsMouse ? "white" : "transparent"
                         opacity: 0.2
                         radius: 4
                     }
-
-                    hoverEnabled: true
                     autoExclusive: true
 
                     width: ListView.view.width
@@ -334,20 +340,21 @@ Pane {
                         color: "#ffffff"
                     }
 
-                    // MouseArea {
-                    //     id: libItemMouse
-                    //     anchors.fill: parent
-                    //     acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    //     hoverEnabled: true
-                    //     onClicked: function (event) {
-                    //         if (event.button === Qt.LeftButton) {
-                    //             libItemButton.toggle()
-                    //         } else if (event.button === Qt.RightButton) {
-                    //             libraryEntryRightClickMenu.popup()
-                    //         }
-                    //     }
-                    //     cursorShape: Qt.PointingHandCursor
-                    // }
+                    MouseArea {
+                        id: libItemMouse
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        hoverEnabled: true
+                        onClicked: function (event) {
+                            if (event.button === Qt.LeftButton) {
+                                libItemButton.onClicked()
+                            } else if (event.button === Qt.RightButton) {
+                                libraryEntryRightClickMenu.entryId = model.id
+                                libraryEntryRightClickMenu.popup()
+                            }
+                        }
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
                 // preferredHighlightBegin: height / 3
                 // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
@@ -452,24 +459,106 @@ Pane {
         }
     }
 
+    // Instantiator {
+    //     model: playlist_model
+    //
+    //     delegate: FirelightRightClickMenuItem {
+    //         parent: addPlaylistRightClickMenu
+    //         labelText: model.display_name
+    //         onTriggered: {
+    //             // playlist_model.addEntryToPlaylist(model.id, libraryList.currentItem.id)
+    //         }
+    //     }
+    // }
+
     FirelightRightClickMenu {
         id: libraryEntryRightClickMenu
 
-        FirelightRightClickMenuItem {
-            labelText: "Rename"
-        }
+        property int entryId: -1
 
         FirelightRightClickMenu {
             id: addPlaylistRightClickMenu
 
             title: "Add to playlist"
-            FirelightRightClickMenuItem {
-                labelText: "Playlist One"
+
+            // ListView {
+            //     id: playlistList
+            //     model: playlist_model
+            //     // delegate: FirelightRightClickMenuItem {
+            //     //     // parent: addPlaylistRightClickMenu
+            //     //     labelText: display_name
+            //     //     onTriggered: {
+            //     //         // playlist_model.addEntryToPlaylist(model.id, libraryList.currentItem.id)
+            //     //     }
+            //     // }
+            //
+            //     delegate: FirelightRightClickMenuItem {
+            //         width: playlistList.width
+            //         height: 40
+            //         labelText: "whatever"
+            //         text: model.display_name
+            //     }
+            //
+            //     Component.onCompleted: {
+            //         console.log("model: " + model)
+            //     }
+            // }
+
+            Instantiator {
+                model: playlist_model
+                delegate: FirelightRightClickMenuItem {
+                    text: model.display_name
+                    onTriggered: {
+                        playlist_model.addEntryToPlaylist(model.id, libraryEntryRightClickMenu.entryId)
+                        library_model.updatePlaylistsForEntry(libraryEntryRightClickMenu.entryId)
+                        // Add your action here
+                    }
+                }
+
+                onObjectAdded: function (index, object) {
+                    addPlaylistRightClickMenu.insertItem(index, object)
+                }
+                onObjectRemoved: function (index, object) {
+                    addPlaylistRightClickMenu.removeItem(object)
+                }
             }
 
-            FirelightRightClickMenuItem {
-                labelText: "Numbah Two"
-            }
+
+            // Instantiator {
+            //     id: me
+            //     property alias playlistModel: playlist_model
+            //     model: playlist_model
+            //
+            //     onObjectAdded: function (index, object) {
+            //         object.index = index
+            //         var keys = Object.keys(object);
+            //         for (var i = 0; i < keys.length; i++) {
+            //             console.log(keys[i] + ": " + this[keys[i]]);
+            //         }
+            //         addPlaylistRightClickMenu.insertItem(index, object)
+            //     }
+            //     onObjectRemoved: function (index, object) {
+            //         addPlaylistRightClickMenu.removeItem(object)
+            //     }
+            //
+            //     FirelightRightClickMenuItem {
+            //         property int index: -1
+            //         property alias playlistModel: me.playlistModel // Add this line
+            //         labelText: playlistModel.at(index).display_name // Change this line
+            //         onTriggered: {
+            //             var keys = Object.keys(playlistModel);
+            //             for (var i = 0; i < keys.length; i++) {
+            //                 console.log(keys[i] + ": " + this[keys[i]]);
+            //             }
+            //             playlist_model.addEntryToPlaylist(model.id, libraryList.currentItem.id)
+            //         }
+            //     }
+            // }
+
+            // onAboutToShow: function () {
+            //
+            // }
+
 
         }
 
@@ -493,7 +582,7 @@ Pane {
                 renamePlaylistDialog.open()
             }
 
-            labelText: "Rename"
+            text: "Rename"
         }
 
         FirelightRightClickMenuItem {
@@ -503,7 +592,7 @@ Pane {
                 deletePlaylistDialog.open()
             }
 
-            labelText: "Delete playlist"
+            text: "Delete playlist"
         }
     }
 

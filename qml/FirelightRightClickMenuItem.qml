@@ -4,7 +4,7 @@ import FirelightStyle 1.0
 
 MenuItem {
     id: control
-    required property string labelText
+    padding: 6
 
     arrow: Canvas {
         x: parent.width - width
@@ -27,15 +27,15 @@ MenuItem {
         implicitHeight: Constants.rightClickMenuItem_DefaultHeight
         radius: Constants.rightClickMenuItem_BackgroundRadius
         color: renameHover.hovered ? Constants.rightClickMenuItem_HoverColor : "transparent"
-
         HoverHandler {
             id: renameHover
             acceptedDevices: PointerDevice.Mouse
         }
     }
 
-    contentItem: Text {
-        text: control.labelText
+    contentItem: CarouselText {
+        hovered: renameHover.hovered
+        text: control.text
         color: Constants.rightClickMenuItem_TextColor
         font.pointSize: 11
         font.family: Constants.strongFontFamily

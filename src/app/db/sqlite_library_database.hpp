@@ -25,6 +25,7 @@ public:
   bool deletePlaylist(int playlistId) override;
   bool renamePlaylist(int playlistId, std::string newName) override;
   [[nodiscard]] std::vector<Playlist> getAllPlaylists() override;
+  std::vector<Playlist> getPlaylistsForEntry(int entryId) override;
 
   // Playlist Entries
   bool addEntryToPlaylist(int playlistId, int entryId) override;

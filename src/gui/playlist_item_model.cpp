@@ -104,4 +104,9 @@ void PlaylistItemModel::renamePlaylist(const int playlistId,
   }
 }
 
+void PlaylistItemModel::addEntryToPlaylist(const int playlistId,
+                                           const int entryId) {
+  m_libraryDatabase->addEntryToPlaylist(playlistId, entryId);
+}
+
 } // namespace firelight::gui

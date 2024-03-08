@@ -20,6 +20,6 @@ Menu {
 
     delegate: FirelightRightClickMenuItem {
         id: delegate
-        labelText: text
+        text: text
     }
 }

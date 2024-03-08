@@ -66,14 +66,10 @@ Button {
     MouseArea {
         id: mouse
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.RightButton
         hoverEnabled: true
         onClicked: function (event) {
-            if (event.button === Qt.LeftButton && !control.checked) {
-                control.toggle()
-            } else if (event.button === Qt.RightButton) {
-                control.rightClicked()
-            }
+            control.rightClicked()
         }
         cursorShape: Qt.PointingHandCursor
     }

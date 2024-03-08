@@ -64,5 +64,6 @@ public:
   virtual bool renamePlaylist(int playlistId, std::string newName) = 0;
   virtual bool addEntryToPlaylist(int playlistId, int entryId) = 0;
   [[nodiscard]] virtual std::vector<Playlist> getAllPlaylists() = 0;
+  virtual std::vector<Playlist> getPlaylistsForEntry(int entryId) = 0;
 };
 } // namespace firelight::db
