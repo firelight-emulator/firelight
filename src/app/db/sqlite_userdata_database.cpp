@@ -118,37 +118,6 @@ SqliteUserdataDatabase::getSavefileMetadata(const std::string contentMd5,
   return metadata;
 }
 
-void SqliteUserdataDatabase::createPlaySession(PlaySession session) {
-  const QString queryString =
-      "INSERT INTO play_sessions ("
-      "content_md5, "
-      "start_time, "
-      "end_time, "
-      "unpaused_duration_seconds) "
-      "VALUES (:contentMd5, :startTime, :endTime, :unpausedDurationSeconds);";
-
-  auto db = QSqlDatabase::database("userdata");
-  if (!db.isValid()) {
-    // TODO: Give each thread its own connection name?
-    db = QSqlDatabase::addDatabase("QSQLITE", "userdata");
-    db.setDatabaseName(QString::fromStdString(m_database_path.string()));
-    db.open();
-  }
-
-  auto query = QSqlQuery(db);
-  query.prepare(queryString);
-
-  query.bindValue(":contentMd5", QString::fromStdString(session.contentMd5));
-  query.bindValue(":startTime", session.startTime);
-  query.bindValue(":endTime", session.endTime);
-  query.bindValue(":unpausedDurationSeconds", session.unpausedDurationSeconds);
-
-  if (!query.exec()) {
-    spdlog::warn("Insert into play_sessions failed: {}",
-                 query.lastError().text().toStdString());
-  }
-}
-
 bool SqliteUserdataDatabase::updateSavefileMetadata(SavefileMetadata metadata) {
   QSqlQuery query(m_database);
   query.prepare("UPDATE savefile_metadata SET savefile_md5 = :savefileMd5, "
@@ -158,7 +127,8 @@ bool SqliteUserdataDatabase::updateSavefileMetadata(SavefileMetadata metadata) {
   query.bindValue(":id", metadata.id);
 
   if (!query.exec()) {
-    spdlog::error("Update failed: {}", query.lastError().text().toStdString());
+    spdlog::error("Update Savefile metadata failed: {}",
+                  query.lastError().text().toStdString());
     return false;
   }
 
@@ -197,6 +167,35 @@ bool SqliteUserdataDatabase::createSavefileMetadata(
   metadata.id = query.lastInsertId().toInt();
 
   query.finish();
+  return true;
+}
+
+bool SqliteUserdataDatabase::createPlaySession(PlaySession &session) {
+  const QString queryString = "INSERT INTO play_sessions ("
+                              "content_md5, "
+                              "savefile_slot_number, "
+                              "start_time, "
+                              "end_time, "
+                              "unpaused_duration_seconds) "
+                              "VALUES (:contentMd5, :slotNumber, :startTime, "
+                              ":endTime, :unpausedDurationSeconds);";
+  auto query = QSqlQuery(m_database);
+  query.prepare(queryString);
+
+  query.bindValue(":contentMd5", QString::fromStdString(session.contentMd5));
+  query.bindValue(":slotNumber", session.slotNumber);
+  query.bindValue(":startTime", session.startTime);
+  query.bindValue(":endTime", session.endTime);
+  query.bindValue(":unpausedDurationSeconds", session.unpausedDurationSeconds);
+
+  if (!query.exec()) {
+    spdlog::warn("Insert into play_sessions failed: {}",
+                 query.lastError().text().toStdString());
+    return false;
+  }
+
+  session.id = query.lastInsertId().toInt();
+
   return true;
 }
 

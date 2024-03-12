@@ -154,20 +154,37 @@ TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataTest) {
   ASSERT_EQ(updatedMetadata->savefileMd5, "1111111111");
 }
 
-//
-// TEST_F(SqliteUserdataDatabaseTest, CreatePlaySessionTest) {
-//   SqliteUserdataDatabase db(temp_file_path.string());
-//
-//   // Add code to test the createPlaySession method
-//   PlaySession session;
-//   session.contentMd5 = "1234567890";
-//   session.startTime = 1000;
-//   session.endTime = 2000;
-//   session.unpausedDurationSeconds = 500;
-//
-//   db.createPlaySession(session);
-//   // Add assertions to check the state of the database after the operation
-// }
+TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataWhenNotExist) {
+  SqliteUserdataDatabase db(temp_file_path.string());
+
+  const auto result = db.getSavefileMetadataForContent("1234567890");
+  ASSERT_TRUE(result.empty());
+
+  SavefileMetadata metadata;
+  metadata.id = 123;
+  metadata.contentMd5 = "1234567890";
+  metadata.slotNumber = 1;
+  metadata.savefileMd5 = "0987654321";
+  metadata.lastModifiedAt = 1000;
+  metadata.createdAt = 500;
+
+  ASSERT_FALSE(db.updateSavefileMetadata(metadata));
+}
+
+TEST_F(SqliteUserdataDatabaseTest, CreatePlaySessionTest) {
+  SqliteUserdataDatabase db(temp_file_path.string());
+
+  PlaySession session;
+  session.id = -1;
+  session.contentMd5 = "1234567890";
+  session.slotNumber = 1;
+  session.startTime = 1000;
+  session.endTime = 2000;
+  session.unpausedDurationSeconds = 500;
+
+  ASSERT_TRUE(db.createPlaySession(session));
+  ASSERT_NE(session.id, -1);
+}
 //
 // TEST_F(SqliteUserdataDatabaseTest, GetOrCreateSavefileMetadataTest) {
 //   SqliteUserdataDatabase db(temp_file_path.string());

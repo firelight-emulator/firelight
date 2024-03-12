@@ -85,8 +85,12 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
       } else {
         m_playtimeTimer.restart();
       }
-      const firelight::db::PlaySession session{
-          -1, m_currentEntry.contentMd5, sessionStartTime, sessionEndTime,
+      firelight::db::PlaySession session{
+          -1,
+          m_currentEntry.contentMd5,
+          1,
+          sessionStartTime,
+          sessionEndTime,
           static_cast<uint16_t>(sessionDuration / 1000)};
       getUserdataManager()->createPlaySession(session);
       m_running = false;
@@ -206,8 +210,12 @@ EmulatorRenderer::~EmulatorRenderer() {
       m_playtimeTimer.restart();
     }
 
-    const firelight::db::PlaySession session{
-        -1, m_currentEntry.contentMd5, sessionStartTime, sessionEndTime,
+    firelight::db::PlaySession session{
+        -1,
+        m_currentEntry.contentMd5,
+        1,
+        sessionStartTime,
+        sessionEndTime,
         static_cast<uint16_t>(sessionDuration / 1000)};
     getUserdataManager()->createPlaySession(session);
     m_running = false;

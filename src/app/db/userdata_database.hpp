@@ -19,14 +19,14 @@ public:
    */
   virtual bool tableExists(std::string tableName) = 0;
 
-  virtual void createPlaySession(PlaySession session) = 0;
-
   virtual bool createSavefileMetadata(SavefileMetadata &metadata) = 0;
   virtual std::optional<SavefileMetadata>
   getSavefileMetadata(std::string contentMd5, uint8_t slotNumber) = 0;
   virtual bool updateSavefileMetadata(SavefileMetadata metadata) = 0;
   virtual std::vector<SavefileMetadata>
   getSavefileMetadataForContent(std::string contentMd5) = 0;
+
+  virtual bool createPlaySession(PlaySession &session) = 0;
 };
 
 } // namespace firelight::db
