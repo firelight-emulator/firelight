@@ -1,0 +1,14 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: hello
+      run: echo "hello world"
