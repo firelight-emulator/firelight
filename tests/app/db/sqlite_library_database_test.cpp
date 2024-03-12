@@ -9,7 +9,8 @@ protected:
   std::filesystem::path temp_file_path;
 
   void SetUp() override {
-    temp_file_path = std::filesystem::temp_directory_path() / "temp.db";
+    temp_file_path =
+        std::filesystem::temp_directory_path() / "firelightlibrary.db";
   }
 
   void TearDown() override { std::filesystem::remove(temp_file_path); }

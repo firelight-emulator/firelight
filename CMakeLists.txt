@@ -36,6 +36,12 @@ find_package(spdlog REQUIRED)
 find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
 find_package(GTest)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
+pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
+pkg_check_modules(AVUTIL REQUIRED IMPORTED_TARGET libavutil)
+pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
+
 qt6_standard_project_setup(REQUIRES 6.5)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -78,10 +84,10 @@ add_library(firelight_lib
         src/app/libretro/audio_data_receiver.hpp
         src/app/audio_manager.cpp
         src/app/audio_manager.hpp
-        src/gui/save_manager.cpp
-        src/gui/save_manager.hpp
-        src/app/saves/save_data.hpp
-        src/app/saves/save_data.cpp
+        src/app/saves/save_manager.cpp
+        src/app/saves/save_manager.hpp
+        src/app/saves/savefile.hpp
+        src/app/saves/savefile.cpp
         src/app/game_loader.cpp
         src/app/game_loader.hpp
         src/app/patching/ips_patch.cpp
@@ -110,12 +116,36 @@ add_library(firelight_lib
         src/app/db/daos/library_entry.hpp
         src/gui/playlist_item_model.cpp
         src/gui/playlist_item_model.hpp
+        src/app/netplay/stream_boy.hpp
+        src/app/netplay/stream_test.cpp
+        src/app/netplay/stream_test.hpp
+        src/app/db/daos/play_session.hpp
+        src/app/db/daos/savefile_metadata.hpp
+        src/app/util/md5.hpp
+        src/app/util/util.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}
         ${SQLite3_INCLUDE_DIRS})
-target_link_libraries(firelight_lib mingw32 SDL2 opengl32 ssl crypto z ${SQLite3_LIBRARIES}
-        Qt6::Gui Qt6::Quick Qt6::OpenGL Qt6::QuickControls2 Qt6::Quick3D Qt6::Sql spdlog::spdlog)
+target_link_libraries(firelight_lib
+        mingw32
+        SDL2
+        opengl32
+        ssl
+        crypto
+        z
+        ${SQLite3_LIBRARIES}
+        Qt6::Gui
+        Qt6::Quick
+        Qt6::OpenGL
+        Qt6::QuickControls2
+        Qt6::Quick3D
+        Qt6::Sql
+        spdlog::spdlog
+        PkgConfig::AVCODEC
+        PkgConfig::AVFORMAT
+        PkgConfig::AVUTIL
+        PkgConfig::SWSCALE)
 
 file(GLOB QML_FILES
         qml/*.qml
@@ -195,6 +225,7 @@ add_executable(fl_test
         tests/app/patching/ips_patch_test.cpp
         tests/app/db/sqlite_library_database_test.cpp
         tests/mocks/mock_library_database.hpp
+        tests/app/db/sqlite_userdata_database_test.cpp
 )
 
 add_dependencies(fl_test copy_resources)

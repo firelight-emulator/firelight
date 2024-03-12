@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
   }
 
   // If missing system directory, throw an error
+  // TODO
 
   // **** Make sure all directories are good ****
   std::filesystem::path appdata_dir = ".";
@@ -67,18 +68,19 @@ int main(int argc, char *argv[]) {
   firelight::Input::ControllerManager controllerManager;
   firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
-  firelight::Saves::SaveManager saveManager(save_dir);
-
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
-  firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   controllerManager.refreshControllerList();
 
   sdlEventLoop.start();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-  SqliteUserdataDatabase userdata_database(userdata_dir / "userdata.db");
+  firelight::db::SqliteUserdataDatabase userdata_database(userdata_dir /
+                                                          "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
+
+  firelight::Saves::SaveManager saveManager(save_dir, userdata_database);
+  firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   // **** Load Content Database ****
   SqliteContentDatabase contentDatabase(system_dir / "content.db");
@@ -129,6 +131,8 @@ int main(int argc, char *argv[]) {
 
   sdlEventLoop.quit();
   sdlEventLoop.wait();
+
+  // TODO: Let daemons finish
 
   return exitCode;
 }

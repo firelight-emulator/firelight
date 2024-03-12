@@ -3,6 +3,7 @@
 #include "emulation_manager.hpp"
 #include "libretro/core.hpp"
 #include "manager_accessor.hpp"
+
 #include <QOpenGLFunctions>
 #include <QQuickFramebufferObject>
 
@@ -28,9 +29,9 @@ protected:
   void render() override;
 
 private:
-  long long sessionStartTime = 0;
-  long long sessionEndTime = 0;
-  long long sessionDuration = 0;
+  uint64_t sessionStartTime = 0;
+  uint64_t sessionEndTime = 0;
+  uint64_t sessionDuration = 0;
   QElapsedTimer m_playtimeTimer;
 
   bool m_shouldLoadGame = false;

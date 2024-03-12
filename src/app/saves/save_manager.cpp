@@ -1,10 +1,6 @@
-//
-// Created by alexs on 1/7/2024.
-//
-
 #include "save_manager.hpp"
 
-#include "../app/db/daos/library_entry.hpp"
+#include "../db/daos/library_entry.hpp"
 
 #include <fstream>
 #include <qfuture.h>
@@ -12,29 +8,51 @@
 
 namespace firelight::Saves {
 
-SaveManager::SaveManager(std::filesystem::path saveDir)
-    : m_saveDir(std::move(saveDir)) {
+SaveManager::SaveManager(std::filesystem::path saveDir,
+                         db::IUserdataDatabase &userdataDatabase)
+    : m_userdataDatabase(userdataDatabase), m_saveDir(std::move(saveDir)) {
   m_ioThreadPool = std::make_unique<QThreadPool>();
-  m_ioThreadPool->setMaxThreadCount(4);
+  m_ioThreadPool->setMaxThreadCount(1);
 }
 
 QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
-                                                 SaveData &saveData) const {
+                                                 Savefile &saveData) const {
   return QtConcurrent::run([this, entry, saveData] {
-    const auto md5 = entry.contentMd5;
+    // TODO: Add some verification that the metadata is correct
+    // TODO: Save file could have been deleted, etc
+    auto slot = 1;
+
+    auto metadata =
+        m_userdataDatabase.getSavefileMetadata(entry.contentMd5, slot).value();
+    // m_userdataDatabase.getOrCreateSavefileMetadata(entry.contentMd5, slot);
+
     const auto bytes = saveData.getSaveRamData();
+    auto savefileMd5 = "heytyhere";
+
+    if (metadata.savefileMd5 == savefileMd5) {
+      return true;
+    }
+
+    metadata.savefileMd5 = savefileMd5;
+
     // auto image = saveData.getImage();
     // spdlog::info("md5: {}, bytesLength: {}, imageWidth: {}, imageHeight: {}",
     //              md5, bytes.size(), image.width(), image.height());
     // return true;
-    const auto directory = m_saveDir / md5;
+    const auto directory =
+        m_saveDir / entry.contentMd5 / ("slot" + std::to_string(slot));
     create_directories(directory);
 
-    const auto saveFile = directory / "savedata.sram";
+    const auto saveFile = directory / "savefile.sram";
 
     std::ofstream saveFileStream(saveFile, std::ios::binary);
     saveFileStream.write(bytes.data(), bytes.size());
     saveFileStream.close();
+
+    auto timestamp = 0;
+    metadata.lastModifiedAt = timestamp;
+
+    m_userdataDatabase.updateSavefileMetadata(metadata);
 
     // if (image != nullptr) {
     // }
@@ -67,7 +85,7 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
   // spdlog::info("writing save data for entry {}", entry.content_path);
 }
 
-std::optional<SaveData>
+std::optional<Savefile>
 SaveManager::readSaveDataForEntry(db::LibraryEntry &entry) const {
   const auto directory = m_saveDir / entry.contentMd5;
   if (!exists(directory)) {
@@ -87,7 +105,7 @@ SaveManager::readSaveDataForEntry(db::LibraryEntry &entry) const {
 
   auto fileContents = std::vector(data.data(), data.data() + size);
 
-  SaveData saveData(fileContents);
+  Savefile saveData(fileContents);
 
   return {saveData};
 }

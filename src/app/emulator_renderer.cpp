@@ -10,7 +10,6 @@
 #include <qdatetime.h>
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
-#include <zlib.h>
 
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
@@ -86,9 +85,10 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
       } else {
         m_playtimeTimer.restart();
       }
-      getUserdataManager()->savePlaySession(m_currentEntry.contentMd5,
-                                            sessionStartTime, sessionEndTime,
-                                            sessionDuration / 1000);
+      const firelight::db::PlaySession session{
+          -1, m_currentEntry.contentMd5, sessionStartTime, sessionEndTime,
+          static_cast<uint16_t>(sessionDuration / 1000)};
+      getUserdataManager()->createPlaySession(session);
       m_running = false;
       m_ranLastFrame = false;
       save(true);
@@ -158,7 +158,7 @@ void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
 
 void EmulatorRenderer::save(bool waitForFinish) {
   spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
-  firelight::Saves::SaveData saveData(core->getMemoryData(libretro::SAVE_RAM));
+  firelight::Saves::Savefile saveData(core->getMemoryData(libretro::SAVE_RAM));
   saveData.setImage(m_fbo->toImage());
 
   QFuture<bool> result =
@@ -205,9 +205,11 @@ EmulatorRenderer::~EmulatorRenderer() {
     } else {
       m_playtimeTimer.restart();
     }
-    getUserdataManager()->savePlaySession(m_currentEntry.contentMd5,
-                                          sessionStartTime, sessionEndTime,
-                                          sessionDuration / 1000);
+
+    const firelight::db::PlaySession session{
+        -1, m_currentEntry.contentMd5, sessionStartTime, sessionEndTime,
+        static_cast<uint16_t>(sessionDuration / 1000)};
+    getUserdataManager()->createPlaySession(session);
     m_running = false;
     m_ranLastFrame = false;
 
@@ -234,7 +236,7 @@ void EmulatorRenderer::render() {
 
   if (m_running) {
     if (!m_paused) {
-      auto frameBegin = SDL_GetPerformanceCounter();
+      const auto frameBegin = SDL_GetPerformanceCounter();
       lastTick = thisTick;
       thisTick = SDL_GetPerformanceCounter();
 

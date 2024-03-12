@@ -348,55 +348,54 @@ ApplicationWindow {
             showButtons: false
         }
 
-        Component {
+        Item {
             id: homePage
+            visible: false
+            Rectangle {
+                id: homeTop
+                anchors.top: parent.top
+                anchors.topMargin: 12
+                anchors.leftMargin: 12
+                anchors.left: parent.left
+                anchors.right: parent.right
+                radius: 12
+                height: 120
+                color: "transparent"
 
-            Item {
-                Rectangle {
-                    id: homeTop
+                Text {
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WordWrap
+                    font.pointSize: 24
+                    text: "Thanks for trying out Firelight!"
+                    font.family: Constants.regularFontFamily
+                    color: Constants.colorTestTextActive
+                }
+            }
+
+            Rectangle {
+                id: homeLeft
+                anchors.topMargin: 12
+                anchors.top: homeTop.bottom
+                anchors.left: parent.left
+                anchors.leftMargin: 12
+                width: parent.width / 2
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 12
+                radius: 12
+                color: Constants.colorTestSurface
+
+                Text {
                     anchors.top: parent.top
-                    anchors.topMargin: 12
-                    anchors.leftMargin: 12
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    radius: 12
-                    height: 120
-                    color: "transparent"
-
-                    Text {
-                        anchors.fill: parent
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        wrapMode: Text.WordWrap
-                        font.pointSize: 24
-                        text: "Thanks for trying out Firelight!"
-                        font.family: Constants.regularFontFamily
-                        color: Constants.colorTestTextActive
-                    }
-                }
-
-                Rectangle {
-                    id: homeLeft
-                    anchors.topMargin: 12
-                    anchors.top: homeTop.bottom
-                    anchors.left: parent.left
-                    anchors.leftMargin: 12
-                    width: parent.width / 2
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 12
-                    radius: 12
-                    color: Constants.colorTestSurface
-
-                    Text {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.margins: 12
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                        wrapMode: Text.WordWrap
-                        font.pointSize: 12
-                        text: "<p>Seriously, thanks so much :) This is a passion project of mine, and I'm excited to
+                    anchors.margins: 12
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WordWrap
+                    font.pointSize: 12
+                    text: "<p>Seriously, thanks so much :) This is a passion project of mine, and I'm excited to
                          share it with you. Here's some of the stuff you can look forward to next:</p>
                         <br />
                          <b>Content matching</b>: <p>We'll scan your ROMs and determine which game each of
@@ -414,33 +413,33 @@ ApplicationWindow {
 
                          <p>There's a lot to look forward to, so keep an eye on the Discord for updates and to take
                          part in the discussions!</p>"
-                        font.family: Constants.lightFontFamily
-                        color: Constants.colorTestTextActive
-                    }
+                    font.family: Constants.lightFontFamily
+                    color: Constants.colorTestTextActive
                 }
+            }
 
-                Rectangle {
-                    id: homeRight
-                    anchors.top: homeTop.bottom
-                    anchors.topMargin: 12
-                    anchors.left: homeLeft.right
-                    anchors.leftMargin: 12
+            Rectangle {
+                id: homeRight
+                anchors.top: homeTop.bottom
+                anchors.topMargin: 12
+                anchors.left: homeLeft.right
+                anchors.leftMargin: 12
+                anchors.right: parent.right
+                anchors.bottomMargin: 12
+                anchors.bottom: parent.bottom
+                radius: 12
+                color: Constants.colorTestSurface
+
+                Text {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.bottomMargin: 12
-                    anchors.bottom: parent.bottom
-                    radius: 12
-                    color: Constants.colorTestSurface
-
-                    Text {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.margins: 12
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                        wrapMode: Text.WordWrap
-                        font.pointSize: 12
-                        text: "<p><b>Known Issues<b>:</p>
+                    anchors.margins: 12
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WordWrap
+                    font.pointSize: 12
+                    text: "<p><b>Known Issues<b>:</p>
                         <ul>
                         <li>Doesn't work correctly at anything other than 60Hz</li>
                         <li>Slight delay opening pause menu for the first time</li>
@@ -448,190 +447,183 @@ ApplicationWindow {
                         <li>Graphical glitches in N64 games</li>
                         <li>Picture mode button doesn't accurately reflect state</li>
                         </ul>"
-                        font.family: Constants.lightFontFamily
-                        color: Constants.colorTestTextActive
-                    }
-                }
-            }
-        }
-
-        Component {
-            id: explorePage
-            Item {
-                Text {
-                    text: "Here's where the Explore menu will go!"
-                    anchors.centerIn: parent
+                    font.family: Constants.lightFontFamily
                     color: Constants.colorTestTextActive
-                    font.pointSize: 16
-                    font.family: Constants.regularFontFamily
                 }
             }
         }
 
-        Component {
-            id: libraryPage
-            LibraryPage {
-                id: thisLibraryPage
-                property int nextEntryId: -1
+        Item {
+            id: explorePage
+            visible: false
+            Text {
+                text: "Here's where the Explore menu will go!"
+                anchors.centerIn: parent
+                color: Constants.colorTestTextActive
+                font.pointSize: 16
+                font.family: Constants.regularFontFamily
+            }
+        }
 
-                fontFamilyName: Constants.regularFontFamily
-                onEntryClicked: function (entryId) {
-                    // gameLoader.loadGame(entryId)
-                    // fullPane.loadGame(entryId)
-                    if (emulator.isRunning()) {
-                        dialog.entryId = entryId
-                        dialog.open()
-                    } else {
+        LibraryPage {
+            id: libraryPage
+            visible: false
+            property int nextEntryId: -1
+
+            fontFamilyName: Constants.regularFontFamily
+            onEntryClicked: function (entryId) {
+                // gameLoader.loadGame(entryId)
+                // fullPane.loadGame(entryId)
+                if (emulator.isRunning()) {
+                    dialog.entryId = entryId
+                    dialog.open()
+                } else {
+                    gameLoader.loadGame(entryId)
+                }
+            }
+
+            FirelightDialog {
+                id: dialog
+                property int entryId
+                parent: Overlay.overlay
+                anchors.centerIn: parent
+                text: "<p>You need to close the current game before loading another one. Are you sure you want
+                     to close the current game?</p>"
+
+                onAccepted: {
+                    libraryPage.nextEntryId = entryId
+                    appRoot.state = "notPlayingGame"
+                }
+            }
+
+            Connections {
+                target: appRoot
+
+                function onCustomStateChanged(newState) {
+                    if (newState === "notPlayingGame" && libraryPage.nextEntryId !== -1) {
+                        var entryId = libraryPage.nextEntryId
+                        libraryPage.nextEntryId = -1
+
                         gameLoader.loadGame(entryId)
                     }
                 }
-
-                FirelightDialog {
-                    id: dialog
-                    property int entryId
-                    parent: Overlay.overlay
-                    anchors.centerIn: parent
-                    text: "<p>You need to close the current game before loading another one. Are you sure you want
-                     to close the current game?</p>"
-
-                    onAccepted: {
-                        thisLibraryPage.nextEntryId = entryId
-                        appRoot.state = "notPlayingGame"
-                    }
-                }
-
-                Connections {
-                    target: appRoot
-
-                    function onCustomStateChanged(newState) {
-                        if (newState === "notPlayingGame" && thisLibraryPage.nextEntryId !== -1) {
-                            var entryId = thisLibraryPage.nextEntryId
-                            thisLibraryPage.nextEntryId = -1
-
-                            gameLoader.loadGame(entryId)
-                        }
-                    }
-                }
-
             }
+
         }
 
-        Component {
+        ControllersPage {
             id: controllersPage
-            ControllersPage {
-            }
+            visible: false
         }
 
-        Component {
+        SettingsPage {
             id: settingsPage
-            SettingsPage {
-            }
+            visible: false
         }
 
-        Component {
+        Item {
             id: nowPlayingPage
-            Item {
-                Column {
-                    id: topPart
-                    spacing: 12
-                    anchors.left: parent.left
-                    anchors.top: parent.top
+            visible: false
+            Column {
+                id: topPart
+                spacing: 12
+                anchors.left: parent.left
+                anchors.top: parent.top
 
-                    anchors.leftMargin: 24
-                    anchors.topMargin: 24
-                    Text {
-                        text: "You're playing:"
-                        color: Constants.colorTestTextActive
-                        font.pointSize: 14
-                        font.family: Constants.regularFontFamily
-                    }
-                    Text {
-                        text: emulator.currentGameName
-                        color: Constants.colorTestTextActive
-                        font.pointSize: 24
-                        font.family: Constants.regularFontFamily
-                    }
-                    Item {
-                        height: 60
-                        width: 10
+                anchors.leftMargin: 24
+                anchors.topMargin: 24
+                Text {
+                    text: "You're playing:"
+                    color: Constants.colorTestTextActive
+                    font.pointSize: 14
+                    font.family: Constants.regularFontFamily
+                }
+                Text {
+                    text: emulator.currentGameName
+                    color: Constants.colorTestTextActive
+                    font.pointSize: 24
+                    font.family: Constants.regularFontFamily
+                }
+                Item {
+                    height: 60
+                    width: 10
+                }
+            }
+            Column {
+                spacing: 2
+                anchors.left: parent.left
+                anchors.top: topPart.bottom
+                anchors.right: parent.right
+
+                anchors.leftMargin: 24
+
+                Button {
+                    text: "Resume Game"
+                    // labelIcon: "\uf7d0"
+                    height: 40
+                    width: 200
+                    checkable: false
+
+                    onClicked: function () {
+                        appRoot.state = "playingGame"
                     }
                 }
-                Column {
-                    spacing: 2
-                    anchors.left: parent.left
-                    anchors.top: topPart.bottom
-                    anchors.right: parent.right
 
-                    anchors.leftMargin: 24
+                Button {
+                    text: "Restart Game"
+                    // labelIcon: "\uf053"
+                    height: 40
+                    width: 200
+                    checkable: false
 
-                    Button {
-                        text: "Resume Game"
-                        // labelIcon: "\uf7d0"
-                        height: 40
-                        width: 200
-                        checkable: false
-
-                        onClicked: function () {
-                            appRoot.state = "playingGame"
-                        }
+                    onClicked: function () {
+                        emulator.resetGame()
+                        appRoot.state = "playingGame"
                     }
-
-                    Button {
-                        text: "Restart Game"
-                        // labelIcon: "\uf053"
-                        height: 40
-                        width: 200
-                        checkable: false
-
-                        onClicked: function () {
-                            emulator.resetGame()
-                            appRoot.state = "playingGame"
-                        }
-                    }
-
-                    Button {
-                        text: "Quit Game"
-                        // labelIcon: "\ue5cd"
-                        height: 40
-                        width: 200
-                        checkable: false
-
-                        onClicked: function () {
-                            closeGameDialog.open()
-                        }
-                    }
-
-                    // Text {
-                    //     text: "This thing doesn't remember your setting when you leave this menu and go back in but it's fine for now."
-                    //     color: Constants.colorTestTextActive
-                    //     font.pointSize: 10
-                    //     font.family: Constants.regularFontFamily
-                    // }
-                    //
-                    // SettingsItem {
-                    //     label: "Picture Mode"
-                    //     width: parent.width / 2
-                    //     height: 50
-                    //     thing: Component {
-                    //         ComboBox {
-                    //             model: ["Maintain Aspect Ratio", "Original", "Stretch"]
-                    //             onActivated: function (index) {
-                    //                 switch (index) {
-                    //                     case 0:
-                    //                         emulator.setPictureMode("aspect-ratio")
-                    //                         break
-                    //                     case 1:
-                    //                         emulator.setPictureMode("original")
-                    //                         break
-                    //                     case 2:
-                    //                         emulator.setPictureMode("stretched")
-                    //                         break
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    // }
                 }
+
+                Button {
+                    text: "Quit Game"
+                    // labelIcon: "\ue5cd"
+                    height: 40
+                    width: 200
+                    checkable: false
+
+                    onClicked: function () {
+                        closeGameDialog.open()
+                    }
+                }
+
+                // Text {
+                //     text: "This thing doesn't remember your setting when you leave this menu and go back in but it's fine for now."
+                //     color: Constants.colorTestTextActive
+                //     font.pointSize: 10
+                //     font.family: Constants.regularFontFamily
+                // }
+                //
+                // SettingsItem {
+                //     label: "Picture Mode"
+                //     width: parent.width / 2
+                //     height: 50
+                //     thing: Component {
+                //         ComboBox {
+                //             model: ["Maintain Aspect Ratio", "Original", "Stretch"]
+                //             onActivated: function (index) {
+                //                 switch (index) {
+                //                     case 0:
+                //                         emulator.setPictureMode("aspect-ratio")
+                //                         break
+                //                     case 1:
+                //                         emulator.setPictureMode("original")
+                //                         break
+                //                     case 2:
+                //                         emulator.setPictureMode("stretched")
+                //                         break
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
             }
         }
 

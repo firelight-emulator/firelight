@@ -5,10 +5,10 @@
 
 namespace firelight::Saves {
 
-class SaveData {
+class Savefile {
 public:
-  explicit SaveData(const std::vector<char> &saveRamData);
-  SaveData(const SaveData &other);
+  explicit Savefile(const std::vector<char> &saveRamData);
+  Savefile(const Savefile &other);
   [[nodiscard]] std::vector<char> getSaveRamData() const;
   void setImage(QImage image);
   [[nodiscard]] QImage getImage() const;
