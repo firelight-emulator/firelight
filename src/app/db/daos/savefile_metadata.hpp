@@ -5,7 +5,7 @@
 
 namespace firelight::db {
 struct SavefileMetadata {
-  uint64_t id;
+  int64_t id = -1;
   std::string contentMd5;
   uint8_t slotNumber;
   std::string savefileMd5;

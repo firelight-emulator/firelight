@@ -3,6 +3,7 @@
 #include <openssl/evp.h>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 static std::string calculateMD5(const char *input, int size) {
   unsigned char md5Hash[EVP_MAX_MD_SIZE];
@@ -39,4 +40,8 @@ static std::string calculateMD5(const char *input, int size) {
     std::sprintf(&output[i * 2], "%02x", md5Hash[i]);
 
   return output;
+}
+
+static std::string calculateMD5(const std::vector<char> &input) {
+  return calculateMD5(input.data(), input.size());
 }
