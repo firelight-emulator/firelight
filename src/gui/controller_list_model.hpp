@@ -2,9 +2,9 @@
 
 #include <QAbstractListModel>
 
-namespace firelight::Input {
+namespace firelight::gui {
 
-class ControllerListModel final : public QAbstractListModel {
+class ControllerListModel : public QAbstractListModel {
   Q_OBJECT
 
 public:
@@ -13,4 +13,4 @@ public:
                               int role) const override;
 };
 
-} // namespace firelight::Input
+} // namespace firelight::gui
