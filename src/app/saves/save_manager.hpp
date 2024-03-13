@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <qfuture.h>
 
-namespace firelight::Saves {
+namespace firelight::saves {
 
 class SaveManager : public QObject {
 public:

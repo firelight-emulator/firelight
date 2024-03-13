@@ -30,18 +30,12 @@ public:
   // Playlist Entries
   bool addEntryToPlaylist(int playlistId, int entryId) override;
 
-  // Old stuff
-  void updateEntryContentPath(int entryId, std::string sourceDirectory,
-                              std::string contentPath) override;
-
-  void addOrRenameEntry(LibEntry entry) override;
   std::vector<LibEntry> getAllEntries() override;
   void match_md5s(std::string source_directory,
                   std::vector<std::string> md5s) override;
   std::vector<LibEntry> getMatching(Filter filter) override;
 
 private:
-  void insert_entry_into_db(LibEntry entry) const;
   QSqlDatabase m_database;
 };
 

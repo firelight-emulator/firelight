@@ -3,7 +3,7 @@
 #include <qimage.h>
 #include <vector>
 
-namespace firelight::Saves {
+namespace firelight::saves {
 
 class Savefile {
 public:

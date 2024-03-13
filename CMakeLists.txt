@@ -101,8 +101,8 @@ add_library(firelight_lib
         src/app/db/userdata_database.hpp
         src/app/db/sqlite_userdata_database.cpp
         src/app/db/sqlite_userdata_database.hpp
-        src/app/input/controller_list_model.cpp
-        src/app/input/controller_list_model.hpp
+        src/gui/controller_list_model.cpp
+        src/gui/controller_list_model.hpp
         src/gui/QLibraryManager.cpp
         src/gui/QLibraryManager.hpp
         src/app/db/daos/romhack.hpp
@@ -123,6 +123,8 @@ add_library(firelight_lib
         src/app/db/daos/savefile_metadata.hpp
         src/app/util/md5.hpp
         src/app/util/util.hpp
+        src/gui/savefile_list_model.cpp
+        src/gui/savefile_list_model.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}
@@ -151,6 +153,7 @@ file(GLOB QML_FILES
         qml/*.qml
         qml/controllers/*.qml
         qml/settings/*.qml
+        qml/library/*.qml
 )
 
 foreach (QML_FILE ${QML_FILES})
@@ -226,6 +229,7 @@ add_executable(fl_test
         tests/app/db/sqlite_library_database_test.cpp
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
+        tests/app/saves/save_manager_test.cpp
 )
 
 add_dependencies(fl_test copy_resources)

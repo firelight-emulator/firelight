@@ -476,6 +476,13 @@ Pane {
 
         property int entryId: -1
 
+        FirelightRightClickMenuItem {
+            text: "Manage save files"
+            onTriggered: {
+                manageSavefilesDialog.open()
+            }
+        }
+
         FirelightRightClickMenu {
             id: addPlaylistRightClickMenu
 
@@ -594,6 +601,11 @@ Pane {
 
             text: "Delete playlist"
         }
+    }
+
+    ManageSavefilesDialog {
+        id: manageSavefilesDialog
+        visible: false
     }
 
 }

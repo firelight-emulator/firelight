@@ -19,6 +19,7 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
                                "display_name TEXT NOT NULL,"
                                "content_md5 TEXT UNIQUE NOT NULL,"
                                "platform_id INTEGER NOT NULL,"
+                               "active_save_slot INTEGER DEFAULT 1,"
                                "type INTEGER NOT NULL,"
                                "source_directory TEXT NOT NULL,"
                                "content_path TEXT NOT NULL,"
@@ -111,30 +112,6 @@ bool SqliteLibraryDatabase::addEntryToPlaylist(const int playlistId,
 
   query.finish();
   return query.exec();
-}
-
-void SqliteLibraryDatabase::updateEntryContentPath(
-    const int entryId, const std::string sourceDirectory,
-    const std::string contentPath) {
-  const QString queryString =
-      "UPDATE library_entries "
-      "SET source_directory = :source_directory, content_path = :content_path "
-      "WHERE id = :id;";
-
-  auto query = QSqlQuery(m_database);
-  query.prepare(queryString);
-
-  query.bindValue(":id", entryId);
-  query.bindValue(":source_directory", QString::fromStdString(sourceDirectory));
-  query.bindValue(":content_path", QString::fromStdString(contentPath));
-
-  if (!query.exec()) {
-    spdlog::warn("Update failed: {}", query.lastError().text().toStdString());
-  }
-}
-
-void SqliteLibraryDatabase::addOrRenameEntry(const LibEntry entry) {
-  insert_entry_into_db(entry);
 }
 
 std::vector<LibEntry> SqliteLibraryDatabase::getAllEntries() {
@@ -306,10 +283,11 @@ SqliteLibraryDatabase::getLibraryEntry(const int entryId) {
   entry.displayName = q.value(1).toString().toStdString();
   entry.contentMd5 = q.value(2).toString().toStdString();
   entry.platformId = q.value(3).toInt();
-  entry.type = static_cast<LibraryEntry::EntryType>(q.value(4).toInt());
-  entry.sourceDirectory = q.value(5).toString().toStdString();
-  entry.contentPath = q.value(6).toString().toStdString();
-  entry.createdAt = q.value(7).toLongLong();
+  entry.activeSaveSlot = q.value(4).toInt();
+  entry.type = static_cast<LibraryEntry::EntryType>(q.value(5).toInt());
+  entry.sourceDirectory = q.value(6).toString().toStdString();
+  entry.contentPath = q.value(7).toString().toStdString();
+  entry.createdAt = q.value(8).toLongLong();
 
   return entry;
 }
@@ -344,10 +322,11 @@ std::vector<LibraryEntry> SqliteLibraryDatabase::getAllLibraryEntries() {
     entry.displayName = q.value(1).toString().toStdString();
     entry.contentMd5 = q.value(2).toString().toStdString();
     entry.platformId = q.value(3).toInt();
-    entry.type = static_cast<LibraryEntry::EntryType>(q.value(4).toInt());
-    entry.sourceDirectory = q.value(5).toString().toStdString();
-    entry.contentPath = q.value(6).toString().toStdString();
-    entry.createdAt = q.value(7).toLongLong();
+    entry.activeSaveSlot = q.value(4).toInt();
+    entry.type = static_cast<LibraryEntry::EntryType>(q.value(5).toInt());
+    entry.sourceDirectory = q.value(6).toString().toStdString();
+    entry.contentPath = q.value(7).toString().toStdString();
+    entry.createdAt = q.value(8).toLongLong();
 
     entries.emplace_back(entry);
   }
@@ -450,66 +429,6 @@ bool SqliteLibraryDatabase::renamePlaylist(const int playlistId,
   }
 
   return true;
-}
-
-void SqliteLibraryDatabase::insert_entry_into_db(LibEntry entry) const {
-  return;
-  QString queryString =
-      "INSERT OR IGNORE INTO library ("
-      "display_name, "
-      "type, "
-      "verified, "
-      "md5, "
-      "platform,"
-      "game, "
-      "rom, "
-      "parent_entry, "
-      "romhack, "
-      "romhack_release, "
-      "source_directory, "
-      "content_path) "
-      "VALUES (:display_name, :type, :verified, :md5, :platform, :game, "
-      ":rom, :parent_entry, :romhack, :romhack_release, :source_directory, "
-      ":content_path);";
-
-  QSqlQuery query = QSqlQuery(m_database);
-  query.prepare(queryString);
-
-  query.bindValue(":display_name", QString::fromStdString(entry.display_name));
-  query.bindValue(":type", static_cast<int>(entry.type));
-  query.bindValue(":verified", entry.verified);
-  query.bindValue(":md5", QString::fromStdString(entry.md5));
-  query.bindValue(":platform", entry.platform);
-  query.bindValue(":game", entry.game);
-  query.bindValue(":rom", entry.rom);
-  query.bindValue(":parent_entry", entry.parent_entry);
-  query.bindValue(":romhack", entry.romhack);
-  query.bindValue(":romhack_release", entry.romhack_release);
-  query.bindValue(":source_directory",
-                  QString::fromStdString(entry.source_directory));
-  query.bindValue(":content_path", QString::fromStdString(entry.content_path));
-
-  if (!query.exec()) {
-    spdlog::warn("Insert into library failed: {}",
-                 query.lastError().text().toStdString());
-    return;
-  }
-
-  if (query.numRowsAffected() > 0) {
-    entry.id = query.lastInsertId().toInt();
-  } else {
-    // The row already exists, retrieve its ID
-    QSqlQuery selectQuery(m_database);
-    selectQuery.prepare("SELECT id FROM library WHERE md5 = :md5");
-    selectQuery.bindValue(":md5", QString::fromStdString(entry.md5));
-
-    if (selectQuery.exec() && selectQuery.next()) {
-      entry.id = selectQuery.value(0).toInt();
-    } else {
-      spdlog::warn("Retrieving existing library row failed: {}",
-                   selectQuery.lastError().text().toStdString());
-    }
-  }
 }
 
 } // namespace firelight::db

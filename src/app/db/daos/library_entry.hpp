@@ -12,6 +12,7 @@ struct LibraryEntry {
   std::string displayName;
   std::string contentMd5;
   int platformId;
+  int activeSaveSlot = 1;
   EntryType type;
   std::string sourceDirectory;
   std::string contentPath;

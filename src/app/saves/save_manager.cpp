@@ -8,7 +8,7 @@
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
 
-namespace firelight::Saves {
+namespace firelight::saves {
 
 SaveManager::SaveManager(std::filesystem::path saveDir,
                          db::IUserdataDatabase &userdataDatabase)
@@ -125,4 +125,4 @@ SaveManager::readSaveDataForEntry(db::LibraryEntry &entry) const {
   return {saveData};
 }
 
-} // namespace firelight::Saves
+} // namespace firelight::saves

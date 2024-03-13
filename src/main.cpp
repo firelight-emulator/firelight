@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
-  firelight::Saves::SaveManager saveManager(save_dir, userdata_database);
+  firelight::saves::SaveManager saveManager(save_dir, userdata_database);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   // **** Load Content Database ****
