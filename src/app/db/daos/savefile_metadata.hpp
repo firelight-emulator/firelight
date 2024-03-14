@@ -1,15 +1,14 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 
 namespace firelight::db {
 struct SavefileMetadata {
-  int64_t id = -1;
+  int id = -1;
   std::string contentMd5;
-  uint8_t slotNumber;
+  unsigned int slotNumber = 1;
   std::string savefileMd5;
-  uint64_t lastModifiedAt;
-  uint64_t createdAt;
+  unsigned int lastModifiedAt = 0;
+  unsigned int createdAt = 0;
 };
 } // namespace firelight::db

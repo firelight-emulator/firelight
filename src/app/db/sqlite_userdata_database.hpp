@@ -13,8 +13,8 @@ public:
 
   bool tableExists(std::string tableName) override;
 
-  std::optional<SavefileMetadata>
-  getSavefileMetadata(std::string contentMd5, uint8_t slotNumber) override;
+  std::optional<SavefileMetadata> getSavefileMetadata(std::string contentMd5,
+                                                      int slotNumber) override;
   bool updateSavefileMetadata(SavefileMetadata metadata) override;
   bool createSavefileMetadata(SavefileMetadata &metadata) override;
   std::vector<SavefileMetadata>

@@ -34,7 +34,7 @@ Pane {
                 background: Rectangle {
                     // color: Constants.surface_color
                     color: "white"
-                    opacity: 0.1
+                    opacity: 0.05
                     radius: 8
                 }
 
@@ -100,7 +100,7 @@ Pane {
                 background: Rectangle {
                     // color: Constants.surface_color
                     color: "white"
-                    opacity: 0.1
+                    opacity: 0.05
                     radius: 8
                 }
 
@@ -252,7 +252,7 @@ Pane {
             background: Rectangle {
                 // color: Constants.surface_color
                 color: "white"
-                opacity: 0.1
+                opacity: 0.05
                 radius: 8
             }
 
@@ -272,6 +272,22 @@ Pane {
                 anchors.fill: parent
                 clip: true
                 focus: true
+
+                // header: Rectangle {
+                //     width: libraryList.width
+                //     height: 30
+                //     color: "grey"
+                //     Text {
+                //         anchors.fill: parent
+                //         anchors.leftMargin: 12
+                //         text: "All games"
+                //         color: "black"
+                //         font.pointSize: 12
+                //         font.family: Constants.regularFontFamily
+                //     }
+                // }
+                //
+                // headerPositioning: ListView.PullBackHeader
 
                 // section.criteria: ViewSection.FirstCharacter
                 // section.property: "display_name"
@@ -295,10 +311,12 @@ Pane {
                 //         }
                 //     }
                 // }
-                ScrollBar.vertical: ScrollBar {
-                    width: 15
-                    interactive: true
-                }
+                ScrollBar.vertical
+                    :
+                    ScrollBar {
+                        width: 15
+                        interactive: true
+                    }
 
                 currentIndex: 0
 

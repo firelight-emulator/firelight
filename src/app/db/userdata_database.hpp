@@ -21,7 +21,7 @@ public:
 
   virtual bool createSavefileMetadata(SavefileMetadata &metadata) = 0;
   virtual std::optional<SavefileMetadata>
-  getSavefileMetadata(std::string contentMd5, uint8_t slotNumber) = 0;
+  getSavefileMetadata(std::string contentMd5, int slotNumber) = 0;
   virtual bool updateSavefileMetadata(SavefileMetadata metadata) = 0;
   virtual std::vector<SavefileMetadata>
   getSavefileMetadataForContent(std::string contentMd5) = 0;

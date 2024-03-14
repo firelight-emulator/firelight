@@ -70,7 +70,7 @@ private:
     QString displayName;
     int platformId;
     QVector<int> m_playlists;
-    uint64_t createdAt;
+    unsigned int createdAt;
   };
 
   db::ILibraryDatabase *m_libraryDatabase;

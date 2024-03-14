@@ -29,9 +29,9 @@ protected:
   void render() override;
 
 private:
-  uint64_t sessionStartTime = 0;
-  uint64_t sessionEndTime = 0;
-  uint64_t sessionDuration = 0;
+  unsigned int sessionStartTime = 0;
+  unsigned int sessionEndTime = 0;
+  unsigned int sessionDuration = 0;
   QElapsedTimer m_playtimeTimer;
 
   bool m_shouldLoadGame = false;

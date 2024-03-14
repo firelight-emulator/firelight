@@ -88,7 +88,7 @@ bool SqliteUserdataDatabase::tableExists(const std::string tableName) {
 }
 std::optional<SavefileMetadata>
 SqliteUserdataDatabase::getSavefileMetadata(const std::string contentMd5,
-                                            const uint8_t slotNumber) {
+                                            const int slotNumber) {
   const QString queryString =
       "SELECT * FROM savefile_metadata WHERE content_md5 = :contentMd5 AND "
       "slot_number = :slotNumber LIMIT 1;";

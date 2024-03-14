@@ -1,5 +1,6 @@
 #pragma once
+#include <cstdint>
 
 struct Platform {
-  int id{};
+  int id = -1;
 };

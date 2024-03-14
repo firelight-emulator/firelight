@@ -1,0 +1,26 @@
+#include "../../../../src/app/db/daos/library_entry.hpp"
+#include <gtest/gtest.h>
+
+namespace firelight::db {
+class LibraryEntryTest : public testing::Test {
+protected:
+  void SetUp() override {}
+
+  void TearDown() override {}
+};
+
+TEST_F(LibraryEntryTest, DefaultValuesTest) {
+  const LibraryEntry entry;
+
+  ASSERT_EQ(entry.id, -1);
+  ASSERT_EQ(entry.displayName, "");
+  ASSERT_EQ(entry.contentMd5, "");
+  ASSERT_EQ(entry.platformId, -1);
+  ASSERT_EQ(entry.activeSaveSlot, 1);
+  ASSERT_EQ(entry.type, LibraryEntry::EntryType::UNKNOWN);
+  ASSERT_EQ(entry.sourceDirectory, "");
+  ASSERT_EQ(entry.contentPath, "");
+  ASSERT_EQ(entry.createdAt, 0);
+}
+
+} // namespace firelight::db

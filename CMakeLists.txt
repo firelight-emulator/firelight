@@ -230,6 +230,10 @@ add_executable(fl_test
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
         tests/app/saves/save_manager_test.cpp
+        tests/app/db/daos/playlist_test.cpp
+        tests/app/db/daos/savefile_metadata_test.cpp
+        tests/app/db/daos/library_entry_test.cpp
+        tests/app/db/daos/play_session_test.cpp
 )
 
 add_dependencies(fl_test copy_resources)
