@@ -4,13 +4,28 @@ import QtQuick.Layouts
 import FirelightStyle 1.0
 
 Item {
-    Text {
-        text: "Sound settings will go here"
-        font.pointSize: 12
-        font.family: Constants.regularFontFamily
-        color: "#b3b3b3"
-        anchors.centerIn: parent
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    ColumnLayout {
+        spacing: 0
+        anchors.fill: parent
+        SliderOption {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "Master Volume"
+        }
+        ToggleOption {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "Menu Navigation Sounds"
+        }
+        SliderOption {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "Menu Navigation Sounds Volume"
+        }
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+        }
     }
 }

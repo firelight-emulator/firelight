@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-// import QtQuick.Controls.Material
 import QtQuick.Dialogs
 import QtQuick.Window
 import QtQuick.Layouts
@@ -10,12 +9,17 @@ import FirelightStyle 1.0
 
 ApplicationWindow {
     id: window
+
+    property bool borderlessFullscreen: false
+
     width: 1280
     height: 720
 
     minimumWidth: 640
     minimumHeight: 480
     visible: true
+    // flags: Qt.Window | Qt.FramelessWindowHint | Qt.MaximizeUsingFullscreenGeometryHint
+    // visibility: Window.Maximized
     title: qsTr("Firelight")
     color: "black"
 
@@ -32,6 +36,14 @@ ApplicationWindow {
         Keys.onEscapePressed: function () {
             if (state === "gameSuspended") {
                 state = "playingGame"
+            }
+        }
+
+        Keys.onDigit2Pressed: {
+            if (window.visibility === Window.FullScreen) {
+                window.showNormal()
+            } else {
+                window.showFullScreen()
             }
         }
 

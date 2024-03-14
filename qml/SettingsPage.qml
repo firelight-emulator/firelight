@@ -3,9 +3,10 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import FirelightStyle 1.0
 
-Rectangle {
+Pane {
     id: root
-    color: "transparent"
+    background: Item {
+    }
 
     SplitView {
         id: page
@@ -15,18 +16,10 @@ Rectangle {
         handle: FirelightSplitViewHandle {
         }
 
-        Pane {
+        ContentPane {
             id: navigation
-            SplitView.minimumWidth: 200
-            SplitView.maximumWidth: 200
-
-            background: Rectangle {
-                color: "white"
-                opacity: 0.1
-                radius: 8
-            }
-
-            padding: 8
+            SplitView.minimumWidth: 350
+            SplitView.maximumWidth: 350
 
             ListView {
                 id: categoryList
@@ -64,8 +57,8 @@ Rectangle {
                 delegate: Button {
                     id: settingsCategoryButton
                     background: Rectangle {
-                        color: handler.hovered ? "white" : "transparent"
-                        opacity: 0.1
+                        color: handler.hovered || checked ? "white" : "transparent"
+                        opacity: checked ? 0.2 : 0.1
                         radius: 4
                     }
 
@@ -125,18 +118,10 @@ Rectangle {
             }
         }
 
-        Pane {
+        ContentPane {
             id: controls
 
             property var pages: [appearancePage, videoPage, soundPage, systemPage, aboutPage]
-
-            background: Rectangle {
-                color: "white"
-                opacity: 0.1
-                radius: 8
-            }
-
-            padding: 8
 
             StackView {
                 id: stackView

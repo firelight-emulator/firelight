@@ -29,16 +29,8 @@ Pane {
         Item {
             SplitView.minimumWidth: 260
             SplitView.maximumWidth: parent.width / 2
-            Pane {
+            ContentPane {
                 id: content
-                background: Rectangle {
-                    // color: Constants.surface_color
-                    color: "white"
-                    opacity: 0.05
-                    radius: 8
-                }
-
-                padding: 8
 
                 anchors.left: parent.left
                 anchors.top: parent.top
@@ -95,16 +87,8 @@ Pane {
                 }
             }
 
-            Pane {
+            ContentPane {
                 id: playlistPane
-                background: Rectangle {
-                    // color: Constants.surface_color
-                    color: "white"
-                    opacity: 0.05
-                    radius: 8
-                }
-
-                padding: 8
 
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -120,7 +104,7 @@ Pane {
                     height: 40
 
                     Text {
-                        text: "Playlists"
+                        text: "Folders"
                         Layout.leftMargin: 8
                         font.pointSize: 12
                         font.family: Constants.strongFontFamily
@@ -155,7 +139,7 @@ Pane {
                         }
 
                         ToolTip.visible: createPlaylistButton.hovered
-                        ToolTip.text: "Create new playlist"
+                        ToolTip.text: "Create folder"
                         ToolTip.delay: 400
                         ToolTip.timeout: 5000
                     }
@@ -227,16 +211,8 @@ Pane {
 
             }
         }
-        Pane {
+        ContentPane {
             id: contentRight
-            background: Rectangle {
-                // color: Constants.surface_color
-                color: "white"
-                opacity: 0.05
-                radius: 8
-            }
-
-            padding: 8
 
             Text {
                 text: "no gams here"
@@ -417,16 +393,6 @@ Pane {
         }
     }
 
-
-    // Pane {
-    //     id: playlistPane
-    //     background: Rectangle {
-    //         color: Constants.surface_color
-    //         radius: 8
-    //     }
-    // }
-
-
     FirelightCreatePlaylistDialog {
         id: createPlaylistDialog
         visible: false
@@ -449,7 +415,7 @@ Pane {
         property string playlistName: ""
         property int playlistId: -1
 
-        text: "Are you sure you want to delete the playlist \"" + playlistName + "\"?"
+        text: "Are you sure you want to delete the folder \"" + playlistName + "\"?"
         visible: false
 
         onAccepted: {
@@ -469,28 +435,28 @@ Pane {
     //     }
     // }
 
-    FirelightRightClickMenu {
+    RightClickMenu {
         id: libraryEntryRightClickMenu
 
         property int entryId: -1
 
-        FirelightRightClickMenuItem {
+        RightClickMenuItem {
             text: "Manage save files"
             onTriggered: {
                 manageSavefilesDialog.open()
             }
         }
 
-        FirelightRightClickMenu {
+        RightClickMenu {
             id: addPlaylistRightClickMenu
             enabled: ins.count > 0
 
-            title: "Add to playlist"
+            title: "Add to folder"
 
             Instantiator {
                 id: ins
                 model: playlist_model
-                delegate: FirelightRightClickMenuItem {
+                delegate: RightClickMenuItem {
                     text: model.display_name
                     onTriggered: {
                         playlist_model.addEntryToPlaylist(model.id, libraryEntryRightClickMenu.entryId)
@@ -509,12 +475,12 @@ Pane {
         }
     }
 
-    FirelightRightClickMenu {
+    RightClickMenu {
         id: playlistRightClickMenu
         property string playlistName: ""
         property int playlistId: -1
 
-        FirelightRightClickMenuItem {
+        RightClickMenuItem {
             onTriggered: {
                 renamePlaylistDialog.text = playlistRightClickMenu.playlistName
                 renamePlaylistDialog.playlistId = playlistRightClickMenu.playlistId
@@ -524,14 +490,14 @@ Pane {
             text: "Rename"
         }
 
-        FirelightRightClickMenuItem {
+        RightClickMenuItem {
             onTriggered: {
                 deletePlaylistDialog.playlistName = playlistRightClickMenu.playlistName
                 deletePlaylistDialog.playlistId = playlistRightClickMenu.playlistId
                 deletePlaylistDialog.open()
             }
 
-            text: "Delete playlist"
+            text: "Delete folder"
         }
     }
 

@@ -151,6 +151,7 @@ target_link_libraries(firelight_lib
 
 file(GLOB QML_FILES
         qml/*.qml
+        qml/common/*.qml
         qml/controllers/*.qml
         qml/settings/*.qml
         qml/library/*.qml

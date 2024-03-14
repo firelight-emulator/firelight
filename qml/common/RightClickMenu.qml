@@ -18,7 +18,7 @@ Menu {
         radius: Constants.rightClickMenu_BackgroundRadius
     }
 
-    delegate: FirelightRightClickMenuItem {
+    delegate: RightClickMenuItem {
         id: delegate
         text: text
     }

@@ -4,13 +4,38 @@ import QtQuick.Layouts
 import FirelightStyle 1.0
 
 Item {
-    Text {
-        text: "Video settings will go here"
-        font.pointSize: 12
-        font.family: Constants.regularFontFamily
-        color: "#b3b3b3"
-        anchors.centerIn: parent
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    ColumnLayout {
+        spacing: 0
+        anchors.fill: parent
+        ToggleOption {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "testing the thing"
+        }
+        ToggleOption {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "another test!"
+        }
+        ToggleOption {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "well now"
+        }
+        ToggleOption {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "aint that something"
+        }
+        ToggleOption {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "he really did it"
+        }
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+        }
     }
 }
