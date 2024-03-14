@@ -605,37 +605,6 @@ ApplicationWindow {
                         closeGameDialog.open()
                     }
                 }
-
-                // Text {
-                //     text: "This thing doesn't remember your setting when you leave this menu and go back in but it's fine for now."
-                //     color: Constants.colorTestTextActive
-                //     font.pointSize: 10
-                //     font.family: Constants.regularFontFamily
-                // }
-                //
-                // SettingsItem {
-                //     label: "Picture Mode"
-                //     width: parent.width / 2
-                //     height: 50
-                //     thing: Component {
-                //         ComboBox {
-                //             model: ["Maintain Aspect Ratio", "Original", "Stretch"]
-                //             onActivated: function (index) {
-                //                 switch (index) {
-                //                     case 0:
-                //                         emulator.setPictureMode("aspect-ratio")
-                //                         break
-                //                     case 1:
-                //                         emulator.setPictureMode("original")
-                //                         break
-                //                     case 2:
-                //                         emulator.setPictureMode("stretched")
-                //                         break
-                //                 }
-                //             }
-                //         }
-                //     }
-                // }
             }
         }
 

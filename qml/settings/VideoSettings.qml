@@ -7,10 +7,10 @@ Item {
     ColumnLayout {
         spacing: 0
         anchors.fill: parent
-        ToggleOption {
+        ComboBoxOption {
             Layout.fillWidth: true
             Layout.preferredHeight: 60
-            label: "testing the thing"
+            label: "Window Mode?"
         }
         ToggleOption {
             Layout.fillWidth: true
