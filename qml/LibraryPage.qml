@@ -223,26 +223,6 @@ Pane {
                             cursorShape: Qt.PointingHandCursor
                         }
                     }
-
-                    // delegate: FirelightMenuItem {
-                    //     labelText: model.display_name
-                    //     labelIcon: ""
-                    //     height: 64
-                    //     width: categoryList.width
-                    //
-                    //     onClicked: function () {
-                    //         library_short_model.filterOnPlaylistId(model.id)
-                    //         library_short_model.sort(0)
-                    //     }
-                    //
-                    //     onRightClicked: function () {
-                    //         playlistRightClickMenu.playlistName = model.display_name
-                    //         playlistRightClickMenu.playlistId = model.id
-                    //         playlistRightClickMenu.popup()
-                    //     }
-                    //
-                    //     ButtonGroup.group: buttonGroup
-                    // }
                 }
 
             }
@@ -503,33 +483,12 @@ Pane {
 
         FirelightRightClickMenu {
             id: addPlaylistRightClickMenu
+            enabled: ins.count > 0
 
             title: "Add to playlist"
 
-            // ListView {
-            //     id: playlistList
-            //     model: playlist_model
-            //     // delegate: FirelightRightClickMenuItem {
-            //     //     // parent: addPlaylistRightClickMenu
-            //     //     labelText: display_name
-            //     //     onTriggered: {
-            //     //         // playlist_model.addEntryToPlaylist(model.id, libraryList.currentItem.id)
-            //     //     }
-            //     // }
-            //
-            //     delegate: FirelightRightClickMenuItem {
-            //         width: playlistList.width
-            //         height: 40
-            //         labelText: "whatever"
-            //         text: model.display_name
-            //     }
-            //
-            //     Component.onCompleted: {
-            //         console.log("model: " + model)
-            //     }
-            // }
-
             Instantiator {
+                id: ins
                 model: playlist_model
                 delegate: FirelightRightClickMenuItem {
                     text: model.display_name
@@ -547,52 +506,7 @@ Pane {
                     addPlaylistRightClickMenu.removeItem(object)
                 }
             }
-
-
-            // Instantiator {
-            //     id: me
-            //     property alias playlistModel: playlist_model
-            //     model: playlist_model
-            //
-            //     onObjectAdded: function (index, object) {
-            //         object.index = index
-            //         var keys = Object.keys(object);
-            //         for (var i = 0; i < keys.length; i++) {
-            //             console.log(keys[i] + ": " + this[keys[i]]);
-            //         }
-            //         addPlaylistRightClickMenu.insertItem(index, object)
-            //     }
-            //     onObjectRemoved: function (index, object) {
-            //         addPlaylistRightClickMenu.removeItem(object)
-            //     }
-            //
-            //     FirelightRightClickMenuItem {
-            //         property int index: -1
-            //         property alias playlistModel: me.playlistModel // Add this line
-            //         labelText: playlistModel.at(index).display_name // Change this line
-            //         onTriggered: {
-            //             var keys = Object.keys(playlistModel);
-            //             for (var i = 0; i < keys.length; i++) {
-            //                 console.log(keys[i] + ": " + this[keys[i]]);
-            //             }
-            //             playlist_model.addEntryToPlaylist(model.id, libraryList.currentItem.id)
-            //         }
-            //     }
-            // }
-
-            // onAboutToShow: function () {
-            //
-            // }
-
-
         }
-
-        // FirelightRightClickMenuItem {
-        //     labelText: "Add to playlist"
-        //     cascade: true
-        //
-        //
-        // }
     }
 
     FirelightRightClickMenu {

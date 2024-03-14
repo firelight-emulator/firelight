@@ -3,6 +3,6 @@
 #include <string>
 
 struct Game {
-  int id{};
-  std::string name{};
+  int id = -1;
+  std::string name;
 };

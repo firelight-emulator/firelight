@@ -13,7 +13,7 @@ MenuItem {
         visible: control.subMenu
         onPaint: {
             var ctx = getContext("2d")
-            ctx.fillStyle = Constants.rightClickMenuItem_TextColor
+            ctx.fillStyle = enabled ? Constants.rightClickMenuItem_TextColor : "grey"
             ctx.moveTo(14, 14)
             ctx.lineTo(width - 15, height / 2)
             ctx.lineTo(14, height - 14)
@@ -23,10 +23,10 @@ MenuItem {
     }
 
     background: Rectangle {
-        implicitWidth: 200
+        implicitWidth: 260
         implicitHeight: Constants.rightClickMenuItem_DefaultHeight
         radius: Constants.rightClickMenuItem_BackgroundRadius
-        color: renameHover.hovered ? Constants.rightClickMenuItem_HoverColor : "transparent"
+        color: enabled ? (renameHover.hovered ? Constants.rightClickMenuItem_HoverColor : "transparent") : "transparent"
         HoverHandler {
             id: renameHover
             acceptedDevices: PointerDevice.Mouse
@@ -36,7 +36,7 @@ MenuItem {
     contentItem: CarouselText {
         hovered: renameHover.hovered
         text: control.text
-        color: Constants.rightClickMenuItem_TextColor
+        color: enabled ? Constants.rightClickMenuItem_TextColor : "grey"
         font.pointSize: 11
         font.family: Constants.strongFontFamily
         horizontalAlignment: Text.AlignLeft

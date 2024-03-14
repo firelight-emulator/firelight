@@ -12,7 +12,7 @@ Menu {
 
     background: Rectangle {
         id: bg
-        implicitWidth: 200
+        implicitWidth: 260
         implicitHeight: control.count * Constants.rightClickMenuItem_DefaultHeight
         color: Constants.rightClickMenu_BackgroundColor
         radius: Constants.rightClickMenu_BackgroundRadius

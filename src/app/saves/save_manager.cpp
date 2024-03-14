@@ -22,7 +22,7 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
   return QtConcurrent::run([this, entry, saveData] {
     // TODO: Add some verification that the metadata is correct
     // TODO: Save file could have been deleted, etc
-    auto slot = 1;
+    auto slot = entry.activeSaveSlot;
 
     auto exists = false;
     db::SavefileMetadata metadata;
@@ -47,7 +47,8 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
       return true;
     }
 
-    spdlog::info("Writing updated savefile for {}", entry.contentMd5);
+    spdlog::info("Writing updated savefile for {} slot {}", entry.contentMd5,
+                 slot);
     metadata.savefileMd5 = savefileMd5;
 
     const auto directory =
@@ -102,7 +103,10 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
 
 std::optional<Savefile>
 SaveManager::readSaveDataForEntry(db::LibraryEntry &entry) const {
-  const auto directory = m_saveDir / entry.contentMd5 / "slot1";
+  auto slot = entry.activeSaveSlot;
+
+  const auto directory =
+      m_saveDir / entry.contentMd5 / ("slot" + std::to_string(slot));
   if (!exists(directory)) {
     return std::nullopt;
   }
