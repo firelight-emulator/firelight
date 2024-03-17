@@ -39,8 +39,7 @@ Button {
             anchors.bottom: parent.bottom
             leftPadding: labelIcon !== "" ? 10 : 0
             font.pointSize: 11
-            font.family: Constants.strongFontFamily
-            font.bold: true
+            font.family: Constants.semiboldFontFamily
             color: (mouse.containsMouse || control.checked) ? "white" : "#b3b3b3"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter

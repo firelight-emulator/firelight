@@ -102,8 +102,7 @@ Pane {
                             anchors.bottom: parent.bottom
                             leftPadding: model.icon !== "" ? 8 : 0
                             font.pointSize: 11
-                            font.family: Constants.strongFontFamily
-                            font.bold: true
+                            font.family: Constants.semiboldFontFamily
                             color: "#b3b3b3"
                             horizontalAlignment: Text.AlignLeft
                             verticalAlignment: Text.AlignVCenter

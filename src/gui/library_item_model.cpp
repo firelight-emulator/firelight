@@ -38,8 +38,21 @@ QVariant LibraryItemModel::data(const QModelIndex &index, int role) const {
     return item.displayName;
   case CreatedAt:
     return item.createdAt;
-  case PlatformName:
-    return "Nintendo 64";
+  case PlatformName: {
+    if (item.platformId == 0) {
+      return "Nintendo 64";
+    }
+    if (item.platformId == 1) {
+      return "SNES";
+    }
+    if (item.platformId == 2) {
+      return "Game Boy Color";
+    }
+    if (item.platformId == 3) {
+      return "Game Boy";
+    }
+    return "Unknown";
+  }
   case Playlists:
     return QVariant::fromValue(item.m_playlists);
   default:

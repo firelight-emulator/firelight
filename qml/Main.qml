@@ -363,105 +363,12 @@ ApplicationWindow {
         Item {
             id: homePage
             visible: false
-            Rectangle {
-                id: homeTop
-                anchors.top: parent.top
-                anchors.topMargin: 12
-                anchors.leftMargin: 12
-                anchors.left: parent.left
-                anchors.right: parent.right
-                radius: 12
-                height: 120
-                color: "transparent"
-
-                Text {
-                    anchors.fill: parent
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WordWrap
-                    font.pointSize: 24
-                    text: "Thanks for trying out Firelight!"
-                    font.family: Constants.regularFontFamily
-                    color: Constants.colorTestTextActive
-                }
-            }
-
-            Rectangle {
-                id: homeLeft
-                anchors.topMargin: 12
-                anchors.top: homeTop.bottom
-                anchors.left: parent.left
-                anchors.leftMargin: 12
-                width: parent.width / 2
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 12
-                radius: 12
-                color: Constants.colorTestSurface
-
-                Text {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: 12
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WordWrap
-                    font.pointSize: 12
-                    text: "<p>Seriously, thanks so much :) This is a passion project of mine, and I'm excited to
-                         share it with you. Here's some of the stuff you can look forward to next:</p>
-                        <br />
-                         <b>Content matching</b>: <p>We'll scan your ROMs and determine which game each of
-                          them is. That'll open up the way for box art and metadata downloading in a future
-                           update!</p>
-                        <br />
-                        <b>Suspend points and rewind</b>: <p>Save states! You'll be able to save an exact
-                          point in a game and go back to it anytime. And don't worry - it'll be really easy to
-                           get back to where you were in case you load one by mistake.</p>
-                        <br />
-                        <b>Controller profiles</b>: <p>Want to easily remap your controllers AND be able
-                          to see exactly which button you're \"pressing\" on the emulated controller? You'll be
-                           able to do that! </p>
-                        <br />
-
-                         <p>There's a lot to look forward to, so keep an eye on the Discord for updates and to take
-                         part in the discussions!</p>"
-                    font.family: Constants.lightFontFamily
-                    color: Constants.colorTestTextActive
-                }
-            }
-
-            Rectangle {
-                id: homeRight
-                anchors.top: homeTop.bottom
-                anchors.topMargin: 12
-                anchors.left: homeLeft.right
-                anchors.leftMargin: 12
-                anchors.right: parent.right
-                anchors.bottomMargin: 12
-                anchors.bottom: parent.bottom
-                radius: 12
-                color: Constants.colorTestSurface
-
-                Text {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: 12
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WordWrap
-                    font.pointSize: 12
-                    text: "<p><b>Known Issues<b>:</p>
-                        <ul>
-                        <li>Doesn't work correctly at anything other than 60Hz</li>
-                        <li>Slight delay opening pause menu for the first time</li>
-                        <li>Some audio crackling</li>
-                        <li>Graphical glitches in N64 games</li>
-                        <li>Picture mode button doesn't accurately reflect state</li>
-                        </ul>"
-                    font.family: Constants.lightFontFamily
-                    color: Constants.colorTestTextActive
-                }
+            Text {
+                text: "Here's where the Home menu will go!"
+                anchors.centerIn: parent
+                color: Constants.colorTestTextActive
+                font.pointSize: 16
+                font.family: Constants.regularFontFamily
             }
         }
 
@@ -734,35 +641,35 @@ ApplicationWindow {
                     background: Item {
                     }
 
-                    NavigationButton {
+                    MainMenuNavButton {
                         iconCode: "\ue88a"
                         toolTipText: "Home"
                         ButtonGroup.group: buttonGroup
                         Layout.alignment: Qt.AlignVCenter
                     }
 
-                    NavigationButton {
+                    MainMenuNavButton {
                         iconCode: "\ue87a"
                         toolTipText: "Explore"
                         ButtonGroup.group: buttonGroup
                         Layout.alignment: Qt.AlignVCenter
                     }
 
-                    NavigationButton {
+                    MainMenuNavButton {
                         iconCode: "\uf53e"
                         toolTipText: "Library"
                         ButtonGroup.group: buttonGroup
                         Layout.alignment: Qt.AlignVCenter
                     }
 
-                    NavigationButton {
+                    MainMenuNavButton {
                         iconCode: "\uf135"
                         toolTipText: "Controllers"
                         ButtonGroup.group: buttonGroup
                         Layout.alignment: Qt.AlignVCenter
                     }
 
-                    NavigationButton {
+                    MainMenuNavButton {
                         iconCode: "\ue8b8"
                         toolTipText: "Settings"
                         ButtonGroup.group: buttonGroup
@@ -988,110 +895,5 @@ ApplicationWindow {
             id: myHover
             cursorShape: Qt.PointingHandCursor
         }
-    }
-
-    component NavigationButton: TabButton {
-        id: myButton
-
-        required property string iconCode
-        required property string toolTipText
-
-        implicitHeight: width
-
-        contentItem: Text {
-            // text: "Settings"
-            text: iconCode
-            color: (myHover.hovered || myButton.checked) ? "white" : "#b3b3b3"
-            font.pixelSize: 28
-            // font.family: Constants.strongFontFamily
-            font.family: Constants.symbolFontFamily
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-        }
-        scale: checked ? 1.1 : 1.0
-        Behavior on scale {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        background: Rectangle {
-            color: "white"
-            opacity: myButton.checked ? 0.1 : 0.0
-            radius: 4
-
-            anchors.centerIn: parent
-
-            height: myButton.height * (2 / 3)
-            width: myButton.width * (2 / 3)
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-
-        HoverHandler {
-            id: myHover
-            cursorShape: Qt.PointingHandCursor
-        }
-
-        ToolTip.visible: myHover.hovered
-        ToolTip.text: toolTipText
-        ToolTip.delay: 400
-        ToolTip.timeout: 5000
-
-        // ToolTip {
-        //     id: tool
-        //     visible: homeHover.hovered
-        //     delay: 400
-        //     timeout: 5000
-        //
-        //     ParallelAnimation {
-        //         id: fadeIn
-        //         NumberAnimation {
-        //             target: tool
-        //             property: "opacity"
-        //             to: 1
-        //             duration: 200
-        //             easing.type: Easing.InOutQuad
-        //         }
-        //         NumberAnimation {
-        //             target: tool
-        //             property: "y"
-        //             from: 43
-        //             to: 48
-        //             duration: 200
-        //             easing.type: Easing.InOutQuad
-        //         }
-        //     }
-        //
-        //     onVisibleChanged: function () {
-        //         if (visible) {
-        //             opacity = 0 // Start from fully transparent
-        //             y = 43
-        //             fadeIn.start()
-        //         }
-        //     }
-        //
-        //     height: 24
-        //
-        //     contentItem: Text {
-        //         text: "Home"
-        //         color: Constants.rightClickMenuItem_TextColor
-        //         font.pointSize: 12
-        //         font.family: Constants.regularFontFamily
-        //         horizontalAlignment: Text.AlignHCenter
-        //         verticalAlignment: Text.AlignVCenter
-        //     }
-        //
-        //     background: Rectangle {
-        //         color: Constants.rightClickMenu_BackgroundColor
-        //         radius: Constants.rightClickMenu_BackgroundRadius
-        //     }
-        // }
     }
 }

@@ -107,7 +107,7 @@ Pane {
                         text: "Folders"
                         Layout.leftMargin: 8
                         font.pointSize: 12
-                        font.family: Constants.strongFontFamily
+                        font.family: Constants.semiboldFontFamily
                         color: "#b3b3b3"
                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                     }
@@ -223,9 +223,70 @@ Pane {
                 visible: libraryList.count === 0
             }
 
+            Pane {
+                id: listHeader
+                background: Item {
+                }
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                padding: 0
+                horizontalPadding: 10
+
+                RowLayout {
+                    anchors.fill: parent
+                    Text {
+                        id: favoriteSection
+                        text: "\ue87d"
+                        font.family: Constants.symbolFontFamily
+                        font.pointSize: 12
+                        color: "#b3b3b3"
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        Layout.fillHeight: true
+                        Layout.preferredWidth: 24
+                        topPadding: 2
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Text {
+                        id: titleSection
+                        text: "Title"
+                        font.pointSize: 10
+                        font.family: Constants.regularFontFamily
+                        color: "#b3b3b3"
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        // Layout.preferredWidth: 300
+                        Layout.minimumWidth: 200
+                        Layout.horizontalStretchFactor: 3
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        id: platformSection
+                        text: "Platform"
+                        font.pointSize: 10
+                        font.family: Constants.regularFontFamily
+                        color: "#b3b3b3"
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        Layout.fillHeight: true
+                        Layout.minimumWidth: 100
+                        Layout.fillWidth: true
+                        Layout.horizontalStretchFactor: 1
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        // Layout.preferredWidth: 100
+                    }
+                }
+            }
             ListView {
                 id: libraryList
-                anchors.fill: parent
+                anchors.top: listHeader.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
                 clip: true
                 focus: true
 
@@ -299,19 +360,50 @@ Pane {
                     }
                     autoExclusive: true
 
-                    width: ListView.view.width
+                    // width: ListView.view.width
 
-                    padding: 6
+                    padding: 8
+                    horizontalPadding: 10
 
                     onClicked: function () {
                         entryClicked(model.id)
                     }
 
-                    contentItem: Text {
-                        text: model.display_name
-                        font.pointSize: 12
-                        font.family: Constants.strongFontFamily
-                        color: "#ffffff"
+                    contentItem: RowLayout {
+                        Text {
+                            text: "\ue87d"
+                            font.family: Constants.symbolFontFamily
+                            font.pointSize: 12
+                            opacity: libItemMouse.containsMouse ? 1 : 0
+                            color: "#b3b3b3"
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: favoriteSection.width
+                        }
+
+                        Text {
+                            text: model.display_name
+                            font.pointSize: 11
+                            font.family: Constants.semiboldFontFamily
+                            color: "#ffffff"
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: titleSection.width
+                            wrapMode: Text.WordWrap
+                        }
+
+                        Text {
+                            text: model.platform_name
+                            font.pointSize: 10
+                            font.family: Constants.regularFontFamily
+                            color: libItemMouse.containsMouse ? "white" : "#b3b3b3"
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: platformSection.width
+                            // Layout.fillWidth: true
+                            // Layout.horizontalStretchFactor: 1
+                            // Layout.preferredWidth: 100
+                        }
                     }
 
                     MouseArea {
@@ -332,63 +424,6 @@ Pane {
                 }
                 // preferredHighlightBegin: height / 3
                 // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
-            }
-
-            Component {
-                id: gameListItem
-
-                Rectangle {
-                    id: wrapper
-
-                    width: ListView.view.width
-                    height: 40
-                    radius: 12
-
-                    color: mouseArea.containsMouse ? Constants.colorTestCard : "transparent"
-
-                    MouseArea {
-                        id: mouseArea
-                        hoverEnabled: true
-                        anchors.fill: parent
-
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            libraryEntryRightClickMenu.popup()
-                            // entryClicked(model.id)
-                            // gameLoader.loadGame(model.id)
-                        }
-                    }
-
-                    Text {
-                        id: label
-                        anchors.left: parent.left
-                        anchors.leftMargin: 12
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: (parent.width / 3) * 2
-
-                        font.pointSize: 12
-                        font.family: fontFamilyName
-                        text: model.display_name
-                        color: Constants.colorTestText
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Text {
-                        id: platformLabel
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.left: label.right
-
-                        // font.family: lexendLight.name
-                        font.pointSize: 10
-                        text: model.platform_name
-                        color: "#989898"
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
             }
         }
     }
