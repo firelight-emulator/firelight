@@ -9,7 +9,7 @@
 
 namespace firelight::Input {
 
-class ControllerManager final : public QAbstractListModel,
+class ControllerManager final : public QObject,
                                 public libretro::IRetropadProvider {
   Q_OBJECT
 public:
@@ -20,13 +20,8 @@ public:
   getControllerForPlayer(int t_player) const;
   std::optional<libretro::IRetroPad *>
   getRetropadForPlayer(int t_player) override;
-  [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
-  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
 public slots:
-  void swap(int firstIndex, int secondIndex);
   void updateControllerOrder(const QVariantMap &map);
 
 signals:
@@ -34,8 +29,6 @@ signals:
   void controllerDisconnected();
 
 private:
-  enum Roles { PlayerIndex = Qt::UserRole + 1, ControllerName };
-
   int m_numControllers = 0;
   std::array<std::unique_ptr<Controller>, 32> m_controllers{};
 

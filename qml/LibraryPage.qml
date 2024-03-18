@@ -234,20 +234,21 @@ Pane {
                 horizontalPadding: 10
 
                 RowLayout {
+                    id: headerRow
                     anchors.fill: parent
-                    Text {
-                        id: favoriteSection
-                        text: "\ue87d"
-                        font.family: Constants.symbolFontFamily
-                        font.pointSize: 12
-                        color: "#b3b3b3"
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: 24
-                        topPadding: 2
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                    // Text {
+                    //     id: favoriteSection
+                    //     text: "\ue87d"
+                    //     font.family: Constants.symbolFontFamily
+                    //     font.pointSize: 12
+                    //     color: "#b3b3b3"
+                    //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                    //     Layout.fillHeight: true
+                    //     Layout.preferredWidth: 24
+                    //     topPadding: 2
+                    //     horizontalAlignment: Text.AlignLeft
+                    //     verticalAlignment: Text.AlignVCenter
+                    // }
                     Text {
                         id: titleSection
                         text: "Title"
@@ -281,9 +282,19 @@ Pane {
                     }
                 }
             }
+            Rectangle {
+                id: spacer
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: listHeader.bottom
+                anchors.topMargin: 8
+                width: libraryList.width
+                height: 1
+                color: "#373737"
+            }
             ListView {
                 id: libraryList
-                anchors.top: listHeader.bottom
+                anchors.top: spacer.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
@@ -370,16 +381,16 @@ Pane {
                     }
 
                     contentItem: RowLayout {
-                        Text {
-                            text: "\ue87d"
-                            font.family: Constants.symbolFontFamily
-                            font.pointSize: 12
-                            opacity: libItemMouse.containsMouse ? 1 : 0
-                            color: "#b3b3b3"
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: favoriteSection.width
-                        }
+                        // Text {
+                        //     text: "\ue87d"
+                        //     font.family: Constants.symbolFontFamily
+                        //     font.pointSize: 12
+                        //     opacity: libItemMouse.containsMouse ? 1 : 0
+                        //     color: "#b3b3b3"
+                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        //     Layout.fillHeight: true
+                        //     Layout.preferredWidth: favoriteSection.width
+                        // }
 
                         Text {
                             text: model.display_name

@@ -3,94 +3,194 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import FirelightStyle 1.0
 
-Item {
+Pane {
     id: root
 
-    Pane {
-        id: pOneFour
-        background: Rectangle {
-            color: "transparent"
-            opacity: 0.1
-            radius: 8
-        }
-
-        padding: 0
-
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.bottom: bottomPane.top
-        anchors.bottomMargin: 8
-        width: parent.width / 2
-
-        ColumnLayout {
-            id: players
-            anchors.fill: parent
-            spacing: 8
-
-            Thing {
-                Layout.preferredWidth: parent.width
-                Layout.minimumHeight: 48
-                Layout.fillHeight: true
-
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            }
-
-            Thing {
-                Layout.preferredWidth: parent.width
-                Layout.minimumHeight: 48
-                Layout.fillHeight: true
-
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            }
-
-            Thing {
-                Layout.preferredWidth: parent.width
-                Layout.minimumHeight: 48
-                Layout.fillHeight: true
-
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            }
-
-            Thing {
-                Layout.preferredWidth: parent.width
-                Layout.minimumHeight: 48
-                Layout.fillHeight: true
-
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            }
-
-        }
+    background: Rectangle {
+        color: "transparent"
     }
 
-    Pane {
-        id: rightPane
-        padding: 8
-        background: Rectangle {
-            color: "white"
-            opacity: 0.1
-            radius: 8
+    ListView {
+        id: playerList
+        width: 400
+        height: 400
+        anchors.centerIn: parent
+        spacing: 6
+
+        model: controller_manager
+        delegate: RowLayout {
+            implicitWidth: 300
+            implicitHeight: 48
+
+            Text {
+                text: "P" + (model.player_index + 1)
+                font.pointSize: 11
+                font.family: Constants.semiboldFontFamily
+                color: "#b3b3b3"
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.horizontalStretchFactor: 1
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            ContentPane {
+                Text {
+                    text: model.model_name
+                    anchors.fill: parent
+                    font.pointSize: 11
+                    font.family: Constants.semiboldFontFamily
+                    color: "white"
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+
+                }
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.horizontalStretchFactor: 3
+            }
         }
-        anchors.leftMargin: 8
-        anchors.left: pOneFour.right
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.bottom: bottomPane.top
-        anchors.bottomMargin: 8
+
+
+        // ContentPane {
+        //     Text {
+        //         text: controllerName
+        //         anchors.fill: parent
+        //         font.pointSize: 12
+        //         font.family: Constants.strongFontFamily
+        //         color: "white"
+        //         horizontalAlignment: Text.AlignLeft
+        //         verticalAlignment: Text.AlignVCenter
+        //
+        //     }
+        //     width: parent.width
+        //     height: 48
+        // }
     }
 
-    Pane {
-        id: bottomPane
-        background: Rectangle {
-            color: "white"
-            opacity: 0.1
-            radius: 8
-        }
-        padding: 8
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        height: 120
-    }
+    // ColumnLayout {
+    //     id: players
+    //     anchors.centerIn: parent
+    //     spacing: 8
+    //
+    //     RowLayout {
+    //         Layout.preferredWidth: 300
+    //         Layout.preferredHeight: 48
+    //
+    //         Text {
+    //             text: "P1"
+    //             font.pointSize: 11
+    //             font.family: Constants.strongFontFamily
+    //             color: "#b3b3b3"
+    //             Layout.fillWidth: true
+    //             Layout.fillHeight: true
+    //             Layout.horizontalStretchFactor: 1
+    //             horizontalAlignment: Text.AlignLeft
+    //             verticalAlignment: Text.AlignVCenter
+    //         }
+    //
+    //         ContentPane {
+    //             Text {
+    //                 text: "Xbox One Controller for Windows"
+    //                 anchors.fill: parent
+    //                 font.pointSize: 12
+    //                 font.family: Constants.strongFontFamily
+    //                 color: "#b3b3b3"
+    //                 horizontalAlignment: Text.AlignLeft
+    //                 verticalAlignment: Text.AlignVCenter
+    //
+    //             }
+    //             Layout.fillWidth: true
+    //             Layout.fillHeight: true
+    //             Layout.horizontalStretchFactor: 3
+    //         }
+    //     }
+
+    // ContentPane {
+    //     id: playerOne
+    //     Layout.preferredWidth: 300
+    //     Layout.preferredHeight: 48
+    //
+    //     Text {
+    //         text: "Player 1"
+    //         font.pointSize: 12
+    //         font.family: Constants.strongFontFamily
+    //         color: "#b3b3b3"
+    //     }
+    // }
+    //
+    // ContentPane {
+    //     id: playerTwo
+    //     Layout.preferredWidth: 300
+    //     Layout.preferredHeight: 48
+    //
+    //     Text {
+    //         text: "Player 2"
+    //         font.pointSize: 12
+    //         font.family: Constants.strongFontFamily
+    //         color: "#b3b3b3"
+    //     }
+    // }
+    //
+    // ContentPane {
+    //     id: playerThree
+    //     Layout.preferredWidth: 300
+    //     Layout.preferredHeight: 48
+    //
+    //     Text {
+    //         text: "Player 3"
+    //         font.pointSize: 12
+    //         font.family: Constants.strongFontFamily
+    //         color: "#b3b3b3"
+    //     }
+    // }
+    //
+    // ContentPane {
+    //     id: playerFour
+    //     Layout.preferredWidth: 300
+    //     Layout.preferredHeight: 48
+    //
+    //     Text {
+    //         text: "Player 4"
+    //         font.pointSize: 12
+    //         font.family: Constants.strongFontFamily
+    //         color: "#b3b3b3"
+    //     }
+    // }
+
+    // Thing {
+    //     Layout.preferredWidth: parent.width
+    //     Layout.minimumHeight: 48
+    //     Layout.fillHeight: true
+    //
+    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+    // }
+    //
+    // Thing {
+    //     Layout.preferredWidth: parent.width
+    //     Layout.minimumHeight: 48
+    //     Layout.fillHeight: true
+    //
+    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+    // }
+    //
+    // Thing {
+    //     Layout.preferredWidth: parent.width
+    //     Layout.minimumHeight: 48
+    //     Layout.fillHeight: true
+    //
+    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+    // }
+    //
+    // Thing {
+    //     Layout.preferredWidth: parent.width
+    //     Layout.minimumHeight: 48
+    //     Layout.fillHeight: true
+    //
+    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+    // }
+
+    // }
 
 
     // Item {

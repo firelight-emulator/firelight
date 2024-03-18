@@ -23,6 +23,12 @@ ApplicationWindow {
     title: qsTr("Firelight")
     color: "black"
 
+    onActiveFocusItemChanged: {
+        if (activeFocusItem !== null) {
+            console.log("Active focus item: " + activeFocusItem)
+        }
+    }
+
     Rectangle {
         id: appRoot
         anchors.fill: parent
@@ -895,5 +901,17 @@ ApplicationWindow {
             id: myHover
             cursorShape: Qt.PointingHandCursor
         }
+    }
+
+    Rectangle {
+        id: focusHighlight
+        x: window.activeFocusItem ? window.activeFocusItem.mapToItem(appRoot, 0, 0).x : 0
+        y: window.activeFocusItem ? window.activeFocusItem.mapToItem(appRoot, 0, 0).y : 0
+        width: window.activeFocusItem ? window.activeFocusItem.width : 0
+        height: window.activeFocusItem ? window.activeFocusItem.height : 0
+        visible: window.activeFocusItem !== null
+        color: "transparent"
+        border.color: "red"
+        border.width: 2
     }
 }

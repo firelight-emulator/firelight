@@ -53,6 +53,7 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
   // Index refers to N'th controller, so only shows order
   // InstanceID refers to a specific controller for the duration of its
   // session
+  printf("Adding controller\n");
 
   for (int i = 0; i < m_controllers.max_size(); ++i) {
     if (m_controllers[i] != nullptr &&
@@ -92,49 +93,6 @@ ControllerManager::getControllerForPlayer(const int t_player) const {
   return {};
 }
 
-int ControllerManager::rowCount(const QModelIndex &parent) const {
-  return m_numControllers;
-}
-
-QVariant ControllerManager::data(const QModelIndex &index, int role) const {
-  if (role < Qt::UserRole || index.row() >= m_controllers.size()) {
-    return QVariant{};
-  }
-
-  auto item = m_controllers.at(index.row()).get();
-
-  if (!item) {
-    return QVariant{};
-  }
-
-  switch (role) {
-  case PlayerIndex:
-    return item->getPlayerIndex();
-  case ControllerName:
-    return QString::fromStdString(item->getControllerName());
-  default:
-    return QVariant{};
-  }
-}
-
-QHash<int, QByteArray> ControllerManager::roleNames() const {
-  QHash<int, QByteArray> roles;
-  roles[PlayerIndex] = "playerIndex";
-  roles[ControllerName] = "controllerName";
-  return roles;
-}
-void ControllerManager::swap(int firstIndex, int secondIndex) {
-  for (auto i : persistentIndexList()) {
-    printf("%d: %d\n", i.row(), i.column());
-  }
-
-  if (firstIndex == secondIndex) {
-    return;
-  }
-
-  printf("Swapping: %d, %d\n", firstIndex, secondIndex);
-}
-
 void ControllerManager::updateControllerOrder(const QVariantMap &map) {
   std::unique_ptr<Controller> tempCon[map.size()];
 
@@ -148,7 +106,7 @@ void ControllerManager::updateControllerOrder(const QVariantMap &map) {
 
     if (!emittedSignal) {
       emittedSignal = true;
-      emit layoutAboutToBeChanged();
+      // emit layoutAboutToBeChanged();
     }
 
     tempCon[to] = std::move(m_controllers[from]);
@@ -162,7 +120,7 @@ void ControllerManager::updateControllerOrder(const QVariantMap &map) {
     }
   }
 
-  emit layoutChanged();
+  // emit layoutChanged();
 }
 
-} // namespace Firelight::Input
+} // namespace firelight::Input

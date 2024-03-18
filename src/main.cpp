@@ -17,6 +17,7 @@
 #include "app/fps_multiplier.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
+#include "gui/controller_list_model.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
 #include "gui/playlist_item_model.hpp"
@@ -94,6 +95,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
   // Set up the models for QML ***********************************************
+  firelight::gui::ControllerListModel controllerListModel(controllerManager);
   firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
   firelight::gui::LibraryItemModel libModel(&libraryDatabase);
   firelight::gui::LibrarySortFilterModel libSortModel;
@@ -110,7 +112,7 @@ int main(int argc, char *argv[]) {
                                            &libSortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
   engine.rootContext()->setContextProperty("controller_manager",
-                                           &controllerManager);
+                                           &controllerListModel);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",
