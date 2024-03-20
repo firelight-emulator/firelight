@@ -4,16 +4,19 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlTableModel>
+#include <QThread>
 #include <spdlog/spdlog.h>
+
+constexpr auto DATABASE_PREFIX = "library_";
 
 namespace firelight::db {
 SqliteLibraryDatabase::SqliteLibraryDatabase(
-    const std::filesystem::path &db_file_path) {
-  m_database = QSqlDatabase::addDatabase("QSQLITE", "library");
-  m_database.setDatabaseName(QString::fromStdString(db_file_path.string()));
-  m_database.open();
+    const std::filesystem::path &db_file_path)
+    : m_dbFilePath(db_file_path) {
 
-  QSqlQuery createLibraryEntries(m_database);
+  const auto db = getDatabase();
+
+  QSqlQuery createLibraryEntries(db);
   createLibraryEntries.prepare("CREATE TABLE IF NOT EXISTS library_entries("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                                "display_name TEXT NOT NULL,"
@@ -30,7 +33,7 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
                   createLibraryEntries.lastError().text().toStdString());
   }
 
-  QSqlQuery createPlaylists(m_database);
+  QSqlQuery createPlaylists(db);
   createPlaylists.prepare("CREATE TABLE IF NOT EXISTS playlists("
                           "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                           "display_name TEXT UNIQUE NOT NULL,"
@@ -41,7 +44,7 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
                   createPlaylists.lastError().text().toStdString());
   }
 
-  QSqlQuery createPlaylistEntries(m_database);
+  QSqlQuery createPlaylistEntries(db);
   createPlaylistEntries.prepare(
       "CREATE TABLE IF NOT EXISTS playlist_entries("
       "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -59,12 +62,15 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(
 }
 
 SqliteLibraryDatabase::~SqliteLibraryDatabase() {
-  m_database.close();
-  QSqlDatabase::removeDatabase(m_database.connectionName());
+  for (const auto &name : QSqlDatabase::connectionNames()) {
+    if (name.startsWith(DATABASE_PREFIX)) {
+      QSqlDatabase::removeDatabase(name);
+    }
+  }
 }
 
 bool SqliteLibraryDatabase::tableExists(const std::string &tableName) {
-  QSqlQuery query(m_database);
+  QSqlQuery query(getDatabase());
   query.prepare("SELECT 1 FROM " + QString::fromStdString(tableName) +
                 " LIMIT 1;");
 
@@ -72,15 +78,9 @@ bool SqliteLibraryDatabase::tableExists(const std::string &tableName) {
 }
 
 bool SqliteLibraryDatabase::createPlaylist(Playlist &playlist) {
-  if (!m_database.open()) {
-    spdlog::error("Couldn't open database: {}",
-                  m_database.lastError().text().toStdString());
-    return false;
-  }
-
   const QString queryString =
       "INSERT INTO playlists (display_name) VALUES (:name);";
-  QSqlQuery query(m_database);
+  QSqlQuery query(getDatabase());
   query.prepare(queryString);
   query.bindValue(":name", QString::fromStdString(playlist.displayName));
 
@@ -97,13 +97,7 @@ bool SqliteLibraryDatabase::createPlaylist(Playlist &playlist) {
 
 bool SqliteLibraryDatabase::addEntryToPlaylist(const int playlistId,
                                                const int entryId) {
-  if (!m_database.open()) {
-    spdlog::error("Couldn't open database: {}",
-                  m_database.lastError().text().toStdString());
-    return false;
-  }
-
-  QSqlQuery query(m_database);
+  QSqlQuery query(getDatabase());
   query.prepare(
       "INSERT INTO playlist_entries (playlist_id, library_entry_id) VALUES "
       "(:playlistId, :libraryEntryId);");
@@ -114,130 +108,13 @@ bool SqliteLibraryDatabase::addEntryToPlaylist(const int playlistId,
   return query.exec();
 }
 
-std::vector<LibEntry> SqliteLibraryDatabase::getAllEntries() {
-  return getMatching({});
-}
-
-void SqliteLibraryDatabase::match_md5s(std::string source_directory,
-                                       std::vector<std::string> md5s) {
-  // TODO: Select all from DB with matching source
-  // LibraryDatabase::match_md5s(source_directory, md5s);
-}
-std::vector<LibEntry> SqliteLibraryDatabase::getMatching(Filter filter) {
-  std::vector<LibEntry> result;
-  return result;
-
-  QString queryString = "SELECT * FROM library_entries";
-
-  QString whereClause;
-  bool needAND = false;
-
-  if (filter.id != -1) {
-    whereClause += " WHERE id = :id";
-    needAND = true;
-  }
-
-  if (!filter.display_name.empty()) {
-    if (needAND) {
-      whereClause += " AND ";
-    } else {
-      whereClause += " WHERE ";
-      needAND = true;
-    }
-    whereClause += "display_name = :display_name";
-  }
-
-  if (!filter.md5.empty()) {
-    if (needAND) {
-      whereClause += " AND ";
-    } else {
-      whereClause += " WHERE ";
-      needAND = true;
-    }
-    whereClause += "md5 = :md5";
-  }
-
-  if (!filter.content_path.empty()) {
-    if (needAND) {
-      whereClause += " AND ";
-    } else {
-      whereClause += " WHERE ";
-      needAND = true;
-    }
-    whereClause += "content_path = :content_path";
-  }
-
-  if (filter.rom != -1) {
-    if (needAND) {
-      whereClause += " AND ";
-    } else {
-      whereClause += " WHERE ";
-      needAND = true;
-    }
-    whereClause += "rom = :rom";
-  }
-
-  queryString += whereClause;
-  QSqlQuery query(m_database);
-  query.prepare(queryString);
-
-  if (filter.id != -1) {
-    query.bindValue(":id", filter.id);
-  }
-  if (!filter.display_name.empty()) {
-    query.bindValue(":display_name",
-                    QString::fromStdString(filter.display_name));
-  }
-  if (!filter.md5.empty()) {
-    query.bindValue(":md5", QString::fromStdString(filter.md5));
-  }
-  if (!filter.content_path.empty()) {
-    query.bindValue(":content_path",
-                    QString::fromStdString(filter.content_path));
-  }
-  if (filter.rom != -1) {
-    query.bindValue(":rom", filter.rom);
-  }
-
-  if (!query.exec()) {
-    spdlog::error("ruh roh raggy: {}", query.lastError().text().toStdString());
-  }
-
-  while (query.next()) {
-    LibEntry nextEntry;
-    nextEntry.id = query.value(0).toInt();
-    nextEntry.display_name = query.value(1).toString().toStdString();
-    nextEntry.type = static_cast<EntryType>(query.value(2).toInt());
-    nextEntry.verified = query.value(3).toBool();
-    nextEntry.md5 = query.value(4).toString().toStdString();
-    nextEntry.platform = query.value(5).toInt();
-    nextEntry.game = query.value(6).toInt();
-    nextEntry.rom = query.value(7).toInt();
-    nextEntry.parent_entry = query.value(8).toInt();
-    nextEntry.romhack = query.value(9).toInt();
-    nextEntry.romhack_release = query.value(10).toInt();
-    nextEntry.source_directory = query.value(11).toString().toStdString();
-    nextEntry.content_path = query.value(12).toString().toStdString();
-
-    result.emplace_back(nextEntry);
-  }
-
-  return result;
-}
-
 bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
-  if (!m_database.open()) {
-    spdlog::error("Couldn't open database: {}",
-                  m_database.lastError().text().toStdString());
-    return false;
-  }
-
   const QString queryString =
       "INSERT INTO library_entries (display_name, content_md5, platform_id, "
       "type, source_directory, content_path, created_at) VALUES (:displayName, "
       ":contentMd5, :platformId, :type, :sourceDirectory, :contentPath, "
       ":createdAt);";
-  QSqlQuery query(m_database);
+  QSqlQuery query(getDatabase());
   query.prepare(queryString);
   query.bindValue(":displayName", QString::fromStdString(entry.displayName));
   query.bindValue(":contentMd5", QString::fromStdString(entry.contentMd5));
@@ -264,7 +141,7 @@ bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
 
 std::optional<LibraryEntry>
 SqliteLibraryDatabase::getLibraryEntry(const int entryId) {
-  QSqlQuery q(m_database);
+  QSqlQuery q(getDatabase());
   q.prepare("SELECT * FROM library_entries WHERE id = :id");
   q.bindValue(":id", entryId);
 
@@ -278,22 +155,11 @@ SqliteLibraryDatabase::getLibraryEntry(const int entryId) {
     return std::nullopt;
   }
 
-  LibraryEntry entry;
-  entry.id = q.value(0).toInt();
-  entry.displayName = q.value(1).toString().toStdString();
-  entry.contentMd5 = q.value(2).toString().toStdString();
-  entry.platformId = q.value(3).toInt();
-  entry.activeSaveSlot = q.value(4).toInt();
-  entry.type = static_cast<LibraryEntry::EntryType>(q.value(5).toInt());
-  entry.sourceDirectory = q.value(6).toString().toStdString();
-  entry.contentPath = q.value(7).toString().toStdString();
-  entry.createdAt = q.value(8).toLongLong();
-
-  return entry;
+  return createLibraryEntryFromQuery(q);
 }
 
 bool SqliteLibraryDatabase::deleteLibraryEntry(int entryId) {
-  QSqlQuery query(m_database);
+  QSqlQuery query(getDatabase());
   query.prepare("DELETE FROM library_entries WHERE id = :id");
   query.bindValue(":id", entryId);
 
@@ -307,7 +173,7 @@ bool SqliteLibraryDatabase::deleteLibraryEntry(int entryId) {
 }
 
 std::vector<LibraryEntry> SqliteLibraryDatabase::getAllLibraryEntries() {
-  QSqlQuery q(m_database);
+  QSqlQuery q(getDatabase());
   q.prepare("SELECT * FROM library_entries");
 
   if (!q.exec()) {
@@ -317,25 +183,86 @@ std::vector<LibraryEntry> SqliteLibraryDatabase::getAllLibraryEntries() {
 
   std::vector<LibraryEntry> entries;
   while (q.next()) {
-    LibraryEntry entry;
-    entry.id = q.value(0).toInt();
-    entry.displayName = q.value(1).toString().toStdString();
-    entry.contentMd5 = q.value(2).toString().toStdString();
-    entry.platformId = q.value(3).toInt();
-    entry.activeSaveSlot = q.value(4).toInt();
-    entry.type = static_cast<LibraryEntry::EntryType>(q.value(5).toInt());
-    entry.sourceDirectory = q.value(6).toString().toStdString();
-    entry.contentPath = q.value(7).toString().toStdString();
-    entry.createdAt = q.value(8).toLongLong();
+    entries.emplace_back(createLibraryEntryFromQuery(q));
+  }
 
-    entries.emplace_back(entry);
+  return entries;
+}
+
+std::vector<LibraryEntry>
+SqliteLibraryDatabase::getMatchingLibraryEntries(const LibraryEntry &entry) {
+  QString queryString = "SELECT * FROM library_entries";
+
+  QString whereClause;
+  bool needAND = false;
+
+  if (entry.id != -1) {
+    whereClause += " WHERE id = :id";
+    needAND = true;
+  }
+
+  if (!entry.displayName.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "display_name = :displayName";
+  }
+
+  if (!entry.contentMd5.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "content_md5 = :contentMd5";
+  }
+
+  if (!entry.contentPath.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "content_path = :contentPath";
+  }
+
+  queryString += whereClause;
+  QSqlQuery query(getDatabase());
+  query.prepare(queryString);
+
+  if (entry.id != -1) {
+    query.bindValue(":id", entry.id);
+  }
+  if (!entry.displayName.empty()) {
+    query.bindValue(":displayName", QString::fromStdString(entry.displayName));
+  }
+  if (!entry.contentMd5.empty()) {
+    query.bindValue(":contentMd5", QString::fromStdString(entry.contentMd5));
+  }
+  if (!entry.contentPath.empty()) {
+    query.bindValue(":contentPath", QString::fromStdString(entry.contentPath));
+  }
+
+  if (!query.exec()) {
+    spdlog::error("ruh roh raggy: {}", query.lastError().text().toStdString());
+  }
+
+  std::vector<LibraryEntry> entries;
+
+  while (query.next()) {
+    entries.emplace_back(createLibraryEntryFromQuery(query));
   }
 
   return entries;
 }
 
 std::vector<Playlist> SqliteLibraryDatabase::getAllPlaylists() {
-  QSqlQuery q(m_database);
+  QSqlQuery q(getDatabase());
   q.prepare("SELECT * FROM playlists");
 
   if (!q.exec()) {
@@ -357,7 +284,7 @@ std::vector<Playlist> SqliteLibraryDatabase::getAllPlaylists() {
 
 std::vector<Playlist>
 SqliteLibraryDatabase::getPlaylistsForEntry(const int entryId) {
-  QSqlQuery query(m_database);
+  QSqlQuery query(getDatabase());
   query.prepare(
       "SELECT playlists.* FROM playlists "
       "JOIN playlist_entries ON playlists.id = playlist_entries.playlist_id "
@@ -383,7 +310,7 @@ SqliteLibraryDatabase::getPlaylistsForEntry(const int entryId) {
 }
 
 bool SqliteLibraryDatabase::deletePlaylist(const int playlistId) {
-  QSqlQuery query(m_database);
+  QSqlQuery query(getDatabase());
   query.prepare("DELETE FROM playlists WHERE id = :id");
   query.bindValue(":id", playlistId);
 
@@ -398,7 +325,7 @@ bool SqliteLibraryDatabase::deletePlaylist(const int playlistId) {
 
 bool SqliteLibraryDatabase::renamePlaylist(const int playlistId,
                                            const std::string newName) {
-  QSqlQuery checkQuery(m_database);
+  QSqlQuery checkQuery(getDatabase());
   checkQuery.prepare("SELECT 1 FROM playlists WHERE id = :id");
   checkQuery.bindValue(":id", playlistId);
   if (!checkQuery.exec()) {
@@ -417,7 +344,7 @@ bool SqliteLibraryDatabase::renamePlaylist(const int playlistId,
     return false;
   }
 
-  QSqlQuery query(m_database);
+  QSqlQuery query(getDatabase());
   query.prepare("UPDATE playlists SET display_name = :name WHERE id = :id");
   query.bindValue(":name", QString::fromStdString(newName));
   query.bindValue(":id", playlistId);
@@ -429,6 +356,38 @@ bool SqliteLibraryDatabase::renamePlaylist(const int playlistId,
   }
 
   return true;
+}
+
+LibraryEntry
+SqliteLibraryDatabase::createLibraryEntryFromQuery(const QSqlQuery &query) {
+  LibraryEntry entry;
+  entry.id = query.value(0).toInt();
+  entry.displayName = query.value(1).toString().toStdString();
+  entry.contentMd5 = query.value(2).toString().toStdString();
+  entry.platformId = query.value(3).toInt();
+  entry.activeSaveSlot = query.value(4).toInt();
+  entry.type = static_cast<LibraryEntry::EntryType>(query.value(5).toInt());
+  entry.sourceDirectory = query.value(6).toString().toStdString();
+  entry.contentPath = query.value(7).toString().toStdString();
+  entry.createdAt = query.value(8).toLongLong();
+
+  return entry;
+}
+
+QSqlDatabase SqliteLibraryDatabase::getDatabase() const {
+  const auto name =
+      DATABASE_PREFIX +
+      QString::number(reinterpret_cast<quint64>(QThread::currentThread()), 16);
+  if (QSqlDatabase::contains(name)) {
+    return QSqlDatabase::database(name);
+  }
+
+  spdlog::debug("Database connection with name {} does not exist; creating",
+                name.toStdString());
+  auto db = QSqlDatabase::addDatabase("QSQLITE", name);
+  db.setDatabaseName(QString::fromStdString(m_dbFilePath.string()));
+  db.open();
+  return db;
 }
 
 } // namespace firelight::db

@@ -59,34 +59,6 @@ QLibraryManager::QLibraryManager(firelight::db::ILibraryDatabase *lib_database,
   connect(&directory_watcher_, &QFileSystemWatcher::directoryChanged,
           [&](const QString &) { startScan(); });
 }
-std::optional<LibEntry> QLibraryManager::get_by_id(const int id) const {
-  auto result =
-      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
-          .id = id,
-      }));
-
-  if (result.empty()) {
-    return {};
-  }
-
-  if (result.size() > 1) {
-    spdlog::debug("uhhh??");
-  }
-
-  return {result.at(0)};
-}
-std::optional<LibEntry> QLibraryManager::getByRomId(int id) const {
-  auto libEntry =
-      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
-          .rom = id,
-      }));
-
-  if (libEntry.empty()) {
-    return {};
-  }
-
-  return {libEntry.at(0)};
-}
 
 void QLibraryManager::startScan() {
   QFuture<ScanResults> future =
@@ -157,8 +129,8 @@ void QLibraryManager::handleScannedPatchFile(
 
   auto filename = entry.path().relative_path().string();
   auto libEntry =
-      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
-          .content_path = filename,
+      library_database_->getMatchingLibraryEntries(firelight::db::LibraryEntry({
+          .contentPath = filename,
       }));
 
   if (!libEntry.empty()) {
@@ -213,10 +185,8 @@ void QLibraryManager::handleScannedRomFile(
   }
 
   auto filename = entry.path().relative_path().string();
-  auto libEntry =
-      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
-          .content_path = filename,
-      }));
+  auto libEntry = library_database_->getMatchingLibraryEntries(
+      firelight::db::LibraryEntry{.contentPath = filename});
   if (!libEntry.empty()) {
     spdlog::debug("Found library entry with filename {}; skipping", filename);
     return; // TODO: For now let's assume no change.
@@ -232,9 +202,9 @@ void QLibraryManager::handleScannedRomFile(
   scan_results.all_md5s.emplace_back(md5);
 
   auto matchingRoms =
-      library_database_->getMatching(firelight::db::ILibraryDatabase::Filter({
-          .md5 = md5,
-      }));
+      library_database_->getMatchingLibraryEntries(firelight::db::LibraryEntry{
+          .contentMd5 = md5,
+      });
 
   // if (!matchingRoms.empty()) {
   //   auto matching = matchingRoms.at(0);
@@ -248,6 +218,15 @@ void QLibraryManager::handleScannedRomFile(
   auto verified = false;
   auto game_id = -1;
   auto rom_id = -1;
+
+  firelight::db::LibraryEntry e = {
+      .id = -1,
+      .displayName = display_name,
+      .contentMd5 = md5,
+      .platformId = platform->id,
+      .type = firelight::db::LibraryEntry::EntryType::ROM,
+      .sourceDirectory = entry.path().parent_path().string(),
+      .contentPath = entry.path().relative_path().string()};
 
   // if (auto rom = content_database_->getRomByMd5(md5); rom.has_value()) {
   //   auto game = content_database_->getGameByRomId(rom->id);
@@ -273,15 +252,6 @@ void QLibraryManager::handleScannedRomFile(
   //               .romhack_release = -1,
   //               .source_directory = entry.path().parent_path().string(),
   //               .content_path = entry.path().relative_path().string()};
-
-  firelight::db::LibraryEntry e = {
-      .id = -1,
-      .displayName = display_name,
-      .contentMd5 = md5,
-      .platformId = platform->id,
-      .type = firelight::db::LibraryEntry::EntryType::ROM,
-      .sourceDirectory = entry.path().parent_path().string(),
-      .contentPath = entry.path().relative_path().string()};
 
   scan_results.new_entries.emplace_back(e);
 }

@@ -22,9 +22,6 @@ public:
                            std::filesystem::path default_rom_path,
                            IContentDatabase *content_database);
 
-  [[nodiscard]] std::optional<LibEntry> get_by_id(int id) const;
-  [[nodiscard]] std::optional<LibEntry> getByRomId(int id) const;
-
 public slots:
   void startScan();
   bool scanning() const;

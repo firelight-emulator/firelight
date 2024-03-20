@@ -7,6 +7,9 @@ void LibrarySortFilterModel::filterOnPlaylistId(const int playlistId) {
   m_playlistId = playlistId;
   invalidateFilter();
 }
+
+int LibrarySortFilterModel::currentPlaylistId() const { return m_playlistId; }
+
 void LibrarySortFilterModel::sortByDisplayName() {
   m_sortType = SortType::DisplayName;
   sort(0);

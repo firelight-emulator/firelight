@@ -31,14 +31,17 @@ Pane {
                     ListElement {
                         display_name: "Appearance"
                         icon: "\ue40a"
+                        enabled: false
                     }
                     ListElement {
                         display_name: "Video"
                         icon: "\ue333"
+                        enabled: true
                     }
                     ListElement {
                         display_name: "Sound"
                         icon: "\ue050"
+                        enabled: false
                     }
                     // ListElement {
                     //     display_name: "Menu Navigation"
@@ -47,21 +50,24 @@ Pane {
                     ListElement {
                         display_name: "System"
                         icon: "\uf522"
+                        enabled: false
                     }
                     ListElement {
                         display_name: "About"
                         icon: "\ue88e"
+                        enabled: false
                     }
                 }
 
                 delegate: Button {
                     id: settingsCategoryButton
                     background: Rectangle {
-                        color: handler.hovered || checked ? "white" : "transparent"
+                        color: enabled ? handler.hovered || checked ? "white" : "transparent" : "transparent"
                         opacity: checked ? 0.2 : 0.1
                         radius: 4
                     }
 
+                    enabled: model.enabled
 
                     implicitHeight: 48
 
@@ -89,7 +95,7 @@ Pane {
 
                             font.family: Constants.symbolFontFamily
                             font.pixelSize: 28
-                            color: "#b3b3b3"
+                            color: settingsCategoryButton.enabled ? "#b3b3b3" : "#666666"
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -103,7 +109,7 @@ Pane {
                             leftPadding: model.icon !== "" ? 8 : 0
                             font.pointSize: 11
                             font.family: Constants.semiboldFontFamily
-                            color: "#b3b3b3"
+                            color: settingsCategoryButton.enabled ? "#b3b3b3" : "#666666"
                             horizontalAlignment: Text.AlignLeft
                             verticalAlignment: Text.AlignVCenter
                         }

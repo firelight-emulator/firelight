@@ -2,6 +2,7 @@
 
 #include "library_database.hpp"
 #include <QSqlDatabase>
+#include <QThreadStorage>
 #include <filesystem>
 
 namespace firelight::db {
@@ -19,6 +20,8 @@ public:
   std::optional<LibraryEntry> getLibraryEntry(int entryId) override;
   bool deleteLibraryEntry(int entryId) override;
   std::vector<LibraryEntry> getAllLibraryEntries() override;
+  std::vector<LibraryEntry>
+  getMatchingLibraryEntries(const LibraryEntry &entry) override;
 
   // Playlists
   bool createPlaylist(Playlist &playlist) override;
@@ -30,13 +33,10 @@ public:
   // Playlist Entries
   bool addEntryToPlaylist(int playlistId, int entryId) override;
 
-  std::vector<LibEntry> getAllEntries() override;
-  void match_md5s(std::string source_directory,
-                  std::vector<std::string> md5s) override;
-  std::vector<LibEntry> getMatching(Filter filter) override;
-
 private:
-  QSqlDatabase m_database;
+  std::filesystem::path m_dbFilePath;
+  static LibraryEntry createLibraryEntryFromQuery(const QSqlQuery &query);
+  QSqlDatabase getDatabase() const;
 };
 
 } // namespace firelight::db

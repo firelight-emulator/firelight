@@ -9,6 +9,7 @@ class LibrarySortFilterModel final : public QSortFilterProxyModel {
 
 public slots:
   void filterOnPlaylistId(int playlistId);
+  [[nodiscard]] int currentPlaylistId() const;
   void sortByDisplayName();
   void sortByCreatedAt();
 

@@ -11,25 +11,7 @@ namespace firelight::db {
 
 class ILibraryDatabase {
 public:
-  struct Filter {
-    int id = -1;
-    std::string display_name;
-    bool verified;
-    std::string md5;
-    int platform;
-    int game = -1;
-    int rom = -1;
-    int parent_entry = -1;
-    int romhack = -1;
-    std::string source_directory;
-    std::string content_path;
-  };
-
   virtual ~ILibraryDatabase() = default;
-  virtual std::vector<LibEntry> getAllEntries() = 0;
-  virtual void match_md5s(std::string t_sourceDirectory,
-                          std::vector<std::string> t_md5List) = 0;
-  virtual std::vector<LibEntry> getMatching(Filter filter) = 0;
 
   /**
    * @param tableName The name of the table to check for.
@@ -48,6 +30,8 @@ public:
   virtual std::optional<LibraryEntry> getLibraryEntry(int entryId) = 0;
   virtual bool deleteLibraryEntry(int entryId) = 0;
   virtual std::vector<LibraryEntry> getAllLibraryEntries() = 0;
+  virtual std::vector<LibraryEntry>
+  getMatchingLibraryEntries(const LibraryEntry &entry) = 0;
 
   /**
    * @brief Creates a new Playlist.
