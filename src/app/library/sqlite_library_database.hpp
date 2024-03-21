@@ -1,6 +1,6 @@
 #pragma once
 
-#include "library_database.hpp"
+#include "firelight/library_database.hpp"
 #include <QSqlDatabase>
 #include <QThreadStorage>
 #include <filesystem>

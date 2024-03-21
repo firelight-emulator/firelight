@@ -1,7 +1,7 @@
 #pragma once
 
-#include "daos/play_session.hpp"
-#include "daos/savefile_metadata.hpp"
+#include "play_session.hpp"
+#include "savefile_metadata.hpp"
 
 #include <optional>
 #include <string>

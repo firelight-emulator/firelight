@@ -8,7 +8,7 @@ namespace firelight {
 
 Input::ControllerManager *ManagerAccessor::m_controllerManager;
 saves::SaveManager *ManagerAccessor::m_saveManager;
-QLibraryManager *ManagerAccessor::m_libraryManager;
+LibraryScanner *ManagerAccessor::m_libraryManager;
 db::IUserdataDatabase *ManagerAccessor::m_userdataDatabase;
 db::ILibraryDatabase *ManagerAccessor::m_libraryDatabase;
 
@@ -19,7 +19,7 @@ void ManagerAccessor::setControllerManager(
 void ManagerAccessor::setSaveManager(saves::SaveManager *t_manager) {
   m_saveManager = t_manager;
 }
-void ManagerAccessor::setLibraryManager(QLibraryManager *t_libraryManager) {
+void ManagerAccessor::setLibraryManager(LibraryScanner *t_libraryManager) {
   m_libraryManager = t_libraryManager;
 }
 void ManagerAccessor::setUserdataManager(
@@ -36,7 +36,7 @@ Input::ControllerManager *ManagerAccessor::getControllerManager() {
   return m_controllerManager;
 }
 saves::SaveManager *ManagerAccessor::getSaveManager() { return m_saveManager; }
-QLibraryManager *ManagerAccessor::getLibraryManager() {
+LibraryScanner *ManagerAccessor::getLibraryManager() {
   return m_libraryManager;
 }
 db::IUserdataDatabase *ManagerAccessor::getUserdataManager() {

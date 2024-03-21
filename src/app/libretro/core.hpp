@@ -1,16 +1,15 @@
 #pragma once
 
+#include "firelight/libretro/audio_data_receiver.hpp"
+#include "firelight/libretro/retropad_provider.hpp"
+#include "firelight/libretro/video_data_receiver.hpp"
 #include "SDL2/SDL.h"
 #include "coreoption.hpp"
 #include "game.hpp"
-#include "libretro.h"
-#include "retropad_provider.hpp"
-#include "video_data_receiver.hpp"
+#include "libretro/libretro.h"
 #include <iostream>
 #include <mutex>
 #include <vector>
-
-#include "audio_data_receiver.hpp"
 
 using std::array;
 using std::string;

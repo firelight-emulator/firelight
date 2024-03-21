@@ -1,4 +1,4 @@
-#include "../../../src/app/db/daos/playlist.hpp"
+#include "firelight/playlist.hpp"
 #include <gtest/gtest.h>
 
 namespace firelight::db {

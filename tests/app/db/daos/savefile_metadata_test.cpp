@@ -1,4 +1,4 @@
-#include "../../../src/app/db/daos/savefile_metadata.hpp"
+#include "firelight/savefile_metadata.hpp"
 #include <gtest/gtest.h>
 
 namespace firelight::db {

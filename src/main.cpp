@@ -3,7 +3,7 @@
 #include "app/db/sqlite_content_database.hpp"
 #include "app/emulation_manager.hpp"
 #include "app/game_loader.hpp"
-#include "src/gui/QLibraryManager.hpp"
+#include "app/library/library_scanner.hpp"
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -12,11 +12,11 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
-#include "app/db/sqlite_library_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
 #include "app/fps_multiplier.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
+#include "app/library/sqlite_library_database.hpp"
 #include "gui/controller_list_model.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
-  QLibraryManager libraryManager(&libraryDatabase, roms_dir, &contentDatabase);
+  LibraryScanner libraryManager(&libraryDatabase, roms_dir, &contentDatabase);
   libraryManager.startScan();
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 

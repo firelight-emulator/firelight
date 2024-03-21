@@ -15,16 +15,5 @@ public:
   MOCK_METHOD(std::vector<Playlist>, getAllPlaylists, (), (override));
   MOCK_METHOD(bool, addEntryToPlaylist, (int playlistId, int entryId),
               (override));
-  MOCK_METHOD(void, addOrRenameEntry, (LibEntry entry), (override));
-  MOCK_METHOD(std::vector<LibEntry>, getAllEntries, (), (override));
-  MOCK_METHOD(void, match_md5s,
-              (std::string t_sourceDirectory,
-               std::vector<std::string> t_md5List),
-              (override));
-  MOCK_METHOD(void, updateEntryContentPath,
-              (int entryId, std::string sourceDirectory,
-               std::string contentPath),
-              (override));
-  MOCK_METHOD(std::vector<LibEntry>, getMatching, (Filter filter), (override));
 };
 } // namespace firelight::db

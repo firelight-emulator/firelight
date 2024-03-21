@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../app/db/content_database.hpp"
-#include "../app/db/library_database.hpp"
+#include "firelight/content_database.hpp"
+#include "firelight/library_database.hpp"
 #include <QFileSystemWatcher>
 #include <QObject>
 #include <QThreadPool>
 #include <filesystem>
 
-class QLibraryManager final : public QObject {
+class LibraryScanner final : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool scanning READ scanning NOTIFY scanningChanged)
 
@@ -18,9 +18,9 @@ public:
     std::vector<firelight::db::LibraryEntry> new_entries;
   };
 
-  explicit QLibraryManager(firelight::db::ILibraryDatabase *lib_database,
-                           std::filesystem::path default_rom_path,
-                           IContentDatabase *content_database);
+  explicit LibraryScanner(firelight::db::ILibraryDatabase *lib_database,
+                          std::filesystem::path default_rom_path,
+                          IContentDatabase *content_database);
 
 public slots:
   void startScan();

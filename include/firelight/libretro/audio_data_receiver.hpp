@@ -1,4 +1,5 @@
 #pragma once
+#include <SDL_audio.h>
 
 class IAudioDataReceiver {
 public:

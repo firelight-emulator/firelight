@@ -1,4 +1,5 @@
-#include "QLibraryManager.hpp"
+#include "library_scanner.hpp"
+
 #include <fstream>
 #include <openssl/evp.h>
 #include <qfuture.h>
@@ -45,9 +46,9 @@ static std::string calculateMD5(const char *input, int size) {
   return output;
 }
 
-QLibraryManager::QLibraryManager(firelight::db::ILibraryDatabase *lib_database,
-                                 std::filesystem::path default_rom_path,
-                                 IContentDatabase *content_database)
+LibraryScanner::LibraryScanner(firelight::db::ILibraryDatabase *lib_database,
+                               std::filesystem::path default_rom_path,
+                               IContentDatabase *content_database)
     : default_rom_path_(std::move(default_rom_path)),
       library_database_(lib_database), content_database_(content_database) {
   scanner_thread_pool_ = std::make_unique<QThreadPool>();
@@ -60,7 +61,7 @@ QLibraryManager::QLibraryManager(firelight::db::ILibraryDatabase *lib_database,
           [&](const QString &) { startScan(); });
 }
 
-void QLibraryManager::startScan() {
+void LibraryScanner::startScan() {
   QFuture<ScanResults> future =
       QtConcurrent::run(scanner_thread_pool_.get(), [this] {
         // TODO: prob should lock the db from write access lol
@@ -76,8 +77,17 @@ void QLibraryManager::startScan() {
           }
 
           if (entry.file_size() > MAX_FILESIZE_BYTES) {
-            // spdlog::info("File {} too large; skipping",
-            //              entry.path().filename().string());
+            spdlog::debug("File {} (size {}) too large; skipping",
+                          entry.path().filename().string(), entry.file_size());
+            continue;
+          }
+
+          auto filename = entry.path().relative_path().string();
+          auto existing = library_database_->getMatchingLibraryEntries(
+              firelight::db::LibraryEntry{.contentPath = filename});
+          if (!existing.empty()) {
+            spdlog::debug("Found library entry with filename {}; skipping",
+                          filename);
             continue;
           }
 
@@ -115,9 +125,9 @@ void QLibraryManager::startScan() {
   // TODO: Get a list of all md5s from the db. For each one, check if it's in
   // TODO:  the list of md5s we found when we scanned. If not, remove the entry
 }
-bool QLibraryManager::scanning() const { return scanning_; }
+bool LibraryScanner::scanning() const { return scanning_; }
 
-void QLibraryManager::handleScannedPatchFile(
+void LibraryScanner::handleScannedPatchFile(
     const std::filesystem::directory_entry &entry,
     ScanResults &scan_results) const {
   auto size = entry.file_size();
@@ -125,17 +135,6 @@ void QLibraryManager::handleScannedPatchFile(
     // spdlog::info("File {} too large; skipping",
     //              entry.path().filename().string());
     return;
-  }
-
-  auto filename = entry.path().relative_path().string();
-  auto libEntry =
-      library_database_->getMatchingLibraryEntries(firelight::db::LibraryEntry({
-          .contentPath = filename,
-      }));
-
-  if (!libEntry.empty()) {
-    spdlog::debug("Found library entry with filename {}; skipping", filename);
-    return; // TODO: For now let's assume no change.
   }
 
   std::vector<char> thing(size);
@@ -171,7 +170,7 @@ void QLibraryManager::handleScannedPatchFile(
   // scan_results.new_entries.emplace_back(e);
 }
 
-void QLibraryManager::handleScannedRomFile(
+void LibraryScanner::handleScannedRomFile(
     const std::filesystem::directory_entry &entry,
     ScanResults &scan_results) const {
   auto ext = entry.path().extension();
@@ -182,14 +181,6 @@ void QLibraryManager::handleScannedRomFile(
   if (!platform.has_value()) {
     printf("File extension not recognized: %s\n", ext.string().c_str());
     return;
-  }
-
-  auto filename = entry.path().relative_path().string();
-  auto libEntry = library_database_->getMatchingLibraryEntries(
-      firelight::db::LibraryEntry{.contentPath = filename});
-  if (!libEntry.empty()) {
-    spdlog::debug("Found library entry with filename {}; skipping", filename);
-    return; // TODO: For now let's assume no change.
   }
 
   std::vector<char> thing(size);

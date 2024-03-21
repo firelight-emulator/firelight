@@ -1,9 +1,9 @@
 #pragma once
 
-#include "daos/game.hpp"
-#include "daos/platform.hpp"
-#include "daos/rom.hpp"
-#include "daos/romhack.hpp"
+#include "firelight/game.hpp"
+#include "firelight/platform.hpp"
+#include "firelight/rom.hpp"
+#include "firelight/romhack.hpp"
 
 #include <memory>
 #include <optional>

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "libretro/libretro.h"
 #include <cstddef>
 
 typedef void (*proc_address_t)();

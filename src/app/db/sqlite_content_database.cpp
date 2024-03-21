@@ -4,7 +4,7 @@
 
 #include "sqlite_content_database.hpp"
 
-#include "daos/game.hpp"
+#include "firelight/game.hpp"
 
 #include <iostream>
 #include <utility>

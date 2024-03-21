@@ -46,89 +46,40 @@ qt6_standard_project_setup(REQUIRES 6.5)
 
 set(CMAKE_CXX_STANDARD 17)
 
+include_directories(${CMAKE_SOURCE_DIR}/include)
+add_subdirectory(src/app)
+
 add_library(firelight_lib
         #        ${DISCORD_SOURCES}
         src/app/libretro/core.cpp
         src/app/libretro/coreoption.cpp
-        src/app/libretro/coreoption.hpp
         src/app/libretro/game.cpp
-        src/app/libretro/game.hpp
-        src/app/patching/pm_star_rod_mod_patch.cpp
-        src/app/patching/yay_0_codec.cpp
-        src/app/patching/yay_0_codec.hpp
-        src/app/patching/pm_star_rod_mod_patch.hpp
-        src/app/libretro/video_data_receiver.hpp
         src/app/emulation_manager.cpp
-        src/app/db/content_database.hpp
         src/app/db/sqlite_content_database.cpp
-        src/app/db/sqlite_content_database.hpp
         src/app/fps_multiplier.cpp
-        src/app/fps_multiplier.hpp
-        src/app/db/library_database.hpp
-        src/app/db/sqlite_library_database.cpp
-        src/app/db/sqlite_library_database.hpp
-        src/app/db/daos/rom.hpp
-        src/app/db/daos/game.hpp
-        src/app/db/daos/lib_entry.hpp
-        src/app/db/daos/platform.hpp
-        src/app/libretro/retropad.hpp
-        src/app/input/controller.hpp
         src/app/input/controller.cpp
-        src/app/libretro/retropad_provider.hpp
         src/app/input/controller_manager.cpp
-        src/app/input/controller_manager.hpp
         src/app/input/sdl_event_loop.cpp
-        src/app/input/sdl_event_loop.hpp
-        src/app/manager_accessor.hpp
         src/app/manager_accessor.cpp
-        src/app/libretro/audio_data_receiver.hpp
         src/app/audio_manager.cpp
-        src/app/audio_manager.hpp
         src/app/saves/save_manager.cpp
-        src/app/saves/save_manager.hpp
-        src/app/saves/savefile.hpp
         src/app/saves/savefile.cpp
         src/app/game_loader.cpp
-        src/app/game_loader.hpp
         src/app/patching/ips_patch.cpp
-        src/app/patching/ips_patch.hpp
-        src/app/patching/rom_patch.hpp
         src/app/emulator_renderer.cpp
-        src/app/emulator_renderer.hpp
-        src/gui/window_resize_handler.hpp
         src/app/input/keyboard_controller.cpp
-        src/app/input/keyboard_controller.hpp
-        src/app/db/userdata_database.hpp
         src/app/db/sqlite_userdata_database.cpp
-        src/app/db/sqlite_userdata_database.hpp
         src/gui/controller_list_model.cpp
-        src/gui/controller_list_model.hpp
-        src/gui/QLibraryManager.cpp
-        src/gui/QLibraryManager.hpp
-        src/app/db/daos/romhack.hpp
-        src/app/db/daos/romhack_release.hpp
         src/gui/library_item_model.cpp
-        src/gui/library_item_model.hpp
         src/gui/library_sort_filter_model.cpp
-        src/gui/library_sort_filter_model.hpp
-        src/app/db/daos/playlist.hpp
-        src/app/db/daos/playlist_entry.hpp
-        src/app/db/daos/library_entry.hpp
         src/gui/playlist_item_model.cpp
-        src/gui/playlist_item_model.hpp
-        src/app/netplay/stream_boy.hpp
         src/app/netplay/stream_test.cpp
-        src/app/netplay/stream_test.hpp
-        src/app/db/daos/play_session.hpp
-        src/app/db/daos/savefile_metadata.hpp
-        src/app/util/md5.hpp
-        src/app/util/util.hpp
         src/gui/savefile_list_model.cpp
-        src/gui/savefile_list_model.hpp
+        src/gui/window_resize_handler.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}
-        ${SQLite3_INCLUDE_DIRS})
+        ${SQLite3_INCLUDE_DIRS} include)
 target_link_libraries(firelight_lib
         mingw32
         SDL2
@@ -147,7 +98,9 @@ target_link_libraries(firelight_lib
         PkgConfig::AVCODEC
         PkgConfig::AVFORMAT
         PkgConfig::AVUTIL
-        PkgConfig::SWSCALE)
+        PkgConfig::SWSCALE
+        library
+        patching)
 
 file(GLOB QML_FILES
         qml/*.qml
@@ -228,13 +181,13 @@ add_custom_target(copy_resources ALL
 add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
         tests/app/patching/ips_patch_test.cpp
-        tests/app/db/sqlite_library_database_test.cpp
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
         tests/app/saves/save_manager_test.cpp
-        tests/app/db/daos/playlist_test.cpp
+        tests/app/library/sqlite_library_database_test.cpp
+        tests/app/library/playlist_test.cpp
+        tests/app/library/library_entry_test.cpp
         tests/app/db/daos/savefile_metadata_test.cpp
-        tests/app/db/daos/library_entry_test.cpp
         tests/app/db/daos/play_session_test.cpp
 )
 

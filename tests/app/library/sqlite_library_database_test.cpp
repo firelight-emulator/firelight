@@ -1,4 +1,4 @@
-#include "../../../src/app/db/sqlite_library_database.hpp"
+#include "../../../src/app/library/sqlite_library_database.hpp"
 #include "filesystem"
 #include "gtest/gtest.h"
 

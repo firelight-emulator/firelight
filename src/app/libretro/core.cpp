@@ -4,7 +4,7 @@
 
 #include "core.hpp"
 #include "SDL2/SDL.h"
-#include "retropad.hpp"
+#include "firelight/libretro/retropad.hpp"
 #include <cstdarg>
 
 #include "../audio_manager.hpp"

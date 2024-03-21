@@ -1,6 +1,6 @@
 #pragma once
 
-#include "content_database.hpp"
+#include "firelight/content_database.hpp"
 #include <filesystem>
 #include <optional>
 #include <sqlite3.h>

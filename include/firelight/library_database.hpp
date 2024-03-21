@@ -1,10 +1,10 @@
 #pragma once
 
-#include "daos/lib_entry.hpp"
-#include "daos/library_entry.hpp"
-#include "daos/playlist.hpp"
+#include "library_entry.hpp"
+#include "playlist.hpp"
 
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace firelight::db {

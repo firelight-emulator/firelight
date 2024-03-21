@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../libretro/retropad.hpp"
+#include "firelight/libretro/retropad.hpp"
 #include <SDL_gamecontroller.h>
 #include <string>
 

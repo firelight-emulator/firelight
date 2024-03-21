@@ -1,6 +1,6 @@
 #include "save_manager.hpp"
 
-#include "../db/daos/library_entry.hpp"
+#include "firelight/library_entry.hpp"
 #include "../util/md5.hpp"
 
 #include <fstream>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libretro.h"
+#include "libretro/libretro.h"
 #include <vector>
 
 namespace libretro {

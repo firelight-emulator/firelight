@@ -1,4 +1,4 @@
-#include "../../../../src/app/db/daos/library_entry.hpp"
+#include "firelight/library_entry.hpp"
 #include <gtest/gtest.h>
 
 namespace firelight::db {

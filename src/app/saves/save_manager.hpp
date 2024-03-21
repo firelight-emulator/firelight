@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../db/daos/library_entry.hpp"
-#include "../db/userdata_database.hpp"
+#include "firelight/library_entry.hpp"
+#include "firelight/userdata_database.hpp"
 #include "savefile.hpp"
 #include <filesystem>
 #include <qfuture.h>

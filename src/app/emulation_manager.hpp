@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../gui/QLibraryManager.hpp"
+#include "library/library_scanner.hpp"
 #include "libretro/core.hpp"
 #include "manager_accessor.hpp"
 #include <QOpenGLFunctions>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libretro.h"
+#include "libretro/libretro.h"
 #include <cstdint>
 
 namespace firelight::libretro {

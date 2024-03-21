@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../app/db/library_database.hpp"
+#include "firelight/library_database.hpp"
 #include <QAbstractListModel>
 
 namespace firelight::gui {

@@ -1,4 +1,4 @@
-#include "../../../src/app/db/daos/play_session.hpp"
+#include "firelight/play_session.hpp"
 #include <gtest/gtest.h>
 
 namespace firelight::db {
