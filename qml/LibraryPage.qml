@@ -552,4 +552,9 @@ Pane {
         visible: false
     }
 
+    ScanPopup {
+        id: scanPopup
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
 }

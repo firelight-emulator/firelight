@@ -1,14 +1,12 @@
 #pragma once
 
+#include "coreoption.hpp"
 #include "firelight/libretro/audio_data_receiver.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
 #include "firelight/libretro/video_data_receiver.hpp"
-#include "SDL2/SDL.h"
-#include "coreoption.hpp"
 #include "game.hpp"
 #include "libretro/libretro.h"
 #include <iostream>
-#include <mutex>
 #include <vector>
 
 using std::array;
@@ -74,7 +72,6 @@ public:
 
 private:
   firelight::libretro::IRetropadProvider *m_retropadProvider;
-  SDL_AudioDeviceID audioDevice;
   IAudioDataReceiver *audioReceiver;
 
   vector<string> environmentCalls;

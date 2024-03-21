@@ -7,6 +7,7 @@
 #include <QOpenGLPaintDevice>
 #include <QPainter>
 #include <QSGTextureProvider>
+#include <SDL_timer.h>
 #include <qdatetime.h>
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>

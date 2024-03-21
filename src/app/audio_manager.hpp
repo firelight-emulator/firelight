@@ -1,24 +1,16 @@
-//
-// Created by nicho on 12/29/2023.
-//
-
-#ifndef AUDIO_MANAGER_H
-#define AUDIO_MANAGER_H
-#include <SDL_audio.h>
+#pragma once
 
 #include "firelight/libretro/audio_data_receiver.hpp"
+#include <SDL_audio.h>
 
 class AudioManager : public IAudioDataReceiver {
-  SDL_AudioDeviceID audioDevice = 0;
-
 public:
+  size_t receive(const int16_t *data, size_t numFrames) override;
   void initialize(double new_freq) override;
-  SDL_AudioDeviceID get_audio_device() override;
   bool is_muted() override;
   void toggle_mute() override;
 
 private:
-  bool muted;
+  SDL_AudioDeviceID audioDevice = 0;
+  bool muted = false;
 };
-
-#endif // AUDIO_MANAGER_H

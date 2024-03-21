@@ -3,21 +3,7 @@
 namespace firelight::gui {
 
 LibraryItemModel::LibraryItemModel(db::ILibraryDatabase *libraryDatabase)
-    : m_libraryDatabase(libraryDatabase) {
-
-  const auto entries = m_libraryDatabase->getAllLibraryEntries();
-  for (const auto &entry : entries) {
-    const auto playlists = m_libraryDatabase->getPlaylistsForEntry(entry.id);
-    QVector<int> playlistIds;
-    for (const auto &playlist : playlists) {
-      playlistIds.push_back(playlist.id);
-    }
-
-    m_items.emplace_back(
-        Item({entry.id, QString::fromStdString(entry.displayName),
-              entry.platformId, playlistIds, entry.createdAt}));
-  }
-}
+    : m_libraryDatabase(libraryDatabase) {}
 
 int LibraryItemModel::rowCount(const QModelIndex &parent) const {
   return m_items.size();
@@ -81,6 +67,24 @@ void LibraryItemModel::updatePlaylistsForEntry(const int entryId) {
       break;
     }
   }
+}
+void LibraryItemModel::refresh() {
+  emit beginResetModel();
+  m_items.clear();
+  const auto entries = m_libraryDatabase->getAllLibraryEntries();
+
+  for (const auto &entry : entries) {
+    const auto playlists = m_libraryDatabase->getPlaylistsForEntry(entry.id);
+    QVector<int> playlistIds;
+    for (const auto &playlist : playlists) {
+      playlistIds.push_back(playlist.id);
+    }
+
+    m_items.emplace_back(
+        Item({entry.id, QString::fromStdString(entry.displayName),
+              entry.platformId, playlistIds, entry.createdAt}));
+  }
+  emit endResetModel();
 }
 
 } // namespace firelight::gui

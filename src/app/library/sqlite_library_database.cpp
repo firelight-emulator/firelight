@@ -136,6 +136,7 @@ bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
   entry.id = query.lastInsertId().toInt();
 
   query.finish();
+  emit libraryEntryCreated(entry);
   return true;
 }
 

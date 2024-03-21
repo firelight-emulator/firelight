@@ -90,16 +90,20 @@ int main(int argc, char *argv[]) {
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
-  LibraryScanner libraryManager(&libraryDatabase, roms_dir, &contentDatabase);
-  libraryManager.startScan();
-  firelight::ManagerAccessor::setLibraryManager(&libraryManager);
-
   // Set up the models for QML ***********************************************
   firelight::gui::ControllerListModel controllerListModel(controllerManager);
   firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
   firelight::gui::LibraryItemModel libModel(&libraryDatabase);
   firelight::gui::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);
+
+  LibraryScanner libraryManager(&libraryDatabase, roms_dir, &contentDatabase);
+  firelight::ManagerAccessor::setLibraryManager(&libraryManager);
+
+  QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
+                   &firelight::gui::LibraryItemModel::refresh);
+
+  libraryManager.startScan();
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");

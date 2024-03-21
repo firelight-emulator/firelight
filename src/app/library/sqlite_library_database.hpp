@@ -1,13 +1,16 @@
 #pragma once
 
 #include "firelight/library_database.hpp"
+
+#include <QObject>
 #include <QSqlDatabase>
 #include <QThreadStorage>
 #include <filesystem>
 
 namespace firelight::db {
 
-class SqliteLibraryDatabase final : public ILibraryDatabase {
+class SqliteLibraryDatabase final : public QObject, public ILibraryDatabase {
+  Q_OBJECT
 public:
   explicit SqliteLibraryDatabase(const std::filesystem::path &db_file_path);
   ~SqliteLibraryDatabase() override;
@@ -32,6 +35,9 @@ public:
 
   // Playlist Entries
   bool addEntryToPlaylist(int playlistId, int entryId) override;
+
+signals:
+  void libraryEntryCreated(const firelight::db::LibraryEntry &entry);
 
 private:
   std::filesystem::path m_dbFilePath;

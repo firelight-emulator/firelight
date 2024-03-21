@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../src/app/db/library_database.hpp"
+#include "firelight/library_database.hpp"
 #include <gmock/gmock.h>
 
 namespace firelight::db {

@@ -45,8 +45,6 @@ private:
   QFileSystemWatcher directory_watcher_;
 
   std::unique_ptr<QThreadPool> scanner_thread_pool_ = nullptr;
-  void handleScannedPatchFile(const std::filesystem::directory_entry &entry,
-                              ScanResults &scan_results) const;
   void handleScannedRomFile(const std::filesystem::directory_entry &entry,
                             ScanResults &scan_results) const;
 };

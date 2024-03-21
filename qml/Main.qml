@@ -902,8 +902,4 @@ ApplicationWindow {
             cursorShape: Qt.PointingHandCursor
         }
     }
-
-    Notification {
-        visible: true
-    }
 }

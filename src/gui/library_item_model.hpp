@@ -60,6 +60,9 @@ public:
 
   Q_INVOKABLE void updatePlaylistsForEntry(int entryId);
 
+public slots:
+  void refresh();
+
 private:
   /**
    * @struct Item

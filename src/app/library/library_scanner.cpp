@@ -76,7 +76,8 @@ void LibraryScanner::startScan() {
             continue;
           }
 
-          if (entry.file_size() > MAX_FILESIZE_BYTES) {
+          auto filesize = entry.file_size();
+          if (filesize > MAX_FILESIZE_BYTES) {
             spdlog::debug("File {} (size {}) too large; skipping",
                           entry.path().filename().string(), entry.file_size());
             continue;
@@ -91,9 +92,23 @@ void LibraryScanner::startScan() {
             continue;
           }
 
+          std::vector<char> contents(filesize);
+          std::ifstream file(entry.path(), std::ios::binary);
+
+          file.read(contents.data(), filesize);
+          file.close();
+
+          auto contentMd5 = calculateMD5(contents.data(), filesize);
+          // Check if we have an entry with this md5 - if so, update the
+          // filename
+
+          // Check if it's a rom or a patch
+
+          // Check against content database
+
           if (auto ext = entry.path().extension();
               ext.string() == ".mod" || ext.string() == ".ips") {
-            handleScannedPatchFile(entry, scan_results);
+            // handle patch
           } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
                      ext.string() == ".v64" || ext.string() == ".z64" ||
                      ext.string() == ".gb" || ext.string() == ".gbc" ||
@@ -117,58 +132,8 @@ void LibraryScanner::startScan() {
         scanning_ = false;
         return scan_results;
       });
-
-  // TODO: With scan results...
-  // TODO: For each new entry, add it to the database.
-  // TODO: For each existing entry, the main difference, if any, should be the
-  // TODO:  filename, but there could be updated links too
-  // TODO: Get a list of all md5s from the db. For each one, check if it's in
-  // TODO:  the list of md5s we found when we scanned. If not, remove the entry
 }
 bool LibraryScanner::scanning() const { return scanning_; }
-
-void LibraryScanner::handleScannedPatchFile(
-    const std::filesystem::directory_entry &entry,
-    ScanResults &scan_results) const {
-  auto size = entry.file_size();
-  if (size > MAX_FILESIZE_BYTES) {
-    // spdlog::info("File {} too large; skipping",
-    //              entry.path().filename().string());
-    return;
-  }
-
-  std::vector<char> thing(size);
-  std::ifstream file(entry.path(), std::ios::binary);
-
-  file.read(thing.data(), size);
-  file.close();
-
-  auto md5 = calculateMD5(thing.data(), size);
-  scan_results.all_md5s.emplace_back(md5);
-
-  // auto romhack = content_database_->getRomhackByMd5(md5);
-  // if (romhack.has_value()) {
-  // }
-
-  // TODO: Check content database for romhack with this md5
-  // TODO: If not found, then user needs to select a rom to patch
-
-  // LibEntry e = {.id = -1,
-  //               .display_name = entry.path().filename().string(),
-  //               .type = EntryType::PATCH,
-  //               .verified = false,
-  //               .md5 = md5,
-  //               .platform = 1,
-  //               .game = -1,
-  //               .rom = -1,
-  //               .parent_entry = -1,
-  //               .romhack = -1,
-  //               .romhack_release = -1,
-  //               .source_directory = entry.path().parent_path().string(),
-  //               .content_path = entry.path().relative_path().string()};
-  //
-  // scan_results.new_entries.emplace_back(e);
-}
 
 void LibraryScanner::handleScannedRomFile(
     const std::filesystem::directory_entry &entry,

@@ -4,10 +4,7 @@
 
 #include "core.hpp"
 #include "SDL2/SDL.h"
-#include "firelight/libretro/retropad.hpp"
 #include <cstdarg>
-
-#include "../audio_manager.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -945,9 +942,7 @@ Core::Core(const std::string &libPath) {
       return frames;
     }
 
-    SDL_QueueAudio(core->audioReceiver->get_audio_device(), data, frames * 4);
-
-    return frames;
+    return core->audioReceiver->receive(data, frames);
   };
 
   loadRetroFunc<RetroSetAudioSampleBatch>(dll, "retro_set_audio_sample_batch")(

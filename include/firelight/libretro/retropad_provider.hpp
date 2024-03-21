@@ -1,9 +1,9 @@
 #pragma once
 
+#include "retropad.hpp"
 #include <optional>
 
 namespace firelight::libretro {
-class IRetroPad;
 
 class IRetropadProvider {
 public:
