@@ -19,7 +19,7 @@ ApplicationWindow {
     minimumHeight: 480
     visible: true
     // flags: Qt.Window | Qt.FramelessWindowHint | Qt.MaximizeUsingFullscreenGeometryHint
-    // visibility: Window.Maximized
+    visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
     title: qsTr("Firelight")
     color: "black"
 

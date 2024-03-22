@@ -5,13 +5,16 @@ import FirelightStyle 1.0
 
 Option {
     id: root
+
+    property bool checked: false
+
     control: Switch {
         id: control
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-        checked: true
+        checked: root.checked
         onCheckedChanged: {
-            console.log("Switch checked: " + checked)
+            root.checked = checked
         }
 
         indicator: Rectangle {

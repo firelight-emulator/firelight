@@ -7,16 +7,23 @@ Item {
     ColumnLayout {
         spacing: 0
         anchors.fill: parent
-        ComboBoxOption {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 60
-            label: "Window Mode?"
-        }
-        // ToggleOption {
+        // ComboBoxOption {
         //     Layout.fillWidth: true
         //     Layout.preferredHeight: 60
-        //     label: "another test!"
+        //     label: "Window Mode?"
         // }
+        ToggleOption {
+            id: fullscreenOption
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            label: "Fullscreen"
+
+            checked: GeneralSettings.fullscreen
+
+            onCheckedChanged: {
+                GeneralSettings.fullscreen = checked
+            }
+        }
         // ToggleOption {
         //     Layout.fillWidth: true
         //     Layout.preferredHeight: 60

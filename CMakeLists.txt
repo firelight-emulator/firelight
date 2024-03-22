@@ -151,6 +151,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 
 set_source_files_properties(qml/FirelightStyle/import/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/FirelightStyle/import/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 qt6_add_qml_module(firelight_style
         URI FirelightStyle
         VERSION 1.0

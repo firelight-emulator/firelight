@@ -66,6 +66,10 @@ int main(int argc, char *argv[]) {
   QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
 
+  QGuiApplication::setOrganizationName("Games by Firelight");
+  QGuiApplication::setOrganizationDomain("firelight-emulator.com");
+  QGuiApplication::setApplicationName("Firelight");
+
   firelight::Input::ControllerManager controllerManager;
   firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
