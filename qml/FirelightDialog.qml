@@ -84,11 +84,6 @@ Dialog {
         }
     }
 
-    onAccepted: {
-        appRoot.state = "notPlayingGame"
-        // closeGameAnimation.startWith(outPage, inPage)
-    }
-
     Overlay.modal: Rectangle {
         color: "black"
         anchors.fill: parent

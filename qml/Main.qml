@@ -23,12 +23,6 @@ ApplicationWindow {
     title: qsTr("Firelight")
     color: "black"
 
-    onActiveFocusItemChanged: {
-        if (activeFocusItem !== null) {
-            console.log("Active focus item: " + activeFocusItem)
-        }
-    }
-
     Rectangle {
         id: appRoot
         anchors.fill: parent
@@ -42,14 +36,8 @@ ApplicationWindow {
         Keys.onEscapePressed: function () {
             if (state === "gameSuspended") {
                 state = "playingGame"
-            }
-        }
-
-        Keys.onDigit2Pressed: {
-            if (window.visibility === Window.FullScreen) {
-                window.showNormal()
             } else {
-                window.showFullScreen()
+                closeAppDialog.open()
             }
         }
 
@@ -900,6 +888,15 @@ ApplicationWindow {
         HoverHandler {
             id: myHover
             cursorShape: Qt.PointingHandCursor
+        }
+    }
+
+    FirelightDialog {
+        id: closeAppDialog
+        text: "Are you sure you want \nto exit Firelight?"
+
+        onAccepted: {
+            window.close()
         }
     }
 }
