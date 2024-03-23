@@ -109,6 +109,7 @@ file(GLOB QML_FILES
         qml/controllers/*.qml
         qml/settings/*.qml
         qml/library/*.qml
+        qml/discover/*.qml
 )
 
 foreach (QML_FILE ${QML_FILES})

@@ -366,16 +366,9 @@ ApplicationWindow {
             }
         }
 
-        Item {
+        HackPage {
             id: explorePage
             visible: false
-            Text {
-                text: "Here's where the Explore menu will go!"
-                anchors.centerIn: parent
-                color: Constants.colorTestTextActive
-                font.pointSize: 16
-                font.family: Constants.regularFontFamily
-            }
         }
 
         LibraryPage {
