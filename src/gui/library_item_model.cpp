@@ -37,6 +37,12 @@ QVariant LibraryItemModel::data(const QModelIndex &index, int role) const {
     if (item.platformId == 3) {
       return "Game Boy";
     }
+    if (item.platformId == 4) {
+      return "Game Boy Advance";
+    }
+    if (item.platformId == 5) {
+      return "Nintendo DS";
+    }
     return "Unknown";
   }
   case Playlists:

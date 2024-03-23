@@ -486,13 +486,6 @@ Pane {
 
         property int entryId: -1
 
-        RightClickMenuItem {
-            text: "Manage save files"
-            onTriggered: {
-                manageSavefilesDialog.open()
-            }
-        }
-
         RightClickMenu {
             id: addPlaylistRightClickMenu
             enabled: ins.count > 0

@@ -7,7 +7,7 @@
 #include <spdlog/spdlog.h>
 #include <utility>
 
-constexpr int MAX_FILESIZE_BYTES = 75000000;
+constexpr int MAX_FILESIZE_BYTES = 750000000;
 
 static std::string calculateMD5(const char *input, int size) {
   unsigned char md5Hash[EVP_MAX_MD_SIZE];
@@ -112,7 +112,7 @@ void LibraryScanner::startScan() {
           } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
                      ext.string() == ".v64" || ext.string() == ".z64" ||
                      ext.string() == ".gb" || ext.string() == ".gbc" ||
-                     ext.string() == ".gba") {
+                     ext.string() == ".gba" || ext.string() == ".nds") {
             handleScannedRomFile(entry, scan_results);
           }
         }

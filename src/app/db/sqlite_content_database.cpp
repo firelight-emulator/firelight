@@ -99,10 +99,11 @@ SqliteContentDatabase::getPlatformByExtension(std::string ext) {
     result.emplace(Platform{.id = 2});
   } else if (ext == ".gb") {
     result.emplace(Platform{.id = 3});
+  } else if (ext == ".gba") {
+    result.emplace(Platform{.id = 4});
+  } else if (ext == ".nds") {
+    result.emplace(Platform{.id = 5});
   }
-  // else if (ext == ".gba") {
-  //   result.emplace(Platform{.id = 4});
-  // }
 
   return result;
 }

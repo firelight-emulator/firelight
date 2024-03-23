@@ -29,6 +29,10 @@ void GameLoader::loadGame(int entryId) {
     corePath = "./system/_cores/gambatte_libretro.dll";
   } else if (entry->platformId == 3) {
     corePath = "./system/_cores/gambatte_libretro.dll";
+  } else if (entry->platformId == 4) {
+    corePath = "./system/_cores/mgba_libretro.dll";
+  } else if (entry->platformId == 5) {
+    corePath = "./system/_cores/melondsds_libretro.dll";
   }
 
   auto size = std::filesystem::file_size(entry->contentPath);
