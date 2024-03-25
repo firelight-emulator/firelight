@@ -24,6 +24,38 @@ Pane {
             anchors.bottom: parent.bottom
             anchors.right: parent.right
             width: parent.width * 0.3
+
+            ColumnLayout {
+                anchors.centerIn: parent
+                spacing: 8
+
+                Button {
+                    id: addToLibraryButton
+                    text: "Add to Library"
+                    Layout.preferredWidth: 200
+                    Layout.preferredHeight: 60
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                }
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 8
+                }
+                Text {
+                    text: "You need Pokémon Fire Red in your Library to play this game"
+                    font.family: Constants.regularFontFamily
+                    color: "white"
+                    wrapMode: Text.WordWrap
+                    font.pointSize: 10
+                    Layout.preferredWidth: 300
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+            }
         }
 
         Pane {
@@ -36,14 +68,29 @@ Pane {
             anchors.right: rightSection.left
             anchors.left: parent.left
 
-            Text {
-                text: "Pokemon Radical Red"
+            ColumnLayout {
                 anchors.fill: parent
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-                font.pointSize: 20
-                font.family: Constants.semiboldFontFamily
-                color: "white"
+                spacing: 8
+
+                Text {
+                    text: "Pokémon Radical Red"
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: 20
+                    font.family: Constants.semiboldFontFamily
+                    color: "white"
+                }
+
+                Text {
+                    text: "By soupercell"
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: 11
+                    font.family: Constants.regularFontFamily
+                    color: "white"
+                }
+
+
             }
         }
 
@@ -68,24 +115,35 @@ Pane {
                 ColumnLayout {
                     id: column
                     anchors.fill: parent
-                    spacing: 8
+                    spacing: 16
 
                     ListView {
+                        id: screenshots
                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        Layout.preferredHeight: 200
+                        Layout.preferredHeight: 240
                         Layout.fillWidth: true
                         clip: true
                         orientation: ListView.Horizontal
-                        model: 5
-                        spacing: 8
-                        delegate: Item {
-                            width: 240
-                            height: 160
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "red"
+                        model: ListModel {
+                            ListElement {
+                                source: "file:///Users/alexs/git/firelight/build/prr1.png"
                             }
+                            ListElement {
+                                source: "file:///Users/alexs/git/firelight/build/prr2.png"
+                            }
+                            ListElement {
+                                source: "file:///Users/alexs/git/firelight/build/prr3.jpg"
+                            }
+                            ListElement {
+                                source: "file:///Users/alexs/git/firelight/build/prr4.jpg"
+                            }
+                        }
+                        spacing: 8
+                        delegate: Image {
+                            source: model.source
+                            fillMode: Image.Stretch
+                            width: parent.height * 1.5
+                            height: parent.height
                         }
                     }
 
