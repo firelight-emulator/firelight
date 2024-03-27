@@ -66,6 +66,7 @@ add_library(firelight_lib
         src/app/saves/savefile.cpp
         src/app/game_loader.cpp
         src/app/patching/ips_patch.cpp
+        src/app/patching/ups_patch.cpp
         src/app/emulator_renderer.cpp
         src/app/input/keyboard_controller.cpp
         src/app/db/sqlite_userdata_database.cpp
@@ -183,6 +184,7 @@ add_custom_target(copy_resources ALL
 add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
         tests/app/patching/ips_patch_test.cpp
+        tests/app/patching/ups_patch_test.cpp
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
         tests/app/saves/save_manager_test.cpp
@@ -192,6 +194,9 @@ add_executable(fl_test
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
 )
+
+#target_compile_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
+#target_link_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
 
 add_dependencies(fl_test copy_resources)
 
