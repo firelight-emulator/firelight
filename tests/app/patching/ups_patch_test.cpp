@@ -22,9 +22,7 @@ protected:
   // You can add member variables here if needed
 };
 
-// Test case for PMStarRodModPatch constructor
 TEST_F(UPSPatchTest, ConstructorTest) {
-  // Each one is offset, size, repeat
   const auto path = "test_resources/wellformatted.ups";
   const auto size = std::filesystem::file_size(path);
 
@@ -37,7 +35,6 @@ TEST_F(UPSPatchTest, ConstructorTest) {
 
   firelight::patching::UPSPatch patch(data);
 
-  //
   const auto romPath = "test_resources/testrom.gba";
   const auto romSize = std::filesystem::file_size(romPath);
 
@@ -61,12 +58,33 @@ TEST_F(UPSPatchTest, ConstructorTest) {
   crc = crc32(0L, nullptr, 0);
   crc = crc32(crc, data.data(), data.size() - 4);
   ASSERT_EQ(crc, patch.getPatchFileCRC32Checksum());
+}
+
+TEST_F(UPSPatchTest, PatchRomTest) {
+  const auto path = "test_resources/wellformatted.ups";
+  const auto size = std::filesystem::file_size(path);
+
+  std::ifstream file(path, std::ios::binary);
+
+  std::vector<uint8_t> data(size);
+  file.read(reinterpret_cast<char *>(data.data()), size);
+
+  file.close();
+
+  firelight::patching::UPSPatch patch(data);
+
+  const auto romPath = "test_resources/testrom.gba";
+  const auto romSize = std::filesystem::file_size(romPath);
+
+  std::ifstream romFile(romPath, std::ios::binary);
+  std::vector<uint8_t> romData(romSize);
+  romFile.read(reinterpret_cast<char *>(romData.data()), romSize);
+
+  romFile.close();
 
   auto patchedData = patch.patchRom(romData);
-  crc = crc32(0L, nullptr, 0);
+  uint32_t crc = crc32(0L, nullptr, 0);
   crc = crc32(crc, patchedData.data(), patchedData.size());
 
   ASSERT_EQ(crc, patch.getOutputFileCRC32Checksum());
 }
-
-TEST_F(UPSPatchTest, PatchRomTest) {}
