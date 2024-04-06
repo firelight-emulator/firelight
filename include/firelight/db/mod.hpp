@@ -9,5 +9,7 @@ struct Mod {
   std::string name;
   std::string primaryAuthor;
   std::vector<int> gameReleaseIds;
+  std::string imageSource;
+  std::string description;
 };
 } // namespace firelight::db

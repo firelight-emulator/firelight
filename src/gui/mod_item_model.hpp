@@ -5,7 +5,7 @@
 
 namespace firelight::gui {
 
-class ModListModel final : public QAbstractListModel {
+class ModItemModel final : public QAbstractListModel {
   Q_OBJECT
 
 public:
@@ -16,13 +16,15 @@ public:
   enum Roles {
     Id = Qt::UserRole + 1,
     Name,
+    Description,
     PrimaryAuthor,
     Platform,
     TargetGameName,
-    TargetGameId
+    TargetGameId,
+    ImageSource
   };
 
-  explicit ModListModel(IContentDatabase &contentDatabase);
+  explicit ModItemModel(IContentDatabase &contentDatabase);
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant data(const QModelIndex &index,
@@ -36,10 +38,12 @@ private:
   struct Item {
     int id;
     QString name;
+    QString description;
     QString primaryAuthor;
     QString platform;
     QString targetGameName;
     int targetGameId;
+    QString imageSource;
   };
 
   IContentDatabase &m_contentDatabase;

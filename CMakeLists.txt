@@ -82,8 +82,9 @@ add_library(firelight_lib
         include/firelight/db/region.hpp
         include/firelight/db/mod.hpp
         include/firelight/db/mod_release.hpp
-        src/gui/mod_list_model.cpp
-        src/gui/mod_list_model.hpp
+        src/gui/mod_item_model.cpp
+        src/gui/mod_item_model.hpp
+        include/firelight/db/game.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}

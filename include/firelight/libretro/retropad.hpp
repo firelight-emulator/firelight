@@ -32,6 +32,8 @@ public:
   virtual int16_t getLeftStickYPosition() = 0;
   virtual int16_t getRightStickXPosition() = 0;
   virtual int16_t getRightStickYPosition() = 0;
+  virtual void setStrongRumble(uint16_t t_strength) = 0;
+  virtual void setWeakRumble(uint16_t t_strength) = 0;
 };
 
 } // namespace firelight::libretro

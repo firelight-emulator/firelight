@@ -8,6 +8,8 @@
 
 namespace firelight::Input {
 
+void KeyboardController::setStrongRumble(uint16_t t_strength) {}
+void KeyboardController::setWeakRumble(uint16_t t_strength) {}
 bool KeyboardController::isButtonPressed(Button t_button) {
   const uint8_t *currentKeyStates = SDL_GetKeyboardState(nullptr);
 

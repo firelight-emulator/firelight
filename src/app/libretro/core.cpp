@@ -196,7 +196,13 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     auto ptr = static_cast<retro_variable *>(data);
     for (const auto &opt : this->options) {
       if (strcmp(opt.key, ptr->key) == 0) {
-        ptr->value = opt.currentValue;
+        auto strr = "mupen64plus-pak1";
+        auto val = "rumble";
+        if (strcmp(opt.key, strr) == 0) {
+          ptr->value = val;
+        } else {
+          ptr->value = opt.currentValue;
+        }
         return true;
       }
     }
@@ -251,7 +257,20 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     auto ptr = static_cast<retro_rumble_interface *>(data);
     ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
                                uint16_t strength) {
-      printf("Calling rumble callback\n");
+      const auto con =
+          currentCore->getRetropadProvider()->getRetropadForPlayer(port);
+      if (!con.has_value()) {
+        return true;
+      }
+
+      auto controller = con.value();
+      if (effect == RETRO_RUMBLE_STRONG) {
+        controller->setStrongRumble(strength);
+      } else if (effect == RETRO_RUMBLE_WEAK) {
+        controller->setWeakRumble(strength);
+      }
+
+      printf("Calling rumble callback: %d, %d, %d\n", port, effect, strength);
       return true;
     };
     return true;

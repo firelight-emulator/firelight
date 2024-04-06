@@ -10,8 +10,8 @@ Controller::Controller(SDL_GameController *t_controller,
                        const int32_t t_joystickIndex)
     : m_SDLController(t_controller), m_SDLJoystickDeviceIndex(t_joystickIndex) {
 
-  const auto joystick = SDL_GameControllerGetJoystick(t_controller);
-  m_SDLJoystickInstanceId = SDL_JoystickInstanceID(joystick);
+  m_SDLJoystick = SDL_GameControllerGetJoystick(t_controller);
+  m_SDLJoystickInstanceId = SDL_JoystickInstanceID(m_SDLJoystick);
 }
 
 bool Controller::isButtonPressed(const Button t_button) {
@@ -96,4 +96,14 @@ int Controller::getPlayerIndex() const {
   return SDL_GameControllerGetPlayerIndex(m_SDLController);
 }
 
-} // namespace Firelight::Input
+void Controller::setStrongRumble(const uint16_t t_strength) {
+  printf("Setting strong rumble: %d\n", t_strength);
+  SDL_JoystickRumble(m_SDLJoystick, 0, t_strength, 2000);
+}
+
+void Controller::setWeakRumble(const uint16_t t_strength) {
+  printf("Setting weak rumble: %d\n", t_strength);
+  SDL_JoystickRumble(m_SDLJoystick, t_strength, 0, 2000);
+}
+
+} // namespace firelight::Input

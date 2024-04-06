@@ -1,5 +1,6 @@
 #pragma once
 
+#include "db/game.hpp"
 #include "db/game_release.hpp"
 #include "db/mod.hpp"
 #include "db/mod_release.hpp"
@@ -23,6 +24,7 @@ public:
    */
   virtual bool tableExists(const std::string &tableName) = 0;
 
+  virtual std::optional<firelight::db::Game> getGame(int id) = 0;
   virtual std::optional<firelight::db::GameRelease> getGameRelease(int id) = 0;
   virtual std::optional<ROM> getRom(int id) = 0;
   virtual std::optional<firelight::db::Mod> getMod(int id) = 0;

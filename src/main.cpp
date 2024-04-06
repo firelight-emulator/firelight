@@ -1,9 +1,5 @@
 #define SDL_MAIN_HANDLED
 
-#include "app/db/sqlite_content_database.hpp"
-#include "app/emulation_manager.hpp"
-#include "app/game_loader.hpp"
-#include "app/library/library_scanner.hpp"
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -12,19 +8,21 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
+#include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
+#include "app/emulation_manager.hpp"
 #include "app/fps_multiplier.hpp"
+#include "app/game_loader.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
+#include "app/library/library_scanner.hpp"
 #include "app/library/sqlite_library_database.hpp"
 #include "gui/controller_list_model.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
+#include "gui/mod_item_model.hpp"
 #include "gui/playlist_item_model.hpp"
 #include "gui/window_resize_handler.hpp"
-
-const int SCREEN_WIDTH = 1280;
-const int SCREEN_HEIGHT = 720;
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
@@ -95,6 +93,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
   // Set up the models for QML ***********************************************
+  firelight::gui::ModItemModel modListModel(contentDatabase);
   firelight::gui::ControllerListModel controllerListModel(controllerManager);
   firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
   firelight::gui::LibraryItemModel libModel(&libraryDatabase);
@@ -121,6 +120,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
   engine.rootContext()->setContextProperty("controller_manager",
                                            &controllerListModel);
+  engine.rootContext()->setContextProperty("mod_model", &modListModel);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",

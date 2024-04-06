@@ -22,9 +22,12 @@ public:
   [[nodiscard]] std::string getControllerName() const;
   void setPlayerIndex(int t_newPlayerIndex) const;
   [[nodiscard]] int getPlayerIndex() const;
+  void setStrongRumble(uint16_t t_strength) override;
+  void setWeakRumble(uint16_t t_strength) override;
 
 private:
   SDL_GameController *m_SDLController = nullptr;
+  SDL_Joystick *m_SDLJoystick = nullptr;
   int32_t m_SDLJoystickDeviceIndex = -1;
   int32_t m_SDLJoystickInstanceId = -1;
 };

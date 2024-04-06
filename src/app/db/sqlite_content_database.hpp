@@ -8,6 +8,7 @@
 
 class SqliteContentDatabase final : public IContentDatabase {
 public:
+  std::optional<firelight::db::Game> getGame(int id) override;
   std::optional<firelight::db::GameRelease> getGameRelease(int id) override;
   explicit SqliteContentDatabase(std::filesystem::path dbFile);
   ~SqliteContentDatabase() override = default;

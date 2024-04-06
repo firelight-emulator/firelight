@@ -12,6 +12,11 @@ Pane {
 
     FirelightDialog {
         id: contentPopup
+
+        property string name;
+        property string author;
+        property string description;
+
         width: parent.width * 0.75
         height: parent.height * 0.9
         parent: Overlay.overlay
@@ -19,31 +24,18 @@ Pane {
         y: (parent.height / 2) - (height / 2)
         contentItem: StoreContent {
             anchors.centerIn: parent
+            name: contentPopup.name
+            author: contentPopup.author
+            description: contentPopup.description
         }
 
         header: Item {
             height: 0
             width: 0
         }
-        footer: Pane {
-            background: Rectangle {
-                color: "transparent"
-                radius: 4
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                spacing: 8
-
-                Button {
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    text: "Add to Library"
-                    onClicked: {
-                        contentPopup.close()
-                    }
-                }
-
-            }
+        footer: Item {
+            height: 0
+            width: 0
         }
     }
 
@@ -54,77 +46,16 @@ Pane {
         background: Item {
         }
 
-        Button {
-            id: backButton
-            text: "Back"
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.topMargin: 8
-            anchors.leftMargin: 8
-            onClicked: {
-                contentPopup.open()
-            }
-        }
-
         ListView {
             id: list
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
             anchors.bottom: parent.bottom
+            boundsBehavior: Flickable.StopAtBounds
             width: 600
             clip: true
             spacing: 8
-            model: ListModel {
-                ListElement {
-                    name: "Pokemon Radical Red"
-                    source: "file:///Users/alexs/git/firelight/build/pkmnrr.png"
-                    original: "Pokemon Fire Red"
-                    platform: "Game Boy Advance"
-                    creator: "soupercell"
-                }
-                ListElement {
-                    name: "Paper Mario: Master Quest"
-                    source: "file:///Users/alexs/git/firelight/build/pmmasterquest.jpg"
-                    original: "Paper Mario"
-                    platform: "Nintendo 64"
-                    creator: "..."
-                }
-                ListElement {
-                    name: "Pokemon Blaze Black"
-                    source: "file:///Users/alexs/git/firelight/build/blazeblack.jpg"
-                    original: "Pokemon Black"
-                    platform: "Nintendo DS"
-                    creator: "..."
-                }
-                ListElement {
-                    name: "Pokemon Gaia Version"
-                    source: "file:///Users/alexs/git/firelight/build/gaia.jpg"
-                    original: "Pokemon Fire Red"
-                    platform: "Game Boy Advance"
-                    creator: "..."
-                }
-                ListElement {
-                    name: "Ultimate Goomboss Challenge"
-                    source: "file:///Users/alexs/git/firelight/build/ultimategoomboss.png"
-                    original: "Paper Mario"
-                    platform: "Nintendo 64"
-                    creator: "Enneagon"
-                }
-                ListElement {
-                    name: "Pokemon Unbound"
-                    source: "file:///Users/alexs/git/firelight/build/unbound.png"
-                    original: "Pokemon Fire Red"
-                    platform: "Game Boy Advance"
-                    creator: "..."
-                }
-                ListElement {
-                    name: "Grand Poo World 2"
-                    source: "file:///Users/alexs/git/firelight/build/gpw2.jpg"
-                    original: "Super Mario World"
-                    platform: "SNES"
-                    creator: "BarbarousKing"
-                }
-            }
+            model: mod_model
 
             delegate: Pane {
                 height: 100
@@ -149,6 +80,15 @@ Pane {
                     cursorShape: Qt.PointingHandCursor
                 }
 
+                TapHandler {
+                    onTapped: {
+                        contentPopup.name = model.name
+                        contentPopup.author = model.primary_author
+                        contentPopup.description = model.description
+                        contentPopup.open()
+                    }
+                }
+
                 RowLayout {
                     anchors.fill: parent
                     spacing: 8
@@ -156,7 +96,7 @@ Pane {
                     Image {
                         Layout.fillHeight: true
                         Layout.preferredWidth: height * 2
-                        source: model.source
+                        source: model.image_source
                         fillMode: Image.Stretch
                     }
 
@@ -178,7 +118,7 @@ Pane {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "by " + model.creator
+                            text: "by " + model.primary_author
                             font.family: Constants.regularFontFamily
                             font.pointSize: 10
                             verticalAlignment: Text.AlignVCenter
@@ -191,7 +131,7 @@ Pane {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Mod for " + model.original + " (" + model.platform + ")"
+                            text: "Mod for " + model.target_game_name + " (" + model.platform_name + ")"
                             font.family: Constants.regularFontFamily
                             font.pointSize: 10
                             verticalAlignment: Text.AlignVCenter

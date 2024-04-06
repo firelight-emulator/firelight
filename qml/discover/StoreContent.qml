@@ -7,6 +7,10 @@ import FirelightStyle 1.0
 Item {
     id: root
 
+    required property string name;
+    required property string author;
+    required property string description;
+
     // Pane {
     //     id: banner
     //     anchors.top: parent.top
@@ -35,22 +39,63 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        Pane {
+            background: Item {
+            }
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.left: scrollableArea.right
+
+
+            Button {
+                anchors.centerIn: parent
+                height: 60
+                width: parent.width * 3 / 4
+                background: Rectangle {
+                    color: "white"
+                    radius: 6
+                }
+                contentItem: Text {
+                    text: qsTr("Add to Library")
+                    anchors.centerIn: parent
+                    color: Constants.colorTestBackground
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: 11
+                }
+
+                HoverHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    cursorShape: Qt.PointingHandCursor
+                }
+            }
+        }
+
         Flickable {
-            anchors.fill: parent
-            contentWidth: content.width
-            contentHeight: 1000
+            id: scrollableArea
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            width: parent.width * 2 / 3
+            // contentWidth: content.width * 2 / 3
+            // contentHeight: 1000
+            contentHeight: header.height + column.height
             boundsBehavior: Flickable.StopAtBounds
             flickableDirection: Flickable.VerticalFlick
             clip: true
 
             ColumnLayout {
-                id: column
-                anchors.fill: parent
-                spacing: 16
+                id: header
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 8
 
                 Text {
-                    text: "Pokémon Radical Red"
-                    horizontalAlignment: Text.AlignHCenter
+                    text: name
+                    horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
                     Layout.fillWidth: true
                     font.pointSize: 20
@@ -59,81 +104,67 @@ Item {
                 }
 
                 Text {
-                    text: "By soupercell"
-                    horizontalAlignment: Text.AlignHCenter
+                    text: "By " + author
+                    horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
                     Layout.fillWidth: true
-                    font.pointSize: 11
+                    font.pointSize: 10
                     font.family: Constants.regularFontFamily
                     color: "white"
                 }
+            }
 
-                ListView {
-                    id: screenshots
-                    Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                    Layout.preferredHeight: 180
+            ColumnLayout {
+                id: column
+                anchors.top: header.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                Text {
+                    text: "Screenshots will go here"
                     Layout.fillWidth: true
-                    clip: true
-                    orientation: ListView.Horizontal
-                    model: ListModel {
-                        ListElement {
-                            source: "file:///Users/alexs/git/firelight/build/prr1.png"
-                        }
-                        ListElement {
-                            source: "file:///Users/alexs/git/firelight/build/prr2.png"
-                        }
-                        ListElement {
-                            source: "file:///Users/alexs/git/firelight/build/prr3.jpg"
-                        }
-                        ListElement {
-                            source: "file:///Users/alexs/git/firelight/build/prr4.jpg"
-                        }
-                    }
-                    spacing: 8
-                    delegate: Image {
-                        source: model.source
-                        fillMode: Image.Stretch
-                        width: parent.height * 1.5
-                        height: parent.height
-                    }
+                    Layout.preferredHeight: 180
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WordWrap
+                    font.pointSize: 11
+                    font.family: Constants.regularFontFamily
+                    color: "#d5d5d5"
                 }
+                // ListView {
+                //     id: screenshots
+                //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                //     Layout.preferredHeight: 180
+                //     Layout.fillWidth: true
+                //     clip: true
+                //     orientation: ListView.Horizontal
+                //     model: ListModel {
+                //         ListElement {
+                //             source: "file:///Users/alexs/git/firelight/build/prr1.png"
+                //         }
+                //         ListElement {
+                //             source: "file:///Users/alexs/git/firelight/build/prr2.png"
+                //         }
+                //         ListElement {
+                //             source: "file:///Users/alexs/git/firelight/build/prr3.jpg"
+                //         }
+                //         ListElement {
+                //             source: "file:///Users/alexs/git/firelight/build/prr4.jpg"
+                //         }
+                //     }
+                //     spacing: 8
+                //     delegate: Image {
+                //         source: model.source
+                //         fillMode: Image.Stretch
+                //         width: parent.height * 1.5
+                //         height: parent.height
+                //     }
+                // }
 
                 Text {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                    text: "<p>Pokémon Radical Red is an enhancement hack of Pokémon Fire Red.</p>
-                            <p>This is a difficulty hack, with massive additional features added to help you navigate through this game.</p>
-                            <p>This hack utilises the Complete Fire Red Upgrade Engine and Dynamic Pokemon Expansion built
-                             by Skeli789, Ghoulslash, and others. It's responsible for most of the significant features
-                              in the hack.</p>
-                            <p>List of features (Most of them provided by CFRU and DPE):</p>
-                            <ul>
-                                <li>Much higher difficulty, with optional modes to add or mitigate difficulty</li>
-                                <li>Built-in Randomizer options (Pokémon, Abilities and Learnsets)</li>
-                                <li>Physical/Special split + Fairy Typing</li>
-                                <li>All Pokémon up to Gen 9 obtainable (with some exceptions)</li>
-                                <li>Most Moves up to Gen 9</li>
-                                <li>Updated Pokémon sprites</li>
-                                <li>Mega Evolutions & Z-Moves</li>
-                                <li>Most Abilities up to Gen 9</li>
-                                <li>All important battle items (with some exceptions)</li>
-                                <li>Wish Piece Raid Battles (with Dynamax)</li>
-                                <li>Mystery Gifts</li>
-                                <li>Reusable TMs</li>
-                                <li>Expanded TM list</li>
-                                <li>Additional move tutors</li>
-                                <li>EV Training Gear and NPCs</li>
-                                <li>Ability popups during battle</li>
-                                <li>Party Exp Share (can be disabled)</li>
-                                <li>Hidden Abilities</li>
-                                <li>Day, Dusk and Night cycle (syncs with RTC)</li>
-                                <li>DexNav, which allows you to search for Pokémon with hidden abilities and more</li>
-                                <li>Even faster turbo speed on bike and while surfing</li>
-                                <li>Abilities like Magma Armor, Static, or Flash Fire have overworld effects like in recent generations</li>
-                                <li>Destiny Knot, Everstone have updated breeding mechanics</li>
-                                <li>Lots of Quality of Life changes</li>
-                                <li>... and more!</li>
-                            </ul>"
+                    text: description
                     wrapMode: Text.WordWrap
                     font.pointSize: 12
                     font.family: Constants.regularFontFamily
