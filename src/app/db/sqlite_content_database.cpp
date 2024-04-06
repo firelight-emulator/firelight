@@ -9,6 +9,10 @@
 #include <iostream>
 #include <utility>
 
+std::optional<firelight::db::GameRelease>
+SqliteContentDatabase::getGameRelease(int id) {
+  return {};
+}
 SqliteContentDatabase::SqliteContentDatabase(std::filesystem::path dbFile)
     : databaseFile(std::move(dbFile)) {
   // TODO: throw error
@@ -103,9 +107,41 @@ SqliteContentDatabase::getPlatformByExtension(std::string ext) {
     result.emplace(Platform{.id = 4});
   } else if (ext == ".nds") {
     result.emplace(Platform{.id = 5});
+  } else if (ext == ".md") {
+    result.emplace(Platform{.id = 6});
   }
 
   return result;
+}
+bool SqliteContentDatabase::tableExists(const std::string &tableName) {
+  return true;
+}
+std::optional<ROM> SqliteContentDatabase::getRom(int id) { return {}; }
+std::optional<firelight::db::Mod> SqliteContentDatabase::getMod(int id) {
+  return {};
+}
+std::optional<firelight::db::ModRelease>
+SqliteContentDatabase::getModRelease(int id) {
+  return {};
+}
+std::optional<firelight::db::Patch> SqliteContentDatabase::getPatch(int id) {
+  return {};
+}
+std::optional<Platform> SqliteContentDatabase::getPlatform(int id) {
+  return {};
+}
+std::optional<firelight::db::Region> SqliteContentDatabase::getRegion(int id) {
+  return {};
+}
+std::vector<firelight::db::Mod> SqliteContentDatabase::getAllMods() {
+  return {};
+}
+std::vector<ROM> SqliteContentDatabase::getMatchingRoms(const ROM &rom) {
+  return {};
+}
+std::vector<firelight::db::Patch>
+SqliteContentDatabase::getMatchingPatches(const firelight::db::Patch &patch) {
+  return {};
 }
 
 sqlite3 *SqliteContentDatabase::getOrCreateDbConnection() {

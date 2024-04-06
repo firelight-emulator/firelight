@@ -922,8 +922,6 @@ Core::Core(const std::string &libPath) {
   this->retroSystemInfo = new retro_system_info;
   this->retroSystemAVInfo = new retro_system_av_info;
 
-  //  this->video = new Video(gfxDriver);
-
   currentCore = this; // todo prob different namespace
 
   // The next several methods load the callback symbols from the library and
@@ -1028,8 +1026,7 @@ void Core::writeMemoryData(const MemoryType memType,
   memcpy(ptr, data.data(), size);
 }
 
-void Core::set_video_receiver(
-    firelight::libretro::IVideoDataReceiver *receiver) {
+void Core::setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) {
   videoReceiver = receiver;
 }
 
@@ -1042,7 +1039,7 @@ firelight::libretro::IRetropadProvider *Core::getRetropadProvider() {
   return m_retropadProvider;
 }
 
-void Core::set_audio_receiver(IAudioDataReceiver *receiver) {
+void Core::setAudioReceiver(IAudioDataReceiver *receiver) {
   audioReceiver = receiver;
 }
 

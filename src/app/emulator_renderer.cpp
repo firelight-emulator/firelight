@@ -34,8 +34,8 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     core->setSystemDirectory("./system");
     core->setSaveDirectory(".");
 
-    core->set_video_receiver(this);
-    core->set_audio_receiver(new AudioManager());
+    core->setVideoReceiver(this);
+    core->setAudioReceiver(new AudioManager());
     core->init();
 
     libretro::Game game(

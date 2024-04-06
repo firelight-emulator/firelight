@@ -77,6 +77,13 @@ add_library(firelight_lib
         src/app/netplay/stream_test.cpp
         src/gui/savefile_list_model.cpp
         src/gui/window_resize_handler.hpp
+        include/firelight/Product.hpp
+        include/firelight/db/game_release.hpp
+        include/firelight/db/region.hpp
+        include/firelight/db/mod.hpp
+        include/firelight/db/mod_release.hpp
+        src/gui/mod_list_model.cpp
+        src/gui/mod_list_model.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}
@@ -132,6 +139,7 @@ qt6_add_executable(firelight
         resources.qrc
         src/main.cpp
         src/logo.ico
+        include/firelight/db/patch.hpp
 )
 
 

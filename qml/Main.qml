@@ -366,7 +366,7 @@ ApplicationWindow {
             }
         }
 
-        HackPage {
+        DiscoverPage {
             id: explorePage
             visible: false
         }

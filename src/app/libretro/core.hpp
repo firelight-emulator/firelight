@@ -39,11 +39,11 @@ public:
 
   virtual ~Core();
 
-  void set_video_receiver(firelight::libretro::IVideoDataReceiver *receiver);
+  void setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver);
   void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
   firelight::libretro::IRetropadProvider *getRetropadProvider();
 
-  void set_audio_receiver(IAudioDataReceiver *receiver);
+  void setAudioReceiver(IAudioDataReceiver *receiver);
 
   bool handleEnvironmentCall(unsigned cmd, void *data);
 

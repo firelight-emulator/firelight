@@ -112,7 +112,8 @@ void LibraryScanner::startScan() {
           } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
                      ext.string() == ".v64" || ext.string() == ".z64" ||
                      ext.string() == ".gb" || ext.string() == ".gbc" ||
-                     ext.string() == ".gba" || ext.string() == ".nds") {
+                     ext.string() == ".gba" || ext.string() == ".nds" ||
+                     ext.string() == ".md") {
             handleScannedRomFile(entry, scan_results);
           }
         }
