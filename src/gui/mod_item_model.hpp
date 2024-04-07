@@ -21,7 +21,8 @@ public:
     Platform,
     TargetGameName,
     TargetGameId,
-    ImageSource
+    ImageSource,
+    RomIds
   };
 
   explicit ModItemModel(IContentDatabase &contentDatabase);
@@ -44,6 +45,7 @@ private:
     QString targetGameName;
     int targetGameId;
     QString imageSource;
+    QList<int> romIds;
   };
 
   IContentDatabase &m_contentDatabase;

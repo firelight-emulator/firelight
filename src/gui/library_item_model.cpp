@@ -74,6 +74,9 @@ void LibraryItemModel::updatePlaylistsForEntry(const int entryId) {
     }
   }
 }
+
+bool LibraryItemModel::isRomInLibrary(int romId) { return true; }
+
 void LibraryItemModel::refresh() {
   emit beginResetModel();
   m_items.clear();

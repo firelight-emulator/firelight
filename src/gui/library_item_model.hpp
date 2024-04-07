@@ -59,6 +59,7 @@ public:
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
   Q_INVOKABLE void updatePlaylistsForEntry(int entryId);
+  Q_INVOKABLE bool isRomInLibrary(int romId);
 
 public slots:
   void refresh();

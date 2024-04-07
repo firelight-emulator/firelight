@@ -16,6 +16,7 @@ Pane {
         property string name;
         property string author;
         property string description;
+        property bool targetInLibrary;
 
         width: parent.width * 0.75
         height: parent.height * 0.9
@@ -27,6 +28,7 @@ Pane {
             name: contentPopup.name
             author: contentPopup.author
             description: contentPopup.description
+            targetInLibrary: contentPopup.targetInLibrary
         }
 
         header: Item {
@@ -85,6 +87,15 @@ Pane {
                         contentPopup.name = model.name
                         contentPopup.author = model.primary_author
                         contentPopup.description = model.description
+
+                        contentPopup.targetInLibrary = false
+                        for (let i = 0; i < model.rom_ids.length; i++) {
+                            if (library_model.isRomInLibrary(model.rom_ids[i])) {
+                                contentPopup.targetInLibrary = true
+                                break
+                            }
+                        }
+
                         contentPopup.open()
                     }
                 }

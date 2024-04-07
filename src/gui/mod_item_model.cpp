@@ -21,6 +21,13 @@ ModItemModel::ModItemModel(IContentDatabase &contentDatabase)
       item.imageSource = QString::fromStdString(mod.imageSource);
       item.description = QString::fromStdString(mod.description);
 
+      QList<int> list;
+      for (const auto &element : release->romIds) {
+        list.append(element);
+      }
+
+      item.romIds = list;
+
       auto platform = m_contentDatabase.getPlatform(release->platformId);
       if (!platform) {
         // TODO: ????
@@ -72,6 +79,8 @@ QVariant ModItemModel::data(const QModelIndex &index, int role) const {
     return item.targetGameId;
   case ImageSource:
     return item.imageSource;
+  case RomIds:
+    return QVariant::fromValue(item.romIds);
   default:
     return QVariant{};
   }
@@ -87,6 +96,7 @@ QHash<int, QByteArray> ModItemModel::roleNames() const {
   roles[TargetGameName] = "target_game_name";
   roles[TargetGameId] = "target_game_id";
   roles[ImageSource] = "image_source";
+  roles[RomIds] = "rom_ids";
   return roles;
 }
 } // namespace firelight::gui

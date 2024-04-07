@@ -51,4 +51,4 @@ int16_t KeyboardController::getLeftStickYPosition() { return 0; }
 int16_t KeyboardController::getRightStickXPosition() { return 0; }
 int16_t KeyboardController::getRightStickYPosition() { return 0; }
 
-} // namespace Firelight::Input
+} // namespace firelight::Input

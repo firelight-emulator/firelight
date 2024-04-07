@@ -10,6 +10,7 @@ Item {
     required property string name;
     required property string author;
     required property string description;
+    required property bool targetInLibrary;
 
     // Pane {
     //     id: banner
@@ -47,28 +48,65 @@ Item {
             anchors.bottom: parent.bottom
             anchors.left: scrollableArea.right
 
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 16
 
-            Button {
-                anchors.centerIn: parent
-                height: 60
-                width: parent.width * 3 / 4
-                background: Rectangle {
-                    color: "white"
-                    radius: 6
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
-                contentItem: Text {
-                    text: qsTr("Add to Library")
-                    anchors.centerIn: parent
-                    color: Constants.colorTestBackground
-                    font.family: Constants.regularFontFamily
+
+                Text {
+                    text: targetInLibrary ? "The required game is in your library" : "You don't have the required game in your library"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pointSize: 11
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.fillWidth: true
+                    font.pointSize: 10
+                    font.family: Constants.regularFontFamily
+                    color: "#d5d5d5"
                 }
 
-                HoverHandler {
-                    acceptedDevices: PointerDevice.Mouse
-                    cursorShape: Qt.PointingHandCursor
+                Button {
+                    id: addToLibraryButton
+                    Layout.preferredHeight: 60
+                    Layout.preferredWidth: parent.width * 3 / 4
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    background: Rectangle {
+                        color: targetInLibrary ? "grey" : "white"
+                        radius: 6
+                    }
+                    enabled: !targetInLibrary
+                    contentItem: Text {
+                        text: targetInLibrary ? qsTr("In Library") : qsTr("Add to Library")
+                        anchors.centerIn: parent
+                        color: Constants.colorTestBackground
+                        font.family: Constants.regularFontFamily
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        font.pointSize: 11
+                    }
+
+                    HoverHandler {
+                        acceptedDevices: PointerDevice.Mouse
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
+                    // onClicked: {
+                    //     if (!targetInLibrary) {
+                    //         for (let i = 0; i < romIds.length; i++) {
+                    //             library_model.addRomToLibrary(romIds[i])
+                    //         }
+                    //         targetInLibrary = true
+                    //         addToLibraryButton.text = qsTr("In Library")
+                    //     }
+                    // }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
             }
         }
