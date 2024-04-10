@@ -96,13 +96,13 @@ int Controller::getPlayerIndex() const {
   return SDL_GameControllerGetPlayerIndex(m_SDLController);
 }
 
+// TODO: This isn't quite right, will set the rumble for only one motor at a
+// time
 void Controller::setStrongRumble(const uint16_t t_strength) {
-  printf("Setting strong rumble: %d\n", t_strength);
   SDL_JoystickRumble(m_SDLJoystick, 0, t_strength, 2000);
 }
 
 void Controller::setWeakRumble(const uint16_t t_strength) {
-  printf("Setting weak rumble: %d\n", t_strength);
   SDL_JoystickRumble(m_SDLJoystick, t_strength, 0, 2000);
 }
 

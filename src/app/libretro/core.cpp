@@ -253,8 +253,8 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return false;
   }
   case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE: {
-    this->environmentCalls.emplace_back
-    ("RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE");
+    this->environmentCalls.emplace_back(
+        "RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE");
     auto ptr = static_cast<retro_rumble_interface *>(data);
     ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
                                uint16_t strength) {
@@ -271,7 +271,6 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
         controller->setWeakRumble(strength);
       }
 
-      printf("Calling rumble callback: %d, %d, %d\n", port, effect, strength);
       return true;
     };
     return true;

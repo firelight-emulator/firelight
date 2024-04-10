@@ -5,8 +5,14 @@
 #include "sqlite_content_database.hpp"
 #include "firelight/game.hpp"
 
+#include <QSqlError>
+#include <QSqlQuery>
+#include <QThread>
 #include <iostream>
+#include <spdlog/spdlog.h>
 #include <utility>
+
+constexpr auto DATABASE_PREFIX = "content_";
 
 const std::string radicalRedDescription =
     "<p>Pokémon Radical Red is an enhancement hack of Pokémon Fire Red.</p>"
@@ -67,6 +73,13 @@ SqliteContentDatabase::SqliteContentDatabase(std::filesystem::path dbFile)
     : databaseFile(std::move(dbFile)) {
   // TODO: throw error
   getOrCreateDbConnection();
+}
+SqliteContentDatabase::~SqliteContentDatabase() {
+  for (const auto &name : QSqlDatabase::connectionNames()) {
+    if (name.startsWith(DATABASE_PREFIX)) {
+      QSqlDatabase::removeDatabase(name);
+    }
+  }
 }
 
 std::optional<ROM> SqliteContentDatabase::getRomByMd5(const std::string &md5) {
@@ -200,16 +213,29 @@ std::optional<ROM> SqliteContentDatabase::getRom(const int id) {
 
   return result;
 }
-std::optional<firelight::db::Mod> SqliteContentDatabase::getMod(int id) {
-  return {};
+
+std::optional<firelight::db::Mod> SqliteContentDatabase::getMod(const int id) {
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM mods WHERE id = :id");
+  query.bindValue(":id", id);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get library entry: {}",
+                  query.lastError().text().toStdString());
+    return std::nullopt;
+  }
+
+  if (!query.next()) {
+    return std::nullopt;
+  }
+
+  return createModFromQuery(query);
 }
-std::optional<firelight::db::ModRelease>
-SqliteContentDatabase::getModRelease(int id) {
-  return {};
-}
+
 std::optional<firelight::db::Patch> SqliteContentDatabase::getPatch(int id) {
-  return {};
+  return {{0, "radical_red.ips", 0, 0, "4.1", "md5", "crc32", "sha1", {356}}};
 }
+
 std::optional<Platform> SqliteContentDatabase::getPlatform(int id) {
   switch (id) {
   case 0:
@@ -235,18 +261,6 @@ SqliteContentDatabase::getGame(const int id) {
     return {};
   }
 }
-
-std::optional<firelight::db::GameRelease>
-SqliteContentDatabase::getGameRelease(const int id) {
-  switch (id) {
-  case 0:
-    return {{0, 0, 0, -1, {}}};
-  case 1:
-    return {{1, 1, 1, -1, {356}}};
-  default:
-    return {};
-  }
-}
 std::vector<firelight::db::Mod> SqliteContentDatabase::getAllMods() {
   return {{0,
            "Pokemon Radical Red",
@@ -264,6 +278,7 @@ std::vector<firelight::db::Mod> SqliteContentDatabase::getAllMods() {
 std::vector<ROM> SqliteContentDatabase::getMatchingRoms(const ROM &rom) {
   return {};
 }
+
 std::vector<firelight::db::Patch>
 SqliteContentDatabase::getMatchingPatches(const firelight::db::Patch &patch) {
   return {};
@@ -308,4 +323,24 @@ Game SqliteContentDatabase::gameFromDbRow(sqlite3_stmt *stmt) {
       const_cast<unsigned char *>(sqlite3_column_text(stmt, 1)));
 
   return {.id = id, .name = name};
+}
+
+QSqlDatabase SqliteContentDatabase::getDatabase() const {
+  const auto name =
+      DATABASE_PREFIX +
+      QString::number(reinterpret_cast<quint64>(QThread::currentThread()), 16);
+  if (QSqlDatabase::contains(name)) {
+    return QSqlDatabase::database(name);
+  }
+
+  spdlog::debug("Database connection with name {} does not exist; creating",
+                name.toStdString());
+  auto db = QSqlDatabase::addDatabase("QSQLITE", name);
+  db.setDatabaseName(QString::fromStdString(databaseFile.string()));
+  db.open();
+  return db;
+}
+firelight::db::Mod
+SqliteContentDatabase::createModFromQuery(const QSqlQuery &query) {
+  return {};
 }

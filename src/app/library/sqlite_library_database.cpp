@@ -6,13 +6,13 @@
 #include <QSqlTableModel>
 #include <QThread>
 #include <spdlog/spdlog.h>
+#include <utility>
 
 constexpr auto DATABASE_PREFIX = "library_";
 
 namespace firelight::db {
-SqliteLibraryDatabase::SqliteLibraryDatabase(
-    const std::filesystem::path &db_file_path)
-    : m_dbFilePath(db_file_path) {
+SqliteLibraryDatabase::SqliteLibraryDatabase(std::filesystem::path db_file_path)
+    : m_dbFilePath(std::move(db_file_path)) {
 
   const auto db = getDatabase();
 

@@ -5,6 +5,7 @@ namespace firelight::db {
 struct Game {
   int id = -1;
   std::string name;
+  std::string slug;
   std::string description;
 };
 } // namespace firelight::db

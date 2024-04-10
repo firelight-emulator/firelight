@@ -5,12 +5,13 @@
 namespace firelight::db {
 struct Patch {
   int id = -1;
+  std::string version;
   std::string filename;
   int sizeBytes;
-  int modReleaseId = -1;
+  int modId = -1;
+  int romId = -1;
   std::string md5;
   std::string crc32;
   std::string sha1; // TODO:???
-  std::vector<int> romIds;
 };
 } // namespace firelight::db

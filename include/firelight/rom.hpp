@@ -11,4 +11,6 @@ struct ROM {
   std::string region{};
   std::string md5{};
   int size_bytes{};
+  int platformId = -1;
+  int gameReleaseId = -1;
 };

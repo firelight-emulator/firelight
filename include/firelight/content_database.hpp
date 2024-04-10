@@ -25,10 +25,8 @@ public:
   virtual bool tableExists(const std::string &tableName) = 0;
 
   virtual std::optional<firelight::db::Game> getGame(int id) = 0;
-  virtual std::optional<firelight::db::GameRelease> getGameRelease(int id) = 0;
   virtual std::optional<ROM> getRom(int id) = 0;
   virtual std::optional<firelight::db::Mod> getMod(int id) = 0;
-  virtual std::optional<firelight::db::ModRelease> getModRelease(int id) = 0;
   virtual std::optional<firelight::db::Patch> getPatch(int id) = 0;
   virtual std::optional<Platform> getPlatform(int id) = 0;
   virtual std::optional<firelight::db::Region> getRegion(int id) = 0;

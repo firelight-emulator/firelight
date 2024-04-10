@@ -12,7 +12,7 @@ namespace firelight::db {
 class SqliteLibraryDatabase final : public QObject, public ILibraryDatabase {
   Q_OBJECT
 public:
-  explicit SqliteLibraryDatabase(const std::filesystem::path &db_file_path);
+  explicit SqliteLibraryDatabase(std::filesystem::path db_file_path);
   ~SqliteLibraryDatabase() override;
 
   // General stuff
@@ -42,7 +42,7 @@ signals:
 private:
   std::filesystem::path m_dbFilePath;
   static LibraryEntry createLibraryEntryFromQuery(const QSqlQuery &query);
-  QSqlDatabase getDatabase() const;
+  [[nodiscard]] QSqlDatabase getDatabase() const;
 };
 
 } // namespace firelight::db

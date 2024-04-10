@@ -17,6 +17,9 @@ Pane {
         property string author;
         property string description;
         property bool targetInLibrary;
+        property string targetGameName;
+        property int romId;
+        property int gameReleaseId;
 
         width: parent.width * 0.75
         height: parent.height * 0.9
@@ -24,11 +27,38 @@ Pane {
         x: (parent.width / 2) - (width / 2)
         y: (parent.height / 2) - (height / 2)
         contentItem: StoreContent {
+            id: contentThing
             anchors.centerIn: parent
             name: contentPopup.name
             author: contentPopup.author
             description: contentPopup.description
             targetInLibrary: contentPopup.targetInLibrary
+            targetGameName: contentPopup.targetGameName
+            romId: contentPopup.romId
+            gameReleaseId: contentPopup.gameReleaseId
+            modInLibrary: false
+        }
+
+        onAboutToShow: {
+            contentThing.name = contentPopup.name
+            contentThing.author = contentPopup.author
+            contentThing.description = contentPopup.description
+            contentThing.targetInLibrary = contentPopup.targetInLibrary
+            contentThing.targetGameName = contentPopup.targetGameName
+            contentThing.romId = contentPopup.romId
+            contentThing.gameReleaseId = contentPopup.gameReleaseId
+            contentThing.modInLibrary = false
+        }
+
+        onClosed: {
+            contentThing.name = ""
+            contentThing.author = ""
+            contentThing.description = ""
+            contentThing.targetInLibrary = false
+            contentThing.targetGameName = ""
+            contentThing.modInLibrary = false
+            contentThing.romId = -1
+            contentThing.gameReleaseId = -1
         }
 
         header: Item {
@@ -87,6 +117,7 @@ Pane {
                         contentPopup.name = model.name
                         contentPopup.author = model.primary_author
                         contentPopup.description = model.description
+                        contentPopup.targetGameName = model.target_game_name
 
                         contentPopup.targetInLibrary = false
                         for (let i = 0; i < model.rom_ids.length; i++) {

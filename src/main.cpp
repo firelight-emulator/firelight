@@ -54,10 +54,11 @@ int main(int argc, char *argv[]) {
   auto system_dir = appdata_dir / "system";
   auto userdata_dir = appdata_dir / "userdata";
   auto roms_dir = appdata_dir / "roms";
+  auto patches_dir = appdata_dir / "patches";
   auto save_dir = userdata_dir / "savedata";
 
-  if (!create_dirs(
-          {appdata_dir, system_dir, userdata_dir, roms_dir, save_dir})) {
+  if (!create_dirs({appdata_dir, system_dir, userdata_dir, roms_dir,
+                    patches_dir, save_dir})) {
     return 1;
   }
 

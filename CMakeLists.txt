@@ -77,14 +77,14 @@ add_library(firelight_lib
         src/app/netplay/stream_test.cpp
         src/gui/savefile_list_model.cpp
         src/gui/window_resize_handler.hpp
-        include/firelight/Product.hpp
         include/firelight/db/game_release.hpp
         include/firelight/db/region.hpp
         include/firelight/db/mod.hpp
-        include/firelight/db/mod_release.hpp
         src/gui/mod_item_model.cpp
         src/gui/mod_item_model.hpp
         include/firelight/db/game.hpp
+        src/app/mods/mod_manager.cpp
+        src/app/mods/mod_manager.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}
