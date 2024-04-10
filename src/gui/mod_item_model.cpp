@@ -8,48 +8,42 @@ namespace firelight::gui {
 ModItemModel::ModItemModel(IContentDatabase &contentDatabase)
     : m_contentDatabase(contentDatabase) {
   auto mods = m_contentDatabase.getAllMods();
-  for (const auto &mod : mods) {
-    for (const auto &releaseId : mod.gameReleaseIds) {
-      auto release = m_contentDatabase.getGameRelease(releaseId);
-      if (!release) {
-        continue;
-      }
-
-      Item item;
-      item.id = mod.id;
-      item.name = QString::fromStdString(mod.name);
-      item.imageSource = QString::fromStdString(mod.imageSource);
-      item.description = QString::fromStdString(mod.description);
-
-      QList<int> list;
-      for (const auto &element : release->romIds) {
-        list.append(element);
-      }
-
-      item.romIds = list;
-
-      auto platform = m_contentDatabase.getPlatform(release->platformId);
-      if (!platform) {
-        // TODO: ????
-        continue;
-      }
-
-      item.platform = QString::fromStdString(platform->name);
-
-      item.targetGameId = release->gameId;
-      auto game = m_contentDatabase.getGame(release->gameId);
-      if (!game) {
-        // TODO: ????
-        continue;
-      }
-
-      item.targetGameName = QString::fromStdString(game->name);
-
-      item.primaryAuthor = QString::fromStdString(mod.primaryAuthor);
-      m_items.push_back(item);
-    }
-  }
+  // for (const auto &mod : mods) {
+  //     Item item;
+  //     item.id = mod.id;
+  //     item.name = QString::fromStdString(mod.name);
+  //     item.imageSource = QString::fromStdString(mod.imageSource);
+  //     item.description = QString::fromStdString(mod.description);
+  //
+  //     QList<int> list;
+  //     for (const auto &element : release->romIds) {
+  //       list.append(element);
+  //     }
+  //
+  //     item.romIds = list;
+  //
+  //     auto platform = m_contentDatabase.getPlatform(release->platformId);
+  //     if (!platform) {
+  //       // TODO: ????
+  //       continue;
+  //     }
+  //
+  //     item.platform = QString::fromStdString(platform->name);
+  //
+  //     item.targetGameId = release->gameId;
+  //     auto game = m_contentDatabase.getGame(release->gameId);
+  //     if (!game) {
+  //       // TODO: ????
+  //       continue;
+  //     }
+  //
+  //     item.targetGameName = QString::fromStdString(game->name);
+  //
+  //     item.primaryAuthor = QString::fromStdString(mod.primaryAuthor);
+  //     m_items.push_back(item);
+  //   }
 }
+
 int ModItemModel::rowCount(const QModelIndex &parent) const {
   return m_items.size();
 }

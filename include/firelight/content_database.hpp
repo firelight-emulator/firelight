@@ -1,9 +1,7 @@
 #pragma once
 
 #include "db/game.hpp"
-#include "db/game_release.hpp"
 #include "db/mod.hpp"
-#include "db/mod_release.hpp"
 #include "db/patch.hpp"
 #include "db/region.hpp"
 #include "firelight/db/platform.hpp"

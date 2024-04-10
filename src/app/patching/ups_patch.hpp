@@ -30,7 +30,7 @@ public:
                                  std::to_string(index));
       }
 
-      uint8_t x = data[index++];
+      const uint8_t x = data[index++];
       result += (x & 0x7F) * shift;
       if ((x & 0x80) != 0) {
         break;

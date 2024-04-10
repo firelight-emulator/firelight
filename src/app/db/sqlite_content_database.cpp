@@ -233,7 +233,9 @@ std::optional<firelight::db::Mod> SqliteContentDatabase::getMod(const int id) {
 }
 
 std::optional<firelight::db::Patch> SqliteContentDatabase::getPatch(int id) {
-  return {{0, "radical_red.ips", 0, 0, "4.1", "md5", "crc32", "sha1", {356}}};
+  // return {{0, "radical_red.ips", 0, 0, "4.1", "md5", "crc32", "sha1",
+  // {356}}};
+  return std::nullopt;
 }
 
 std::optional<Platform> SqliteContentDatabase::getPlatform(int id) {
@@ -262,16 +264,10 @@ SqliteContentDatabase::getGame(const int id) {
   }
 }
 std::vector<firelight::db::Mod> SqliteContentDatabase::getAllMods() {
-  return {{0,
-           "Pokemon Radical Red",
-           "soupercell",
-           {0},
+  return {{0, "Pokemon Radical Red", "soupercell", 0,
            "file:///Users/alexs/git/firelight/build/pkmnrr.png",
            radicalRedDescription},
-          {1,
-           "Ultimate Goomboss Challenge",
-           "Enneagon",
-           {1},
+          {1, "Ultimate Goomboss Challenge", "Enneagon", 1,
            "file:///Users/alexs/git/firelight/build/ultimategoomboss.png",
            goombossDescription}};
 }

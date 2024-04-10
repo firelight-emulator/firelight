@@ -65,9 +65,8 @@ IPSPatch::IPSPatch(std::vector<uint8_t> &data) {
 
     records.emplace_back(record);
   }
-
-  spdlog::info("Number of bytes read: {}", numBytesRead);
 }
+
 std::vector<uint8_t>
 IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
   const auto last = records[records.size() - 1];

@@ -194,6 +194,7 @@ add_executable(fl_test
         tests/app/patching/pm_star_rod_mod_patch_test.cpp
         tests/app/patching/ips_patch_test.cpp
         tests/app/patching/ups_patch_test.cpp
+        tests/app/patching/bps_patch_test.cpp
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
         tests/app/saves/save_manager_test.cpp
