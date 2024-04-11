@@ -1,32 +1,14 @@
-//
-// Created by alexs on 1/11/2024.
-//
-
 #include "../../../src/app/patching/ips_patch.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
-class IPSPatchTest : public testing::Test {
-protected:
-  // Common setup code that runs before each test case
-  void SetUp() override {
-    // Initialize any common data or resources here
-  }
+class IPSPatchTest : public testing::Test {};
 
-  // Common cleanup code that runs after each test case
-  void TearDown() override {
-    // Clean up any common data or resources here
-  }
-
-  // You can add member variables here if needed
-};
-
-// Test case for PMStarRodModPatch constructor
 TEST_F(IPSPatchTest, ConstructorTest) {
   // Each one is offset, size, repeat
-  std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> expectedValues = {
+  const std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> expectedValues = {
       {47006, 4, 1},      {48398, 4, 1},      {48412, 4, 1},
       {48518, 4, 1},      {58582, 1, 1},      {65495, 9, 1},
       {98516, 119, 1},    {101395, 157, 1},   {102111, 4, 1},
@@ -83,17 +65,8 @@ TEST_F(IPSPatchTest, ConstructorTest) {
       {589824, 55941, 1}, {645765, 1, 65535}, {711300, 1, 65535},
       {776835, 1, 9597}};
 
-  const auto path = "test_resources/wellformatted.ips";
-  const auto size = std::filesystem::file_size(path);
-
-  std::ifstream file(path, std::ios::binary);
-
-  std::vector<uint8_t> data(size);
-  file.read(reinterpret_cast<char *>(data.data()), size);
-
-  file.close();
-
-  firelight::patching::IPSPatch patch(data);
+  const firelight::patching::IPSPatch patch("test_resources/wellformatted.ips");
+  ASSERT_TRUE(patch.isValid());
 
   constexpr int expectedNumRecords = 163;
   ASSERT_EQ(patch.getRecords().size(), expectedNumRecords);
@@ -110,17 +83,8 @@ TEST_F(IPSPatchTest, ConstructorTest) {
 TEST_F(IPSPatchTest, PatchRomTest) {
   const std::vector<uint8_t> romData(4000000);
 
-  const auto path = "test_resources/wellformatted.ips";
-  const auto size = std::filesystem::file_size(path);
-
-  std::ifstream file(path, std::ios::binary);
-
-  std::vector<uint8_t> patchData(size);
-  file.read(reinterpret_cast<char *>(patchData.data()), size);
-
-  file.close();
-
-  const firelight::patching::IPSPatch patch(patchData);
+  const firelight::patching::IPSPatch patch("test_resources/wellformatted.ips");
+  ASSERT_TRUE(patch.isValid());
 
   ASSERT_FALSE(patch.patchRom(romData).empty());
 }

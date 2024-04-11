@@ -1,6 +1,8 @@
 #include "bps_patch.hpp"
-
-// #include <spdlog/spdlog.h>
+#include "util.hpp"
+#include <bits/fs_fwd.h>
+#include <filesystem>
+#include <fstream>
 #include <zlib.h>
 
 namespace firelight::patching {
@@ -9,6 +11,19 @@ constexpr int SOURCE_READ_ACTION = 0;
 constexpr int TARGET_READ_ACTION = 1;
 constexpr int SOURCE_COPY_ACTION = 2;
 constexpr int TARGET_COPY_ACTION = 3;
+
+BPSPatch::BPSPatch(const std::string &path) {
+  const auto size = std::filesystem::file_size(path);
+
+  std::ifstream file(path, std::ios::binary);
+
+  std::vector<uint8_t> data(size);
+  file.read(reinterpret_cast<char *>(data.data()), size);
+
+  file.close();
+
+  *this = BPSPatch(data);
+}
 
 BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
   size_t index = 4; // Skip BPS1 magic string
@@ -47,7 +62,8 @@ BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
     default:
       // TODO: Put actual error here + test
       printf("Invalid action type: %llu\n", action.type);
-      break;
+      m_isValid = false;
+      return;
     }
 
     m_actions.emplace_back(action);
@@ -61,6 +77,13 @@ BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
   index += 4;
   m_patchFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 |
                              data[index + 1] << 8 | data[index];
+
+  auto crc = crc32(0L, nullptr, 0);
+  crc = crc32(crc, data.data(), data.size() - 4);
+  if (crc != m_patchFileCRC32Checksum) {
+    printf("Patch data does not match expected checksum");
+    m_isValid = false;
+  }
 }
 std::vector<uint8_t>
 BPSPatch::patchRom(const std::vector<uint8_t> &data) const {
@@ -110,5 +133,7 @@ BPSPatch::patchRom(const std::vector<uint8_t> &data) const {
 
   return patchedRom;
 }
+
+bool BPSPatch::isValid() const { return m_isValid; }
 
 } // namespace firelight::patching

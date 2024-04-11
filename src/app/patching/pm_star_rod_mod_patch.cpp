@@ -4,9 +4,23 @@
 
 #include "pm_star_rod_mod_patch.hpp"
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 
 namespace firelight::patching {
+
+PMStarRodModPatch::PMStarRodModPatch(const std::string &path) {
+  const auto size = std::filesystem::file_size(path);
+
+  std::ifstream file(path, std::ios::binary);
+
+  std::vector<uint8_t> data(size);
+  file.read(reinterpret_cast<char *>(data.data()), size);
+
+  file.close();
+
+  *this = PMStarRodModPatch(data);
+}
 
 PMStarRodModPatch::PMStarRodModPatch(const std::vector<uint8_t> &data) {
   auto cursor = data.data();
@@ -64,4 +78,6 @@ std::vector<PMStarRodPatchRecord> PMStarRodModPatch::getRecords() {
   return records;
 }
 
-} // namespace FL::Patching
+bool PMStarRodModPatch::isValid() const { return true; }
+
+} // namespace firelight::patching

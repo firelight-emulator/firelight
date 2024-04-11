@@ -8,7 +8,7 @@ namespace firelight::patching {
 
 struct UPSPatchRecord {
   // Relative offset from the previous record
-  uint64_t offset = 0;
+  int64_t offset = 0;
 
   // XOR data to apply at the offset
   std::vector<uint8_t> data;
@@ -16,31 +16,11 @@ struct UPSPatchRecord {
 
 class UPSPatch final : public IRomPatch {
 public:
+  explicit UPSPatch(const std::string &path);
   explicit UPSPatch(const std::vector<uint8_t> &data);
   [[nodiscard]] std::vector<uint8_t>
   patchRom(const std::vector<uint8_t> &data) const override;
-  std::vector<UPSPatchRecord> getRecords();
-
-  uint64_t readVLV(const std::vector<uint8_t> &data, size_t &index) {
-    uint64_t result = 0;
-    uint32_t shift = 1;
-    while (true) {
-      if (index >= data.size()) {
-        throw std::runtime_error("Can't read UPS VLV at offset " +
-                                 std::to_string(index));
-      }
-
-      const uint8_t x = data[index++];
-      result += (x & 0x7F) * shift;
-      if ((x & 0x80) != 0) {
-        break;
-      }
-      shift <<= 7;
-      result += shift;
-    }
-
-    return result;
-  }
+  [[nodiscard]] std::vector<UPSPatchRecord> getRecords() const;
 
   [[nodiscard]] uint32_t getInputFileSize() const { return inputFileSize; }
   [[nodiscard]] uint32_t getOutputFileSize() const { return outputFileSize; }
@@ -53,8 +33,10 @@ public:
   [[nodiscard]] uint32_t getPatchFileCRC32Checksum() const {
     return patchFileCRC32Checksum;
   }
+  [[nodiscard]] bool isValid() const override;
 
 private:
+  bool m_isValid = true;
   uint32_t inputFileSize = 0;
   uint32_t outputFileSize = 0;
   uint32_t inputFileCRC32Checksum = 0;

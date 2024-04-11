@@ -2,6 +2,7 @@
 
 #include "rom_patch.hpp"
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace firelight::patching {
@@ -12,10 +13,12 @@ struct PMStarRodPatchRecord {
 
 class PMStarRodModPatch final : public IRomPatch {
 public:
+  explicit PMStarRodModPatch(const std::string &path);
   explicit PMStarRodModPatch(const std::vector<uint8_t> &data);
-  std::vector<uint8_t>
+  [[nodiscard]] std::vector<uint8_t>
   patchRom(const std::vector<uint8_t> &data) const override;
   std::vector<PMStarRodPatchRecord> getRecords();
+  [[nodiscard]] bool isValid() const override;
 
 private:
   std::vector<PMStarRodPatchRecord> records;

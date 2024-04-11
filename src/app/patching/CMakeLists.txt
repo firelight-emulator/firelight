@@ -3,7 +3,6 @@ set(PATCHING_SOURCES
         pm_star_rod_mod_patch.cpp
         yay_0_codec.cpp
         ups_patch.cpp
-        bps_patch.cpp
-        bps_patch.hpp)
+        bps_patch.cpp)
 
 add_library(patching ${PATCHING_SOURCES})

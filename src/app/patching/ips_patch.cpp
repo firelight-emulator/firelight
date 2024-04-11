@@ -1,27 +1,26 @@
-//
-// Created by alexs on 1/11/2024.
-//
-
 #include "ips_patch.hpp"
 
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <spdlog/spdlog.h>
 
 namespace firelight::patching {
 
-void printHex(const std::vector<uint8_t> &data) {
-  for (auto byte : data) {
-    std::cout << std::hex << std::setw(2) << std::setfill('0')
-              << static_cast<int>(byte) << " ";
-  }
-  std::cout << std::dec << std::endl; // Reset back to decimal format
-}
+IPSPatch::IPSPatch(const std::string &path) {
+  const auto size = std::filesystem::file_size(path);
 
-IPSPatch::IPSPatch(std::vector<uint8_t> &data) {
+  std::ifstream file(path, std::ios::binary);
+
+  std::vector<uint8_t> data(size);
+  file.read(reinterpret_cast<char *>(data.data()), size);
+
+  file.close();
+
+  *this = IPSPatch(data);
+}
+IPSPatch::IPSPatch(const std::vector<uint8_t> &data) {
   auto cursor = data.data();
   // Skip PATCH header
   cursor += 5;
@@ -100,6 +99,8 @@ IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
   return result;
 }
 
-std::vector<IPSPatchRecord> IPSPatch::getRecords() { return records; }
-} // namespace Firelight::Patching
-  // Firelight
+std::vector<IPSPatchRecord> IPSPatch::getRecords() const { return records; }
+
+bool IPSPatch::isValid() const { return true; }
+
+} // namespace firelight::patching

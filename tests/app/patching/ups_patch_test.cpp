@@ -23,17 +23,8 @@ protected:
 };
 
 TEST_F(UPSPatchTest, ConstructorTest) {
-  const auto path = "test_resources/wellformatted.ups";
-  const auto size = std::filesystem::file_size(path);
-
-  std::ifstream file(path, std::ios::binary);
-
-  std::vector<uint8_t> data(size);
-  file.read(reinterpret_cast<char *>(data.data()), size);
-
-  file.close();
-
-  firelight::patching::UPSPatch patch(data);
+  const firelight::patching::UPSPatch patch("test_resources/wellformatted.ups");
+  ASSERT_TRUE(patch.isValid());
 
   const auto romPath = "test_resources/testrom.gba";
   const auto romSize = std::filesystem::file_size(romPath);
@@ -54,24 +45,10 @@ TEST_F(UPSPatchTest, ConstructorTest) {
   uint32_t crc = crc32(0L, nullptr, 0);
   crc = crc32(crc, romData.data(), romData.size());
   ASSERT_EQ(crc, patch.getInputFileCRC32Checksum());
-
-  crc = crc32(0L, nullptr, 0);
-  crc = crc32(crc, data.data(), data.size() - 4);
-  ASSERT_EQ(crc, patch.getPatchFileCRC32Checksum());
 }
 
 TEST_F(UPSPatchTest, PatchRomTest) {
-  const auto path = "test_resources/wellformatted.ups";
-  const auto size = std::filesystem::file_size(path);
-
-  std::ifstream file(path, std::ios::binary);
-
-  std::vector<uint8_t> data(size);
-  file.read(reinterpret_cast<char *>(data.data()), size);
-
-  file.close();
-
-  firelight::patching::UPSPatch patch(data);
+  const firelight::patching::UPSPatch patch("test_resources/wellformatted.ups");
 
   const auto romPath = "test_resources/testrom.gba";
   const auto romSize = std::filesystem::file_size(romPath);
