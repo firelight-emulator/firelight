@@ -1,6 +1,5 @@
 #include "bps_patch.hpp"
 #include "util.hpp"
-#include <bits/fs_fwd.h>
 #include <filesystem>
 #include <fstream>
 #include <zlib.h>

@@ -11,61 +11,6 @@ namespace firelight::db {
 
 constexpr auto DATABASE_PREFIX = "content_";
 
-const std::string radicalRedDescription =
-    "<p>Pokémon Radical Red is an enhancement hack of Pokémon Fire Red.</p>"
-    "<p>This is a difficulty hack, with massive additional features added to "
-    "help you navigate through this game.</p>"
-    " <p>This hack utilises the Complete Fire Red Upgrade Engine and Dynamic "
-    "Pokemon Expansion built"
-    "by Skeli789, Ghoulslash, and others. It's responsible for most of the "
-    "significant features"
-    "in the hack.</p>"
-    "<p>List of features (Most of them provided by CFRU and DPE):</p>"
-    "<ul>"
-    "    <li>Much higher difficulty, with optional modes to add or mitigate "
-    "difficulty</li>"
-    "    <li>Built-in Randomizer options (Pokémon, Abilities and "
-    "Learnsets)</li>"
-    "    <li>Physical/Special split + Fairy Typing</li>"
-    "    <li>All Pokémon up to Gen 9 obtainable (with some exceptions)</li>"
-    "    <li>Most Moves up to Gen 9</li>"
-    "    <li>Updated Pokémon sprites</li>"
-    "    <li>Mega Evolutions & Z-Moves</li>"
-    "    <li>Most Abilities up to Gen 9</li>"
-    "    <li>All important battle items (with some exceptions)</li>"
-    "    <li>Wish Piece Raid Battles (with Dynamax)</li>"
-    "    <li>Mystery Gifts</li>"
-    "    <li>Reusable TMs</li>"
-    "    <li>Expanded TM list</li>"
-    "    <li>Additional move tutors</li>"
-    "    <li>EV Training Gear and NPCs</li>"
-    "    <li>Ability popups during battle</li>"
-    "    <li>Party Exp Share (can be disabled)</li>"
-    "    <li>Hidden Abilities</li>"
-    "    <li>Day, Dusk and Night cycle (syncs with RTC)</li>"
-    "    <li>DexNav, which allows you to search for Pokémon with hidden "
-    "abilities and more</li>"
-    "    <li>Even faster turbo speed on bike and while surfing</li>"
-    "    <li>Abilities like Magma Armor, Static, or Flash Fire have overworld "
-    "effects like in recent generations</li>"
-    "    <li>Destiny Knot, Everstone have updated breeding mechanics</li>"
-    "    <li>Lots of Quality of Life changes</li>"
-    "    <li>... and more!</li>"
-    "</ul>";
-
-const std::string goombossDescription =
-    "<p>Saving the world is hungry work. With the Star Rod recovered, a "
-    "satisfied Mario and Goombario head out for a bite to eat. But who's "
-    "this in their favourite picnic spot? And more importantly, can you come "
-    "up with a strategy to defeat...</p>"
-    "<br />"
-    "<p>THE ULTIMATE GOOMBOSS CHALLENGE?</p>"
-    "<br />"
-    "<p>Made as a love letter to RPG boss battles, and a determination to make "
-    "the most epic possible final product using only Goombas.</p>"
-    "<br />"
-    "<p>WARNING: May have bugs.</p>";
-
 SqliteContentDatabase::SqliteContentDatabase(std::filesystem::path dbFile)
     : databaseFile(std::move(dbFile)) {
   // TODO Test DB connection or w/e
@@ -205,13 +150,26 @@ std::optional<Mod> SqliteContentDatabase::getMod(const int id) {
 }
 
 std::vector<Mod> SqliteContentDatabase::getAllMods() {
-  // return {{0, "Pokemon Radical Red", "soupercell", 0,
-  //          "file:///Users/alexs/git/firelight/build/pkmnrr.png",
-  //          radicalRedDescription},
-  //         {1, "Ultimate Goomboss Challenge", "Enneagon", 1,
-  //          "file:///Users/alexs/git/firelight/build/ultimategoomboss.png",
-  //          goombossDescription}};
-  return {};
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM mods");
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get mods: {}",
+                  query.lastError().text().toStdString());
+    return {};
+  }
+
+  if (!query.next()) {
+    return {};
+  }
+
+  std::vector<Mod> mods;
+
+  while (query.next()) {
+    mods.emplace_back(createModFromQuery(query));
+  }
+
+  return mods;
 }
 
 std::optional<Patch> SqliteContentDatabase::getPatch(const int id) {
@@ -234,7 +192,48 @@ std::optional<Patch> SqliteContentDatabase::getPatch(const int id) {
 
 std::vector<Patch>
 SqliteContentDatabase::getMatchingPatches(const Patch &patch) {
-  return {};
+  QString queryString = "SELECT * FROM patches";
+
+  QString whereClause;
+  bool needAND = false;
+
+  if (patch.id != -1) {
+    whereClause += " WHERE id = :id";
+    needAND = true;
+  }
+
+  if (!patch.md5.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "md5 = :md5";
+  }
+
+  queryString += whereClause;
+  QSqlQuery query(getDatabase());
+  query.prepare(queryString);
+
+  if (patch.id != -1) {
+    query.bindValue(":id", patch.id);
+  }
+  if (!patch.md5.empty()) {
+    query.bindValue(":md5", QString::fromStdString(patch.md5));
+  }
+
+  if (!query.exec()) {
+    spdlog::error("ruh roh raggy: {}", query.lastError().text().toStdString());
+  }
+
+  std::vector<Patch> patches;
+
+  while (query.next()) {
+    patches.emplace_back(createPatchFromQuery(query));
+  }
+
+  return patches;
 }
 
 std::optional<Platform> SqliteContentDatabase::getPlatform(const int id) {
@@ -331,8 +330,18 @@ Game SqliteContentDatabase::createGameFromQuery(const QSqlQuery &query) {
 }
 
 Mod SqliteContentDatabase::createModFromQuery(const QSqlQuery &query) {
-  return {};
+  Mod mod;
+  mod.id = query.value(0).toInt();
+  mod.name = query.value(1).toString().toStdString();
+  mod.slug = query.value(2).toString().toStdString();
+  mod.gameId = query.value(3).toInt();
+  mod.description = query.value(3).toString().toStdString();
+  mod.imageSource = query.value(4).toString().toStdString();
+  mod.primaryAuthor = query.value(5).toString().toStdString();
+
+  return mod;
 }
+
 ROM SqliteContentDatabase::createRomFromQuery(const QSqlQuery &query) {
   ROM rom;
   rom.id = query.value(0).toInt();
@@ -347,15 +356,41 @@ ROM SqliteContentDatabase::createRomFromQuery(const QSqlQuery &query) {
 
   return rom;
 }
+
 Patch SqliteContentDatabase::createPatchFromQuery(const QSqlQuery &query) {
-  return {};
+  Patch patch;
+  patch.id = query.value(0).toInt();
+  patch.version = query.value(1).toString().toStdString();
+  patch.filename = query.value(2).toString().toStdString();
+  patch.sizeBytes = query.value(3).toInt();
+  patch.modId = query.value(4).toInt();
+  patch.romId = query.value(5).toInt();
+  patch.md5 = query.value(6).toString().toStdString();
+  patch.sha1 = query.value(7).toString().toStdString();
+  patch.crc32 = query.value(8).toString().toStdString();
+
+  return patch;
 }
+
 Platform
 SqliteContentDatabase::createPlatformFromQuery(const QSqlQuery &query) {
-  return {};
+  Platform platform;
+  platform.id = query.value(0).toInt();
+  platform.name = query.value(1).toString().toStdString();
+  platform.abbreviation = query.value(2).toString().toStdString();
+  platform.slug = query.value(3).toString().toStdString();
+
+  return platform;
 }
+
 Region SqliteContentDatabase::createRegionFromQuery(const QSqlQuery &query) {
-  return {};
+  Region region;
+  region.id = query.value(0).toInt();
+  region.name = query.value(1).toString().toStdString();
+  region.abbreviation = query.value(2).toString().toStdString();
+  region.slug = query.value(3).toString().toStdString();
+
+  return region;
 }
 
 } // namespace firelight::db

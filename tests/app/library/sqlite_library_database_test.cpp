@@ -116,6 +116,7 @@ TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntry) {
                      .displayName = "Test Playlist",
                      .contentMd5 = "1234567890",
                      .platformId = 1,
+                     .parentEntryId = 100,
                      .type = LibraryEntry::EntryType::ROM,
                      .sourceDirectory = "source",
                      .contentPath = "content"};
@@ -129,6 +130,7 @@ TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntry) {
   ASSERT_EQ(result->displayName, entry.displayName);
   ASSERT_EQ(result->contentMd5, entry.contentMd5);
   ASSERT_EQ(result->platformId, entry.platformId);
+  ASSERT_EQ(result->parentEntryId, entry.parentEntryId);
   ASSERT_EQ(result->type, entry.type);
   ASSERT_EQ(result->sourceDirectory, entry.sourceDirectory);
   ASSERT_EQ(result->contentPath, entry.contentPath);

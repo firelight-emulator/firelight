@@ -204,13 +204,35 @@ void LibraryScanner::handleScannedPatchFile(
     return;
   }
 
+  auto displayName = entry.path().filename().string();
+  auto parent = -1;
+
   // TODO: Check for more than one?? Shouldn't happen
-  auto patch = patches.at(0);
-  if (patch.romId != -1) {
-    auto rom = content_database_->getRom(patch.romId);
-    if (rom.has_value()) {
+  const auto &patch = patches.at(0);
+  auto rom = content_database_->getRom(patch.romId);
+  if (rom.has_value()) {
+    auto existing = library_database_->getMatchingLibraryEntries(
+        {.contentMd5 = rom.value().md5,
+         .type = firelight::db::LibraryEntry::EntryType::ROM});
+
+    if (!existing.empty()) {
+      parent = existing.at(0).id;
     }
+    // romId = rom.value().id;
   }
 
-  // TODO: Get metadata with patch.modId
+  auto mod = content_database_->getMod(patch.modId);
+  if (mod.has_value()) {
+    displayName = mod.value().name;
+  }
+
+  firelight::db::LibraryEntry e = {
+      .displayName = displayName,
+      .contentMd5 = md5,
+      .parentEntryId = parent,
+      .type = firelight::db::LibraryEntry::EntryType::PATCH,
+      .sourceDirectory = entry.path().parent_path().string(),
+      .contentPath = entry.path().relative_path().string()};
+
+  scan_results.new_entries.emplace_back(e);
 }

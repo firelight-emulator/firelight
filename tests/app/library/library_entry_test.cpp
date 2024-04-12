@@ -2,12 +2,7 @@
 #include <gtest/gtest.h>
 
 namespace firelight::db {
-class LibraryEntryTest : public testing::Test {
-protected:
-  void SetUp() override {}
-
-  void TearDown() override {}
-};
+class LibraryEntryTest : public testing::Test {};
 
 TEST_F(LibraryEntryTest, DefaultValuesTest) {
   const LibraryEntry entry;
@@ -16,6 +11,7 @@ TEST_F(LibraryEntryTest, DefaultValuesTest) {
   ASSERT_EQ(entry.displayName, "");
   ASSERT_EQ(entry.contentMd5, "");
   ASSERT_EQ(entry.platformId, -1);
+  ASSERT_EQ(entry.parentEntryId, -1);
   ASSERT_EQ(entry.activeSaveSlot, 1);
   ASSERT_EQ(entry.type, LibraryEntry::EntryType::UNKNOWN);
   ASSERT_EQ(entry.sourceDirectory, "");

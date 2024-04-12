@@ -62,11 +62,14 @@ add_library(firelight_lib
         src/app/input/sdl_event_loop.cpp
         src/app/manager_accessor.cpp
         src/app/audio_manager.cpp
+        src/app/patching/ips_patch.cpp
+        src/app/patching/pm_star_rod_mod_patch.cpp
+        src/app/patching/yay_0_codec.cpp
+        src/app/patching/ups_patch.cpp
+        src/app/patching/bps_patch.cpp
         src/app/saves/save_manager.cpp
         src/app/saves/savefile.cpp
         src/app/game_loader.cpp
-        src/app/patching/ips_patch.cpp
-        src/app/patching/ups_patch.cpp
         src/app/emulator_renderer.cpp
         src/app/input/keyboard_controller.cpp
         src/app/db/sqlite_userdata_database.cpp
@@ -107,8 +110,7 @@ target_link_libraries(firelight_lib
         PkgConfig::AVFORMAT
         PkgConfig::AVUTIL
         PkgConfig::SWSCALE
-        library
-        patching)
+        library)
 
 file(GLOB QML_FILES
         qml/*.qml

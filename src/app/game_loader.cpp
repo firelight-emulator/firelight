@@ -1,6 +1,9 @@
 #include "game_loader.hpp"
+
+#include "patching/bps_patch.hpp"
 #include "patching/ips_patch.hpp"
 #include "patching/pm_star_rod_mod_patch.hpp"
+#include "patching/ups_patch.hpp"
 #include "patching/yay_0_codec.hpp"
 #include <fstream>
 #include <spdlog/spdlog.h>
@@ -17,6 +20,85 @@ void GameLoader::loadGame(int entryId) {
 
   if (!std::filesystem::exists(entry->contentPath)) {
     emit gameLoadFailedContentMissing(entryId);
+    return;
+  }
+
+  if (entry->type == db::LibraryEntry::EntryType::PATCH) {
+    if (entry->parentEntryId == -1) {
+      emit gameLoadFailedOrphanedPatch(entryId);
+      return;
+    }
+
+    auto parent = getLibraryDatabase()->getLibraryEntry(entry->parentEntryId);
+    if (!parent.has_value()) {
+      // TODO: Update patch to not have a parent
+      emit gameLoadFailedOrphanedPatch(entryId);
+      return;
+    }
+
+    auto size = std::filesystem::file_size(parent->contentPath);
+
+    std::vector<char> gameDataVec(size);
+    std::ifstream file(parent->contentPath, std::ios::binary);
+
+    file.read(gameDataVec.data(), size);
+    file.close();
+
+    std::vector<uint8_t> gameDataVecUint8(gameDataVec.begin(),
+                                          gameDataVec.end());
+
+    patching::IRomPatch *patch = nullptr;
+    auto ext = std::filesystem::path(entry->contentPath).extension();
+    if (ext == ".bps") {
+      patch = new patching::BPSPatch(entry->contentPath);
+    } else if (ext == ".ips") {
+      patch = new patching::IPSPatch(entry->contentPath);
+    } else if (ext == ".mod") {
+      auto decompressed =
+          patching::Yay0Codec::decompress(gameDataVecUint8.data());
+
+      patch = new patching::PMStarRodModPatch(decompressed);
+    } else if (ext == ".ups") {
+      patch = new patching::UPSPatch(entry->contentPath);
+    }
+
+    if (patch == nullptr) {
+      // TODO: Actual error
+      emit gameLoadFailedOrphanedPatch(entryId);
+      return;
+    }
+
+    auto patchedGame = patch->patchRom(gameDataVecUint8);
+
+    auto gameData = QByteArray(reinterpret_cast<char *>(patchedGame.data()),
+                               patchedGame.size());
+
+    QByteArray saveDataBytes;
+    const auto saveData = getSaveManager()->readSaveDataForEntry(*entry);
+    if (saveData.has_value()) {
+      saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
+                                 saveData->getSaveRamData().size());
+    }
+
+    std::string corePath;
+    if (parent->platformId == 0) {
+      corePath = "./system/_cores/mupen64plus_next_libretro.dll";
+    } else if (parent->platformId == 1) {
+      corePath = "./system/_cores/snes9x_libretro.dll";
+    } else if (parent->platformId == 2) {
+      corePath = "./system/_cores/gambatte_libretro.dll";
+    } else if (parent->platformId == 3) {
+      corePath = "./system/_cores/gambatte_libretro.dll";
+    } else if (parent->platformId == 4) {
+      corePath = "./system/_cores/mgba_libretro.dll";
+    } else if (parent->platformId == 5) {
+      corePath = "./system/_cores/melondsds_libretro.dll";
+    } else if (parent->platformId == 6) {
+      corePath = "./system/_cores/genesis_plus_gx_libretro.dll";
+    }
+
+    emit gameLoaded(entryId, gameData, saveDataBytes,
+                    QString::fromStdString(corePath));
     return;
   }
 
