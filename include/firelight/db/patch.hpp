@@ -1,6 +1,6 @@
 #pragma once
+
 #include <string>
-#include <vector>
 
 namespace firelight::db {
 struct Patch {
@@ -11,7 +11,7 @@ struct Patch {
   int modId = -1;
   int romId = -1;
   std::string md5;
+  std::string sha1;
   std::string crc32;
-  std::string sha1; // TODO:???
 };
 } // namespace firelight::db

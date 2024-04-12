@@ -1,9 +1,4 @@
-//
-// Created by alexs on 10/17/2023.
-//
-
-#ifndef FIRELIGHT_GAME_HPP
-#define FIRELIGHT_GAME_HPP
+#pragma once
 
 #include <cstddef>
 #include <cstdint>
@@ -31,5 +26,3 @@ private:
 };
 
 } // namespace libretro
-
-#endif // FIRELIGHT_GAME_HPP

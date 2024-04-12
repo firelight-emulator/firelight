@@ -1009,7 +1009,7 @@ void Core::reset() { this->symRetroReset(); }
 
 void Core::run(double deltaTime) { this->symRetroRun(); }
 
-void Core::setSystemDirectory(string frontendSystemDirectory) {
+void Core::setSystemDirectory(const string &frontendSystemDirectory) {
   this->systemDirectory = frontendSystemDirectory;
 }
 

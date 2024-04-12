@@ -1,16 +1,13 @@
-//
-// Created by alexs on 12/22/2023.
-//
-
 #include "sqlite_content_database.hpp"
-#include "firelight/game.hpp"
+#include "firelight/db/game.hpp"
 
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QThread>
-#include <iostream>
 #include <spdlog/spdlog.h>
 #include <utility>
+
+namespace firelight::db {
 
 constexpr auto DATABASE_PREFIX = "content_";
 
@@ -71,9 +68,9 @@ const std::string goombossDescription =
 
 SqliteContentDatabase::SqliteContentDatabase(std::filesystem::path dbFile)
     : databaseFile(std::move(dbFile)) {
-  // TODO: throw error
-  getOrCreateDbConnection();
+  // TODO Test DB connection or w/e
 }
+
 SqliteContentDatabase::~SqliteContentDatabase() {
   for (const auto &name : QSqlDatabase::connectionNames()) {
     if (name.startsWith(DATABASE_PREFIX)) {
@@ -81,146 +78,121 @@ SqliteContentDatabase::~SqliteContentDatabase() {
     }
   }
 }
-
-std::optional<ROM> SqliteContentDatabase::getRomByMd5(const std::string &md5) {
-  sqlite3_stmt *stmt = nullptr;
-  auto query = "SELECT * FROM roms WHERE md5 = ?";
-
-  if (sqlite3_prepare_v2(database, query, -1, &stmt, nullptr) != SQLITE_OK) {
-    printf("prepare didn't work\n");
-    // TODO: error handle
-    sqlite3_finalize(stmt);
-    return {};
-  }
-
-  if (sqlite3_bind_text(stmt, 1, md5.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
-    printf("bind didn't work: %s\n", sqlite3_errmsg(database));
-    // TODO: Handle error
-    sqlite3_finalize(stmt);
-    return {};
-  }
-
-  std::optional<ROM> result;
-
-  if (sqlite3_step(stmt) == SQLITE_ROW) {
-    result.emplace(romFromDbRow(stmt));
-  }
-
-  if (sqlite3_step(stmt) == SQLITE_DONE) {
-    // TODO: log the error (opposite) somehow
-  }
-
-  sqlite3_finalize(stmt);
-
-  return result;
-}
-std::optional<Game> SqliteContentDatabase::getGameByRomId(int romId) {
-  sqlite3_stmt *stmt = nullptr;
-  const auto query = "SELECT games.* FROM roms INNER JOIN games ON games.id = "
-                     "roms.game WHERE roms.id = ?";
-
-  if (sqlite3_prepare_v2(database, query, -1, &stmt, nullptr) != SQLITE_OK) {
-    printf("prepare didn't work\n");
-    // TODO: error handle
-    sqlite3_finalize(stmt);
-    return {};
-  }
-
-  if (sqlite3_bind_int(stmt, 1, romId) != SQLITE_OK) {
-    printf("bind didn't work: %s\n", sqlite3_errmsg(database));
-    // TODO: Handle error
-    sqlite3_finalize(stmt);
-    return {};
-  }
-
-  std::optional<Game> result;
-
-  if (sqlite3_step(stmt) == SQLITE_ROW) {
-    result.emplace(gameFromDbRow(stmt));
-  }
-
-  if (sqlite3_step(stmt) == SQLITE_DONE) {
-    // TODO: log the error (opposite) somehow
-  }
-
-  sqlite3_finalize(stmt);
-
-  return result;
-}
-std::optional<Romhack>
-SqliteContentDatabase::getRomhackByMd5(const std::string &md5) {
-  std::optional<Romhack> result;
-
-  return result;
-}
-
-std::optional<Platform>
-SqliteContentDatabase::getPlatformByExtension(std::string ext) {
-  std::optional<Platform> result;
-
-  if (ext == ".n64" || ext == ".v64" || ext == ".z64") {
-    result.emplace(Platform{.id = 0});
-  } else if (ext == ".smc") {
-    result.emplace(Platform{.id = 1});
-  } else if (ext == ".gbc") {
-    result.emplace(Platform{.id = 2});
-  } else if (ext == ".gb") {
-    result.emplace(Platform{.id = 3});
-  } else if (ext == ".gba") {
-    result.emplace(Platform{.id = 4});
-  } else if (ext == ".nds") {
-    result.emplace(Platform{.id = 5});
-  } else if (ext == ".md") {
-    result.emplace(Platform{.id = 6});
-  }
-
-  return result;
-}
+// std::optional<Platform>
+// SqliteContentDatabase::getPlatformByExtension(std::string ext) {
+//   std::optional<Platform> result;
+//
+//   if (ext == ".n64" || ext == ".v64" || ext == ".z64") {
+//     result.emplace(Platform{.id = 0});
+//   } else if (ext == ".smc") {
+//     result.emplace(Platform{.id = 1});
+//   } else if (ext == ".gbc") {
+//     result.emplace(Platform{.id = 2});
+//   } else if (ext == ".gb") {
+//     result.emplace(Platform{.id = 3});
+//   } else if (ext == ".gba") {
+//     result.emplace(Platform{.id = 4});
+//   } else if (ext == ".nds") {
+//     result.emplace(Platform{.id = 5});
+//   } else if (ext == ".md") {
+//     result.emplace(Platform{.id = 6});
+//   }
+//
+//   return result;
+// }
 
 bool SqliteContentDatabase::tableExists(const std::string &tableName) {
   return true;
 }
 
-std::optional<ROM> SqliteContentDatabase::getRom(const int id) {
-  sqlite3_stmt *stmt = nullptr;
-  auto query = "SELECT * FROM roms WHERE id = ?";
+std::optional<Game> SqliteContentDatabase::getGame(const int id) {
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM games WHERE id = :id");
+  query.bindValue(":id", id);
 
-  if (sqlite3_prepare_v2(database, query, -1, &stmt, nullptr) != SQLITE_OK) {
-    printf("prepare didn't work\n");
-    // TODO: error handle
-    sqlite3_finalize(stmt);
-    return {};
+  if (!query.exec()) {
+    spdlog::error("Failed to get game: {}",
+                  query.lastError().text().toStdString());
+    return std::nullopt;
   }
 
-  if (sqlite3_bind_int(stmt, 1, id) != SQLITE_OK) {
-    printf("bind didn't work: %s\n", sqlite3_errmsg(database));
-    // TODO: Handle error
-    sqlite3_finalize(stmt);
-    return {};
+  if (!query.next()) {
+    return std::nullopt;
   }
 
-  std::optional<ROM> result;
-
-  if (sqlite3_step(stmt) == SQLITE_ROW) {
-    result.emplace(romFromDbRow(stmt));
-  }
-
-  if (sqlite3_step(stmt) == SQLITE_DONE) {
-    // TODO: log the error (opposite) somehow
-  }
-
-  sqlite3_finalize(stmt);
-
-  return result;
+  return createGameFromQuery(query);
 }
 
-std::optional<firelight::db::Mod> SqliteContentDatabase::getMod(const int id) {
+std::optional<ROM> SqliteContentDatabase::getRom(const int id) {
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM roms WHERE id = :id");
+  query.bindValue(":id", id);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get rom: {}",
+                  query.lastError().text().toStdString());
+    return std::nullopt;
+  }
+
+  if (!query.next()) {
+    return std::nullopt;
+  }
+
+  return createRomFromQuery(query);
+}
+
+std::vector<ROM> SqliteContentDatabase::getMatchingRoms(const ROM &rom) {
+  QString queryString = "SELECT * FROM roms";
+
+  QString whereClause;
+  bool needAND = false;
+
+  if (rom.id != -1) {
+    whereClause += " WHERE id = :id";
+    needAND = true;
+  }
+
+  if (!rom.md5.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "md5 = :md5";
+  }
+
+  queryString += whereClause;
+  QSqlQuery query(getDatabase());
+  query.prepare(queryString);
+
+  if (rom.id != -1) {
+    query.bindValue(":id", rom.id);
+  }
+  if (!rom.md5.empty()) {
+    query.bindValue(":md5", QString::fromStdString(rom.md5));
+  }
+
+  if (!query.exec()) {
+    spdlog::error("ruh roh raggy: {}", query.lastError().text().toStdString());
+  }
+
+  std::vector<ROM> roms;
+
+  while (query.next()) {
+    roms.emplace_back(createRomFromQuery(query));
+  }
+
+  return roms;
+}
+
+std::optional<Mod> SqliteContentDatabase::getMod(const int id) {
   QSqlQuery query(getDatabase());
   query.prepare("SELECT * FROM mods WHERE id = :id");
   query.bindValue(":id", id);
 
   if (!query.exec()) {
-    spdlog::error("Failed to get library entry: {}",
+    spdlog::error("Failed to get mod: {}",
                   query.lastError().text().toStdString());
     return std::nullopt;
   }
@@ -232,93 +204,103 @@ std::optional<firelight::db::Mod> SqliteContentDatabase::getMod(const int id) {
   return createModFromQuery(query);
 }
 
-std::optional<firelight::db::Patch> SqliteContentDatabase::getPatch(int id) {
-  // return {{0, "radical_red.ips", 0, 0, "4.1", "md5", "crc32", "sha1",
-  // {356}}};
-  return std::nullopt;
-}
-
-std::optional<Platform> SqliteContentDatabase::getPlatform(int id) {
-  switch (id) {
-  case 0:
-    return {{0, "Game Boy Advance", "GBA"}};
-  case 1:
-    return {{1, "Nintendo 64", "N64"}};
-  default:
-    return {};
-  }
-}
-std::optional<firelight::db::Region> SqliteContentDatabase::getRegion(int id) {
+std::vector<Mod> SqliteContentDatabase::getAllMods() {
+  // return {{0, "Pokemon Radical Red", "soupercell", 0,
+  //          "file:///Users/alexs/git/firelight/build/pkmnrr.png",
+  //          radicalRedDescription},
+  //         {1, "Ultimate Goomboss Challenge", "Enneagon", 1,
+  //          "file:///Users/alexs/git/firelight/build/ultimategoomboss.png",
+  //          goombossDescription}};
   return {};
 }
 
-std::optional<firelight::db::Game>
-SqliteContentDatabase::getGame(const int id) {
-  switch (id) {
-  case 0:
-    return {{0, "Pokemon FireRed Version", "TBD"}};
-  case 1:
-    return {{1, "Paper Mario", "TBD"}};
-  default:
-    return {};
+std::optional<Patch> SqliteContentDatabase::getPatch(const int id) {
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM patches WHERE id = :id");
+  query.bindValue(":id", id);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get patch: {}",
+                  query.lastError().text().toStdString());
+    return std::nullopt;
   }
+
+  if (!query.next()) {
+    return std::nullopt;
+  }
+
+  return createPatchFromQuery(query);
 }
-std::vector<firelight::db::Mod> SqliteContentDatabase::getAllMods() {
-  return {{0, "Pokemon Radical Red", "soupercell", 0,
-           "file:///Users/alexs/git/firelight/build/pkmnrr.png",
-           radicalRedDescription},
-          {1, "Ultimate Goomboss Challenge", "Enneagon", 1,
-           "file:///Users/alexs/git/firelight/build/ultimategoomboss.png",
-           goombossDescription}};
-}
-std::vector<ROM> SqliteContentDatabase::getMatchingRoms(const ROM &rom) {
+
+std::vector<Patch>
+SqliteContentDatabase::getMatchingPatches(const Patch &patch) {
   return {};
 }
 
-std::vector<firelight::db::Patch>
-SqliteContentDatabase::getMatchingPatches(const firelight::db::Patch &patch) {
+std::optional<Platform> SqliteContentDatabase::getPlatform(const int id) {
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM platforms WHERE id = :id");
+  query.bindValue(":id", id);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get platform: {}",
+                  query.lastError().text().toStdString());
+    return std::nullopt;
+  }
+
+  if (!query.next()) {
+    return std::nullopt;
+  }
+
+  return createPlatformFromQuery(query);
+}
+
+std::vector<Platform>
+SqliteContentDatabase::getMatchingPlatforms(const Platform &platform) {
+  const auto ext = platform.supportedExtensions.at(0);
+
+  if (ext == ".n64" || ext == ".v64" || ext == ".z64") {
+    return {Platform{.id = 0}};
+  }
+  if (ext == ".smc" || ext == ".sfc") {
+    return {Platform{.id = 1}};
+  }
+  if (ext == ".gbc") {
+    return {Platform{.id = 2}};
+  }
+  if (ext == ".gb") {
+    return {Platform{.id = 3}};
+  }
+  if (ext == ".gba") {
+    return {Platform{.id = 4}};
+  }
+  if (ext == ".nds") {
+    return {Platform{.id = 5}};
+  }
+
+  if (ext == ".md") {
+    return {Platform{.id = 6}};
+  }
+
   return {};
 }
 
-sqlite3 *SqliteContentDatabase::getOrCreateDbConnection() {
-  if (sqlite3_open(databaseFile.string().c_str(), &database)) {
-    std::cerr << "Cannot open database: " << sqlite3_errmsg(database)
-              << std::endl;
-    return nullptr;
+std::optional<Region> SqliteContentDatabase::getRegion(const int id) {
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM regions WHERE id = :id");
+  query.bindValue(":id", id);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get region: {}",
+                  query.lastError().text().toStdString());
+    return std::nullopt;
   }
 
-  return database;
-}
-ROM SqliteContentDatabase::romFromDbRow(sqlite3_stmt *stmt) {
-  int id = sqlite3_column_int(stmt, 0);
-  std::string filename = reinterpret_cast<char *>(
-      const_cast<unsigned char *>(sqlite3_column_text(stmt, 1)));
-  std::string file_ext = reinterpret_cast<char *>(
-      const_cast<unsigned char *>(sqlite3_column_text(stmt, 2)));
-  const int game_id = sqlite3_column_int(stmt, 3);
-  std::string platform = reinterpret_cast<char *>(
-      const_cast<unsigned char *>(sqlite3_column_text(stmt, 4)));
-  std::string region = reinterpret_cast<char *>(
-      const_cast<unsigned char *>(sqlite3_column_text(stmt, 5)));
-  std::string rom_md5 = reinterpret_cast<char *>(
-      const_cast<unsigned char *>(sqlite3_column_text(stmt, 6)));
-  const int size_bytes = sqlite3_column_int(stmt, 7);
+  if (!query.next()) {
+    return std::nullopt;
+  }
 
-  return {.id = id,
-          .filename = filename,
-          .file_ext = file_ext,
-          .game = game_id,
-          .platform = platform,
-          .region = region,
-          .md5 = rom_md5,
-          .size_bytes = size_bytes};
-}
-Game SqliteContentDatabase::gameFromDbRow(sqlite3_stmt *stmt) {
-  int id = sqlite3_column_int(stmt, 0);
-  std::string name = reinterpret_cast<char *>(
-      const_cast<unsigned char *>(sqlite3_column_text(stmt, 1)));
-
-  return {.id = id, .name = name};
+  return createRegionFromQuery(query);
 }
 
 QSqlDatabase SqliteContentDatabase::getDatabase() const {
@@ -336,7 +318,44 @@ QSqlDatabase SqliteContentDatabase::getDatabase() const {
   db.open();
   return db;
 }
-firelight::db::Mod
-SqliteContentDatabase::createModFromQuery(const QSqlQuery &query) {
+
+Game SqliteContentDatabase::createGameFromQuery(const QSqlQuery &query) {
+  Game game;
+  game.id = query.value(0).toInt();
+  game.name = query.value(1).toString().toStdString();
+  game.slug = query.value(2).toString().toStdString();
+  game.description = query.value(3).toString().toStdString();
+  game.platformId = query.value(4).toInt();
+
+  return game;
+}
+
+Mod SqliteContentDatabase::createModFromQuery(const QSqlQuery &query) {
   return {};
 }
+ROM SqliteContentDatabase::createRomFromQuery(const QSqlQuery &query) {
+  ROM rom;
+  rom.id = query.value(0).toInt();
+  rom.filename = query.value(1).toString().toStdString();
+  rom.size_bytes = query.value(2).toInt();
+  rom.gameId = query.value(3).toInt();
+  rom.gameIdVerified = query.value(4).toBool();
+  rom.platformId = query.value(5).toInt();
+  rom.md5 = query.value(6).toString().toStdString();
+  rom.sha1 = query.value(7).toString().toStdString();
+  rom.crc32 = query.value(8).toString().toStdString();
+
+  return rom;
+}
+Patch SqliteContentDatabase::createPatchFromQuery(const QSqlQuery &query) {
+  return {};
+}
+Platform
+SqliteContentDatabase::createPlatformFromQuery(const QSqlQuery &query) {
+  return {};
+}
+Region SqliteContentDatabase::createRegionFromQuery(const QSqlQuery &query) {
+  return {};
+}
+
+} // namespace firelight::db

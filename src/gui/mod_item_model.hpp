@@ -25,7 +25,7 @@ public:
     RomIds
   };
 
-  explicit ModItemModel(IContentDatabase &contentDatabase);
+  explicit ModItemModel(db::IContentDatabase &contentDatabase);
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant data(const QModelIndex &index,
@@ -48,7 +48,7 @@ private:
     QList<int> romIds;
   };
 
-  IContentDatabase &m_contentDatabase;
+  db::IContentDatabase &m_contentDatabase;
   std::vector<Item> m_items;
 };
 

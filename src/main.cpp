@@ -87,7 +87,8 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   // **** Load Content Database ****
-  SqliteContentDatabase contentDatabase(system_dir / "content.db");
+  firelight::db::SqliteContentDatabase contentDatabase(system_dir /
+                                                       "content.db");
 
   firelight::db::SqliteLibraryDatabase libraryDatabase(userdata_dir /
                                                        "library.db");

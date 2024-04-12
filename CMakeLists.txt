@@ -77,7 +77,6 @@ add_library(firelight_lib
         src/app/netplay/stream_test.cpp
         src/gui/savefile_list_model.cpp
         src/gui/window_resize_handler.hpp
-        include/firelight/db/game_release.hpp
         include/firelight/db/region.hpp
         include/firelight/db/mod.hpp
         src/gui/mod_item_model.cpp
@@ -216,8 +215,8 @@ target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES} gmoc
 #
 #add_test(NAME firelight_test COMMAND firelight)
 
-#file(COPY LICENSE.txt README.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-install(FILES LICENSE.txt README.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
+#file(COPY LICENSE.md README.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+install(FILES LICENSE.md README.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 set(CPACK_PACKAGE_NAME "Firelight")
 set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
@@ -265,7 +264,6 @@ install(
         ${SHARED_LIB_DIR}/libpcre2-16-0.dll
         ${SHARED_LIB_DIR}/libpng16-16.dll
         ${SHARED_LIB_DIR}/libspdlog.dll
-        ${SHARED_LIB_DIR}/libsqlite3-0.dll
         ${SHARED_LIB_DIR}/libssl-3-x64.dll
         ${SHARED_LIB_DIR}/libstdc++-6.dll
         ${SHARED_LIB_DIR}/libwinpthread-1.dll

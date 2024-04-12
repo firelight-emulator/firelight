@@ -34,7 +34,7 @@ void GameLoader::loadGame(int entryId) {
   } else if (entry->platformId == 5) {
     corePath = "./system/_cores/melondsds_libretro.dll";
   } else if (entry->platformId == 6) {
-    corePath = "./system/_cores/genesis_plus_gx_wide_libretro.dll";
+    corePath = "./system/_cores/genesis_plus_gx_libretro.dll";
   }
 
   auto size = std::filesystem::file_size(entry->contentPath);

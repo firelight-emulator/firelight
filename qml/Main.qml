@@ -15,8 +15,8 @@ ApplicationWindow {
     width: 1280
     height: 720
 
-    minimumWidth: 640
-    minimumHeight: 480
+    minimumWidth: 512
+    minimumHeight: 448
     visible: true
     // flags: Qt.Window | Qt.FramelessWindowHint | Qt.MaximizeUsingFullscreenGeometryHint
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed

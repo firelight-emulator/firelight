@@ -7,5 +7,6 @@ struct Game {
   std::string name;
   std::string slug;
   std::string description;
+  int platformId = -1;
 };
 } // namespace firelight::db

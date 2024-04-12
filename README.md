@@ -155,7 +155,6 @@ make install  # install libs & headers
     * pacman -S mingw-w64-x86_64-qt6 (hit enter for all)
     * pacman -S mingw-w64-x86_64-SDL2
     * pacman -S mingw-w64-x86_64-openssl
-    * pacman -S mingw-w64-x86_64-sqlite3
     * pacman -S mingw-w64-x86_64-glew
     * pacman -S mingw-w64-x86_64-freetype
     * pacman -S mingw-w64-x86_64-gtest

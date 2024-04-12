@@ -13,7 +13,6 @@ constexpr auto DATABASE_PREFIX = "library_";
 namespace firelight::db {
 SqliteLibraryDatabase::SqliteLibraryDatabase(std::filesystem::path db_file_path)
     : m_dbFilePath(std::move(db_file_path)) {
-
   const auto db = getDatabase();
 
   QSqlQuery createLibraryEntries(db);

@@ -1,7 +1,3 @@
-//
-// Created by alexs on 1/7/2024.
-//
-
 #include "manager_accessor.hpp"
 
 namespace firelight {

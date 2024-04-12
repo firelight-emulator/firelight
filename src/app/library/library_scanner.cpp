@@ -46,9 +46,10 @@ static std::string calculateMD5(const char *input, int size) {
   return output;
 }
 
-LibraryScanner::LibraryScanner(firelight::db::ILibraryDatabase *lib_database,
-                               std::filesystem::path default_rom_path,
-                               IContentDatabase *content_database)
+LibraryScanner::LibraryScanner(
+    firelight::db::ILibraryDatabase *lib_database,
+    std::filesystem::path default_rom_path,
+    firelight::db::IContentDatabase *content_database)
     : default_rom_path_(std::move(default_rom_path)),
       library_database_(lib_database), content_database_(content_database) {
   scanner_thread_pool_ = std::make_unique<QThreadPool>();
@@ -107,13 +108,15 @@ void LibraryScanner::startScan() {
           // Check against content database
 
           if (auto ext = entry.path().extension();
-              ext.string() == ".mod" || ext.string() == ".ips") {
-            // handle patch
+              ext.string() == ".mod" || ext.string() == ".ips" ||
+              ext.string() == ".ups" || ext.string() == ".bps" ||
+              ext.string() == ".ups") {
+            handleScannedPatchFile(entry, scan_results);
           } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
                      ext.string() == ".v64" || ext.string() == ".z64" ||
                      ext.string() == ".gb" || ext.string() == ".gbc" ||
                      ext.string() == ".gba" || ext.string() == ".nds" ||
-                     ext.string() == ".md") {
+                     ext.string() == ".md" || ext.string() == ".sfc") {
             handleScannedRomFile(entry, scan_results);
           }
         }
@@ -142,9 +145,10 @@ void LibraryScanner::handleScannedRomFile(
   auto ext = entry.path().extension();
   auto size = entry.file_size();
 
-  auto platform = content_database_->getPlatformByExtension(ext.string());
+  auto platforms = content_database_->getMatchingPlatforms(
+      {.supportedExtensions = {ext.string()}});
 
-  if (!platform.has_value()) {
+  if (platforms.empty()) {
     printf("File extension not recognized: %s\n", ext.string().c_str());
     return;
   }
@@ -158,57 +162,55 @@ void LibraryScanner::handleScannedRomFile(
   auto md5 = calculateMD5(thing.data(), size);
   scan_results.all_md5s.emplace_back(md5);
 
-  auto matchingRoms =
-      library_database_->getMatchingLibraryEntries(firelight::db::LibraryEntry{
-          .contentMd5 = md5,
-      });
-
-  // if (!matchingRoms.empty()) {
-  //   auto matching = matchingRoms.at(0);
-  //   matching.source_directory = entry.path().parent_path().string();
-  //   matching.content_path = entry.path().relative_path().string();
-  //   scan_results.existing_entries.emplace_back(matching);
-  //   return;
-  // }
-
   auto display_name = entry.path().filename().string();
-  auto verified = false;
-  auto game_id = -1;
-  auto rom_id = -1;
 
   firelight::db::LibraryEntry e = {
-      .id = -1,
       .displayName = display_name,
       .contentMd5 = md5,
-      .platformId = platform->id,
+      .platformId = platforms.at(0).id,
       .type = firelight::db::LibraryEntry::EntryType::ROM,
       .sourceDirectory = entry.path().parent_path().string(),
       .contentPath = entry.path().relative_path().string()};
 
-  // if (auto rom = content_database_->getRomByMd5(md5); rom.has_value()) {
-  //   auto game = content_database_->getGameByRomId(rom->id);
-  //   if (game.has_value()) {
-  //     display_name = game->name;
-  //   }
-  //
-  //   verified = true;
-  //   game_id = game->id;
-  //   rom_id = rom->id;
-  // }
+  auto roms = content_database_->getMatchingRoms({.md5 = md5});
+  if (!roms.empty()) {
+    auto rom = roms.at(0);
 
-  // LibEntry e = {.id = -1,
-  //               .display_name = display_name,
-  //               .type = EntryType::ROM,
-  //               .verified = verified,
-  //               .md5 = md5,
-  //               .platform = platform->id,
-  //               .game = game_id,
-  //               .rom = rom_id,
-  //               .parent_entry = -1,
-  //               .romhack = -1,
-  //               .romhack_release = -1,
-  //               .source_directory = entry.path().parent_path().string(),
-  //               .content_path = entry.path().relative_path().string()};
+    auto game = content_database_->getGame(rom.gameId);
+    if (game.has_value()) {
+      e.displayName = game->name;
+    }
+  }
 
   scan_results.new_entries.emplace_back(e);
+}
+
+void LibraryScanner::handleScannedPatchFile(
+    const std::filesystem::directory_entry &entry,
+    ScanResults &scan_results) const {
+  auto ext = entry.path().extension();
+  auto size = entry.file_size();
+
+  std::vector<char> thing(size);
+  std::ifstream file(entry.path(), std::ios::binary);
+
+  file.read(thing.data(), size);
+  file.close();
+  const auto md5 = calculateMD5(thing.data(), size);
+
+  const auto patches = content_database_->getMatchingPatches({.md5 = md5});
+  if (patches.empty()) {
+    // TODO: Just add it to the library without any extra info...
+    return;
+  }
+
+  // TODO: Check for more than one?? Shouldn't happen
+  auto patch = patches.at(0);
+  if (patch.romId != -1) {
+    auto rom = content_database_->getRom(patch.romId);
+    if (rom.has_value()) {
+    }
+  }
+
+  // TODO: Get metadata with patch.modId
 }

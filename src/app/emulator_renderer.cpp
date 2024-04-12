@@ -177,8 +177,8 @@ void EmulatorRenderer::save(bool waitForFinish) {
 QOpenGLFramebufferObject *
 EmulatorRenderer::createFramebufferObject(const QSize &size) {
   if (core_av_info_ != nullptr) {
-    auto width = core_av_info_->geometry.max_width;
-    auto height = core_av_info_->geometry.max_height;
+    auto width = core_av_info_->geometry.base_width;
+    auto height = core_av_info_->geometry.base_height;
 
     if (width > 0 && height > 0) {
       m_fbo = Renderer::createFramebufferObject(QSize(width, height));

@@ -36,7 +36,6 @@ jobs:
             spdlog:p
             toolchain:p
             openssl:p
-            sqlite3:p
             nsis:p
 
       - run: git config --global core.autocrlf input

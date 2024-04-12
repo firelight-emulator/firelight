@@ -5,7 +5,7 @@
 #include "mod_item_model.hpp"
 
 namespace firelight::gui {
-ModItemModel::ModItemModel(IContentDatabase &contentDatabase)
+ModItemModel::ModItemModel(db::IContentDatabase &contentDatabase)
     : m_contentDatabase(contentDatabase) {
   auto mods = m_contentDatabase.getAllMods();
   // for (const auto &mod : mods) {

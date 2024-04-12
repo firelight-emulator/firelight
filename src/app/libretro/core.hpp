@@ -61,7 +61,7 @@ public:
 
   size_t getSerializeSize() const;
 
-  void setSystemDirectory(string);
+  void setSystemDirectory(const string &);
 
   void setSaveDirectory(const string &);
 

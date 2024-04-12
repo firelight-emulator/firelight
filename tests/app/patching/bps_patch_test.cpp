@@ -10,8 +10,8 @@ class BPSPatchTest : public testing::Test {};
 
 TEST_F(BPSPatchTest, ConstructorTest) {
   const firelight::patching::BPSPatch patch("test_resources/wellformatted.bps");
-
   ASSERT_TRUE(patch.isValid());
+
   ASSERT_EQ(patch.getInputFileSize(), 41943040);
   ASSERT_EQ(patch.getOutputFileSize(), 42467200);
   ASSERT_EQ(patch.getMetadata(), "");
