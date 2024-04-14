@@ -165,8 +165,6 @@ std::vector<Mod> SqliteContentDatabase::getAllMods() {
     mods.emplace_back(createModFromQuery(query));
   }
 
-  printf("Mods size: %llu\n", mods.size());
-
   return mods;
 }
 
@@ -210,6 +208,16 @@ SqliteContentDatabase::getMatchingPatches(const Patch &patch) {
     whereClause += "md5 = :md5";
   }
 
+  if (patch.modId != -1) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "mod_id = :modId";
+  }
+
   queryString += whereClause;
   QSqlQuery query(getDatabase());
   query.prepare(queryString);
@@ -220,9 +228,13 @@ SqliteContentDatabase::getMatchingPatches(const Patch &patch) {
   if (!patch.md5.empty()) {
     query.bindValue(":md5", QString::fromStdString(patch.md5));
   }
+  if (patch.modId != -1) {
+    query.bindValue(":modId", patch.modId);
+  }
 
   if (!query.exec()) {
-    spdlog::error("ruh roh raggy: {}", query.lastError().text().toStdString());
+    spdlog::error("Failed to get matching patches: {}",
+                  query.lastError().text().toStdString());
   }
 
   std::vector<Patch> patches;

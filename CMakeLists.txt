@@ -276,8 +276,15 @@ install(
         ${SHARED_LIB_DIR}/SDL2.dll
         TYPE BIN
 )
+
 install(
         DIRECTORY
         ${CMAKE_SOURCE_DIR}/_cores
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
+)
+
+install(
+        DIRECTORY
+        ${CMAKE_SOURCE_DIR}/_img
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )

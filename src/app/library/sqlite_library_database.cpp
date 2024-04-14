@@ -22,6 +22,7 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(std::filesystem::path db_file_path)
                                "content_md5 TEXT UNIQUE NOT NULL,"
                                "platform_id INTEGER NOT NULL,"
                                "parent_entry_id INTEGER DEFAULT -1,"
+                               "mod_id INTEGER DEFAULT -1,"
                                "active_save_slot INTEGER DEFAULT 1,"
                                "type INTEGER NOT NULL,"
                                "source_directory TEXT NOT NULL,"
@@ -111,9 +112,9 @@ bool SqliteLibraryDatabase::addEntryToPlaylist(const int playlistId,
 bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
   const QString queryString =
       "INSERT INTO library_entries (display_name, content_md5, platform_id, "
-      "parent_entry_id, type, source_directory, content_path, created_at) "
-      "VALUES"
-      "(:displayName, :contentMd5, :platformId, :parentEntryId, :type, "
+      "parent_entry_id, mod_id, type, source_directory, content_path, "
+      "created_at) VALUES"
+      "(:displayName, :contentMd5, :platformId, :parentEntryId, :modId, :type, "
       ":sourceDirectory, :contentPath, :createdAt);";
   QSqlQuery query(getDatabase());
   query.prepare(queryString);
@@ -121,6 +122,7 @@ bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
   query.bindValue(":contentMd5", QString::fromStdString(entry.contentMd5));
   query.bindValue(":platformId", entry.platformId);
   query.bindValue(":parentEntryId", entry.parentEntryId);
+  query.bindValue(":modId", entry.modId);
   query.bindValue(":type", static_cast<int>(entry.type));
   query.bindValue(":sourceDirectory",
                   QString::fromStdString(entry.sourceDirectory));
@@ -369,11 +371,12 @@ SqliteLibraryDatabase::createLibraryEntryFromQuery(const QSqlQuery &query) {
   entry.contentMd5 = query.value(2).toString().toStdString();
   entry.platformId = query.value(3).toInt();
   entry.parentEntryId = query.value(4).toInt();
-  entry.activeSaveSlot = query.value(5).toInt();
-  entry.type = static_cast<LibraryEntry::EntryType>(query.value(6).toInt());
-  entry.sourceDirectory = query.value(7).toString().toStdString();
-  entry.contentPath = query.value(8).toString().toStdString();
-  entry.createdAt = query.value(9).toLongLong();
+  entry.modId = query.value(5).toInt();
+  entry.activeSaveSlot = query.value(6).toInt();
+  entry.type = static_cast<LibraryEntry::EntryType>(query.value(7).toInt());
+  entry.sourceDirectory = query.value(8).toString().toStdString();
+  entry.contentPath = query.value(9).toString().toStdString();
+  entry.createdAt = query.value(10).toLongLong();
 
   return entry;
 }

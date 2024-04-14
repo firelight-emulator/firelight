@@ -13,10 +13,13 @@ Pane {
     FirelightDialog {
         id: contentPopup
 
+        property int modId;
+        property int patchId;
         property string name;
         property string author;
         property string description;
         property bool targetInLibrary;
+        property bool modInLibrary;
         property string targetGameName;
         property int romId;
         property int gameReleaseId;
@@ -29,6 +32,7 @@ Pane {
         contentItem: StoreContent {
             id: contentThing
             anchors.centerIn: parent
+            modId: contentPopup.modId
             name: contentPopup.name
             author: contentPopup.author
             description: contentPopup.description
@@ -36,10 +40,11 @@ Pane {
             targetGameName: contentPopup.targetGameName
             romId: contentPopup.romId
             gameReleaseId: contentPopup.gameReleaseId
-            modInLibrary: false
+            modInLibrary: contentPopup.modInLibrary
         }
 
         onAboutToShow: {
+            contentThing.modId = contentPopup.modId
             contentThing.name = contentPopup.name
             contentThing.author = contentPopup.author
             contentThing.description = contentPopup.description
@@ -47,10 +52,11 @@ Pane {
             contentThing.targetGameName = contentPopup.targetGameName
             contentThing.romId = contentPopup.romId
             contentThing.gameReleaseId = contentPopup.gameReleaseId
-            contentThing.modInLibrary = false
+            contentThing.modInLibrary = contentPopup.modInLibrary
         }
 
         onClosed: {
+            contentThing.modId = -1
             contentThing.name = ""
             contentThing.author = ""
             contentThing.description = ""
@@ -114,10 +120,12 @@ Pane {
 
                 TapHandler {
                     onTapped: {
+                        contentPopup.modId = model.id
                         contentPopup.name = model.name
                         contentPopup.author = model.primary_author
                         contentPopup.description = model.description
                         contentPopup.targetGameName = model.target_game_name
+                        contentPopup.modInLibrary = library_model.isModInLibrary(model.id)
 
                         contentPopup.targetInLibrary = false
                         for (let i = 0; i < model.rom_ids.length; i++) {

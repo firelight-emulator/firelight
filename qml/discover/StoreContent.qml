@@ -7,14 +7,15 @@ import FirelightStyle 1.0
 Item {
     id: root
 
+    required property int modId
     required property string name
     required property string author
     required property string description
     required property string targetGameName
     required property bool targetInLibrary
+    required property bool modInLibrary
     required property int gameReleaseId
     required property int romId
-    property bool modInLibrary: false
 
     Pane {
         id: content
@@ -84,6 +85,7 @@ Item {
                         addedPopup.open()
                         timer.start()
                         root.modInLibrary = true
+                        library_model.addModToLibrary(root.modId)
                     }
 
                     // onClicked: {

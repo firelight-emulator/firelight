@@ -13,6 +13,11 @@ ModItemModel::ModItemModel(db::IContentDatabase &contentDatabase)
     item.primaryAuthor = QString::fromStdString(mod.primaryAuthor);
     item.targetGameId = mod.gameId;
 
+    auto patches = m_contentDatabase.getMatchingPatches({.modId = mod.id});
+    for (const auto &patch : patches) {
+      item.romIds.push_back(patch.romId);
+    }
+
     // QList<int> list;
     // for (const auto &element : release->romIds) {
     //   list.append(element);

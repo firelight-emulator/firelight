@@ -12,12 +12,12 @@ struct LibraryEntry {
   std::string contentMd5;
   int platformId = -1;
   int parentEntryId = -1;
+  int modId = -1;
   unsigned int activeSaveSlot = 1;
   EntryType type = EntryType::UNKNOWN;
   std::string sourceDirectory;
   std::string contentPath;
   unsigned int createdAt = 0;
-  // TODO: Field for last played time
   // TODO: Field for "verified" - flag if this is a known ROM
 
   // TODO: How to set these:

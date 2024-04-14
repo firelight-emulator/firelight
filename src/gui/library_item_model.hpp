@@ -2,6 +2,7 @@
 
 #include "firelight/library_database.hpp"
 #include <QAbstractListModel>
+#include <firelight/content_database.hpp>
 #include <firelight/userdata_database.hpp>
 
 namespace firelight::gui {
@@ -41,6 +42,7 @@ public:
    * etc.
    */
   explicit LibraryItemModel(db::ILibraryDatabase *libraryDatabase,
+                            db::IContentDatabase *contentDatabase,
                             db::IUserdataDatabase *userdataDatabase);
 
   /**
@@ -67,6 +69,9 @@ public:
 
   Q_INVOKABLE void updatePlaylistsForEntry(int entryId);
   Q_INVOKABLE bool isRomInLibrary(int romId);
+  Q_INVOKABLE bool isModInLibrary(int modId);
+  Q_INVOKABLE void addModToLibrary(int modId); // TODO: TEMPORARY
+  Q_INVOKABLE void addPatchToLibrary(int patchId) const;
 
 public slots:
   void refresh();
@@ -88,6 +93,7 @@ private:
   };
 
   db::ILibraryDatabase *m_libraryDatabase;
+  db::IContentDatabase *m_contentDatabase;
   db::IUserdataDatabase *m_userdataDatabase;
   std::vector<Item> m_items;
 };

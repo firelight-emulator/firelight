@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
   firelight::gui::ModItemModel modListModel(contentDatabase);
   firelight::gui::ControllerListModel controllerListModel(controllerManager);
   firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
-  firelight::gui::LibraryItemModel libModel(&libraryDatabase,
+  firelight::gui::LibraryItemModel libModel(&libraryDatabase, &contentDatabase,
                                             &userdata_database);
   firelight::gui::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);

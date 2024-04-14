@@ -1,11 +1,17 @@
 #include "library_item_model.hpp"
 
+#include "../app/db/sqlite_content_database.hpp"
+
+#include <filesystem>
+#include <spdlog/spdlog.h>
+
 namespace firelight::gui {
 
 LibraryItemModel::LibraryItemModel(db::ILibraryDatabase *libraryDatabase,
+                                   db::IContentDatabase *contentDatabase,
                                    db::IUserdataDatabase *userdataDatabase)
-    : m_libraryDatabase(libraryDatabase), m_userdataDatabase(userdataDatabase) {
-}
+    : m_libraryDatabase(libraryDatabase), m_contentDatabase(contentDatabase),
+      m_userdataDatabase(userdataDatabase) {}
 
 int LibraryItemModel::rowCount(const QModelIndex &parent) const {
   return m_items.size();
@@ -87,6 +93,46 @@ void LibraryItemModel::updatePlaylistsForEntry(const int entryId) {
 }
 
 bool LibraryItemModel::isRomInLibrary(int romId) { return true; }
+
+bool LibraryItemModel::isModInLibrary(int modId) {
+  if (modId == -1) {
+    return false;
+  }
+
+  for (const auto &entry : m_libraryDatabase->getAllLibraryEntries()) {
+    if (entry.modId == modId) {
+      printf("Found mod in library: %d %s\n", modId, entry.displayName.c_str());
+      return true;
+    }
+  }
+  return false;
+}
+void LibraryItemModel::addModToLibrary(int modId) {
+  const auto patches = m_contentDatabase->getMatchingPatches({.modId = modId});
+  if (patches.empty()) {
+    return;
+  }
+
+  // TODO
+  if (patches.size() > 1) {
+    spdlog::error("More than one patch found for mod {}", modId);
+    return;
+  }
+
+  const auto &patch = patches.at(0);
+  addPatchToLibrary(patch.id);
+}
+
+void LibraryItemModel::addPatchToLibrary(const int patchId) const {
+  const auto patch = m_contentDatabase->getPatch(patchId);
+  if (!patch.has_value()) {
+    return;
+  }
+
+  std::filesystem::path path = patch->filename;
+  copy(path, "roms/" + path.filename().string(),
+       std::filesystem::copy_options::update_existing);
+}
 
 void LibraryItemModel::refresh() {
   emit beginResetModel();

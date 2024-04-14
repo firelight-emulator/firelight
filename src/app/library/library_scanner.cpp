@@ -230,6 +230,7 @@ void LibraryScanner::handleScannedPatchFile(
       .displayName = displayName,
       .contentMd5 = md5,
       .parentEntryId = parent,
+      .modId = patch.modId,
       .type = firelight::db::LibraryEntry::EntryType::PATCH,
       .sourceDirectory = entry.path().parent_path().string(),
       .contentPath = entry.path().relative_path().string()};
