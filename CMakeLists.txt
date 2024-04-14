@@ -288,3 +288,9 @@ install(
         ${CMAKE_SOURCE_DIR}/_img
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
+
+install(
+        DIRECTORY
+        ${CMAKE_SOURCE_DIR}/_mods
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
+)
