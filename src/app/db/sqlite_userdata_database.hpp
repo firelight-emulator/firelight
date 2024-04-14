@@ -21,6 +21,8 @@ public:
   getSavefileMetadataForContent(std::string contentMd5) override;
 
   bool createPlaySession(PlaySession &session) override;
+  std::optional<PlaySession>
+  getLatestPlaySession(std::string contentMd5) override;
 
 private:
   std::filesystem::path m_database_path;

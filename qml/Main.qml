@@ -618,6 +618,27 @@ ApplicationWindow {
             contentItem: Item {
                 anchors.fill: parent
 
+                Text {
+                    id: title
+                    text: "Firelight"
+                    color: "#b3b3b3"
+                    font.pointSize: 16
+                    font.family: Constants.semiboldFontFamily
+                    anchors.verticalCenter: tabBar.verticalCenter
+                    anchors.left: parent.left
+                    leftPadding: 12
+                }
+
+                Text {
+                    text: "alpha (0.4.0a)"
+                    color: "#b3b3b3"
+                    font.pointSize: 10
+                    font.family: Constants.regularFontFamily
+                    anchors.left: parent.left
+                    anchors.top: title.bottom
+                    leftPadding: 12
+                }
+
                 TabBar {
                     id: tabBar
                     width: 300

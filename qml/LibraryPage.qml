@@ -44,42 +44,44 @@ Pane {
                     anchors.top: parent.top
                     anchors.right: parent.right
 
-                    implicitHeight: model.count * 50
+                    implicitHeight: model.count * 40
                     model: ListModel {
                         ListElement {
                             name: "All games"
                             icon: "\uf53e"
                             playlistId: -1
                         }
-                        // ListElement {
-                        //     name: "Recently played"
-                        //     icon: "\ue889"
-                        //     playlistId: -1
-                        // }
-                        // ListElement {
-                        //     name: "Newly added"
-                        //     icon: "\ue838"
-                        //     playlistId: -1
-                        // }
+                        ListElement {
+                            name: "Recently played"
+                            icon: "\ue889"
+                            playlistId: -1
+                        }
+                        ListElement {
+                            name: "Newly added"
+                            icon: "\ue838"
+                            playlistId: -1
+                        }
                     }
 
                     delegate: FirelightMenuItem {
                         labelText: model.name
                         labelIcon: model.icon
-                        height: 50
+                        height: 40
                         width: mainCategoryList.width
                         leftPadding: 12
                         rightPadding: 12
 
+                        checked: model.name === "All games"
+
                         onClicked: function () {
-                            library_short_model.filterOnPlaylistId(model.playlistId)
-                            // if (model.name === "All games") {
-                            //     library_short_model.sortByDisplayName()
-                            //     // } else if (model.name === "Recently played") {
-                            //     //     library_short_model.sortByLastPlayed()
-                            // } else if (model.name === "Newly added") {
-                            //     library_short_model.sortByCreatedAt()
-                            // }
+                            // library_short_model.filterOnPlaylistId(model.playlistId)
+                            if (model.name === "All games") {
+                                library_short_model.sortByDisplayName()
+                            } else if (model.name === "Newly added") {
+                                library_short_model.sortByCreatedAt()
+                            } else if (model.name === "Recently played") {
+                                library_short_model.sortByLastPlayedAt()
+                            }
                         }
 
                         ButtonGroup.group: buttonGroup
@@ -280,6 +282,22 @@ Pane {
                         verticalAlignment: Text.AlignVCenter
                         // Layout.preferredWidth: 100
                     }
+
+                    Text {
+                        id: filenameSection
+                        text: "Filename"
+                        font.pointSize: 10
+                        font.family: Constants.regularFontFamily
+                        color: "#b3b3b3"
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        Layout.fillHeight: true
+                        Layout.minimumWidth: 100
+                        Layout.fillWidth: true
+                        Layout.horizontalStretchFactor: 2
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        // Layout.preferredWidth: 100
+                    }
                 }
             }
             Rectangle {
@@ -392,15 +410,27 @@ Pane {
                         //     Layout.preferredWidth: favoriteSection.width
                         // }
 
-                        Text {
-                            text: model.display_name
-                            font.pointSize: 11
-                            font.family: Constants.semiboldFontFamily
-                            color: "#ffffff"
+                        Flow {
                             Layout.fillHeight: true
                             Layout.fillWidth: true
                             Layout.preferredWidth: titleSection.width
-                            wrapMode: Text.WordWrap
+
+                            Text {
+                                text: model.display_name
+                                font.pointSize: 11
+                                font.family: Constants.semiboldFontFamily
+                                color: "#ffffff"
+                                wrapMode: Text.WordWrap
+                                width: parent.width
+                            }
+
+                            Text {
+                                visible: model.parent_game_name !== ""
+                                text: model.parent_game_name
+                                font.pointSize: 10
+                                font.family: Constants.regularFontFamily
+                                color: "#b3b3b3"
+                            }
                         }
 
                         Text {
@@ -411,6 +441,19 @@ Pane {
                             Layout.fillHeight: true
                             Layout.fillWidth: true
                             Layout.preferredWidth: platformSection.width
+                            // Layout.fillWidth: true
+                            // Layout.horizontalStretchFactor: 1
+                            // Layout.preferredWidth: 100
+                        }
+
+                        Text {
+                            text: model.content_path
+                            font.pointSize: 10
+                            font.family: Constants.regularFontFamily
+                            color: libItemMouse.containsMouse ? "white" : "#b3b3b3"
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: filenameSection.width
                             // Layout.fillWidth: true
                             // Layout.horizontalStretchFactor: 1
                             // Layout.preferredWidth: 100

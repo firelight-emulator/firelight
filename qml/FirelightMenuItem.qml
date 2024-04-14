@@ -26,7 +26,7 @@ Button {
             // width: 24
 
             font.family: Constants.symbolFontFamily
-            font.pixelSize: 28
+            font.pixelSize: 24
             color: (mouse.containsMouse || control.checked) ? "white" : "#b3b3b3"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

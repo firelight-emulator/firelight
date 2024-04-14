@@ -2,8 +2,10 @@
 
 namespace firelight::gui {
 
-LibraryItemModel::LibraryItemModel(db::ILibraryDatabase *libraryDatabase)
-    : m_libraryDatabase(libraryDatabase) {}
+LibraryItemModel::LibraryItemModel(db::ILibraryDatabase *libraryDatabase,
+                                   db::IUserdataDatabase *userdataDatabase)
+    : m_libraryDatabase(libraryDatabase), m_userdataDatabase(userdataDatabase) {
+}
 
 int LibraryItemModel::rowCount(const QModelIndex &parent) const {
   return m_items.size();
@@ -47,6 +49,12 @@ QVariant LibraryItemModel::data(const QModelIndex &index, int role) const {
   }
   case Playlists:
     return QVariant::fromValue(item.m_playlists);
+  case ContentPath:
+    return item.contentPath;
+  case ParentGameName:
+    return item.parentGameName;
+  case LastPlayedAt:
+    return item.lastPlayedAt;
   default:
     return QVariant{};
   }
@@ -57,6 +65,9 @@ QHash<int, QByteArray> LibraryItemModel::roleNames() const {
   roles[EntryId] = "id";
   roles[DisplayName] = "display_name";
   roles[PlatformName] = "platform_name";
+  roles[ContentPath] = "content_path";
+  roles[ParentGameName] = "parent_game_name";
+  roles[LastPlayedAt] = "last_played_at";
   return roles;
 }
 
@@ -89,9 +100,27 @@ void LibraryItemModel::refresh() {
       playlistIds.push_back(playlist.id);
     }
 
+    auto platformId = entry.platformId;
+    std::string parentGameName;
+    auto parent = m_libraryDatabase->getLibraryEntry(entry.parentEntryId);
+    if (parent.has_value()) {
+      parentGameName = parent->displayName;
+      platformId = parent->platformId;
+    }
+
+    unsigned int lastSessionTime = 0;
+
+    auto lastSession =
+        m_userdataDatabase->getLatestPlaySession(entry.contentMd5);
+    if (lastSession.has_value()) {
+      lastSessionTime = lastSession->endTime;
+    }
+
     m_items.emplace_back(
-        Item({entry.id, QString::fromStdString(entry.displayName),
-              entry.platformId, playlistIds, entry.createdAt}));
+        Item({entry.id, QString::fromStdString(entry.displayName), platformId,
+              playlistIds, entry.createdAt,
+              QString::fromStdString(entry.contentPath),
+              QString::fromStdString(parentGameName), lastSessionTime}));
   }
   emit endResetModel();
 }

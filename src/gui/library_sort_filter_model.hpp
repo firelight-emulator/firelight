@@ -12,6 +12,7 @@ public slots:
   [[nodiscard]] int currentPlaylistId() const;
   void sortByDisplayName();
   void sortByCreatedAt();
+  void sortByLastPlayedAt();
 
 protected:
   [[nodiscard]] bool
@@ -21,7 +22,7 @@ protected:
                               const QModelIndex &source_right) const override;
 
 private:
-  enum class SortType { DisplayName, CreatedAt };
+  enum class SortType { DisplayName, CreatedAt, LastPlayedAt };
 
   SortType m_sortType = SortType::DisplayName;
   int m_playlistId = -1;

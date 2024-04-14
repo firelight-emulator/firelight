@@ -27,6 +27,8 @@ public:
   getSavefileMetadataForContent(std::string contentMd5) = 0;
 
   virtual bool createPlaySession(PlaySession &session) = 0;
+  virtual std::optional<PlaySession>
+  getLatestPlaySession(std::string contentMd5) = 0;
 };
 
 } // namespace firelight::db

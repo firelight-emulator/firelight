@@ -12,10 +12,19 @@ int LibrarySortFilterModel::currentPlaylistId() const { return m_playlistId; }
 
 void LibrarySortFilterModel::sortByDisplayName() {
   m_sortType = SortType::DisplayName;
+  invalidate();
   sort(0);
 }
+
 void LibrarySortFilterModel::sortByCreatedAt() {
   m_sortType = SortType::CreatedAt;
+  invalidate();
+  sort(0);
+}
+
+void LibrarySortFilterModel::sortByLastPlayedAt() {
+  m_sortType = SortType::LastPlayedAt;
+  invalidate();
   sort(0);
 }
 
@@ -63,6 +72,19 @@ bool LibrarySortFilterModel::lessThan(const QModelIndex &source_left,
 
     // TODO: This is stupid, it just reverses the list.
     return leftCreatedTime > rightCreatedTime;
+  }
+  if (m_sortType == SortType::LastPlayedAt) {
+    const auto leftPlayedTime =
+        sourceModel()
+            ->data(source_left, LibraryItemModel::LastPlayedAt)
+            .toLongLong();
+    const auto rightPlayedTime =
+        sourceModel()
+            ->data(source_right, LibraryItemModel::LastPlayedAt)
+            .toLongLong();
+
+    // TODO: This is stupid, it just reverses the list.
+    return leftPlayedTime > rightPlayedTime;
   }
 
   return false;

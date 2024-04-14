@@ -2,6 +2,7 @@
 
 #include "firelight/library_database.hpp"
 #include <QAbstractListModel>
+#include <firelight/userdata_database.hpp>
 
 namespace firelight::gui {
 
@@ -27,14 +28,20 @@ public:
     EntryId,
     PlatformName,
     CreatedAt,
-    Playlists
+    Playlists,
+    ContentPath,
+    ParentGameName,
+    LastPlayedAt
   };
 
   /**
    * @brief Constructs a new LibraryItemModel.
    * @param libraryDatabase The database to use for the model.
+   * @param userdataDatabase The userdata database to use for recently played,
+   * etc.
    */
-  explicit LibraryItemModel(db::ILibraryDatabase *libraryDatabase);
+  explicit LibraryItemModel(db::ILibraryDatabase *libraryDatabase,
+                            db::IUserdataDatabase *userdataDatabase);
 
   /**
    * @brief Returns the number of rows in the model. Invoked by the view.
@@ -75,9 +82,13 @@ private:
     int platformId;
     QVector<int> m_playlists;
     unsigned int createdAt;
+    QString contentPath;
+    QString parentGameName;
+    unsigned int lastPlayedAt;
   };
 
   db::ILibraryDatabase *m_libraryDatabase;
+  db::IUserdataDatabase *m_userdataDatabase;
   std::vector<Item> m_items;
 };
 

@@ -117,6 +117,9 @@ Item {
             flickableDirection: Flickable.VerticalFlick
             clip: true
 
+            ScrollBar.vertical: ScrollBar {
+            }
+
             ColumnLayout {
                 id: header
                 anchors.top: parent.top

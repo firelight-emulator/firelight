@@ -159,15 +159,13 @@ std::vector<Mod> SqliteContentDatabase::getAllMods() {
     return {};
   }
 
-  if (!query.next()) {
-    return {};
-  }
-
   std::vector<Mod> mods;
 
   while (query.next()) {
     mods.emplace_back(createModFromQuery(query));
   }
+
+  printf("Mods size: %llu\n", mods.size());
 
   return mods;
 }
@@ -335,9 +333,9 @@ Mod SqliteContentDatabase::createModFromQuery(const QSqlQuery &query) {
   mod.name = query.value(1).toString().toStdString();
   mod.slug = query.value(2).toString().toStdString();
   mod.gameId = query.value(3).toInt();
-  mod.description = query.value(3).toString().toStdString();
-  mod.imageSource = query.value(4).toString().toStdString();
-  mod.primaryAuthor = query.value(5).toString().toStdString();
+  mod.description = query.value(4).toString().toStdString();
+  mod.imageSource = query.value(5).toString().toStdString();
+  mod.primaryAuthor = query.value(6).toString().toStdString();
 
   return mod;
 }

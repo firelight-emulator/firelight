@@ -1,47 +1,43 @@
-//
-// Created by alexs on 4/5/2024.
-//
-
 #include "mod_item_model.hpp"
 
 namespace firelight::gui {
 ModItemModel::ModItemModel(db::IContentDatabase &contentDatabase)
     : m_contentDatabase(contentDatabase) {
   auto mods = m_contentDatabase.getAllMods();
-  // for (const auto &mod : mods) {
-  //     Item item;
-  //     item.id = mod.id;
-  //     item.name = QString::fromStdString(mod.name);
-  //     item.imageSource = QString::fromStdString(mod.imageSource);
-  //     item.description = QString::fromStdString(mod.description);
-  //
-  //     QList<int> list;
-  //     for (const auto &element : release->romIds) {
-  //       list.append(element);
-  //     }
-  //
-  //     item.romIds = list;
-  //
-  //     auto platform = m_contentDatabase.getPlatform(release->platformId);
-  //     if (!platform) {
-  //       // TODO: ????
-  //       continue;
-  //     }
-  //
-  //     item.platform = QString::fromStdString(platform->name);
-  //
-  //     item.targetGameId = release->gameId;
-  //     auto game = m_contentDatabase.getGame(release->gameId);
-  //     if (!game) {
-  //       // TODO: ????
-  //       continue;
-  //     }
-  //
-  //     item.targetGameName = QString::fromStdString(game->name);
-  //
-  //     item.primaryAuthor = QString::fromStdString(mod.primaryAuthor);
-  //     m_items.push_back(item);
-  //   }
+  for (const auto &mod : mods) {
+    Item item;
+    item.id = mod.id;
+    item.name = QString::fromStdString(mod.name);
+    item.imageSource = QString::fromStdString(mod.imageSource);
+    item.description = QString::fromStdString(mod.description);
+    item.primaryAuthor = QString::fromStdString(mod.primaryAuthor);
+    item.targetGameId = mod.gameId;
+
+    // QList<int> list;
+    // for (const auto &element : release->romIds) {
+    //   list.append(element);
+    // }
+
+    // item.romIds = list;
+
+    auto game = m_contentDatabase.getGame(mod.gameId);
+    if (!game) {
+      // TODO: ????
+      continue;
+    }
+
+    item.targetGameName = QString::fromStdString(game->name);
+
+    auto platform = m_contentDatabase.getPlatform(game->platformId);
+    if (!platform) {
+      // TODO: ????
+      continue;
+    }
+
+    item.platform = QString::fromStdString(platform->name);
+
+    m_items.push_back(item);
+  }
 }
 
 int ModItemModel::rowCount(const QModelIndex &parent) const {

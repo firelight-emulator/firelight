@@ -199,4 +199,35 @@ bool SqliteUserdataDatabase::createPlaySession(PlaySession &session) {
   return true;
 }
 
+std::optional<PlaySession>
+SqliteUserdataDatabase::getLatestPlaySession(const std::string contentMd5) {
+  const QString queryString = "SELECT * FROM play_sessions WHERE content_md5 = "
+                              ":contentMd5 ORDER BY end_time DESC LIMIT 1;";
+  auto query = QSqlQuery(m_database);
+  query.prepare(queryString);
+
+  query.bindValue(":contentMd5", QString::fromStdString(contentMd5));
+
+  if (!query.exec()) {
+    spdlog::warn("Retrieving last play_session failed: {}",
+                 query.lastError().text().toStdString());
+    return std::nullopt;
+  }
+
+  if (query.next()) {
+    PlaySession session;
+    session.id = query.value("id").toInt();
+    session.contentMd5 = query.value("content_md5").toString().toStdString();
+    session.slotNumber = query.value("savefile_slot_number").toUInt();
+    session.startTime = query.value("start_time").toLongLong();
+    session.endTime = query.value("end_time").toLongLong();
+    session.unpausedDurationSeconds =
+        query.value("unpaused_duration_seconds").toUInt();
+
+    return {session};
+  }
+
+  return std::nullopt;
+}
+
 } // namespace firelight::db
