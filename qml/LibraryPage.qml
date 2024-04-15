@@ -383,7 +383,7 @@ Pane {
                         //         : (libItemMouse.containsMouse ?
                         //             "#1a1a1a"
                         //             : "transparent"))
-                        color: libItemMouse.containsMouse ? "white" : "transparent"
+                        color: entryHoverHandler.hovered ? "white" : "transparent"
                         opacity: 0.2
                         radius: 4
                     }
@@ -437,7 +437,7 @@ Pane {
                             text: model.platform_name
                             font.pointSize: 10
                             font.family: Constants.regularFontFamily
-                            color: libItemMouse.containsMouse ? "white" : "#b3b3b3"
+                            color: entryHoverHandler.hovered ? "white" : "#b3b3b3"
                             Layout.fillHeight: true
                             Layout.fillWidth: true
                             Layout.preferredWidth: platformSection.width
@@ -450,7 +450,7 @@ Pane {
                             text: model.content_path
                             font.pointSize: 10
                             font.family: Constants.regularFontFamily
-                            color: libItemMouse.containsMouse ? "white" : "#b3b3b3"
+                            color: entryHoverHandler.hovered ? "white" : "#b3b3b3"
                             Layout.fillHeight: true
                             Layout.fillWidth: true
                             Layout.preferredWidth: filenameSection.width
@@ -460,20 +460,25 @@ Pane {
                         }
                     }
 
-                    MouseArea {
-                        id: libItemMouse
-                        anchors.fill: parent
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        hoverEnabled: true
-                        onClicked: function (event) {
-                            if (event.button === Qt.LeftButton) {
-                                libItemButton.onClicked()
-                            } else if (event.button === Qt.RightButton) {
-                                libraryEntryRightClickMenu.entryId = model.id
-                                libraryEntryRightClickMenu.popup()
-                            }
-                        }
+                    HoverHandler {
+                        id: entryHoverHandler
                         cursorShape: Qt.PointingHandCursor
+                    }
+
+                    TapHandler {
+                        id: entryLeftHandler
+                        onTapped: {
+                            libItemButton.onClicked()
+                        }
+                    }
+
+                    TapHandler {
+                        id: entryRightHandler
+                        acceptedButtons: Qt.RightButton
+                        onTapped: {
+                            libraryEntryRightClickMenu.entryId = model.id
+                            libraryEntryRightClickMenu.popup()
+                        }
                     }
                 }
                 // preferredHighlightBegin: height / 3

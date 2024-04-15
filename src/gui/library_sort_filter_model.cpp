@@ -4,8 +4,10 @@
 namespace firelight::gui {
 
 void LibrarySortFilterModel::filterOnPlaylistId(const int playlistId) {
+  m_sortType = SortType::DisplayName;
   m_playlistId = playlistId;
-  invalidateFilter();
+  invalidate();
+  sort(0);
 }
 
 int LibrarySortFilterModel::currentPlaylistId() const { return m_playlistId; }

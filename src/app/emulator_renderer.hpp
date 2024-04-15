@@ -3,6 +3,7 @@
 #include "emulation_manager.hpp"
 #include "libretro/core.hpp"
 #include "manager_accessor.hpp"
+#include "saves/suspend_point.hpp"
 
 #include <QOpenGLFunctions>
 #include <QQuickFramebufferObject>
@@ -33,6 +34,8 @@ private:
   unsigned int sessionEndTime = 0;
   unsigned int sessionDuration = 0;
   QElapsedTimer m_playtimeTimer;
+
+  std::vector<SuspendPoint> m_suspendPoints;
 
   bool m_shouldLoadGame = false;
   bool m_shouldStartEmulation = false;

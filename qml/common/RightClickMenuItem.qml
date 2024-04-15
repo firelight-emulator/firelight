@@ -38,7 +38,7 @@ MenuItem {
         text: control.text
         color: enabled ? Constants.rightClickMenuItem_TextColor : "grey"
         font.pointSize: 11
-        font.family: Constants.strongFontFamily
+        font.family: Constants.semiboldFontFamily
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }

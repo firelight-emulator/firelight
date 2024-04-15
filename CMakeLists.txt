@@ -87,6 +87,7 @@ add_library(firelight_lib
         include/firelight/db/game.hpp
         src/app/mods/mod_manager.cpp
         src/app/mods/mod_manager.hpp
+        src/app/saves/suspend_point.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}

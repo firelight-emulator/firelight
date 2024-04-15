@@ -57,7 +57,10 @@ public:
 
   bool loadGame(Game *game);
 
-  void unloadGame();
+  void unloadGame() const;
+
+  std::vector<uint8_t> serializeState() const;
+  void deserializeState(const std::vector<uint8_t> &data) const;
 
   size_t getSerializeSize() const;
 

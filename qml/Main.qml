@@ -626,7 +626,7 @@ ApplicationWindow {
                     font.family: Constants.semiboldFontFamily
                     anchors.verticalCenter: tabBar.verticalCenter
                     anchors.left: parent.left
-                    leftPadding: 12
+                    leftPadding: 24
                 }
 
                 Text {
@@ -636,7 +636,7 @@ ApplicationWindow {
                     font.family: Constants.regularFontFamily
                     anchors.left: parent.left
                     anchors.top: title.bottom
-                    leftPadding: 12
+                    leftPadding: 24
                 }
 
                 TabBar {

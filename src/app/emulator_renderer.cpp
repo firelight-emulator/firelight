@@ -261,6 +261,12 @@ void EmulatorRenderer::render() {
         m_millisSinceLastSave = 0;
         // gameImage = gameFbo->toImage();
         save(false);
+
+        const auto state = core->serializeState();
+        const SuspendPoint suspendPoint{
+            .state = state, .timestamp = QDateTime::currentMSecsSinceEpoch()};
+
+        m_suspendPoints.push_back(suspendPoint);
       }
 
       frameCount++;

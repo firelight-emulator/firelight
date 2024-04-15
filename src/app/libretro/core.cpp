@@ -993,11 +993,33 @@ bool Core::loadGame(Game *game) {
   this->symRetroGetSystemAVInfo(this->retroSystemAVInfo);
   videoReceiver->setSystemAVInfo(this->retroSystemAVInfo);
   //  this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
-  printf("New Audio Sample Rate: %f \n", retroSystemAVInfo->timing.sample_rate);
+
   audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
   return result;
 }
-void Core::unloadGame() { symRetroUnloadGame(); }
+void Core::unloadGame() const { symRetroUnloadGame(); }
+
+std::vector<uint8_t> Core::serializeState() const {
+  const auto size = symRetroSerializeSize();
+
+  std::vector<uint8_t> data(size);
+  if (!symRetroSerialize(data.data(), size)) {
+    printf("Some issue??\n");
+    return {};
+  }
+
+  return data;
+}
+
+void Core::deserializeState(const std::vector<uint8_t> &data) const {
+  const auto size = getSerializeSize();
+
+  if (data.size() != size) {
+    printf("um sizes don't match. data: %zu, size: %zu\n", data.size(), size);
+  }
+
+  symRetroUnserialize(data.data(), size);
+}
 
 size_t Core::getSerializeSize() const { return this->symRetroSerializeSize(); }
 
