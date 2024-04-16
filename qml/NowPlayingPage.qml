@@ -19,7 +19,7 @@ Item {
             spacing: 8
 
             Text {
-                text: "Settings"
+                text: "Now Playing"
                 color: "#dadada"
                 font.pointSize: 24
                 font.family: Constants.semiboldFontFamily
@@ -41,65 +41,67 @@ Item {
         anchors.left: parent.left
         anchors.top: header.bottom
         anchors.bottom: parent.bottom
-        width: parent.width / 3
+        width: parent.width / 2
 
         ColumnLayout {
             id: menu
             anchors.fill: parent
             spacing: 4
 
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-
             FirelightMenuItem {
-                labelText: "Appearance"
-                // labelIcon: "\ue40a"
+                labelText: "Resume Game"
                 Layout.preferredWidth: parent.width / 2
                 Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
             }
             FirelightMenuItem {
-                labelText: "Video"
-                // labelIcon: "\ue333"
+                labelText: "Restart Game"
                 Layout.preferredWidth: parent.width / 2
                 Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
             }
             FirelightMenuItem {
-                labelText: "Sound"
-                // labelIcon: "\ue050"
+                labelText: "Rewind"
                 Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                Layout.preferredHeight: 40
-            }
-            FirelightMenuItem {
-                labelText: "System"
-                // labelIcon: "\uf522"
-                Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
             }
             Rectangle {
                 Layout.preferredWidth: parent.width / 2
                 Layout.preferredHeight: 1
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 opacity: 0.3
                 color: "#dadada"
             }
             FirelightMenuItem {
-                labelText: "Privacy"
-                // labelIcon: "\ue897"
+                labelText: "Create Suspend Point"
                 Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
             }
             FirelightMenuItem {
-                labelText: "About"
-                // labelIcon: "\ue88e"
+                labelText: "Load Suspend Point"
                 Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                Layout.preferredHeight: 40
+            }
+            FirelightMenuItem {
+                labelText: "Undo Last Load"
+                Layout.preferredWidth: parent.width / 2
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                Layout.preferredHeight: 40
+            }
+            Rectangle {
+                Layout.preferredWidth: parent.width / 2
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                Layout.preferredHeight: 1
+                opacity: 0.3
+                color: "#dadada"
+            }
+            FirelightMenuItem {
+                labelText: "Quit Game"
+                Layout.preferredWidth: parent.width / 2
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
             }
 
@@ -118,14 +120,13 @@ Item {
         anchors.left: leftHalf.right
 
 
-        Rectangle {
+        Image {
             id: preview
-            width: 2 * parent.width / 3
-            height: width * 9 / 16
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.centerIn: parent
+            smooth: false
 
-            color: "lightblue"
+            source: "file:pmscreenshot.jpg"
+            // fillMode: Image.PreserveAspectFit
         }
     }
 

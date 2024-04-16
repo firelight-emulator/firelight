@@ -10,43 +10,47 @@ Button {
 
     autoExclusive: true
     checkable: true
-    padding: 6
     property string labelText
     property string labelIcon
-    contentItem: Item {
+    leftPadding: 8
+    rightPadding: 8
+    contentItem: Row {
         anchors.fill: parent
+        spacing: 8
+        leftPadding: control.leftPadding
+        rightPadding: control.rightPadding
 
         Text {
             id: buttonIcon
             text: control.labelIcon
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
             visible: labelIcon !== ""
             // width: 24
+            height: parent.height
 
             font.family: Constants.symbolFontFamily
             font.pixelSize: 24
-            color: (mouse.containsMouse || control.checked) ? "white" : "#b3b3b3"
+            color: control.checked ? "black" : "#dadada"
+            opacity: control.checked ? 0.8 : 1
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
         Text {
             id: buttonText
+            visible: control.width > 52
             text: control.labelText
-            anchors.left: labelIcon !== "" ? buttonIcon.right : parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            leftPadding: labelIcon !== "" ? 10 : 0
+            height: parent.height
             font.pointSize: 11
             font.family: Constants.semiboldFontFamily
-            color: (mouse.containsMouse || control.checked) ? "white" : "#b3b3b3"
+            color: control.checked ? "black" : "#dadada"
+            opacity: control.checked ? 0.8 : 1
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
         }
     }
 
     background: Rectangle {
+        color: "#dadada"
+        opacity: control.checked ? 1.0 : mouse.containsMouse ? 0.2 : 0.0
         // color: control.checked ?
         //     (mouse.pressed ?
         //         "#2b2b2b"
@@ -58,7 +62,6 @@ Button {
         //         : (mouse.containsMouse ?
         //             "#1a1a1a"
         //             : "transparent"))
-        color: "transparent"
         radius: 6
     }
 
