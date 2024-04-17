@@ -50,7 +50,7 @@ Button {
 
     background: Rectangle {
         color: "#dadada"
-        opacity: control.enabled ? (control.checked ? 1.0 : mouse.containsMouse ? (control.pressed ? 0.15 : 0.2) : 0.0) : 0.0
+        opacity: control.enabled ? (control.checked ? 1.0 : mouse.containsMouse ? 0.2 : 0.0) : 0.0
         // color: control.checked ?
         //     (mouse.pressed ?
         //         "#2b2b2b"

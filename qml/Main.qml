@@ -13,416 +13,268 @@ ApplicationWindow {
     width: 1280
     height: 720
 
+    minimumHeight: 720
+    minimumWidth: 1280
+
     visible: true
 
     title: qsTr("Firelight")
-    background: Image {
-        source: "file:orange.jpg"
-        width: 2560
-        height: 1440
-        fillMode: Image.Stretch
+    background: Rectangle {
+        color: "black"
+        // Image {
+        //     source: "file:orange.jpg"
+        //     width: 2560
+        //     height: 1440
+        //     fillMode: Image.Stretch
+        // }
     }
 
-    Component {
-        id: thingy
-
-        Pane {
-            id: header
-            property alias text: headerLabel.text
-
-            background: Item {
-            }
-
-            Column {
-                anchors.fill: parent
-                spacing: 8
-
-                Text {
-                    id: headerLabel
-                    color: "#dadada"
-                    font.pointSize: 24
-                    font.family: Constants.semiboldFontFamily
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                Rectangle {
-                    width: parent.width
-                    height: 1
-                    opacity: 0.3
-                    color: "#dadada"
-                }
-            }
-        }
-    }
-
-    LibraryPage {
-        id: libraryPage
-        visible: false
-    }
-
-    ControllersPage {
-        id: controllerPage
-        visible: false
-    }
-
-    SettingsPage {
-        id: settingsPage
-        visible: false
-    }
-
-    NowPlayingPage {
-        id: nowPlayingPage
-        visible: false
-    }
-
-
-    SplitView {
+    Rectangle {
         anchors.fill: parent
-        orientation: Qt.Horizontal
+        parent: window.activeFocusItem
+        border.color: "blue"
+        color: "transparent"
+    }
 
-        // handle: FirelightSplitViewHandle {
-        //     width: 1
-        // }
+    MainMenu {
+        id: mainMenu
+        visible: false
 
-        handle: Item {
+        onGameStartRequested: function (entryId) {
+            gameLoader.loadGame(entryId)
+        }
+    }
+
+    SequentialAnimation {
+        id: overlayFadeIn
+        PropertyAction {
+            target: overlay
+            property: "opacity"
+            value: 0
+        }
+        PropertyAction {
+            target: overlay
+            property: "scale"
+            value: 1
         }
 
-        Pane {
-            id: drawer
-            SplitView.preferredWidth: 220
-            SplitView.maximumWidth: 220
-            SplitView.minimumWidth: 48
-            background: Rectangle {
-                color: "black"
-                opacity: 0.4
-            }
-            padding: 4
-
-            Button {
-                id: theButton
-                width: 48
-                height: 48
-                hoverEnabled: true
-                background: Rectangle {
-                    color: "#dadada"
-                    opacity: theButton.hovered ? 0.2 : 0
-                    radius: 6
-                }
-
-                onPressed: function () {
-                    if (drawer.SplitView.preferredWidth === 220) {
-                        drawer.SplitView.preferredWidth = 48
-                    } else {
-                        drawer.SplitView.preferredWidth = 220
-                    }
-                }
-                anchors.top: parent.top
-                anchors.right: parent.right
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 4
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 10
-                }
-
-                Text {
-                    text: "Firelight"
-                    opacity: parent.width > 48 ? 1 : 0
-                    color: "#dadada"
-                    font.pointSize: 16
-                    font.family: Constants.semiboldFontFamily
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                }
-
-                Text {
-                    text: "alpha (0.4.0a)"
-                    opacity: parent.width > 48 ? 1 : 0
-                    color: "#dadada"
-                    font.pointSize: 10
-                    font.family: Constants.regularFontFamily
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 10
-                }
-
-                FirelightMenuItem {
-                    labelText: "Home"
-                    labelIcon: "\ue88a"
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 40
-                    checked: true
-
-                    onToggled: function () {
-                        stackview.replace(thingy, {text: "Home"})
-                    }
-                }
-                FirelightMenuItem {
-                    labelText: "Library"
-                    labelIcon: "\uf53e"
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 40
-
-                    onToggled: function () {
-                        stackview.replace(libraryPage)
-                    }
-                }
-                FirelightMenuItem {
-                    labelText: "Market"
-                    labelIcon: "\uea12"
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 40
-
-                    onToggled: function () {
-                        stackview.replace(thingy, {text: "Market"})
-                    }
-                }
-                FirelightMenuItem {
-                    labelText: "Controllers"
-                    labelIcon: "\uf135"
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 40
-
-                    onToggled: function () {
-                        stackview.replace(controllerPage)
-                    }
-                }
-                Rectangle {
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 1
-                    opacity: 0.3
-                    color: "#dadada"
-                }
-                FirelightMenuItem {
-                    labelText: "Now Playing"
-                    labelIcon: "\ue037"
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 40
-
-                    onToggled: function () {
-                        stackview.replace(nowPlayingPage)
-                    }
-                }
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-                FirelightMenuItem {
-                    labelText: "Settings"
-                    labelIcon: "\ue8b8"
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 40
-
-                    onToggled: function () {
-                        stackview.replace(settingsPage)
-                    }
-                }
-                Rectangle {
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 1
-                    opacity: 0.3
-                    color: "#dadada"
-                }
-                FirelightMenuItem {
-                    labelText: "Profile"
-                    labelIcon: "\ue853"
-                    Layout.preferredWidth: parent.width
-                    Layout.preferredHeight: 40
-
-                    onToggled: function () {
-                        stackview.replace(thingy, {text: "Profile"})
-                    }
-                }
-
-
-            }
-
-
-            // ListView {
-            //     id: mainCategoryList
-            //     interactive: false
-            //
-            //     anchors.fill: parent
-            //
-            //     implicitHeight: model.count * 40
-            //     model: ListModel {
-            //         ListElement {
-            //             name: "Home"
-            //             icon: "\ue88a"
-            //             playlistId: -1
-            //         }
-            //         ListElement {
-            //             name: "Library"
-            //             icon: "\uf53e"
-            //             playlistId: -1
-            //         }
-            //         ListElement {
-            //             name: "Mods"
-            //             icon: "\ue87a"
-            //             playlistId: -1
-            //         }
-            //         ListElement {
-            //             name: "Controllers"
-            //             icon: "\uf135"
-            //             playlistId: -1
-            //         }
-            //     }
-            //
-            //     delegate: FirelightMenuItem {
-            //         labelText: model.name
-            //         labelIcon: model.icon
-            //         height: 40
-            //         width: mainCategoryList.width
-            //         leftPadding: 12
-            //         rightPadding: 12
-            //
-            //         checked: model.name === "Home"
-            //
-            //         onClicked: function () {
-            //             // library_short_model.filterOnPlaylistId(model.playlistId)
-            //             if (model.name === "All games") {
-            //                 library_short_model.sortByDisplayName()
-            //             } else if (model.name === "Newly added") {
-            //                 library_short_model.sortByCreatedAt()
-            //             } else if (model.name === "Recently played") {
-            //                 library_short_model.sortByLastPlayedAt()
-            //             }
-            //         }
-            //
-            //         // ButtonGroup.group: buttonGroup
-            //     }
-            // }
+        PropertyAction {
+            target: overlay
+            property: "visible"
+            value: true
         }
-        Pane {
-            id: rightSide
-            background: Rectangle {
-                color: "black"
-                opacity: 0.6
-            }
 
-            StackView {
-                id: stackview
-                anchors.fill: parent
-
-                pushEnter: Transition {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: 200
-                    }
-                }
-                pushExit: Transition {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 1
-                        to: 0
-                        duration: 200
-                    }
-                }
-                popEnter: Transition {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: 200
-                    }
-                }
-                popExit: Transition {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 1
-                        to: 0
-                        duration: 200
-                    }
-                }
-                replaceEnter: Transition {
-                    ParallelAnimation {
-                        PropertyAnimation {
-                            property: "opacity"
-                            from: 0
-                            to: 1
-                            duration: 400
-                        }
-                        PropertyAnimation {
-                            property: "x"
-                            from: 20
-                            to: 0
-                            duration: 250
-                        }
-                    }
-                }
-                replaceExit: Transition {
-                }
-                // replaceExit: Transition {
-                //     PropertyAnimation {
-                //         property: "opacity"
-                //         from: 1
-                //         to: 0
-                //         duration: 200
-                //     }
-                // }
-            }
-
-            // LibraryPage {
-            //     id: libraryPage
-            //     anchors.fill: parent
-            // }
+        PropertyAnimation {
+            target: overlay
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 350
+            easing.type: Easing.InQuad
         }
-        // SplitViewColumn {
-        //     width: 300
-        //
-        //     ListView {
-        //         id: listView
-        //         anchors.fill: parent
-        //         model: ListModel {
-        //             ListElement {
-        //                 name: "Home"; icon: "home"; page: "Home.qml"
-        //             }
-        //             ListElement {
-        //                 name: "Settings"; icon: "settings"; page: "Settings.qml"
-        //             }
-        //         }
-        //
-        //         delegate: Item {
-        //             width: listView.width
-        //             height: 50
-        //
-        //             Rectangle {
-        //                 anchors.fill: parent
-        //                 color: listView.currentIndex === index ? "lightsteelblue" : "transparent"
-        //
-        //                 Text {
-        //                     anchors.centerIn: parent
-        //                     text: model.name
-        //                 }
-        //
-        //                 MouseArea {
-        //                     anchors.fill: parent
-        //                     onClicked: {
-        //                         listView.currentIndex = index
-        //                         stackView.replaceItem(index, {page: model.page})
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
+
+        ScriptAction {
+            script: {
+                stackView.replace(emulator, {}, StackView.Immediate)
+                // emulator.resumeGame()
+            }
+        }
+
+        PropertyAnimation {
+            target: overlay
+            property: "opacity"
+            from: 1
+            to: 0
+            duration: 200
+            easing.type: Easing.InQuad
+        }
+
+        ScriptAction {
+            script: {
+                emulator.startEmulation()
+                // emulator.resumeGame()
+            }
+        }
+    }
+
+    GameLoader {
+        id: gameLoader
+
+        onGameLoaded: function (entryId, romData, saveData, corePath) {
+            console.log("loaded game!")
+            emulator.loadTheThing(entryId, romData, saveData, corePath)
+            overlayFadeIn.start()
+        }
+
+        onGameLoadFailedOrphanedPatch: function (entryId) {
+            patchClickedDialog.open()
+        }
+    }
+
+    EmulatorPage {
+        id: emulator
+        visible: false
+
+        StackView.visible: true
+
+        StackView.onActivated: {
+            layer.enabled = false
+            emulator.resumeGame()
+        }
+
+        StackView.onActivating: {
+            emulatorDimmer.opacity = 0
+        }
+
+        StackView.onDeactivating: {
+            layer.enabled = true
+            emulator.pauseGame()
+            emulatorDimmer.opacity = 0.4
+        }
+        // smooth: false
+
+        property double blurAmount: 0
+
+        layer.enabled: false
+        layer.effect: MultiEffect {
+            source: emulator
+            anchors.fill: emulator
+            blurEnabled: true
+            blurMultiplier: 1.0
+            blurMax: 64
+            blur: emulator.blurAmount
+        }
+
+        // Keys.onEscapePressed: {
+        //     appRoot.state = "gameSuspended"
         // }
         //
-        // StackView {
-        //     id: stackView
-        //     anchors.fill: parent
-        //
-        //     initialItem: { page: "Home.qml" }
+        // onGameLoaded: {
+        //     appRoot.state = "playingGame"
         // }
+
+        Rectangle {
+            id: emulatorDimmer
+            anchors.fill: parent
+            color: "black"
+            opacity: 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
+        Connections {
+            target: window_resize_handler
+
+            function onWindowResizeStarted() {
+                if (stackView.currentItem === emulator) {
+                    emulator.pauseGame()
+                }
+            }
+
+            function onWindowResizeFinished() {
+                if (stackView.currentItem === emulator) {
+                    emulator.resumeGame()
+                }
+            }
+        }
+    }
+
+    StackView {
+        id: stackView
+        anchors.fill: parent
+        initialItem: mainMenu
+
+        Keys.onEscapePressed: {
+            if (stackView.currentItem === mainMenu) {
+                stackView.pop()
+            } else {
+                stackView.push(mainMenu)
+            }
+        }
+
+        pushEnter: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "scale"
+                    from: 1.05
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        pushExit: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "blurAmount"
+                    from: 0
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "scale"
+                    from: 1
+                    to: 0.92
+                    duration: 250
+                    easing.type: Easing.OutQuad
+                }
+            }
+        }
+        popEnter: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "blurAmount"
+                    from: 1
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "scale"
+                    from: 0.92
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InQuad
+                }
+            }
+        }
+        popExit: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "scale"
+                    from: 1
+                    to: 1.05
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+    }
+
+    Rectangle {
+        id: overlay
+        anchors.fill: parent
+        color: "black"
+        visible: false
     }
 }

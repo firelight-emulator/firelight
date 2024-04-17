@@ -48,43 +48,42 @@ Item {
             anchors.fill: parent
             spacing: 4
 
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-
             FirelightMenuItem {
                 labelText: "Appearance"
                 // labelIcon: "\ue40a"
                 Layout.preferredWidth: parent.width / 2
                 Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                enabled: false
             }
             FirelightMenuItem {
                 labelText: "Video"
                 // labelIcon: "\ue333"
                 Layout.preferredWidth: parent.width / 2
                 Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                checked: true
             }
             FirelightMenuItem {
                 labelText: "Sound"
                 // labelIcon: "\ue050"
                 Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                enabled: false
             }
             FirelightMenuItem {
                 labelText: "System"
                 // labelIcon: "\uf522"
                 Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                enabled: false
             }
             Rectangle {
                 Layout.preferredWidth: parent.width / 2
                 Layout.preferredHeight: 1
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 opacity: 0.3
                 color: "#dadada"
             }
@@ -92,15 +91,17 @@ Item {
                 labelText: "Privacy"
                 // labelIcon: "\ue897"
                 Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                enabled: false
             }
             FirelightMenuItem {
                 labelText: "About"
                 // labelIcon: "\ue88e"
                 Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                enabled: false
             }
 
             Item {
@@ -110,24 +111,24 @@ Item {
         }
     }
 
-    Item {
-        id: rightHalf
-        anchors.right: parent.right
-        anchors.top: header.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: leftHalf.right
-
-
-        Rectangle {
-            id: preview
-            width: 2 * parent.width / 3
-            height: width * 9 / 16
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-
-            color: "lightblue"
-        }
-    }
+    // Item {
+    //     id: rightHalf
+    //     anchors.right: parent.right
+    //     anchors.top: header.bottom
+    //     anchors.bottom: parent.bottom
+    //     anchors.left: leftHalf.right
+    //
+    //
+    //     Rectangle {
+    //         id: preview
+    //         width: 2 * parent.width / 3
+    //         height: width * 9 / 16
+    //         anchors.left: parent.left
+    //         anchors.verticalCenter: parent.verticalCenter
+    //
+    //         color: "lightblue"
+    //     }
+    // }
 
 
 }

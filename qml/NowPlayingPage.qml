@@ -41,7 +41,7 @@ Item {
         anchors.left: parent.left
         anchors.top: header.bottom
         anchors.bottom: parent.bottom
-        width: parent.width / 2
+        width: parent.width / 4
 
         ColumnLayout {
             id: menu
@@ -50,24 +50,27 @@ Item {
 
             FirelightMenuItem {
                 labelText: "Resume Game"
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                checkable: false
             }
             FirelightMenuItem {
                 labelText: "Restart Game"
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                checkable: false
             }
             FirelightMenuItem {
                 labelText: "Rewind"
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                enabled: false
             }
             Rectangle {
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 1
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 opacity: 0.3
@@ -75,24 +78,27 @@ Item {
             }
             FirelightMenuItem {
                 labelText: "Create Suspend Point"
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                enabled: false
             }
             FirelightMenuItem {
                 labelText: "Load Suspend Point"
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                enabled: false
             }
             FirelightMenuItem {
                 labelText: "Undo Last Load"
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                enabled: false
             }
             Rectangle {
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 1
                 opacity: 0.3
@@ -100,9 +106,10 @@ Item {
             }
             FirelightMenuItem {
                 labelText: "Quit Game"
-                Layout.preferredWidth: parent.width / 2
+                Layout.preferredWidth: parent.width
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
+                checkable: false
             }
 
             Item {
@@ -112,23 +119,23 @@ Item {
         }
     }
 
-    Item {
-        id: rightHalf
-        anchors.right: parent.right
-        anchors.top: header.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: leftHalf.right
-
-
-        Image {
-            id: preview
-            anchors.centerIn: parent
-            smooth: false
-
-            source: "file:pmscreenshot.jpg"
-            // fillMode: Image.PreserveAspectFit
-        }
-    }
+    // Item {
+    //     id: rightHalf
+    //     anchors.right: parent.right
+    //     anchors.top: header.bottom
+    //     anchors.bottom: parent.bottom
+    //     anchors.left: leftHalf.right
+    //
+    //
+    //     Image {
+    //         id: preview
+    //         anchors.centerIn: parent
+    //         smooth: false
+    //
+    //         source: "file:pmscreenshot.jpg"
+    //         // fillMode: Image.PreserveAspectFit
+    //     }
+    // }
 
 
 }
