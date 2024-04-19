@@ -47,7 +47,11 @@ SqliteContentDatabase::~SqliteContentDatabase() {
 // }
 
 bool SqliteContentDatabase::tableExists(const std::string &tableName) {
-  return true;
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT 1 FROM " + QString::fromStdString(tableName) +
+                " LIMIT 1;");
+
+  return query.exec();
 }
 
 std::optional<Game> SqliteContentDatabase::getGame(const int id) {

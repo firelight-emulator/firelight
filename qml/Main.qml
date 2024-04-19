@@ -19,22 +19,23 @@ ApplicationWindow {
     visible: true
 
     title: qsTr("Firelight")
+    // background: Image {
+    //     source: "file:orange.jpg"
+    //     width: 2560
+    //     height: 1440
+    //     fillMode: Image.Stretch
+    // }
+
     background: Rectangle {
-        color: "black"
-        // Image {
-        //     source: "file:orange.jpg"
-        //     width: 2560
-        //     height: 1440
-        //     fillMode: Image.Stretch
-        // }
+        color: "#e4e4e4"
     }
 
-    Rectangle {
-        anchors.fill: parent
-        parent: window.activeFocusItem
-        border.color: "blue"
-        color: "transparent"
-    }
+    // Rectangle {
+    //     anchors.fill: parent
+    //     parent: window.activeFocusItem
+    //     border.color: "blue"
+    //     color: "transparent"
+    // }
 
     MainMenu {
         id: mainMenu
@@ -123,13 +124,13 @@ ApplicationWindow {
         }
 
         StackView.onActivating: {
-            emulatorDimmer.opacity = 0
+            // emulatorDimmer.opacity = 0
         }
 
         StackView.onDeactivating: {
             layer.enabled = true
             emulator.pauseGame()
-            emulatorDimmer.opacity = 0.4
+            // emulatorDimmer.opacity = 0.4
         }
         // smooth: false
 

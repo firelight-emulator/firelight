@@ -74,8 +74,9 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        width: 220
-        background: Item {
+        width: 48
+        background: Rectangle {
+            color: "#000000"
         }
         padding: 4
         KeyNavigation.right: stackview
@@ -173,13 +174,13 @@ Item {
             NavMenuButton {
                 id: modNavButton
                 KeyNavigation.down: controllersNavButton
-                labelText: "Market"
-                labelIcon: "\uea12"
+                labelText: "Mods"
+                labelIcon: "\uef48"
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 40
 
                 onToggled: function () {
-                    stackview.replace(thingy, {text: "Market"})
+                    stackview.replace(thingy, {text: "Mods"})
                 }
 
                 enabled: false

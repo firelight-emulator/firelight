@@ -1,9 +1,10 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQml.Models
 import FirelightStyle 1.0
 
-FocusScope {
+Item {
     id: root
 
     signal entryClicked(int entryId)
@@ -22,18 +23,11 @@ FocusScope {
 
             Text {
                 text: "Library"
-                color: "#dadada"
+                color: "#353535"
                 font.pointSize: 24
                 font.family: Constants.semiboldFontFamily
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
-            }
-
-            Rectangle {
-                width: parent.width
-                height: 1
-                opacity: 0.3
-                color: "#dadada"
             }
         }
     }
@@ -45,110 +39,125 @@ FocusScope {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
 
-        // handle: FirelightSplitViewHandle {
-        // }
-        //
-        // Item {
-        //     SplitView.minimumWidth: 260
-        //     SplitView.maximumWidth: parent.width / 2
-        //
-        //     ColumnLayout {
-        //         id: menu
-        //         anchors.fill: parent
-        //         spacing: 4
-        //
-        //         // Item {
-        //         //     Layout.fillWidth: true
-        //         //     Layout.fillHeight: true
-        //         // }
-        //
-        //         FirelightMenuItem {
-        //             labelText: "All Games"
-        //             labelIcon: "\uf53e"
-        //             Layout.preferredWidth: parent.width
-        //             Layout.preferredHeight: 40
-        //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-        //         }
-        //         FirelightMenuItem {
-        //             labelText: "Recently Played"
-        //             labelIcon: "\ue889"
-        //             Layout.preferredWidth: parent.width
-        //             Layout.preferredHeight: 40
-        //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-        //         }
-        //         FirelightMenuItem {
-        //             labelText: "Newly Added"
-        //             labelIcon: "\ue838"
-        //             Layout.preferredWidth: parent.width
-        //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-        //             Layout.preferredHeight: 40
-        //         }
-        //         RowLayout {
-        //             Layout.preferredWidth: parent.width
-        //             Layout.preferredHeight: 40
-        //             Text {
-        //                 text: "Folders"
-        //                 color: "#c6c6c6"
-        //                 font.pointSize: 12
-        //                 font.family: Constants.regularFontFamily
-        //                 horizontalAlignment: Text.AlignLeft
-        //                 verticalAlignment: Text.AlignVCenter
-        //                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-        //                 leftPadding: 8
-        //             }
-        //
-        //             Item {
-        //                 Layout.fillWidth: true
-        //             }
-        //
-        //             Text {
-        //                 text: "\ue145"
-        //                 font.pixelSize: 24
-        //                 font.family: Constants.symbolFontFamily
-        //                 horizontalAlignment: Text.AlignHCenter
-        //                 verticalAlignment: Text.AlignVCenter
-        //                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-        //                 color: "#dadada"
-        //             }
-        //         }
-        //         Rectangle {
-        //             Layout.preferredWidth: parent.width
-        //             Layout.preferredHeight: 1
-        //             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-        //             opacity: 0.3
-        //             color: "#dadada"
-        //         }
-        //         FirelightMenuItem {
-        //             labelText: "Test Folder One"
-        //             Layout.preferredWidth: parent.width
-        //             Layout.preferredHeight: 40
-        //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-        //         }
-        //         FirelightMenuItem {
-        //             labelText: "Some Other Stuff"
-        //             Layout.preferredWidth: parent.width
-        //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-        //             Layout.preferredHeight: 40
-        //         }
-        //
-        //         Item {
-        //             Layout.fillWidth: true
-        //             Layout.fillHeight: true
-        //         }
-        //     }
-        //
-        // }
-
         Pane {
-            background: Item {
+            anchors.fill: parent
+            background: Rectangle {
+                color: "white"
+                radius: 12
             }
-            Text {
-                text: "no gams here"
-                font.pointSize: 12
-                font.family: Constants.regularFontFamily
-                color: "#b3b3b3"
-                anchors.centerIn: parent
-                visible: libraryList.count === 0
+            // Text {
+            //     text: "no gams here"
+            //     font.pointSize: 12
+            //     font.family: Constants.regularFontFamily
+            //     color: "#b3b3b3"
+            //     anchors.centerIn: parent
+            //     visible: libraryList.count === 0
+            // }
+
+            RowLayout {
+                id: navHeader
+                anchors.leftMargin: 8
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.right: parent.right
+                height: 36
+
+                spacing: 28
+
+                Button {
+                    id: allButton
+                    background: Item {
+                    }
+                    Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+
+                    padding: 0
+
+                    checkable: true
+                    autoExclusive: true
+                    checked: true
+
+                    contentItem: Text {
+                        text: "All games"
+                        color: "#353535"
+                        opacity: allButton.checked ? 1 : 0.5
+                        font.pointSize: 14
+                        font.family: Constants.semiboldFontFamily
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    onClicked: function () {
+                        library_short_model.sortByDisplayName()
+                    }
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                }
+
+                Button {
+                    id: recentButton
+                    background: Item {
+                    }
+                    Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+
+                    padding: 0
+
+                    checkable: true
+                    autoExclusive: true
+
+                    contentItem: Text {
+                        text: "Recently played"
+                        color: "#353535"
+                        opacity: recentButton.checked ? 1 : 0.5
+                        font.pointSize: 14
+                        font.family: Constants.semiboldFontFamily
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    onClicked: function () {
+                        library_short_model.sortByLastPlayedAt()
+                    }
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                }
+
+                Button {
+                    id: newButton
+                    background: Item {
+                    }
+                    Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+
+                    padding: 0
+
+                    checkable: true
+                    autoExclusive: true
+
+                    contentItem: Text {
+                        text: "Newly added"
+                        color: "#353535"
+                        opacity: newButton.checked ? 1 : 0.5
+                        font.pointSize: 14
+                        font.family: Constants.semiboldFontFamily
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    onClicked: function () {
+                        library_short_model.sortByCreatedAt()
+                    }
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
             }
 
             // RowLayout {
@@ -213,94 +222,95 @@ FocusScope {
             ListView {
                 id: libraryList
                 // anchors.top: sortByThing.bottom
-                anchors.top: parent.top
+                anchors.top: navHeader.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 clip: true
-                focus: true
 
                 property real titleColumnWidth: libraryList.width * 2 / 5
                 property real platformColumnWidth: libraryList.width / 5
                 property real filenameColumnWidth: libraryList.width * 2 / 5
 
-                // header: Pane {
-                //     background: Rectangle {
-                //         color: "black"
-                //         opacity: 0.3
-                //         radius: 4
-                //     }
-                //     verticalPadding: 4
-                //     horizontalPadding: 8
-                //     RowLayout {
-                //         id: headerRow
-                //
-                //         // anchors.fill: parent
-                //         // Text {
-                //         //     id: favoriteSection
-                //         //     text: "\ue87d"
-                //         //     font.family: Constants.symbolFontFamily
-                //         //     font.pointSize: 12
-                //         //     color: "#b3b3b3"
-                //         //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                //         //     Layout.fillHeight: true
-                //         //     Layout.preferredWidth: 24
-                //         //     topPadding: 2
-                //         //     horizontalAlignment: Text.AlignLeft
-                //         //     verticalAlignment: Text.AlignVCenter
-                //         // }
-                //         Text {
-                //             id: titleSection
-                //             text: "Title"
-                //             font.pointSize: 10
-                //             font.family: Constants.regularFontFamily
-                //             color: "#b3b3b3"
-                //             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                //             Layout.fillHeight: true
-                //             Layout.fillWidth: true
-                //             // Layout.preferredWidth: 300
-                //             Layout.minimumWidth: libraryList.titleColumnWidth
-                //             Layout.horizontalStretchFactor: 3
-                //             horizontalAlignment: Text.AlignLeft
-                //             verticalAlignment: Text.AlignVCenter
-                //         }
-                //
-                //         Text {
-                //             id: platformSection
-                //             text: "Platform"
-                //             font.pointSize: 10
-                //             font.family: Constants.regularFontFamily
-                //             color: "#b3b3b3"
-                //             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                //             Layout.fillHeight: true
-                //             Layout.minimumWidth: libraryList.platformColumnWidth
-                //             horizontalAlignment: Text.AlignLeft
-                //             verticalAlignment: Text.AlignVCenter
-                //             // Layout.preferredWidth: 100
-                //         }
-                //
-                //         Text {
-                //             id: filenameSection
-                //             text: "Filename"
-                //             font.pointSize: 10
-                //             font.family: Constants.regularFontFamily
-                //             color: "#b3b3b3"
-                //             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                //             Layout.fillHeight: true
-                //             Layout.minimumWidth: libraryList.filenameColumnWidth
-                //             horizontalAlignment: Text.AlignLeft
-                //             verticalAlignment: Text.AlignVCenter
-                //             // Layout.preferredWidth: 100
-                //         }
-                //     }
-                //
-                //     // Rectangle {
-                //     //     width: libraryList.width
-                //     //     height: 1
-                //     //     color: "#dadada"
-                //     //     anchors.bottom: headerRow.bottom
-                //     // }
-                // }
+                header: ColumnLayout {
+                    spacing: 4
+
+                    RowLayout {
+                        id: headerRow
+                        // Layout.leftMargin: 8
+                        Layout.leftMargin: 8
+                        Layout.fillWidth: true
+
+                        // anchors.fill: parent
+                        // Text {
+                        //     id: favoriteSection
+                        //     text: "\ue87d"
+                        //     font.family: Constants.symbolFontFamily
+                        //     font.pointSize: 12
+                        //     color: "#b3b3b3"
+                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        //     Layout.fillHeight: true
+                        //     Layout.preferredWidth: 24
+                        //     topPadding: 2
+                        //     horizontalAlignment: Text.AlignLeft
+                        //     verticalAlignment: Text.AlignVCenter
+                        // }
+                        Text {
+                            id: titleSection
+                            text: "Title"
+                            font.pointSize: 10
+                            font.family: Constants.regularFontFamily
+                            color: "black"
+                            opacity: 0.7
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            // Layout.preferredWidth: 300
+                            Layout.minimumWidth: libraryList.titleColumnWidth
+                            Layout.horizontalStretchFactor: 3
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        Text {
+                            id: platformSection
+                            text: "Platform"
+                            font.pointSize: 10
+                            font.family: Constants.regularFontFamily
+                            color: "black"
+                            opacity: 0.7
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                            Layout.fillHeight: true
+                            Layout.minimumWidth: libraryList.platformColumnWidth
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                            // Layout.preferredWidth: 100
+                        }
+
+                        Text {
+                            id: filenameSection
+                            text: "Filename"
+                            font.pointSize: 10
+                            font.family: Constants.regularFontFamily
+                            color: "black"
+                            opacity: 0.7
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                            Layout.fillHeight: true
+                            Layout.minimumWidth: libraryList.filenameColumnWidth
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                            // Layout.preferredWidth: 100
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.bottomMargin: 4
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "black"
+                        opacity: 0.3
+                    }
+                }
 
                 // header: Rectangle {
                 //     width: libraryList.width
@@ -360,28 +370,25 @@ FocusScope {
                 delegate: Button {
                     id: libItemButton
                     background: Rectangle {
-                        // color: libItemButton.checked ?
-                        //     (libItemMouse.pressed ?
-                        //         "#2b2b2b"
-                        //         : ((libItemMouse.containsMouse ?
-                        //             "#393939"
-                        //             : "#232323")))
-                        //     : (libItemMouse.pressed ?
-                        //         "#020202"
-                        //         : (libItemMouse.containsMouse ?
-                        //             "#1a1a1a"
-                        //             : "transparent"))
-                        color: libItemButton.ListView.isCurrentItem ? "white" : (libItemMouse.hovered ? "white" : "transparent")
-                        opacity: libItemButton.ListView.isCurrentItem ? 0.8 : 0.2
-                        radius: 4
+                        color: "black"
+                        opacity: libItemButton.ListView.isCurrentItem ? 0.9 : (libItemMouse.hovered ? 0.2 : 0)
+                        radius: 0
                     }
 
                     HoverHandler {
                         id: libItemMouse
                     }
 
+                    TapHandler {
+                        acceptedButtons: Qt.RightButton
+                        onTapped: {
+                            libItemButton.ListView.view.currentIndex = index
+                            libraryEntryRightClickMenu.popup()
+                        }
+                    }
+
                     // hoverEnabled: true
-                    autoExclusive: true
+                    // autoExclusive: true
 
                     // width: ListView.view.width
 
@@ -393,34 +400,101 @@ FocusScope {
                     //
                     onClicked: function () {
                         ListView.view.currentIndex = index
+                        // libraryEntryRightClickMenu.popup()
                     }
 
                     onDoubleClicked: function () {
                         entryClicked(model.id)
                     }
 
-                    contentItem: RowLayout {
-                        // Text {
-                        //     text: "\ue87d"
-                        //     font.family: Constants.symbolFontFamily
-                        //     font.pointSize: 12
-                        //     opacity: libItemMouse.containsMouse ? 1 : 0
-                        //     color: "#b3b3b3"
-                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                        //     Layout.fillHeight: true
-                        //     Layout.preferredWidth: favoriteSection.width
+
+                    RightClickMenu {
+                        id: libraryEntryRightClickMenu
+
+                        RightClickMenuItem {
+                            text: "Play"
+                            // onTriggered: {
+                            //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
+                            //     addPlaylistRightClickMenu.popup()
+                            // }
+                        }
+
+                        RightClickMenuItem {
+                            text: "View details"
+                            // onTriggered: {
+                            //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
+                            //     addPlaylistRightClickMenu.popup()
+                            // }
+                        }
+
+                        MenuSeparator {
+                        }
+
+                        RightClickMenu {
+                            id: addPlaylistRightClickMenu
+                            enabled: ins.count > 0
+
+                            title: "Add to folder"
+
+                            Instantiator {
+                                id: ins
+                                model: playlist_model
+                                delegate: RightClickMenuItem {
+                                    text: model.display_name
+                                    onTriggered: {
+                                        playlist_model.addEntryToPlaylist(model.id, libraryEntryRightClickMenu.entryId)
+                                        library_model.updatePlaylistsForEntry(libraryEntryRightClickMenu.entryId)
+                                        // Add your action here
+                                    }
+                                }
+
+                                onObjectAdded: function (index, object) {
+                                    addPlaylistRightClickMenu.insertItem(index, object)
+                                }
+                                onObjectRemoved: function (index, object) {
+                                    addPlaylistRightClickMenu.removeItem(object)
+                                }
+                            }
+                        }
+
+                        MenuSeparator {
+                        }
+
+                        RightClickMenuItem {
+                            enabled: false
+                            text: "Manage save data"
+                            // onTriggered: {
+                            //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
+                            //     addPlaylistRightClickMenu.popup()
+                            // }
+                        }
+
+                        // MenuSeparator {
                         // }
+
+                        // RightClickMenuItem {
+                        //     text: "Show in filesystem"
+                        //     // onTriggered: {
+                        //     //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
+                        //     //     addPlaylistRightClickMenu.popup()
+                        //     // }
+                        // }
+
+
+                    }
+
+                    contentItem: RowLayout {
 
                         Flow {
                             Layout.fillHeight: true
-                            Layout.fillWidth: true
+                            // Layout.fillWidth: true
                             Layout.preferredWidth: libraryList.titleColumnWidth
 
                             Text {
                                 text: model.display_name
                                 font.pointSize: 11
                                 font.family: Constants.regularFontFamily
-                                color: libItemButton.ListView.isCurrentItem ? "black" : "#ffffff"
+                                color: libItemButton.ListView.isCurrentItem ? "white" : "black"
                                 wrapMode: Text.WordWrap
                                 width: parent.width
                             }
@@ -430,7 +504,7 @@ FocusScope {
                                 text: model.parent_game_name
                                 font.pointSize: 10
                                 font.family: Constants.regularFontFamily
-                                color: libItemButton.ListView.isCurrentItem ? "black" : "#b3b3b3"
+                                color: libItemButton.ListView.isCurrentItem ? "white" : "black"
                             }
                         }
 
@@ -438,8 +512,8 @@ FocusScope {
                             text: model.platform_name
                             font.pointSize: 10
                             font.family: Constants.regularFontFamily
-                            color: libItemButton.ListView.isCurrentItem ? "black" : (libItemMouse.hovered ? "white" : "#b3b3b3")
-                            opacity: libItemButton.ListView.isCurrentItem ? 0.8 : 1
+                            color: libItemButton.ListView.isCurrentItem ? "white" : "black"
+                            opacity: libItemButton.ListView.isCurrentItem ? 0.9 : (libItemMouse.hovered ? 0.9 : 0.6)
                             Layout.fillHeight: true
                             Layout.preferredWidth: libraryList.platformColumnWidth
                             // Layout.fillWidth: true
@@ -451,8 +525,8 @@ FocusScope {
                             text: model.content_path
                             font.pointSize: 10
                             font.family: Constants.regularFontFamily
-                            color: libItemButton.ListView.isCurrentItem ? "black" : (libItemMouse.hovered ? "white" : "#b3b3b3")
-                            opacity: libItemButton.ListView.isCurrentItem ? 0.8 : 1
+                            color: libItemButton.ListView.isCurrentItem ? "white" : "black"
+                            opacity: libItemButton.ListView.isCurrentItem ? 0.9 : (libItemMouse.hovered ? 0.9 : 0.6)
                             Layout.fillHeight: true
                             Layout.preferredWidth: libraryList.filenameColumnWidth
                             // Layout.fillWidth: true
@@ -460,137 +534,7 @@ FocusScope {
                             // Layout.preferredWidth: 100
                         }
                     }
-
-                    // TapHandler {
-                    //     id: entryLeftHandler
-                    //     onTapped: {
-                    //         libItemButton.onClicked()
-                    //     }
-                    // }
-                    //
-                    // TapHandler {
-                    //     id: entryRightHandler
-                    //     acceptedButtons: Qt.RightButton
-                    //     onTapped: {
-                    //         libraryEntryRightClickMenu.entryId = model.id
-                    //         libraryEntryRightClickMenu.popup()
-                    //     }
-                    // }
                 }
-
-                // delegate: Button {
-                //     id: libItemButton
-                //     background: Rectangle {
-                //         // color: libItemButton.checked ?
-                //         //     (libItemMouse.pressed ?
-                //         //         "#2b2b2b"
-                //         //         : ((libItemMouse.containsMouse ?
-                //         //             "#393939"
-                //         //             : "#232323")))
-                //         //     : (libItemMouse.pressed ?
-                //         //         "#020202"
-                //         //         : (libItemMouse.containsMouse ?
-                //         //             "#1a1a1a"
-                //         //             : "transparent"))
-                //         color: entryHoverHandler.hovered ? "white" : "transparent"
-                //         opacity: 0.2
-                //         radius: 4
-                //     }
-                //     autoExclusive: true
-                //
-                //     // width: ListView.view.width
-                //
-                //     verticalPadding: 8
-                //
-                //     onClicked: function () {
-                //         entryClicked(model.id)
-                //     }
-                //
-                //     contentItem: RowLayout {
-                //         // Text {
-                //         //     text: "\ue87d"
-                //         //     font.family: Constants.symbolFontFamily
-                //         //     font.pointSize: 12
-                //         //     opacity: libItemMouse.containsMouse ? 1 : 0
-                //         //     color: "#b3b3b3"
-                //         //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                //         //     Layout.fillHeight: true
-                //         //     Layout.preferredWidth: favoriteSection.width
-                //         // }
-                //
-                //         Flow {
-                //             Layout.fillHeight: true
-                //             Layout.fillWidth: true
-                //             Layout.preferredWidth: titleSection.width
-                //
-                //             Text {
-                //                 text: model.display_name
-                //                 font.pointSize: 11
-                //                 font.family: Constants.semiboldFontFamily
-                //                 color: "#ffffff"
-                //                 wrapMode: Text.WordWrap
-                //                 width: parent.width
-                //             }
-                //
-                //             Text {
-                //                 visible: model.parent_game_name !== ""
-                //                 text: model.parent_game_name
-                //                 font.pointSize: 10
-                //                 font.family: Constants.regularFontFamily
-                //                 color: "#b3b3b3"
-                //             }
-                //         }
-                //
-                //         Text {
-                //             text: model.platform_name
-                //             font.pointSize: 10
-                //             font.family: Constants.regularFontFamily
-                //             color: entryHoverHandler.hovered ? "white" : "#b3b3b3"
-                //             Layout.fillHeight: true
-                //             Layout.fillWidth: true
-                //             Layout.preferredWidth: platformSection.width
-                //             // Layout.fillWidth: true
-                //             // Layout.horizontalStretchFactor: 1
-                //             // Layout.preferredWidth: 100
-                //         }
-                //
-                //         Text {
-                //             text: model.content_path
-                //             font.pointSize: 10
-                //             font.family: Constants.regularFontFamily
-                //             color: entryHoverHandler.hovered ? "white" : "#b3b3b3"
-                //             Layout.fillHeight: true
-                //             Layout.fillWidth: true
-                //             Layout.preferredWidth: filenameSection.width
-                //             // Layout.fillWidth: true
-                //             // Layout.horizontalStretchFactor: 1
-                //             // Layout.preferredWidth: 100
-                //         }
-                //     }
-                //
-                //     HoverHandler {
-                //         id: entryHoverHandler
-                //         cursorShape: Qt.PointingHandCursor
-                //     }
-                //
-                //     TapHandler {
-                //         id: entryLeftHandler
-                //         onTapped: {
-                //             libItemButton.onClicked()
-                //         }
-                //     }
-                //
-                //     TapHandler {
-                //         id: entryRightHandler
-                //         acceptedButtons: Qt.RightButton
-                //         onTapped: {
-                //             libraryEntryRightClickMenu.entryId = model.id
-                //             libraryEntryRightClickMenu.popup()
-                //         }
-                //     }
-                // }
-                // preferredHighlightBegin: height / 3
-                // preferredHighlightEnd: 2 * (height / 3) + currentItem.height
             }
         }
     }

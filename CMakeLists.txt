@@ -205,6 +205,7 @@ add_executable(fl_test
         tests/app/library/library_entry_test.cpp
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
+        tests/app/db/sqlite_content_database_test.cpp
 )
 
 #target_compile_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")

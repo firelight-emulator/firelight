@@ -20,18 +20,11 @@ Item {
 
             Text {
                 text: "Controllers"
-                color: "#dadada"
+                color: Constants.purpleText
                 font.pointSize: 24
                 font.family: Constants.semiboldFontFamily
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
-            }
-
-            Rectangle {
-                width: parent.width
-                height: 1
-                opacity: 0.3
-                color: "#dadada"
             }
         }
     }
@@ -53,14 +46,14 @@ Item {
                 color: "transparent"
                 radius: 4
                 opacity: 0.3
-                border.color: "white"
+                border.color: "black"
                 border.width: 1
             }
 
             Text {
                 anchors.fill: parent
                 text: "No controller connected"
-                color: "white"
+                color: "black"
                 opacity: 0.5
                 font.pointSize: 11
                 font.family: Constants.regularFontFamily
@@ -78,14 +71,14 @@ Item {
                 color: "transparent"
                 radius: 4
                 opacity: 0.3
-                border.color: "white"
+                border.color: "black"
                 border.width: 1
             }
 
             Text {
                 anchors.fill: parent
                 text: "No controller connected"
-                color: "white"
+                color: "black"
                 opacity: 0.5
                 font.pointSize: 11
                 font.family: Constants.regularFontFamily
@@ -103,14 +96,14 @@ Item {
                 color: "transparent"
                 radius: 4
                 opacity: 0.3
-                border.color: "white"
+                border.color: "black"
                 border.width: 1
             }
 
             Text {
                 anchors.fill: parent
                 text: "No controller connected"
-                color: "white"
+                color: "black"
                 opacity: 0.5
                 font.pointSize: 11
                 font.family: Constants.regularFontFamily
@@ -128,14 +121,14 @@ Item {
                 color: "transparent"
                 radius: 4
                 opacity: 0.3
-                border.color: "white"
+                border.color: "black"
                 border.width: 1
             }
 
             Text {
                 anchors.fill: parent
                 text: "No controller connected"
-                color: "white"
+                color: "black"
                 opacity: 0.5
                 font.pointSize: 11
                 font.family: Constants.regularFontFamily

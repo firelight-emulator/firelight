@@ -3,13 +3,18 @@ import QtQuick
 pragma Singleton
 
 Item {
+
+    readonly property color purpleText: "#5a4854"
+    readonly property color purpleTextLight: "#ad9cac"
+    readonly property color purpleBackground: "#fafcf7"
+
     // RIGHT-CLICK MENU
     readonly property color rightClickMenu_BackgroundColor: "#282828"
     readonly property int rightClickMenu_BackgroundRadius: 4
     readonly property int rightClickMenu_Padding: 4
 
     // RIGHT-CLICK MENU ITEM
-    readonly property int rightClickMenuItem_DefaultHeight: 40
+    readonly property int rightClickMenuItem_DefaultHeight: 36
     readonly property color rightClickMenuItem_HoverColor: "#3a3a3a"
     readonly property int rightClickMenuItem_BackgroundRadius: 4
     readonly property color rightClickMenuItem_TextColor: "#f1f1f1"

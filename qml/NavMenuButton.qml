@@ -62,7 +62,7 @@ Button {
         //         : (mouse.containsMouse ?
         //             "#1a1a1a"
         //             : "transparent"))
-        radius: 6
+        radius: 4
     }
 
     MouseArea {

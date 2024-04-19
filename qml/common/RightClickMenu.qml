@@ -8,12 +8,18 @@ Menu {
     id: control
 
     padding: Constants.rightClickMenu_Padding
-    overlap: 10
+    // overlap: 10
+
+    // contentWidth: 260
+    // contentHeight: Constants.rightClickMenuItem_DefaultHeight
+
+    // implicitContentWidth: 260
+    // // implicitContentHeight: control.count * Constants.rightClickMenuItem_DefaultHeight
 
     background: Rectangle {
         id: bg
         implicitWidth: 260
-        implicitHeight: control.count * Constants.rightClickMenuItem_DefaultHeight
+        implicitHeight: 48
         color: Constants.rightClickMenu_BackgroundColor
         radius: Constants.rightClickMenu_BackgroundRadius
     }
