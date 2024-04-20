@@ -53,6 +53,11 @@ Item {
         }
     }
 
+    DiscoverPage {
+        id: modsPage
+        visible: false
+    }
+
     ControllersPage {
         id: controllerPage
         visible: false
@@ -180,10 +185,8 @@ Item {
                 Layout.preferredHeight: 40
 
                 onToggled: function () {
-                    stackview.replace(thingy, {text: "Mods"})
+                    stackview.replace(modsPage)
                 }
-
-                enabled: false
             }
             NavMenuButton {
                 id: controllersNavButton
