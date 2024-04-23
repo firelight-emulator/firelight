@@ -33,7 +33,7 @@ find_package(OpenGL REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
+find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
 find_package(GTest)
 
 find_package(PkgConfig REQUIRED)
@@ -42,7 +42,7 @@ pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
 pkg_check_modules(AVUTIL REQUIRED IMPORTED_TARGET libavutil)
 pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
 
-qt6_standard_project_setup(REQUIRES 6.5)
+qt6_standard_project_setup(REQUIRES 6.7)
 
 set(CMAKE_CXX_STANDARD 17)
 

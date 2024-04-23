@@ -79,9 +79,9 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        width: 48
+        width: 250
         background: Rectangle {
-            color: "#000000"
+            color: "#101114"
         }
         padding: 4
         KeyNavigation.right: stackview
@@ -105,10 +105,10 @@ Item {
             }
 
             onPressed: function () {
-                if (drawer.width === 220) {
+                if (drawer.width === 250) {
                     drawer.width = 48
                 } else {
-                    drawer.width = 220
+                    drawer.width = 250
                 }
             }
 
@@ -156,7 +156,7 @@ Item {
                 labelText: "Home"
                 labelIcon: "\ue88a"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: 48
                 enabled: false
 
                 onToggled: function () {
@@ -169,7 +169,7 @@ Item {
                 labelText: "Library"
                 labelIcon: "\uf53e"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: 48
                 checked: true
 
                 onToggled: function () {
@@ -182,7 +182,7 @@ Item {
                 labelText: "Mods"
                 labelIcon: "\uef48"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: 48
 
                 onToggled: function () {
                     stackview.replace(modsPage)
@@ -194,7 +194,7 @@ Item {
                 labelText: "Controllers"
                 labelIcon: "\uf135"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: 48
 
                 onToggled: function () {
                     stackview.replace(controllerPage)
@@ -212,7 +212,7 @@ Item {
                 labelText: "Now Playing"
                 labelIcon: "\ue037"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: 48
 
                 onToggled: function () {
                     stackview.replace(nowPlayingPage)
@@ -227,7 +227,7 @@ Item {
                 labelText: "Settings"
                 labelIcon: "\ue8b8"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: 48
 
                 onToggled: function () {
                     stackview.replace(settingsPage)
@@ -243,7 +243,7 @@ Item {
                 labelText: "Profile"
                 labelIcon: "\ue853"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: 48
                 enabled: false
 
                 onToggled: function () {

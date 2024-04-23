@@ -36,7 +36,6 @@ Item {
 
     Item {
         id: content
-        anchors.topMargin: 4
         anchors.top: header.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -53,7 +52,7 @@ Item {
             delegate: Button {
                 id: button
                 height: 100
-                width: 200
+                width: parent.width / 2
                 padding: 4
 
                 scale: pressed ? 0.99 : 1
@@ -134,55 +133,54 @@ Item {
 
                     Image {
                         id: img
-                        Layout.alignment: Qt.AlignTop
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: width / 2
+                        Layout.fillHeight: true
+                        Layout.preferredWidth: height * 2
                         // visible: false
                         source: model.image_source
                         fillMode: Image.Stretch
                     }
-                    //
-                    // ColumnLayout {
-                    //     Layout.topMargin: 4
-                    //     Layout.bottomMargin: 4
-                    //     Layout.fillHeight: true
-                    //     Layout.fillWidth: true
-                    //     spacing: 4
-                    //
-                    //     Text {
-                    //         Layout.fillWidth: true
-                    //         text: model.name
-                    //         font.family: Constants.semiboldFontFamily
-                    //         font.pointSize: 14
-                    //         verticalAlignment: Text.AlignVCenter
-                    //         color: "black"
-                    //         opacity: 0.9
-                    //     }
-                    //
-                    //     Text {
-                    //         Layout.fillWidth: true
-                    //         text: "by " + model.primary_author
-                    //         font.family: Constants.regularFontFamily
-                    //         font.pointSize: 10
-                    //         verticalAlignment: Text.AlignVCenter
-                    //         color: "black"
-                    //         opacity: 0.7
-                    //     }
-                    //     Item {
-                    //         Layout.fillWidth: true
-                    //         Layout.fillHeight: true
-                    //     }
-                    //
-                    //     Text {
-                    //         Layout.fillWidth: true
-                    //         text: "Mod for " + model.target_game_name + " (" + model.platform_name + ")"
-                    //         font.family: Constants.regularFontFamily
-                    //         font.pointSize: 10
-                    //         verticalAlignment: Text.AlignVCenter
-                    //         color: "black"
-                    //         opacity: 0.7
-                    //     }
-                    // }
+
+                    ColumnLayout {
+                        Layout.topMargin: 4
+                        Layout.bottomMargin: 4
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: model.name
+                            font.family: Constants.semiboldFontFamily
+                            font.pointSize: 14
+                            verticalAlignment: Text.AlignVCenter
+                            color: "black"
+                            opacity: 0.9
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: "by " + model.primary_author
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 10
+                            verticalAlignment: Text.AlignVCenter
+                            color: "black"
+                            opacity: 0.7
+                        }
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Mod for " + model.target_game_name + " (" + model.platform_name + ")"
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 10
+                            verticalAlignment: Text.AlignVCenter
+                            color: "black"
+                            opacity: 0.7
+                        }
+                    }
                 }
             }
         }

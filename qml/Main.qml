@@ -27,7 +27,7 @@ ApplicationWindow {
     // }
 
     background: Rectangle {
-        color: "#e4e4e4"
+        color: "#1a1b1e"
     }
 
     // Rectangle {
