@@ -28,11 +28,7 @@ Flickable {
 
         Column {
             id: theColumn
-            Layout.preferredWidth: (Math.min(Math.floor(parent.width / libraryGrid.cellContentWidth), 9) * libraryGrid.cellContentWidth)
-
-            // onWidthChanged: {
-            //     console.log("Column width changed to " + width)
-            // }
+            Layout.preferredWidth: Math.max(5, (Math.min(Math.floor(parent.width / libraryGrid.cellContentWidth), 9)) * libraryGrid.cellContentWidth)
 
             Pane {
                 id: header
@@ -195,6 +191,14 @@ Flickable {
                             anchors {
                                 fill: parent
                                 margins: libraryGrid.cellSpacing / 2
+                            }
+
+                            scale: pressed ? 0.97 : 1
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 64
+                                    easing.type: Easing.InOutQuad
+                                }
                             }
                             // bottomInset: 12
                             // rightInset: 12
