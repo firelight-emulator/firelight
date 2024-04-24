@@ -29,6 +29,7 @@ Button {
 
             font.family: Constants.symbolFontFamily
             font.pixelSize: 24
+            font.weight: Font.Light
             color: "white"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

@@ -134,6 +134,8 @@ void LibraryItemModel::addPatchToLibrary(const int patchId) const {
        std::filesystem::copy_options::update_existing);
 }
 
+int LibraryItemModel::getCount() const { return m_items.size(); }
+
 void LibraryItemModel::refresh() {
   emit beginResetModel();
   m_items.clear();
@@ -168,6 +170,7 @@ void LibraryItemModel::refresh() {
               QString::fromStdString(entry.contentPath),
               QString::fromStdString(parentGameName), lastSessionTime}));
   }
+  emit countChanged();
   emit endResetModel();
 }
 

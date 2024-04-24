@@ -8,7 +8,6 @@ import Firelight 1.0
 import FirelightStyle 1.0
 
 Item {
-
     signal gameStartRequested(int entryId)
 
     Component {
@@ -118,7 +117,7 @@ Item {
 
         ColumnLayout {
             anchors.fill: parent
-            spacing: 4
+            spacing: 0
 
             Item {
                 Layout.fillWidth: true
@@ -129,8 +128,9 @@ Item {
                 text: "Firelight"
                 opacity: parent.width > 48 ? 1 : 0
                 color: "#dadada"
-                font.pointSize: 16
-                font.family: Constants.semiboldFontFamily
+                font.pointSize: 12
+                font.weight: Font.DemiBold
+                font.family: Constants.regularFontFamily
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -139,7 +139,8 @@ Item {
                 text: "alpha (0.4.0a)"
                 opacity: parent.width > 48 ? 1 : 0
                 color: "#dadada"
-                font.pointSize: 10
+                font.pointSize: 8
+                font.weight: Font.DemiBold
                 font.family: Constants.regularFontFamily
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
@@ -147,9 +148,8 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 10
+                Layout.preferredHeight: 12
             }
-
             NavMenuButton {
                 id: homeNavButton
                 KeyNavigation.down: libraryNavButton
@@ -164,9 +164,21 @@ Item {
                 }
             }
             NavMenuButton {
+                id: modNavButton
+                KeyNavigation.down: controllersNavButton
+                labelText: "Market"
+                labelIcon: "\uea12"
+                Layout.preferredWidth: parent.width
+                Layout.preferredHeight: 48
+
+                onToggled: function () {
+                    stackview.replace(modsPage)
+                }
+            }
+            NavMenuButton {
                 id: libraryNavButton
                 KeyNavigation.down: modNavButton
-                labelText: "Library"
+                labelText: "My Library"
                 labelIcon: "\uf53e"
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 48
@@ -176,21 +188,33 @@ Item {
                     stackview.replace(libraryPage)
                 }
             }
-            NavMenuButton {
-                id: modNavButton
-                KeyNavigation.down: controllersNavButton
-                labelText: "Mods"
-                labelIcon: "\uef48"
-                Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 48
-
-                onToggled: function () {
-                    stackview.replace(modsPage)
-                }
+            // Rectangle {
+            //     Layout.topMargin: 8
+            //     Layout.bottomMargin: 8
+            //     Layout.preferredWidth: parent.width
+            //     Layout.preferredHeight: 1
+            //     opacity: 0.3
+            //     color: "#dadada"
+            // }
+            // NavMenuButton {
+            //     id: nowPlayingNavButton
+            //     KeyNavigation.down: settingsNavButton
+            //     labelText: "Now Playing"
+            //     labelIcon: "\ue037"
+            //     Layout.preferredWidth: parent.width
+            //     Layout.preferredHeight: 48
+            //
+            //     onToggled: function () {
+            //         stackview.replace(nowPlayingPage)
+            //     }
+            // }
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
             }
             NavMenuButton {
                 id: controllersNavButton
-                KeyNavigation.down: nowPlayingNavButton
+                // KeyNavigation.down: nowPlayingNavButton
                 labelText: "Controllers"
                 labelIcon: "\uf135"
                 Layout.preferredWidth: parent.width
@@ -199,28 +223,6 @@ Item {
                 onToggled: function () {
                     stackview.replace(controllerPage)
                 }
-            }
-            Rectangle {
-                Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 1
-                opacity: 0.3
-                color: "#dadada"
-            }
-            NavMenuButton {
-                id: nowPlayingNavButton
-                KeyNavigation.down: settingsNavButton
-                labelText: "Now Playing"
-                labelIcon: "\ue037"
-                Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 48
-
-                onToggled: function () {
-                    stackview.replace(nowPlayingPage)
-                }
-            }
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
             }
             NavMenuButton {
                 id: settingsNavButton
@@ -233,12 +235,7 @@ Item {
                     stackview.replace(settingsPage)
                 }
             }
-            Rectangle {
-                Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 1
-                opacity: 0.3
-                color: "#dadada"
-            }
+
             NavMenuButton {
                 labelText: "Profile"
                 labelIcon: "\ue853"

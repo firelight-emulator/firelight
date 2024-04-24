@@ -18,6 +18,7 @@ namespace firelight::gui {
  */
 class LibraryItemModel final : public QAbstractListModel {
   Q_OBJECT
+  Q_PROPERTY(int count READ getCount NOTIFY countChanged)
 
 public:
   /**
@@ -73,8 +74,13 @@ public:
   Q_INVOKABLE void addModToLibrary(int modId); // TODO: TEMPORARY
   Q_INVOKABLE void addPatchToLibrary(int patchId) const;
 
+  [[nodiscard]] int getCount() const;
+
 public slots:
   void refresh();
+
+signals:
+  void countChanged();
 
 private:
   /**
