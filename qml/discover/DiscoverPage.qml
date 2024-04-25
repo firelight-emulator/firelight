@@ -333,7 +333,33 @@ Flickable {
                             // }
 
                             onClicked: function () {
-                                rootItem.GridView.view.currentIndex = model.index
+
+                                //                         contentPopup.modId = model.id
+                                //                         contentPopup.name = model.name
+                                //                         contentPopup.author = model.primary_author
+                                //                         contentPopup.description = model.description
+                                //                         contentPopup.targetGameName = model.target_game_name
+                                //                         contentPopup.modInLibrary = library_model.isModInLibrary(model.id)
+                                //
+                                //                         contentPopup.targetInLibrary = false
+                                //                         for (let i = 0; i < model.rom_ids.length; i++) {
+                                //                             if (library_model.isRomInLibrary(model.rom_ids[i])) {
+                                //                                 contentPopup.targetInLibrary = true
+                                //                                 break
+                                //                             }
+                                //                         }
+                                root.StackView.view.push(contentThing, {
+                                    modId: model.id,
+                                    name: model.name,
+                                    author: model.primary_author,
+                                    description: model.description,
+                                    targetGameName: model.target_game_name,
+                                    modInLibrary: library_model.isModInLibrary(model.id),
+                                    targetInLibrary: false,
+                                    romId: -1,
+                                    gameReleaseId: -1
+                                })
+                                // rootItem.GridView.view.currentIndex = model.index
                                 // libraryEntryRightClickMenu.popup()
                             }
 
@@ -350,6 +376,14 @@ Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
+        }
+    }
+
+    Component {
+        id: contentThing
+
+        StoreContent {
+            anchors.centerIn: parent
         }
     }
 

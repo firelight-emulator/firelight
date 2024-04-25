@@ -203,8 +203,8 @@ Flickable {
                             background: Rectangle {
                                 color: libItemButton.hovered ? "#3a3e45" : "#25282C"
                                 radius: 6
-                                border.color: rootItem.GridView.isCurrentItem ? "white" : "transparent"
-                                border.width: 2
+                                // border.color: rootItem.GridView.isCurrentItem ? "white" : "transparent"
+                                // border.width: 2
                                 // leftInset: -2
                                 // rightInset: -2
                                 // topInset: -2

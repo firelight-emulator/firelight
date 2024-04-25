@@ -43,35 +43,50 @@ Item {
         }
     }
 
-    LibraryPage {
+    Component {
         id: libraryPage
-        visible: false
+        LibraryPage {
+            property bool topLevel: true
 
-        onEntryClicked: function (id) {
-            gameStartRequested(id)
+            property string topLevelName: "library"
+            onEntryClicked: function (id) {
+                gameStartRequested(id)
+            }
         }
     }
 
-    DiscoverPage {
+    Component {
         id: modsPage
-        visible: false
+        DiscoverPage {
+            property bool topLevel: true
+            property string topLevelName: "mods"
+        }
     }
 
-    ControllersPage {
+
+    Component {
         id: controllerPage
-        visible: false
+        ControllersPage {
+            property bool topLevel: true
+            property string topLevelName: "controllers"
+        }
     }
 
-    SettingsPage {
+    Component {
         id: settingsPage
-        visible: false
+        SettingsPage {
+            property bool topLevel: true
+            property string topLevelName: "settings"
+        }
     }
 
-    NowPlayingPage {
+    Component {
         id: nowPlayingPage
-        visible: false
+        NowPlayingPage {
+            property bool topLevel: true
+            property string topLevelName: "nowPlaying"
+        }
     }
-
 
     Pane {
         id: drawer
@@ -104,11 +119,12 @@ Item {
             }
 
             onPressed: function () {
-                if (drawer.width === 250) {
-                    drawer.width = 48
-                } else {
-                    drawer.width = 250
-                }
+                stackview.pop()
+                // if (drawer.width === 250) {
+                //     drawer.width = 48
+                // } else {
+                //     drawer.width = 250
+                // }
             }
 
             anchors.top: parent.top
@@ -159,8 +175,10 @@ Item {
                 Layout.preferredHeight: 48
                 enabled: false
 
+                checked: stackview.topLevelName === "home"
+
                 onToggled: function () {
-                    stackview.replace(thingy, {text: "Home"})
+                    stackview.push(thingy, {text: "Home"})
                 }
             }
             NavMenuButton {
@@ -171,8 +189,10 @@ Item {
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 48
 
+                checked: stackview.topLevelName === "mods"
+
                 onToggled: function () {
-                    stackview.replace(modsPage)
+                    stackview.push(modsPage)
                 }
             }
             NavMenuButton {
@@ -182,10 +202,11 @@ Item {
                 labelIcon: "\uf53e"
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 48
-                checked: true
+
+                checked: stackview.topLevelName === "library"
 
                 onToggled: function () {
-                    stackview.replace(libraryPage)
+                    stackview.push(libraryPage)
                 }
             }
             // Rectangle {
@@ -220,8 +241,10 @@ Item {
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 48
 
+                checked: stackview.topLevelName === "controllers"
+
                 onToggled: function () {
-                    stackview.replace(controllerPage)
+                    stackview.push(controllerPage)
                 }
             }
             NavMenuButton {
@@ -231,8 +254,10 @@ Item {
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 48
 
+                checked: stackview.topLevelName === "settings"
+
                 onToggled: function () {
-                    stackview.replace(settingsPage)
+                    stackview.push(settingsPage)
                 }
             }
 
@@ -241,10 +266,14 @@ Item {
                 labelIcon: "\ue853"
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 48
+
+
+                checked: stackview.topLevelName === "nowPlaying"
+
                 enabled: false
 
                 onToggled: function () {
-                    stackview.replace(thingy, {text: "Profile"})
+                    stackview.push(thingy, {text: "Profile"})
                 }
             }
         }
@@ -261,62 +290,126 @@ Item {
         background: Item {
         }
 
-        StackView {
-            id: stackview
+        ColumnLayout {
             anchors.fill: parent
 
-            initialItem: libraryPage
+            Pane {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
 
-            pushEnter: Transition {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: 200
+                z: 2
+
+                background: Item {
                 }
-            }
-            pushExit: Transition {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: 200
-                }
-            }
-            popEnter: Transition {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: 200
-                }
-            }
-            popExit: Transition {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: 200
-                }
-            }
-            replaceEnter: Transition {
-                ParallelAnimation {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: 400
+
+                Button {
+                    id: melol
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    // horizontalPadding: 12
+                    // verticalPadding: 8
+
+                    enabled: stackview.depth > 1
+
+                    hoverEnabled: false
+
+                    HoverHandler {
+                        id: myHover
+                        cursorShape: melol.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                     }
-                    PropertyAnimation {
-                        property: "x"
-                        from: 20
-                        to: 0
-                        duration: 250
+
+                    background: Rectangle {
+                        color: enabled ? myHover.hovered ? "#4e535b" : "#3e434b" : "#3e434b"
+                        radius: height / 2
+                        // border.color: "#7d848c"
+                    }
+
+                    contentItem: Text {
+                        text: "\ue5c4"
+                        color: enabled ? "white" : "#7d848c"
+                        font.pointSize: 11
+                        font.family: Constants.symbolFontFamily
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    onClicked: {
+                        stackview.pop()
                     }
                 }
             }
-            replaceExit: Transition {
+
+            StackView {
+                id: stackview
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                property string topLevelName: ""
+
+                onCurrentItemChanged: {
+                    if (currentItem) {
+                        let top = stackview.find(function (item, index) {
+                            return item.topLevel === true
+                        })
+
+                        stackview.topLevelName = top ? top.topLevelName : ""
+                    }
+                }
+
+                initialItem: libraryPage
+
+                pushEnter: Transition {
+                    // PropertyAnimation {
+                    //     property: "opacity"
+                    //     from: 0
+                    //     to: 1
+                    //     duration: 200
+                    // }
+                }
+                pushExit: Transition {
+                    // PropertyAnimation {
+                    //     property: "opacity"
+                    //     from: 1
+                    //     to: 0
+                    //     duration: 200
+                    // }
+                }
+                popEnter: Transition {
+                    // PropertyAnimation {
+                    //     property: "opacity"
+                    //     from: 0
+                    //     to: 1
+                    //     duration: 200
+                    // }
+                }
+                popExit: Transition {
+                    // PropertyAnimation {
+                    //     property: "opacity"
+                    //     from: 1
+                    //     to: 0
+                    //     duration: 200
+                    // }
+                }
+                replaceEnter: Transition {
+                    // ParallelAnimation {
+                    //     PropertyAnimation {
+                    //         property: "opacity"
+                    //         from: 0
+                    //         to: 1
+                    //         duration: 400
+                    //     }
+                    //     PropertyAnimation {
+                    //         property: "x"
+                    //         from: 20
+                    //         to: 0
+                    //         duration: 250
+                    //     }
+                    // }
+                }
+                replaceExit: Transition {
+                }
             }
+
         }
     }
 }
