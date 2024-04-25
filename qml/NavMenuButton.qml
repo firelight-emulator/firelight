@@ -29,8 +29,9 @@ Button {
 
             font.family: Constants.symbolFontFamily
             font.pixelSize: 24
-            font.weight: Font.Light
-            color: "white"
+            font.weight: Font.ExtraLight
+            // font.variableAxes: { "FILL": 1 }
+            color: control.enabled ? "white" : "#aaaaaa"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
@@ -41,14 +42,14 @@ Button {
             height: parent.height
             font.pointSize: 11
             font.family: Constants.regularFontFamily
-            color: "white"
+            color: control.enabled ? "white" : "#aaaaaa"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
         }
     }
 
     background: Rectangle {
-        color: control.checked ? "#58595b" : mouse.containsMouse ? "#404143" : "transparent"
+        color: control.enabled ? (mouse.containsMouse ? "#404143" : (control.checked ? "#58595b" : "transparent")) : "transparent"
         // opacity: control.enabled ? (control.checked ? 1.0 : mouse.containsMouse ? 0.2 : 0.0) : 0.0
         // color: control.checked ?
         //     (mouse.pressed ?

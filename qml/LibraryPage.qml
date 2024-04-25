@@ -28,7 +28,7 @@ Flickable {
 
         Column {
             id: theColumn
-            Layout.preferredWidth: Math.max(5, (Math.min(Math.floor(parent.width / libraryGrid.cellContentWidth), 9)) * libraryGrid.cellContentWidth)
+            Layout.preferredWidth: Math.max(5, (Math.min(Math.floor(parent.width / libraryGrid.cellContentWidth), 8)) * libraryGrid.cellContentWidth)
 
             Pane {
                 id: header
@@ -72,7 +72,7 @@ Flickable {
                     Text {
                         Layout.fillHeight: true
                         Layout.alignment: Qt.AlignBottom
-                        text: "Showing " + library_model.count + " games"
+                        text: "Showing " + library_model.count + " game" + (library_model.count === 1 ? "" : "s")
                         color: "#C2BBBB"
                         font.pointSize: 11
                         font.family: Constants.regularFontFamily
@@ -93,7 +93,7 @@ Flickable {
 
                         hoverEnabled: true
 
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
                         background: Rectangle {
                             color: melol.hovered ? "#4e535b" : "#3e434b"
                             radius: 12
@@ -111,7 +111,7 @@ Flickable {
                     }
 
                     Item {
-                        Layout.preferredWidth: 12
+                        Layout.preferredWidth: 8
                     }
 
                     Text {
@@ -165,8 +165,8 @@ Flickable {
 
                     interactive: false
                     readonly property int cellSpacing: 12
-                    readonly property int cellContentWidth: 180
-                    readonly property int cellContentHeight: 260
+                    readonly property int cellContentWidth: 180 + cellSpacing
+                    readonly property int cellContentHeight: 260 + cellSpacing
 
                     populate: Transition {
                     }
@@ -176,7 +176,6 @@ Flickable {
                     model: library_short_model
                     boundsBehavior: Flickable.StopAtBounds
                     keyNavigationEnabled: true
-                    // delegate: gameListItem
 
                     highlight: Item {
                     }
@@ -200,22 +199,16 @@ Flickable {
                                     easing.type: Easing.InOutQuad
                                 }
                             }
-                            // bottomInset: 12
-                            // rightInset: 12
-                            // leftInset: 12
-                            // topInset: 12
-                            //
-                            // padding: 12
-
-                            // padding: 8
-                            // verticalPadding: 0
-                            // horizontalPadding: 0
 
                             background: Rectangle {
                                 color: libItemButton.hovered ? "#3a3e45" : "#25282C"
                                 radius: 6
                                 border.color: rootItem.GridView.isCurrentItem ? "white" : "transparent"
                                 border.width: 2
+                                // leftInset: -2
+                                // rightInset: -2
+                                // topInset: -2
+                                // bottomInset: -2
                             }
 
                             contentItem: ColumnLayout {
@@ -223,7 +216,7 @@ Flickable {
                                 spacing: 0
                                 anchors {
                                     fill: parent
-                                    margins: 3
+                                    // margins: 2
                                 }
 
                                 // Image {
@@ -259,6 +252,8 @@ Flickable {
                                     color: "grey"
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: colLayout.width
+                                    topLeftRadius: 6
+                                    topRightRadius: 6
 
                                     Text {
                                         text: "Box art coming soon :)"
@@ -279,7 +274,7 @@ Flickable {
                                         spacing: 2
                                         anchors {
                                             fill: parent
-                                            margins: 8
+                                            margins: 6
                                         }
 
                                         Text {

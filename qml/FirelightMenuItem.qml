@@ -40,7 +40,7 @@ Button {
             text: control.labelText
             height: parent.height
             font.pointSize: 11
-            font.family: Constants.semiboldFontFamily
+            font.family: Constants.regularFontFamily
             color: control.checked ? "black" : "#dadada"
             opacity: control.enabled ? (control.checked ? 0.8 : 1) : 0.65
             horizontalAlignment: Text.AlignLeft
