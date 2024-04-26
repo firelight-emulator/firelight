@@ -126,6 +126,13 @@ Flickable {
                     }
 
                     ComboBox {
+                        background: Rectangle {
+                            implicitWidth: 140
+                            implicitHeight: 40
+                            color: "#3e434b"
+                            radius: 12
+                            border.color: "#7d848c"
+                        }
                         model: ["A-Z", "Recently played", "Date added (newest first)", "Date added (oldest first)"]
                     }
                 }
