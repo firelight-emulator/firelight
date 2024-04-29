@@ -19,55 +19,9 @@ ApplicationWindow {
     visible: true
 
     title: qsTr("Firelight")
-    // background: Image {
-    //     source: "file:orange.jpg"
-    //     width: 2560
-    //     height: 1440
-    //     fillMode: Image.Stretch
-    // }
 
     background: Rectangle {
         color: "#1a1b1e"
-    }
-
-    // Rectangle {
-    //     anchors.fill: parent
-    //     parent: window.activeFocusItem
-    //     border.color: "blue"
-    //     color: "transparent"
-    // }
-
-    Component {
-        id: thingy
-
-        Pane {
-            id: header
-            property alias text: headerLabel.text
-
-            background: Item {
-            }
-
-            Column {
-                anchors.fill: parent
-                spacing: 8
-
-                Text {
-                    id: headerLabel
-                    color: "#dadada"
-                    font.pointSize: 24
-                    font.family: Constants.semiboldFontFamily
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                Rectangle {
-                    width: parent.width
-                    height: 1
-                    opacity: 0.3
-                    color: "#dadada"
-                }
-            }
-        }
     }
 
     Component {
@@ -110,8 +64,27 @@ ApplicationWindow {
     Component {
         id: nowPlayingPage
         NowPlayingPage {
+            id: me
             property bool topLevel: true
             property string topLevelName: "nowPlaying"
+
+            onBackToMainMenuPressed: function () {
+                stackView.push(mainMenu)
+            }
+
+            onResumeGamePressed: function () {
+                emulatorStack.pop()
+            }
+
+            onRestartGamePressed: function () {
+                emulator.resetGame()
+                emulatorStack.pop()
+            }
+
+            // onCloseGamePressed: function () {
+            //     emulatorStack.pop()
+            //     emulator.closeGame()
+            // }
         }
     }
 
@@ -119,7 +92,6 @@ ApplicationWindow {
         id: mainMenu
 
         Item {
-            anchors.fill: parent
             Pane {
                 id: drawer
                 anchors.top: parent.top
@@ -208,10 +180,6 @@ ApplicationWindow {
                         enabled: false
 
                         checked: stackview.topLevelName === "home"
-
-                        onToggled: function () {
-                            stackview.push(thingy, {text: "Home"})
-                        }
                     }
                     NavMenuButton {
                         id: modNavButton
@@ -255,18 +223,6 @@ ApplicationWindow {
                             stackview.push(controllerPage)
                         }
                     }
-
-                    Button {
-                        id: button
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 200
-                        background: Rectangle {
-                            color: button.hovered ? "#4e535b" : "#3e434b"
-                            radius: 12
-                        }
-
-                        hoverEnabled: true
-                    }
                     // Rectangle {
                     //     Layout.topMargin: 8
                     //     Layout.bottomMargin: 8
@@ -292,6 +248,30 @@ ApplicationWindow {
                         Layout.fillHeight: true
                     }
                     NavMenuButton {
+                        id: nowPlayingNavButton
+                        KeyNavigation.down: settingsNavButton
+                        labelText: "Back to game"
+                        labelIcon: "\ue037"
+                        Layout.preferredWidth: parent.width
+                        Layout.preferredHeight: 48
+
+                        // visible: emulator.currentGameName !== ""
+
+                        checkable: false
+
+                        onClicked: function () {
+                            stackView.pop()
+                            // stackview.push(nowPlayingPage)
+                        }
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 8
+                        Layout.bottomMargin: 8
+                        Layout.preferredHeight: 1
+                        color: "#404143"
+                    }
+                    NavMenuButton {
                         id: settingsNavButton
                         labelText: "Settings"
                         labelIcon: "\ue8b8"
@@ -311,14 +291,9 @@ ApplicationWindow {
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
 
-
-                        checked: stackview.topLevelName === "nowPlaying"
+                        checked: stackview.topLevelName === "profile"
 
                         enabled: false
-
-                        onToggled: function () {
-                            stackview.push(thingy, {text: "Profile"})
-                        }
                     }
                 }
             }
@@ -453,7 +428,6 @@ ApplicationWindow {
                         replaceExit: Transition {
                         }
                     }
-
                 }
             }
         }
@@ -489,7 +463,7 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
-                stackView.replace(emulator, {}, StackView.Immediate)
+                stackView.pop(StackView.Immediate)
                 // emulator.resumeGame()
             }
         }
@@ -515,7 +489,6 @@ ApplicationWindow {
         id: gameLoader
 
         onGameLoaded: function (entryId, romData, saveData, corePath) {
-            console.log("loaded game!")
             emulator.loadTheThing(entryId, romData, saveData, corePath)
             overlayFadeIn.start()
         }
@@ -529,25 +502,121 @@ ApplicationWindow {
         id: emulator
         visible: false
 
+        states: [
+            State {
+                name: "suspended"
+                PropertyChanges {
+                    target: emulatorDimmer
+                    opacity: 0.4
+                }
+                PropertyChanges {
+                    emulator {
+                        layer.enabled: true
+                        blurAmount: 1
+                    }
+                }
+            },
+            State {
+                name: "running"
+                PropertyChanges {
+                    target: emulatorDimmer
+                    opacity: 0
+                }
+                PropertyChanges {
+                    emulator {
+                        layer.enabled: false
+                        blurAmount: 0
+                    }
+                }
+            }
+        ]
+
+        transitions: [
+            Transition {
+                from: "*"
+                to: "suspended"
+                SequentialAnimation {
+                    ScriptAction {
+                        script: {
+                            emulator.pauseGame()
+                        }
+                    }
+                    PropertyAction {
+                        target: emulator
+                        property: "layer.enabled"
+                        value: true
+                    }
+                    ParallelAnimation {
+                        NumberAnimation {
+                            properties: "blurAmount"
+                            duration: 250
+                            easing.type: Easing.InOutQuad
+                        }
+                        NumberAnimation {
+                            target: emulatorDimmer
+                            properties: "opacity"
+                            duration: 250
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+                }
+            },
+            Transition {
+                from: "*"
+                to: "running"
+                SequentialAnimation {
+                    ParallelAnimation {
+                        NumberAnimation {
+                            properties: "blurAmount"
+                            duration: 250
+                            easing.type: Easing.InOutQuad
+                        }
+                        NumberAnimation {
+                            target: emulatorDimmer
+                            properties: "opacity"
+                            duration: 250
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+                    PropertyAction {
+                        target: emulator
+                        property: "layer.enabled"
+                        value: false
+                    }
+
+                    ScriptAction {
+                        script: {
+                            emulator.resumeGame()
+                        }
+
+                    }
+                }
+            }
+        ]
+
         StackView.visible: true
 
-        StackView.onActivated: {
-            layer.enabled = false
-            emulator.resumeGame()
+        StackView.onActivating: {
+            state = "running"
         }
 
-        StackView.onActivating: {
-            // emulatorDimmer.opacity = 0
-        }
+        // StackView.onActivated: {
+        //     layer.enabled = false
+        //     emulator.resumeGame()
+        // }
 
         StackView.onDeactivating: {
-            layer.enabled = true
-            emulator.pauseGame()
-            // emulatorDimmer.opacity = 0.4
+            state = "suspended"
         }
-        // smooth: false
 
         property double blurAmount: 0
+
+        Behavior on blurAmount {
+            NumberAnimation {
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+        }
 
         layer.enabled: false
         layer.effect: MultiEffect {
@@ -558,14 +627,6 @@ ApplicationWindow {
             blurMax: 64
             blur: emulator.blurAmount
         }
-
-        // Keys.onEscapePressed: {
-        //     appRoot.state = "gameSuspended"
-        // }
-        //
-        // onGameLoaded: {
-        //     appRoot.state = "playingGame"
-        // }
 
         Rectangle {
             id: emulatorDimmer
@@ -585,13 +646,13 @@ ApplicationWindow {
             target: window_resize_handler
 
             function onWindowResizeStarted() {
-                if (stackView.currentItem === emulator) {
+                if (emulator.StackView.view.currentItem === emulator) {
                     emulator.pauseGame()
                 }
             }
 
             function onWindowResizeFinished() {
-                if (stackView.currentItem === emulator) {
+                if (emulator.StackView.view.currentItem === emulator) {
                     emulator.resumeGame()
                 }
             }
@@ -599,17 +660,23 @@ ApplicationWindow {
     }
 
     StackView {
-        id: stackView
-        anchors.fill: parent
-        initialItem: mainMenu
+        id: emulatorStack
+        visible: false
+
+        initialItem: emulator
 
         Keys.onEscapePressed: {
-            if (stackView.currentItem === mainMenu) {
-                stackView.pop()
+            if (emulatorStack.currentItem === emulator) {
+                // emulatorStack.pop()
+                emulatorStack.push(nowPlayingPage)
             } else {
-                stackView.push(mainMenu)
+                emulatorStack.pop()
+                // emulatorStack.push(mainMenu)
             }
         }
+
+        property bool suspended: false
+        property bool running: false
 
         pushEnter: Transition {
             ParallelAnimation {
@@ -621,8 +688,61 @@ ApplicationWindow {
                     easing.type: Easing.InOutQuad
                 }
                 PropertyAnimation {
+                    property: "x"
+                    from: -20
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        pushExit: Transition {
+
+        }
+        popEnter: Transition {
+        }
+        popExit: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "x"
+                    from: 0
+                    to: -20
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        replaceEnter: Transition {
+        }
+        replaceExit: Transition {
+        }
+    }
+
+    StackView {
+        id: stackView
+        anchors.fill: parent
+
+        Component.onCompleted: stackView.push([emulatorStack, mainMenu])
+
+        pushEnter: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
                     property: "scale"
                     from: 1.05
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
                     to: 1
                     duration: 250
                     easing.type: Easing.InOutQuad
@@ -632,16 +752,16 @@ ApplicationWindow {
         pushExit: Transition {
             ParallelAnimation {
                 PropertyAnimation {
-                    property: "blurAmount"
-                    from: 0
-                    to: 1
+                    property: "opacity"
+                    from: 1
+                    to: 0
                     duration: 250
                     easing.type: Easing.InOutQuad
                 }
                 PropertyAnimation {
                     property: "scale"
                     from: 1
-                    to: 0.92
+                    to: 0.95
                     duration: 250
                     easing.type: Easing.OutQuad
                 }
@@ -650,18 +770,18 @@ ApplicationWindow {
         popEnter: Transition {
             ParallelAnimation {
                 PropertyAnimation {
-                    property: "blurAmount"
-                    from: 1
-                    to: 0
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-                PropertyAnimation {
                     property: "scale"
-                    from: 0.92
+                    from: 0.95
                     to: 1
                     duration: 250
                     easing.type: Easing.InQuad
+                }
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
                 }
             }
         }

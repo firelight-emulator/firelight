@@ -108,7 +108,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   }
   if (manager->takeShouldResetEmulationFlag()) {
     if (core) {
-      m_paused = true;
+      // m_paused = true;
       core->reset();
       update();
     }

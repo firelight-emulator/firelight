@@ -29,8 +29,7 @@ Button {
 
             font.family: Constants.symbolFontFamily
             font.pixelSize: 24
-            color: control.checked ? "black" : "#dadada"
-            opacity: control.enabled ? (control.checked ? 0.8 : 1) : 0.65
+            color: control.enabled ? "white" : "#aaaaaa"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
@@ -41,27 +40,15 @@ Button {
             height: parent.height
             font.pointSize: 11
             font.family: Constants.regularFontFamily
-            color: control.checked ? "black" : "#dadada"
-            opacity: control.enabled ? (control.checked ? 0.8 : 1) : 0.65
+            color: control.enabled ? "white" : "#aaaaaa"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
         }
     }
 
     background: Rectangle {
-        color: "#dadada"
-        opacity: control.enabled ? (control.checked ? 1.0 : mouse.containsMouse ? (control.pressed ? 0.15 : 0.2) : 0.0) : 0.0
-        // color: control.checked ?
-        //     (mouse.pressed ?
-        //         "#2b2b2b"
-        //         : ((mouse.containsMouse ?
-        //             "#393939"
-        //             : "#232323")))
-        //     : (mouse.pressed ?
-        //         "#000000"
-        //         : (mouse.containsMouse ?
-        //             "#1a1a1a"
-        //             : "transparent"))
+        color: control.enabled ? "white" : "transparent"
+        opacity: control.enabled ? (mouse.containsMouse ? 0.2 : (control.checked ? 0.3 : "transparent")) : "transparent"
         radius: 6
     }
 
