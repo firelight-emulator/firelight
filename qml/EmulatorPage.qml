@@ -13,7 +13,8 @@ Rectangle {
     // property var blurAmount: 0.0
     color: "black"
 
-    property string currentGameName: emulatorView.currentGameName
+    property alias currentGameName: emulatorView.currentGameName
+    property alias running: emulatorView.running
 
     signal gameLoaded()
 
@@ -49,18 +50,7 @@ Rectangle {
     function stopEmulation() {
         emulatorView.stopEmulation()
     }
-
-    // layer.enabled: true
-    // layer.effect: MultiEffect {
-    //     source: emulatorContainer
-    //     anchors.fill: emulatorContainer
-    //     blurEnabled: emulatorContainer.blurred
-    //     blurMultiplier: 1.0
-    //     blurMax: 64
-    //     blur: emulatorContainer.blurAmount
-    // }
-
-
+    
     EmulatorView {
         id: emulatorView
 

@@ -16,6 +16,8 @@ class EmulationManager : public QQuickFramebufferObject,
   Q_PROPERTY(int nativeHeight READ nativeHeight NOTIFY nativeHeightChanged)
   Q_PROPERTY(float nativeAspectRatio READ nativeAspectRatio NOTIFY
                  nativeAspectRatioChanged)
+  Q_PROPERTY(bool running READ isRunning NOTIFY emulationStarted NOTIFY
+                 emulationStopped)
 
   typedef uintptr_t (*get_framebuffer_func)();
 

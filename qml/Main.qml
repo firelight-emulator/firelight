@@ -81,10 +81,28 @@ ApplicationWindow {
                 emulatorStack.pop()
             }
 
-            // onCloseGamePressed: function () {
-            //     emulatorStack.pop()
-            //     emulator.closeGame()
-            // }
+            onCloseGamePressed: function () {
+                closeGameAnimation.start()
+            }
+        }
+    }
+
+    SequentialAnimation {
+        id: closeGameAnimation
+        ScriptAction {
+            script: {
+                stackView.push(mainMenu)
+            }
+        }
+        ScriptAction {
+            script: {
+                emulator.stopEmulation()
+            }
+        }
+        ScriptAction {
+            script: {
+                emulatorStack.pop()
+            }
         }
     }
 
@@ -255,7 +273,7 @@ ApplicationWindow {
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
 
-                        // visible: emulator.currentGameName !== ""
+                        visible: emulator.running
 
                         checkable: false
 
@@ -504,6 +522,9 @@ ApplicationWindow {
 
         states: [
             State {
+                name: "stopped"
+            },
+            State {
                 name: "suspended"
                 PropertyChanges {
                     target: emulatorDimmer
@@ -599,11 +620,6 @@ ApplicationWindow {
         StackView.onActivating: {
             state = "running"
         }
-
-        // StackView.onActivated: {
-        //     layer.enabled = false
-        //     emulator.resumeGame()
-        // }
 
         StackView.onDeactivating: {
             state = "suspended"

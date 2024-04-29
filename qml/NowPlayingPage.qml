@@ -131,7 +131,7 @@ Item {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.horizontalStretchFactor: 2
+            Layout.horizontalStretchFactor: 3
         }
 
         Item {

@@ -12,20 +12,16 @@ Button {
     checkable: true
     property string labelText
     property string labelIcon
-    leftPadding: 8
-    rightPadding: 8
-    contentItem: Row {
-        anchors.fill: parent
+    padding: 8
+    contentItem: RowLayout {
         spacing: 8
-        leftPadding: control.leftPadding
-        rightPadding: control.rightPadding
 
         Text {
             id: buttonIcon
             text: control.labelIcon
             visible: labelIcon !== ""
             // width: 24
-            height: parent.height
+            Layout.fillHeight: true
 
             font.family: Constants.symbolFontFamily
             font.pixelSize: 24
@@ -39,7 +35,8 @@ Button {
             id: buttonText
             visible: control.width > 52
             text: control.labelText
-            height: parent.height
+            Layout.fillHeight: true
+            Layout.fillWidth: true
             font.pointSize: 11
             font.family: Constants.regularFontFamily
             color: control.enabled ? "white" : "#aaaaaa"

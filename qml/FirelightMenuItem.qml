@@ -12,38 +12,20 @@ Button {
     checkable: true
     property string labelText
     property string labelIcon
-    leftPadding: 8
-    rightPadding: 8
-    contentItem: Row {
-        anchors.fill: parent
-        spacing: 8
-        leftPadding: control.leftPadding
-        rightPadding: control.rightPadding
+    padding: 8
 
-        Text {
-            id: buttonIcon
-            text: control.labelIcon
-            visible: labelIcon !== ""
-            // width: 24
-            height: parent.height
+    contentItem: Text {
+        id: buttonText
+        visible: control.width > 52
+        // anchors.fill: parent
 
-            font.family: Constants.symbolFontFamily
-            font.pixelSize: 24
-            color: control.enabled ? "white" : "#aaaaaa"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-        Text {
-            id: buttonText
-            visible: control.width > 52
-            text: control.labelText
-            height: parent.height
-            font.pointSize: 11
-            font.family: Constants.regularFontFamily
-            color: control.enabled ? "white" : "#aaaaaa"
-            horizontalAlignment: Text.AlignLeft
-            verticalAlignment: Text.AlignVCenter
-        }
+        text: control.labelText
+
+        font.pointSize: 11
+        font.family: Constants.regularFontFamily
+        color: control.enabled ? "white" : "#aaaaaa"
+        horizontalAlignment: Text.AlignRight
+        verticalAlignment: Text.AlignVCenter
     }
 
     background: Rectangle {

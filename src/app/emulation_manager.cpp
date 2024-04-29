@@ -96,6 +96,7 @@ bool EmulationManager::takeShouldResumeGameFlag() {
 }
 bool EmulationManager::takeShouldStartEmulationFlag() {
   if (m_shouldStartEmulation) {
+    emit emulationStarted();
     m_shouldStartEmulation = false;
     return true;
   }
@@ -104,6 +105,7 @@ bool EmulationManager::takeShouldStartEmulationFlag() {
 }
 bool EmulationManager::takeShouldStopEmulationFlag() {
   if (m_shouldStopEmulation) {
+    emit emulationStopped();
     m_shouldStopEmulation = false;
     return true;
   }
