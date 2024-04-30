@@ -85,34 +85,34 @@ Flickable {
                         Layout.fillWidth: true
                     }
 
-                    Button {
-                        id: melol
-                        Layout.preferredHeight: 32
-                        horizontalPadding: 12
-                        verticalPadding: 8
+                    // Button {
+                    //     id: melol
+                    //     Layout.preferredHeight: 32
+                    //     horizontalPadding: 12
+                    //     verticalPadding: 8
+                    //
+                    //     hoverEnabled: true
+                    //
+                    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
+                    //     background: Rectangle {
+                    //         color: melol.hovered ? "#4e535b" : "#3e434b"
+                    //         radius: 12
+                    //         border.color: "#7d848c"
+                    //     }
+                    //
+                    //     contentItem: Text {
+                    //         text: "Show filters"
+                    //         color: "white"
+                    //         font.pointSize: 11
+                    //         font.family: Constants.regularFontFamily
+                    //         horizontalAlignment: Text.AlignHCenter
+                    //         verticalAlignment: Text.AlignVCenter
+                    //     }
+                    // }
 
-                        hoverEnabled: true
-
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                        background: Rectangle {
-                            color: melol.hovered ? "#4e535b" : "#3e434b"
-                            radius: 12
-                            border.color: "#7d848c"
-                        }
-
-                        contentItem: Text {
-                            text: "Show filters"
-                            color: "white"
-                            font.pointSize: 11
-                            font.family: Constants.regularFontFamily
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Item {
-                        Layout.preferredWidth: 8
-                    }
+                    // Item {
+                    //     Layout.preferredWidth: 8
+                    // }
 
                     Text {
                         Layout.fillHeight: true
@@ -377,13 +377,13 @@ Flickable {
 
                                 RightClickMenuItem {
                                     text: "Play " + model.display_name
-                                    // onTriggered: {
-                                    //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
-                                    //     addPlaylistRightClickMenu.popup()
-                                    // }
+                                    onTriggered: {
+                                        entryClicked(model.id)
+                                    }
                                 }
 
                                 RightClickMenuItem {
+                                    enabled: false
                                     text: "View details"
                                     // onTriggered: {
                                     //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId

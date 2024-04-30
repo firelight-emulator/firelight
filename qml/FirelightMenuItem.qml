@@ -30,7 +30,7 @@ Button {
 
     background: Rectangle {
         color: control.enabled ? "white" : "transparent"
-        opacity: control.enabled ? (mouse.containsMouse ? 0.2 : (control.checked ? 0.3 : "transparent")) : "transparent"
+        opacity: control.enabled ? (mouse.containsMouse ? (control.pressed ? 0.1 : 0.2) : (control.checked ? 0.3 : "transparent")) : "transparent"
         radius: 6
     }
 

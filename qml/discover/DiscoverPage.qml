@@ -83,49 +83,49 @@ Flickable {
                         Layout.fillWidth: true
                     }
 
-                    Button {
-                        id: melol
-                        Layout.preferredHeight: 32
-                        horizontalPadding: 12
-                        verticalPadding: 8
-
-                        hoverEnabled: true
-
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                        background: Rectangle {
-                            color: melol.hovered ? "#4e535b" : "#3e434b"
-                            radius: 12
-                            border.color: "#7d848c"
-                        }
-
-                        contentItem: Text {
-                            text: "Show filters"
-                            color: "white"
-                            font.pointSize: 11
-                            font.family: Constants.regularFontFamily
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Item {
-                        Layout.preferredWidth: 8
-                    }
-
-                    Text {
-                        Layout.fillHeight: true
-                        Layout.alignment: Qt.AlignVCenter
-                        text: "Sort by:"
-                        color: "white"
-                        font.pointSize: 12
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    ComboBox {
-                        model: ["A-Z", "Recently played", "Date added (newest first)", "Date added (oldest first)"]
-                    }
+                    // Button {
+                    //     id: melol
+                    //     Layout.preferredHeight: 32
+                    //     horizontalPadding: 12
+                    //     verticalPadding: 8
+                    //
+                    //     hoverEnabled: true
+                    //
+                    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
+                    //     background: Rectangle {
+                    //         color: melol.hovered ? "#4e535b" : "#3e434b"
+                    //         radius: 12
+                    //         border.color: "#7d848c"
+                    //     }
+                    //
+                    //     contentItem: Text {
+                    //         text: "Show filters"
+                    //         color: "white"
+                    //         font.pointSize: 11
+                    //         font.family: Constants.regularFontFamily
+                    //         horizontalAlignment: Text.AlignHCenter
+                    //         verticalAlignment: Text.AlignVCenter
+                    //     }
+                    // }
+                    //
+                    // Item {
+                    //     Layout.preferredWidth: 8
+                    // }
+                    //
+                    // Text {
+                    //     Layout.fillHeight: true
+                    //     Layout.alignment: Qt.AlignVCenter
+                    //     text: "Sort by:"
+                    //     color: "white"
+                    //     font.pointSize: 12
+                    //     font.family: Constants.regularFontFamily
+                    //     horizontalAlignment: Text.AlignLeft
+                    //     verticalAlignment: Text.AlignVCenter
+                    // }
+                    //
+                    // ComboBox {
+                    //     model: ["A-Z", "Recently played", "Date added (newest first)", "Date added (oldest first)"]
+                    // }
                 }
             }
 
@@ -383,7 +383,6 @@ Flickable {
         id: contentThing
 
         StoreContent {
-            anchors.centerIn: parent
         }
     }
 

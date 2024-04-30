@@ -28,8 +28,8 @@ ApplicationWindow {
         id: libraryPage
         LibraryPage {
             property bool topLevel: true
-
             property string topLevelName: "library"
+
             onEntryClicked: function (id) {
                 gameLoader.loadGame(id)
             }
@@ -121,37 +121,6 @@ ApplicationWindow {
                 }
                 padding: 4
                 KeyNavigation.right: stackview
-
-                Behavior on width {
-                    NumberAnimation {
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }
-                }
-
-                Button {
-                    id: theButton
-                    width: 48
-                    height: 48
-                    hoverEnabled: true
-                    background: Rectangle {
-                        color: "#dadada"
-                        opacity: theButton.hovered ? 0.2 : 0
-                        radius: 6
-                    }
-
-                    onPressed: function () {
-                        stackview.pop()
-                        // if (drawer.width === 250) {
-                        //     drawer.width = 48
-                        // } else {
-                        //     drawer.width = 250
-                        // }
-                    }
-
-                    anchors.top: parent.top
-                    anchors.right: parent.right
-                }
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -327,124 +296,119 @@ ApplicationWindow {
                 background: Item {
                 }
 
-                ColumnLayout {
-                    anchors.fill: parent
+                Pane {
+                    width: parent.width
+                    height: 48
 
-                    Pane {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 48
+                    z: 2
 
-                        z: 2
+                    background: Item {
+                    }
 
-                        background: Item {
+                    Button {
+                        id: melol
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        // horizontalPadding: 12
+                        // verticalPadding: 8
+
+                        enabled: stackview.depth > 1
+
+                        hoverEnabled: false
+
+                        HoverHandler {
+                            id: myHover
+                            cursorShape: melol.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                         }
 
-                        Button {
-                            id: melol
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            // horizontalPadding: 12
-                            // verticalPadding: 8
+                        background: Rectangle {
+                            color: enabled ? myHover.hovered ? "#4e535b" : "#3e434b" : "#3e434b"
+                            radius: height / 2
+                            // border.color: "#7d848c"
+                        }
 
-                            enabled: stackview.depth > 1
+                        contentItem: Text {
+                            text: "\ue5c4"
+                            color: enabled ? "white" : "#7d848c"
+                            font.pointSize: 11
+                            font.family: Constants.symbolFontFamily
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
 
-                            hoverEnabled: false
+                        onClicked: {
+                            stackview.pop()
+                        }
+                    }
+                }
 
-                            HoverHandler {
-                                id: myHover
-                                cursorShape: melol.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                            }
+                StackView {
+                    id: stackview
+                    anchors.fill: parent
 
-                            background: Rectangle {
-                                color: enabled ? myHover.hovered ? "#4e535b" : "#3e434b" : "#3e434b"
-                                radius: height / 2
-                                // border.color: "#7d848c"
-                            }
+                    property string topLevelName: ""
 
-                            contentItem: Text {
-                                text: "\ue5c4"
-                                color: enabled ? "white" : "#7d848c"
-                                font.pointSize: 11
-                                font.family: Constants.symbolFontFamily
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
+                    onCurrentItemChanged: {
+                        if (currentItem) {
+                            let top = stackview.find(function (item, index) {
+                                return item.topLevel === true
+                            })
 
-                            onClicked: {
-                                stackview.pop()
-                            }
+                            stackview.topLevelName = top ? top.topLevelName : ""
                         }
                     }
 
-                    StackView {
-                        id: stackview
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    initialItem: libraryPage
 
-                        property string topLevelName: ""
-
-                        onCurrentItemChanged: {
-                            if (currentItem) {
-                                let top = stackview.find(function (item, index) {
-                                    return item.topLevel === true
-                                })
-
-                                stackview.topLevelName = top ? top.topLevelName : ""
-                            }
-                        }
-
-                        initialItem: libraryPage
-
-                        pushEnter: Transition {
-                            // PropertyAnimation {
-                            //     property: "opacity"
-                            //     from: 0
-                            //     to: 1
-                            //     duration: 200
-                            // }
-                        }
-                        pushExit: Transition {
-                            // PropertyAnimation {
-                            //     property: "opacity"
-                            //     from: 1
-                            //     to: 0
-                            //     duration: 200
-                            // }
-                        }
-                        popEnter: Transition {
-                            // PropertyAnimation {
-                            //     property: "opacity"
-                            //     from: 0
-                            //     to: 1
-                            //     duration: 200
-                            // }
-                        }
-                        popExit: Transition {
-                            // PropertyAnimation {
-                            //     property: "opacity"
-                            //     from: 1
-                            //     to: 0
-                            //     duration: 200
-                            // }
-                        }
-                        replaceEnter: Transition {
-                            // ParallelAnimation {
-                            //     PropertyAnimation {
-                            //         property: "opacity"
-                            //         from: 0
-                            //         to: 1
-                            //         duration: 400
-                            //     }
-                            //     PropertyAnimation {
-                            //         property: "x"
-                            //         from: 20
-                            //         to: 0
-                            //         duration: 250
-                            //     }
-                            // }
-                        }
-                        replaceExit: Transition {
-                        }
+                    pushEnter: Transition {
+                        // PropertyAnimation {
+                        //     property: "opacity"
+                        //     from: 0
+                        //     to: 1
+                        //     duration: 200
+                        // }
+                    }
+                    pushExit: Transition {
+                        // PropertyAnimation {
+                        //     property: "opacity"
+                        //     from: 1
+                        //     to: 0
+                        //     duration: 200
+                        // }
+                    }
+                    popEnter: Transition {
+                        // PropertyAnimation {
+                        //     property: "opacity"
+                        //     from: 0
+                        //     to: 1
+                        //     duration: 200
+                        // }
+                    }
+                    popExit: Transition {
+                        // PropertyAnimation {
+                        //     property: "opacity"
+                        //     from: 1
+                        //     to: 0
+                        //     duration: 200
+                        // }
+                    }
+                    replaceEnter: Transition {
+                        // ParallelAnimation {
+                        //     PropertyAnimation {
+                        //         property: "opacity"
+                        //         from: 0
+                        //         to: 1
+                        //         duration: 400
+                        //     }
+                        //     PropertyAnimation {
+                        //         property: "x"
+                        //         from: 20
+                        //         to: 0
+                        //         duration: 250
+                        //     }
+                        // }
+                    }
+                    replaceExit: Transition {
                     }
                 }
             }
