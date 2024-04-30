@@ -15,8 +15,6 @@ Flickable {
     required property string targetGameName
     required property bool targetInLibrary
     required property bool modInLibrary
-    required property int gameReleaseId
-    required property int romId
 
     contentHeight: theColumn.height
     boundsBehavior: Flickable.StopAtBounds
@@ -98,7 +96,7 @@ Flickable {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                         width: parent.width
-                        font.pointSize: 10
+                        font.pointSize: 11
                         font.family: Constants.regularFontFamily
                         color: "white"
                         Layout.fillWidth: true
@@ -168,16 +166,80 @@ Flickable {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 clip: true
                 orientation: ListView.Horizontal
-                model: 5
-                spacing: 8
-                delegate: Item {
-                    width: listView.height * (16 / 9)
-                    height: listView.height
-
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "grey"
+                model: ListModel {
+                    ListElement {
+                        source: "file:system/_img/goom2.png"
+                        modId: 1
                     }
+                    ListElement {
+                        source: "file:system/_img/goom1.png"
+                        modId: 1
+                    }
+                    ListElement {
+                        source: "file:system/_img/goom3.png"
+                        modId: 1
+                    }
+                    ListElement {
+                        source: "file:system/_img/goom4.png"
+                        modId: 1
+                    }
+                    ListElement {
+                        source: "file:system/_img/rr1.png"
+                        modId: 2
+                    }
+                    ListElement {
+                        source: "file:system/_img/rr2.png"
+                        modId: 2
+                    }
+                    ListElement {
+                        source: "file:system/_img/rr3.png"
+                        modId: 2
+                    }
+                    ListElement {
+                        source: "file:system/_img/rr4.png"
+                        modId: 2
+                    }
+                    ListElement {
+                        source: "file:system/_img/rr5.png"
+                        modId: 2
+                    }
+                    ListElement {
+                        source: "file:system/_img/rr6.png"
+                        modId: 2
+                    }
+                    ListElement {
+                        source: "file:system/_img/rr7.png"
+                        modId: 2
+                    }
+                    ListElement {
+                        source: "file:system/_img/rr8.png"
+                        modId: 2
+                    }
+                }
+                spacing: 8
+                delegate: Image {
+                    width: model.modId === root.modId ? listView.height * (16 / 9) : -8
+                    height: listView.height
+                    visible: model.modId === root.modId
+
+                    source: model.source
+                    fillMode: Image.Stretch
+                }
+            }
+
+            Row {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 24
+
+                Text {
+                    text: "Click and drag to see all screenshots"
+                    font.pointSize: 10
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.Medium
+                    color: "white"
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
 
@@ -194,6 +256,7 @@ Flickable {
 
             Text {
                 text: description
+                Layout.topMargin: 12
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
                 font.pointSize: 12
