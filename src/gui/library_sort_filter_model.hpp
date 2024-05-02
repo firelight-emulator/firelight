@@ -6,13 +6,17 @@ namespace firelight::gui {
 
 class LibrarySortFilterModel final : public QSortFilterProxyModel {
   Q_OBJECT
+  Q_PROPERTY(
+      QString sortType READ sortType WRITE setSortType NOTIFY sortTypeChanged)
 
 public slots:
   void filterOnPlaylistId(int playlistId);
   [[nodiscard]] int currentPlaylistId() const;
-  void sortByDisplayName();
-  void sortByCreatedAt();
-  void sortByLastPlayedAt();
+  [[nodiscard]] QString sortType() const;
+  void setSortType(QString sortType);
+
+signals:
+  void sortTypeChanged();
 
 protected:
   [[nodiscard]] bool

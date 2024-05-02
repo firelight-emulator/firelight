@@ -12,22 +12,39 @@ void LibrarySortFilterModel::filterOnPlaylistId(const int playlistId) {
 
 int LibrarySortFilterModel::currentPlaylistId() const { return m_playlistId; }
 
-void LibrarySortFilterModel::sortByDisplayName() {
-  m_sortType = SortType::DisplayName;
-  invalidate();
-  sort(0);
+QString LibrarySortFilterModel::sortType() const {
+  if (m_sortType == SortType::DisplayName) {
+    return "display_name";
+  }
+  if (m_sortType == SortType::CreatedAt) {
+    return "created_at";
+  }
+  if (m_sortType == SortType::LastPlayedAt) {
+    return "last_played_at";
+  }
+
+  return "";
 }
 
-void LibrarySortFilterModel::sortByCreatedAt() {
-  m_sortType = SortType::CreatedAt;
-  invalidate();
-  sort(0);
-}
+void LibrarySortFilterModel::setSortType(QString sortType) {
+  SortType newSortType;
 
-void LibrarySortFilterModel::sortByLastPlayedAt() {
-  m_sortType = SortType::LastPlayedAt;
-  invalidate();
-  sort(0);
+  if (sortType == "display_name") {
+    newSortType = SortType::DisplayName;
+  } else if (sortType == "created_at") {
+    newSortType = SortType::CreatedAt;
+  } else if (sortType == "last_played_at") {
+    newSortType = SortType::LastPlayedAt;
+  } else {
+    return;
+  }
+
+  if (newSortType != m_sortType) {
+    m_sortType = newSortType;
+    invalidate();
+    sort(0);
+    emit sortTypeChanged();
+  }
 }
 
 bool LibrarySortFilterModel::filterAcceptsRow(

@@ -126,6 +126,12 @@ Flickable {
                     }
 
                     ComboBox {
+                        textRole: "text"
+                        valueRole: "value"
+
+                        onActivated: library_short_model.sortType = currentValue
+                        Component.onCompleted: currentIndex = indexOfValue(library_short_model.sortType)
+
                         background: Rectangle {
                             implicitWidth: 140
                             implicitHeight: 40
@@ -133,7 +139,12 @@ Flickable {
                             radius: 12
                             border.color: "#7d848c"
                         }
-                        model: ["A-Z", "Recently played", "Date added (newest first)", "Date added (oldest first)"]
+                        
+                        model: [
+                            {text: "A-Z", value: "display_name"},
+                            {text: "Recently played", value: "last_played_at"},
+                            {text: "Newest first", value: "created_at"}
+                        ]
                     }
                 }
             }

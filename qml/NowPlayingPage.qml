@@ -37,6 +37,7 @@ Item {
                 Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 checkable: false
+                alignRight: true
 
                 onClicked: function () {
                     resumeGamePressed()
@@ -49,6 +50,7 @@ Item {
                 Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 checkable: false
+                alignRight: true
 
                 onClicked: function () {
                     restartGamePressed()
@@ -61,6 +63,7 @@ Item {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 enabled: false
+                alignRight: true
             }
             Rectangle {
                 Layout.fillWidth: true
@@ -77,6 +80,7 @@ Item {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 enabled: false
+                alignRight: true
             }
             FirelightMenuItem {
                 labelText: "Load Suspend Point"
@@ -85,6 +89,7 @@ Item {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 enabled: false
+                alignRight: true
             }
             FirelightMenuItem {
                 labelText: "Undo Last Load"
@@ -93,6 +98,7 @@ Item {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 enabled: false
+                alignRight: true
             }
             Rectangle {
                 Layout.fillWidth: true
@@ -109,6 +115,7 @@ Item {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 checkable: false
+                alignRight: true
 
                 onClicked: function () {
                     backToMainMenuPressed()
@@ -121,6 +128,7 @@ Item {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 checkable: false
+                alignRight: true
 
                 onClicked: function () {
                     closeGameConfirmationDialog.open()

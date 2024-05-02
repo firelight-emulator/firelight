@@ -17,6 +17,7 @@ ApplicationWindow {
     minimumWidth: 1280
 
     visible: true
+    visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
 
     title: qsTr("Firelight")
 

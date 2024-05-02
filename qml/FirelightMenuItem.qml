@@ -12,6 +12,7 @@ Button {
     checkable: true
     property string labelText
     property string labelIcon
+    property bool alignRight: false
     padding: 8
 
     contentItem: Text {
@@ -24,7 +25,7 @@ Button {
         font.pointSize: 11
         font.family: Constants.regularFontFamily
         color: control.enabled ? "white" : "#aaaaaa"
-        horizontalAlignment: Text.AlignRight
+        horizontalAlignment: alignRight ? Text.AlignRight : Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 
