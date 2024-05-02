@@ -110,6 +110,12 @@ ApplicationWindow {
         id: mainMenu
 
         Item {
+
+            Keys.onEscapePressed: function () {
+                closeAppConfirmationDialog.open()
+            }
+            focus: true
+
             Pane {
                 id: drawer
                 anchors.top: parent.top
@@ -414,6 +420,15 @@ ApplicationWindow {
                     }
                 }
             }
+
+            FirelightDialog {
+                id: closeAppConfirmationDialog
+                text: "Are you sure you want to close Firelight?"
+
+                onAccepted: {
+                    Qt.callLater(Qt.quit)
+                }
+            }
         }
     }
 
@@ -710,6 +725,7 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
+        focus: true
 
         initialItem: emulatorStack
 

@@ -123,7 +123,7 @@ Item {
                 checkable: false
 
                 onClicked: function () {
-                    closeGamePressed()
+                    closeGameConfirmationDialog.open()
                 }
             }
         }
@@ -138,6 +138,15 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
+        }
+    }
+
+    FirelightDialog {
+        id: closeGameConfirmationDialog
+        text: "Are you sure you want to close the game?"
+
+        onAccepted: {
+            closeGamePressed()
         }
     }
 
