@@ -139,10 +139,11 @@ Flickable {
                             radius: 12
                             border.color: "#7d848c"
                         }
-                        
+
+                        palette.buttonText: "white"
+
                         model: [
                             {text: "A-Z", value: "display_name"},
-                            {text: "Recently played", value: "last_played_at"},
                             {text: "Newest first", value: "created_at"}
                         ]
                     }

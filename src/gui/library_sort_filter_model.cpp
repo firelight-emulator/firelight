@@ -19,22 +19,22 @@ QString LibrarySortFilterModel::sortType() const {
   if (m_sortType == SortType::CreatedAt) {
     return "created_at";
   }
-  if (m_sortType == SortType::LastPlayedAt) {
-    return "last_played_at";
-  }
+  // if (m_sortType == SortType::LastPlayedAt) {
+  //   return "last_played_at";
+  // }
 
   return "";
 }
 
-void LibrarySortFilterModel::setSortType(QString sortType) {
+void LibrarySortFilterModel::setSortType(const QString &sortType) {
   SortType newSortType;
 
   if (sortType == "display_name") {
     newSortType = SortType::DisplayName;
   } else if (sortType == "created_at") {
     newSortType = SortType::CreatedAt;
-  } else if (sortType == "last_played_at") {
-    newSortType = SortType::LastPlayedAt;
+    // } else if (sortType == "last_played_at") {
+    //   newSortType = SortType::LastPlayedAt;
   } else {
     return;
   }
@@ -92,19 +92,33 @@ bool LibrarySortFilterModel::lessThan(const QModelIndex &source_left,
     // TODO: This is stupid, it just reverses the list.
     return leftCreatedTime > rightCreatedTime;
   }
-  if (m_sortType == SortType::LastPlayedAt) {
-    const auto leftPlayedTime =
-        sourceModel()
-            ->data(source_left, LibraryItemModel::LastPlayedAt)
-            .toLongLong();
-    const auto rightPlayedTime =
-        sourceModel()
-            ->data(source_right, LibraryItemModel::LastPlayedAt)
-            .toLongLong();
-
-    // TODO: This is stupid, it just reverses the list.
-    return leftPlayedTime > rightPlayedTime;
-  }
+  // if (m_sortType == SortType::LastPlayedAt) {
+  //   const auto leftPlayedTime =
+  //       sourceModel()
+  //           ->data(source_left, LibraryItemModel::LastPlayedAt)
+  //           .toLongLong();
+  //   const auto rightPlayedTime =
+  //       sourceModel()
+  //           ->data(source_right, LibraryItemModel::LastPlayedAt)
+  //           .toLongLong();
+  //
+  //   printf("left (%s): %ld, right (%s): %ld\n",
+  //          sourceModel()
+  //              ->data(source_left, LibraryItemModel::DisplayName)
+  //              .toString()
+  //              .toStdString()
+  //              .c_str(),
+  //          leftPlayedTime,
+  //          sourceModel()
+  //              ->data(source_right, LibraryItemModel::DisplayName)
+  //              .toString()
+  //              .toStdString()
+  //              .c_str(),
+  //          rightPlayedTime);
+  //
+  //   // TODO: This is stupid, it just reverses the list.
+  //   return leftPlayedTime > rightPlayedTime;
+  // }
 
   return false;
 }

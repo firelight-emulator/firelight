@@ -29,18 +29,16 @@ if (CMAKE_VERSION VERSION_LESS "3.7.0")
 endif ()
 
 find_package(SDL2 REQUIRED)
-find_package(OpenGL REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(SQLite3 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
 find_package(GTest)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
-pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
-pkg_check_modules(AVUTIL REQUIRED IMPORTED_TARGET libavutil)
-pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
+#pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
+#pkg_check_modules(AVUTIL REQUIRED IMPORTED_TARGET libavutil)
+#pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
 
 qt6_standard_project_setup(REQUIRES 6.7)
 
@@ -77,7 +75,6 @@ add_library(firelight_lib
         src/gui/library_item_model.cpp
         src/gui/library_sort_filter_model.cpp
         src/gui/playlist_item_model.cpp
-        src/app/netplay/stream_test.cpp
         src/gui/savefile_list_model.cpp
         src/gui/window_resize_handler.hpp
         include/firelight/db/region.hpp
@@ -90,16 +87,13 @@ add_library(firelight_lib
         src/app/saves/suspend_point.hpp
 )
 
-target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS}
-        ${SQLite3_INCLUDE_DIRS} include)
+target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
 target_link_libraries(firelight_lib
         mingw32
         SDL2
-        opengl32
         ssl
         crypto
         z
-        ${SQLite3_LIBRARIES}
         Qt6::Gui
         Qt6::Quick
         Qt6::OpenGL
@@ -107,10 +101,10 @@ target_link_libraries(firelight_lib
         Qt6::Quick3D
         Qt6::Sql
         spdlog::spdlog
-        PkgConfig::AVCODEC
-        PkgConfig::AVFORMAT
-        PkgConfig::AVUTIL
-        PkgConfig::SWSCALE
+        #        PkgConfig::AVCODEC
+        #        PkgConfig::AVFORMAT
+        #        PkgConfig::AVUTIL
+        #        PkgConfig::SWSCALE
         library)
 
 file(GLOB QML_FILES
@@ -155,8 +149,7 @@ qt6_add_qml_module(firelight
         ${QML_FILES}
 )
 
-target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS}
-        ${SQLite3_INCLUDE_DIRS})
+target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(firelight PRIVATE firelight_lib)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")

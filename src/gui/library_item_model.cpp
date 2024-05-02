@@ -174,6 +174,8 @@ void LibraryItemModel::refresh() {
         m_userdataDatabase->getLatestPlaySession(entry.contentMd5);
     if (lastSession.has_value()) {
       lastSessionTime = lastSession->endTime;
+    } else {
+      lastSessionTime = entry.createdAt;
     }
 
     m_items.emplace_back(

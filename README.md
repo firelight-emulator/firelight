@@ -1,4 +1,4 @@
-# Firelight
+# Firelight Emulator
 
 One Paragraph of project description goes here
 
@@ -10,6 +10,11 @@ purposes.
 ### Prerequisites
 
 What things you need to install the software and how to install them
+
+- QT 6.7
+- SDL2
+- OpenSSL
+- spdlog
 
 ```
 Give examples

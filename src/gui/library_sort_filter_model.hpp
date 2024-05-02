@@ -13,7 +13,7 @@ public slots:
   void filterOnPlaylistId(int playlistId);
   [[nodiscard]] int currentPlaylistId() const;
   [[nodiscard]] QString sortType() const;
-  void setSortType(QString sortType);
+  void setSortType(const QString &sortType);
 
 signals:
   void sortTypeChanged();
