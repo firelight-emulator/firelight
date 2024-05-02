@@ -67,7 +67,6 @@ Flickable {
 
             RowLayout {
                 id: header
-                Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 260
                 Layout.minimumHeight: 260
 
@@ -108,47 +107,57 @@ Flickable {
                     Layout.fillHeight: true
                 }
 
-                Button {
-                    id: addToLibraryButton
-                    Layout.preferredHeight: 60
-                    Layout.preferredWidth: 180
-                    Layout.alignment: Qt.AlignRight | Qt.AlignBottom
-                    background: Rectangle {
-                        color: enabled ? "white" : "grey"
-                        radius: 6
+                ColumnLayout {
+                    Layout.fillHeight: true
+                    Layout.maximumWidth: 180
+                    spacing: 8
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                     }
-                    enabled: !modInLibrary && targetInLibrary
-                    contentItem: Text {
-                        text: modInLibrary ? qsTr("In Library") : qsTr("Add to Library")
-                        anchors.centerIn: parent
-                        color: Constants.colorTestBackground
-                        font.family: Constants.regularFontFamily
+                    Text {
+                        text: targetInLibrary ? "The required game is in your library" : "You need " + targetGameName + " in your library to play this mod"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 11
+                        Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        font.pointSize: 10
+                        font.family: Constants.regularFontFamily
+                        color: "#d5d5d5"
                     }
+                    Button {
+                        Layout.preferredHeight: 60
+                        Layout.preferredWidth: 180
+                        id: addToLibraryButton
+                        Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+                        background: Rectangle {
+                            color: enabled ? "white" : "grey"
+                            radius: 6
+                        }
+                        enabled: !modInLibrary && targetInLibrary
+                        contentItem: Text {
+                            text: modInLibrary ? qsTr("In Library") : qsTr("Add to Library")
+                            anchors.centerIn: parent
+                            color: Constants.colorTestBackground
+                            font.family: Constants.regularFontFamily
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pointSize: 11
+                        }
 
-                    HoverHandler {
-                        acceptedDevices: PointerDevice.Mouse
-                        cursorShape: Qt.PointingHandCursor
+                        HoverHandler {
+                            acceptedDevices: PointerDevice.Mouse
+                            cursorShape: Qt.PointingHandCursor
+                        }
+
+                        onClicked: {
+                            addedPopup.open()
+                            timer.start()
+                            root.modInLibrary = true
+                            library_model.addModToLibrary(root.modId)
+                        }
                     }
-
-                    onClicked: {
-                        addedPopup.open()
-                        timer.start()
-                        root.modInLibrary = true
-                        library_model.addModToLibrary(root.modId)
-                    }
-
-                    // onClicked: {
-                    //     if (!targetInLibrary) {
-                    //         for (let i = 0; i < romIds.length; i++) {
-                    //             library_model.addRomToLibrary(romIds[i])
-                    //         }
-                    //         targetInLibrary = true
-                    //         addToLibraryButton.text = qsTr("In Library")
-                    //     }
-                    // }
                 }
             }
 

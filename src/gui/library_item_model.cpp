@@ -92,9 +92,21 @@ void LibraryItemModel::updatePlaylistsForEntry(const int entryId) {
   }
 }
 
-bool LibraryItemModel::isRomInLibrary(int romId) { return true; }
+bool LibraryItemModel::isRomInLibrary(const int romId) const {
+  if (romId == -1) {
+    return false;
+  }
 
-bool LibraryItemModel::isModInLibrary(int modId) {
+  const auto rom = m_contentDatabase->getRom(romId);
+  if (!rom.has_value()) {
+    return false;
+  }
+
+  return !m_libraryDatabase->getMatchingLibraryEntries({.contentMd5 = rom->md5})
+              .empty();
+}
+
+bool LibraryItemModel::isModInLibrary(const int modId) const {
   if (modId == -1) {
     return false;
   }

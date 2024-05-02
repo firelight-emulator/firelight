@@ -69,8 +69,8 @@ public:
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
   Q_INVOKABLE void updatePlaylistsForEntry(int entryId);
-  Q_INVOKABLE bool isRomInLibrary(int romId);
-  Q_INVOKABLE bool isModInLibrary(int modId);
+  Q_INVOKABLE bool isRomInLibrary(int romId) const;
+  Q_INVOKABLE bool isModInLibrary(int modId) const;
   Q_INVOKABLE void addModToLibrary(int modId); // TODO: TEMPORARY
   Q_INVOKABLE void addPatchToLibrary(int patchId) const;
 
