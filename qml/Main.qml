@@ -711,7 +711,9 @@ ApplicationWindow {
         id: stackView
         anchors.fill: parent
 
-        Component.onCompleted: stackView.push([emulatorStack, mainMenu])
+        initialItem: emulatorStack
+
+        Component.onCompleted: stackView.push(mainMenu, {}, StackView.Immediate)
 
         pushEnter: Transition {
             ParallelAnimation {
