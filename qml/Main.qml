@@ -171,8 +171,8 @@ ApplicationWindow {
                     NavMenuButton {
                         id: modNavButton
                         KeyNavigation.down: controllersNavButton
-                        labelText: "Market"
-                        labelIcon: "\uea12"
+                        labelText: "Discover"
+                        labelIcon: "\ue87a"
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
 
@@ -203,6 +203,8 @@ ApplicationWindow {
                         labelIcon: "\uf135"
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
+
+                        enabled: false
 
                         checked: stackview.topLevelName === "controllers"
 

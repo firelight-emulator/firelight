@@ -42,7 +42,7 @@ Flickable {
 
                 Text {
                     anchors.fill: parent
-                    text: "Market"
+                    text: "Discover"
                     color: "white"
                     font.pointSize: 26
                     font.family: Constants.regularFontFamily
