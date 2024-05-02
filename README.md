@@ -1,6 +1,10 @@
 # Firelight Emulator
 
-One Paragraph of project description goes here
+Firelight is a libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover
+awesome mods for those games, and just have a dang good time.
+
+Plus, it's all in one, so you don't need to do anything but download the app, tell it where to find your games, and
+start playing! Firelight takes care of the rest.
 
 ## Getting Started
 
@@ -9,58 +13,107 @@ purposes.
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+Here are the things you need to build the application:
 
-- QT 6.7
-- SDL2
-- OpenSSL
-- spdlog
+- A C++17 compiler. I use Clang, but other stuff should work too... I think.
+- CMake 3.22.1 or later.
+- The following libraries:
+    - Qt6 (6.7)
+    - SDL2
+    - OpenSSL
+    - spdlog
+    - GTest (currently required even without running tests, but this will be fixed later)
+
+#### Recommended Windows setup
+
+I recommend using MSYS2 on Windows and using pacboy to install the libraries. I don't currently have any platforms
+other than that, so unfortunately I can't help you :-(
 
 ```
 Give examples
 ```
 
-### Installing
+[//]: # (### Installing)
 
-A step by step series of examples that tell you how to get a development env running
+[//]: # ()
 
-Say what the step will be
+[//]: # (A step by step series of examples that tell you how to get a development env running)
 
-```
-Give the example
-```
+[//]: # ()
 
-And repeat
+[//]: # (Say what the step will be)
 
-```
-until finished
-```
+[//]: # ()
 
-End with an example of getting some data out of the system or using it for a little demo
+[//]: # (```)
 
-## Running the tests
+[//]: # (Give the example)
 
-Explain how to run the automated tests for this system
+[//]: # (```)
 
-### Break down into end to end tests
+[//]: # ()
 
-Explain what these tests test and why
+[//]: # (And repeat)
 
-```
-Give an example
-```
+[//]: # ()
 
-### And coding style tests
+[//]: # (```)
 
-Explain what these tests test and why
+[//]: # (until finished)
 
-```
-Give an example
-```
+[//]: # (```)
 
-## Deployment
+[//]: # ()
 
-Add additional notes about how to deploy this on a live system
+[//]: # (End with an example of getting some data out of the system or using it for a little demo)
+
+[//]: # ()
+
+[//]: # (## Running the tests)
+
+[//]: # ()
+
+[//]: # (Explain how to run the automated tests for this system)
+
+[//]: # ()
+
+[//]: # (### Break down into end to end tests)
+
+[//]: # ()
+
+[//]: # (Explain what these tests test and why)
+
+[//]: # ()
+
+[//]: # (```)
+
+[//]: # (Give an example)
+
+[//]: # (```)
+
+[//]: # ()
+
+[//]: # (### And coding style tests)
+
+[//]: # ()
+
+[//]: # (Explain what these tests test and why)
+
+[//]: # ()
+
+[//]: # (```)
+
+[//]: # (Give an example)
+
+[//]: # (```)
+
+[//]: # ()
+
+[//]: # (## Deployment)
+
+[//]: # ()
+
+[//]: # (Add additional notes about how to deploy this on a live system)
 
 ## Built With
 
@@ -70,109 +123,81 @@ Add additional notes about how to deploy this on a live system
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of
-conduct, and the process for submitting pull requests to us.
+I'm not currently accepting contributions, but in the future I will!
+
+[//]: # (Please read [CONTRIBUTING.md]&#40;https://gist.github.com/PurpleBooth/b24679402957c63ec426&#41; to see the process for)
+
+[//]: # (submitting pull requests.)
 
 ## Versioning
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see
 the [tags on this repository](https://github.com/your/project/tags).
 
-## Authors
+[//]: # (## Authors)
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+[//]: # ()
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+[//]: # (* [BiscuitCakes]&#40;https://github.com/biscuitcakes&#41;)
+
+[//]: # (See also the list of [contributors]&#40;https://github.com/your/project/contributors&#41; who participated in this project.)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the GPL-3.0 License - see the [LICENSE.md](LICENSE.md) file for details
 
-## Acknowledgments
+[//]: # (## Acknowledgments)
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+[//]: # ()
 
-# Firelight
+[//]: # (* Hat tip to anyone whose code was used)
 
-libs:
-Dear ImGui
-SDL2
-GLEW
-OpenSSL
-spdlog
-freetype2
-libretro
+[//]: # (* Inspiration)
 
-1. load the game and get system av info before you refresh the hw context
+[//]: # (* etc)
 
-### On game_geometry max_width vs base_width
+[//]: # (### Installation on Windows)
 
-BiscuitCakes — Today at 12:17 PM
-Anyone know of any situations where a core's game_geometry.base_width would differ from game_geometry.max_width (same
-for height)?
-JesseTG — Today at 12:19 PM
-When an emulator supports upscaling the game's resolution.
-BiscuitCakes — Today at 12:20 PM
-Ahhh. That makes sense. It'd be nice if it gave me the current values instead of just the range... unless it does and
-I'm missing it (or forgot that I saw it)
-JesseTG — Today at 12:20 PM
-Or if the core draws additional information (say, a custom HUD) outside the emulated screen's area but within the
-libretro screen, and this position is customizable
-BiscuitCakes — Today at 12:21 PM
-That's interesting. I think I might cross that one when I get to it. For now I guess I need to make my software
-framebuffer max_width*max_height 😵‍💫
-JesseTG — Today at 12:21 PM
-Yes, that's the intent. And then you only blit the area given by base_width * base_height
-Ooh, here's another scenario; when a core optionally can render two instances of the emulator side-by-side. Like, say,
-with one of the Game Boy emulators; it emulates the link cable by emulating two Game Boys and synchronizing their
-state (it's the only way to accommodate the link cable's latency requirements)
-Here's another scenario; when you can change the layout of the emulated screen(s). Like for melonDS DS, you can lay out
-both screens vertically, horizontally, scaled in various ways... And for the Wonderswan, the original hardware was
-intended to be held in two orientations, so that's another layout change.
-Psyraven — Today at 12:24 PM
-In DOSBox (and other computer cores I assume) the emulated screen resolution varies widely. max is just the biggest
-supported emulated monitor resolution.
-BiscuitCakes — Today at 12:25 PM
-Oof glad I asked. Thank you guys for the info, really appreciate it 👍
-JesseTG — Today at 12:25 PM
-Basically any scenario that would involve adjusting the screen resolution. Luckily, it's often not too difficult for a
-core to compute the max_width and max_height.
+[//]: # ()
 
-### freetype
+[//]: # (1. Download and install [MSYS2]&#40;Download and install MSYS2: https://github.com/msys2/msys2-installer/releases&#41;)
 
-had to compile myself
+[//]: # (2. Open a MSYS2 terminal and run the following commands:)
 
-```
-git clone https://git.savannah.nongnu.org/git/freetype/freetype2.git
-cd freetype2
-mkdir build && cd build
-cmake ..      # generates Makefile + deactivates HarfBuzz if not found
-make          # compile libs
-make install  # install libs & headers
-```
+[//]: # (    * pacman -S mingw-w64-x86_64-qt6 &#40;hit enter for all&#41;)
 
-### Installation on Windows
+[//]: # (    * pacman -S mingw-w64-x86_64-SDL2)
 
-1. Download and install [MSYS2](Download and install MSYS2: https://github.com/msys2/msys2-installer/releases)
-2. Open a MSYS2 terminal and run the following commands:
-    * pacman -S mingw-w64-x86_64-qt6 (hit enter for all)
-    * pacman -S mingw-w64-x86_64-SDL2
-    * pacman -S mingw-w64-x86_64-openssl
-    * pacman -S mingw-w64-x86_64-glew
-    * pacman -S mingw-w64-x86_64-freetype
-    * pacman -S mingw-w64-x86_64-gtest
-    * pacman -S mingw-w64-x86_64-cmake
-    * pacman -S mingw-w64-x86_64-gcc
-    * pacman -S make gettext base-devel
-    * pacman -S mingw-w64-x86_64-make
-    * pacman -S mingw-w64-x86_64-spdlog
-3. Go to your MSYS2 bin folder and copy mingw32-make.exe as make.exe
-4. Add the MSYS2 directory to the PATH environment variable in Windows (mine was C:\msys64\mingw64\bin)
-5. Make a folder called build in the root directory of the project
-6. Open a Linux Shell and run the following commands (start in the build directory)
-    * apt install cmake
-    * apt install make
-    * cmake -G "MinGW Makefiles" ..
-    * make
+[//]: # (    * pacman -S mingw-w64-x86_64-openssl)
+
+[//]: # (    * pacman -S mingw-w64-x86_64-glew)
+
+[//]: # (    * pacman -S mingw-w64-x86_64-freetype)
+
+[//]: # (    * pacman -S mingw-w64-x86_64-gtest)
+
+[//]: # (    * pacman -S mingw-w64-x86_64-cmake)
+
+[//]: # (    * pacman -S mingw-w64-x86_64-gcc)
+
+[//]: # (    * pacman -S make gettext base-devel)
+
+[//]: # (    * pacman -S mingw-w64-x86_64-make)
+
+[//]: # (    * pacman -S mingw-w64-x86_64-spdlog)
+
+[//]: # (3. Go to your MSYS2 bin folder and copy mingw32-make.exe as make.exe)
+
+[//]: # (4. Add the MSYS2 directory to the PATH environment variable in Windows &#40;mine was C:\msys64\mingw64\bin&#41;)
+
+[//]: # (5. Make a folder called build in the root directory of the project)
+
+[//]: # (6. Open a Linux Shell and run the following commands &#40;start in the build directory&#41;)
+
+[//]: # (    * apt install cmake)
+
+[//]: # (    * apt install make)
+
+[//]: # (    * cmake -G "MinGW Makefiles" ..)
+
+[//]: # (    * make)
