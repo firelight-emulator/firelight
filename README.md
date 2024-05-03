@@ -19,6 +19,13 @@ Here are the things you need to build the application:
 - CMake 3.22.1 or later.
 - The following libraries:
     - Qt6 (6.7)
+        - Components:
+            - Quick
+            - Gui
+            - OpenGL
+            - QuickControls2
+            - Quick3D
+            - Sql
     - SDL2
     - OpenSSL
     - spdlog
@@ -27,10 +34,10 @@ Here are the things you need to build the application:
 #### Recommended Windows setup
 
 I recommend using MSYS2 on Windows and using pacboy to install the libraries. I don't currently have any platforms
-other than that, so unfortunately I can't help you :-(
+other than that, so unfortunately I can't help you yet :-(
 
 ```
-Give examples
+examples soon sry
 ```
 
 [//]: # (### Installing)
@@ -117,9 +124,8 @@ Give examples
 
 ## Built With
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* [Qt6](https://contribute.qt-project.org/) - The GUI framework used
+* [libretro](https://github.com/libretro) - The emulation library used (will list specific cores later)
 
 ## Contributing
 
@@ -129,16 +135,17 @@ I'm not currently accepting contributions, but in the future I will!
 
 [//]: # (submitting pull requests.)
 
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see
-the [tags on this repository](https://github.com/your/project/tags).
-
-[//]: # (## Authors)
+[//]: # (## Versioning)
 
 [//]: # ()
 
-[//]: # (* [BiscuitCakes]&#40;https://github.com/biscuitcakes&#41;)
+[//]: # (We use [SemVer]&#40;http://semver.org/&#41; for versioning. For the versions available, see)
+
+[//]: # (the [tags on this repository]&#40;https://github.com/your/project/tags&#41;.)
+
+## Authors
+
+* [BiscuitCakes](https://github.com/biscuitcakes)
 
 [//]: # (See also the list of [contributors]&#40;https://github.com/your/project/contributors&#41; who participated in this project.)
 
@@ -146,15 +153,10 @@ the [tags on this repository](https://github.com/your/project/tags).
 
 This project is licensed under the GPL-3.0 License - see the [LICENSE.md](LICENSE.md) file for details
 
-[//]: # (## Acknowledgments)
+## Acknowledgments
 
-[//]: # ()
-
-[//]: # (* Hat tip to anyone whose code was used)
-
-[//]: # (* Inspiration)
-
-[//]: # (* etc)
+* The libretro team for making such a great library and for putting up with my hundreds, nay, thousands of questions
+* The romhack authors who are letting me include their mods in the app in these early days
 
 [//]: # (### Installation on Windows)
 
