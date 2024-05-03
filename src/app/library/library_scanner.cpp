@@ -1,4 +1,5 @@
 #include "library_scanner.hpp"
+#include "../util/md5.hpp"
 
 #include <fstream>
 #include <openssl/evp.h>
@@ -8,43 +9,6 @@
 #include <utility>
 
 constexpr int MAX_FILESIZE_BYTES = 750000000;
-
-static std::string calculateMD5(const char *input, int size) {
-  unsigned char md5Hash[EVP_MAX_MD_SIZE];
-  unsigned int md5HashLength;
-
-  std::string output;
-
-  // Create a message digest context
-  auto mdctx = EVP_MD_CTX_new();
-
-  // Initialize the message digest context
-  if (mdctx == nullptr || !EVP_DigestInit_ex2(mdctx, EVP_md5(), nullptr)) {
-    EVP_MD_CTX_free(mdctx);
-    throw std::runtime_error("Failed to initialize hash context");
-  }
-
-  // Add data to the message digest context
-  if (!EVP_DigestUpdate(mdctx, input, size)) {
-    EVP_MD_CTX_free(mdctx);
-    throw std::runtime_error("Failed to update hash context");
-  }
-
-  // Finalize the hash computation
-  if (!EVP_DigestFinal_ex(mdctx, md5Hash, &md5HashLength)) {
-    EVP_MD_CTX_free(mdctx);
-    throw std::runtime_error("Failed to finalize hash context");
-  }
-
-  // Clean up the message digest context
-  EVP_MD_CTX_free(mdctx);
-
-  output.resize(md5HashLength * 2);
-  for (unsigned int i = 0; i < md5HashLength; ++i)
-    std::sprintf(&output[i * 2], "%02x", md5Hash[i]);
-
-  return output;
-}
 
 LibraryScanner::LibraryScanner(
     firelight::db::ILibraryDatabase *lib_database,
@@ -159,6 +123,19 @@ void LibraryScanner::handleScannedRomFile(
   file.read(thing.data(), size);
   file.close();
 
+  // TODO: Determine if ROM has a header
+  if (ext == ".sfc" || ext == ".smc") {
+    if (size % 1024 == 512) {
+      printf("FOUND HEADER!!! %s\n", entry.path().filename().string().c_str());
+      thing.erase(thing.begin(), thing.begin() + 512);
+      size -= 512;
+
+      // Copy thing into a new vector without the header
+      // std::vector<char> new_thing(size - 512);
+      // std::copy(thing.begin() + 512, thing.end(), new_thing.begin());
+    }
+  }
+
   auto md5 = calculateMD5(thing.data(), size);
   scan_results.all_md5s.emplace_back(md5);
 
@@ -166,9 +143,11 @@ void LibraryScanner::handleScannedRomFile(
 
   firelight::db::LibraryEntry e = {
       .displayName = display_name,
-      .contentMd5 = md5,
+      .contentId = md5,
       .platformId = platforms.at(0).id,
       .type = firelight::db::LibraryEntry::EntryType::ROM,
+      .fileMd5 = md5,
+      .fileCrc32 = md5, // TODO: Calculate CRC32
       .sourceDirectory = entry.path().parent_path().string(),
       .contentPath = entry.path().relative_path().string()};
 
@@ -212,7 +191,7 @@ void LibraryScanner::handleScannedPatchFile(
   auto rom = content_database_->getRom(patch.romId);
   if (rom.has_value()) {
     auto existing = library_database_->getMatchingLibraryEntries(
-        {.contentMd5 = rom.value().md5,
+        {.contentId = rom.value().md5,
          .type = firelight::db::LibraryEntry::EntryType::ROM});
 
     if (!existing.empty()) {
@@ -228,10 +207,12 @@ void LibraryScanner::handleScannedPatchFile(
 
   firelight::db::LibraryEntry e = {
       .displayName = displayName,
-      .contentMd5 = md5,
+      .contentId = md5,
       .parentEntryId = parent,
       .modId = patch.modId,
       .type = firelight::db::LibraryEntry::EntryType::PATCH,
+      .fileMd5 = md5,
+      .fileCrc32 = md5,
       .sourceDirectory = entry.path().parent_path().string(),
       .contentPath = entry.path().relative_path().string()};
 

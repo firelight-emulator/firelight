@@ -9,12 +9,14 @@ struct LibraryEntry {
 
   int id = -1;
   std::string displayName;
-  std::string contentMd5;
+  std::string contentId;
   int platformId = -1;
   int parentEntryId = -1;
   int modId = -1;
   unsigned int activeSaveSlot = 1;
   EntryType type = EntryType::UNKNOWN;
+  std::string fileMd5;
+  std::string fileCrc32;
   std::string sourceDirectory;
   std::string contentPath;
   unsigned int createdAt = 0;

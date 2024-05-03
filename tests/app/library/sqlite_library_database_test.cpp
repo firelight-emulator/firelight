@@ -83,9 +83,11 @@ TEST_F(SqliteLibraryDatabaseTest, CreateLibraryEntrySetsId) {
   SqliteLibraryDatabase db(temp_file_path.string());
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
-                     .contentMd5 = "1234567890",
+                     .contentId = "1234567890",
                      .platformId = 1,
                      .type = LibraryEntry::EntryType::ROM,
+                     .fileMd5 = "md5",
+                     .fileCrc32 = "crc32",
                      .sourceDirectory = "source",
                      .contentPath = "content"};
 
@@ -98,9 +100,11 @@ TEST_F(SqliteLibraryDatabaseTest, CreateLibraryEntryFailsOnDuplicate) {
   SqliteLibraryDatabase db(temp_file_path.string());
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
-                     .contentMd5 = "1234567890",
+                     .contentId = "1234567890",
                      .platformId = 1,
                      .type = LibraryEntry::EntryType::ROM,
+                     .fileMd5 = "md5",
+                     .fileCrc32 = "crc32",
                      .sourceDirectory = "source",
                      .contentPath = "content"};
 
@@ -114,10 +118,12 @@ TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntry) {
   SqliteLibraryDatabase db(temp_file_path.string());
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
-                     .contentMd5 = "1234567890",
+                     .contentId = "1234567890",
                      .platformId = 1,
                      .parentEntryId = 100,
                      .type = LibraryEntry::EntryType::ROM,
+                     .fileMd5 = "md5",
+                     .fileCrc32 = "crc32",
                      .sourceDirectory = "source",
                      .contentPath = "content"};
 
@@ -128,10 +134,12 @@ TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntry) {
   ASSERT_TRUE(result.has_value());
   ASSERT_EQ(result->id, entry.id);
   ASSERT_EQ(result->displayName, entry.displayName);
-  ASSERT_EQ(result->contentMd5, entry.contentMd5);
+  ASSERT_EQ(result->contentId, entry.contentId);
   ASSERT_EQ(result->platformId, entry.platformId);
   ASSERT_EQ(result->parentEntryId, entry.parentEntryId);
   ASSERT_EQ(result->type, entry.type);
+  ASSERT_EQ(result->fileMd5, entry.fileMd5);
+  ASSERT_EQ(result->fileCrc32, entry.fileCrc32);
   ASSERT_EQ(result->sourceDirectory, entry.sourceDirectory);
   ASSERT_EQ(result->contentPath, entry.contentPath);
 }
@@ -148,9 +156,11 @@ TEST_F(SqliteLibraryDatabaseTest, AddEntryToPlaylist) {
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
-                     .contentMd5 = "1234567890",
+                     .contentId = "1234567890",
                      .platformId = 1,
                      .type = LibraryEntry::EntryType::ROM,
+                     .fileMd5 = "md5",
+                     .fileCrc32 = "crc32",
                      .sourceDirectory = "source",
                      .contentPath = "content"};
 
@@ -164,9 +174,11 @@ TEST_F(SqliteLibraryDatabaseTest, AddEntryToPlaylistFailsOnDuplicate) {
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
-                     .contentMd5 = "1234567890",
+                     .contentId = "1234567890",
                      .platformId = 1,
                      .type = LibraryEntry::EntryType::ROM,
+                     .fileMd5 = "md5",
+                     .fileCrc32 = "crc32",
                      .sourceDirectory = "source",
                      .contentPath = "content"};
 
@@ -181,9 +193,11 @@ TEST_F(SqliteLibraryDatabaseTest, GetPlaylistsForEntry) {
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
-                     .contentMd5 = "1234567890",
+                     .contentId = "1234567890",
                      .platformId = 1,
                      .type = LibraryEntry::EntryType::ROM,
+                     .fileMd5 = "md5",
+                     .fileCrc32 = "crc32",
                      .sourceDirectory = "source",
                      .contentPath = "content"};
 
@@ -208,9 +222,11 @@ TEST_F(SqliteLibraryDatabaseTest, DeleteLibraryEntry) {
   SqliteLibraryDatabase db(temp_file_path.string());
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
-                     .contentMd5 = "1234567890",
+                     .contentId = "1234567890",
                      .platformId = 1,
                      .type = LibraryEntry::EntryType::ROM,
+                     .fileMd5 = "md5",
+                     .fileCrc32 = "crc32",
                      .sourceDirectory = "source",
                      .contentPath = "content"};
 

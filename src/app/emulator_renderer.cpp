@@ -88,7 +88,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
       }
       firelight::db::PlaySession session{
           -1,
-          m_currentEntry.contentMd5,
+          m_currentEntry.contentId,
           1,
           sessionStartTime,
           sessionEndTime,
@@ -213,7 +213,7 @@ EmulatorRenderer::~EmulatorRenderer() {
 
     firelight::db::PlaySession session{
         -1,
-        m_currentEntry.contentMd5,
+        m_currentEntry.contentId,
         1,
         sessionStartTime,
         sessionEndTime,

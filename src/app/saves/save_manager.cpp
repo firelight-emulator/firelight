@@ -1,7 +1,7 @@
 #include "save_manager.hpp"
 
-#include "firelight/library_entry.hpp"
 #include "../util/md5.hpp"
+#include "firelight/library_entry.hpp"
 
 #include <fstream>
 #include <qfuture.h>
@@ -28,13 +28,13 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
     db::SavefileMetadata metadata;
 
     auto metadataOpt =
-        m_userdataDatabase.getSavefileMetadata(entry.contentMd5, slot);
+        m_userdataDatabase.getSavefileMetadata(entry.contentId, slot);
 
     if (metadataOpt.has_value()) {
       metadata = metadataOpt.value();
       exists = true;
     } else {
-      metadata.contentMd5 = entry.contentMd5;
+      metadata.contentMd5 = entry.contentId;
       metadata.slotNumber = slot;
     }
 
@@ -47,7 +47,7 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
       return true;
     }
 
-    spdlog::info("Writing updated savefile for {} slot {}", entry.contentMd5,
+    spdlog::info("Writing updated savefile for {} slot {}", entry.contentId,
                  slot);
     metadata.savefileMd5 = savefileMd5;
 
@@ -106,7 +106,7 @@ SaveManager::readSaveDataForEntry(db::LibraryEntry &entry) const {
   auto slot = entry.activeSaveSlot;
 
   const auto directory =
-      m_saveDir / entry.contentMd5 / ("slot" + std::to_string(slot));
+      m_saveDir / entry.contentId / ("slot" + std::to_string(slot));
   if (!exists(directory)) {
     return std::nullopt;
   }

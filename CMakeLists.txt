@@ -199,6 +199,7 @@ add_executable(fl_test
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
         tests/app/db/sqlite_content_database_test.cpp
+        tests/main.cpp
 )
 
 #target_compile_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
@@ -213,7 +214,7 @@ target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES} gmoc
 #add_test(NAME firelight_test COMMAND firelight)
 
 #file(COPY LICENSE.md README.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-install(FILES LICENSE.md README.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
+#install(FILES LICENSE.md README.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 set(CPACK_PACKAGE_NAME "Firelight")
 set(CPACK_PACKAGE_VENDOR "BiscuitCakes")

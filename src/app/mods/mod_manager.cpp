@@ -29,7 +29,7 @@ void ModManager::installLatest(const int modId, const int romId) const {
 
       db::LibraryEntry entry{
           .displayName = mod->name,
-          .contentMd5 = patch.md5,
+          .contentId = patch.md5,
           .platformId = rom->platformId,
           .activeSaveSlot = 1,
           .type = db::LibraryEntry::EntryType::PATCH,

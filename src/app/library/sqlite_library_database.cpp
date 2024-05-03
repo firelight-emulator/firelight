@@ -19,12 +19,14 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(std::filesystem::path db_file_path)
   createLibraryEntries.prepare("CREATE TABLE IF NOT EXISTS library_entries("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                                "display_name TEXT NOT NULL,"
-                               "content_md5 TEXT UNIQUE NOT NULL,"
+                               "content_id TEXT UNIQUE NOT NULL,"
                                "platform_id INTEGER NOT NULL,"
                                "parent_entry_id INTEGER DEFAULT -1,"
                                "mod_id INTEGER DEFAULT -1,"
                                "active_save_slot INTEGER DEFAULT 1,"
                                "type INTEGER NOT NULL,"
+                               "file_md5 TEXT UNIQUE NOT NULL,"
+                               "file_crc32 TEXT UNIQUE NOT NULL,"
                                "source_directory TEXT NOT NULL,"
                                "content_path TEXT NOT NULL,"
                                "created_at INTEGER NOT NULL);");
@@ -111,19 +113,24 @@ bool SqliteLibraryDatabase::addEntryToPlaylist(const int playlistId,
 
 bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
   const QString queryString =
-      "INSERT INTO library_entries (display_name, content_md5, platform_id, "
-      "parent_entry_id, mod_id, type, source_directory, content_path, "
+      "INSERT INTO library_entries (display_name, content_id, "
+      "platform_id, "
+      "parent_entry_id, mod_id, type, file_md5, file_crc32, source_directory, "
+      "content_path, "
       "created_at) VALUES"
-      "(:displayName, :contentMd5, :platformId, :parentEntryId, :modId, :type, "
-      ":sourceDirectory, :contentPath, :createdAt);";
+      "(:displayName, :contentId, :platformId, :parentEntryId, "
+      ":modId, :type, :fileMd5, :fileCrc32, :sourceDirectory, :contentPath, "
+      ":createdAt);";
   QSqlQuery query(getDatabase());
   query.prepare(queryString);
   query.bindValue(":displayName", QString::fromStdString(entry.displayName));
-  query.bindValue(":contentMd5", QString::fromStdString(entry.contentMd5));
+  query.bindValue(":contentId", QString::fromStdString(entry.contentId));
   query.bindValue(":platformId", entry.platformId);
   query.bindValue(":parentEntryId", entry.parentEntryId);
   query.bindValue(":modId", entry.modId);
   query.bindValue(":type", static_cast<int>(entry.type));
+  query.bindValue(":fileMd5", QString::fromStdString(entry.fileMd5));
+  query.bindValue(":fileCrc32", QString::fromStdString(entry.fileCrc32));
   query.bindValue(":sourceDirectory",
                   QString::fromStdString(entry.sourceDirectory));
   query.bindValue(":contentPath", QString::fromStdString(entry.contentPath));
@@ -216,14 +223,14 @@ SqliteLibraryDatabase::getMatchingLibraryEntries(const LibraryEntry &entry) {
     whereClause += "display_name = :displayName";
   }
 
-  if (!entry.contentMd5.empty()) {
+  if (!entry.contentId.empty()) {
     if (needAND) {
       whereClause += " AND ";
     } else {
       whereClause += " WHERE ";
       needAND = true;
     }
-    whereClause += "content_md5 = :contentMd5";
+    whereClause += "content_id = :contentId";
   }
 
   if (!entry.contentPath.empty()) {
@@ -246,8 +253,8 @@ SqliteLibraryDatabase::getMatchingLibraryEntries(const LibraryEntry &entry) {
   if (!entry.displayName.empty()) {
     query.bindValue(":displayName", QString::fromStdString(entry.displayName));
   }
-  if (!entry.contentMd5.empty()) {
-    query.bindValue(":contentMd5", QString::fromStdString(entry.contentMd5));
+  if (!entry.contentId.empty()) {
+    query.bindValue(":contentId", QString::fromStdString(entry.contentId));
   }
   if (!entry.contentPath.empty()) {
     query.bindValue(":contentPath", QString::fromStdString(entry.contentPath));
@@ -368,15 +375,17 @@ SqliteLibraryDatabase::createLibraryEntryFromQuery(const QSqlQuery &query) {
   LibraryEntry entry;
   entry.id = query.value(0).toInt();
   entry.displayName = query.value(1).toString().toStdString();
-  entry.contentMd5 = query.value(2).toString().toStdString();
+  entry.contentId = query.value(2).toString().toStdString();
   entry.platformId = query.value(3).toInt();
   entry.parentEntryId = query.value(4).toInt();
   entry.modId = query.value(5).toInt();
   entry.activeSaveSlot = query.value(6).toInt();
   entry.type = static_cast<LibraryEntry::EntryType>(query.value(7).toInt());
-  entry.sourceDirectory = query.value(8).toString().toStdString();
-  entry.contentPath = query.value(9).toString().toStdString();
-  entry.createdAt = query.value(10).toLongLong();
+  entry.fileMd5 = query.value(8).toString().toStdString();
+  entry.fileCrc32 = query.value(9).toString().toStdString();
+  entry.sourceDirectory = query.value(10).toString().toStdString();
+  entry.contentPath = query.value(11).toString().toStdString();
+  entry.createdAt = query.value(12).toLongLong();
 
   return entry;
 }

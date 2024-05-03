@@ -102,7 +102,7 @@ bool LibraryItemModel::isRomInLibrary(const int romId) const {
     return false;
   }
 
-  return !m_libraryDatabase->getMatchingLibraryEntries({.contentMd5 = rom->md5})
+  return !m_libraryDatabase->getMatchingLibraryEntries({.contentId = rom->md5})
               .empty();
 }
 
@@ -171,7 +171,7 @@ void LibraryItemModel::refresh() {
     unsigned int lastSessionTime = 0;
 
     auto lastSession =
-        m_userdataDatabase->getLatestPlaySession(entry.contentMd5);
+        m_userdataDatabase->getLatestPlaySession(entry.contentId);
     if (lastSession.has_value()) {
       lastSessionTime = lastSession->endTime;
     } else {
