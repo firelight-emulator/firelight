@@ -211,6 +211,10 @@ void EmulationManager::stopEmulation() {
     getUserdataManager()->createPlaySession(*session);
     m_currentPlaySession.reset();
 
+    getAchievementManager()->unloadGame();
+    m_achievementsLoadedSignalReady = false;
+    m_gameLoadedSignalReady = false;
+
     m_isRunning = false;
     save(true);
     m_nativeWidth = 0;

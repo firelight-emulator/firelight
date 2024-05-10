@@ -74,9 +74,9 @@ Rectangle {
             emulatorContainer.readyToStart()
         }
 
-        onReadyToStart: function () {
-            emulatorContainer.readyToStart()
-        }
+        // onReadyToStart: function () {
+        //     emulatorContainer.readyToStart()
+        // }
 
         states: [
             State {

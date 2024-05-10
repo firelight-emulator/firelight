@@ -10,19 +10,53 @@
 
 namespace firelight::achievements {
 
-static RAClient *theClient;
 static ::libretro::Core *theCore;
 
 static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
+  switch (event->type) {
+  case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
+    break;
+  case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW:
+    break;
+  case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE:
+    break;
+  case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
+    break;
+  case RC_CLIENT_EVENT_GAME_COMPLETED:
+    break;
+  case RC_CLIENT_EVENT_LEADERBOARD_STARTED:
+    break;
+  case RC_CLIENT_EVENT_LEADERBOARD_FAILED:
+    break;
+  case RC_CLIENT_EVENT_LEADERBOARD_SUBMITTED:
+    break;
+  case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_SHOW:
+    break;
+  case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_UPDATE:
+    break;
+  case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_HIDE:
+    break;
+  case RC_CLIENT_EVENT_LEADERBOARD_SCOREBOARD:
+    break;
+  case RC_CLIENT_EVENT_RESET:
+    break;
+  case RC_CLIENT_EVENT_SERVER_ERROR:
+    break;
+  case RC_CLIENT_EVENT_DISCONNECTED:
+    break;
+  case RC_CLIENT_EVENT_RECONNECTED:
+    break;
+  }
   printf("Event! (%d)\n", event->type);
 }
 
 static uint32_t readMemoryCallback(uint32_t address, uint8_t *buffer,
                                    uint32_t num_bytes, rc_client_t *client) {
-  if (theClient && theCore) {
-    if (!theClient->m_memorySeemsGood) {
+  const auto raClient = static_cast<RAClient *>(rc_client_get_userdata(client));
+  if (raClient && theCore) {
+    if (!raClient->m_memorySeemsGood) {
       const auto valid = rc_libretro_memory_init(
-          &theClient->m_memoryRegions, nullptr,
+          &raClient->m_memoryRegions, theCore->getMemoryMap(),
           [](unsigned id, rc_libretro_core_memory_info_t *info) {
             info->data =
                 static_cast<unsigned char *>(theCore->getMemoryData(id));
@@ -31,18 +65,13 @@ static uint32_t readMemoryCallback(uint32_t address, uint8_t *buffer,
           RC_CONSOLE_NINTENDO_64);
 
       if (valid) {
-        printf("Memory seems good!\n");
-        theClient->m_memorySeemsGood = true;
-      } else {
-
-        printf("Memory seems badddddd!\n");
+        raClient->m_memorySeemsGood = true;
       }
     }
 
-    return rc_libretro_memory_read(&theClient->m_memoryRegions, address, buffer,
+    return rc_libretro_memory_read(&raClient->m_memoryRegions, address, buffer,
                                    num_bytes);
   }
-  // spdlog::info("read memory: {}", QThread::currentThreadId());
   return uint32_t(0);
 }
 
@@ -76,23 +105,20 @@ static void httpCallback(const rc_api_request_t *request,
 }
 
 static void logCallback(const char *message, const rc_client_t *client) {
-  spdlog::info("{}", message);
+  spdlog::info("[RetroAchievements] {}", message);
 }
 
 RAClient::RAClient() {
-  theClient = this;
-
   m_client = rc_client_create(readMemoryCallback, httpCallback);
   rc_client_enable_logging(m_client, RC_CLIENT_LOG_LEVEL_VERBOSE, logCallback);
   rc_client_set_event_handler(m_client, eventHandler);
+  rc_client_set_userdata(m_client, this);
 
   rc_client_set_hardcore_enabled(m_client, 0);
 
-  m_idleTimer.setInterval(1000);
-  connect(&m_idleTimer, &QTimer::timeout, this, [this] {
-    printf("Calling idle\n");
-    rc_client_idle(m_client);
-  });
+  m_idleTimer.setInterval(2000);
+  connect(&m_idleTimer, &QTimer::timeout, this,
+          [this] { rc_client_idle(m_client); });
 }
 
 RAClient::~RAClient() {
@@ -108,18 +134,13 @@ void RAClient::loadGame(const QString &contentMd5) {
     return;
   }
 
-  // QMetaObject::invokeMethod(
-  //     this, "loadAchievements", Qt::QueuedConnection,
-  //     Q_ARG(QString, QString::fromStdString(contentId)));
-
-  auto p = std::promise<bool>();
-
   rc_client_begin_load_game(
       m_client, contentMd5.toStdString().c_str(),
       [](int result, const char *error_message, rc_client_t *client,
          void *userdata) {
         // auto promise = static_cast<std::promise<bool> *>(userdata);
-        const auto theThing = static_cast<RAClient *>(userdata);
+        const auto theThing =
+            static_cast<RAClient *>(rc_client_get_userdata(client));
         printf("Result: %d: %s\n", result, error_message);
         if (result == 0) {
           // promise->set_value(true);
@@ -131,26 +152,34 @@ void RAClient::loadGame(const QString &contentMd5) {
           emit theThing->gameLoadFailed();
         }
       },
-      this);
+      nullptr);
 }
 void RAClient::unloadGame() {
   rc_client_unload_game(m_client);
   m_gameLoaded = false;
+  m_frameNumber = 0;
+  m_memorySeemsGood = false;
+  theCore = nullptr;
+  QMetaObject::invokeMethod(&m_idleTimer, "stop", Qt::QueuedConnection);
   emit gameUnloaded();
 }
 
 void RAClient::doFrame(::libretro::Core *core,
                        const db::LibraryEntry &currentEntry) {
+  if (!m_loggedIn) {
+    return;
+  }
+
   if (!theCore) {
     theCore = core;
   }
   m_frameNumber++;
 
-  if (m_frameNumber == 5) {
+  if (m_frameNumber == 2) {
     QMetaObject::invokeMethod(
         this, "loadGame", Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(currentEntry.contentId)));
-  } else if (m_frameNumber > 5) {
+  } else if (m_frameNumber > 2) {
     rc_client_do_frame(m_client);
     QMetaObject::invokeMethod(&m_idleTimer, "start", Qt::QueuedConnection);
   }
@@ -163,22 +192,34 @@ void RAClient::logInUserWithPassword(const QString &username,
       m_client, username.toStdString().c_str(), password.toStdString().c_str(),
       [](int result, const char *error_message, rc_client_t *client,
          void *userdata) {
-        if (error_message != nullptr) {
-          printf("We got an error: %s\n", error_message);
-        }
-        if (result == 0) {
-          const auto userInfo = rc_client_get_user_info(client);
-          const auto raClient = static_cast<RAClient *>(userdata);
+        const auto userInfo = rc_client_get_user_info(client);
+        const auto raClient = static_cast<RAClient *>(userdata);
 
+        switch (result) {
+        case RC_OK:
           raClient->m_displayName = QString::fromUtf8(userInfo->display_name);
           raClient->m_loggedIn = true;
           emit raClient->loginSucceeded();
           emit raClient->loginStatusChanged();
-        } else {
-          printf("Error (%d): %s\n", result, error_message);
+          break;
+        case RC_INVALID_CREDENTIALS:
+          emit raClient->loginFailedWithInvalidCredentials();
+          raClient->m_loggedIn = false;
+          break;
+        case RC_EXPIRED_TOKEN:
+          emit raClient->loginFailedWithExpiredToken();
+          raClient->m_loggedIn = false;
+          break;
+        case RC_ACCESS_DENIED:
+          emit raClient->loginFailedWithAccessDenied();
+          raClient->m_loggedIn = false;
+          break;
+        default:
+          emit raClient->loginFailedWithInternalError();
+          raClient->m_loggedIn = false;
         }
       },
-      this);
+      nullptr);
 }
 
 void RAClient::logout() {

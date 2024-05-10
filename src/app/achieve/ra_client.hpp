@@ -41,7 +41,11 @@ public:
 
 signals:
   void loginSucceeded();
-  void loginFailed();
+  void loginFailedWithInvalidCredentials();
+  void loginFailedWithExpiredToken();
+  void loginFailedWithAccessDenied();
+  void loginFailedWithInternalError();
+
   void achievementUnlocked();
   void loginStatusChanged();
 

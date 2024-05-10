@@ -20,7 +20,7 @@ void log(enum retro_log_level level, const char *fmt, ...) {
   msg[std::remove(msg, msg + strlen(msg), '\n') - msg] = 0;
   msg[std::remove(msg, msg + strlen(msg), '\r') - msg] = 0;
 
-  spdlog::debug("{}", msg);
+  spdlog::debug("[Core] {}", msg);
 }
 
 // Only supports one core at a time for now, but, eh.
@@ -78,11 +78,11 @@ static bool envCallback(unsigned cmd, void *data) {
 bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   switch (cmd) {
   case RETRO_ENVIRONMENT_SET_ROTATION:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_ROTATION");
-    //    this->video->setRotation(*(unsigned *)data);
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_ROTATION");
+    //    video->setRotation(*(unsigned *)data);
     return true;
   case (3 | 0x800000): {
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB");
     auto ptr = static_cast<retro_environment_t *>(data);
     *ptr = [](unsigned int cmd, void *data) {
@@ -92,48 +92,48 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_GET_OVERSCAN:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_OVERSCAN");
-    this->recordPotentialAPIViolation(
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_OVERSCAN");
+    recordPotentialAPIViolation(
         "Using deprecated environment call GET_OVERSCAN");
     *static_cast<bool *>(data) = false;
     return true;
   case RETRO_ENVIRONMENT_GET_CAN_DUPE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_CAN_DUPE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_CAN_DUPE");
     *static_cast<bool *>(data) = true;
     return true;
   }
   case RETRO_ENVIRONMENT_SET_MESSAGE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_MESSAGE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_MESSAGE");
     auto ptr = static_cast<retro_message *>(data);
     // TODO: Do something to queue message
     printf("Got message for %d frames: %s\n", ptr->frames, ptr->msg);
     return true;
   }
   case RETRO_ENVIRONMENT_SHUTDOWN:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SHUTDOWN");
-    this->shutdown = *static_cast<bool *>(data);
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SHUTDOWN");
+    shutdown = *static_cast<bool *>(data);
     break;
   case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL");
-    this->performanceLevel = *static_cast<unsigned *>(data);
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL");
+    performanceLevel = *static_cast<unsigned *>(data);
     break;
   case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY");
-    if (this->systemDirectory.empty()) {
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY");
+    if (systemDirectory.empty()) {
       return false;
     }
 
     auto ptr = static_cast<const char **>(data);
-    *ptr = &this->systemDirectory[0];
+    *ptr = &systemDirectory[0];
     return true;
   }
   case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
-    printf("pixelformat: %p\n", static_cast<retro_pixel_format *>(data));
-    //    this->video->setPixelFormat((retro_pixel_format *)data);
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
+    // TODO: Implement
+    //    video->setPixelFormat((retro_pixel_format *)data);
     return true;
   case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS");
     auto ptr = static_cast<retro_input_descriptor *>(data);
     // TODO sane default
     for (int i = 0; i < 100; ++i) {
@@ -142,16 +142,16 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
         break;
       }
 
-      this->inputDescriptors.push_back(descriptor);
+      inputDescriptors.emplace_back(descriptor);
 
       if (i == 99) {
-        this->recordPotentialAPIViolation("Over 100 input descriptors");
+        recordPotentialAPIViolation("Over 100 input descriptors");
       }
     }
     return true;
   }
   case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK");
     auto ptr = (retro_keyboard_callback *)data;
     ptr->callback = [](bool down, unsigned keycode, uint32_t character,
                        uint16_t key_modifiers) {
@@ -160,7 +160,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE: {
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE");
     auto ptr = static_cast<retro_disk_control_callback *>(data);
     ptr->set_eject_state = nullptr;
@@ -173,7 +173,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return false;
   }
   case RETRO_ENVIRONMENT_SET_HW_RENDER: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
     // TODO I think this is actually mostly stuff informing the frontend
     auto *renderCallback = static_cast<retro_hw_render_callback *>(data);
 
@@ -192,9 +192,9 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_GET_VARIABLE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_VARIABLE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VARIABLE");
     auto ptr = static_cast<retro_variable *>(data);
-    for (const auto &opt : this->options) {
+    for (const auto &opt : options) {
       if (strcmp(opt.key, ptr->key) == 0) {
         auto strr = "mupen64plus-pak1";
         auto val = "rumble";
@@ -209,7 +209,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_SET_VARIABLES: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_VARIABLES");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_VARIABLES");
     auto ptr = static_cast<retro_variable *>(data);
     // TODO sane default
     for (int i = 0; i < 100; ++i) {
@@ -222,39 +222,37 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE");
-    *(bool *)data = false; // TODO: actually implement
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE");
+    *static_cast<bool *>(data) = false; // TODO: actually implement
     return true;
   }
   case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME");
-    this->canRunWithNoGame = *(bool *)data;
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME");
+    canRunWithNoGame = *static_cast<bool *>(data);
   }
   case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH");
-    if (this->libretroPath.empty()) {
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH");
+    if (libretroPath.empty()) {
       return false;
     }
-    *static_cast<const char **>(data) = &this->libretroPath[0];
+    *static_cast<const char **>(data) = &libretroPath[0];
     return true;
   }
   case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK");
-    //    this->video->setFrameTimeCallback((retro_frame_time_callback
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK");
+    //    video->setFrameTimeCallback((retro_frame_time_callback
     //    *)data);
     return true;
   }
   case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK");
     auto ptr = static_cast<retro_audio_callback *>(data);
     ptr->callback = nullptr;
     ptr->set_state = nullptr;
     return false;
   }
   case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE: {
-    this->environmentCalls.emplace_back(
-        "RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE");
     auto ptr = static_cast<retro_rumble_interface *>(data);
     ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
                                uint16_t strength) {
@@ -276,7 +274,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES: {
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES");
     auto ptr = static_cast<uint64_t *>(data);
     //* Gets a bitmask telling which device type are expected to be
@@ -290,15 +288,15 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return false;
   }
   case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE");
     auto ptr = static_cast<retro_sensor_interface *>(data);
     ptr->set_sensor_state = nullptr;
     ptr->get_sensor_input = nullptr;
     return false;
   }
   case RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE");
-    // todo: actually support camera?
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE");
+
     auto ptr = static_cast<retro_camera_callback *>(data);
     ptr->start = [] {
       printf("Here's where I WOULD start the camera driver\n");
@@ -308,13 +306,13 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_LOG_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LOG_INTERFACE");
     auto ptr = static_cast<retro_log_callback *>(data);
     ptr->log = log;
     return true;
   }
   case RETRO_ENVIRONMENT_GET_PERF_INTERFACE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_PERF_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_PERF_INTERFACE");
     auto ptr = static_cast<retro_perf_callback *>(data);
     // Return current time microseconds (unix epoch?)
     ptr->get_time_usec = [] {
@@ -322,7 +320,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       return static_cast<retro_time_t>(0);
     };
     // Returns a bit-mask of detected CPU features (RETRO_SIMD_*)
-    ptr->get_cpu_features = []() {
+    ptr->get_cpu_features = [] {
       uint64_t cpu = 0;
       if (SDL_HasAVX()) {
         cpu |= RETRO_SIMD_AVX;
@@ -372,13 +370,12 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
      * counters. Performance counters can always be poked into manually as
      * well.
      */
-    ptr->perf_log = [] { printf("Logging performance counters\n"); };
+    ptr->perf_log = [] {};
 
     return false;
   }
   case RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE");
     auto ptr = static_cast<retro_location_callback *>(data);
     ptr->start = nullptr;
     ptr->stop = nullptr;
@@ -389,30 +386,30 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return false;
   }
   case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY: {
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY");
     auto ptr = static_cast<const char **>(data);
-    *ptr = &this->coreAssetsDirectory[0];
+    *ptr = &coreAssetsDirectory[0];
     return true;
   }
   case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY");
     auto ptr = static_cast<const char **>(data);
-    *ptr = &this->saveDirectory[0]; // TODO
+    *ptr = &saveDirectory[0]; // TODO
     return true;
   }
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
-    this->environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
     videoReceiver->setSystemAVInfo(static_cast<retro_system_av_info *>(data));
-    //    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
+    //    video->setGameGeometry(&retroSystemAVInfo->geometry);
     return true;
   }
   case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK");
     break;
   case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO");
     auto ptr = static_cast<retro_subsystem_info *>(data);
     for (int i = 0; i < 100; ++i) {
       auto ssInfo = ptr[i];
@@ -420,90 +417,90 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
         break;
       }
 
-      this->subsystemInfo.push_back(ssInfo);
+      subsystemInfo.emplace_back(ssInfo);
       if (i == 99) {
-        this->recordPotentialAPIViolation("Over 100 subsystems");
+        recordPotentialAPIViolation("Over 100 subsystems");
       }
     }
     return true;
   }
   case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO");
-    auto ptr = (retro_controller_info *)data;
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO");
+    auto ptr = static_cast<retro_controller_info *>(data);
     for (unsigned i = 0; i < ptr->num_types; ++i) {
       auto info = ptr->types[i];
       if (info.desc == nullptr) {
         break;
       }
 
-      this->controllerInfo.push_back(info);
+      controllerInfo.emplace_back(info);
       if (i == 100) {
-        this->recordPotentialAPIViolation("Over 100 controller infos");
+        recordPotentialAPIViolation("Over 100 controller infos");
       }
     }
     return true;
   }
   case RETRO_ENVIRONMENT_SET_MEMORY_MAPS: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_MEMORY_MAPS");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_MEMORY_MAPS");
     auto ptr = static_cast<retro_memory_map *>(data);
     for (unsigned i = 0; i < ptr->num_descriptors; ++i) {
       if (ptr->descriptors[i].ptr == nullptr) {
         break;
       }
-      this->memoryMaps.push_back(ptr->descriptors[i]);
+      memoryDescriptors.emplace_back(ptr->descriptors[i]);
     }
+
+    memoryMap.descriptors = ptr->descriptors;
+    memoryMap.num_descriptors = ptr->num_descriptors;
+
     return true;
   }
   case RETRO_ENVIRONMENT_SET_GEOMETRY: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_GEOMETRY");
-    this->retroSystemAVInfo->geometry =
-        *static_cast<retro_game_geometry *>(data);
-    //    this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_GEOMETRY");
+    retroSystemAVInfo->geometry = *static_cast<retro_game_geometry *>(data);
+    //    video->setGameGeometry(&retroSystemAVInfo->geometry);
     return true;
   }
   case RETRO_ENVIRONMENT_GET_USERNAME: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_USERNAME");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_USERNAME");
     auto ptr = static_cast<const char **>(data);
-    *ptr = &this->username[0];
+    *ptr = &username[0];
     return true;
   }
   case RETRO_ENVIRONMENT_GET_LANGUAGE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_LANGUAGE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LANGUAGE");
     // TODO: Set by user
     auto ptr = static_cast<retro_language *>(data);
     *ptr = RETRO_LANGUAGE_ENGLISH;
     return true;
   }
   case RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER");
     break;
   case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE");
     auto ptr = static_cast<retro_hw_render_interface *>(data);
     ptr->interface_type = RETRO_HW_RENDER_INTERFACE_DUMMY;
     ptr->interface_version = 0;
   }
   case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS");
-    this->supportsAchievements = *static_cast<bool *>(data);
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS");
+    supportsAchievements = *static_cast<bool *>(data);
     return true;
   }
   case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE");
     break;
   case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS");
     break;
   case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT");
     return true;
   case RETRO_ENVIRONMENT_GET_VFS_INTERFACE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_VFS_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VFS_INTERFACE");
     // TODO: Do something here to ensure this was called before we give the
     // core any paths
     auto ptr = static_cast<retro_vfs_interface_info *>(data);
@@ -513,7 +510,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_GET_LED_INTERFACE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_LED_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LED_INTERFACE");
     auto ptr = static_cast<retro_led_interface *>(data);
     ptr->set_led_state = [](int led, int state) {
       printf("Setting LED %d to state %d\n", led, state);
@@ -521,38 +518,35 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE");
     auto value = static_cast<int *>(data);
     *value = 1 << 0 | 1 << 1;
     return true;
   }
   case RETRO_ENVIRONMENT_GET_MIDI_INTERFACE:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_MIDI_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_MIDI_INTERFACE");
     break;
   case RETRO_ENVIRONMENT_GET_FASTFORWARDING: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_FASTFORWARDING");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_FASTFORWARDING");
     auto ptr = static_cast<bool *>(data);
-    *ptr = this->fastforwarding;
+    *ptr = fastforwarding;
     return true;
   }
   case RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE:
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE");
     break;
   case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_INPUT_BITMASKS");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_BITMASKS");
     break;
   case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION");
     // TODO: Set this behind some user-settable flag?
     auto ptr = static_cast<unsigned *>(data);
     *ptr = 2;
     return true;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS");
     auto ptr = static_cast<retro_core_option_definition **>(data);
     // TODO sane default
     for (int i = 0; i < 200; ++i) {
@@ -564,12 +558,12 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
 
       // TODO: pointer?
       CoreOption coreOption(opt);
-      this->options.push_back(coreOption);
+      options.emplace_back(coreOption);
     }
     return true;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL");
     auto ptr = static_cast<retro_core_options_intl *>(data);
     // TODO sane default
     for (int i = 0; i < 200; ++i) {
@@ -579,15 +573,14 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       }
 
       CoreOption coreOption(opt);
-      this->options.push_back(coreOption);
+      options.emplace_back(coreOption);
     }
     return true;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY");
     auto ptr = static_cast<retro_core_option_display *>(data);
-    for (auto opt : this->options) {
+    for (auto opt : options) {
       if (strcmp(ptr->key, opt.key) == 0) {
         opt.displayToUser = ptr->visible;
         return true;
@@ -596,49 +589,48 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return false;
   }
   case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
     *static_cast<unsigned *>(data) = RETRO_HW_CONTEXT_OPENGL;
     return true;
   case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION");
     break;
   case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE");
     break;
   case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION");
     break;
   case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_MESSAGE_EXT");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_MESSAGE_EXT");
     break;
   case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS");
     break;
   case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK");
     break;
   case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY");
     break;
   case RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE");
     break;
   case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE");
     break;
   case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
     break;
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2");
     auto ptr = static_cast<retro_core_options_v2 *>(data);
     for (int i = 0; i < 100; ++i) {
       auto opt = ptr->categories[i];
@@ -653,13 +645,12 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       }
 
       CoreOption coreOption(opt);
-      this->options.push_back(coreOption);
+      options.emplace_back(coreOption);
     }
     return true;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL");
     // TODO
     auto ptr = static_cast<retro_core_options_v2_intl *>(data);
     for (int i = 0; i < 100; ++i) {
@@ -675,12 +666,12 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       }
 
       CoreOption coreOption(opt);
-      this->options.push_back(coreOption);
+      options.emplace_back(coreOption);
     }
     return true;
   }
   case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK: {
-    this->environmentCalls.push_back(
+    environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK");
     auto ptr = static_cast<retro_core_options_update_display_callback *>(data);
     ptr->callback = []() {
@@ -690,20 +681,20 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_SET_VARIABLE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_SET_VARIABLE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_VARIABLE");
     auto ptr = static_cast<retro_variable *>(data);
     if (ptr == nullptr) {
       return true;
     }
 
-    for (auto opt : this->options) {
+    for (auto opt : options) {
       if (strcmp(opt.key, ptr->key) == 0) {
         for (auto v : opt.values) {
           if (strcmp(ptr->value, v.value) == 0) {
             opt.currentValue = ptr->value;
             return true;
           }
-          this->recordPotentialAPIViolation(
+          recordPotentialAPIViolation(
               "SET_VARIABLE with unknown value for key TODO");
         }
         // TODO: Make sure value is one of the allowed strings
@@ -713,7 +704,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return true;
   }
   case RETRO_ENVIRONMENT_GET_THROTTLE_STATE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_THROTTLE_STATE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_THROTTLE_STATE");
     auto ptr = static_cast<retro_throttle_state *>(data);
     /* During normal operation. Rate will be equal to the core's internal
      * FPS.
@@ -750,40 +741,38 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     return false;
   }
   case RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT");
     auto ptr = static_cast<retro_savestate_context *>(data);
     *ptr = RETRO_SAVESTATE_CONTEXT_NORMAL;
     return true;
   }
   case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_"
-                                     "NEGOTIATION_INTERFACE_SUPPORT");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_"
+                                  "NEGOTIATION_INTERFACE_SUPPORT");
     break;
   case RETRO_ENVIRONMENT_GET_JIT_CAPABLE: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_JIT_CAPABLE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_JIT_CAPABLE");
     auto ptr = (bool *)data;
     *ptr = true; // TODO
     return true;
   }
   case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE: {
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE");
     auto ptr = static_cast<retro_microphone_interface *>(data);
     ptr->interface_version = 0;
     return false;
   }
   case RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE:
-    this->environmentCalls.push_back(
-        "RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE");
     break;
   case RETRO_ENVIRONMENT_GET_DEVICE_POWER: {
-    this->environmentCalls.push_back("RETRO_ENVIRONMENT_GET_DEVICE_POWER");
+    environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_DEVICE_POWER");
     //                auto ptr = (retro_device_power *) softwareBufData;
     return false;
   }
   default:
     printf("Unimplemented env command: %d\n", cmd);
-    this->environmentCalls.push_back("UNIMPLEMENTED");
+    environmentCalls.emplace_back("UNIMPLEMENTED");
   }
   return false;
 }
@@ -799,40 +788,40 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 
 //    std::basic_string<char> Core::dumpJson() {
 //        json j;
-////        j["rotation"] = this->rotation;
-////        j["overscan"] = this->useOverscan;
-////        j["can_dupe_frames"] = this->canDupeFrames;
+////        j["rotation"] = rotation;
+////        j["overscan"] = useOverscan;
+////        j["can_dupe_frames"] = canDupeFrames;
 //        // set message
-//        j["should_shutdown"] = this->shutdown;
-//        j["performance_level"] = this->performanceLevel;
-//        j["system_directory"] = this->systemDirectory;
-////        j["pixel_format"] = *this->pixelFormat;
-//        j["supports_no_game"] = this->canRunWithNoGame;
-////        j["libretro_path"] = this->libretroPath;
-////        j["core_assets_directory"] = this->coreAssetsDirectory;
-////        j["save_directory"] = this->saveDirectory;
+//        j["should_shutdown"] = shutdown;
+//        j["performance_level"] = performanceLevel;
+//        j["system_directory"] = systemDirectory;
+////        j["pixel_format"] = *pixelFormat;
+//        j["supports_no_game"] = canRunWithNoGame;
+////        j["libretro_path"] = libretroPath;
+////        j["core_assets_directory"] = coreAssetsDirectory;
+////        j["save_directory"] = saveDirectory;
 //
 //        json opts = json::array();
-//        for (auto o: this->options) {
-//            opts.push_back(o.dumpJson());
+//        for (auto o: options) {
+//            opts.emplace_back(o.dumpJson());
 //        }
 //        j["options"] = opts;
 //
 //        json inDesc = json::array();
-//        for (auto i: this->inputDescriptors) {
+//        for (auto i: inputDescriptors) {
 //            json in;
 //            in["id"] = i.id;
 //            in["index"] = i.index;
 //            in["device"] = i.device;
 //            in["description"] = i.description;
 //            in["port"] = i.port;
-//            inDesc.push_back(in);
+//            inDesc.emplace_back(in);
 //        }
 //
 //        j["input_descriptors"] = inDesc;
 //
 //        json subsys = json::array();
-//        for (auto sub: this->subsystemInfo) {
+//        for (auto sub: subsystemInfo) {
 //            json ssInfo;
 //            ssInfo["id"] = sub.id;
 //            ssInfo["description"] = sub.desc;
@@ -840,28 +829,28 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 //            ssInfo["num_roms"] = sub.num_roms;
 //            // TODO: ROMS
 //
-//            subsys.push_back(ssInfo);
+//            subsys.emplace_back(ssInfo);
 //        }
 //
 //        j["subsystem_info"] = subsys;
 //
-////        if (this->hardwareRenderCallback) {
+////        if (hardwareRenderCallback) {
 ////            json hwRender;
 ////            hwRender["context_type"] =
-/// this->hardwareRenderCallback->context_type; /            hwRender["depth"]
-/// = this->hardwareRenderCallback->depth; /            hwRender["stencil"] =
-/// this->hardwareRenderCallback->stencil; / hwRender["bottom_left_origin"] =
-/// this->hardwareRenderCallback->bottom_left_origin; /
-/// hwRender["version_major"] = this->hardwareRenderCallback->version_major; /
-/// hwRender["version_minor"] = this->hardwareRenderCallback->version_minor; /
-/// hwRender["cache_context"] = this->hardwareRenderCallback->cache_context; /
-/// hwRender["debug_context"] = this->hardwareRenderCallback->debug_context;
+/// hardwareRenderCallback->context_type; /            hwRender["depth"]
+/// = hardwareRenderCallback->depth; /            hwRender["stencil"] =
+/// hardwareRenderCallback->stencil; / hwRender["bottom_left_origin"] =
+/// hardwareRenderCallback->bottom_left_origin; /
+/// hwRender["version_major"] = hardwareRenderCallback->version_major; /
+/// hwRender["version_minor"] = hardwareRenderCallback->version_minor; /
+/// hwRender["cache_context"] = hardwareRenderCallback->cache_context; /
+/// hwRender["debug_context"] = hardwareRenderCallback->debug_context;
 ////
 ////            j["hw_render_callback"] = hwRender;
 ////        }
 //
 //        json memMaps = json::array();
-//        for (auto m: this->memoryMaps) {
+//        for (auto m: memoryMaps) {
 //            json map;
 //            map["flags"] = m.flags;
 //            if (m.ptr != nullptr) {
@@ -876,14 +865,14 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 //                map["addrspace"] = m.addrspace;
 //            }
 //
-//            memMaps.push_back(map);
+//            memMaps.emplace_back(map);
 //        }
 //
 //        j["memory_descriptors"] = memMaps;
 //
 //        json envCalls = json::array();
-//        for (auto e: this->environmentCalls) {
-//            envCalls.push_back(e);
+//        for (auto e: environmentCalls) {
+//            envCalls.emplace_back(e);
 //        }
 //
 //        j["environment_calls"] = envCalls;
@@ -892,54 +881,50 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 //    }
 
 Core::Core(const std::string &libPath) {
-  this->dll = SDL_LoadObject(libPath.c_str());
-  if (this->dll == nullptr) {
+  dll = SDL_LoadObject(libPath.c_str());
+  if (dll == nullptr) {
     // Check error
   }
 
-  this->symRetroInit = loadRetroFunc<void (*)()>(this->dll, "retro_init");
-  this->symRetroDeinit = loadRetroFunc<void (*)()>(this->dll, "retro_deinit");
+  symRetroInit = loadRetroFunc<void (*)()>(dll, "retro_init");
+  symRetroDeinit = loadRetroFunc<void (*)()>(dll, "retro_deinit");
 
-  this->symRetroApiVersion =
-      loadRetroFunc<unsigned int (*)()>(this->dll, "retro_api_version");
-  this->symRetroGetSystemInfo = loadRetroFunc<void (*)(retro_system_info *)>(
-      this->dll, "retro_get_system_info");
-  this->symRetroGetSystemAVInfo =
-      loadRetroFunc<void (*)(retro_system_av_info *)>(
-          this->dll, "retro_get_system_av_info");
-  this->symRetroSetControllerPortDevice =
+  symRetroApiVersion =
+      loadRetroFunc<unsigned int (*)()>(dll, "retro_api_version");
+  symRetroGetSystemInfo = loadRetroFunc<void (*)(retro_system_info *)>(
+      dll, "retro_get_system_info");
+  symRetroGetSystemAVInfo = loadRetroFunc<void (*)(retro_system_av_info *)>(
+      dll, "retro_get_system_av_info");
+  symRetroSetControllerPortDevice =
       loadRetroFunc<void (*)(unsigned int, unsigned int)>(
-          this->dll, "retro_set_controller_port_device");
+          dll, "retro_set_controller_port_device");
 
-  this->symRetroReset = loadRetroFunc<void (*)()>(this->dll, "retro_reset");
-  this->symRetroRun = loadRetroFunc<void (*)()>(this->dll, "retro_run");
-  this->symRetroSerializeSize =
-      loadRetroFunc<size_t (*)()>(this->dll, "retro_serialize_size");
-  this->symRetroSerialize =
-      loadRetroFunc<bool (*)(void *, size_t)>(this->dll, "retro_serialize");
-  this->symRetroUnserialize = loadRetroFunc<bool (*)(const void *, size_t)>(
-      this->dll, "retro_unserialize");
-  this->symRetroCheatReset =
-      loadRetroFunc<void (*)()>(this->dll, "retro_cheat_reset");
-  this->symRetroCheatSet =
-      loadRetroFunc<void (*)(unsigned, bool, const char *)>(this->dll,
-                                                            "retro_cheat_set");
-  this->symRetroLoadGame = loadRetroFunc<bool (*)(const retro_game_info *)>(
-      this->dll, "retro_load_game");
-  this->symRetroLoadGameSpecial =
+  symRetroReset = loadRetroFunc<void (*)()>(dll, "retro_reset");
+  symRetroRun = loadRetroFunc<void (*)()>(dll, "retro_run");
+  symRetroSerializeSize =
+      loadRetroFunc<size_t (*)()>(dll, "retro_serialize_size");
+  symRetroSerialize =
+      loadRetroFunc<bool (*)(void *, size_t)>(dll, "retro_serialize");
+  symRetroUnserialize =
+      loadRetroFunc<bool (*)(const void *, size_t)>(dll, "retro_unserialize");
+  symRetroCheatReset = loadRetroFunc<void (*)()>(dll, "retro_cheat_reset");
+  symRetroCheatSet = loadRetroFunc<void (*)(unsigned, bool, const char *)>(
+      dll, "retro_cheat_set");
+  symRetroLoadGame =
+      loadRetroFunc<bool (*)(const retro_game_info *)>(dll, "retro_load_game");
+  symRetroLoadGameSpecial =
       loadRetroFunc<bool (*)(unsigned int, const retro_game_info *, size_t)>(
-          this->dll, "retro_load_game_special");
-  this->symRetroUnloadGame =
-      loadRetroFunc<void (*)()>(this->dll, "retro_unload_game");
-  this->symRetroGetRegion =
-      loadRetroFunc<unsigned int (*)()>(this->dll, "retro_get_region");
-  this->symRetroGetMemoryData = loadRetroFunc<void *(*)(unsigned int)>(
-      this->dll, "retro_get_memory_data");
-  this->symRetroGetMemoryDataSize = loadRetroFunc<size_t (*)(unsigned int)>(
-      this->dll, "retro_get_memory_size");
+          dll, "retro_load_game_special");
+  symRetroUnloadGame = loadRetroFunc<void (*)()>(dll, "retro_unload_game");
+  symRetroGetRegion =
+      loadRetroFunc<unsigned int (*)()>(dll, "retro_get_region");
+  symRetroGetMemoryData =
+      loadRetroFunc<void *(*)(unsigned int)>(dll, "retro_get_memory_data");
+  symRetroGetMemoryDataSize =
+      loadRetroFunc<size_t (*)(unsigned int)>(dll, "retro_get_memory_size");
 
-  this->retroSystemInfo = new retro_system_info;
-  this->retroSystemAVInfo = new retro_system_av_info;
+  retroSystemInfo = new retro_system_info;
+  retroSystemAVInfo = new retro_system_av_info;
 
   currentCore = this; // todo prob different namespace
 
@@ -975,9 +960,9 @@ Core::~Core() {
   SDL_UnloadObject(dll);
   // close DL handle
   // need to close symbol handles or free their memory?
-  delete this->retroSystemInfo;
-  delete this->retroSystemAVInfo;
-  //  delete this->video;
+  delete retroSystemInfo;
+  delete retroSystemAVInfo;
+  //  delete video;
 }
 
 bool Core::loadGame(Game *game) {
@@ -987,12 +972,12 @@ bool Core::loadGame(Game *game) {
   info.size = game->getSize();
   info.meta = "";
   // TODO: meta?
-  auto result = this->symRetroLoadGame(&info);
+  auto result = symRetroLoadGame(&info);
 
-  this->symRetroGetSystemInfo(this->retroSystemInfo);
-  this->symRetroGetSystemAVInfo(this->retroSystemAVInfo);
-  videoReceiver->setSystemAVInfo(this->retroSystemAVInfo);
-  //  this->video->setGameGeometry(&this->retroSystemAVInfo->geometry);
+  symRetroGetSystemInfo(retroSystemInfo);
+  symRetroGetSystemAVInfo(retroSystemAVInfo);
+  videoReceiver->setSystemAVInfo(retroSystemAVInfo);
+  //  video->setGameGeometry(&retroSystemAVInfo->geometry);
 
   audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
   return result;
@@ -1021,22 +1006,22 @@ void Core::deserializeState(const std::vector<uint8_t> &data) const {
   symRetroUnserialize(data.data(), size);
 }
 
-size_t Core::getSerializeSize() const { return this->symRetroSerializeSize(); }
+size_t Core::getSerializeSize() const { return symRetroSerializeSize(); }
 
 void Core::init() { symRetroInit(); }
 
-void Core::deinit() { this->symRetroDeinit(); }
+void Core::deinit() { symRetroDeinit(); }
 
-void Core::reset() { this->symRetroReset(); }
+void Core::reset() { symRetroReset(); }
 
-void Core::run(double deltaTime) { this->symRetroRun(); }
+void Core::run(double deltaTime) { symRetroRun(); }
 
 void Core::setSystemDirectory(const string &frontendSystemDirectory) {
-  this->systemDirectory = frontendSystemDirectory;
+  systemDirectory = frontendSystemDirectory;
 }
 
 void Core::setSaveDirectory(const string &frontendSaveDirectory) {
-  this->saveDirectory = frontendSaveDirectory;
+  saveDirectory = frontendSaveDirectory;
 }
 
 void Core::recordPotentialAPIViolation(const std::string &msg) {
@@ -1072,6 +1057,7 @@ void *Core::getMemoryData(const unsigned id) const {
 size_t Core::getMemorySize(const unsigned id) const {
   return symRetroGetMemoryDataSize(id);
 }
+retro_memory_map *Core::getMemoryMap() { return &memoryMap; }
 
 void Core::setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) {
   videoReceiver = receiver;

@@ -76,6 +76,8 @@ public:
   void *getMemoryData(unsigned id) const;
   size_t getMemorySize(unsigned id) const;
 
+  retro_memory_map *getMemoryMap();
+
 private:
   firelight::libretro::IRetropadProvider *m_retropadProvider;
   IAudioDataReceiver *audioReceiver;
@@ -130,7 +132,9 @@ private:
   retro_location_callback *locationCallback;
   retro_get_proc_address_interface *procAddressCallback;
   vector<retro_subsystem_info> subsystemInfo;
-  vector<retro_memory_descriptor> memoryMaps;
+  vector<retro_memory_descriptor> memoryDescriptors;
+
+  retro_memory_map memoryMap{};
 
   int audioVideoEnableBitmap;
 
