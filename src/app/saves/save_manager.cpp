@@ -34,7 +34,7 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
       metadata = metadataOpt.value();
       exists = true;
     } else {
-      metadata.contentMd5 = entry.contentId;
+      metadata.contentId = entry.contentId;
       metadata.slotNumber = slot;
     }
 
@@ -52,7 +52,7 @@ QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
     metadata.savefileMd5 = savefileMd5;
 
     const auto directory =
-        m_saveDir / metadata.contentMd5 / ("slot" + std::to_string(slot));
+        m_saveDir / metadata.contentId / ("slot" + std::to_string(slot));
     create_directories(directory);
 
     const auto saveFile = directory / "savefile.sram";

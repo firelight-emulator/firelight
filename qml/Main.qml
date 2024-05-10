@@ -32,7 +32,7 @@ ApplicationWindow {
             property string topLevelName: "library"
 
             onEntryClicked: function (id) {
-                gameLoader.loadGame(id)
+                emulator.loadGame(id)
             }
         }
     }
@@ -485,22 +485,26 @@ ApplicationWindow {
         }
     }
 
-    GameLoader {
-        id: gameLoader
-
-        onGameLoaded: function (entryId, romData, saveData, corePath) {
-            emulator.loadTheThing(entryId, romData, saveData, corePath)
-            overlayFadeIn.start()
-        }
-
-        onGameLoadFailedOrphanedPatch: function (entryId) {
-            patchClickedDialog.open()
-        }
-    }
+    // GameLoader {
+    //     id: gameLoader
+    //
+    //     onGameLoaded: function (entryId, romData, saveData, corePath) {
+    //         emulator.loadTheThing(entryId, romData, saveData, corePath)
+    //         overlayFadeIn.start()
+    //     }
+    //
+    //     onGameLoadFailedOrphanedPatch: function (entryId) {
+    //         patchClickedDialog.open()
+    //     }
+    // }
 
     EmulatorPage {
         id: emulator
         visible: false
+
+        onReadyToStart: function () {
+            overlayFadeIn.start()
+        }
 
         states: [
             State {

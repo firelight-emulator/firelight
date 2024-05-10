@@ -32,7 +32,13 @@ find_package(SDL2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
+find_package(cpr REQUIRED)
 find_package(GTest)
+
+#include(FetchContent)
+#FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+#        GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8)
+#FetchContent_MakeAvailable(cpr)
 
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
@@ -42,10 +48,11 @@ find_package(GTest)
 
 qt6_standard_project_setup(REQUIRES 6.7)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(src/app)
+add_subdirectory(libs/rcheevos)
 
 add_library(firelight_lib
         #        ${DISCORD_SOURCES}
@@ -60,14 +67,8 @@ add_library(firelight_lib
         src/app/input/sdl_event_loop.cpp
         src/app/manager_accessor.cpp
         src/app/audio_manager.cpp
-        src/app/patching/ips_patch.cpp
-        src/app/patching/pm_star_rod_mod_patch.cpp
-        src/app/patching/yay_0_codec.cpp
-        src/app/patching/ups_patch.cpp
-        src/app/patching/bps_patch.cpp
         src/app/saves/save_manager.cpp
         src/app/saves/savefile.cpp
-        src/app/game_loader.cpp
         src/app/emulator_renderer.cpp
         src/app/input/keyboard_controller.cpp
         src/app/db/sqlite_userdata_database.cpp
@@ -76,15 +77,10 @@ add_library(firelight_lib
         src/gui/library_sort_filter_model.cpp
         src/gui/playlist_item_model.cpp
         src/gui/savefile_list_model.cpp
-        src/gui/window_resize_handler.hpp
-        include/firelight/db/region.hpp
-        include/firelight/db/mod.hpp
         src/gui/mod_item_model.cpp
-        src/gui/mod_item_model.hpp
-        include/firelight/db/game.hpp
         src/app/mods/mod_manager.cpp
-        src/app/mods/mod_manager.hpp
-        src/app/saves/suspend_point.hpp
+        src/app/achieve/ra_client.cpp
+        src/gui/window_resize_handler.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
@@ -101,11 +97,16 @@ target_link_libraries(firelight_lib
         Qt6::Quick3D
         Qt6::Sql
         spdlog::spdlog
+        cpr::cpr
         #        PkgConfig::AVCODEC
         #        PkgConfig::AVFORMAT
         #        PkgConfig::AVUTIL
         #        PkgConfig::SWSCALE
-        library)
+        #        library
+        #        cpr::cpr
+        library
+        patching
+        rcheevos)
 
 file(GLOB QML_FILES
         qml/*.qml
@@ -138,7 +139,6 @@ qt6_add_executable(firelight
         src/logo.ico
         include/firelight/db/patch.hpp
 )
-
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
 

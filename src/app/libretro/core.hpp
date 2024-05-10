@@ -73,6 +73,9 @@ public:
   void writeMemoryData(MemoryType memType, const std::vector<char> &data);
   firelight::libretro::IVideoDataReceiver *videoReceiver;
 
+  void *getMemoryData(unsigned id) const;
+  size_t getMemorySize(unsigned id) const;
+
 private:
   firelight::libretro::IRetropadProvider *m_retropadProvider;
   IAudioDataReceiver *audioReceiver;

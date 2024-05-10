@@ -5,7 +5,7 @@
 namespace firelight::db {
 struct SavefileMetadata {
   int id = -1;
-  std::string contentMd5;
+  std::string contentId;
   unsigned int slotNumber = 1;
   std::string savefileMd5;
   unsigned int lastModifiedAt = 0;

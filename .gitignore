@@ -8,6 +8,8 @@ artifact
 .gitbak
 out
 build
+build2
+build3
 release
 userdata
 system

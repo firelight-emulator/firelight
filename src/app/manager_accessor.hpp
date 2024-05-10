@@ -1,5 +1,6 @@
 #pragma once
 
+#include "achieve/ra_client.hpp"
 #include "firelight/userdata_database.hpp"
 #include "input/controller_manager.hpp"
 #include "library/library_scanner.hpp"
@@ -14,13 +15,15 @@ public:
   static void setLibraryManager(LibraryScanner *t_libraryManager);
   static void setUserdataManager(db::IUserdataDatabase *t_userdataManager);
   static void setLibraryDatabase(db::ILibraryDatabase *t_libraryDatabase);
+  static void
+  setAchievementManager(achievements::RAClient *t_achievementManager);
 
-protected:
   static Input::ControllerManager *getControllerManager();
   static saves::SaveManager *getSaveManager();
   static LibraryScanner *getLibraryManager();
   static db::IUserdataDatabase *getUserdataManager();
   static db::ILibraryDatabase *getLibraryDatabase();
+  static achievements::RAClient *getAchievementManager();
 
 private:
   static Input::ControllerManager *m_controllerManager;
@@ -28,6 +31,7 @@ private:
   static LibraryScanner *m_libraryManager;
   static db::IUserdataDatabase *m_userdataDatabase;
   static db::ILibraryDatabase *m_libraryDatabase;
+  static achievements::RAClient *m_achievementManager;
 };
 
 } // namespace firelight

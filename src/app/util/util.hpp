@@ -1,7 +1,11 @@
 #pragma once
 
-void util() {
-  std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::system_clock::now().time_since_epoch())
-      .count();
+#include <sstream>
+#include <string>
+#include <thread>
+
+static std::string thread_id_string() {
+  std::stringstream ss;
+  ss << std::this_thread::get_id();
+  return ss.str();
 }

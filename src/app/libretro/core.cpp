@@ -11,7 +11,7 @@
 namespace libretro {
 
 void log(enum retro_log_level level, const char *fmt, ...) {
-  char msg[4096] = {0};
+  char msg[4096] = {};
   va_list va;
   va_start(va, fmt);
   vsnprintf(msg, sizeof(msg), fmt, va);
@@ -1065,6 +1065,12 @@ void Core::writeMemoryData(const MemoryType memType,
   //  }
 
   memcpy(ptr, data.data(), size);
+}
+void *Core::getMemoryData(const unsigned id) const {
+  return symRetroGetMemoryData(id);
+}
+size_t Core::getMemorySize(const unsigned id) const {
+  return symRetroGetMemoryDataSize(id);
 }
 
 void Core::setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) {

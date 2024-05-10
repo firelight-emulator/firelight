@@ -18,9 +18,10 @@ Rectangle {
 
     signal gameLoaded()
 
-    function loadTheThing(currentLibraryEntryId, romData, saveData, corePath) {
-        emulatorView.loadGame(currentLibraryEntryId, romData, saveData, corePath)
-        gameLoaded()
+    signal readyToStart()
+
+    function loadGame(entryId) {
+        emulatorView.loadLibraryEntry(entryId)
     }
 
     function setPictureMode(pictureMode) {
@@ -50,7 +51,7 @@ Rectangle {
     function stopEmulation() {
         emulatorView.stopEmulation()
     }
-    
+
     EmulatorView {
         id: emulatorView
 
@@ -67,6 +68,15 @@ Rectangle {
         // Component.onCompleted: {
         //     this.load(currentLibraryEntryId, romData, saveData, corePath)
         // }
+
+        onGameLoadSucceeded: function () {
+            emulatorContainer.gameLoaded()
+            emulatorContainer.readyToStart()
+        }
+
+        onReadyToStart: function () {
+            emulatorContainer.readyToStart()
+        }
 
         states: [
             State {

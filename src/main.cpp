@@ -8,15 +8,16 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
+#include "app/achieve/ra_client.hpp"
 #include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
 #include "app/emulation_manager.hpp"
 #include "app/fps_multiplier.hpp"
-#include "app/game_loader.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
 #include "app/library/library_scanner.hpp"
 #include "app/library/sqlite_library_database.hpp"
+#include "app/saves/save_manager.hpp"
 #include "gui/controller_list_model.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
@@ -72,6 +73,9 @@ int main(int argc, char *argv[]) {
   firelight::Input::ControllerManager controllerManager;
   firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
+  firelight::achievements::RAClient raClient;
+  firelight::ManagerAccessor::setAchievementManager(&raClient);
+
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
 
   controllerManager.refreshControllerList();
@@ -113,9 +117,9 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
-  qmlRegisterType<firelight::GameLoader>("Firelight", 1, 0, "GameLoader");
 
   QQmlApplicationEngine engine;
+  engine.rootContext()->setContextProperty("achievement_manager", &raClient);
   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
   engine.rootContext()->setContextProperty("library_model", &libModel);
   engine.rootContext()->setContextProperty("library_short_model",
@@ -136,7 +140,7 @@ int main(int argc, char *argv[]) {
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
-  window->installEventFilter(resizeHandler);
+  // window->installEventFilter(resizeHandler);
 
   int exitCode = QGuiApplication::exec();
 

@@ -23,27 +23,10 @@ signals:
   void windowResizeFinished();
 
 public:
-  WindowResizeHandler() {
-    resizeTimer = new QTimer(this);
-    resizeTimer->setSingleShot(true);
-    resizeTimer->setInterval(300);
-    connect(resizeTimer, &QTimer::timeout, this,
-            [this]() { emit windowResizeFinished(); });
-  }
+  WindowResizeHandler();
 
 protected:
   bool eventFilter(QObject *obj, QEvent *event) override;
 };
-
-inline bool WindowResizeHandler::eventFilter(QObject *obj, QEvent *event) {
-  if (event->type() == QEvent::Resize) {
-    if (!resizeTimer->isActive()) {
-      emit windowResizeStarted();
-    }
-    resizeTimer->start();
-  }
-
-  return QObject::eventFilter(obj, event);
-}
 
 } // namespace firelight::gui

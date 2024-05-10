@@ -63,7 +63,7 @@ void LibraryScanner::startScan() {
           file.read(contents.data(), filesize);
           file.close();
 
-          auto contentMd5 = calculateMD5(contents.data(), filesize);
+          auto contentId = calculateMD5(contents.data(), filesize);
           // Check if we have an entry with this md5 - if so, update the
           // filename
 

@@ -27,7 +27,7 @@ TEST_F(SqliteUserdataDatabaseTest, CreateSavefileMetadataSetsId) {
   SqliteUserdataDatabase db(temp_file_path.string());
   SavefileMetadata metadata;
   metadata.id = -1;
-  metadata.contentMd5 = "1234567890";
+  metadata.contentId = "1234567890";
   metadata.slotNumber = 1;
   metadata.savefileMd5 = "0987654321";
   metadata.lastModifiedAt = 1000;
@@ -35,10 +35,10 @@ TEST_F(SqliteUserdataDatabaseTest, CreateSavefileMetadataSetsId) {
   ASSERT_TRUE(db.createSavefileMetadata(metadata));
   ASSERT_NE(metadata.id, -1);
 
-  const auto playlists = db.getSavefileMetadataForContent(metadata.contentMd5);
+  const auto playlists = db.getSavefileMetadataForContent(metadata.contentId);
   ASSERT_EQ(playlists.size(), 1);
   ASSERT_EQ(playlists[0].id, metadata.id);
-  ASSERT_EQ(playlists[0].contentMd5, metadata.contentMd5);
+  ASSERT_EQ(playlists[0].contentId, metadata.contentId);
   ASSERT_EQ(playlists[0].slotNumber, metadata.slotNumber);
   ASSERT_EQ(playlists[0].savefileMd5, metadata.savefileMd5);
   ASSERT_EQ(playlists[0].lastModifiedAt, metadata.lastModifiedAt);
@@ -53,7 +53,7 @@ TEST_F(SqliteUserdataDatabaseTest, GetSavefileMetadataTest) {
 
   SavefileMetadata metadata;
   metadata.id = -1;
-  metadata.contentMd5 = "1234567890";
+  metadata.contentId = "1234567890";
   metadata.slotNumber = 1;
   metadata.savefileMd5 = "0987654321";
   metadata.lastModifiedAt = 1000;
@@ -62,10 +62,10 @@ TEST_F(SqliteUserdataDatabaseTest, GetSavefileMetadataTest) {
   ASSERT_NE(metadata.id, -1);
 
   const auto retrievedMetadata =
-      db.getSavefileMetadata(metadata.contentMd5, metadata.slotNumber);
+      db.getSavefileMetadata(metadata.contentId, metadata.slotNumber);
   ASSERT_TRUE(retrievedMetadata.has_value());
   ASSERT_EQ(retrievedMetadata->id, metadata.id);
-  ASSERT_EQ(retrievedMetadata->contentMd5, metadata.contentMd5);
+  ASSERT_EQ(retrievedMetadata->contentId, metadata.contentId);
   ASSERT_EQ(retrievedMetadata->slotNumber, metadata.slotNumber);
   ASSERT_EQ(retrievedMetadata->savefileMd5, metadata.savefileMd5);
   ASSERT_EQ(retrievedMetadata->lastModifiedAt, metadata.lastModifiedAt);
@@ -81,7 +81,7 @@ TEST_F(SqliteUserdataDatabaseTest,
 
   SavefileMetadata metadata;
   metadata.id = -1;
-  metadata.contentMd5 = "1234567890";
+  metadata.contentId = "1234567890";
   metadata.slotNumber = 1;
   metadata.savefileMd5 = "0987654321";
   metadata.lastModifiedAt = 1000;
@@ -107,7 +107,7 @@ TEST_F(SqliteUserdataDatabaseTest,
 
   SavefileMetadata metadata;
   metadata.id = -1;
-  metadata.contentMd5 = "1234567890";
+  metadata.contentId = "1234567890";
   metadata.slotNumber = 1;
   metadata.savefileMd5 = "0987654321";
   metadata.lastModifiedAt = 1000;
@@ -117,7 +117,7 @@ TEST_F(SqliteUserdataDatabaseTest,
   ASSERT_EQ(db.getSavefileMetadataForContent("1234567890").size(), 1);
 
   metadata.id = -1;
-  metadata.contentMd5 = "4444";
+  metadata.contentId = "4444";
 
   ASSERT_TRUE(db.createSavefileMetadata(metadata));
   ASSERT_NE(metadata.id, -1);
@@ -132,7 +132,7 @@ TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataTest) {
 
   SavefileMetadata metadata;
   metadata.id = -1;
-  metadata.contentMd5 = "1234567890";
+  metadata.contentId = "1234567890";
   metadata.slotNumber = 1;
   metadata.savefileMd5 = "0987654321";
   metadata.lastModifiedAt = 1000;
@@ -162,7 +162,7 @@ TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataWhenNotExist) {
 
   SavefileMetadata metadata;
   metadata.id = 123;
-  metadata.contentMd5 = "1234567890";
+  metadata.contentId = "1234567890";
   metadata.slotNumber = 1;
   metadata.savefileMd5 = "0987654321";
   metadata.lastModifiedAt = 1000;
@@ -176,14 +176,14 @@ TEST_F(SqliteUserdataDatabaseTest, CreatePlaySessionTest) {
 
   PlaySession session;
   session.id = -1;
-  session.contentMd5 = "1234567890";
+  session.contentId = "1234567890";
   session.slotNumber = 1;
   session.startTime = 1000;
   session.endTime = 2000;
-  session.unpausedDurationSeconds = 500;
+  session.unpausedDurationMillis = 500;
 
   ASSERT_TRUE(db.createPlaySession(session));
-  // ASSERT_NE(session.id, -1); // TODO: PUT THIS BACK
+  ASSERT_NE(session.id, -1);
 }
 //
 // TEST_F(SqliteUserdataDatabaseTest, GetOrCreateSavefileMetadataTest) {
@@ -199,7 +199,7 @@ TEST_F(SqliteUserdataDatabaseTest, CreatePlaySessionTest) {
 //
 //   // Add code to test the updateSavefileMetadata method
 //   SavefileMetadata metadata;
-//   metadata.contentMd5 = "1234567890";
+//   metadata.contentId = "1234567890";
 //   metadata.slotNumber = 1;
 //   metadata.savefileMd5 = "0987654321";
 //   metadata.lastModifiedAt = 1000;
@@ -214,7 +214,7 @@ TEST_F(SqliteUserdataDatabaseTest, CreatePlaySessionTest) {
 //
 //   // Add code to test the createSavefileMetadata method
 //   SavefileMetadata metadata;
-//   metadata.contentMd5 = "1234567890";
+//   metadata.contentId = "1234567890";
 //   metadata.slotNumber = 1;
 //   metadata.savefileMd5 = "0987654321";
 //   metadata.lastModifiedAt = 1000;

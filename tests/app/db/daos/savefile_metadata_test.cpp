@@ -13,7 +13,7 @@ TEST_F(SavefileMetadataTest, DefaultValuesTest) {
   const SavefileMetadata metadata;
 
   ASSERT_EQ(metadata.id, -1);
-  ASSERT_EQ(metadata.contentMd5, "");
+  ASSERT_EQ(metadata.contentId, "");
   ASSERT_EQ(metadata.slotNumber, 1);
   ASSERT_EQ(metadata.savefileMd5, "");
   ASSERT_EQ(metadata.lastModifiedAt, 0);

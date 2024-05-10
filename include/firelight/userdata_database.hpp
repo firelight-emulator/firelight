@@ -21,14 +21,14 @@ public:
 
   virtual bool createSavefileMetadata(SavefileMetadata &metadata) = 0;
   virtual std::optional<SavefileMetadata>
-  getSavefileMetadata(std::string contentMd5, int slotNumber) = 0;
+  getSavefileMetadata(std::string contentId, int slotNumber) = 0;
   virtual bool updateSavefileMetadata(SavefileMetadata metadata) = 0;
   virtual std::vector<SavefileMetadata>
-  getSavefileMetadataForContent(std::string contentMd5) = 0;
+  getSavefileMetadataForContent(std::string contentId) = 0;
 
   virtual bool createPlaySession(PlaySession &session) = 0;
   virtual std::optional<PlaySession>
-  getLatestPlaySession(std::string contentMd5) = 0;
+  getLatestPlaySession(std::string contentId) = 0;
 };
 
 } // namespace firelight::db

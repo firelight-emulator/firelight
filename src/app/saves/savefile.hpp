@@ -14,7 +14,7 @@ public:
   [[nodiscard]] QImage getImage() const;
 
 private:
-  std::string m_contentMd5{};
+  std::string m_contentId{};
   std::vector<char> m_saveRamData{};
   QImage m_screenshot{};
 };

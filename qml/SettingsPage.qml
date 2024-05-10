@@ -6,124 +6,176 @@ import FirelightStyle 1.0
 Item {
     id: root
 
-    Pane {
-        id: header
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        background: Item {
+    RowLayout {
+        id: contentRow
+        anchors.fill: parent
+        spacing: 0
+
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.horizontalStretchFactor: 1
         }
-
-        Column {
-            anchors.fill: parent
-            spacing: 8
-
-            Item {
-                width: parent.width
-                height: 24
-            }
-
-            Text {
-                text: "Settings"
-                color: "#dadada"
-                font.pointSize: 24
-                font.family: Constants.semiboldFontFamily
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            Rectangle {
-                width: parent.width
-                height: 1
-                opacity: 0.3
-                color: "#dadada"
-            }
-        }
-    }
-
-    Item {
-        id: leftHalf
-        anchors.left: parent.left
-        anchors.top: header.bottom
-        anchors.bottom: parent.bottom
-        width: parent.width / 3
 
         ColumnLayout {
-            id: menu
-            anchors.fill: parent
-            spacing: 4
+            id: theColumn
+            Layout.preferredWidth: parent.width * 3 / 4
+            Layout.fillHeight: true
 
-            FirelightMenuItem {
-                labelText: "Appearance"
-                // labelIcon: "\ue40a"
+            Pane {
+                id: header
+
                 Layout.fillWidth: true
-                Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                enabled: false
-            }
-            FirelightMenuItem {
-                labelText: "Video"
-                // labelIcon: "\ue333"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                checked: true
-            }
-            FirelightMenuItem {
-                labelText: "Sound"
-                // labelIcon: "\ue050"
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 40
-                enabled: false
-            }
-            FirelightMenuItem {
-                labelText: "System"
-                // labelIcon: "\uf522"
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 40
-                enabled: false
-            }
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                opacity: 0.3
-                color: "#dadada"
-            }
-            FirelightMenuItem {
-                labelText: "Privacy"
-                // labelIcon: "\ue897"
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 40
-                enabled: false
-            }
-            FirelightMenuItem {
-                labelText: "About"
-                // labelIcon: "\ue88e"
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 40
-                enabled: false
+                Layout.preferredHeight: 120
+                background: Rectangle {
+                    color: "transparent"
+                    // border.color: "red"
+                }
+
+                horizontalPadding: 8
+
+                Text {
+                    anchors.fill: parent
+                    text: "Settings"
+                    color: "white"
+                    font.pointSize: 26
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                ColumnLayout {
+                    id: menu
+                    spacing: 4
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.bottom: parent.bottom
+                    width: parent.width / 3
+
+                    FirelightMenuItem {
+                        labelText: "Appearance"
+                        // labelIcon: "\ue40a"
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        enabled: false
+                    }
+                    FirelightMenuItem {
+                        labelText: "Video"
+                        // labelIcon: "\ue333"
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        checked: true
+                        onToggled: {
+                            if (checked) {
+                                rightHalf.replace(videoSettings)
+                            }
+                        }
+                    }
+                    FirelightMenuItem {
+                        labelText: "Sound"
+                        // labelIcon: "\ue050"
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        Layout.preferredHeight: 40
+                        enabled: false
+                    }
+                    FirelightMenuItem {
+                        labelText: "System"
+                        // labelIcon: "\uf522"
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        Layout.preferredHeight: 40
+                        enabled: false
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        opacity: 0.3
+                        color: "#dadada"
+                    }
+                    FirelightMenuItem {
+                        labelText: "RetroAchievements"
+                        // labelIcon: "\ue897"
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        Layout.preferredHeight: 40
+                        onToggled: {
+                            if (checked) {
+                                rightHalf.replace(retroAchievementSettings)
+                            }
+                        }
+                    }
+                    FirelightMenuItem {
+                        labelText: "Privacy"
+                        // labelIcon: "\ue897"
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        Layout.preferredHeight: 40
+                        enabled: false
+                    }
+                    FirelightMenuItem {
+                        labelText: "About"
+                        // labelIcon: "\ue88e"
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        Layout.preferredHeight: 40
+                        enabled: false
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                }
+
+                StackView {
+                    id: rightHalf
+                    initialItem: videoSettings
+
+                    anchors.left: menu.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+
+                    pushEnter: Transition {
+                    }
+
+                    pushExit: Transition {
+                    }
+
+                    popEnter: Transition {
+                    }
+
+                    popExit: Transition {
+                    }
+
+                    replaceEnter: Transition {
+                    }
+
+                    replaceExit: Transition {
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
             }
         }
-    }
-
-    StackView {
-        id: rightHalf
-        anchors.right: parent.right
-        anchors.top: header.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: leftHalf.right
-
-        initialItem: videoSettings
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.horizontalStretchFactor: 1
+        }
     }
 
     Component {
@@ -132,5 +184,182 @@ Item {
         }
     }
 
-
+    Component {
+        id: retroAchievementSettings
+        RetroAchievementSettings {
+        }
+    }
 }
+
+// Item {
+//     id: root
+//
+//     Pane {
+//         id: header
+//         anchors.top: parent.top
+//         anchors.left: parent.left
+//         anchors.right: parent.right
+//         background: Item {
+//         }
+//
+//         Column {
+//             anchors.fill: parent
+//             spacing: 8
+//
+//             Item {
+//                 width: parent.width
+//                 height: 24
+//             }
+//
+//             Text {
+//                 text: "Settings"
+//                 color: "#dadada"
+//                 font.pointSize: 24
+//                 font.family: Constants.semiboldFontFamily
+//                 horizontalAlignment: Text.AlignLeft
+//                 verticalAlignment: Text.AlignVCenter
+//             }
+//
+//             Rectangle {
+//                 width: parent.width
+//                 height: 1
+//                 opacity: 0.3
+//                 color: "#dadada"
+//             }
+//         }
+//     }
+//
+//     Item {
+//         id: leftHalf
+//         anchors.left: parent.left
+//         anchors.top: header.bottom
+//         anchors.bottom: parent.bottom
+//         width: parent.width / 3
+//
+//         ColumnLayout {
+//             id: menu
+//             anchors.fill: parent
+//             spacing: 4
+//
+//             FirelightMenuItem {
+//                 labelText: "Appearance"
+//                 // labelIcon: "\ue40a"
+//                 Layout.fillWidth: true
+//                 Layout.preferredHeight: 40
+//                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+//                 enabled: false
+//             }
+//             FirelightMenuItem {
+//                 labelText: "Video"
+//                 // labelIcon: "\ue333"
+//                 Layout.fillWidth: true
+//                 Layout.preferredHeight: 40
+//                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+//                 checked: true
+//                 onToggled: {
+//                     if (checked) {
+//                         rightHalf.replace(videoSettings)
+//                     }
+//                 }
+//             }
+//             FirelightMenuItem {
+//                 labelText: "Sound"
+//                 // labelIcon: "\ue050"
+//                 Layout.fillWidth: true
+//                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+//                 Layout.preferredHeight: 40
+//                 enabled: false
+//             }
+//             FirelightMenuItem {
+//                 labelText: "System"
+//                 // labelIcon: "\uf522"
+//                 Layout.fillWidth: true
+//                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+//                 Layout.preferredHeight: 40
+//                 enabled: false
+//             }
+//             Rectangle {
+//                 Layout.fillWidth: true
+//                 Layout.preferredHeight: 1
+//                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+//                 opacity: 0.3
+//                 color: "#dadada"
+//             }
+//             FirelightMenuItem {
+//                 labelText: "RetroAchievements"
+//                 // labelIcon: "\ue897"
+//                 Layout.fillWidth: true
+//                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+//                 Layout.preferredHeight: 40
+//                 onToggled: {
+//                     if (checked) {
+//                         rightHalf.replace(retroAchievementSettings)
+//                     }
+//                 }
+//             }
+//             FirelightMenuItem {
+//                 labelText: "Privacy"
+//                 // labelIcon: "\ue897"
+//                 Layout.fillWidth: true
+//                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+//                 Layout.preferredHeight: 40
+//                 enabled: false
+//             }
+//             FirelightMenuItem {
+//                 labelText: "About"
+//                 // labelIcon: "\ue88e"
+//                 Layout.fillWidth: true
+//                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+//                 Layout.preferredHeight: 40
+//                 enabled: false
+//             }
+//
+//             Item {
+//                 Layout.fillWidth: true
+//                 Layout.fillHeight: true
+//             }
+//         }
+//     }
+//
+//     StackView {
+//         id: rightHalf
+//         anchors.right: parent.right
+//         anchors.top: header.bottom
+//         anchors.bottom: parent.bottom
+//         anchors.left: leftHalf.right
+//
+//         initialItem: videoSettings
+//
+//         pushEnter: Transition {
+//         }
+//
+//         pushExit: Transition {
+//         }
+//
+//         popEnter: Transition {
+//         }
+//
+//         popExit: Transition {
+//         }
+//
+//         replaceEnter: Transition {
+//         }
+//
+//         replaceExit: Transition {
+//         }
+//     }
+//
+//     Component {
+//         id: videoSettings
+//         VideoSettings {
+//         }
+//     }
+//
+//     Component {
+//         id: retroAchievementSettings
+//         RetroAchievementSettings {
+//         }
+//     }
+//
+//
+// }
