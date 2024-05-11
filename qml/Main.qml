@@ -57,8 +57,13 @@ ApplicationWindow {
     Component {
         id: settingsPage
         SettingsPage {
+            id: me
             property bool topLevel: true
             property string topLevelName: "settings"
+
+            Keys.onEscapePressed: function () {
+                StackView.view.pop()
+            }
         }
     }
 
@@ -277,7 +282,7 @@ ApplicationWindow {
                         checked: stackview.topLevelName === "settings"
 
                         onToggled: function () {
-                            stackview.push(settingsPage)
+                            stackView.push(settingsPage)
                         }
                     }
 

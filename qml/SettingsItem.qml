@@ -15,7 +15,7 @@ Rectangle {
         Text {
             text: control.label
             color: Constants.colorTestTextActive
-            font.pointSize: 12
+            font.pointSize: 11
             Layout.alignment: Qt.AlignLeft
             font.family: Constants.regularFontFamily
             padding: 12

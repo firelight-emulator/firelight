@@ -6,171 +6,178 @@ import FirelightStyle 1.0
 Item {
     id: root
 
+    Rectangle {
+        color: "#101114"
+        height: parent.height
+        width: leftSpacer.width + menu.width + contentPane.horizontalPadding + 6
+    }
+
     RowLayout {
         id: contentRow
         anchors.fill: parent
         spacing: 0
 
         Item {
+            id: leftSpacer
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
         }
 
-        ColumnLayout {
-            id: theColumn
-            Layout.preferredWidth: parent.width * 3 / 4
+        Pane {
+            id: contentPane
+            Layout.fillWidth: true
+            Layout.horizontalStretchFactor: 6
             Layout.fillHeight: true
 
-            Pane {
-                id: header
+            verticalPadding: 80
 
-                Layout.fillWidth: true
-                Layout.preferredHeight: 120
-                background: Rectangle {
-                    color: "transparent"
-                    // border.color: "red"
-                }
-
-                horizontalPadding: 8
-
-                Text {
-                    anchors.fill: parent
-                    text: "Settings"
-                    color: "white"
-                    font.pointSize: 26
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.DemiBold
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                }
+            background: Item {
             }
 
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                ColumnLayout {
-                    id: menu
-                    spacing: 4
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
-                    width: parent.width / 3
+            ColumnLayout {
+                id: menu
+                spacing: 4
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 160
 
-                    FirelightMenuItem {
-                        labelText: "Appearance"
-                        // labelIcon: "\ue40a"
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 40
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        enabled: false
-                    }
-                    FirelightMenuItem {
-                        labelText: "Video"
-                        // labelIcon: "\ue333"
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 40
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        checked: true
-                        onToggled: {
-                            if (checked) {
-                                rightHalf.replace(videoSettings)
-                            }
+                FirelightMenuItem {
+                    labelText: "Appearance"
+                    // labelIcon: "\ue40a"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    enabled: false
+                }
+                FirelightMenuItem {
+                    labelText: "Video"
+                    // labelIcon: "\ue333"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    checked: true
+                    onToggled: {
+                        if (checked) {
+                            rightHalf.replace(videoSettings)
                         }
                     }
-                    FirelightMenuItem {
-                        labelText: "Sound"
-                        // labelIcon: "\ue050"
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        Layout.preferredHeight: 40
-                        enabled: false
-                    }
-                    FirelightMenuItem {
-                        labelText: "System"
-                        // labelIcon: "\uf522"
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        Layout.preferredHeight: 40
-                        enabled: false
-                    }
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 1
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        opacity: 0.3
-                        color: "#dadada"
-                    }
-                    FirelightMenuItem {
-                        labelText: "RetroAchievements"
-                        // labelIcon: "\ue897"
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        Layout.preferredHeight: 40
-                        onToggled: {
-                            if (checked) {
-                                rightHalf.replace(retroAchievementSettings)
-                            }
+                }
+                FirelightMenuItem {
+                    labelText: "Sound"
+                    // labelIcon: "\ue050"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    enabled: false
+                }
+                FirelightMenuItem {
+                    labelText: "System"
+                    // labelIcon: "\uf522"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    enabled: false
+                }
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 1
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    opacity: 0.3
+                    color: "#dadada"
+                }
+                FirelightMenuItem {
+                    labelText: "RetroAchievements"
+                    // labelIcon: "\ue897"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    onToggled: {
+                        if (checked) {
+                            rightHalf.replace(retroAchievementSettings)
                         }
                     }
-                    FirelightMenuItem {
-                        labelText: "Privacy"
-                        // labelIcon: "\ue897"
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        Layout.preferredHeight: 40
-                        enabled: false
-                    }
-                    FirelightMenuItem {
-                        labelText: "About"
-                        // labelIcon: "\ue88e"
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        Layout.preferredHeight: 40
-                        enabled: false
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                    }
+                }
+                FirelightMenuItem {
+                    labelText: "Privacy"
+                    // labelIcon: "\ue897"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    enabled: false
+                }
+                FirelightMenuItem {
+                    labelText: "About"
+                    // labelIcon: "\ue88e"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    enabled: false
                 }
 
-                StackView {
-                    id: rightHalf
-                    initialItem: videoSettings
-
-                    anchors.left: menu.right
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    anchors.right: parent.right
-
-                    pushEnter: Transition {
-                    }
-
-                    pushExit: Transition {
-                    }
-
-                    popEnter: Transition {
-                    }
-
-                    popExit: Transition {
-                    }
-
-                    replaceEnter: Transition {
-                    }
-
-                    replaceExit: Transition {
-                    }
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
             }
 
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+            StackView {
+                id: rightHalf
 
+                anchors.top: parent.top
+                anchors.left: menu.right
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: 12
+
+                initialItem: videoSettings
+
+                pushEnter: Transition {
+                }
+
+                pushExit: Transition {
+                }
+
+                popEnter: Transition {
+                }
+
+                popExit: Transition {
+                }
+
+                replaceEnter: Transition {
+                }
+
+                replaceExit: Transition {
+                }
             }
+
+            // Pane {
+            //     id: header
+            //
+            //     Layout.fillWidth: true
+            //     Layout.preferredHeight: 120
+            //     background: Rectangle {
+            //         color: "transparent"
+            //         // border.color: "red"
+            //     }
+            //
+            //     horizontalPadding: 8
+            //
+            //     Text {
+            //         anchors.fill: parent
+            //         text: "Settings"
+            //         color: "white"
+            //         font.pointSize: 26
+            //         font.family: Constants.regularFontFamily
+            //         font.weight: Font.DemiBold
+            //         horizontalAlignment: Text.AlignLeft
+            //         verticalAlignment: Text.AlignVCenter
+            //     }
+            // }
         }
+
+
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
