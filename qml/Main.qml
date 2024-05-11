@@ -191,7 +191,7 @@ ApplicationWindow {
                         checked: stackview.topLevelName === "mods"
 
                         onToggled: function () {
-                            stackview.push(modsPage)
+                            stackview.replace(null, modsPage)
                         }
                     }
                     NavMenuButton {
@@ -205,7 +205,7 @@ ApplicationWindow {
                         checked: stackview.topLevelName === "library"
 
                         onToggled: function () {
-                            stackview.push(libraryPage)
+                            stackview.replace(null, libraryPage)
                         }
                     }
                     NavMenuButton {
@@ -221,7 +221,7 @@ ApplicationWindow {
                         checked: stackview.topLevelName === "controllers"
 
                         onToggled: function () {
-                            stackview.push(controllerPage)
+                            stackview.replace(null, controllerPage)
                         }
                     }
                     // Rectangle {
@@ -250,7 +250,6 @@ ApplicationWindow {
                     }
                     NavMenuButton {
                         id: nowPlayingNavButton
-                        KeyNavigation.down: settingsNavButton
                         labelText: "Back to game"
                         labelIcon: "\ue037"
                         Layout.preferredWidth: parent.width
@@ -268,34 +267,87 @@ ApplicationWindow {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.topMargin: 8
-                        Layout.bottomMargin: 8
+                        Layout.bottomMargin: 4
                         Layout.preferredHeight: 1
                         color: "#404143"
                     }
-                    NavMenuButton {
-                        id: settingsNavButton
-                        labelText: "Settings"
-                        labelIcon: "\ue8b8"
+                    // NavMenuButton {
+                    //     id: settingsNavButton
+                    //     labelText: "Settings"
+                    //     labelIcon: "\ue8b8"
+                    //     Layout.preferredWidth: parent.width
+                    //     Layout.preferredHeight: 48
+                    //
+                    //     checked: stackview.topLevelName === "settings"
+                    //
+                    //     onToggled: function () {
+                    //         stackView.push(settingsPage)
+                    //     }
+                    // }
+
+                    RowLayout {
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
+                        Layout.maximumHeight: 48
+                        spacing: 8
 
-                        checked: stackview.topLevelName === "settings"
+                        Button {
+                            background: Rectangle {
+                                color: "transparent"
+                                radius: 4
+                            }
+                            Layout.preferredHeight: 42
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
-                        onToggled: function () {
-                            stackView.push(settingsPage)
+                            checkable: false
+                            // Layout.fillHeight: true
+                            // Layout.fillWidth: true
+                        }
+
+                        // NavMenuButton {
+                        //     labelText: "Profile"
+                        //     labelIcon: "\ue853"
+                        //     Layout.fillWidth: true
+                        //     Layout.fillHeight: true
+                        //
+                        //     checked: stackview.topLevelName === "profile"
+                        //
+                        //     enabled: false
+                        // }
+
+                        Button {
+                            id: me
+                            background: Rectangle {
+                                color: enabled ? (me.hovered ? "#404143" : "transparent") : "transparent"
+                                radius: 4
+                            }
+                            Layout.preferredHeight: 42
+                            Layout.preferredWidth: 42
+                            Layout.alignment: Qt.AlignCenter
+
+                            hoverEnabled: true
+
+                            contentItem: Text {
+                                text: "\ue8b8"
+                                font.family: Constants.symbolFontFamily
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: 26
+                                color: "#c3c3c3"
+                            }
+
+                            checkable: false
+
+                            onClicked: {
+                                stackView.push(settingsPage)
+                            }
+                            // Layout.fillHeight: true
+                            // Layout.fillWidth: true
                         }
                     }
 
-                    NavMenuButton {
-                        labelText: "Profile"
-                        labelIcon: "\ue853"
-                        Layout.preferredWidth: parent.width
-                        Layout.preferredHeight: 48
 
-                        checked: stackview.topLevelName === "profile"
-
-                        enabled: false
-                    }
                 }
             }
 

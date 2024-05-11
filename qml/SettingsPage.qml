@@ -41,7 +41,7 @@ Item {
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: 160
+                width: 200
 
                 FirelightMenuItem {
                     labelText: "Appearance"
@@ -115,6 +115,18 @@ Item {
                     Layout.preferredHeight: 40
                     enabled: false
                 }
+                FirelightMenuItem {
+                    labelText: "Debug"
+                    // labelIcon: "\ue88e"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    onToggled: {
+                        if (checked) {
+                            rightHalf.replace(debugSettings)
+                        }
+                    }
+                }
 
                 Item {
                     Layout.fillWidth: true
@@ -129,7 +141,7 @@ Item {
                 anchors.left: menu.right
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                anchors.leftMargin: 12
+                anchors.leftMargin: 36
 
                 initialItem: videoSettings
 
@@ -182,6 +194,41 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
+
+            Button {
+                id: me
+                background: Rectangle {
+                    color: enabled ? (me.hovered ? "#404143" : "transparent") : "transparent"
+                    radius: height / 2
+
+                }
+                anchors.topMargin: 24
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.leftMargin: 8
+
+                width: 40
+                height: 40
+
+                hoverEnabled: true
+
+                contentItem: Text {
+                    text: "\ue5cd"
+                    font.family: Constants.symbolFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: 26
+                    color: "#c3c3c3"
+                }
+
+                checkable: false
+
+                onClicked: {
+                    root.StackView.view.pop()
+                }
+                // Layout.fillHeight: true
+                // Layout.fillWidth: true
+            }
         }
     }
 
@@ -195,6 +242,13 @@ Item {
         id: retroAchievementSettings
         RetroAchievementSettings {
         }
+    }
+
+    Component {
+        id: debugSettings
+        DebugPage {
+        }
+
     }
 }
 
