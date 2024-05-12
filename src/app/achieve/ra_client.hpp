@@ -45,14 +45,16 @@ signals:
   void loginFailedWithExpiredToken();
   void loginFailedWithAccessDenied();
   void loginFailedWithInternalError();
+  void loginStatusChanged();
 
   void achievementUnlocked();
-  void loginStatusChanged();
 
   void gameLoadSucceeded();
   void gameLoadFailed();
-
   void gameUnloaded();
+
+  void achievementProgressUpdated(int achievementId, int current, int desired);
+  void achievementProgressPercentUpdated(int achievementId, float percent);
 
 public slots:
   void logInUserWithPassword(const QString &username, const QString &password);

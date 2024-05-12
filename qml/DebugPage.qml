@@ -18,7 +18,7 @@ ColumnLayout {
             parent: Overlay.overlay
             x: parent.width / 2 - width / 2
             y: parent.height - height - 40
-            width: 270
+            width: 310
             height: 80
             modal: false
 
@@ -217,26 +217,6 @@ ColumnLayout {
                         font.weight: Font.Normal
                         color: "#c1c1c1"
                     }
-
-                    // Text {
-                    //     id: detailsText
-                    //     visible: row.textVisible
-                    //     opacity: row.textOpacity
-                    //     Layout.fillWidth: true
-                    //     Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
-                    //     text: "Click for details"
-                    //     font.weight: Font.Light
-                    //     font.pointSize: 10
-                    //     font.family: Constants.regularFontFamily
-                    //     verticalAlignment: Text.AlignBottom
-                    //     color: "#c1c1c1"
-                    // }
-                    // Item {
-                    //     visible: row.textVisible
-                    //     Layout.fillWidth: true
-                    //     Layout.fillHeight: true
-                    //
-                    // }
                 }
             }
         }

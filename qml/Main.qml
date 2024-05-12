@@ -25,6 +25,131 @@ ApplicationWindow {
         color: "#1a1b1e"
     }
 
+    Popup {
+        id: popup
+        parent: Overlay.overlay
+        x: 40
+        y: parent.height - height - 40
+        width: 310
+        height: 80
+        modal: false
+
+        property int current: 0
+        property int desired: 0
+
+        Timer {
+            id: timer
+            interval: 3000
+            running: false
+            repeat: false
+            onTriggered: {
+                popup.close()
+            }
+        }
+
+        Connections {
+            target: achievement_manager
+
+            function onAchievementProgressUpdated(id, current, desired) {
+                popup.current = current
+                popup.desired = desired
+                popup.open()
+            }
+        }
+
+        closePolicy: Popup.NoAutoClose
+
+        background: Rectangle {
+            color: "#191919"
+            radius: 8
+            border.color: "#404040"
+        }
+
+        enter: Transition {
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "scale"
+                    from: 0.7
+                    to: 1.0
+                    duration: 100
+                    easing.type: Easing.OutBack
+                    easing.overshoot: 2.0
+                }
+                NumberAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1.0
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+            }
+
+            ScriptAction {
+                script: {
+                    timer.start()
+                }
+            }
+        }
+
+        exit: Transition {
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "scale"
+                    from: 1.0
+                    to: 0.7
+                    duration: 100
+                    easing.type: Easing.InBack
+                    easing.overshoot: 2.0
+                }
+                NumberAnimation {
+                    property: "opacity"
+                    from: 1.0
+                    to: 0
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
+        padding: 6
+
+        contentItem: Item {
+            id: row
+
+            Image {
+                id: pic
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                width: parent.height
+                fillMode: Image.PreserveAspectFit
+                source: "file:system/_img/achieve.png"
+            }
+
+            ColumnLayout {
+                anchors.top: parent.top
+                anchors.left: pic.right
+                anchors.leftMargin: 8
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                spacing: 4
+
+                Text {
+                    id: unlockedText
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    text: popup.current + " / " + popup.desired
+                    font.pointSize: 15
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: "white"
+                }
+            }
+        }
+    }
+
     Component {
         id: libraryPage
         LibraryPage {

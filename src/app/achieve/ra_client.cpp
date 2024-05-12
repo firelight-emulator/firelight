@@ -13,6 +13,8 @@ namespace firelight::achievements {
 static ::libretro::Core *theCore;
 
 static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
+  auto raClient = static_cast<RAClient *>(rc_client_get_userdata(client));
+
   switch (event->type) {
   case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
     break;
@@ -21,6 +23,29 @@ static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
   case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE:
     break;
   case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
+  case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE:
+    if (event->achievement->measured_progress[0] != '\0') {
+      printf("progress: %s\n", event->achievement->measured_progress);
+      string progress(event->achievement->measured_progress);
+
+      if (progress.find('/') != string::npos) {
+        const auto slashPos = progress.find('/');
+        const auto current = progress.substr(0, slashPos);
+        const auto desired = progress.substr(slashPos + 1);
+
+        if (std::ranges::all_of(current, isdigit) &&
+            std::ranges::all_of(desired, isdigit)) {
+          emit raClient->achievementProgressUpdated(
+              event->achievement->id, std::stoi(current), std::stoi(desired));
+        }
+      }
+    }
+    raClient->achievementProgressPercentUpdated(
+        event->achievement->id, event->achievement->measured_percent);
+
+    break;
+  case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_HIDE:
+    // printf("progress: %s\n", event->achievement->measured_progress);
     break;
   case RC_CLIENT_EVENT_GAME_COMPLETED:
     break;
@@ -141,7 +166,6 @@ void RAClient::loadGame(const QString &contentMd5) {
         // auto promise = static_cast<std::promise<bool> *>(userdata);
         const auto theThing =
             static_cast<RAClient *>(rc_client_get_userdata(client));
-        printf("Result: %d: %s\n", result, error_message);
         if (result == 0) {
           // promise->set_value(true);
           theThing->m_gameLoaded = true;
@@ -173,9 +197,11 @@ void RAClient::doFrame(::libretro::Core *core,
   if (!theCore) {
     theCore = core;
   }
-  m_frameNumber++;
 
-  if (m_frameNumber == 2) {
+  if (m_frameNumber < 2) {
+    m_frameNumber++;
+  } else if (m_frameNumber == 2) {
+    m_frameNumber++;
     QMetaObject::invokeMethod(
         this, "loadGame", Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(currentEntry.contentId)));
@@ -193,7 +219,8 @@ void RAClient::logInUserWithPassword(const QString &username,
       [](int result, const char *error_message, rc_client_t *client,
          void *userdata) {
         const auto userInfo = rc_client_get_user_info(client);
-        const auto raClient = static_cast<RAClient *>(userdata);
+        const auto raClient =
+            static_cast<RAClient *>(rc_client_get_userdata(client));
 
         switch (result) {
         case RC_OK:
