@@ -30,8 +30,8 @@ ApplicationWindow {
         parent: Overlay.overlay
         x: 40
         y: parent.height - height - 40
-        width: 310
-        height: 80
+        width: 170
+        height: 60
         modal: false
 
         property int current: 0
@@ -54,6 +54,11 @@ ApplicationWindow {
                 popup.current = current
                 popup.desired = desired
                 popup.open()
+                if (bounceAnimation.running) {
+                    bounceAnimation.restart()
+                } else {
+                    bounceAnimation.running = true
+                }
             }
         }
 
@@ -114,10 +119,8 @@ ApplicationWindow {
         padding: 6
 
         contentItem: Item {
-            id: row
-
             Image {
-                id: pic
+                id: picasdf
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
@@ -125,27 +128,68 @@ ApplicationWindow {
                 fillMode: Image.PreserveAspectFit
                 source: "file:system/_img/achieve.png"
             }
-
-            ColumnLayout {
+            Item {
+                anchors.left: picasdf.right
                 anchors.top: parent.top
-                anchors.left: pic.right
-                anchors.leftMargin: 8
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
-                spacing: 4
+                Row {
+                    anchors.centerIn: parent
+                    Text {
+                        id: first
+                        text: popup.current
+                        font.family: Constants.regularFontFamily
+                        font.pointSize: 16
+                        font.weight: Font.DemiBold
+                        color: "white"
+                        verticalAlignment: Text.AlignBottom
 
-                Text {
-                    id: unlockedText
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    text: popup.current + " / " + popup.desired
-                    font.pointSize: 15
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.DemiBold
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: "white"
+                        Behavior on y {
+                            NumberAnimation {
+                                duration: 150 // Duration of the animation in milliseconds
+                                easing.type: Easing.OutBounce // Easing function for bounce effect
+                            }
+                        }
+
+                        SequentialAnimation {
+                            id: bounceAnimation
+                            running: false
+                            PropertyAnimation {
+                                target: first
+                                property: "y"
+                                to: -7
+                                duration: 100
+                                easing.type: Easing.InOutExpo
+                            }
+                            PropertyAnimation {
+                                target: first
+                                property: "y"
+                                to: 0
+                                duration: 100
+                                easing.type: Easing.InOutExpo
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: " /"
+                        height: first.height
+                        font.family: Constants.regularFontFamily
+                        font.pointSize: 12
+                        color: "#aaaaaa"
+                        verticalAlignment: Text.AlignBottom
+                    }
+
+                    Text {
+                        text: popup.desired
+                        height: first.height
+                        font.family: Constants.regularFontFamily
+                        font.pointSize: 12
+                        color: "#aaaaaa"
+                        verticalAlignment: Text.AlignBottom
+                    }
                 }
+
             }
         }
     }
