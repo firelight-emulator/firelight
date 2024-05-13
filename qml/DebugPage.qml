@@ -6,80 +6,30 @@ import FirelightStyle 1.0
 ColumnLayout {
     id: root
 
-    Row {
-        id: countingRow
-        property int current: 0
-        property int desired: 10
+    Button {
+        text: "achieve progress indicator"
 
-        onCurrentChanged: function () {
-            if (bounceAnimation.running) {
-                bounceAnimation.restart()
-            } else {
-                bounceAnimation.running = true
-            }
+        property int number: 0
+
+        onClicked: function () {
+            achievementProgressIndicator.openWith(number, 80)
+            number += 1
         }
 
-        spacing: 8
 
-        Text {
-            id: first
-            text: countingRow.current
-            font.family: Constants.regularFontFamily
-            font.pointSize: 12
-            color: "white"
+        AchievementProgressIndicator {
+            id: achievementProgressIndicator
 
-            Behavior on y {
-                NumberAnimation {
-                    duration: 150 // Duration of the animation in milliseconds
-                    easing.type: Easing.OutBounce // Easing function for bounce effect
-                }
-            }
+            Connections {
+                target: achievement_manager
 
-            SequentialAnimation {
-                id: bounceAnimation
-                running: false
-                PropertyAnimation {
-                    target: first
-                    property: "y"
-                    to: -7
-                    duration: 100
-                    easing.overshoot: 3.0
-                    easing.type: Easing.InBack
-                }
-                PropertyAnimation {
-                    target: first
-                    property: "y"
-                    to: 0
-                    duration: 100
-                    easing.overshoot: 3.0
-                    easing.type: Easing.InOutExpo
+                function onAchievementProgressUpdated(id, current, desired) {
+                    achievementProgressIndicator.openWith(current, desired)
                 }
             }
         }
 
-        Text {
-            text: "/"
-            font.family: Constants.regularFontFamily
-            font.pointSize: 12
-            color: "white"
-        }
 
-        Text {
-            text: countingRow.desired
-            font.family: Constants.regularFontFamily
-            font.pointSize: 12
-            color: "white"
-        }
-
-        Button {
-            text: "number animation"
-
-            onClicked: function () {
-                countingRow.current = countingRow.current + 1
-            }
-
-
-        }
     }
 
     Button {
