@@ -5,7 +5,6 @@ import QtQuick.Window
 import QtQuick.Layouts 1.0
 import QtQuick.Effects
 import Firelight 1.0
-import FirelightStyle 1.0
 
 ApplicationWindow {
     id: window
@@ -31,8 +30,20 @@ ApplicationWindow {
         Connections {
             target: achievement_manager
 
-            function onAchievementProgressUpdated(id, current, desired) {
-                achievementProgressIndicator.openWith(current, desired)
+            function onAchievementProgressUpdated(imageUrl, id, name, description, current, desired) {
+                achievementProgressIndicator.openWith(imageUrl, name, description, current, desired)
+            }
+        }
+    }
+
+    AchievementUnlockIndicator {
+        id: achievementUnlockIndicator
+
+        Connections {
+            target: achievement_manager
+
+            function onAchievementUnlocked(name, description) {
+                achievementUnlockIndicator.openWith(name, description)
             }
         }
     }

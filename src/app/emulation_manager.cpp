@@ -83,8 +83,8 @@ EmulationManager::~EmulationManager() {
   save(true);
 
   if (m_core) {
-    m_core->unloadGame();
-    m_core->deinit();
+    // m_core->unloadGame();
+    // m_core->deinit();
     m_core.reset();
   }
 
@@ -101,8 +101,18 @@ void EmulationManager::setGetProcAddressFunction(
 }
 std::function<void()> EmulationManager::consumeContextResetFunction() {
   if (m_resetContextFunction) {
+    printf("giving it\n");
     auto func = m_resetContextFunction;
     m_resetContextFunction = nullptr;
+    return func;
+  }
+
+  return nullptr;
+}
+std::function<void()> EmulationManager::consumeContextDestroyFunction() {
+  if (m_destroyContextFunction) {
+    auto func = m_destroyContextFunction;
+    m_destroyContextFunction = nullptr;
     return func;
   }
 
@@ -145,8 +155,16 @@ proc_address_t EmulationManager::getProcAddress(const char *sym) {
 }
 
 void EmulationManager::setResetContextFunc(context_reset_func resetFunction) {
+  printf("Setting reset context function\n");
   m_usingHwRendering = true;
   m_resetContextFunction = resetFunction;
+}
+
+void EmulationManager::setDestroyContextFunc(
+    context_destroy_func destroyFunction) {
+  printf("Setting destroy context function\n");
+  m_usingHwRendering = true;
+  m_destroyContextFunction = destroyFunction;
 }
 
 void EmulationManager::pauseGame() {
@@ -224,9 +242,13 @@ void EmulationManager::stopEmulation() {
     emit nativeWidthChanged();
     emit nativeHeightChanged();
 
+    // if (m_destroyContextFunction) {
+    //   m_destroyContextFunction();
+    // }
+
     m_usingHwRendering = false;
-    m_core->unloadGame();
-    m_core->deinit();
+    // m_core->unloadGame();
+    // m_core->deinit();
     m_core.reset();
 
     emit emulationStopped();
@@ -259,8 +281,10 @@ void EmulationManager::save(const bool waitForFinish) {
 uintptr_t EmulationManager::getCurrentFramebufferId() { return m_currentFboId; }
 
 void EmulationManager::setSystemAVInfo(retro_system_av_info *info) {
-  const auto width = info->geometry.max_width;
-  const auto height = info->geometry.max_height;
+  // const auto width = info->geometry.max_width;
+  // const auto height = info->geometry.max_height;
+  const auto width = info->geometry.base_width;
+  const auto height = info->geometry.base_height;
 
   if (width > 0 && height > 0) {
     if (width != m_nativeWidth) {
@@ -519,16 +543,22 @@ void EmulationManager::loadLibraryEntry(int entryId) {
     }
 
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString());
+
+    m_core->setVideoReceiver(this);
+    m_core->setAudioReceiver(new AudioManager());
+
+    // m_core = std::make_unique<libretro::Core>(m_corePath.toStdString());
     m_core->setRetropadProvider(getControllerManager());
 
     m_core->setSystemDirectory("./system");
     m_core->setSaveDirectory(".");
 
-    m_core->setVideoReceiver(this);
-    m_core->setAudioReceiver(new AudioManager());
+    // m_core->setVideoReceiver(this);
+    // m_core->setAudioReceiver(new AudioManager());
     m_core->init();
 
     libretro::Game game(
+        entry->contentPath,
         vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
     m_core->loadGame(&game);
 

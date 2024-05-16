@@ -12,7 +12,10 @@ using std::vector;
 using std::string;
 
 namespace libretro {
-Game::Game(const std::vector<unsigned char> &data) {
+Game::Game(const string &filePath, const std::vector<unsigned char> &data) {
+  // this->path = filePath;
+  this->path =
+      R"(/c/Users/alexs/git/firelight/build/roms/6149 - Pokemon - Black Version 2 (U) (frieNDS).nds)";
   this->data = data; // todo
 }
 
@@ -38,5 +41,8 @@ string Game::getPath() { return this->path; }
 
 void *Game::getData() { return &this->data[0]; }
 
-size_t Game::getSize() { return this->data.size(); }
+size_t Game::getSize() {
+  printf("size: %llu\n", this->data.size());
+  return this->data.size();
+}
 } // namespace libretro

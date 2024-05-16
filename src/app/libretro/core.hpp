@@ -6,7 +6,10 @@
 #include "firelight/libretro/video_data_receiver.hpp"
 #include "game.hpp"
 #include "libretro/libretro.h"
+
+#include <functional>
 #include <iostream>
+#include <qlibrary.h>
 #include <vector>
 
 using std::array;
@@ -78,9 +81,15 @@ public:
 
   retro_memory_map *getMemoryMap();
 
+  std::function<void()> destroyContextFunction = nullptr;
+
 private:
+  QLibrary *coreLib;
+
   firelight::libretro::IRetropadProvider *m_retropadProvider;
   IAudioDataReceiver *audioReceiver;
+
+  retro_vfs_interface m_vfsInterface;
 
   vector<string> environmentCalls;
 

@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import FirelightStyle 1.0
 
 Item {
     id: handle

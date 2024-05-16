@@ -20,6 +20,12 @@ else ()
     return()
 endif ()
 
+# Enable AddressSanitizer and LeakSanitizer
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+
+# Enable extra warnings and treat them as errors (optional but recommended)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -129,6 +135,7 @@ file(GLOB_RECURSE QML_STYLE_FILES
 
 foreach (QML_FILE ${QML_STYLE_FILES})
     get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
+    message("QML_FILE_NAME: ${QML_FILE_NAME}")
     set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
 endforeach ()
 
@@ -142,6 +149,8 @@ qt6_add_executable(firelight
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
 
+set_source_files_properties(qml/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 qt6_add_qml_module(firelight
         URI QMLFirelight
         VERSION 1.0
@@ -156,15 +165,15 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
 endif ()
 
-set_source_files_properties(qml/FirelightStyle/import/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/FirelightStyle/import/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-qt6_add_qml_module(firelight_style
-        URI FirelightStyle
-        VERSION 1.0
-        QML_FILES
-        ${QML_STYLE_FILES}
-        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/FirelightStyle"
-)
+# set_source_files_properties(qml/FirelightStyle/import/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+# set_source_files_properties(qml/FirelightStyle/import/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+# qt6_add_qml_module(firelight_style
+#         URI FirelightStyle
+#         VERSION 1.0
+#         QML_FILES
+#         ${QML_STYLE_FILES}
+#         OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/FirelightStyle"
+# )
 
 
 include(GNUInstallDirs)
@@ -241,7 +250,7 @@ message("Shared Library Directory: ${SHARED_LIB_DIR}")
 
 install(
         PROGRAMS
-        ${CMAKE_BINARY_DIR}/firelight_style.dll
+        # ${CMAKE_BINARY_DIR}/firelight_style.dll
         ${SHARED_LIB_DIR}/libb2-1.dll
         ${SHARED_LIB_DIR}/libbrotlicommon.dll
         ${SHARED_LIB_DIR}/libbrotlidec.dll

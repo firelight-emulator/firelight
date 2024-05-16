@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import FirelightStyle 1.0
 
 Popup {
     id: root
@@ -12,10 +11,16 @@ Popup {
     height: 80
     modal: false
 
+    property string imageUrl: "file:system/_img/achieve2.png"
+    property string title: "dev messed up"
+    property string description: "dev messed up"
     property int current: 0
     property int desired: 0
 
-    function openWith(current, desired) {
+    function openWith(imageUrl, title, description, current, desired) {
+        root.imageUrl = imageUrl
+        root.title = title
+        root.description = description
         root.current = current
         root.desired = desired
         root.open()
@@ -29,7 +34,7 @@ Popup {
 
     Timer {
         id: timer
-        interval: 4000
+        interval: 3000
         running: false
         repeat: false
         onTriggered: {
@@ -93,7 +98,7 @@ Popup {
             anchors.bottom: parent.bottom
             width: parent.height
             fillMode: Image.PreserveAspectFit
-            source: "file:system/_img/achieve2.png"
+            source: root.imageUrl
         }
 
         ColumnLayout {
@@ -105,7 +110,7 @@ Popup {
 
             Text {
                 Layout.fillWidth: true
-                text: "Collect all 80 Coins in The Princess's Secret Slide."
+                text: root.description
                 font.pointSize: 10
                 font.family: Constants.regularFontFamily
                 wrapMode: Text.WordWrap

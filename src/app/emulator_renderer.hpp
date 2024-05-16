@@ -28,4 +28,5 @@ private:
   void receiveVideoData(const void *data, unsigned width, unsigned height,
                         size_t pitch) const;
   std::function<void()> m_resetContextFunction = nullptr;
+  std::function<void()> m_destroyContextFunction = nullptr;
 };
