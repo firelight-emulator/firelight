@@ -18,7 +18,7 @@ void log(enum retro_log_level level, const char *fmt, ...) {
   msg[std::remove(msg, msg + strlen(msg), '\n') - msg] = 0;
   msg[std::remove(msg, msg + strlen(msg), '\r') - msg] = 0;
 
-  spdlog::info("[Core] {}", msg);
+  spdlog::debug("[Core] {}", msg);
 }
 
 // Only supports one core at a time for now, but, eh.
@@ -411,11 +411,11 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY");
-    auto ptr = static_cast<const char **>(data);
-    *ptr = R"(C:\Users\alexs\git\firelight\build\system)";
+    // auto ptr = static_cast<const char **>(data);
+    // *ptr = R"(C:\Users\alexs\git\firelight\build\system)";
     // *ptr = "./system";
     // *ptr = &saveDirectory[0]; // TODO
-    return true;
+    return false;
   }
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
@@ -466,10 +466,19 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       if (ptr->descriptors[i].ptr == nullptr) {
         break;
       }
-      memoryDescriptors.emplace_back(ptr->descriptors[i]);
+      memoryDescriptors.emplace_back(retro_memory_descriptor {
+        ptr->descriptors[i].flags,
+        ptr->descriptors[i].ptr,
+      ptr->descriptors[i].offset,
+      ptr->descriptors[i].start,
+      ptr->descriptors[i].select,
+      ptr->descriptors[i].disconnect,
+      ptr->descriptors[i].len,
+      ptr->descriptors[i].addrspace
+    });
     }
 
-    memoryMap.descriptors = ptr->descriptors;
+    memoryMap.descriptors = &memoryDescriptors[0];
     memoryMap.num_descriptors = ptr->num_descriptors;
 
     return true;

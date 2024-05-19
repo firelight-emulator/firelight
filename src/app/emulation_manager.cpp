@@ -546,12 +546,10 @@ void EmulationManager::loadLibraryEntry(int entryId) {
 
     m_core->setVideoReceiver(this);
     m_core->setAudioReceiver(new AudioManager());
-
-    // m_core = std::make_unique<libretro::Core>(m_corePath.toStdString());
     m_core->setRetropadProvider(getControllerManager());
 
     m_core->setSystemDirectory("./system");
-    m_core->setSaveDirectory(".");
+    // m_core->setSaveDirectory(".");
 
     // m_core->setVideoReceiver(this);
     // m_core->setAudioReceiver(new AudioManager());

@@ -107,17 +107,21 @@ static uint32_t readMemoryCallback(uint32_t address, uint8_t *buffer,
                 static_cast<unsigned char *>(theCore->getMemoryData(id));
             info->size = theCore->getMemorySize(id);
           },
-          RC_CONSOLE_NINTENDO_64);
+          RC_CONSOLE_SUPER_NINTENDO);
 
       if (valid) {
         raClient->m_memorySeemsGood = true;
       }
     }
 
-    return rc_libretro_memory_read(&raClient->m_memoryRegions, address, buffer,
-                                   num_bytes);
+    if (raClient->m_memorySeemsGood) {
+      return rc_libretro_memory_read(&raClient->m_memoryRegions, address, buffer,
+                                     num_bytes);
+    }
+    return 0;
   }
-  return uint32_t(0);
+
+  return 0;
 }
 
 static void httpCallback(const rc_api_request_t *request,
@@ -228,9 +232,9 @@ void RAClient::doFrame(::libretro::Core *core,
     theCore = core;
   }
 
-  if (m_frameNumber < 2) {
+  if (m_frameNumber < 6) {
     m_frameNumber++;
-  } else if (m_frameNumber == 2) {
+  } else if (m_frameNumber == 6) {
     m_frameNumber++;
     QMetaObject::invokeMethod(
         this, "loadGame", Qt::QueuedConnection,
