@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
-import FirelightStyle 1.0
+
 
 Pane {
     id: root

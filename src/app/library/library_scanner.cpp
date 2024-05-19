@@ -48,7 +48,7 @@ void LibraryScanner::startScan() {
             continue;
           }
 
-          auto filename = entry.path().relative_path().string();
+          auto filename = canonical(entry.path()).string();
           auto existing = library_database_->getMatchingLibraryEntries(
               firelight::db::LibraryEntry{.contentPath = filename});
           if (!existing.empty()) {
@@ -148,8 +148,8 @@ void LibraryScanner::handleScannedRomFile(
       .type = firelight::db::LibraryEntry::EntryType::ROM,
       .fileMd5 = md5,
       .fileCrc32 = md5, // TODO: Calculate CRC32
-      .sourceDirectory = entry.path().parent_path().string(),
-      .contentPath = entry.path().relative_path().string()};
+      .sourceDirectory = canonical(entry.path().parent_path()).string(),
+      .contentPath = canonical(entry.path()).string()};
 
   auto roms = content_database_->getMatchingRoms({.md5 = md5});
   if (!roms.empty()) {

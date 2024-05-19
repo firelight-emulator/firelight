@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import FirelightStyle 1.0
+
 
 Text {
     id: root

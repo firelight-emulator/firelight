@@ -5,28 +5,11 @@ project(firelight
         LANGUAGES CXX
 )
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    message("This is a Windows platform.")
-    #elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    #    message("This is a Linux platform.")
-    #elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    #    message("This is a macOS platform.")
-    #elseif (CMAKE_SYSTEM_NAME STREQUAL "Android")
-    #    message("This is a Android platform.")
-    #elseif (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
-    #    message("This is a FreeBSD platform.")
-else ()
-    message("This CMake file is not set up to work on anything but Windows at the moment. Feel free to tinker!")
-    return()
-endif ()
+include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-
-if (CMAKE_VERSION VERSION_LESS "3.7.0")
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
-endif ()
 
 find_package(SDL2 REQUIRED)
 find_package(OpenSSL REQUIRED)
@@ -52,7 +35,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(src/app)
-add_subdirectory(libs/rcheevos)
 
 add_library(firelight_lib
         #        ${DISCORD_SOURCES}
@@ -98,12 +80,6 @@ target_link_libraries(firelight_lib
         Qt6::Sql
         spdlog::spdlog
         cpr::cpr
-        #        PkgConfig::AVCODEC
-        #        PkgConfig::AVFORMAT
-        #        PkgConfig::AVUTIL
-        #        PkgConfig::SWSCALE
-        #        library
-        #        cpr::cpr
         library
         patching
         rcheevos)
@@ -123,21 +99,14 @@ foreach (QML_FILE ${QML_FILES})
     set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
 endforeach ()
 
-file(GLOB_RECURSE QML_STYLE_FILES
-        qml/FirelightStyle/**/*.qml
-)
-
-foreach (QML_FILE ${QML_STYLE_FILES})
-    get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
-    set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
-endforeach ()
+set_source_files_properties(qml/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 # main code
 qt6_add_executable(firelight
         resources.qrc
         src/main.cpp
         src/logo.ico
-        include/firelight/db/patch.hpp
 )
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
@@ -155,17 +124,6 @@ target_link_libraries(firelight PRIVATE firelight_lib)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
 endif ()
-
-set_source_files_properties(qml/FirelightStyle/import/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/FirelightStyle/import/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-qt6_add_qml_module(firelight_style
-        URI FirelightStyle
-        VERSION 1.0
-        QML_FILES
-        ${QML_STYLE_FILES}
-        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/FirelightStyle"
-)
-
 
 include(GNUInstallDirs)
 install(TARGETS firelight
@@ -241,7 +199,6 @@ message("Shared Library Directory: ${SHARED_LIB_DIR}")
 
 install(
         PROGRAMS
-        ${CMAKE_BINARY_DIR}/firelight_style.dll
         ${SHARED_LIB_DIR}/libb2-1.dll
         ${SHARED_LIB_DIR}/libbrotlicommon.dll
         ${SHARED_LIB_DIR}/libbrotlidec.dll

@@ -33,6 +33,8 @@ Here are the things you need to build the application:
 
 #### Recommended Windows setup
 
+I HIGHLY RECOMMEND YOU FOLLOW THIS GUIDE: https://github.com/HO-COOH/CPPDevOnWindows
+
 I recommend using MSYS2 on Windows and using pacboy to install the libraries. I don't currently have any platforms
 other than that, so unfortunately I can't help you yet :-(
 

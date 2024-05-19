@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
-import FirelightStyle 1.0
+
 
 Menu {
     id: control

@@ -6,6 +6,7 @@
 #include <QQuickWindow>
 #include <QWindow>
 #include <filesystem>
+#include <qstandardpaths.h>
 #include <spdlog/spdlog.h>
 
 #include "app/achieve/ra_client.hpp"
@@ -47,28 +48,55 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::info);
   }
 
+  QGuiApplication::setOrganizationDomain("firelight-emulator.com");
+  QGuiApplication::setApplicationName("Firelight");
+
+  QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+  QGuiApplication app(argc, argv);
+
+
+
+  //TODO:
+  // Roms
+
+  // QSettings:
+  // credentials?
+
+  // images
+  auto cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+  // "C:/Users/<USER>/AppData/Local/Firelight/cache/"
+
+  // saves files
+  // userdata db
+  // controller profiles
+  // library db
+  auto appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+
+  // C:/Users/<USER>/AppData/Roaming/Firelight/library.db
+  // C:/Users/<USER>/AppData/Roaming/Firelight/patches/
+  // C:/Users/<USER>/AppData/Roaming/Firelight/saves/<content_id>/slot<n>/
+  // C:/Users/<USER>/AppData/Roaming/Firelight/userdata.db
+
+  printf("Cache path: %s\n", cachePath.toStdString().c_str());
+  printf("App data path: %s\n", appDataPath.toStdString().c_str());
+
+  auto appDataDir = std::filesystem::path(appDataPath.toStdString());
+  auto saveDir = appDataDir / "saves";
+  auto romsDir = appDataDir / "roms";
+  auto patchesDir = appDataDir / "patches";
+
   // If missing system directory, throw an error
   // TODO
 
   // **** Make sure all directories are good ****
   std::filesystem::path appdata_dir = ".";
-  auto system_dir = appdata_dir / "system";
-  auto userdata_dir = appdata_dir / "userdata";
-  auto roms_dir = appdata_dir / "roms";
-  auto patches_dir = appdata_dir / "patches";
-  auto save_dir = userdata_dir / "savedata";
+  auto systemDir = appdata_dir / "system";
 
-  if (!create_dirs({appdata_dir, system_dir, userdata_dir, roms_dir,
-                    patches_dir, save_dir})) {
+  if (!create_dirs({appdata_dir, systemDir, romsDir,
+                    patchesDir, saveDir})) {
     return 1;
   }
-
-  QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-  QGuiApplication app(argc, argv);
-
-  QGuiApplication::setOrganizationName("Games by Firelight");
-  QGuiApplication::setOrganizationDomain("firelight-emulator.com");
-  QGuiApplication::setApplicationName("Firelight");
 
   firelight::Input::ControllerManager controllerManager;
   firelight::SdlEventLoop sdlEventLoop(&controllerManager);
@@ -83,18 +111,18 @@ int main(int argc, char *argv[]) {
   sdlEventLoop.start();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-  firelight::db::SqliteUserdataDatabase userdata_database(userdata_dir /
+  firelight::db::SqliteUserdataDatabase userdata_database(appDataDir /
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
-  firelight::saves::SaveManager saveManager(save_dir, userdata_database);
+  firelight::saves::SaveManager saveManager(saveDir, userdata_database);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   // **** Load Content Database ****
-  firelight::db::SqliteContentDatabase contentDatabase(system_dir /
+  firelight::db::SqliteContentDatabase contentDatabase(systemDir /
                                                        "content.db");
 
-  firelight::db::SqliteLibraryDatabase libraryDatabase(userdata_dir /
+  firelight::db::SqliteLibraryDatabase libraryDatabase(appDataDir /
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
@@ -107,7 +135,7 @@ int main(int argc, char *argv[]) {
   firelight::gui::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);
 
-  LibraryScanner libraryManager(&libraryDatabase, roms_dir, &contentDatabase);
+  LibraryScanner libraryManager(&libraryDatabase, romsDir, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
   QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
@@ -140,7 +168,7 @@ int main(int argc, char *argv[]) {
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
-  // window->installEventFilter(resizeHandler);
+  window->installEventFilter(resizeHandler);
 
   int exitCode = QGuiApplication::exec();
 

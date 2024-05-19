@@ -5,7 +5,7 @@ import QtQuick.Window
 import QtQuick.Layouts 1.0
 import QtQuick.Effects
 import Firelight 1.0
-import FirelightStyle 1.0
+
 
 ApplicationWindow {
     id: window

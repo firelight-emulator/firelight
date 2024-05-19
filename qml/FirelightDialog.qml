@@ -6,7 +6,7 @@ import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
-import FirelightStyle 1.0
+
 
 Dialog {
     id: control

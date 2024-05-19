@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
 import QtQml.Models
-import FirelightStyle 1.0
+
 
 Flickable {
     id: root
