@@ -7,7 +7,6 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
-
 Dialog {
     id: control
     property string text

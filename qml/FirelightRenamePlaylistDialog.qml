@@ -6,7 +6,6 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
-
 Dialog {
     id: control
     property alias text: playlistNameInput.text

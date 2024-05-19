@@ -5,6 +5,7 @@
 #include "cpr/cpr.h"
 #include "rcheevos/rc_consoles.h"
 #include <QThreadPool>
+#include <algorithm>
 #include <cstdio>
 #include <spdlog/spdlog.h>
 
@@ -17,26 +18,44 @@ static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
 
   switch (event->type) {
   case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
+    emit raClient->achievementUnlocked(
+        QString(event->achievement->title),
+        QString(event->achievement->description));
+    emit raClient->pointsChanged();
     break;
   case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW:
+    printf("Challenge show: %s: %s\n", event->achievement->title,
+           event->achievement->description);
     break;
   case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE:
+    printf("Challenge hide: %s: %s\n", event->achievement->title,
+           event->achievement->description);
     break;
   case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
   case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE:
     if (event->achievement->measured_progress[0] != '\0') {
-      printf("progress: %s\n", event->achievement->measured_progress);
       string progress(event->achievement->measured_progress);
 
       if (progress.find('/') != string::npos) {
         const auto slashPos = progress.find('/');
-        const auto current = progress.substr(0, slashPos);
-        const auto desired = progress.substr(slashPos + 1);
+        auto current = progress.substr(0, slashPos);
+        auto desired = progress.substr(slashPos + 1);
+
+        erase(current, ' ');
+        erase(desired, ' ');
 
         if (std::ranges::all_of(current, isdigit) &&
             std::ranges::all_of(desired, isdigit)) {
+
+          char urlBuffer[256];
+
+          auto success = rc_client_achievement_get_image_url(
+              event->achievement, event->achievement->unlocked, urlBuffer, 256);
+
           emit raClient->achievementProgressUpdated(
-              event->achievement->id, std::stoi(current), std::stoi(desired));
+              QString(urlBuffer), event->achievement->id,
+              event->achievement->title, event->achievement->description,
+              std::stoi(current), std::stoi(desired));
         }
       }
     }
@@ -71,8 +90,9 @@ static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
     break;
   case RC_CLIENT_EVENT_RECONNECTED:
     break;
+  default:
+    printf("Unhandled event! (%d)\n", event->type);
   }
-  printf("Event! (%d)\n", event->type);
 }
 
 static uint32_t readMemoryCallback(uint32_t address, uint8_t *buffer,
@@ -144,6 +164,16 @@ RAClient::RAClient() {
   m_idleTimer.setInterval(2000);
   connect(&m_idleTimer, &QTimer::timeout, this,
           [this] { rc_client_idle(m_client); });
+
+  m_settings = std::make_unique<QSettings>();
+  const auto user =
+      m_settings->value("retroachievements/username", "").toString();
+  const auto token =
+      m_settings->value("retroachievements/token", "").toString();
+
+  if (!user.isEmpty() && !token.isEmpty()) {
+    logInUserWithToken(user, token);
+  }
 }
 
 RAClient::~RAClient() {
@@ -228,6 +258,12 @@ void RAClient::logInUserWithPassword(const QString &username,
           raClient->m_loggedIn = true;
           emit raClient->loginSucceeded();
           emit raClient->loginStatusChanged();
+          emit raClient->pointsChanged();
+
+          raClient->m_settings->setValue("retroachievements/username",
+                                         QString(userInfo->username));
+          raClient->m_settings->setValue("retroachievements/token",
+                                         QString(userInfo->token));
           break;
         case RC_INVALID_CREDENTIALS:
           emit raClient->loginFailedWithInvalidCredentials();
@@ -255,11 +291,51 @@ void RAClient::logout() {
   emit loginStatusChanged();
 }
 
-void RAClient::logInUserWithToken(const std::string &username,
-                                  const std::string &token) {}
+void RAClient::logInUserWithToken(const QString &username,
+                                  const QString &token) {
+  rc_client_begin_login_with_token(
+      m_client, username.toStdString().c_str(), token.toStdString().c_str(),
+      [](int result, const char *error_message, rc_client_t *client,
+         void *userdata) {
+        const auto userInfo = rc_client_get_user_info(client);
+        const auto raClient =
+            static_cast<RAClient *>(rc_client_get_userdata(client));
 
-void RAClient::initializeMemory(::libretro::Core *core) { theCore = core; }
+        switch (result) {
+        case RC_OK:
+          raClient->m_displayName =
+          QString::fromUtf8(userInfo->display_name); raClient->m_loggedIn =
+          true; emit raClient->loginSucceeded(); emit
+          raClient->loginStatusChanged(); emit raClient->pointsChanged();
+          break;
+        case RC_INVALID_CREDENTIALS:
+          emit raClient->loginFailedWithInvalidCredentials();
+          raClient->m_loggedIn = false;
+          break;
+        case RC_EXPIRED_TOKEN:
+          emit raClient->loginFailedWithExpiredToken();
+          raClient->m_loggedIn = false;
+          break;
+        case RC_ACCESS_DENIED:
+          emit raClient->loginFailedWithAccessDenied();
+          raClient->m_loggedIn = false;
+          break;
+        default:
+          emit raClient->loginFailedWithInternalError();
+          raClient->m_loggedIn = false;
+        }
+      },
+      nullptr);
+}
 
 bool RAClient::loggedIn() const { return m_loggedIn; }
 QString RAClient::displayName() { return m_displayName; }
+int RAClient::numPoints() const {
+  const auto userInfo = rc_client_get_user_info(m_client);
+  if (userInfo == nullptr) {
+    return 0;
+  }
+
+  return userInfo->score_softcore;
+}
 } // namespace firelight::achievements

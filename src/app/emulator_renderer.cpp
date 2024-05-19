@@ -33,7 +33,13 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     invalidateFramebufferObject();
   }
 
-  m_resetContextFunction = manager->consumeContextResetFunction();
+  if (!m_resetContextFunction) {
+    m_resetContextFunction = manager->consumeContextResetFunction();
+  }
+
+  // if (!m_destroyContextFunction) {
+  //   m_destroyContextFunction = manager->consumeContextDestroyFunction();
+  // }
 
   m_nativeWidth = manager->nativeWidth();
   m_nativeHeight = manager->nativeHeight();
@@ -56,6 +62,7 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 
 void EmulatorRenderer::render() {
   if (m_resetContextFunction) {
+    printf("Calling context reset\n");
     m_resetContextFunction();
     m_resetContextFunction = nullptr;
   }

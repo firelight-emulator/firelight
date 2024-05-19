@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 
-
 MenuItem {
     id: control
     padding: 6

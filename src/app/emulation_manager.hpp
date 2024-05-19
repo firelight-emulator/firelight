@@ -33,6 +33,7 @@ public:
   setGetProcAddressFunction(const std::function<proc_address_t(const char *)>
                                 &getProcAddressFunction);
   [[nodiscard]] std::function<void()> consumeContextResetFunction();
+  [[nodiscard]] std::function<void()> consumeContextDestroyFunction();
 
   void setReceiveVideoDataFunction(
       const std::function<void(const void *data, unsigned width,
@@ -48,6 +49,7 @@ public:
                size_t pitch) override;
   proc_address_t getProcAddress(const char *sym) override;
   void setResetContextFunc(context_reset_func) override;
+  void setDestroyContextFunc(context_destroy_func) override;
   uintptr_t getCurrentFramebufferId() override;
   void setSystemAVInfo(retro_system_av_info *info) override;
 
@@ -112,6 +114,7 @@ private:
   std::function<proc_address_t(const char *)> m_getProcAddressFunction =
       nullptr;
   std::function<void()> m_resetContextFunction = nullptr;
+  std::function<void()> m_destroyContextFunction = nullptr;
   std::function<void(const void *data, unsigned width, unsigned height,
                      size_t pitch)>
       m_receiveVideoDataFunction = nullptr;

@@ -11,7 +11,7 @@ namespace libretro {
 
 class Game {
 public:
-  explicit Game(const std::vector<unsigned char> &data);
+  explicit Game(const string &filePath, const std::vector<unsigned char> &data);
   explicit Game(const string &filePath);
 
   string getPath();
