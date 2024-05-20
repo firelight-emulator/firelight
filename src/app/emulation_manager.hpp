@@ -53,7 +53,7 @@ public:
   uintptr_t getCurrentFramebufferId() override;
   void setSystemAVInfo(retro_system_av_info *info) override;
 
-  [[nodiscard]] bool runFrame() const;
+  [[nodiscard]] bool runFrame();
 
 public slots:
   void loadLibraryEntry(int entryId);
@@ -83,6 +83,7 @@ signals:
   void loadAchievements(QString contentId);
 
 private:
+    bool shouldUnload = false;
   void save(bool waitForFinish = false);
 
   std::unique_ptr<libretro::Core> m_core;

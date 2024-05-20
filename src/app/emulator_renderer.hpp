@@ -19,7 +19,7 @@ protected:
   void render() override;
 
 private:
-  const EmulationManager *m_manager = nullptr;
+  EmulationManager *m_manager = nullptr;
   QOpenGLFramebufferObject *m_fbo = nullptr;
 
   int m_nativeWidth = 0;

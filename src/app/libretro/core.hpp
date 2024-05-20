@@ -44,7 +44,7 @@ public:
 
   void setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver);
   void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
-  firelight::libretro::IRetropadProvider *getRetropadProvider();
+  firelight::libretro::IRetropadProvider *getRetropadProvider() const;
 
   void setAudioReceiver(IAudioDataReceiver *receiver);
 
@@ -60,7 +60,7 @@ public:
 
   bool loadGame(Game *game);
 
-  void unloadGame() const;
+  void unloadGame();
 
   std::vector<uint8_t> serializeState() const;
   void deserializeState(const std::vector<uint8_t> &data) const;
@@ -84,7 +84,7 @@ public:
   std::function<void()> destroyContextFunction = nullptr;
 
 private:
-  QLibrary *coreLib;
+  std::unique_ptr<QLibrary> coreLib;
 
   firelight::libretro::IRetropadProvider *m_retropadProvider;
   IAudioDataReceiver *audioReceiver;

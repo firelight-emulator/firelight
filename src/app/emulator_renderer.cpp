@@ -10,7 +10,15 @@
 
 EmulatorRenderer::EmulatorRenderer(const EmulationManager *manager) {
   initializeOpenGLFunctions();
-  m_manager = manager;
+  m_manager = const_cast<EmulationManager *>(manager);
+  m_manager->setReceiveVideoDataFunction(
+      [this](const void *data, unsigned width, unsigned height, size_t pitch) {
+        receiveVideoData(data, width, height, pitch);
+  });
+
+  m_manager->setGetProcAddressFunction([this](const char *sym) {
+    return QOpenGLContext::currentContext()->getProcAddress(sym);
+  });
 }
 
 void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
@@ -19,15 +27,6 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   if (m_fbo) {
     manager->setCurrentFboId(m_fbo->handle());
   }
-
-  manager->setGetProcAddressFunction([this](const char *sym) {
-    return QOpenGLContext::currentContext()->getProcAddress(sym);
-  });
-
-  manager->setReceiveVideoDataFunction(
-      [this](const void *data, unsigned width, unsigned height, size_t pitch) {
-        receiveVideoData(data, width, height, pitch);
-      });
 
   if (manager->nativeWidth() != m_nativeWidth) {
     invalidateFramebufferObject();

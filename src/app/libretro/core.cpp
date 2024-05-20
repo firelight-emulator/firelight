@@ -18,7 +18,7 @@ void log(enum retro_log_level level, const char *fmt, ...) {
   msg[std::remove(msg, msg + strlen(msg), '\n') - msg] = 0;
   msg[std::remove(msg, msg + strlen(msg), '\r') - msg] = 0;
 
-  spdlog::debug("[Core] {}", msg);
+  spdlog::info("[Core] {}", msg);
 }
 
 // Only supports one core at a time for now, but, eh.
@@ -928,11 +928,11 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
 //    }
 
 Core::Core(const std::string &libPath) {
-  coreLib = new QLibrary(QString::fromStdString(libPath));
+  coreLib = std::make_unique<QLibrary>(QString::fromStdString(libPath));
 
   // dll = SDL_LoadObject(libPath.c_str());
   // if (dll == nullptr) {
-  //   // Check error
+  // // Check error
   // }
 
   symRetroInit = coreLib->resolve("retro_init");
@@ -976,42 +976,42 @@ Core::Core(const std::string &libPath) {
 
   // symRetroInit = loadRetroFunc<void (*)()>(dll, "retro_init");
   // symRetroDeinit = loadRetroFunc<void (*)()>(dll, "retro_deinit");
-  //
+
   // symRetroApiVersion =
-  //     loadRetroFunc<unsigned int (*)()>(dll, "retro_api_version");
+  // loadRetroFunc<unsigned int (*)()>(dll, "retro_api_version");
   // symRetroGetSystemInfo = loadRetroFunc<void (*)(retro_system_info *)>(
-  //     dll, "retro_get_system_info");
+  // dll, "retro_get_system_info");
   // symRetroGetSystemAVInfo = loadRetroFunc<void (*)(retro_system_av_info *)>(
-  //     dll, "retro_get_system_av_info");
+  // dll, "retro_get_system_av_info");
   // symRetroSetControllerPortDevice =
-  //     loadRetroFunc<void (*)(unsigned int, unsigned int)>(
-  //         dll, "retro_set_controller_port_device");
-  //
+  // loadRetroFunc<void (*)(unsigned int, unsigned int)>(
+  // dll, "retro_set_controller_port_device");
+
   // symRetroReset = loadRetroFunc<void (*)()>(dll, "retro_reset");
   // symRetroRun = loadRetroFunc<void (*)()>(dll, "retro_run");
   // symRetroSerializeSize =
-  //     loadRetroFunc<size_t (*)()>(dll, "retro_serialize_size");
+  // loadRetroFunc<size_t (*)()>(dll, "retro_serialize_size");
   // symRetroSerialize =
-  //     loadRetroFunc<bool (*)(void *, size_t)>(dll, "retro_serialize");
+  // loadRetroFunc<bool (*)(void *, size_t)>(dll, "retro_serialize");
   // symRetroUnserialize =
-  //     loadRetroFunc<bool (*)(const void *, size_t)>(dll,
-  //     "retro_unserialize");
+  // loadRetroFunc<bool (*)(const void *, size_t)>(dll,
+  // "retro_unserialize");
   // symRetroCheatReset = loadRetroFunc<void (*)()>(dll, "retro_cheat_reset");
   // symRetroCheatSet = loadRetroFunc<void (*)(unsigned, bool, const char *)>(
-  //     dll, "retro_cheat_set");
+  // dll, "retro_cheat_set");
   // symRetroLoadGame =
-  //     loadRetroFunc<bool (*)(const retro_game_info *)>(dll,
-  //     "retro_load_game");
+  // loadRetroFunc<bool (*)(const retro_game_info *)>(dll,
+  // "retro_load_game");
   // symRetroLoadGameSpecial =
-  //     loadRetroFunc<bool (*)(unsigned int, const retro_game_info *, size_t)>(
-  //         dll, "retro_load_game_special");
+  // loadRetroFunc<bool (*)(unsigned int, const retro_game_info *, size_t)>(
+  // dll, "retro_load_game_special");
   // symRetroUnloadGame = loadRetroFunc<void (*)()>(dll, "retro_unload_game");
   // symRetroGetRegion =
-  //     loadRetroFunc<unsigned int (*)()>(dll, "retro_get_region");
+  // loadRetroFunc<unsigned int (*)()>(dll, "retro_get_region");
   // symRetroGetMemoryData =
-  //     loadRetroFunc<void *(*)(unsigned int)>(dll, "retro_get_memory_data");
+  // loadRetroFunc<void *(*)(unsigned int)>(dll, "retro_get_memory_data");
   // symRetroGetMemoryDataSize =
-  //     loadRetroFunc<size_t (*)(unsigned int)>(dll, "retro_get_memory_size");
+  // loadRetroFunc<size_t (*)(unsigned int)>(dll, "retro_get_memory_size");
 
   retroSystemInfo = new retro_system_info;
   retroSystemAVInfo = new retro_system_av_info;
@@ -1031,9 +1031,9 @@ Core::Core(const std::string &libPath) {
   // loadRetroFunc<RetroSetEnvironment>(dll,
   // "retro_set_environment")(envCallback);
   // loadRetroFunc<RetroSetVideoRefresh>(dll,
-  //                                     "retro_set_video_refresh")(videoCallback);
+  // "retro_set_video_refresh")(videoCallback);
   // loadRetroFunc<RetroSetAudioSample>(dll, "retro_set_audio_sample")(
-  //     [](int16_t left, int16_t right) {});
+  // [](int16_t left, int16_t right) {});
 
   auto processAudioLambda = [](const int16_t *data, size_t frames) -> size_t {
     auto core = currentCore;
@@ -1054,33 +1054,33 @@ Core::Core(const std::string &libPath) {
 
   // loadRetroFunc<RetroSetAudioSampleBatch>(dll,
   // "retro_set_audio_sample_batch")(
-  //     processAudioLambda);
+  // processAudioLambda);
   // loadRetroFunc<RetroInputPoll>(dll, "retro_set_input_poll")([]() {});
   // loadRetroFunc<RetroInputState>(dll,
-  //                                "retro_set_input_state")(inputStateCallback);
+  // "retro_set_input_state")(inputStateCallback);
 
-  //  symRetroSetControllerPortDevice(0, RETRO_DEVICE_ANALOG);
+  symRetroSetControllerPortDevice(0, RETRO_DEVICE_ANALOG);
 }
 
 Core::~Core() {
-  if (destroyContextFunction) {
-    printf("Destroying context\n");
-    destroyContextFunction();
-  }
+  // if (destroyContextFunction) {
+  //   printf("Destroying context\n");
+  //   destroyContextFunction();
+  // }
 
-  unloadGame();
-  deinit();
+  // unloadGame();
+  // deinit();
 
   // SDL_UnloadObject(dll);
-
+  //
   coreLib->unload();
-  delete coreLib;
-
-  // currentCore = nullptr;
-  // close DL handle
-  // need to close symbol handles or free their memory?
-  delete retroSystemInfo;
-  delete retroSystemAVInfo;
+  // delete coreLib;
+  //
+  currentCore = nullptr;
+  // // close DL handle
+  // // need to close symbol handles or free their memory?
+  // delete retroSystemInfo;
+  // delete retroSystemAVInfo;
   //  delete video;
 }
 
@@ -1100,12 +1100,13 @@ bool Core::loadGame(Game *game) {
   audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
   return result;
 }
-void Core::unloadGame() const {
-
+  void Core::unloadGame() {
   if (destroyContextFunction) {
     printf("Destroying context\n");
     destroyContextFunction();
+    destroyContextFunction = nullptr;
   }
+
   symRetroUnloadGame();
 }
 
@@ -1138,7 +1139,9 @@ void Core::init() {
   symRetroGetSystemInfo(retroSystemInfo);
 }
 
-void Core::deinit() { symRetroDeinit(); }
+void Core::deinit() {
+  symRetroDeinit();
+}
 
 void Core::reset() { symRetroReset(); }
 
@@ -1196,7 +1199,7 @@ void Core::setRetropadProvider(
   m_retropadProvider = provider;
 }
 
-firelight::libretro::IRetropadProvider *Core::getRetropadProvider() {
+firelight::libretro::IRetropadProvider *Core::getRetropadProvider() const {
   return m_retropadProvider;
 }
 

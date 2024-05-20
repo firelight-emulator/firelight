@@ -85,7 +85,7 @@ EmulationManager::~EmulationManager() {
   if (m_core) {
     // m_core->unloadGame();
     // m_core->deinit();
-    m_core.reset();
+    // m_core.reset();
   }
 
   printf("End of emulation manager destructor\n");
@@ -245,14 +245,17 @@ void EmulationManager::stopEmulation() {
     // if (m_destroyContextFunction) {
     //   m_destroyContextFunction();
     // }
+    shouldUnload = true;
 
     m_usingHwRendering = false;
     // m_core->unloadGame();
     // m_core->deinit();
-    m_core.reset();
+    // m_core.reset();
 
     emit emulationStopped();
   });
+  
+  update();
 }
 
 void EmulationManager::resetEmulation() {
@@ -281,8 +284,6 @@ void EmulationManager::save(const bool waitForFinish) {
 uintptr_t EmulationManager::getCurrentFramebufferId() { return m_currentFboId; }
 
 void EmulationManager::setSystemAVInfo(retro_system_av_info *info) {
-  // const auto width = info->geometry.max_width;
-  // const auto height = info->geometry.max_height;
   const auto width = info->geometry.base_width;
   const auto height = info->geometry.base_height;
 
@@ -306,7 +307,16 @@ void EmulationManager::setSystemAVInfo(retro_system_av_info *info) {
   }
 }
 
-bool EmulationManager::runFrame() const {
+bool EmulationManager::runFrame() {
+  if (shouldUnload) {
+    printf("Unloading on thread: %p\n", QThread::currentThreadId());
+    m_core->unloadGame();
+    m_core->deinit();
+    m_core.reset();
+
+    shouldUnload = false;
+  }
+
   if (m_isRunning && !m_paused) {
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
@@ -541,6 +551,9 @@ void EmulationManager::loadLibraryEntry(int entryId) {
       m_saveData = saveDataBytes;
       m_corePath = QString::fromStdString(corePath);
     }
+
+
+    printf("Initializing on thread: %p\n", QThread::currentThreadId());
 
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString());
 
