@@ -33,6 +33,7 @@ jobs:
             gettext:p
             qt6-tools:p
             SDL2:p
+            cpr:p
             spdlog:p
             toolchain:p
             openssl:p
