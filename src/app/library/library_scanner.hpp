@@ -14,6 +14,7 @@ class LibraryScanner final : public QObject {
 public:
   struct ScanResults {
     std::vector<std::string> all_md5s;
+    std::vector<std::string> all_filenames;
     std::vector<firelight::db::LibraryEntry> existing_entries;
     std::vector<firelight::db::LibraryEntry> new_entries;
   };

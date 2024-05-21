@@ -49,6 +49,8 @@ void LibraryScanner::startScan() {
           }
 
           auto filename = canonical(entry.path()).string();
+          scan_results.all_filenames.emplace_back(filename);
+
           auto existing = library_database_->getMatchingLibraryEntries(
               firelight::db::LibraryEntry{.contentPath = filename});
           if (!existing.empty()) {
@@ -82,6 +84,17 @@ void LibraryScanner::startScan() {
                      ext.string() == ".gba" || ext.string() == ".nds" ||
                      ext.string() == ".md" || ext.string() == ".sfc") {
             handleScannedRomFile(entry, scan_results);
+          }
+        }
+
+        auto allPaths = library_database_->getAllContentPaths();
+
+        for (const auto& path : allPaths) {
+          if (std::ranges::find(scan_results.all_filenames, path) == scan_results.all_filenames.end()) {
+            auto matchingEntry = library_database_->getMatchingLibraryEntries(
+                {.contentPath = path});
+
+            library_database_->deleteLibraryEntry(matchingEntry.at(0).id);
           }
         }
 
@@ -123,6 +136,11 @@ void LibraryScanner::handleScannedRomFile(
   file.read(thing.data(), size);
   file.close();
 
+  auto md5 = calculateMD5(thing.data(), size);
+  scan_results.all_md5s.emplace_back(md5);
+
+  auto contentId = md5;
+
   // TODO: Determine if ROM has a header
   if (ext == ".sfc" || ext == ".smc") {
     if (size % 1024 == 512) {
@@ -130,20 +148,18 @@ void LibraryScanner::handleScannedRomFile(
       thing.erase(thing.begin(), thing.begin() + 512);
       size -= 512;
 
+      contentId = calculateMD5(thing.data(), size);
       // Copy thing into a new vector without the header
       // std::vector<char> new_thing(size - 512);
       // std::copy(thing.begin() + 512, thing.end(), new_thing.begin());
     }
   }
 
-  auto md5 = calculateMD5(thing.data(), size);
-  scan_results.all_md5s.emplace_back(md5);
-
   auto display_name = entry.path().filename().string();
 
   firelight::db::LibraryEntry e = {
       .displayName = display_name,
-      .contentId = md5,
+      .contentId = contentId,
       .platformId = platforms.at(0).id,
       .type = firelight::db::LibraryEntry::EntryType::ROM,
       .fileMd5 = md5,
@@ -151,12 +167,13 @@ void LibraryScanner::handleScannedRomFile(
       .sourceDirectory = canonical(entry.path().parent_path()).string(),
       .contentPath = canonical(entry.path()).string()};
 
-  auto roms = content_database_->getMatchingRoms({.md5 = md5});
+  auto roms = content_database_->getMatchingRoms({.md5 = contentId});
   if (!roms.empty()) {
     auto rom = roms.at(0);
 
     auto game = content_database_->getGame(rom.gameId);
     if (game.has_value()) {
+      e.gameId = game->id;
       e.displayName = game->name;
     }
   }

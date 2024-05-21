@@ -22,6 +22,7 @@ SqliteLibraryDatabase::SqliteLibraryDatabase(std::filesystem::path db_file_path)
                                "content_id TEXT UNIQUE NOT NULL,"
                                "platform_id INTEGER NOT NULL,"
                                "parent_entry_id INTEGER DEFAULT -1,"
+                               "game_id INTEGER DEFAULT -1,"
                                "mod_id INTEGER DEFAULT -1,"
                                "active_save_slot INTEGER DEFAULT 1,"
                                "type INTEGER NOT NULL,"
@@ -115,10 +116,10 @@ bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
   const QString queryString =
       "INSERT INTO library_entries (display_name, content_id, "
       "platform_id, "
-      "parent_entry_id, mod_id, type, file_md5, file_crc32, source_directory, "
+      "parent_entry_id, game_id, mod_id, type, file_md5, file_crc32, source_directory, "
       "content_path, "
       "created_at) VALUES"
-      "(:displayName, :contentId, :platformId, :parentEntryId, "
+      "(:displayName, :contentId, :platformId, :parentEntryId, :gameId, "
       ":modId, :type, :fileMd5, :fileCrc32, :sourceDirectory, :contentPath, "
       ":createdAt);";
   QSqlQuery query(getDatabase());
@@ -127,6 +128,7 @@ bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {
   query.bindValue(":contentId", QString::fromStdString(entry.contentId));
   query.bindValue(":platformId", entry.platformId);
   query.bindValue(":parentEntryId", entry.parentEntryId);
+  query.bindValue(":gameId", entry.gameId);
   query.bindValue(":modId", entry.modId);
   query.bindValue(":type", static_cast<int>(entry.type));
   query.bindValue(":fileMd5", QString::fromStdString(entry.fileMd5));
@@ -243,6 +245,16 @@ SqliteLibraryDatabase::getMatchingLibraryEntries(const LibraryEntry &entry) {
     whereClause += "content_path = :contentPath";
   }
 
+  if (!entry.fileMd5.empty()) {
+    if (needAND) {
+      whereClause += " AND ";
+    } else {
+      whereClause += " WHERE ";
+      needAND = true;
+    }
+    whereClause += "file_md5 = :fileMd5";
+  }
+
   queryString += whereClause;
   QSqlQuery query(getDatabase());
   query.prepare(queryString);
@@ -259,6 +271,9 @@ SqliteLibraryDatabase::getMatchingLibraryEntries(const LibraryEntry &entry) {
   if (!entry.contentPath.empty()) {
     query.bindValue(":contentPath", QString::fromStdString(entry.contentPath));
   }
+  if (!entry.fileMd5.empty()) {
+    query.bindValue(":fileMd5", QString::fromStdString(entry.fileMd5));
+  }
 
   if (!query.exec()) {
     spdlog::error("ruh roh raggy: {}", query.lastError().text().toStdString());
@@ -271,6 +286,23 @@ SqliteLibraryDatabase::getMatchingLibraryEntries(const LibraryEntry &entry) {
   }
 
   return entries;
+}
+
+std::vector<std::string> SqliteLibraryDatabase::getAllContentPaths() {
+  QSqlQuery q(getDatabase());
+  q.prepare("SELECT content_path FROM library_entries");
+
+  if (!q.exec()) {
+    spdlog::error("Failed to get content paths: {}",
+                  q.lastError().text().toStdString());
+  }
+
+  std::vector<std::string> paths;
+  while (q.next()) {
+    paths.emplace_back(q.value(0).toString().toStdString());
+  }
+
+  return paths;
 }
 
 std::vector<Playlist> SqliteLibraryDatabase::getAllPlaylists() {
@@ -378,14 +410,15 @@ SqliteLibraryDatabase::createLibraryEntryFromQuery(const QSqlQuery &query) {
   entry.contentId = query.value(2).toString().toStdString();
   entry.platformId = query.value(3).toInt();
   entry.parentEntryId = query.value(4).toInt();
-  entry.modId = query.value(5).toInt();
-  entry.activeSaveSlot = query.value(6).toInt();
-  entry.type = static_cast<LibraryEntry::EntryType>(query.value(7).toInt());
-  entry.fileMd5 = query.value(8).toString().toStdString();
-  entry.fileCrc32 = query.value(9).toString().toStdString();
-  entry.sourceDirectory = query.value(10).toString().toStdString();
-  entry.contentPath = query.value(11).toString().toStdString();
-  entry.createdAt = query.value(12).toLongLong();
+  entry.gameId = query.value(5).toInt();
+  entry.modId = query.value(6).toInt();
+  entry.activeSaveSlot = query.value(7).toInt();
+  entry.type = static_cast<LibraryEntry::EntryType>(query.value(8).toInt());
+  entry.fileMd5 = query.value(9).toString().toStdString();
+  entry.fileCrc32 = query.value(10).toString().toStdString();
+  entry.sourceDirectory = query.value(11).toString().toStdString();
+  entry.contentPath = query.value(12).toString().toStdString();
+  entry.createdAt = query.value(13).toLongLong();
 
   return entry;
 }

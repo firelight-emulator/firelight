@@ -12,6 +12,7 @@ struct LibraryEntry {
   std::string contentId;
   int platformId = -1;
   int parentEntryId = -1;
+  int gameId = -1;
   int modId = -1;
   unsigned int activeSaveSlot = 1;
   EntryType type = EntryType::UNKNOWN;

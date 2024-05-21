@@ -11,6 +11,7 @@ namespace firelight::db {
 
 class SqliteLibraryDatabase final : public QObject, public ILibraryDatabase {
   Q_OBJECT
+
 public:
   explicit SqliteLibraryDatabase(std::filesystem::path db_file_path);
   ~SqliteLibraryDatabase() override;
@@ -25,6 +26,7 @@ public:
   std::vector<LibraryEntry> getAllLibraryEntries() override;
   std::vector<LibraryEntry>
   getMatchingLibraryEntries(const LibraryEntry &entry) override;
+  std::vector<std::string> getAllContentPaths() override;
 
   // Playlists
   bool createPlaylist(Playlist &playlist) override;

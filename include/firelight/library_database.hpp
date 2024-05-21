@@ -32,6 +32,7 @@ public:
   virtual std::vector<LibraryEntry> getAllLibraryEntries() = 0;
   virtual std::vector<LibraryEntry>
   getMatchingLibraryEntries(const LibraryEntry &entry) = 0;
+  virtual std::vector<std::string> getAllContentPaths() = 0;
 
   /**
    * @brief Creates a new Playlist.
