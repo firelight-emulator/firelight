@@ -101,8 +101,6 @@ int main(int argc, char *argv[]) {
   firelight::Input::ControllerManager controllerManager;
   firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
-  firelight::achievements::RAClient raClient;
-  firelight::ManagerAccessor::setAchievementManager(&raClient);
 
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
 
@@ -125,6 +123,9 @@ int main(int argc, char *argv[]) {
   firelight::db::SqliteLibraryDatabase libraryDatabase(appDataDir /
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
+
+  firelight::achievements::RAClient raClient;
+  firelight::ManagerAccessor::setAchievementManager(&raClient);
 
   // Set up the models for QML ***********************************************
   firelight::gui::ModItemModel modListModel(contentDatabase);

@@ -8,4 +8,5 @@ struct Platform {
   std::string abbreviation;
   std::string slug;
   std::vector<std::string> supportedExtensions;
+  unsigned int retroAchievementsId = 0;
 };

@@ -252,7 +252,10 @@ SqliteContentDatabase::getMatchingPatches(const Patch &patch) {
 
 std::optional<Platform> SqliteContentDatabase::getPlatform(const int id) {
   QSqlQuery query(getDatabase());
-  query.prepare("SELECT * FROM platforms WHERE id = :id");
+  query.prepare("SELECT platforms.id, platforms.name, platforms.abbreviation, platforms.slug, platform_external_ids.external_id FROM platforms "
+                "JOIN platform_external_ids ON platforms.id = platform_external_ids.platform_id "
+                "AND platform_external_ids.external_system_name = retroachievements "
+                "WHERE id = :id");
   query.bindValue(":id", id);
 
   if (!query.exec()) {

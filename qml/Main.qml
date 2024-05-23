@@ -24,6 +24,10 @@ ApplicationWindow {
         color: "#1a1b1e"
     }
 
+    GameLaunchPopup {
+        id: gameLaunchPopup
+    }
+
     AchievementProgressIndicator {
         id: achievementProgressIndicator
 
@@ -559,6 +563,7 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
+                gameLaunchPopup.open()
                 emulator.startEmulation()
                 // emulator.resumeGame()
             }

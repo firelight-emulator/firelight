@@ -8,6 +8,7 @@
 #include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
+#include <firelight/content_database.hpp>
 
 namespace libretro {
 class Core;

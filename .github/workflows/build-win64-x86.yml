@@ -39,6 +39,8 @@ jobs:
             openssl:p
             nsis:p
 
+      - run: echo create symlink
+
       - run: git config --global core.autocrlf input
 
       - uses: actions/checkout@v4

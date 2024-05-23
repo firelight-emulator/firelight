@@ -32,6 +32,20 @@ ColumnLayout {
         }
     }
 
+    Button {
+        text: "show game launch popup"
+
+        onClicked: {
+            gameLaunchPopup.open()
+        }
+
+        GameLaunchPopup {
+            id: gameLaunchPopup
+        }
+
+
+    }
+
     Item {
         Layout.fillWidth: true
         Layout.fillHeight: true

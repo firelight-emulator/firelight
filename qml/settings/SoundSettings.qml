@@ -22,10 +22,13 @@ Item {
         //     Layout.preferredHeight: 60
         //     label: "Menu Navigation Sounds Volume"
         // }
-        Item {
+        ToggleOption {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.minimumHeight: 42
+            label: "Progress notifications"
+            description: "Show a notification when you make progress on an achievement that has progress tracking."
 
+            checked: true
         }
     }
 }

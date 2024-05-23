@@ -107,7 +107,7 @@ static uint32_t readMemoryCallback(uint32_t address, uint8_t *buffer,
                 static_cast<unsigned char *>(theCore->getMemoryData(id));
             info->size = theCore->getMemorySize(id);
           },
-          RC_CONSOLE_SUPER_NINTENDO);
+          RC_CONSOLE_UNKNOWN);
 
       if (valid) {
         raClient->m_memorySeemsGood = true;
@@ -181,6 +181,7 @@ RAClient::RAClient() {
 }
 
 RAClient::~RAClient() {
+  QMetaObject::invokeMethod(&m_idleTimer, "stop", Qt::QueuedConnection);
   if (m_client) {
     rc_client_destroy(m_client);
     m_client = nullptr;
@@ -232,14 +233,15 @@ void RAClient::doFrame(::libretro::Core *core,
     theCore = core;
   }
 
-  if (m_frameNumber < 6) {
+  if (m_frameNumber < 4) {
     m_frameNumber++;
-  } else if (m_frameNumber == 6) {
+  } else if (m_frameNumber == 4) {
     m_frameNumber++;
+
     QMetaObject::invokeMethod(
         this, "loadGame", Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(currentEntry.contentId)));
-  } else if (m_frameNumber > 2) {
+  } else if (m_frameNumber > 4) {
     rc_client_do_frame(m_client);
     QMetaObject::invokeMethod(&m_idleTimer, "start", Qt::QueuedConnection);
   }
@@ -292,6 +294,9 @@ void RAClient::logInUserWithPassword(const QString &username,
 void RAClient::logout() {
   rc_client_logout(m_client);
   m_loggedIn = false;
+  m_settings->remove("retroachievements/username");
+  m_settings->remove("retroachievements/token");
+
   emit loginStatusChanged();
 }
 
@@ -307,10 +312,11 @@ void RAClient::logInUserWithToken(const QString &username,
 
         switch (result) {
         case RC_OK:
-          raClient->m_displayName =
-          QString::fromUtf8(userInfo->display_name); raClient->m_loggedIn =
-          true; emit raClient->loginSucceeded(); emit
-          raClient->loginStatusChanged(); emit raClient->pointsChanged();
+          raClient->m_displayName = QString::fromUtf8(userInfo->display_name);
+          raClient->m_loggedIn = true;
+          emit raClient->loginSucceeded();
+          emit raClient->loginStatusChanged();
+          emit raClient->pointsChanged();
           break;
         case RC_INVALID_CREDENTIALS:
           emit raClient->loginFailedWithInvalidCredentials();
