@@ -7,6 +7,8 @@
 #include <QWindow>
 #include <filesystem>
 #include <qstandardpaths.h>
+#include <qstringlistmodel.h>
+
 #include <spdlog/spdlog.h>
 
 #include "app/achieve/ra_client.hpp"
@@ -28,7 +30,7 @@
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
-  for (const auto &path : list) {
+  for (const auto &path: list) {
     if (!exists(path)) {
       spdlog::info("Directory not found, creating: {}", path.string());
       if (!create_directories(path, error_code)) {
@@ -53,7 +55,6 @@ int main(int argc, char *argv[]) {
 
   QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QGuiApplication app(argc, argv);
-
 
 
   //TODO:
@@ -93,8 +94,10 @@ int main(int argc, char *argv[]) {
   std::filesystem::path appdata_dir = ".";
   auto systemDir = appdata_dir / "system";
 
-  if (!create_dirs({appdata_dir, systemDir, romsDir,
-                    patchesDir, saveDir})) {
+  if (!create_dirs({
+    appdata_dir, systemDir, romsDir,
+    patchesDir, saveDir
+  })) {
     return 1;
   }
 
@@ -163,8 +166,8 @@ int main(int argc, char *argv[]) {
                                            resizeHandler);
 
   QObject::connect(
-      &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
-      []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
+    &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
+    []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
   engine.loadFromModule("QMLFirelight", "Main");
 
   QObject *rootObject = engine.rootObjects().value(0);

@@ -51,7 +51,32 @@ Item {
                     enabled: false
                 }
                 FirelightMenuItem {
-                    labelText: "Video"
+                    labelText: "Library"
+                    // labelIcon: "\ue40a"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    onToggled: {
+                        if (checked) {
+                            rightHalf.replace(librarySettings)
+                        }
+                    }
+                }
+                FirelightMenuItem {
+                    labelText: "Achievements"
+                    // labelIcon: "\ue897"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    onToggled: {
+                        if (checked) {
+                            rightHalf.replace(retroAchievementSettings)
+                        }
+                    }
+                }
+
+                FirelightMenuItem {
+                    labelText: "Audio / Video"
                     // labelIcon: "\ue333"
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
@@ -62,14 +87,6 @@ Item {
                             rightHalf.replace(videoSettings)
                         }
                     }
-                }
-                FirelightMenuItem {
-                    labelText: "Sound"
-                    // labelIcon: "\ue050"
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    Layout.preferredHeight: 40
-                    enabled: false
                 }
                 FirelightMenuItem {
                     labelText: "System"
@@ -85,18 +102,6 @@ Item {
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                     opacity: 0.3
                     color: "#dadada"
-                }
-                FirelightMenuItem {
-                    labelText: "RetroAchievements"
-                    // labelIcon: "\ue897"
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    Layout.preferredHeight: 40
-                    onToggled: {
-                        if (checked) {
-                            rightHalf.replace(retroAchievementSettings)
-                        }
-                    }
                 }
                 FirelightMenuItem {
                     labelText: "Privacy"
@@ -228,6 +233,12 @@ Item {
                 // Layout.fillHeight: true
                 // Layout.fillWidth: true
             }
+        }
+    }
+
+    Component {
+        id: librarySettings
+        LibrarySettings {
         }
     }
 

@@ -26,6 +26,13 @@ ApplicationWindow {
 
     GameLaunchPopup {
         id: gameLaunchPopup
+
+        Connections {
+            target: achievement_manager
+            function onGameLoadSucceeded() {
+                gameLaunchPopup.open()
+            }
+        }
     }
 
     AchievementProgressIndicator {
@@ -88,8 +95,10 @@ ApplicationWindow {
             property bool topLevel: true
             property string topLevelName: "settings"
 
-            Keys.onEscapePressed: function () {
-                StackView.view.pop()
+            Keys.onEscapePressed: function (event) {
+                if (!event.isAutoRepeat) {
+                    StackView.view.pop()
+                }
             }
         }
     }
@@ -144,8 +153,10 @@ ApplicationWindow {
 
         Item {
 
-            Keys.onEscapePressed: function () {
-                closeAppConfirmationDialog.open()
+            Keys.onEscapePressed: function (event) {
+                if (!event.isAutoRepeat) {
+                    closeAppConfirmationDialog.open()
+                }
             }
             focus: true
 
@@ -563,7 +574,7 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
-                gameLaunchPopup.open()
+                // gameLaunchPopup.open()
                 emulator.startEmulation()
                 // emulator.resumeGame()
             }
@@ -752,7 +763,11 @@ ApplicationWindow {
 
         initialItem: emulator
 
-        Keys.onEscapePressed: {
+        Keys.onEscapePressed: function(event) {
+            if (event.isAutoRepeat) {
+                return
+            }
+
             if (emulatorStack.currentItem === emulator) {
                 // emulatorStack.pop()
                 emulatorStack.push(nowPlayingPage)

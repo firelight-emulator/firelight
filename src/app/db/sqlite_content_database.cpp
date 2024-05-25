@@ -276,26 +276,26 @@ SqliteContentDatabase::getMatchingPlatforms(const Platform &platform) {
   const auto ext = platform.supportedExtensions.at(0);
 
   if (ext == ".n64" || ext == ".v64" || ext == ".z64") {
-    return {Platform{.id = 0}};
+    return {Platform{.id = 7}};
   }
   if (ext == ".smc" || ext == ".sfc") {
-    return {Platform{.id = 1}};
+    return {Platform{.id = 6}};
   }
   if (ext == ".gbc") {
     return {Platform{.id = 2}};
   }
   if (ext == ".gb") {
-    return {Platform{.id = 3}};
+    return {Platform{.id = 1}};
   }
   if (ext == ".gba") {
-    return {Platform{.id = 4}};
+    return {Platform{.id = 3}};
   }
   if (ext == ".nds") {
-    return {Platform{.id = 5}};
+    return {Platform{.id = 10}};
   }
 
   if (ext == ".md") {
-    return {Platform{.id = 6}};
+    return {Platform{.id = 13}};
   }
 
   return {};

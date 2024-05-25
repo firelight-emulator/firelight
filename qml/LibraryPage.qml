@@ -162,7 +162,8 @@ Flickable {
 
                 GridView {
                     id: libraryGrid
-                    anchors.fill: parent
+                    width: parent.width
+                    height: 2000
                     cellWidth: cellContentWidth
                     cellHeight: cellContentHeight
 

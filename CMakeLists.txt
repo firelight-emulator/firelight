@@ -111,6 +111,8 @@ qt6_add_executable(firelight
         src/app/achieve/ra_client.cpp
         src/gui/window_resize_handler.cpp
         src/logo.ico
+        src/gui/library_path_model.cpp
+        src/gui/library_path_model.h
 )
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
@@ -248,9 +250,6 @@ install(
 
 # Install the DLLs
 #install(FILES ${DLL_LIST} DESTINATION bin)
-
-message(STATUS "C++ Standard Libraries: ${CMAKE_CXX_STANDARD_LIBRARIES}")
-message(STATUS "C++ Standard Libraries: ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES}")
 
 find_program(MINGW_PATH gcc)
 get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)

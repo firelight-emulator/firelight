@@ -4,6 +4,13 @@ import QtQuick.Layouts
 
 Popup {
     id: root
+
+    // required property string imageUrl
+    // required property string title
+    // required property int numEarnedAchievements
+    // required property int totalAchievements
+    // required property bool hardcoreMode
+
     parent: Overlay.overlay
     x: 0
     y: parent.height - height
@@ -77,16 +84,16 @@ Popup {
         ParallelAnimation {
             PropertyAnimation {
                 property: "x"
-                from: -30
+                from: -15
                 to: 0
-                duration: 500
+                duration: 340
                 easing.type: Easing.InOutQuad
             }
             PropertyAnimation {
                 property: "opacity"
                 from: 0
                 to: 1.0
-                duration: 500
+                duration: 340
                 easing.type: Easing.InOutQuad
             }
         }
@@ -97,15 +104,15 @@ Popup {
             PropertyAnimation {
                 property: "x"
                 from: 0
-                to: -30
-                duration: 500
+                to: -15
+                duration: 340
                 easing.type: Easing.InOutQuad
             }
             PropertyAnimation {
                 property: "opacity"
                 from: 1.0
                 to: 0
-                duration: 500
+                duration: 340
                 easing.type: Easing.InOutQuad
             }
         }

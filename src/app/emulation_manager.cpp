@@ -494,19 +494,19 @@ void EmulationManager::loadLibraryEntry(int entryId) {
       }
 
       std::string corePath;
-      if (parent->platformId == 0) {
+      if (parent->platformId == 7) {
         corePath = "./system/_cores/mupen64plus_next_libretro.dll";
-      } else if (parent->platformId == 1) {
+      } else if (parent->platformId == 6) {
         corePath = "./system/_cores/snes9x_libretro.dll";
       } else if (parent->platformId == 2) {
         corePath = "./system/_cores/gambatte_libretro.dll";
-      } else if (parent->platformId == 3) {
+      } else if (parent->platformId == 1) {
         corePath = "./system/_cores/gambatte_libretro.dll";
-      } else if (parent->platformId == 4) {
+      } else if (parent->platformId == 3) {
         corePath = "./system/_cores/mgba_libretro.dll";
-      } else if (parent->platformId == 5) {
+      } else if (parent->platformId == 10) {
         corePath = "./system/_cores/melondsds_libretro.dll";
-      } else if (parent->platformId == 6) {
+      } else if (parent->platformId == 13) {
         corePath = "./system/_cores/genesis_plus_gx_libretro.dll";
       }
 
@@ -516,19 +516,19 @@ void EmulationManager::loadLibraryEntry(int entryId) {
     } else {
 
       std::string corePath;
-      if (entry->platformId == 0) {
+      if (entry->platformId == 7) {
         corePath = "./system/_cores/mupen64plus_next_libretro.dll";
-      } else if (entry->platformId == 1) {
+      } else if (entry->platformId == 6) {
         corePath = "./system/_cores/snes9x_libretro.dll";
       } else if (entry->platformId == 2) {
         corePath = "./system/_cores/gambatte_libretro.dll";
-      } else if (entry->platformId == 3) {
+      } else if (entry->platformId == 1) {
         corePath = "./system/_cores/gambatte_libretro.dll";
-      } else if (entry->platformId == 4) {
+      } else if (entry->platformId == 3) {
         corePath = "./system/_cores/mgba_libretro.dll";
-      } else if (entry->platformId == 5) {
+      } else if (entry->platformId == 10) {
         corePath = "./system/_cores/melondsds_libretro.dll";
-      } else if (entry->platformId == 6) {
+      } else if (entry->platformId == 13) {
         corePath = "./system/_cores/genesis_plus_gx_libretro.dll";
       }
 

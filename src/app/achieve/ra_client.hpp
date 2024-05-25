@@ -35,6 +35,7 @@ public:
   void doFrame(::libretro::Core *core, const db::LibraryEntry &currentEntry);
   rc_libretro_memory_regions_t m_memoryRegions{};
   bool m_memorySeemsGood = false;
+  int m_consoleId = 0;
 
   // bool gameLoaded() const;
 

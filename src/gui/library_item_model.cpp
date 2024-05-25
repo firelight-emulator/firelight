@@ -33,22 +33,22 @@ QVariant LibraryItemModel::data(const QModelIndex &index, int role) const {
   case CreatedAt:
     return item.createdAt;
   case PlatformName: {
-    if (item.platformId == 0) {
+    if (item.platformId == 7) {
       return "Nintendo 64";
     }
-    if (item.platformId == 1) {
+    if (item.platformId == 6) {
       return "SNES";
     }
     if (item.platformId == 2) {
       return "Game Boy Color";
     }
-    if (item.platformId == 3) {
+    if (item.platformId == 1) {
       return "Game Boy";
     }
-    if (item.platformId == 4) {
+    if (item.platformId == 3) {
       return "Game Boy Advance";
     }
-    if (item.platformId == 5) {
+    if (item.platformId == 10) {
       return "Nintendo DS";
     }
     return "Unknown";
