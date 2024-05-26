@@ -27,14 +27,24 @@ namespace firelight::achievements {
         emit raClient->pointsChanged();
         break;
       }
-      case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW:
+      case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW: {
+        char urlBuffer[256];
+
+        auto success = rc_client_achievement_get_image_url(
+          event->achievement, RC_CLIENT_ACHIEVEMENT_STATE_UNLOCKED, urlBuffer, 256);
+        emit raClient->showChallengeIndicator(event->achievement->id, QString(urlBuffer),
+                                              QString(event->achievement->title),
+                                              QString(event->achievement->description));
         printf("Challenge show: %s: %s\n", event->achievement->title,
                event->achievement->description);
         break;
-      case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE:
+      }
+      case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE: {
+        emit raClient->hideChallengeIndicator(event->achievement->id);
         printf("Challenge hide: %s: %s\n", event->achievement->title,
                event->achievement->description);
         break;
+      }
       case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
       case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE:
         if (event->achievement->measured_progress[0] != '\0') {
@@ -62,7 +72,7 @@ namespace firelight::achievements {
             }
           }
         }
-        raClient->achievementProgressPercentUpdated(
+        emit raClient->achievementProgressPercentUpdated(
           event->achievement->id, event->achievement->measured_percent);
 
         break;

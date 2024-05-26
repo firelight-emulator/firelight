@@ -603,6 +603,59 @@ ApplicationWindow {
             overlayFadeIn.start()
         }
 
+        ListView {
+            id: challengeIndicators
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.topMargin: 8
+            anchors.rightMargin: 8
+            height: 100
+            width: 300
+
+            model: ListModel {
+            }
+
+            spacing: 8
+
+            layoutDirection: Qt.RightToLeft
+            orientation: ListView.Horizontal
+
+            Connections {
+                target: achievement_manager
+
+                function onShowChallengeIndicator(id, imageUrl, name, description) {
+                    challengeIndicators.model.append({
+                        "id": id,
+                        "imageUrl": imageUrl,
+                        "title": name,
+                        "description": description
+                    })
+                }
+
+                function onHideChallengeIndicator(id) {
+                    // Remove the listmodel item with the matching id
+                    for (let i = 0; i < challengeIndicators.model.count; i++) {
+                        if (challengeIndicators.model.get(i).id === id) {
+                            challengeIndicators.model.remove(i)
+                            break
+                        }
+                    }
+                }
+            }
+
+            delegate: Image {
+                required property int id
+                required property string imageUrl
+                required property string title
+                required property string description
+
+                width: 32
+                height: 32
+                source: imageUrl
+                fillMode: Image.PreserveAspectFit
+            }
+        }
+
         states: [
             State {
                 name: "stopped"

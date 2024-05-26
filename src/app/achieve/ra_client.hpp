@@ -75,6 +75,10 @@ namespace firelight::achievements {
 
     void achievementProgressPercentUpdated(int achievementId, float percent);
 
+    void showChallengeIndicator(int id, QString imageUrl, QString title, QString description);
+
+    void hideChallengeIndicator(int id);
+
   public slots:
     void logInUserWithPassword(const QString &username, const QString &password);
 
