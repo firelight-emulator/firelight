@@ -41,7 +41,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(src/app)
 
 #add_library(firelight_lib
-        #        ${DISCORD_SOURCES}
+#        ${DISCORD_SOURCES}
 #)
 
 #target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
@@ -113,6 +113,7 @@ qt6_add_executable(firelight
         src/logo.ico
         src/gui/library_path_model.cpp
         src/gui/library_path_model.h
+        include/firelight/library_content_directory.hpp
 )
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
@@ -181,6 +182,7 @@ add_custom_target(copy_resources ALL
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/_cores DESTINATION ${CMAKE_BINARY_DIR}/system)
+file(COPY ${CMAKE_SOURCE_DIR}/_img DESTINATION ${CMAKE_BINARY_DIR}/system)
 
 #add_executable(fl_test
 #        tests/app/patching/pm_star_rod_mod_patch_test.cpp
@@ -268,34 +270,34 @@ message("Shared Library Directory: ${SHARED_LIB_DIR}")
 install(
         PROGRAMS
         ${SHARED_LIB_DIR}/libsqlite3-0.dll
-#        ${SHARED_LIB_DIR}/libb2-1.dll
-#        ${SHARED_LIB_DIR}/libbrotlicommon.dll
-#        ${SHARED_LIB_DIR}/libbrotlidec.dll
-#        ${SHARED_LIB_DIR}/libbz2-1.dll
-#        ${SHARED_LIB_DIR}/libcrypto-3-x64.dll
-#        ${SHARED_LIB_DIR}/libdouble-conversion.dll
-#        ${SHARED_LIB_DIR}/libfmt.dll
-#        ${SHARED_LIB_DIR}/libfreetype-6.dll
-#        ${SHARED_LIB_DIR}/libgcc_s_seh-1.dll
-#        ${SHARED_LIB_DIR}/libglib-2.0-0.dll
-#        ${SHARED_LIB_DIR}/libgraphite2.dll
-#        ${SHARED_LIB_DIR}/libharfbuzz-0.dll
-#        ${SHARED_LIB_DIR}/libicudt74.dll
-#        ${SHARED_LIB_DIR}/libicuin74.dll
-#        ${SHARED_LIB_DIR}/libicuuc74.dll
-#        ${SHARED_LIB_DIR}/libmd4c.dll
-#        ${SHARED_LIB_DIR}/libpcre2-8-0.dll
-#        ${SHARED_LIB_DIR}/libpcre2-16-0.dll
-#        ${SHARED_LIB_DIR}/libpng16-16.dll
-#        ${SHARED_LIB_DIR}/libspdlog.dll
-#        ${SHARED_LIB_DIR}/libssl-3-x64.dll
-#        ${SHARED_LIB_DIR}/libstdc++-6.dll
-#        ${SHARED_LIB_DIR}/libwinpthread-1.dll
-#        ${SHARED_LIB_DIR}/libzstd.dll
-#        ${SHARED_LIB_DIR}/zlib1.dll
-#        ${SHARED_LIB_DIR}/libintl-8.dll
-#        ${SHARED_LIB_DIR}/libiconv-2.dll
-#        ${SHARED_LIB_DIR}/SDL2.dll
+        #        ${SHARED_LIB_DIR}/libb2-1.dll
+        #        ${SHARED_LIB_DIR}/libbrotlicommon.dll
+        #        ${SHARED_LIB_DIR}/libbrotlidec.dll
+        #        ${SHARED_LIB_DIR}/libbz2-1.dll
+        #        ${SHARED_LIB_DIR}/libcrypto-3-x64.dll
+        #        ${SHARED_LIB_DIR}/libdouble-conversion.dll
+        #        ${SHARED_LIB_DIR}/libfmt.dll
+        #        ${SHARED_LIB_DIR}/libfreetype-6.dll
+        #        ${SHARED_LIB_DIR}/libgcc_s_seh-1.dll
+        #        ${SHARED_LIB_DIR}/libglib-2.0-0.dll
+        #        ${SHARED_LIB_DIR}/libgraphite2.dll
+        #        ${SHARED_LIB_DIR}/libharfbuzz-0.dll
+        #        ${SHARED_LIB_DIR}/libicudt74.dll
+        #        ${SHARED_LIB_DIR}/libicuin74.dll
+        #        ${SHARED_LIB_DIR}/libicuuc74.dll
+        #        ${SHARED_LIB_DIR}/libmd4c.dll
+        #        ${SHARED_LIB_DIR}/libpcre2-8-0.dll
+        #        ${SHARED_LIB_DIR}/libpcre2-16-0.dll
+        #        ${SHARED_LIB_DIR}/libpng16-16.dll
+        #        ${SHARED_LIB_DIR}/libspdlog.dll
+        #        ${SHARED_LIB_DIR}/libssl-3-x64.dll
+        #        ${SHARED_LIB_DIR}/libstdc++-6.dll
+        #        ${SHARED_LIB_DIR}/libwinpthread-1.dll
+        #        ${SHARED_LIB_DIR}/libzstd.dll
+        #        ${SHARED_LIB_DIR}/zlib1.dll
+        #        ${SHARED_LIB_DIR}/libintl-8.dll
+        #        ${SHARED_LIB_DIR}/libiconv-2.dll
+        #        ${SHARED_LIB_DIR}/SDL2.dll
         TYPE BIN
 )
 

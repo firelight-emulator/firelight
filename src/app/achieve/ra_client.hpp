@@ -11,72 +11,88 @@
 #include <firelight/content_database.hpp>
 
 namespace libretro {
-class Core;
+  class Core;
 }
 
 namespace firelight::achievements {
+  class RAClient : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(bool loggedIn READ loggedIn NOTIFY loginStatusChanged)
+    Q_PROPERTY(QString displayName READ displayName NOTIFY loginSucceeded)
+    Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY loginStatusChanged)
+    Q_PROPERTY(int points READ numPoints NOTIFY pointsChanged)
+    // Q_PROPERTY(bool gameLoaded READ gameLoaded NOTIFY gameLoadSucceeded)
 
-class RAClient : public QObject {
-  Q_OBJECT
-  Q_PROPERTY(bool loggedIn READ loggedIn NOTIFY loginStatusChanged)
-  Q_PROPERTY(QString displayName READ displayName NOTIFY loginSucceeded)
-  Q_PROPERTY(int points READ numPoints NOTIFY pointsChanged)
-  // Q_PROPERTY(bool gameLoaded READ gameLoaded NOTIFY gameLoadSucceeded)
+  public:
+    RAClient();
 
-public:
-  RAClient();
-  ~RAClient() override;
+    ~RAClient() override;
 
-  Q_INVOKABLE void logout();
+    Q_INVOKABLE void logout();
 
-  [[nodiscard]] bool loggedIn() const;
-  QString displayName();
-  int numPoints() const;
-  void doFrame(::libretro::Core *core, const db::LibraryEntry &currentEntry);
-  rc_libretro_memory_regions_t m_memoryRegions{};
-  bool m_memorySeemsGood = false;
-  int m_consoleId = 0;
+    [[nodiscard]] bool loggedIn() const;
 
-  // bool gameLoaded() const;
+    QString displayName();
 
-signals:
-  void loginSucceeded();
-  void loginFailedWithInvalidCredentials();
-  void loginFailedWithExpiredToken();
-  void loginFailedWithAccessDenied();
-  void loginFailedWithInternalError();
-  void loginStatusChanged();
+    int numPoints() const;
 
-  void achievementUnlocked(QString title, QString description);
+    QString avatarUrl() const;
 
-  void gameLoadSucceeded();
-  void gameLoadFailed();
-  void gameUnloaded();
+    void doFrame(::libretro::Core *core, const db::LibraryEntry &currentEntry);
 
-  void pointsChanged();
+    rc_libretro_memory_regions_t m_memoryRegions{};
+    bool m_memorySeemsGood = false;
+    int m_consoleId = 0;
 
-  void achievementProgressUpdated(QString imageUrl, int achievementId,
-                                  QString title, QString description,
-                                  int current, int desired);
-  void achievementProgressPercentUpdated(int achievementId, float percent);
+    // bool gameLoaded() const;
 
-public slots:
-  void logInUserWithPassword(const QString &username, const QString &password);
-  void logInUserWithToken(const QString &username, const QString &token);
+  signals:
+    void loginSucceeded();
 
-  void loadGame(const QString &contentMd5);
-  void unloadGame();
+    void loginFailedWithInvalidCredentials();
 
-private:
-  QString m_displayName;
-  bool m_loggedIn = false;
-  bool m_gameLoaded = false;
-  rc_client_t *m_client;
+    void loginFailedWithExpiredToken();
 
-  int m_frameNumber = 0;
-  QTimer m_idleTimer;
+    void loginFailedWithAccessDenied();
 
-  std::unique_ptr<QSettings> m_settings;
-};
+    void loginFailedWithInternalError();
 
+    void loginStatusChanged();
+
+    void achievementUnlocked(QString title, QString description);
+
+    void gameLoadSucceeded();
+
+    void gameLoadFailed();
+
+    void gameUnloaded();
+
+    void pointsChanged();
+
+    void achievementProgressUpdated(QString imageUrl, int achievementId,
+                                    QString title, QString description,
+                                    int current, int desired);
+
+    void achievementProgressPercentUpdated(int achievementId, float percent);
+
+  public slots:
+    void logInUserWithPassword(const QString &username, const QString &password);
+
+    void logInUserWithToken(const QString &username, const QString &token);
+
+    void loadGame(const QString &contentMd5);
+
+    void unloadGame();
+
+  private:
+    QString m_displayName;
+    bool m_loggedIn = false;
+    bool m_gameLoaded = false;
+    rc_client_t *m_client;
+
+    int m_frameNumber = 0;
+    QTimer m_idleTimer;
+
+    std::unique_ptr<QSettings> m_settings;
+  };
 } // namespace firelight::achievements

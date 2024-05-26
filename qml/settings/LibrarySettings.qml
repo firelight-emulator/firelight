@@ -16,7 +16,7 @@ Item {
         Text {
             // Layout.topMargin: 30
             Layout.fillWidth: true
-            text: qsTr("Game directories")
+            text: qsTr("Game directory")
             color: "white"
             font.pointSize: 12
             // font.pointSize: 11
@@ -27,7 +27,7 @@ Item {
 
         Text {
             Layout.fillWidth: true
-            text: qsTr("Firelight will automatically watch these directories for game files and update your library accordingly.")
+            text: qsTr("Firelight will automatically watch this directory for game files and update your library accordingly. Later you'll be able to add more!")
             color: "#c1c1c1"
             wrapMode: Text.WordWrap
             font.pointSize: 11
@@ -39,12 +39,9 @@ Item {
             spacing: 8
             Layout.fillWidth: true
             Layout.fillHeight: true
-            model: ListModel {
-                ListElement { name: "file:///C:/Users/alexs/AppData/Roaming/Firelight/roms" }
-                // ListElement { name: "C:/Users/alexs/otherplace" }
-                // ListElement { name: "C:/gamez" }
-            }
+            model: library_scan_path_model
             delegate: ColumnLayout {
+                required property var model
                 width: parent.width
                 height: 100
 
@@ -62,7 +59,7 @@ Item {
 
                     contentItem: TextInput {
                         padding: 4
-                        text: folderDialog.folder
+                        text: model.path
                         font.family: Constants.regularFontFamily
                         font.pointSize: 12
                         color: "white"
@@ -109,43 +106,43 @@ Item {
                             radius: 4
                         }
 
-                        onClicked: function(){
+                        onClicked: function () {
                             folderDialog.open()
                         }
 
                         FolderDialog {
                             id: folderDialog
-                            folder: model.name
-                            // currentFolder: model.name
+                            currentFolder: model.local_filename
                             onAccepted: {
-                                console.log("found it")
+                                model.path = folder
+                                // console.log("found it")
                             }
                         }
                     }
 
-                    Button {
-                        id: but
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: 100
-
-                        // onHeightChanged: function() {
-                        //     width = height
-                        // }
-
-                        contentItem: Text {
-                            text: "Remove"
-                            font.family: Constants.regularFontFamily
-                            font.pointSize: 10
-                            font.weight: Font.DemiBold
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            color: "white"
-                        }
-                        background: Rectangle {
-                            color: "#c60e0e"
-                            radius: 4
-                        }
-                    }
+                    // Button {
+                    //     id: but
+                    //     Layout.fillHeight: true
+                    //     Layout.preferredWidth: 100
+                    //
+                    //     // onHeightChanged: function() {
+                    //     //     width = height
+                    //     // }
+                    //
+                    //     contentItem: Text {
+                    //         text: "Remove"
+                    //         font.family: Constants.regularFontFamily
+                    //         font.pointSize: 10
+                    //         font.weight: Font.DemiBold
+                    //         horizontalAlignment: Text.AlignHCenter
+                    //         verticalAlignment: Text.AlignVCenter
+                    //         color: "white"
+                    //     }
+                    //     background: Rectangle {
+                    //         color: "#c60e0e"
+                    //         radius: 4
+                    //     }
+                    // }
                 }
 
                 Rectangle {
@@ -157,6 +154,22 @@ Item {
             }
         }
 
+        // Button {
+        //     Layout.alignment: Qt.AlignRight
+        //     Layout.preferredHeight: 40
+        //     text: "Add new folder"
+        //     font.family: Constants.regularFontFamily
+        //     font.pointSize: 12
+        //
+        //     background: Rectangle {
+        //         color: "#757575"
+        //         radius: 4
+        //     }
+        //
+        //     onClicked: {
+        //         library_scan_path_model.append("Cool stuff man")
+        //     }
+        // }
 
 
         // Pane {

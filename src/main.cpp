@@ -104,7 +104,6 @@ int main(int argc, char *argv[]) {
   firelight::Input::ControllerManager controllerManager;
   firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
-
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
 
   controllerManager.refreshControllerList();
@@ -127,6 +126,15 @@ int main(int argc, char *argv[]) {
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
+  auto contentDirs = libraryDatabase.getAllLibraryContentDirectories();
+  if (contentDirs.empty()) {
+    firelight::db::LibraryContentDirectory dir{
+      .path = canonical(romsDir).string()
+    };
+
+    libraryDatabase.createLibraryContentDirectory(dir);
+  }
+
   firelight::achievements::RAClient raClient;
   firelight::ManagerAccessor::setAchievementManager(&raClient);
 
@@ -145,6 +153,11 @@ int main(int argc, char *argv[]) {
   QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
                    &firelight::gui::LibraryItemModel::refresh);
 
+  QObject::connect(&libraryDatabase,
+                   &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
+                   &libraryManager,
+                   &LibraryScanner::startScan);
+
   libraryManager.startScan();
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
@@ -157,6 +170,8 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("library_short_model",
                                            &libSortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
+  engine.rootContext()->setContextProperty("library_scan_path_model",
+                                           libraryManager.scanDirectoryModel());
   engine.rootContext()->setContextProperty("controller_manager",
                                            &controllerListModel);
   engine.rootContext()->setContextProperty("mod_model", &modListModel);

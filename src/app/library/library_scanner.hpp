@@ -6,6 +6,10 @@
 #include <QObject>
 #include <QThreadPool>
 #include <filesystem>
+#include <QAbstractListModel>
+#include <qstringlistmodel.h>
+
+#include "../../gui/library_path_model.h"
 
 class LibraryScanner final : public QObject {
   Q_OBJECT
@@ -23,16 +27,22 @@ public:
                           std::filesystem::path default_rom_path,
                           firelight::db::IContentDatabase *content_database);
 
+  QAbstractListModel *scanDirectoryModel() const;
+
 public slots:
   void startScan();
+
   bool scanning() const;
 
 signals:
   void entryAdded(int entryId);
+
   void entryRemoved(int entryId);
+
   void entryModified(int entryId);
 
   void scanStarted();
+
   void scanFinished();
 
   void scanningChanged();
@@ -45,9 +55,14 @@ private:
   firelight::db::IContentDatabase *content_database_;
   QFileSystemWatcher directory_watcher_;
 
+  firelight::gui::LibraryPathModel *m_scanDirectoryModel = nullptr;
+  QList<QString> m_scanDirectories;
+
   std::unique_ptr<QThreadPool> scanner_thread_pool_ = nullptr;
+
   void handleScannedRomFile(const std::filesystem::directory_entry &entry,
                             ScanResults &scan_results) const;
+
   void handleScannedPatchFile(const std::filesystem::directory_entry &entry,
                               ScanResults &scan_results) const;
 };

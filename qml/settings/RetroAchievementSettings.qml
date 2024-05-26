@@ -15,14 +15,6 @@ Flickable {
         width: parent.width
         // anchors.fill: parent
 
-        Image {
-            Layout.leftMargin: 8
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-            source: "file:system/_img/RA_Logo10.png"
-            fillMode: Image.PreserveAspectFit
-        }
-
         ColumnLayout {
             Layout.fillWidth: true
 
@@ -39,11 +31,11 @@ Flickable {
                     }
 
                     contentItem: RowLayout {
-                        Rectangle {
+                        Image {
                             Layout.preferredHeight: 120
-                            Layout.preferredWidth: 120
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
-                            color: "red"
+                            source: achievement_manager.avatarUrl
+                            fillMode: Image.PreserveAspectFit
                         }
                         ColumnLayout {
                             Text {
