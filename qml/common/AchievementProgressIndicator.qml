@@ -11,13 +11,16 @@ Popup {
     height: 80
     modal: false
 
-    property string imageUrl: "file:system/_img/achieve2.png"
+    property string imageUrl: ""
     property string title: "dev messed up"
     property string description: "dev messed up"
     property int current: 0
     property int desired: 0
 
     function openWith(imageUrl, title, description, current, desired) {
+        if (!achievement_manager.progressNotificationsEnabled) {
+            return
+        }
         root.imageUrl = imageUrl
         root.title = title
         root.description = description

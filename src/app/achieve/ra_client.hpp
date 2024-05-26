@@ -17,10 +17,14 @@ namespace libretro {
 namespace firelight::achievements {
   class RAClient : public QObject {
     Q_OBJECT
-    Q_PROPERTY(bool loggedIn READ loggedIn NOTIFY loginStatusChanged)
-    Q_PROPERTY(QString displayName READ displayName NOTIFY loginSucceeded)
+    Q_PROPERTY(bool loggedIn MEMBER m_loggedIn NOTIFY loginStatusChanged)
+    Q_PROPERTY(QString displayName MEMBER m_displayName NOTIFY loginSucceeded)
     Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY loginStatusChanged)
     Q_PROPERTY(int points READ numPoints NOTIFY pointsChanged)
+    Q_PROPERTY(bool unlockNotificationsEnabled MEMBER m_unlockNotificationsEnabled NOTIFY notificationSettingsChanged)
+    Q_PROPERTY(
+      bool progressNotificationsEnabled MEMBER m_progressNotificationsEnabled NOTIFY notificationSettingsChanged)
+    Q_PROPERTY(bool challengeIndicatorsEnabled MEMBER m_challengeIndicatorsEnabled NOTIFY notificationSettingsChanged)
     // Q_PROPERTY(bool gameLoaded READ gameLoaded NOTIFY gameLoadSucceeded)
 
   public:
@@ -29,10 +33,6 @@ namespace firelight::achievements {
     ~RAClient() override;
 
     Q_INVOKABLE void logout();
-
-    [[nodiscard]] bool loggedIn() const;
-
-    QString displayName();
 
     int numPoints() const;
 
@@ -79,6 +79,8 @@ namespace firelight::achievements {
 
     void hideChallengeIndicator(int id);
 
+    void notificationSettingsChanged();
+
   public slots:
     void logInUserWithPassword(const QString &username, const QString &password);
 
@@ -92,7 +94,12 @@ namespace firelight::achievements {
     QString m_displayName;
     bool m_loggedIn = false;
     bool m_gameLoaded = false;
+    bool m_unlockNotificationsEnabled = true;
+    bool m_progressNotificationsEnabled = true;
+    bool m_challengeIndicatorsEnabled = true;
+
     rc_client_t *m_client;
+
 
     int m_frameNumber = 0;
     QTimer m_idleTimer;

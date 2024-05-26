@@ -411,9 +411,6 @@ namespace firelight::achievements {
       nullptr);
   }
 
-  bool RAClient::loggedIn() const { return m_loggedIn; }
-  QString RAClient::displayName() { return m_displayName; }
-
   int RAClient::numPoints() const {
     const auto userInfo = rc_client_get_user_info(m_client);
     if (userInfo == nullptr) {

@@ -17,6 +17,8 @@ ColumnLayout {
 
         AchievementProgressIndicator {
             id: achievementProgressIndicator
+
+            enabled: achievement_manager.progressNotificationsEnabled
         }
     }
 
@@ -42,8 +44,6 @@ ColumnLayout {
         GameLaunchPopup {
             id: gameLaunchPopup
         }
-
-
     }
 
     Item {

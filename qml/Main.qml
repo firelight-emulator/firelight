@@ -603,7 +603,7 @@ ApplicationWindow {
             overlayFadeIn.start()
         }
 
-        ListView {
+        ChallengeIndicatorList {
             id: challengeIndicators
             anchors.top: parent.top
             anchors.right: parent.right
@@ -611,95 +611,6 @@ ApplicationWindow {
             anchors.rightMargin: 16
             height: 100
             width: 300
-
-            model: ListModel {
-            }
-
-            spacing: 8
-
-            layoutDirection: Qt.RightToLeft
-            orientation: ListView.Horizontal
-
-            Connections {
-                target: achievement_manager
-
-                function onShowChallengeIndicator(id, imageUrl, name, description) {
-                    challengeIndicators.model.append({
-                        "id": id,
-                        "imageUrl": imageUrl,
-                        "title": name,
-                        "description": description
-                    })
-                }
-
-                function onHideChallengeIndicator(id) {
-                    // Remove the listmodel item with the matching id
-                    for (let i = 0; i < challengeIndicators.model.count; i++) {
-                        if (challengeIndicators.model.get(i).id === id) {
-                            challengeIndicators.model.remove(i)
-                            break
-                        }
-                    }
-                }
-            }
-
-            delegate: Image {
-                id: imgDelegate
-                required property int id
-                required property string imageUrl
-                required property string title
-                required property string description
-
-                width: 32
-                height: 32
-                source: imageUrl
-                fillMode: Image.PreserveAspectFit
-
-                HoverHandler {
-                    id: hovvv
-                }
-
-                ToolTip {
-                    visible: hovvv.hovered
-                    text: title + "\n" + description
-
-                    background: Rectangle {
-                        color: "#1a1b1e"
-                        radius: 4
-                    }
-
-                    contentItem: ColumnLayout {
-                        spacing: 4
-                        width: 300
-
-                        Text {
-                            id: titleText
-                            Layout.fillWidth: true
-                            text: imgDelegate.title
-                            font.pointSize: 11
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.DemiBold
-                            elide: Text.ElideRight
-                            maximumLineCount: 1
-                            color: "white"
-                        }
-
-                        Text {
-                            id: descriptionText
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            text: imgDelegate.description
-                            font.pointSize: 10
-                            font.family: Constants.regularFontFamily
-                            wrapMode: Text.WordWrap
-                            verticalAlignment: Text.AlignVCenter
-                            font.weight: Font.Normal
-                            color: "#c1c1c1"
-                        }
-                    }
-
-                }
-            }
         }
 
         states: [

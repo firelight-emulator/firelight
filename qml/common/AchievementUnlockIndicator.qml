@@ -10,6 +10,9 @@ Popup {
     property string description: "dev messed up"
 
     function openWith(imageUrl, title, description) {
+        if (!achievement_manager.unlockNotificationsEnabled) {
+            return
+        }
         popup.url = imageUrl
         popup.title = title
         popup.description = description
