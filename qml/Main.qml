@@ -607,8 +607,8 @@ ApplicationWindow {
             id: challengeIndicators
             anchors.top: parent.top
             anchors.right: parent.right
-            anchors.topMargin: 8
-            anchors.rightMargin: 8
+            anchors.topMargin: 16
+            anchors.rightMargin: 16
             height: 100
             width: 300
 
