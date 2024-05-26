@@ -43,7 +43,9 @@ ApplicationWindow {
             target: achievement_manager
 
             function onAchievementProgressUpdated(imageUrl, id, name, description, current, desired) {
-                achievementProgressIndicator.openWith(imageUrl, name, description, current, desired)
+                if (achievement_manager.progressNotificationsEnabled) {
+                    achievementProgressIndicator.openWith(imageUrl, name, description, current, desired)
+                }
             }
         }
     }
@@ -55,7 +57,9 @@ ApplicationWindow {
             target: achievement_manager
 
             function onAchievementUnlocked(imageUrl, name, description) {
-                achievementUnlockIndicator.openWith(imageUrl, name, description)
+                if (achievement_manager.unlockNotificationsEnabled) {
+                    achievementUnlockIndicator.openWith(imageUrl, name, description)
+                }
             }
         }
     }
@@ -605,6 +609,8 @@ ApplicationWindow {
 
         ChallengeIndicatorList {
             id: challengeIndicators
+            visible: achievement_manager.challengeIndicatorsEnabled
+
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.topMargin: 16

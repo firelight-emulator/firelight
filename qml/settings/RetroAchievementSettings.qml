@@ -303,7 +303,11 @@ Flickable {
                 label: "Achievement unlock notifications"
                 description: "Show a notification when you earn an achievement."
 
-                checked: true
+                checked: achievement_manager.unlockNotificationsEnabled
+
+                onCheckedChanged: {
+                    achievement_manager.unlockNotificationsEnabled = checked
+                }
             }
 
             // ToggleOption {
@@ -324,7 +328,11 @@ Flickable {
                 label: "Progress notifications"
                 description: "Show a notification when you make progress on an achievement that has progress tracking."
 
-                checked: true
+                checked: achievement_manager.progressNotificationsEnabled
+
+                onCheckedChanged: {
+                    achievement_manager.progressNotificationsEnabled = checked
+                }
             }
 
             Rectangle {
@@ -354,7 +362,11 @@ Flickable {
                 label: "Challenge indicators"
                 description: "Show a small indicator on the screen when a challenge achievement is active."
 
-                checked: true
+                checked: achievement_manager.challengeIndicatorsEnabled
+
+                onCheckedChanged: {
+                    achievement_manager.challengeIndicatorsEnabled = checked
+                }
             }
 
             Rectangle {
