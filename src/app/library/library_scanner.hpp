@@ -24,7 +24,6 @@ public:
   };
 
   explicit LibraryScanner(firelight::db::ILibraryDatabase *lib_database,
-                          std::filesystem::path default_rom_path,
                           firelight::db::IContentDatabase *content_database);
 
   QAbstractListModel *scanDirectoryModel() const;
@@ -49,16 +48,15 @@ signals:
 
 private:
   bool scanning_ = false;
-  std::filesystem::path default_rom_path_;
   const int thread_pool_size_ = 1;
   firelight::db::ILibraryDatabase *library_database_;
   firelight::db::IContentDatabase *content_database_;
   QFileSystemWatcher directory_watcher_;
 
   firelight::gui::LibraryPathModel *m_scanDirectoryModel = nullptr;
-  QList<QString> m_scanDirectories;
-
   std::unique_ptr<QThreadPool> scanner_thread_pool_ = nullptr;
+
+  void refreshDirectories();
 
   void handleScannedRomFile(const std::filesystem::directory_entry &entry,
                             ScanResults &scan_results) const;

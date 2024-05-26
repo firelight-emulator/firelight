@@ -14,18 +14,15 @@ constexpr int MAX_FILESIZE_BYTES = 750000000;
 
 LibraryScanner::LibraryScanner(
   firelight::db::ILibraryDatabase *lib_database,
-  std::filesystem::path default_rom_path,
   firelight::db::IContentDatabase *content_database)
-  : default_rom_path_(std::move(default_rom_path)),
-    library_database_(lib_database), content_database_(content_database) {
+  : library_database_(lib_database), content_database_(content_database) {
   scanner_thread_pool_ = std::make_unique<QThreadPool>();
   scanner_thread_pool_->setMaxThreadCount(thread_pool_size_);
-  directory_watcher_.addPath(
-    QString::fromStdString(default_rom_path_.string()));
-
-  m_scanDirectories.append(QString::fromStdString(default_rom_path_.string()));
+  // directory_watcher_.addPath(
+  //   QString::fromStdString(default_rom_path_.string()));
 
   m_scanDirectoryModel = new firelight::gui::LibraryPathModel(*lib_database);
+  refreshDirectories();
 
   connect(m_scanDirectoryModel, &QAbstractListModel::dataChanged,
           [this](const QModelIndex &topLeft, const QModelIndex &bottomRight,
@@ -56,57 +53,61 @@ void LibraryScanner::startScan() {
         scanning_ = true;
         ScanResults scan_results;
 
-        for (const auto &entry:
-             std::filesystem::recursive_directory_iterator(default_rom_path_)) {
-          if (entry.is_directory()) {
-            continue;
-          }
+        auto paths = library_database_->getAllLibraryContentDirectories();
+        for (const auto &path: paths) {
+          for (const auto &entry:
+               std::filesystem::recursive_directory_iterator(path.path)) {
+            if (entry.is_directory()) {
+              continue;
+            }
 
-          auto filesize = entry.file_size();
-          if (filesize > MAX_FILESIZE_BYTES) {
-            spdlog::debug("File {} (size {}) too large; skipping",
-                          entry.path().filename().string(), entry.file_size());
-            continue;
-          }
+            auto filesize = entry.file_size();
+            if (filesize > MAX_FILESIZE_BYTES) {
+              spdlog::debug("File {} (size {}) too large; skipping",
+                            entry.path().filename().string(), entry.file_size());
+              continue;
+            }
 
-          auto filename = canonical(entry.path()).string();
-          scan_results.all_filenames.emplace_back(filename);
+            auto filename = canonical(entry.path()).string();
+            scan_results.all_filenames.emplace_back(filename);
 
-          auto existing = library_database_->getMatchingLibraryEntries(
-            firelight::db::LibraryEntry{.contentPath = filename});
-          if (!existing.empty()) {
-            spdlog::debug("Found library entry with filename {}; skipping",
-                          filename);
-            continue;
-          }
+            auto existing = library_database_->getMatchingLibraryEntries(
+              firelight::db::LibraryEntry{.contentPath = filename});
+            if (!existing.empty()) {
+              spdlog::debug("Found library entry with filename {}; skipping",
+                            filename);
+              continue;
+            }
 
-          std::vector<char> contents(filesize);
-          std::ifstream file(entry.path(), std::ios::binary);
+            std::vector<char> contents(filesize);
+            std::ifstream file(entry.path(), std::ios::binary);
 
-          file.read(contents.data(), filesize);
-          file.close();
+            file.read(contents.data(), filesize);
+            file.close();
 
-          auto contentId = calculateMD5(contents.data(), filesize);
-          // Check if we have an entry with this md5 - if so, update the
-          // filename
+            auto contentId = calculateMD5(contents.data(), filesize);
+            // Check if we have an entry with this md5 - if so, update the
+            // filename
 
-          // Check if it's a rom or a patch
+            // Check if it's a rom or a patch
 
-          // Check against content database
+            // Check against content database
 
-          if (auto ext = entry.path().extension();
-            ext.string() == ".mod" || ext.string() == ".ips" ||
-            ext.string() == ".ups" || ext.string() == ".bps" ||
-            ext.string() == ".ups") {
-            handleScannedPatchFile(entry, scan_results);
-          } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
-                     ext.string() == ".v64" || ext.string() == ".z64" ||
-                     ext.string() == ".gb" || ext.string() == ".gbc" ||
-                     ext.string() == ".gba" || ext.string() == ".nds" ||
-                     ext.string() == ".md" || ext.string() == ".sfc") {
-            handleScannedRomFile(entry, scan_results);
+            if (auto ext = entry.path().extension();
+              ext.string() == ".mod" || ext.string() == ".ips" ||
+              ext.string() == ".ups" || ext.string() == ".bps" ||
+              ext.string() == ".ups") {
+              handleScannedPatchFile(entry, scan_results);
+            } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
+                       ext.string() == ".v64" || ext.string() == ".z64" ||
+                       ext.string() == ".gb" || ext.string() == ".gbc" ||
+                       ext.string() == ".gba" || ext.string() == ".nds" ||
+                       ext.string() == ".md" || ext.string() == ".sfc") {
+              handleScannedRomFile(entry, scan_results);
+            }
           }
         }
+
 
         auto allPaths = library_database_->getAllContentPaths();
 
@@ -137,6 +138,14 @@ void LibraryScanner::startScan() {
 }
 
 bool LibraryScanner::scanning() const { return scanning_; }
+
+void LibraryScanner::refreshDirectories() {
+  auto dirs = library_database_->getAllLibraryContentDirectories();
+
+  for (const auto &dir: dirs) {
+    directory_watcher_.addPath(QString::fromStdString(dir.path));
+  }
+}
 
 void LibraryScanner::handleScannedRomFile(
   const std::filesystem::directory_entry &entry,

@@ -16,12 +16,17 @@ namespace firelight::achievements {
     auto raClient = static_cast<RAClient *>(rc_client_get_userdata(client));
 
     switch (event->type) {
-      case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
-        emit raClient->achievementUnlocked(
-          QString(event->achievement->title),
-          QString(event->achievement->description));
+      case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED: {
+        char urlBuffer[256];
+
+        auto success = rc_client_achievement_get_image_url(
+          event->achievement, RC_CLIENT_ACHIEVEMENT_STATE_UNLOCKED, urlBuffer, 256);
+        emit raClient->achievementUnlocked(QString(urlBuffer),
+                                           QString(event->achievement->title),
+                                           QString(event->achievement->description));
         emit raClient->pointsChanged();
         break;
+      }
       case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW:
         printf("Challenge show: %s: %s\n", event->achievement->title,
                event->achievement->description);

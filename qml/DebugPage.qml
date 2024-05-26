@@ -24,7 +24,7 @@ ColumnLayout {
         text: "toggle achievement"
 
         onClicked: {
-            achievementUnlockIndicator.openWith("Mighty Morphin' Shy Guys", "Defeat the groups of two Red, Pink, Yellow, Green, and Blue Shy Guys IN ORDER in the Blue Zone of Shy Guys Toybox")
+            achievementUnlockIndicator.openWith("", "Mighty Morphin' Shy Guys", "Defeat the groups of two Red, Pink, Yellow, Green, and Blue Shy Guys IN ORDER in the Blue Zone of Shy Guys Toybox")
         }
 
         AchievementUnlockIndicator {

@@ -59,7 +59,7 @@ namespace firelight::achievements {
 
     void loginStatusChanged();
 
-    void achievementUnlocked(QString title, QString description);
+    void achievementUnlocked(QString imageUrl, QString title, QString description);
 
     void gameLoadSucceeded();
 

@@ -29,6 +29,7 @@ ApplicationWindow {
 
         Connections {
             target: achievement_manager
+
             function onGameLoadSucceeded() {
                 gameLaunchPopup.open()
             }
@@ -53,8 +54,8 @@ ApplicationWindow {
         Connections {
             target: achievement_manager
 
-            function onAchievementUnlocked(name, description) {
-                achievementUnlockIndicator.openWith(name, description)
+            function onAchievementUnlocked(imageUrl, name, description) {
+                achievementUnlockIndicator.openWith(imageUrl, name, description)
             }
         }
     }
@@ -763,7 +764,7 @@ ApplicationWindow {
 
         initialItem: emulator
 
-        Keys.onEscapePressed: function(event) {
+        Keys.onEscapePressed: function (event) {
             if (event.isAutoRepeat) {
                 return
             }

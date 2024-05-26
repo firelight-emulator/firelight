@@ -5,10 +5,12 @@ import QtQuick.Layouts
 Popup {
     id: popup
 
+    property string url: ""
     property string title: "dev messed up"
     property string description: "dev messed up"
 
-    function openWith(title, description) {
+    function openWith(imageUrl, title, description) {
+        popup.url = imageUrl
         popup.title = title
         popup.description = description
         popup.open()
@@ -162,7 +164,7 @@ Popup {
             anchors.bottom: parent.bottom
             width: parent.height
             fillMode: Image.PreserveAspectFit
-            source: "file:system/_img/achieve.png"
+            source: popup.url
         }
 
         ColumnLayout {

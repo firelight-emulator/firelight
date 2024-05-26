@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
   firelight::gui::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);
 
-  LibraryScanner libraryManager(&libraryDatabase, romsDir, &contentDatabase);
+  LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
   QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
