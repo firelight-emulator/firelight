@@ -10,7 +10,6 @@
 
 EmulatorRenderer::EmulatorRenderer(const EmulationManager *manager) {
   initializeOpenGLFunctions();
-  printf("NEW RENDERER\n");
   m_manager = const_cast<EmulationManager *>(manager);
   m_manager->setReceiveVideoDataFunction(
     [this](const void *data, unsigned width, unsigned height, size_t pitch) {
@@ -63,7 +62,6 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 
 void EmulatorRenderer::render() {
   if (m_resetContextFunction) {
-    printf("Calling context reset\n");
     m_resetContextFunction();
     m_resetContextFunction = nullptr;
   }

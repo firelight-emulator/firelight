@@ -6,8 +6,6 @@
 #include <QObject>
 #include <QThreadPool>
 #include <filesystem>
-#include <QAbstractListModel>
-#include <qstringlistmodel.h>
 
 #include "../../gui/library_path_model.h"
 

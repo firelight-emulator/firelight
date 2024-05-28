@@ -166,103 +166,119 @@ Flickable {
                 color: "#c1c1c1"
             }
 
-            Item {
+            RadioButton {
                 Layout.fillWidth: true
-                Layout.minimumHeight: 140
-                RadioButton {
-                    anchors.left: parent.left
-                    height: parent.height
-                    width: parent.width / 2 - 8
-                    checked: true
-                    horizontalPadding: 12
-                    verticalPadding: 6
+                Layout.preferredHeight: 140
+                checked: achievement_manager.defaultToHardcore
+                horizontalPadding: 12
+                verticalPadding: 6
 
-                    background: Rectangle {
-                        radius: 8
-                        color: "#333333"
-                        border.color: parent.checked ? "#f16205" : "transparent"
-                        border.width: 3
-                    }
+                background: Rectangle {
+                    radius: 8
+                    color: "#333333"
+                    border.color: parent.checked ? "#f16205" : "transparent"
+                    border.width: 3
+                }
 
-                    indicator: Item {
-                    }
+                indicator: Item {
+                }
 
-                    HoverHandler {
-                        id: hardcoreHover
-                        cursorShape: Qt.PointingHandCursor
-                    }
-
-                    contentItem: ColumnLayout {
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Hardcore mode"
-                            color: "white"
-                            font.pointSize: 11
-                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.DemiBold
-                        }
-
-                        Text {
-                            text: "Challenge yourself and earn Mastery points by disabling save states, cheats, and rewinding."
-                            Layout.fillWidth: true
-                            wrapMode: Text.WordWrap
-                            font.pointSize: 11
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.Normal
-                            color: "#c1c1c1"
-                        }
-                        Item {
-                            Layout.fillHeight: true
-                        }
+                onCheckedChanged: {
+                    if (checked) {
+                        achievement_manager.defaultToHardcore = true
                     }
                 }
-                RadioButton {
-                    anchors.right: parent.right
-                    height: parent.height
-                    width: parent.width / 2 - 8
-                    horizontalPadding: 12
-                    verticalPadding: 6
 
-                    background: Rectangle {
-                        radius: 8
-                        color: "#333333"
-                        border.color: parent.checked ? "#f16205" : "transparent"
-                        border.width: 3
+                HoverHandler {
+                    id: hardcoreHover
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                contentItem: ColumnLayout {
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Hardcore mode"
+                        color: "white"
+                        font.pointSize: 11
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.DemiBold
                     }
 
-                    indicator: Item {
+                    Text {
+                        text: "Challenge yourself and earn Mastery points by disabling save states, cheats, and rewinding."
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        font.pointSize: 11
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        color: "#c1c1c1"
+                    }
+                    Item {
+                        Layout.fillHeight: true
+                    }
+                }
+            }
+
+            RadioButton {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 60
+                horizontalPadding: 12
+                checked: !achievement_manager.defaultToHardcore
+                verticalPadding: 6
+
+                background: Rectangle {
+                    radius: 8
+                    color: "#333333"
+                    border.color: parent.checked ? "#f16205" : "transparent"
+                    border.width: 3
+                }
+
+                indicator: Item {
+                }
+
+                onCheckedChanged: {
+                    if (checked) {
+                        achievement_manager.defaultToHardcore = false
+                    }
+                }
+
+                Connections {
+                    target: achievement_manager
+
+                    function onDefaultToHardcoreChanged() {
+                        console.log(":)")
+                    }
+                }
+
+                HoverHandler {
+                    id: casualHover
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                contentItem: ColumnLayout {
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Casual mode"
+                        color: "white"
+                        font.pointSize: 11
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.DemiBold
                     }
 
-                    HoverHandler {
-                        id: casualHover
-                        cursorShape: Qt.PointingHandCursor
+                    Text {
+                        text: "Play with save states, cheats, and rewinding enabled."
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        font.pointSize: 11
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        color: "#c1c1c1"
                     }
 
-                    contentItem: ColumnLayout {
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Casual mode"
-                            color: "white"
-                            font.pointSize: 11
-                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.DemiBold
-                        }
-
-                        Text {
-                            text: "Play with save states, cheats, and rewinding enabled."
-                            Layout.fillWidth: true
-                            wrapMode: Text.WordWrap
-                            font.pointSize: 11
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.Normal
-                            color: "#c1c1c1"
-                        }
-
-                        Item {
-                            Layout.fillHeight: true
-                        }
+                    Item {
+                        Layout.fillHeight: true
                     }
                 }
             }
@@ -344,21 +360,6 @@ Flickable {
             ToggleOption {
                 Layout.fillWidth: true
                 Layout.minimumHeight: 42
-                label: "Completion notifications"
-                description: "Show a notification when you earn all of the achievements for a game."
-
-                checked: true
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
-            }
-
-            ToggleOption {
-                Layout.fillWidth: true
-                Layout.minimumHeight: 42
                 label: "Challenge indicators"
                 description: "Show a small indicator on the screen when a challenge achievement is active."
 
@@ -374,6 +375,21 @@ Flickable {
                 Layout.preferredHeight: 1
                 color: "#333333"
             }
+
+            // ToggleOption {
+            //     Layout.fillWidth: true
+            //     Layout.minimumHeight: 42
+            //     label: "Completion notifications"
+            //     description: "Show a notification when you earn all of the achievements for a game."
+            //
+            //     checked: true
+            // }
+            //
+            // Rectangle {
+            //     Layout.fillWidth: true
+            //     Layout.preferredHeight: 1
+            //     color: "#333333"
+            // }
 
             Item {
                 Layout.fillWidth: true

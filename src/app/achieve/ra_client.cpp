@@ -178,13 +178,15 @@ namespace firelight::achievements {
     rc_client_set_event_handler(m_client, eventHandler);
     rc_client_set_userdata(m_client, this);
 
-    rc_client_set_hardcore_enabled(m_client, 0);
-
     m_idleTimer.setInterval(2000);
     connect(&m_idleTimer, &QTimer::timeout, this,
             [this] { rc_client_idle(m_client); });
 
     m_settings = std::make_unique<QSettings>();
+
+    m_defaultToHardcore = m_settings->value("retroachievements/defaultToHardcore", true).toBool();
+    rc_client_set_hardcore_enabled(m_client, m_defaultToHardcore);
+
     const auto user =
         m_settings->value("retroachievements/username", "").toString();
     const auto token =
@@ -317,6 +319,12 @@ namespace firelight::achievements {
       rc_client_do_frame(m_client);
       QMetaObject::invokeMethod(&m_idleTimer, "start", Qt::QueuedConnection);
     }
+  }
+
+  void RAClient::setDefaultToHardcore(const bool hardcore) {
+    m_defaultToHardcore = hardcore;
+    rc_client_set_hardcore_enabled(m_client, hardcore);
+    m_settings->setValue("retroachievements/defaultToHardcore", hardcore);
   }
 
   // bool RAClient::gameLoaded() const { return m_gameLoaded; }

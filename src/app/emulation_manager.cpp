@@ -59,12 +59,21 @@ EmulationManager::EmulationManager(QQuickItem *parent)
       }
     },
     Qt::QueuedConnection);
+
+  m_autosaveTimer.setInterval(SAVE_FREQUENCY_MILLIS);
+  m_autosaveTimer.setSingleShot(false);
+  m_autosaveTimer.callOnTimeout([this] {
+    spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
+    save();
+  });
 }
 
 EmulationManager::~EmulationManager() {
   if (!m_isRunning) {
     return;
   }
+
+  QMetaObject::invokeMethod(&m_autosaveTimer, "stop", Qt::QueuedConnection);
 
   m_isRunning = false;
 
@@ -87,8 +96,6 @@ EmulationManager::~EmulationManager() {
     // m_core->deinit();
     // m_core.reset();
   }
-
-  printf("End of emulation manager destructor\n");
 }
 
 QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
@@ -102,7 +109,6 @@ void EmulationManager::setGetProcAddressFunction(
 
 std::function<void()> EmulationManager::consumeContextResetFunction() {
   if (m_resetContextFunction) {
-    printf("giving it\n");
     auto func = m_resetContextFunction;
     m_resetContextFunction = nullptr;
     return func;
@@ -210,6 +216,7 @@ void EmulationManager::startEmulation() {
     m_isRunning = true;
     m_paused = false;
     m_playtimeTimer.start();
+    QMetaObject::invokeMethod(&m_autosaveTimer, "start", Qt::QueuedConnection);
 
     emit emulationStarted();
   });
@@ -219,6 +226,8 @@ void EmulationManager::stopEmulation() {
   if (!m_isRunning) {
     return;
   }
+
+  QMetaObject::invokeMethod(&m_autosaveTimer, "stop", Qt::QueuedConnection);
 
   QThreadPool::globalInstance()->start([this] {
     m_currentPlaySession->endTime = QDateTime::currentMSecsSinceEpoch();
@@ -271,7 +280,6 @@ void EmulationManager::resetEmulation() {
 bool EmulationManager::isRunning() const { return m_isRunning; }
 
 void EmulationManager::save(const bool waitForFinish) {
-  spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
   firelight::saves::Savefile saveData(
     m_core->getMemoryData(libretro::SAVE_RAM));
   // saveData.setImage(m_fbo->toImage());

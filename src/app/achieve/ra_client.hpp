@@ -20,6 +20,7 @@ namespace firelight::achievements {
     Q_PROPERTY(bool loggedIn MEMBER m_loggedIn NOTIFY loginStatusChanged)
     Q_PROPERTY(QString displayName MEMBER m_displayName NOTIFY loginSucceeded)
     Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY loginStatusChanged)
+    Q_PROPERTY(bool defaultToHardcore MEMBER m_defaultToHardcore WRITE setDefaultToHardcore NOTIFY defaultModeChanged)
     Q_PROPERTY(int points READ numPoints NOTIFY pointsChanged)
     Q_PROPERTY(bool unlockNotificationsEnabled MEMBER m_unlockNotificationsEnabled NOTIFY notificationSettingsChanged)
     Q_PROPERTY(
@@ -32,8 +33,6 @@ namespace firelight::achievements {
 
     ~RAClient() override;
 
-    Q_INVOKABLE void logout();
-
     int numPoints() const;
 
     QString avatarUrl() const;
@@ -43,6 +42,8 @@ namespace firelight::achievements {
     rc_libretro_memory_regions_t m_memoryRegions{};
     bool m_memorySeemsGood = false;
     int m_consoleId = 0;
+
+    void setDefaultToHardcore(bool hardcore);
 
     // bool gameLoaded() const;
 
@@ -69,6 +70,8 @@ namespace firelight::achievements {
 
     void pointsChanged();
 
+    void defaultModeChanged();
+
     void achievementProgressUpdated(QString imageUrl, int achievementId,
                                     QString title, QString description,
                                     int current, int desired);
@@ -82,6 +85,8 @@ namespace firelight::achievements {
     void notificationSettingsChanged();
 
   public slots:
+    void logout();
+
     void logInUserWithPassword(const QString &username, const QString &password);
 
     void logInUserWithToken(const QString &username, const QString &token);
@@ -97,6 +102,7 @@ namespace firelight::achievements {
     bool m_unlockNotificationsEnabled = true;
     bool m_progressNotificationsEnabled = true;
     bool m_challengeIndicatorsEnabled = true;
+    bool m_defaultToHardcore = true;
 
     rc_client_t *m_client;
 
