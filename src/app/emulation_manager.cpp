@@ -63,7 +63,7 @@ EmulationManager::EmulationManager(QQuickItem *parent)
   m_autosaveTimer.setInterval(SAVE_FREQUENCY_MILLIS);
   m_autosaveTimer.setSingleShot(false);
   m_autosaveTimer.callOnTimeout([this] {
-    spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
+    spdlog::info("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
     save();
   });
 }
