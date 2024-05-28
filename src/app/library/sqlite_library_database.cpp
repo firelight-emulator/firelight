@@ -344,7 +344,19 @@ namespace firelight::db {
   }
 
   bool SqliteLibraryDatabase::updateLibraryContentDirectory(LibraryContentDirectory &directory) {
-    return false;
+    QSqlQuery q(getDatabase());
+    q.prepare("UPDATE content_directories SET path = :path WHERE id = :id");
+    q.bindValue(":path", QString::fromStdString(directory.path));
+    q.bindValue(":id", directory.id);
+
+    if (!q.exec()) {
+      spdlog::error("Failed to update content directory: {}",
+                    q.lastError().text().toStdString());
+      return false;
+    }
+
+    emit contentDirectoriesUpdated();
+    return true;
   }
 
   std::vector<LibraryContentDirectory> SqliteLibraryDatabase::getAllLibraryContentDirectories() const {

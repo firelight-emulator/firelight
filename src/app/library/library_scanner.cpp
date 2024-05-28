@@ -78,14 +78,6 @@ void LibraryScanner::startScan() {
                             filename);
               continue;
             }
-
-            std::vector<char> contents(filesize);
-            std::ifstream file(entry.path(), std::ios::binary);
-
-            file.read(contents.data(), filesize);
-            file.close();
-
-            auto contentId = calculateMD5(contents.data(), filesize);
             // Check if we have an entry with this md5 - if so, update the
             // filename
 
@@ -97,12 +89,26 @@ void LibraryScanner::startScan() {
               ext.string() == ".mod" || ext.string() == ".ips" ||
               ext.string() == ".ups" || ext.string() == ".bps" ||
               ext.string() == ".ups") {
+              std::vector<char> contents(filesize);
+              std::ifstream file(entry.path(), std::ios::binary);
+
+              file.read(contents.data(), filesize);
+              file.close();
+
+              auto contentId = calculateMD5(contents.data(), filesize);
               handleScannedPatchFile(entry, scan_results);
             } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
                        ext.string() == ".v64" || ext.string() == ".z64" ||
                        ext.string() == ".gb" || ext.string() == ".gbc" ||
                        ext.string() == ".gba" || ext.string() == ".nds" ||
                        ext.string() == ".md" || ext.string() == ".sfc") {
+              std::vector<char> contents(filesize);
+              std::ifstream file(entry.path(), std::ios::binary);
+
+              file.read(contents.data(), filesize);
+              file.close();
+
+              auto contentId = calculateMD5(contents.data(), filesize);
               handleScannedRomFile(entry, scan_results);
             }
           }

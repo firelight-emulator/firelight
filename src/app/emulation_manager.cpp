@@ -23,7 +23,7 @@
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 EmulationManager::EmulationManager(QQuickItem *parent)
-    : QQuickFramebufferObject(parent) {
+  : QQuickFramebufferObject(parent) {
   setTextureFollowsItemSize(false);
   setMirrorVertically(true);
   setFlag(ItemHasContents);
@@ -36,29 +36,29 @@ EmulationManager::EmulationManager(QQuickItem *parent)
           &QQuickFramebufferObject::update, Qt::QueuedConnection);
 
   connect(
-      this, &EmulationManager::gameLoadSucceeded, this,
-      [this] {
-        m_gameLoadedSignalReady = true;
-        if (m_achievementsLoadedSignalReady) {
-          emit readyToStart();
-          m_gameLoadedSignalReady = false;
-          m_achievementsLoadedSignalReady = false;
-        }
-      },
-      Qt::QueuedConnection);
+    this, &EmulationManager::gameLoadSucceeded, this,
+    [this] {
+      m_gameLoadedSignalReady = true;
+      if (m_achievementsLoadedSignalReady) {
+        emit readyToStart();
+        m_gameLoadedSignalReady = false;
+        m_achievementsLoadedSignalReady = false;
+      }
+    },
+    Qt::QueuedConnection);
 
   connect(
-      getAchievementManager(),
-      &firelight::achievements::RAClient::gameLoadSucceeded, this,
-      [this] {
-        m_achievementsLoadedSignalReady = true;
-        if (m_gameLoadedSignalReady) {
-          emit readyToStart();
-          m_gameLoadedSignalReady = false;
-          m_achievementsLoadedSignalReady = false;
-        }
-      },
-      Qt::QueuedConnection);
+    getAchievementManager(),
+    &firelight::achievements::RAClient::gameLoadSucceeded, this,
+    [this] {
+      m_achievementsLoadedSignalReady = true;
+      if (m_gameLoadedSignalReady) {
+        emit readyToStart();
+        m_gameLoadedSignalReady = false;
+        m_achievementsLoadedSignalReady = false;
+      }
+    },
+    Qt::QueuedConnection);
 }
 
 EmulationManager::~EmulationManager() {
@@ -96,9 +96,10 @@ QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
 }
 
 void EmulationManager::setGetProcAddressFunction(
-    const std::function<proc_address_t(const char *)> &getProcAddressFunction) {
+  const std::function<proc_address_t(const char *)> &getProcAddressFunction) {
   m_getProcAddressFunction = getProcAddressFunction;
 }
+
 std::function<void()> EmulationManager::consumeContextResetFunction() {
   if (m_resetContextFunction) {
     printf("giving it\n");
@@ -109,6 +110,7 @@ std::function<void()> EmulationManager::consumeContextResetFunction() {
 
   return nullptr;
 }
+
 std::function<void()> EmulationManager::consumeContextDestroyFunction() {
   if (m_destroyContextFunction) {
     auto func = m_destroyContextFunction;
@@ -120,8 +122,8 @@ std::function<void()> EmulationManager::consumeContextDestroyFunction() {
 }
 
 void EmulationManager::setReceiveVideoDataFunction(
-    const std::function<void(const void *data, unsigned width, unsigned height,
-                             size_t pitch)> &receiveVideoDataFunction) {
+  const std::function<void(const void *data, unsigned width, unsigned height,
+                           size_t pitch)> &receiveVideoDataFunction) {
   m_receiveVideoDataFunction = receiveVideoDataFunction;
 }
 
@@ -135,6 +137,7 @@ QString EmulationManager::currentGameName() const {
 
 int EmulationManager::nativeWidth() const { return m_nativeWidth; }
 int EmulationManager::nativeHeight() const { return m_nativeHeight; }
+
 float EmulationManager::nativeAspectRatio() const {
   return m_nativeAspectRatio;
 }
@@ -161,7 +164,7 @@ void EmulationManager::setResetContextFunc(context_reset_func resetFunction) {
 }
 
 void EmulationManager::setDestroyContextFunc(
-    context_destroy_func destroyFunction) {
+  context_destroy_func destroyFunction) {
   printf("Setting destroy context function\n");
   m_usingHwRendering = true;
   m_destroyContextFunction = destroyFunction;
@@ -254,7 +257,7 @@ void EmulationManager::stopEmulation() {
 
     emit emulationStopped();
   });
-  
+
   update();
 }
 
@@ -270,7 +273,7 @@ bool EmulationManager::isRunning() const { return m_isRunning; }
 void EmulationManager::save(const bool waitForFinish) {
   spdlog::debug("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
   firelight::saves::Savefile saveData(
-      m_core->getMemoryData(libretro::SAVE_RAM));
+    m_core->getMemoryData(libretro::SAVE_RAM));
   // saveData.setImage(m_fbo->toImage());
 
   QFuture<bool> result =
@@ -309,7 +312,6 @@ void EmulationManager::setSystemAVInfo(retro_system_av_info *info) {
 
 bool EmulationManager::runFrame() {
   if (shouldUnload) {
-    printf("Unloading on thread: %p\n", QThread::currentThreadId());
     m_core->unloadGame();
     m_core->deinit();
     m_core.reset();
@@ -514,7 +516,6 @@ void EmulationManager::loadLibraryEntry(int entryId) {
       m_saveData = saveDataBytes;
       m_corePath = QString::fromStdString(corePath);
     } else {
-
       std::string corePath;
       if (entry->platformId == 7) {
         corePath = "./system/_cores/mupen64plus_next_libretro.dll";
@@ -569,8 +570,8 @@ void EmulationManager::loadLibraryEntry(int entryId) {
     m_core->init();
 
     libretro::Game game(
-        entry->contentPath,
-        vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
+      entry->contentPath,
+      vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
     m_core->loadGame(&game);
 
     if (m_saveData.size() > 0) {

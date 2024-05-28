@@ -183,6 +183,7 @@ add_custom_target(copy_resources ALL
 
 file(COPY ${CMAKE_SOURCE_DIR}/_cores DESTINATION ${CMAKE_BINARY_DIR}/system)
 file(COPY ${CMAKE_SOURCE_DIR}/_img DESTINATION ${CMAKE_BINARY_DIR}/system)
+file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
 
 #add_executable(fl_test
 #        tests/app/patching/pm_star_rod_mod_patch_test.cpp

@@ -15,18 +15,23 @@ public:
 
 protected:
   void synchronize(QQuickFramebufferObject *fbo) override;
+
   QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
+
   void render() override;
 
 private:
   EmulationManager *m_manager = nullptr;
   QOpenGLFramebufferObject *m_fbo = nullptr;
 
+  bool m_runAFrame = false;
+
   int m_nativeWidth = 0;
   int m_nativeHeight = 0;
 
   void receiveVideoData(const void *data, unsigned width, unsigned height,
                         size_t pitch) const;
+
   std::function<void()> m_resetContextFunction = nullptr;
   std::function<void()> m_destroyContextFunction = nullptr;
 };

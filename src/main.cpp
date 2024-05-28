@@ -150,13 +150,13 @@ int main(int argc, char *argv[]) {
   LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
-                   &firelight::gui::LibraryItemModel::refresh);
-
   QObject::connect(&libraryDatabase,
                    &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
                    &libraryManager,
                    &LibraryScanner::startScan);
+
+  QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
+                   &firelight::gui::LibraryItemModel::refresh);
 
   libraryManager.startScan();
 

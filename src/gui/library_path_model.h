@@ -10,7 +10,7 @@ namespace firelight::gui {
 
         std::vector<db::LibraryContentDirectory> m_items;
         std::unique_ptr<QSettings> m_settings;
-        const db::ILibraryDatabase &m_libraryDatabase;
+        db::ILibraryDatabase &m_libraryDatabase;
 
     public:
         enum Roles {
@@ -19,7 +19,7 @@ namespace firelight::gui {
             NumGameFiles
         };
 
-        LibraryPathModel(const db::ILibraryDatabase &libraryDatabase);
+        LibraryPathModel(db::ILibraryDatabase &libraryDatabase);
 
         int rowCount(const QModelIndex &parent) const override;
 

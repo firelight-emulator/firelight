@@ -1,7 +1,7 @@
 #include "library_path_model.h"
 
 namespace firelight::gui {
-    LibraryPathModel::LibraryPathModel(const db::ILibraryDatabase &libraryDatabase) : m_libraryDatabase(
+    LibraryPathModel::LibraryPathModel(db::ILibraryDatabase &libraryDatabase) : m_libraryDatabase(
         libraryDatabase) {
         // m_settings = std::make_unique<QSettings>();
         m_items = m_libraryDatabase.getAllLibraryContentDirectories();
@@ -45,7 +45,7 @@ namespace firelight::gui {
         switch (role) {
             case Path:
                 item.path = QUrl(value.toString()).toLocalFile().toStdString();
-                printf("Changing path to: %s\n", item.path.c_str());
+                m_libraryDatabase.updateLibraryContentDirectory(item);
 
                 emit dataChanged(index, index, {Path, LocalFilename});
                 return true;
