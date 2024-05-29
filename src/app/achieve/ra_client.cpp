@@ -184,6 +184,10 @@ namespace firelight::achievements {
 
     m_settings = std::make_unique<QSettings>();
 
+    m_progressNotificationsEnabled = m_settings->value("retroachievements/progressNotificationsEnabled", true).toBool();
+    m_unlockNotificationsEnabled = m_settings->value("retroachievements/unlockNotificationsEnabled", true).toBool();
+    m_challengeIndicatorsEnabled = m_settings->value("retroachievements/challengeIndicatorsEnabled", true).toBool();
+
     m_defaultToHardcore = m_settings->value("retroachievements/defaultToHardcore", true).toBool();
     rc_client_set_hardcore_enabled(m_client, m_defaultToHardcore);
 
@@ -325,6 +329,21 @@ namespace firelight::achievements {
     m_defaultToHardcore = hardcore;
     rc_client_set_hardcore_enabled(m_client, hardcore);
     m_settings->setValue("retroachievements/defaultToHardcore", hardcore);
+  }
+
+  void RAClient::setUnlockNotificationsEnabled(const bool enabled) {
+    m_unlockNotificationsEnabled = enabled;
+    m_settings->setValue("retroachievements/unlockNotificationsEnabled", enabled);
+  }
+
+  void RAClient::setProgressNotificationsEnabled(bool enabled) {
+    m_progressNotificationsEnabled = enabled;
+    m_settings->setValue("retroachievements/progressNotificationsEnabled", enabled);
+  }
+
+  void RAClient::setChallengeIndicatorsEnabled(bool enabled) {
+    m_challengeIndicatorsEnabled = enabled;
+    m_settings->setValue("retroachievements/challengeIndicatorsEnabled", enabled);
   }
 
   // bool RAClient::gameLoaded() const { return m_gameLoaded; }

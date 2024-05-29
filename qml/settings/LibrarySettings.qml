@@ -71,17 +71,22 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Text {
+                    // Text {
+                    //     Layout.fillHeight: true
+                    //     Layout.fillWidth: true
+                    //     // height: parent.height / 2
+                    //     text: "Contains 0 games"
+                    //     color: "#c1c1c1"
+                    //     wrapMode: Text.WordWrap
+                    //     font.pointSize: 10
+                    //     font.family: Constants.regularFontFamily
+                    //     verticalAlignment: Text.AlignTop
+                    //     horizontalAlignment: Text.AlignLeft
+                    // }
+
+                    Item {
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                        // height: parent.height / 2
-                        text: "Contains 0 games"
-                        color: "#c1c1c1"
-                        wrapMode: Text.WordWrap
-                        font.pointSize: 10
-                        font.family: Constants.regularFontFamily
-                        verticalAlignment: Text.AlignTop
-                        horizontalAlignment: Text.AlignLeft
                     }
 
                     Button {

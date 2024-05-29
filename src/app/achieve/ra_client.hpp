@@ -22,10 +22,15 @@ namespace firelight::achievements {
     Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY loginStatusChanged)
     Q_PROPERTY(bool defaultToHardcore MEMBER m_defaultToHardcore WRITE setDefaultToHardcore NOTIFY defaultModeChanged)
     Q_PROPERTY(int points READ numPoints NOTIFY pointsChanged)
-    Q_PROPERTY(bool unlockNotificationsEnabled MEMBER m_unlockNotificationsEnabled NOTIFY notificationSettingsChanged)
     Q_PROPERTY(
-      bool progressNotificationsEnabled MEMBER m_progressNotificationsEnabled NOTIFY notificationSettingsChanged)
-    Q_PROPERTY(bool challengeIndicatorsEnabled MEMBER m_challengeIndicatorsEnabled NOTIFY notificationSettingsChanged)
+      bool unlockNotificationsEnabled MEMBER m_unlockNotificationsEnabled WRITE setUnlockNotificationsEnabled NOTIFY
+      notificationSettingsChanged)
+    Q_PROPERTY(
+      bool progressNotificationsEnabled MEMBER m_progressNotificationsEnabled WRITE setProgressNotificationsEnabled
+      NOTIFY notificationSettingsChanged)
+    Q_PROPERTY(
+      bool challengeIndicatorsEnabled MEMBER m_challengeIndicatorsEnabled WRITE setChallengeIndicatorsEnabled NOTIFY
+      notificationSettingsChanged)
     // Q_PROPERTY(bool gameLoaded READ gameLoaded NOTIFY gameLoadSucceeded)
 
   public:
@@ -44,6 +49,12 @@ namespace firelight::achievements {
     int m_consoleId = 0;
 
     void setDefaultToHardcore(bool hardcore);
+
+    void setUnlockNotificationsEnabled(bool enabled);
+
+    void setProgressNotificationsEnabled(bool enabled);
+
+    void setChallengeIndicatorsEnabled(bool enabled);
 
     // bool gameLoaded() const;
 

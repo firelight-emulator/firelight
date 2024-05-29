@@ -96,6 +96,10 @@ namespace firelight::saves {
 
     const auto saveFile = directory / "savefile.srm";
 
+    if (!exists(saveFile)) {
+      return std::nullopt;
+    }
+
     std::ifstream saveFileStream(saveFile, std::ios::binary);
 
     auto size = file_size(saveFile);
