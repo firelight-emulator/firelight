@@ -120,10 +120,10 @@ namespace libretro {
         // return false;
         // }
 
-        // auto ptr = static_cast<const char **>(data);
-        // *ptr = R"(C:\Users\alexs\git\firelight\build\system)";
+        auto ptr = static_cast<const char **>(data);
+        *ptr = R"(C:\Users\alexs\git\firelight\build\system)";
         // *ptr = &systemDirectory[0];
-        return false;
+        return true;
       }
       case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
