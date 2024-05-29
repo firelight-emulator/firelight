@@ -11,6 +11,8 @@ Item {
     readonly property color primary300: "#a9d3f3"
     readonly property color primary200: "#edf6fd"
 
+
+    readonly property color neutral900: "#1a222c"
     readonly property color neutral800: "#212934"
     readonly property color neutral700: "#5f6b79"
     readonly property color neutral600: "#8794a6"
@@ -18,6 +20,11 @@ Item {
     readonly property color neutral400: "#ced5dd"
     readonly property color neutral300: "#e0e6eb"
     readonly property color neutral200: "#f6f7f8"
+
+    readonly property color red900: "#b71c1c"
+    readonly property color red700: "#ca1f17"
+    readonly property color red500: "#d62727"
+    readonly property color red100: "#f8d7da"
 
 
     readonly property color backgroundColorOne: "#2d2d32"

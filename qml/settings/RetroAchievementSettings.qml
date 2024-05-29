@@ -58,13 +58,6 @@ Flickable {
                         Item {
                             Layout.fillWidth: true
                         }
-                        Button {
-                            Layout.alignment: Qt.AlignRight | Qt.AlignBottom
-                            text: "Log out"
-                            onClicked: {
-                                achievement_manager.logout()
-                            }
-                        }
                     }
 
                     // Text {
@@ -102,8 +95,29 @@ Flickable {
                         Layout.fillHeight: true
                     }
                     Button {
-                        text: qsTr("Log in")
                         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
+                        implicitWidth: 140
+                        implicitHeight: 40
+
+                        contentItem: Text {
+                            text: qsTr("Log in")
+                            color: "#272727"
+                            font.family: Constants.regularFontFamily
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pointSize: 11
+                        }
+
+                        onClicked: {
+                            control.open()
+                        }
+
+                        background: Rectangle {
+                            color: "white"
+                            radius: 4
+                        }
+
                         // background: Rectangle {
                         //     color: "#f16205"
                         //     width: 130
@@ -114,19 +128,54 @@ Flickable {
                         //     achievement_manager.showLoginDialog()
                         // }
                     }
-                    Text {
-                        // text: qsTr("<a href='https://retroachievements.org/createaccount.php'>Don't have an account?</a>")
-                        text: "Don't have an account?"
+                    Button {
                         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        font.pointSize: 10
-                        // textFormat: Text.StyledText
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Medium
-                        wrapMode: Text.WordWrap
-                        color: "#4673e4"
-                        Layout.topMargin: 2
-                        Layout.bottomMargin: 12
+                        Layout.bottomMargin: 4
+
+                        implicitWidth: 140
+                        implicitHeight: 40
+
+                        contentItem: Text {
+                            text: qsTr("Create an account")
+                            color: "white"
+                            font.family: Constants.regularFontFamily
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pointSize: 11
+                        }
+
+                        onClicked: {
+                            control.open()
+                        }
+
+                        background: Rectangle {
+                            color: "transparent"
+                            radius: 4
+                        }
+
+                        // background: Rectangle {
+                        //     color: "#f16205"
+                        //     width: 130
+                        //     height: 50
+                        //     radius: 8
+                        // }
+                        // onClicked: {
+                        //     achievement_manager.showLoginDialog()
+                        // }
                     }
+                    // Text {
+                    //     // text: qsTr("<a href='https://retroachievements.org/createaccount.php'>Don't have an account?</a>")
+                    //     text: "Don't have an account?"
+                    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    //     font.pointSize: 10
+                    //     // textFormat: Text.StyledText
+                    //     font.family: Constants.regularFontFamily
+                    //     font.weight: Font.Medium
+                    //     wrapMode: Text.WordWrap
+                    //     color: "#4673e4"
+                    //     Layout.topMargin: 2
+                    //     Layout.bottomMargin: 12
+                    // }
                 }
 
 
@@ -391,58 +440,57 @@ Flickable {
             //     color: "#333333"
             // }
 
-            Item {
-                Layout.fillWidth: true
-                Layout.minimumHeight: 42
-                Text {
-                    anchors.left: parent.left
-                    visible: !achievement_manager.loggedIn
-                    text: qsTr("Not logged in to RetroAchievements")
-                    font.pointSize: 12
-                    font.family: Constants.regularFontFamily
-                    color: "white"
-                }
-
-                Text {
-                    anchors.left: parent.left
-                    visible: achievement_manager.loggedIn
-                    text: qsTr("Logged in as %1").arg(achievement_manager.displayName)
-                    font.pointSize: 12
-                    font.family: Constants.regularFontFamily
-                    color: "white"
-                }
-            }
-
-
-            TextField {
-                id: user
-                visible: !achievement_manager.loggedIn
-                Layout.fillWidth: true
-                placeholderText: qsTr("Username")
-            }
-            TextField {
-                id: pass
-                visible: !achievement_manager.loggedIn
-                Layout.fillWidth: true
-                placeholderText: qsTr("Password")
-                echoMode: TextInput.Password
-            }
+            // TextField {
+            //     id: user
+            //     visible: !achievement_manager.loggedIn
+            //     Layout.fillWidth: true
+            //     placeholderText: qsTr("Username")
+            // }
+            // TextField {
+            //     id: pass
+            //     visible: !achievement_manager.loggedIn
+            //     Layout.fillWidth: true
+            //     placeholderText: qsTr("Password")
+            //     echoMode: TextInput.Password
+            // }
+            //
+            // Button {
+            //     Layout.alignment: Qt.AlignRight
+            //     visible: !achievement_manager.loggedIn
+            //     text: qsTr("Login")
+            //     onClicked: {
+            //         achievement_manager.logInUserWithPassword(user.text, pass.text)
+            //     }
+            // }
 
             Button {
-                Layout.alignment: Qt.AlignRight
-                visible: !achievement_manager.loggedIn
-                text: qsTr("Login")
-                onClicked: {
-                    achievement_manager.logInUserWithPassword(user.text, pass.text)
-                }
-            }
-
-            Button {
-                Layout.alignment: Qt.AlignRight
+                id: logoutButton
+                Layout.topMargin: 12
+                Layout.fillWidth: true
                 visible: achievement_manager.loggedIn
-                text: qsTr("Log out")
+                // text: qsTr("Log out of RetroAchievements")
                 onClicked: {
                     achievement_manager.logout()
+                }
+
+                implicitHeight: 48
+
+                contentItem: Text {
+                    text: qsTr("Log out of RetroAchievements")
+                    color: "white"
+                    font.pointSize: 11
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+
+                }
+
+                hoverEnabled: true
+
+                background: Rectangle {
+                    color: logoutButton.hovered ? ColorPalette.red700 : ColorPalette.red500
+                    radius: 8
                 }
             }
         }
@@ -451,6 +499,198 @@ Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
+        }
+    }
+
+    Dialog {
+        id: control
+        property string text
+
+        property string errorMessage: ""
+        property bool showButtons: true
+        modal: true
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        padding: 12
+
+        background: Rectangle {
+            color: Constants.colorTestSurfaceContainerLowest
+            radius: 6
+            implicitWidth: 400
+            implicitHeight: 200
+        }
+
+        header: Text {
+            text: "Log in to RetroAchievements"
+            color: "white"
+            font.family: Constants.regularFontFamily
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            font.pointSize: 11
+            leftPadding: 10
+            rightPadding: 10
+            topPadding: 8
+            bottomPadding: 8
+            font.weight: Font.DemiBold
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+
+            TextField {
+                id: user
+                Layout.alignment: Qt.AlignHCenter
+                placeholderText: qsTr("Username")
+
+            }
+            TextField {
+                id: pass
+                Layout.alignment: Qt.AlignHCenter
+                placeholderText: qsTr("Password")
+                echoMode: TextInput.Password
+            }
+
+            Rectangle {
+                visible: control.errorMessage.length > 0
+                Layout.fillWidth: true
+                Layout.preferredHeight: 28
+                color: "yellow"
+
+                Text {
+                    anchors.fill: parent
+                    text: control.errorMessage
+                    color: "orange"
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: 12
+
+                }
+            }
+        }
+
+        footer: DialogButtonBox {
+            background: Rectangle {
+                color: "transparent"
+            }
+            Button {
+                background: Rectangle {
+                    color: "transparent"
+                }
+                contentItem: Text {
+                    text: qsTr("Cancel")
+                    // anchors.centerIn: parent
+                    color: Constants.colorTestTextActive
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: 12
+                }
+
+                onClicked: function () {
+                    control.reject()
+                }
+
+                HoverHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    cursorShape: Qt.PointingHandCursor
+                }
+            }
+            Button {
+                anchors.verticalCenter: parent.verticalCenter
+                background: Rectangle {
+                    color: "white"
+                    radius: 6
+                }
+                contentItem: Text {
+                    text: qsTr("Log in")
+                    anchors.centerIn: parent
+                    color: Constants.colorTestBackground
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: 12
+                }
+
+                onClicked: function () {
+                    achievement_manager.logInUserWithPassword(user.text, pass.text)
+                }
+
+                Connections {
+                    target: achievement_manager
+
+                    function onLoginSucceeded() {
+                        control.accept()
+                    }
+
+                    function onLoginFailedWithInvalidCredentials() {
+                        console.log("oh no")
+                        control.errorMessage = "Invalid credentials"
+                    }
+
+                    function onLoginFailedWithExpiredToken() {
+                        console.log("oh no")
+                        control.errorMessage = "Expired token"
+                    }
+
+                    function onLoginFailedWithAccessDenied() {
+                        console.log("oh no")
+                        control.errorMessage = "Access denied"
+                    }
+
+                    function onLoginFailedWithInternalError() {
+                        console.log("oh no")
+                        control.errorMessage = "Internal error"
+                    }
+                }
+
+                HoverHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    cursorShape: Qt.PointingHandCursor
+                }
+            }
+        }
+
+        Overlay.modal: Rectangle {
+            color: "black"
+            anchors.fill: parent
+            opacity: 0.4
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 200
+                }
+            }
+        }
+
+        enter: Transition {
+            NumberAnimation {
+                property: "opacity";
+                from: 0.0;
+                to: 1.0
+                duration: 200
+            }
+            NumberAnimation {
+                property: "scale";
+                from: 0.9;
+                to: 1.0
+                duration: 200
+            }
+        }
+
+        exit: Transition {
+            NumberAnimation {
+                property: "opacity";
+                from: 1.0;
+                to: 0.0;
+                duration: 200
+            }
+            NumberAnimation {
+                property: "scale";
+                from: 1.0;
+                to: 0.9
+                duration: 200
+            }
         }
     }
 }
