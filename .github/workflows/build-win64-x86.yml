@@ -42,7 +42,7 @@ jobs:
             openssl:p
             nsis:p
 
-      - run: ln -s "${MSYSTEM_PREFIX}/bin/qtpaths.exe" "${MSYSTEM_PREFIX}/bin/qtpaths-qt6.exe"
+      - run: ln -s "${MSYSTEM_PREFIX}/bin/qtpaths-qt6.exe" "${MSYSTEM_PREFIX}/bin/qtpaths.exe"
 
       - run: git config --global core.autocrlf input
 
