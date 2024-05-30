@@ -42,7 +42,7 @@ jobs:
             openssl:p
             nsis:p
 
-      - run: echo create symlink
+      - run: cp /
 
       - run: git config --global core.autocrlf input
 

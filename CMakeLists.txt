@@ -154,7 +154,10 @@ target_link_libraries(firelight PUBLIC
 find_program(MINGW_PATH gcc)
 get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)
 set(SHARED_LIB_DIR "${MINGW_DIR}")
-message("Shared Library Directory: ${SHARED_LIB_DIR}")
+message("Shared Library  Directory: ${SHARED_LIB_DIR}")
+
+configure_file(${SHARED_LIB_DIR}/qtpaths-qt6.exe ${SHARED_LIB_DIR}/qtpaths.exe COPYONLY)
+#file(COPY  DESTINATION )
 
 #include(GNUInstallDirs)
 install(TARGETS firelight
