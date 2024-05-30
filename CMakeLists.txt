@@ -151,12 +151,17 @@ target_link_libraries(firelight PUBLIC
 #    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
 #endif ()
 
+find_program(MINGW_PATH gcc)
+get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)
+set(SHARED_LIB_DIR "${MINGW_DIR}")
+message("Shared Library Directory: ${SHARED_LIB_DIR}")
+
 #include(GNUInstallDirs)
 install(TARGETS firelight
         RUNTIME_DEPENDENCIES
         PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-" "Qt6"
         POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
-        DIRECTORIES "C:\\\\msys64\\\\mingw64\\\\bin"
+        DIRECTORIES ${SHARED_LIB_DIR}
         BUNDLE DESTINATION .
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -254,11 +259,6 @@ install(
 
 # Install the DLLs
 #install(FILES ${DLL_LIST} DESTINATION bin)
-
-find_program(MINGW_PATH gcc)
-get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)
-set(SHARED_LIB_DIR "${MINGW_DIR}")
-message("Shared Library Directory: ${SHARED_LIB_DIR}")
 
 #install(CODE [[
 #  file(GET_RUNTIME_DEPENDENCIES
