@@ -42,7 +42,7 @@ jobs:
             openssl:p
             nsis:p
 
-      - run: ln -s "$(which qtpaths)" "$(dirname $(which qtpaths))/qtpaths-qt6"
+      - run: env && ln -s "$(which qtpaths)" "$(dirname $(which qtpaths))/qtpaths-qt6"
 
       - run: git config --global core.autocrlf input
 
