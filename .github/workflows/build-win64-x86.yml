@@ -56,13 +56,13 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      #      - name: Run unit tests
-      #        run: build/fl_test
+      - name: Run unit tests
+        working-directory: build
+        run: ctest --output-on-failure
 
       - name: Build zip
-        run: |
-          cd build
-          cpack -G ZIP
+        working-directory: build
+        run: cpack -G ZIP
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2

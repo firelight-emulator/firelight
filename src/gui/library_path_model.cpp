@@ -1,4 +1,4 @@
-#include "library_path_model.h"
+#include "library_path_model.hpp"
 
 namespace firelight::gui {
     LibraryPathModel::LibraryPathModel(db::ILibraryDatabase &libraryDatabase) : m_libraryDatabase(

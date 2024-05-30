@@ -12,27 +12,16 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-SET(CMAKE_INSTALL_RPATH "")
+#set(CMAKE_INSTALL_RPATH "")
 
-set(QT_ENABLE_VERBOSE_DEPLOYMENT ON)
+#set(QT_ENABLE_VERBOSE_DEPLOYMENT ON)
 
 find_package(SDL2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
 find_package(cpr REQUIRED)
-find_package(GTest)
-
-#include(FetchContent)
-#FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
-#        GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8)
-#FetchContent_MakeAvailable(cpr)
-
-#find_package(PkgConfig REQUIRED)
-#pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
-#pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
-#pkg_check_modules(AVUTIL REQUIRED IMPORTED_TARGET libavutil)
-#pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
+find_package(GTest REQUIRED)
 
 qt6_standard_project_setup(REQUIRES 6.7)
 
@@ -40,29 +29,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(src/app)
-
-#add_library(firelight_lib
-#        ${DISCORD_SOURCES}
-#)
-
-#target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
-#target_link_libraries(firelight_lib
-#        mingw32
-#        SDL2
-#        ssl
-#        crypto
-#        z
-#        Qt6::Gui
-#        Qt6::Quick
-#        Qt6::OpenGL
-#        Qt6::QuickControls2
-#        Qt6::Quick3D
-#        Qt6::Sql
-#        spdlog::spdlog
-#        cpr::cpr
-#        library
-#        patching
-#        rcheevos)
 
 file(GLOB QML_FILES
         qml/*.qml
@@ -83,10 +49,7 @@ set_source_files_properties(qml/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE T
 set_source_files_properties(qml/ColorPalette.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
-# main code
-qt6_add_executable(firelight
-        resources.qrc
-        src/main.cpp
+add_library(firelight_lib
         src/app/libretro/core.cpp
         src/app/libretro/coreoption.cpp
         src/app/libretro/game.cpp
@@ -112,25 +75,11 @@ qt6_add_executable(firelight
         src/app/mods/mod_manager.cpp
         src/app/achieve/ra_client.cpp
         src/gui/window_resize_handler.cpp
-        src/logo.ico
         src/gui/library_path_model.cpp
-        src/gui/library_path_model.h
-        include/firelight/library_content_directory.hpp
 )
 
-configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
-
-qt6_add_qml_module(firelight
-        URI QMLFirelight
-        VERSION 1.0
-        QML_FILES
-        ${QML_FILES}
-)
-
-target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
-#target_link_libraries(firelight PRIVATE firelight_lib)
-#target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
-target_link_libraries(firelight PUBLIC
+target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
+target_link_libraries(firelight_lib PUBLIC
         mingw32
         SDL2::SDL2
         OpenSSL::SSL
@@ -148,6 +97,26 @@ target_link_libraries(firelight PUBLIC
         patching
         rcheevos)
 
+# main code
+qt6_add_executable(firelight
+        resources.qrc
+        src/main.cpp
+)
+
+configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
+
+qt6_add_qml_module(firelight
+        URI QMLFirelight
+        VERSION 1.0
+        QML_FILES
+        ${QML_FILES}
+)
+
+target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
+#target_link_libraries(firelight PRIVATE firelight_lib)
+target_link_libraries(firelight PUBLIC
+        firelight_lib)
+
 #if (CMAKE_BUILD_TYPE STREQUAL "Release")
 #    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
 #endif ()
@@ -156,7 +125,6 @@ find_program(MINGW_PATH gcc)
 get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)
 set(SHARED_LIB_DIR "${MINGW_DIR}")
 message("Shared Library  Directory: ${SHARED_LIB_DIR}")
-#file(COPY  DESTINATION )
 
 #include(GNUInstallDirs)
 install(TARGETS firelight
@@ -168,15 +136,6 @@ install(TARGETS firelight
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-#install(FILES $<TARGET_RUNTIME_DLLS:firelight>
-#        DESTINATION ${CMAKE_INSTALL_BINDIR}
-#        CONFIGURATIONS Release Debug
-#)
-
-#install(RUNTIME_DEPENDENCY_SET runtime_deps
-#        DESTINATION ${CMAKE_INSTALL_BINDIR}
-#)
 
 set(SOURCE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/test_resources")
 set(DEST_RESOURCES_DIR "${CMAKE_BINARY_DIR}/test_resources")
@@ -193,30 +152,35 @@ file(COPY ${CMAKE_SOURCE_DIR}/_cores DESTINATION ${CMAKE_BINARY_DIR}/system)
 file(COPY ${CMAKE_SOURCE_DIR}/_img DESTINATION ${CMAKE_BINARY_DIR}/system)
 file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
 
-#add_executable(fl_test
-#        tests/app/patching/pm_star_rod_mod_patch_test.cpp
-#        tests/app/patching/ips_patch_test.cpp
-#        tests/app/patching/ups_patch_test.cpp
-#        tests/app/patching/bps_patch_test.cpp
-#        tests/mocks/mock_library_database.hpp
-#        tests/app/db/sqlite_userdata_database_test.cpp
-#        tests/app/saves/save_manager_test.cpp
-#        tests/app/library/sqlite_library_database_test.cpp
-#        tests/app/library/playlist_test.cpp
-#        tests/app/library/library_entry_test.cpp
-#        tests/app/db/daos/savefile_metadata_test.cpp
-#        tests/app/db/daos/play_session_test.cpp
-#        tests/app/db/sqlite_content_database_test.cpp
-#        tests/main.cpp
-#)
+enable_testing()
+include(GoogleTest)
+
+add_executable(fl_test
+        tests/app/patching/pm_star_rod_mod_patch_test.cpp
+        tests/app/patching/ips_patch_test.cpp
+        tests/app/patching/ups_patch_test.cpp
+        tests/app/patching/bps_patch_test.cpp
+        tests/mocks/mock_library_database.hpp
+        tests/app/db/sqlite_userdata_database_test.cpp
+        tests/app/saves/save_manager_test.cpp
+        tests/app/library/sqlite_library_database_test.cpp
+        tests/app/library/playlist_test.cpp
+        tests/app/library/library_entry_test.cpp
+        tests/app/db/daos/savefile_metadata_test.cpp
+        tests/app/db/daos/play_session_test.cpp
+        tests/app/db/sqlite_content_database_test.cpp
+        tests/main.cpp
+)
 
 #target_compile_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
 #target_link_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
 
-#add_dependencies(fl_test copy_resources)
+add_dependencies(fl_test copy_resources)
 #
-#target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS})
-#target_link_libraries(fl_test PRIVATE firelight_lib ${GTEST_BOTH_LIBRARIES} gmock)
+target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include)
+target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES} gmock)
+gtest_discover_tests(fl_test)
+#ctest_coverage_collect_gcov()
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #
 #add_test(NAME firelight_test COMMAND firelight)
@@ -242,72 +206,21 @@ install(
         SCRIPT ${deploy_script}
 )
 
-#install(CODE [[
-#file(GET_RUNTIME_DEPENDENCIES
-#        RESOLVED_DEPENDENCIES_VAR _r_deps
-#        EXECUTABLES $<TARGET_FILE:firelight>
-#        DIRECTORIES
-#            "C:\\\\msys64\\\\mingw64\\\\bin"
-#        PRE_EXCLUDE_REGEXES "api-ms-win-.*\\.dll"
-#)
-#]])
-#
-## Extract DLL names from CMAKE_CXX_IMPLICIT_LINK_LIBRARIES
-#foreach(lib ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES})
-#    if(lib MATCHES "^(.*\\.(dll|DLL))$")
-#        list(APPEND DLL_LIST ${CMAKE_MATCH_1})
-#    endif()
-#endforeach()
-
-# Install the DLLs
-#install(FILES ${DLL_LIST} DESTINATION bin)
-
-#install(CODE [[
-#  file(GET_RUNTIME_DEPENDENCIES
-#  UNRESOLVED_DEPENDENCIES_VAR _r_deps)
-#
-#    message("THE THIIIIIIIIIIIIIIIIIIIIIIIING")
-#  message("${_r_deps}")
-#    message("THE THIIIIIIIIIIIIIIIIIIIIIIIING")
-#  ]])
-
 install(
         PROGRAMS
         ${SHARED_LIB_DIR}/libsqlite3-0.dll
-        #        ${SHARED_LIB_DIR}/libb2-1.dll
-        #        ${SHARED_LIB_DIR}/libbrotlicommon.dll
-        #        ${SHARED_LIB_DIR}/libbrotlidec.dll
-        #        ${SHARED_LIB_DIR}/libbz2-1.dll
-        #        ${SHARED_LIB_DIR}/libcrypto-3-x64.dll
-        #        ${SHARED_LIB_DIR}/libdouble-conversion.dll
-        #        ${SHARED_LIB_DIR}/libfmt.dll
-        #        ${SHARED_LIB_DIR}/libfreetype-6.dll
-        #        ${SHARED_LIB_DIR}/libgcc_s_seh-1.dll
-        #        ${SHARED_LIB_DIR}/libglib-2.0-0.dll
-        #        ${SHARED_LIB_DIR}/libgraphite2.dll
-        #        ${SHARED_LIB_DIR}/libharfbuzz-0.dll
-        #        ${SHARED_LIB_DIR}/libicudt74.dll
-        #        ${SHARED_LIB_DIR}/libicuin74.dll
-        #        ${SHARED_LIB_DIR}/libicuuc74.dll
-        #        ${SHARED_LIB_DIR}/libmd4c.dll
-        #        ${SHARED_LIB_DIR}/libpcre2-8-0.dll
-        #        ${SHARED_LIB_DIR}/libpcre2-16-0.dll
-        #        ${SHARED_LIB_DIR}/libpng16-16.dll
-        #        ${SHARED_LIB_DIR}/libspdlog.dll
-        #        ${SHARED_LIB_DIR}/libssl-3-x64.dll
-        #        ${SHARED_LIB_DIR}/libstdc++-6.dll
-        #        ${SHARED_LIB_DIR}/libwinpthread-1.dll
-        #        ${SHARED_LIB_DIR}/libzstd.dll
-        #        ${SHARED_LIB_DIR}/zlib1.dll
-        #        ${SHARED_LIB_DIR}/libintl-8.dll
-        #        ${SHARED_LIB_DIR}/libiconv-2.dll
-        #        ${SHARED_LIB_DIR}/SDL2.dll
         TYPE BIN
 )
 
 install(
         DIRECTORY
         ${CMAKE_SOURCE_DIR}/_cores
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
+)
+
+install(
+        FILES
+        ${CMAKE_SOURCE_DIR}/content.db
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
 
