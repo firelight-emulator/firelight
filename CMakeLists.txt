@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(firelight
+        VERSION 0.4.0
         DESCRIPTION "An emulation frontend that just works"
         #    HOMEPAGE_URL ""
         LANGUAGES CXX

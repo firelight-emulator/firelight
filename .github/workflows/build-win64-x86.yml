@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: firelight-zip-win-x64
-          path: build/firelight-0.4.0-win64.zip
+          path: build/firelight-0.1.1-win64.zip
 
         # - name: Prepare artifact
         #   run: |
