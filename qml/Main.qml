@@ -30,8 +30,8 @@ ApplicationWindow {
         Connections {
             target: achievement_manager
 
-            function onGameLoadSucceeded() {
-                gameLaunchPopup.open()
+            function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
+                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore)
             }
         }
     }

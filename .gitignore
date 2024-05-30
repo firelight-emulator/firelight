@@ -1,6 +1,7 @@
 *.exe
 cmake-build-debug
 cmake-build-release
+android-build
 .idea
 cmake-build-debug-event-trace
 cmake-build-mingw

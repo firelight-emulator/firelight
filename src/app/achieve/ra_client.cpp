@@ -35,14 +35,10 @@ namespace firelight::achievements {
         emit raClient->showChallengeIndicator(event->achievement->id, QString(urlBuffer),
                                               QString(event->achievement->title),
                                               QString(event->achievement->description));
-        printf("Challenge show: %s: %s\n", event->achievement->title,
-               event->achievement->description);
         break;
       }
       case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE: {
         emit raClient->hideChallengeIndicator(event->achievement->id);
-        printf("Challenge hide: %s: %s\n", event->achievement->title,
-               event->achievement->description);
         break;
       }
       case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
@@ -211,7 +207,6 @@ namespace firelight::achievements {
 
   void RAClient::loadGame(const QString &contentMd5) {
     if (!m_loggedIn) {
-      emit gameLoadSucceeded();
       return;
     }
 
@@ -225,7 +220,19 @@ namespace firelight::achievements {
         if (result == 0) {
           // promise->set_value(true);
           theThing->m_gameLoaded = true;
-          emit theThing->gameLoadSucceeded();
+          rc_client_user_game_summary_t gameSummary;
+          rc_client_get_user_game_summary(client, &gameSummary);
+
+          auto numEarned = gameSummary.num_unlocked_achievements;
+          auto numTotal = gameSummary.num_core_achievements;
+
+          char buffer[256];
+
+          auto gameInfo = rc_client_get_game_info(client);
+          auto imageUrl = rc_client_game_get_image_url(gameInfo, buffer, 256);
+          emit theThing->gameLoadSucceeded(buffer, QString(gameInfo->title),
+                                           numEarned,
+                                           numTotal);
         } else {
           // promise->set_value(false);
           theThing->m_gameLoaded = false;

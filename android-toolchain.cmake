@@ -1,0 +1,9 @@
+set(CMAKE_SYSTEM_NAME Android)
+set(CMAKE_ANDROID_ARCH_ABI arm64-v8a)
+set(CMAKE_ANDROID_NDK ${ANDROID_NDK_ROOT})
+set(CMAKE_ANDROID_STL_TYPE c++_shared)
+set(CMAKE_ANDROID_API 21)
+set(CMAKE_ANDROID_NDK_TOOLCHAIN_VERSION clang)
+
+#set(CMAKE_PREFIX_PATH /msys64/mingw64/lib/cmake)
+set(SDL2_DIR /msys64/mingw64/lib/cmake/SDL2)

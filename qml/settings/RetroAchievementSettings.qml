@@ -12,7 +12,7 @@ Flickable {
     ColumnLayout {
         id: theColumn
         spacing: 0
-        width: parent.width
+        width: parent.width - 20
         // anchors.fill: parent
 
         ColumnLayout {

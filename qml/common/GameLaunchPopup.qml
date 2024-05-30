@@ -5,16 +5,26 @@ import QtQuick.Layouts
 Popup {
     id: root
 
-    // required property string imageUrl
-    // required property string title
-    // required property int numEarnedAchievements
-    // required property int totalAchievements
-    // required property bool hardcoreMode
+    property string imageUrl
+    property string title
+    property int numEarnedAchievements
+    property int totalAchievements
+    property bool hardcoreMode
+
+    function openWith(imageUrl, title, numEarnedAchievements, totalAchievements, hardcoreMode) {
+        this.imageUrl = imageUrl
+        this.title = title
+        this.numEarnedAchievements = numEarnedAchievements
+        this.totalAchievements = totalAchievements
+        this.hardcoreMode = hardcoreMode
+
+        open()
+    }
 
     parent: Overlay.overlay
     x: 0
     y: parent.height - height
-    width: parent.width
+    // width: parent.width
     height: 100
 
     onOpened: {
@@ -39,22 +49,26 @@ Popup {
 
     closePolicy: Popup.NoAutoClose
 
-    background: Item {}
+    background: Rectangle {
+        color: "#191919"
+    }
 
     padding: 16
 
     contentItem: Item {
+        implicitWidth: pic.implicitWidth + 8 + col.implicitWidth
         Image {
             id: pic
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
-            source: "https://media.retroachievements.org/Images/047942.png"
+            source: root.imageUrl
             fillMode: Image.PreserveAspectFit
         }
 
         ColumnLayout {
+            id: col
             anchors.left: pic.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
@@ -62,7 +76,7 @@ Popup {
             anchors.leftMargin: 8
 
             Text {
-                text: "Super Mario 64"
+                text: root.title
                 font.pointSize: 16
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
@@ -70,10 +84,10 @@ Popup {
             }
 
             Text {
-                text: "You've earned 9 of 119 achievements"
+                text: root.numEarnedAchievements + " of " + root.totalAchievements + " achievements earned"
                 font.pointSize: 12
                 font.family: Constants.regularFontFamily
-                font.weight: Font.Light
+                // font.weight: Font.Light
                 color: "#bbbbbb"
             }
 
