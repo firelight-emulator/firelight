@@ -50,9 +50,10 @@ ColumnLayout {
         Layout.preferredWidth: 140
         Layout.preferredHeight: 50
         background: Rectangle {
-            color: "white"
-            radius: 6
+            color: parent.hovered ? "#b8b8b8" : "white"
+            radius: 4
         }
+        hoverEnabled: true
         contentItem: Text {
             text: qsTr("Play")
             color: Constants.colorTestBackground
@@ -186,6 +187,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         currentIndex: 0
+        enabled: false
 
         clip: true
 

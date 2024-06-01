@@ -56,9 +56,6 @@ private:
 
   void refreshDirectories();
 
-  void handleScannedRomFile(const std::filesystem::directory_entry &entry,
-                            ScanResults &scan_results) const;
-
   void handleScannedPatchFile(const std::filesystem::directory_entry &entry,
                               ScanResults &scan_results) const;
 };

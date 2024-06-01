@@ -56,6 +56,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    checked: true
                     onToggled: {
                         if (checked) {
                             rightHalf.replace(librarySettings)
@@ -81,7 +82,6 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    checked: true
                     onToggled: {
                         if (checked) {
                             rightHalf.replace(videoSettings)
@@ -119,18 +119,18 @@ Item {
                     Layout.preferredHeight: 40
                     enabled: false
                 }
-                FirelightMenuItem {
-                    labelText: "Debug"
-                    // labelIcon: "\ue88e"
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    Layout.preferredHeight: 40
-                    onToggled: {
-                        if (checked) {
-                            rightHalf.replace(debugSettings)
-                        }
-                    }
-                }
+                // FirelightMenuItem {
+                //     labelText: "Debug"
+                //     // labelIcon: "\ue88e"
+                //     Layout.fillWidth: true
+                //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                //     Layout.preferredHeight: 40
+                //     onToggled: {
+                //         if (checked) {
+                //             rightHalf.replace(debugSettings)
+                //         }
+                //     }
+                // }
 
                 Item {
                     Layout.fillWidth: true
@@ -147,7 +147,7 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.leftMargin: 36
 
-                initialItem: videoSettings
+                initialItem: librarySettings
 
                 pushEnter: Transition {
                 }

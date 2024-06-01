@@ -586,7 +586,7 @@ void EmulationManager::loadLibraryEntry(int entryId) {
     QMetaObject::invokeMethod(
       getAchievementManager(), "loadGame", Qt::QueuedConnection,
       Q_ARG(int, m_currentEntry.platformId),
-      Q_ARG(QString, QString::fromStdString(md5)));
+      Q_ARG(QString, QString::fromStdString(entry->contentId)));
 
     emit gameLoadSucceeded();
   });

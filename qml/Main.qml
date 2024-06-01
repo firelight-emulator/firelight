@@ -230,6 +230,7 @@ ApplicationWindow {
                         labelIcon: "\ue87a"
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
+                        enabled: false
 
                         checked: stackview.topLevelName === "mods"
 

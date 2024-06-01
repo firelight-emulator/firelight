@@ -17,7 +17,7 @@ namespace libretro {
     msg[std::remove(msg, msg + strlen(msg), '\n') - msg] = 0;
     msg[std::remove(msg, msg + strlen(msg), '\r') - msg] = 0;
 
-    spdlog::info("[Core] {}", msg);
+    spdlog::debug("[Core] {}", msg);
   }
 
   // Only supports one core at a time for now, but, eh.

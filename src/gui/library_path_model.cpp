@@ -25,8 +25,6 @@ namespace firelight::gui {
                 return val;
             }
             case Path: {
-                auto val2 = QString::fromStdString(item.path);
-                printf("returning path: %s\n", val2.toStdString().c_str());
                 return QString::fromStdString(item.path);
             }
             case NumGameFiles:
