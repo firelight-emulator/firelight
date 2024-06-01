@@ -79,9 +79,6 @@ int main(int argc, char *argv[]) {
   // C:/Users/<USER>/AppData/Roaming/Firelight/saves/<content_id>/slot<n>/
   // C:/Users/<USER>/AppData/Roaming/Firelight/userdata.db
 
-  printf("Cache path: %s\n", cachePath.toStdString().c_str());
-  printf("App data path: %s\n", appDataPath.toStdString().c_str());
-
   auto appDataDir = std::filesystem::path(appDataPath.toStdString());
   auto saveDir = appDataDir / "saves";
   auto romsDir = appDataDir / "roms";
@@ -170,6 +167,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("library_short_model",
                                            &libSortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
+  engine.rootContext()->setContextProperty("library_database", &libraryDatabase);
   engine.rootContext()->setContextProperty("library_scan_path_model",
                                            libraryManager.scanDirectoryModel());
   engine.rootContext()->setContextProperty("controller_manager",

@@ -102,7 +102,7 @@ namespace firelight::achievements {
 
     void logInUserWithToken(const QString &username, const QString &token);
 
-    void loadGame(const QString &contentMd5);
+    void loadGame(int platformId, const QString &contentMd5);
 
     void unloadGame();
 
@@ -116,7 +116,6 @@ namespace firelight::achievements {
     bool m_defaultToHardcore = true;
 
     rc_client_t *m_client;
-
 
     int m_frameNumber = 0;
     QTimer m_idleTimer;

@@ -213,14 +213,14 @@ install(
 )
 
 install(
-        DIRECTORY
-        ${CMAKE_SOURCE_DIR}/_cores
+        FILES
+        ${CMAKE_SOURCE_DIR}/content.db
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
 
 install(
-        FILES
-        ${CMAKE_SOURCE_DIR}/content.db
+        DIRECTORY
+        ${CMAKE_SOURCE_DIR}/_cores
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
 

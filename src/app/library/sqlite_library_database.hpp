@@ -53,6 +53,8 @@ namespace firelight::db {
     // Playlist Entries
     bool addEntryToPlaylist(int playlistId, int entryId) override;
 
+    Q_INVOKABLE QVariant getLibraryEntryJson(int entryId);
+
   signals:
     void libraryEntryCreated(const LibraryEntry &entry);
 

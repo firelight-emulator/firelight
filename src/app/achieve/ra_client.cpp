@@ -205,9 +205,65 @@ namespace firelight::achievements {
     }
   }
 
-  void RAClient::loadGame(const QString &contentMd5) {
+  void RAClient::loadGame(int platformId, const QString &contentMd5) {
     if (!m_loggedIn) {
       return;
+    }
+
+    switch (platformId) {
+      case 1:
+        m_consoleId = RC_CONSOLE_GAMEBOY;
+        break;
+      case 2:
+        m_consoleId = RC_CONSOLE_GAMEBOY_COLOR;
+        break;
+      case 3:
+        m_consoleId = RC_CONSOLE_GAMEBOY_ADVANCE;
+        break;
+      case 4:
+        m_consoleId = RC_CONSOLE_VIRTUAL_BOY;
+        break;
+      case 5:
+        m_consoleId = RC_CONSOLE_NINTENDO;
+        break;
+      case 6:
+        m_consoleId = RC_CONSOLE_SUPER_NINTENDO;
+        break;
+      case 7:
+        m_consoleId = RC_CONSOLE_NINTENDO_64;
+        break;
+      case 10:
+        m_consoleId = RC_CONSOLE_NINTENDO_DS;
+        break;
+      case 12:
+        m_consoleId = RC_CONSOLE_MASTER_SYSTEM;
+        break;
+      case 13:
+        m_consoleId = RC_CONSOLE_MEGA_DRIVE;
+        break;
+      case 14:
+        m_consoleId = RC_CONSOLE_GAME_GEAR;
+        break;
+      case 15:
+        m_consoleId = RC_CONSOLE_SATURN;
+        break;
+      case 16:
+        m_consoleId = RC_CONSOLE_SEGA_32X;
+        break;
+      case 17:
+        m_consoleId = RC_CONSOLE_SEGA_CD;
+        break;
+      case 18:
+        m_consoleId = RC_CONSOLE_PLAYSTATION;
+        break;
+      case 19:
+        m_consoleId = RC_CONSOLE_PLAYSTATION_2;
+        break;
+      case 20:
+        m_consoleId = RC_CONSOLE_PSP;
+        break;
+      default:
+        m_consoleId = RC_CONSOLE_UNKNOWN;
     }
 
     rc_client_begin_load_game(
@@ -262,71 +318,7 @@ namespace firelight::achievements {
       theCore = core;
     }
 
-    if (m_frameNumber < 1) {
-      m_frameNumber++;
-    } else if (m_frameNumber == 1) {
-      m_frameNumber++;
-
-      switch (currentEntry.platformId) {
-        case 1:
-          m_consoleId = RC_CONSOLE_GAMEBOY;
-          break;
-        case 2:
-          m_consoleId = RC_CONSOLE_GAMEBOY_COLOR;
-          break;
-        case 3:
-          m_consoleId = RC_CONSOLE_GAMEBOY_ADVANCE;
-          break;
-        case 4:
-          m_consoleId = RC_CONSOLE_VIRTUAL_BOY;
-          break;
-        case 5:
-          m_consoleId = RC_CONSOLE_NINTENDO;
-          break;
-        case 6:
-          m_consoleId = RC_CONSOLE_SUPER_NINTENDO;
-          break;
-        case 7:
-          m_consoleId = RC_CONSOLE_NINTENDO_64;
-          break;
-        case 10:
-          m_consoleId = RC_CONSOLE_NINTENDO_DS;
-          break;
-        case 12:
-          m_consoleId = RC_CONSOLE_MASTER_SYSTEM;
-          break;
-        case 13:
-          m_consoleId = RC_CONSOLE_MEGA_DRIVE;
-          break;
-        case 14:
-          m_consoleId = RC_CONSOLE_GAME_GEAR;
-          break;
-        case 15:
-          m_consoleId = RC_CONSOLE_SATURN;
-          break;
-        case 16:
-          m_consoleId = RC_CONSOLE_SEGA_32X;
-          break;
-        case 17:
-          m_consoleId = RC_CONSOLE_SEGA_CD;
-          break;
-        case 18:
-          m_consoleId = RC_CONSOLE_PLAYSTATION;
-          break;
-        case 19:
-          m_consoleId = RC_CONSOLE_PLAYSTATION_2;
-          break;
-        case 20:
-          m_consoleId = RC_CONSOLE_PSP;
-          break;
-        default:
-          m_consoleId = RC_CONSOLE_UNKNOWN;
-      }
-
-      QMetaObject::invokeMethod(
-        this, "loadGame", Qt::QueuedConnection,
-        Q_ARG(QString, QString::fromStdString(currentEntry.contentId)));
-    } else if (m_frameNumber > 1) {
+    if (m_gameLoaded) {
       rc_client_do_frame(m_client);
       QMetaObject::invokeMethod(&m_idleTimer, "start", Qt::QueuedConnection);
     }

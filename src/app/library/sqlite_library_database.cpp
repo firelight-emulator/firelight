@@ -5,6 +5,7 @@
 #include <QSqlQuery>
 #include <QSqlTableModel>
 #include <QThread>
+#include <QJsonObject>
 #include <QUrl>
 #include <spdlog/spdlog.h>
 #include <utility>
@@ -123,6 +124,22 @@ namespace firelight::db {
 
     query.finish();
     return query.exec();
+  }
+
+  QVariant SqliteLibraryDatabase::getLibraryEntryJson(int entryId) {
+    auto entry = getLibraryEntry(entryId);
+    if (!entry.has_value()) {
+      return QVariant{};
+    }
+
+    QJsonObject jsonObj;
+    jsonObj["id"] = entry->id;
+    jsonObj["display_name"] = QString::fromStdString(entry->displayName);
+    jsonObj["platform_name"] = "Lol cool";
+    jsonObj["parent_entry_id"] = entry->parentEntryId;
+    jsonObj["is_patch"] = entry->type == LibraryEntry::EntryType::PATCH;
+
+    return QVariant::fromValue(jsonObj);
   }
 
   bool SqliteLibraryDatabase::createLibraryEntry(LibraryEntry &entry) {

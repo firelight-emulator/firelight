@@ -74,6 +74,23 @@ Item {
                 color: "#dadada"
             }
             FirelightMenuItem {
+                labelText: "Achievements"
+                Layout.fillWidth: true
+                // Layout.preferredWidth: parent.width / 2
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                Layout.preferredHeight: 40
+                checkable: true
+                alignRight: true
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                // Layout.preferredWidth: parent.width / 2
+                Layout.preferredHeight: 1
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                opacity: 0.3
+                color: "#dadada"
+            }
+            FirelightMenuItem {
                 labelText: "Create Suspend Point"
                 Layout.fillWidth: true
                 // Layout.preferredWidth: parent.width / 2
@@ -107,6 +124,15 @@ Item {
                 Layout.preferredHeight: 1
                 opacity: 0.3
                 color: "#dadada"
+            }
+            FirelightMenuItem {
+                labelText: "Settings"
+                Layout.fillWidth: true
+                // Layout.preferredWidth: parent.width / 2
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                Layout.preferredHeight: 40
+                checkable: true
+                alignRight: true
             }
             FirelightMenuItem {
                 labelText: "Back to Main Menu"

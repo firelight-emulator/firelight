@@ -102,14 +102,64 @@ void LibraryScanner::startScan() {
                        ext.string() == ".gb" || ext.string() == ".gbc" ||
                        ext.string() == ".gba" || ext.string() == ".nds" ||
                        ext.string() == ".md" || ext.string() == ".sfc") {
-              std::vector<char> contents(filesize);
+              auto platforms = content_database_->getMatchingPlatforms(
+                {.supportedExtensions = {ext.string()}});
+
+              if (platforms.empty()) {
+                printf("File extension not recognized: %s\n", ext.string().c_str());
+                continue;
+              }
+
+              std::vector<char> thing(filesize);
               std::ifstream file(entry.path(), std::ios::binary);
 
-              file.read(contents.data(), filesize);
+              file.read(thing.data(), filesize);
               file.close();
 
-              auto contentId = calculateMD5(contents.data(), filesize);
-              handleScannedRomFile(entry, scan_results);
+              auto md5 = calculateMD5(thing.data(), filesize);
+              scan_results.all_md5s.emplace_back(md5);
+
+              auto contentId = md5;
+
+              // TODO: Determine if ROM has a header
+              if (ext == ".sfc" || ext == ".smc") {
+                if (filesize % 1024 == 512) {
+                  printf("FOUND HEADER!!! %s\n", entry.path().filename().string().c_str());
+                  thing.erase(thing.begin(), thing.begin() + 512);
+                  filesize -= 512;
+
+                  contentId = calculateMD5(thing.data(), filesize);
+                  // Copy thing into a new vector without the header
+                  // std::vector<char> new_thing(size - 512);
+                  // std::copy(thing.begin() + 512, thing.end(), new_thing.begin());
+                }
+              }
+
+              auto display_name = entry.path().filename().string();
+
+              firelight::db::LibraryEntry e = {
+                .displayName = display_name,
+                .contentId = contentId,
+                .platformId = platforms.at(0).id,
+                .type = firelight::db::LibraryEntry::EntryType::ROM,
+                .fileMd5 = md5,
+                .fileCrc32 = md5, // TODO: Calculate CRC32
+                .sourceDirectory = canonical(entry.path().parent_path()).string(),
+                .contentPath = canonical(entry.path()).string()
+              };
+
+              auto roms = content_database_->getMatchingRoms({.md5 = contentId});
+              if (!roms.empty()) {
+                auto rom = roms.at(0);
+
+                auto game = content_database_->getGame(rom.gameId);
+                if (game.has_value()) {
+                  e.gameId = game->id;
+                  e.displayName = game->name;
+                }
+              }
+
+              scan_results.new_entries.emplace_back(e);
             }
           }
         }
@@ -233,40 +283,41 @@ void LibraryScanner::handleScannedPatchFile(
   const auto md5 = calculateMD5(thing.data(), size);
 
   const auto patches = content_database_->getMatchingPatches({.md5 = md5});
-  if (patches.empty()) {
-    // TODO: Just add it to the library without any extra info...
-    return;
-  }
+  // if (patches.empty()) {
+  //   // TODO: Just add it to the library without any extra info...
+  //   return;
+  // }
 
   auto displayName = entry.path().filename().string();
   auto parent = -1;
 
   // TODO: Check for more than one?? Shouldn't happen
-  const auto &patch = patches.at(0);
-  auto rom = content_database_->getRom(patch.romId);
-  if (rom.has_value()) {
-    auto existing = library_database_->getMatchingLibraryEntries(
-      {
-        .contentId = rom.value().md5,
-        .type = firelight::db::LibraryEntry::EntryType::ROM
-      });
+  // const auto &patch = patches.at(0);
+  // auto rom = content_database_->getRom(patch.romId);
+  // if (rom.has_value()) {
+  //   auto existing = library_database_->getMatchingLibraryEntries(
+  //     {
+  //       .contentId = rom.value().md5,
+  //       .type = firelight::db::LibraryEntry::EntryType::ROM
+  //     });
+  //
+  //   if (!existing.empty()) {
+  //     parent = existing.at(0).id;
+  //   }
+  //   // romId = rom.value().id;
+  // }
 
-    if (!existing.empty()) {
-      parent = existing.at(0).id;
-    }
-    // romId = rom.value().id;
-  }
-
-  auto mod = content_database_->getMod(patch.modId);
-  if (mod.has_value()) {
-    displayName = mod.value().name;
-  }
+  // auto mod = content_database_->getMod(patch.modId);
+  // if (mod.has_value()) {
+  //   displayName = mod.value().name;
+  // }
 
   firelight::db::LibraryEntry e = {
     .displayName = displayName,
     .contentId = md5,
     .parentEntryId = parent,
-    .modId = patch.modId,
+    // .modId = patch.modId,
+    .modId = -1,
     .type = firelight::db::LibraryEntry::EntryType::PATCH,
     .fileMd5 = md5,
     .fileCrc32 = md5,

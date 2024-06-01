@@ -12,6 +12,7 @@
 #include "patching/yay_0_codec.hpp"
 #include "saves/save_manager.hpp"
 #include "saves/savefile.hpp"
+#include "util/md5.hpp"
 
 #include <QPainter>
 #include <QtConcurrent>
@@ -561,9 +562,6 @@ void EmulationManager::loadLibraryEntry(int entryId) {
       m_corePath = QString::fromStdString(corePath);
     }
 
-
-    printf("Initializing on thread: %p\n", QThread::currentThreadId());
-
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString());
 
     m_core->setVideoReceiver(this);
@@ -572,9 +570,6 @@ void EmulationManager::loadLibraryEntry(int entryId) {
 
     m_core->setSystemDirectory("./system");
     // m_core->setSaveDirectory(".");
-
-    // m_core->setVideoReceiver(this);
-    // m_core->setAudioReceiver(new AudioManager());
     m_core->init();
 
     libretro::Game game(
@@ -586,6 +581,12 @@ void EmulationManager::loadLibraryEntry(int entryId) {
       m_core->writeMemoryData(libretro::SAVE_RAM,
                               vector(m_saveData.begin(), m_saveData.end()));
     }
+
+    auto md5 = calculateMD5(m_gameData.data(), m_gameData.size());
+    QMetaObject::invokeMethod(
+      getAchievementManager(), "loadGame", Qt::QueuedConnection,
+      Q_ARG(int, m_currentEntry.platformId),
+      Q_ARG(QString, QString::fromStdString(md5)));
 
     emit gameLoadSucceeded();
   });

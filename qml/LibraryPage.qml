@@ -378,6 +378,7 @@ Flickable {
 
                             onClicked: function () {
                                 rootItem.GridView.view.currentIndex = model.index
+                                root.StackView.view.push(gameDetailsPage, {"entryId": model.id})
                                 // libraryEntryRightClickMenu.popup()
                             }
 
@@ -395,13 +396,20 @@ Flickable {
                                     }
                                 }
 
+                                // RightClickMenuItem {
+                                //     text: "Patch stuff"
+                                //     visible: model.parent_game_name !== ""
+                                //     onTriggered: function () {
+                                //         selectLibEntryDialog.open()
+                                //     }
+                                // }
+
                                 RightClickMenuItem {
-                                    enabled: false
+                                    // enabled: false
                                     text: "View details"
-                                    // onTriggered: {
-                                    //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
-                                    //     addPlaylistRightClickMenu.popup()
-                                    // }
+                                    onTriggered: {
+                                        root.StackView.view.push(gameDetailsPage, {"entryId": model.id})
+                                    }
                                 }
 
                                 MenuSeparator {
@@ -456,6 +464,17 @@ Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
+        }
+    }
+
+    SelectLibraryEntryDialog {
+        id: selectLibEntryDialog
+    }
+
+    Component {
+        id: gameDetailsPage
+        GameDetailsPage {
+            entryId: -1
         }
     }
 
