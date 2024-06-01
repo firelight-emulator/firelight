@@ -9,6 +9,7 @@ ComboBox {
     valueRole: "id"
 
     editable: true
+    selectTextByMouse: true
 
     property bool firstTime: true
 

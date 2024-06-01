@@ -475,6 +475,10 @@ Flickable {
         id: gameDetailsPage
         GameDetailsPage {
             entryId: -1
+
+            onPlayPressed: function () {
+                entryClicked(entryId)
+            }
         }
     }
 

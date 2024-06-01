@@ -5,6 +5,8 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
 
+    signal playPressed()
+
     required property int entryId
     property int tabWidth: 150
     // required property string title
@@ -32,21 +34,47 @@ ColumnLayout {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
-
-        LibraryEntryComboBox {
-            id: entryComboBox
-            visible: root.entryData.is_patch
-            entryId: root.entryData.parent_entry_id
-        }
     }
+
+    LibraryEntryComboBox {
+        id: entryComboBox
+        visible: root.entryData.is_patch
+        entryId: root.entryData.parent_entry_id
+        Layout.alignment: Qt.AlignCenter
+    }
+
 
     Button {
+        Layout.topMargin: 24
         Layout.alignment: Qt.AlignCenter
-        text: "Play"
+        Layout.preferredWidth: 140
+        Layout.preferredHeight: 50
+        background: Rectangle {
+            color: "white"
+            radius: 6
+        }
+        contentItem: Text {
+            text: qsTr("Play")
+            color: Constants.colorTestBackground
+            font.family: Constants.regularFontFamily
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            font.pointSize: 12
+        }
         onClicked: {
-            console.log("Play button clicked")
+            root.playPressed()
         }
     }
+
+    // Rectangle {
+    //     visible: root.entryData.is_patch
+    //     Layout.topMargin: 24
+    //     Layout.preferredHeight: 36
+    //     Layout.maximumHeight: 36
+    //     Layout.fillWidth: true
+    //     radius: 4
+    //     color: "#ffb30c"
+    // }
 
     TabBar {
         id: bar
