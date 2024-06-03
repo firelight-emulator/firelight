@@ -22,4 +22,4 @@ private:
   std::unique_ptr<QThreadPool> m_ioThreadPool = nullptr;
 };
 
-} // namespace firelight::Saves
+} // namespace firelight::saves

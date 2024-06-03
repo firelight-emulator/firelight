@@ -12,141 +12,140 @@
 class EmulationManager : public QQuickFramebufferObject,
                          public firelight::ManagerAccessor,
                          public firelight::libretro::IVideoDataReceiver {
-    Q_OBJECT
-    Q_PROPERTY(QString currentGameName READ currentGameName NOTIFY
-        currentGameNameChanged)
-    Q_PROPERTY(int nativeWidth READ nativeWidth NOTIFY nativeWidthChanged)
-    Q_PROPERTY(int nativeHeight READ nativeHeight NOTIFY nativeHeightChanged)
-    Q_PROPERTY(float nativeAspectRatio READ nativeAspectRatio NOTIFY
-        nativeAspectRatioChanged)
-    Q_PROPERTY(bool running READ isRunning NOTIFY emulationStarted NOTIFY
-        emulationStopped)
+  Q_OBJECT
+  Q_PROPERTY(QString currentGameName READ currentGameName NOTIFY
+                 currentGameNameChanged)
+  Q_PROPERTY(int nativeWidth READ nativeWidth NOTIFY nativeWidthChanged)
+  Q_PROPERTY(int nativeHeight READ nativeHeight NOTIFY nativeHeightChanged)
+  Q_PROPERTY(float nativeAspectRatio READ nativeAspectRatio NOTIFY
+                 nativeAspectRatioChanged)
+  Q_PROPERTY(bool running READ isRunning NOTIFY emulationStarted NOTIFY
+                 emulationStopped)
 
 public:
-    [[nodiscard]] Renderer *createRenderer() const override;
+  [[nodiscard]] Renderer *createRenderer() const override;
 
-    explicit EmulationManager(QQuickItem *parent = nullptr);
+  explicit EmulationManager(QQuickItem *parent = nullptr);
 
-    ~EmulationManager() override;
+  ~EmulationManager() override;
 
-    void setCurrentFboId(int fboId);
+  void setCurrentFboId(int fboId);
 
-    void
-    setGetProcAddressFunction(const std::function<proc_address_t(const char *)>
-        &getProcAddressFunction);
+  void
+  setGetProcAddressFunction(const std::function<proc_address_t(const char *)>
+                                &getProcAddressFunction);
 
-    [[nodiscard]] std::function<void()> consumeContextResetFunction();
+  [[nodiscard]] std::function<void()> consumeContextResetFunction();
 
-    [[nodiscard]] std::function<void()> consumeContextDestroyFunction();
+  [[nodiscard]] std::function<void()> consumeContextDestroyFunction();
 
-    void setReceiveVideoDataFunction(
-        const std::function<void(const void *data, unsigned width,
-                                 unsigned height, size_t pitch)>
-        &receiveVideoDataFunction);
+  void setReceiveVideoDataFunction(
+      const std::function<void(const void *data, unsigned width,
+                               unsigned height, size_t pitch)>
+          &receiveVideoDataFunction);
 
-    [[nodiscard]] QString currentGameName() const;
+  [[nodiscard]] QString currentGameName() const;
 
-    [[nodiscard]] int nativeWidth() const;
+  [[nodiscard]] int nativeWidth() const;
 
-    [[nodiscard]] int nativeHeight() const;
+  [[nodiscard]] int nativeHeight() const;
 
-    [[nodiscard]] float nativeAspectRatio() const;
+  [[nodiscard]] float nativeAspectRatio() const;
 
-    void receive(const void *data, unsigned width, unsigned height,
-                 size_t pitch) override;
+  void receive(const void *data, unsigned width, unsigned height,
+               size_t pitch) override;
 
-    proc_address_t getProcAddress(const char *sym) override;
+  proc_address_t getProcAddress(const char *sym) override;
 
-    void setResetContextFunc(context_reset_func) override;
+  void setResetContextFunc(context_reset_func) override;
 
-    void setDestroyContextFunc(context_destroy_func) override;
+  void setDestroyContextFunc(context_destroy_func) override;
 
-    uintptr_t getCurrentFramebufferId() override;
+  uintptr_t getCurrentFramebufferId() override;
 
-    void setSystemAVInfo(retro_system_av_info *info) override;
+  void setSystemAVInfo(retro_system_av_info *info) override;
 
-    [[nodiscard]] bool runFrame();
+  [[nodiscard]] bool runFrame();
 
 public slots:
-    void loadLibraryEntry(int entryId);
+  void loadLibraryEntry(int entryId);
 
-    void startEmulation();
+  void startEmulation();
 
-    void pauseGame();
+  void pauseGame();
 
-    void resumeGame();
+  void resumeGame();
 
-    void stopEmulation();
+  void stopEmulation();
 
-    void resetEmulation();
+  void resetEmulation();
 
-    bool isRunning() const;
+  bool isRunning() const;
 
-    void save(bool waitForFinish = false);
+  void save(bool waitForFinish = false);
 
 signals:
-    void gameLoadSucceeded();
+  void gameLoadSucceeded();
 
-    void gameLoadFailed();
+  void gameLoadFailed();
 
-    void readyToStart();
+  void readyToStart();
 
-    void gamePaused();
+  void gamePaused();
 
-    void gameResumed();
+  void gameResumed();
 
-    void emulationStarted();
+  void emulationStarted();
 
-    void emulationStopped();
+  void emulationStopped();
 
-    void currentGameNameChanged();
+  void currentGameNameChanged();
 
-    void nativeWidthChanged();
+  void nativeWidthChanged();
 
-    void nativeHeightChanged();
+  void nativeHeightChanged();
 
-    void nativeAspectRatioChanged();
+  void nativeAspectRatioChanged();
 
-    void loadAchievements(QString contentId);
+  void loadAchievements(QString contentId);
 
 private:
-    bool shouldUnload = false;
+  bool shouldUnload = false;
 
-    std::unique_ptr<libretro::Core> m_core;
-    firelight::db::LibraryEntry m_currentEntry;
+  std::unique_ptr<libretro::Core> m_core;
+  firelight::db::LibraryEntry m_currentEntry;
 
-    bool m_gameLoadedSignalReady = false;
-    bool m_achievementsLoadedSignalReady = false;
+  bool m_gameLoadedSignalReady = false;
+  bool m_achievementsLoadedSignalReady = false;
 
-    bool m_isRunning = false;
-    bool m_paused = false;
+  bool m_isRunning = false;
+  bool m_paused = false;
 
-    std::unique_ptr<firelight::db::PlaySession> m_currentPlaySession;
-    std::vector<SuspendPoint> m_suspendPoints;
-    QElapsedTimer m_playtimeTimer;
-    QTimer m_autosaveTimer;
+  std::unique_ptr<firelight::db::PlaySession> m_currentPlaySession;
+  std::vector<SuspendPoint> m_suspendPoints;
+  QElapsedTimer m_playtimeTimer;
+  QTimer m_autosaveTimer;
 
-    QByteArray m_gameData;
-    QByteArray m_saveData;
-    QString m_corePath;
+  QByteArray m_gameData;
+  QByteArray m_saveData;
+  QString m_corePath;
 
-    int m_nativeWidth = 0;
-    int m_nativeHeight = 0;
-    float m_nativeAspectRatio = 0;
+  int m_nativeWidth = 0;
+  int m_nativeHeight = 0;
+  float m_nativeAspectRatio = 0;
 
-    int numFramesRun = 0;
+  int numFramesRun = 0;
 
-
-    /****************************************************************************
-     * Ugly rendering stuff
-     ***************************************************************************/
-    std::function<proc_address_t(const char *)> m_getProcAddressFunction =
-            nullptr;
-    std::function<void()> m_resetContextFunction = nullptr;
-    std::function<void()> m_destroyContextFunction = nullptr;
-    std::function<void(const void *data, unsigned width, unsigned height,
-                       size_t pitch)>
-    m_receiveVideoDataFunction = nullptr;
-    bool m_usingHwRendering = false;
-    int m_currentFboId = -1;
+  /****************************************************************************
+   * Ugly rendering stuff
+   ***************************************************************************/
+  std::function<proc_address_t(const char *)> m_getProcAddressFunction =
+      nullptr;
+  std::function<void()> m_resetContextFunction = nullptr;
+  std::function<void()> m_destroyContextFunction = nullptr;
+  std::function<void(const void *data, unsigned width, unsigned height,
+                     size_t pitch)>
+      m_receiveVideoDataFunction = nullptr;
+  bool m_usingHwRendering = false;
+  int m_currentFboId = -1;
 };

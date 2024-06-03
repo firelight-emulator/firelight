@@ -10,8 +10,8 @@
 #include "library_content_directory.hpp"
 
 namespace firelight::db {
- class ILibraryDatabase {
- public:
+class ILibraryDatabase {
+public:
   virtual ~ILibraryDatabase() = default;
 
   /**
@@ -40,12 +40,14 @@ namespace firelight::db {
 
   virtual std::vector<std::string> getAllContentPaths() = 0;
 
-  virtual bool createLibraryContentDirectory(LibraryContentDirectory &directory) = 0;
+  virtual bool
+  createLibraryContentDirectory(LibraryContentDirectory &directory) = 0;
 
-  virtual bool updateLibraryContentDirectory(LibraryContentDirectory &directory) = 0;
+  virtual bool
+  updateLibraryContentDirectory(LibraryContentDirectory &directory) = 0;
 
-  virtual std::vector<LibraryContentDirectory> getAllLibraryContentDirectories() const = 0;
-
+  virtual std::vector<LibraryContentDirectory>
+  getAllLibraryContentDirectories() const = 0;
 
   /**
    * @brief Creates a new Playlist.
@@ -65,5 +67,5 @@ namespace firelight::db {
   [[nodiscard]] virtual std::vector<Playlist> getAllPlaylists() = 0;
 
   virtual std::vector<Playlist> getPlaylistsForEntry(int entryId) = 0;
- };
+};
 } // namespace firelight::db

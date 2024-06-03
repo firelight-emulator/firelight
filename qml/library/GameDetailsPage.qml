@@ -1,238 +1,680 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
+import QtCharts 2.7
 
-ColumnLayout {
+Item {
     id: root
 
     signal playPressed()
 
     required property int entryId
     property int tabWidth: 150
-    // required property string title
-    // required property string contentId
-    // required property int parentId
-    //
+    property var achievements: null
+    property var achievementsSummary: {
+        "NumPossibleAchievements": 0,
+        "PossibleScore": 0,
+        "NumAchieved": 0,
+        "ScoreAchieved": 0,
+        "NumAchievedHardcore": 0,
+        "ScoreAchievedHardcore": 0
+
+    }
     property var entryData: {}
 
-    Component.onCompleted: function () {
+    Component.onCompleted: {
         entryData = library_database.getLibraryEntryJson(entryId)
+
+        root.achievements = achievement_manager.getAchievementsModelForGameId(entryData.game_id)
+        achievement_manager.getAchievementsOverview(entryData.game_id)
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 12
+    Connections {
+        target: achievement_manager
 
-        Text {
-            Layout.fillWidth: true
-            padding: 10
-            text: root.entryData.display_name
-            color: "white"
-            font.pointSize: 22
-            font.family: Constants.regularFontFamily
-            font.weight: Font.DemiBold
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+        function onAchievementSummaryAvailable(json) {
+            root.achievementsSummary = json
         }
-    }
 
-    LibraryEntryComboBox {
-        id: entryComboBox
-        visible: root.entryData.is_patch
-        entryId: root.entryData.parent_entry_id
-        Layout.alignment: Qt.AlignCenter
-    }
-
-
-    Button {
-        Layout.topMargin: 24
-        Layout.alignment: Qt.AlignCenter
-        Layout.preferredWidth: 140
-        Layout.preferredHeight: 50
-        background: Rectangle {
-            color: parent.hovered ? "#b8b8b8" : "white"
-            radius: 4
-        }
-        hoverEnabled: true
-        contentItem: Text {
-            text: qsTr("Play")
-            color: Constants.colorTestBackground
-            font.family: Constants.regularFontFamily
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            font.pointSize: 12
-        }
-        onClicked: {
-            root.playPressed()
-        }
+        // function onAchievementListAvailable(model) {
+        //     root.achievements = model
+        // }
     }
 
     // Rectangle {
-    //     visible: root.entryData.is_patch
-    //     Layout.topMargin: 24
-    //     Layout.preferredHeight: 36
-    //     Layout.maximumHeight: 36
-    //     Layout.fillWidth: true
-    //     radius: 4
-    //     color: "#ffb30c"
+    //     width: parent.width + 24
+    //     height: topRow.height + 12
+    //     x: -12
+    //     y: -12
+    //
+    //     color: "#101114"
     // }
 
-    TabBar {
-        id: bar
-        Layout.topMargin: 16
-        Layout.alignment: Qt.AlignHCenter
-        Layout.preferredHeight: 40
-        currentIndex: -1
-
-        onCurrentIndexChanged: function () {
-            view.setCurrentIndex(currentIndex)
-        }
-
-        background: Rectangle {
-            width: root.tabWidth
-            visible: bar.contentChildren[bar.currentIndex].enabled
-            height: 2
-            radius: 1
-            color: "white"
-            x: root.tabWidth * bar.currentIndex
-            y: bar.height
-
-            Behavior on x {
-                NumberAnimation {
-                    duration: 120
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-
-        TabButton {
-            width: root.tabWidth
-            contentItem: Text {
-                text: "Details"
-                color: parent.enabled ? "#ffffff" : "#666666"
-                font.family: Constants.regularFontFamily
-                font.pointSize: 11
-                font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            enabled: false
-
-            background: Item {
-            }
-
-            HoverHandler {
-                cursorShape: Qt.PointingHandCursor
-            }
-        }
-        TabButton {
-            width: root.tabWidth
-            contentItem: Text {
-                text: "Achievements"
-                color: parent.enabled ? "#ffffff" : "#666666"
-                font.family: Constants.regularFontFamily
-                font.pointSize: 11
-                font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            enabled: false
-
-            background: Item {
-            }
-
-            HoverHandler {
-                cursorShape: Qt.PointingHandCursor
-            }
-        }
-        TabButton {
-            width: root.tabWidth
-            contentItem: Text {
-                text: "Activity"
-                color: parent.enabled ? "#ffffff" : "#666666"
-                font.family: Constants.regularFontFamily
-                font.pointSize: 11
-                font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            enabled: false
-
-            background: Item {
-            }
-
-            HoverHandler {
-                cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            }
-        }
-    }
-
-    // Item {
-    //     Layout.fillWidth: true
-    //     Layout.fillHeight: true
+    // Image {
+    //     id: headerBanner
+    //     width: parent.width + 24
+    //     height: topRow.height
+    //     x: -12
+    //     y: -12
     //
-    //     Text {
-    //         text: "There will be cool stuff here soon :)"
-    //         color: "white"
-    //         font.family: Constants.regularFontFamily
-    //         font.pointSize: 10
-    //         anchors.centerIn: parent
-    //         horizontalAlignment: Text.AlignHCenter
-    //         verticalAlignment: Text.AlignVCenter
+    //     source: "file:system/_img/smw_beachkoopa_slope.png"
+    //     fillMode: Image.Stretch
+    //
+    //     layer.enabled: true
+    //     layer.effect: MultiEffect {
+    //         autoPaddingEnabled: false
+    //         source: headerBanner
+    //         anchors.fill: headerBanner
+    //         blurEnabled: true
+    //         blurMultiplier: 1.0
+    //         blurMax: 64
+    //         blur: 1
+    //     }
+    //
+    //     Rectangle {
+    //         anchors.fill: parent
+    //         color: "black"
+    //         opacity: 0.3
     //     }
     // }
 
-    SwipeView {
-        id: view
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        currentIndex: 0
-        enabled: false
+    ColumnLayout {
+        spacing: 0
+        anchors.fill: parent
 
-        clip: true
+        RowLayout {
+            id: topRow
+            Layout.fillWidth: true
+            Layout.topMargin: 12
+            Layout.minimumHeight: 84
+            Layout.maximumHeight: 84
+            spacing: 0
 
-        onCurrentIndexChanged: function () {
-            bar.setCurrentIndex(currentIndex)
+            Text {
+                Layout.alignment: Qt.AlignTop
+                Layout.leftMargin: 48
+                padding: 10
+                text: root.entryData.display_name
+                color: "white"
+                font.pointSize: 22
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            Button {
+                Layout.alignment: Qt.AlignRight | Qt.AlignTop
+                Layout.preferredWidth: 140
+                Layout.preferredHeight: 50
+                Layout.rightMargin: 48
+                background: Rectangle {
+                    color: parent.hovered ? "#b8b8b8" : "white"
+                    radius: 4
+                }
+                hoverEnabled: true
+                contentItem: Text {
+                    text: qsTr("Play")
+                    color: Constants.colorTestBackground
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: 12
+                }
+                onClicked: {
+                    root.playPressed()
+                }
+            }
         }
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
 
-        // Image {
-        //     source: "https://t4.ftcdn.net/jpg/00/89/02/67/360_F_89026793_eyw5a7WCQE0y1RHsizu41uhj7YStgvAA.jpg"
-        //     fillMode: Image.PreserveAspectFit
-        // }
-        //
-        // Image {
-        //     source: "https://t4.ftcdn.net/jpg/00/89/02/67/360_F_89026793_eyw5a7WCQE0y1RHsizu41uhj7YStgvAA.jpg"
-        //     fillMode: Image.PreserveAspectFit
-        // }
-        //
-        // Image {
-        //     source: "https://t4.ftcdn.net/jpg/00/89/02/67/360_F_89026793_eyw5a7WCQE0y1RHsizu41uhj7YStgvAA.jpg"
-        //     fillMode: Image.PreserveAspectFit
-        // }
+            spacing: 0
 
-        Text {
-            text: "There will be cool stuff here soon :)"
-            color: "white"
-            font.family: Constants.regularFontFamily
-            font.pointSize: 10
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-        Text {
-            text: "and here"
-            color: "white"
-            font.family: Constants.regularFontFamily
-            font.pointSize: 10
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-        Text {
-            text: "and here too!"
-            color: "white"
-            font.family: Constants.regularFontFamily
-            font.pointSize: 10
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.horizontalStretchFactor: 1
+            }
+
+            ColumnLayout {
+                id: theColumn
+                Layout.fillWidth: true
+                Layout.horizontalStretchFactor: 4
+                Layout.minimumWidth: 700
+                Layout.maximumWidth: 1200
+                Layout.preferredWidth: parent.width * 3 / 4
+                Layout.fillHeight: true
+
+                TabBar {
+                    id: bar
+                    // Layout.topMargin: 16
+                    Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+                    Layout.preferredHeight: 40
+                    currentIndex: -1
+
+                    onCurrentIndexChanged: function () {
+                        view.setCurrentIndex(currentIndex)
+                    }
+
+                    background: Rectangle {
+                        width: root.tabWidth
+                        visible: bar.contentChildren[bar.currentIndex].enabled
+                        height: 2
+                        radius: 1
+                        color: "white"
+                        x: root.tabWidth * bar.currentIndex
+                        y: bar.height
+
+                        Behavior on x {
+                            NumberAnimation {
+                                duration: 120
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                    }
+
+                    TabButton {
+                        width: root.tabWidth
+                        contentItem: Text {
+                            text: "Details"
+                            color: parent.enabled ? "#ffffff" : "#666666"
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 11
+                            font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        background: Item {
+                        }
+
+                        HoverHandler {
+                            cursorShape: Qt.PointingHandCursor
+                        }
+                    }
+                    TabButton {
+                        width: root.tabWidth
+                        contentItem: Text {
+                            text: "Achievements"
+                            color: parent.enabled ? "#ffffff" : "#666666"
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 11
+                            font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        background: Item {
+                        }
+
+                        HoverHandler {
+                            cursorShape: Qt.PointingHandCursor
+                        }
+                    }
+                    TabButton {
+                        width: root.tabWidth
+                        contentItem: Text {
+                            text: "Activity"
+                            color: parent.enabled ? "#ffffff" : "#666666"
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 11
+                            font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        background: Item {
+                        }
+
+                        HoverHandler {
+                            cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        }
+                    }
+                }
+                SwipeView {
+                    id: view
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    currentIndex: 0
+
+                    clip: true
+
+                    onCurrentIndexChanged: function () {
+                        bar.setCurrentIndex(currentIndex)
+                    }
+
+                    // ChartView {
+                    //     title: "Line Chart"
+                    //     theme: ChartView.ChartThemeBrownSand
+                    //     antialiasing: true
+                    //
+                    //     BarCategoryAxis {
+                    //         id: daysAxis
+                    //         categories: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+                    //     }
+                    //
+                    //     ValueAxis {
+                    //         id: playtimeAxis
+                    //         min: 0
+                    //         max: 10
+                    //         titleText: "Playtime (hours)"
+                    //     }
+                    //
+                    //     BarSeries {
+                    //         id: barSeries
+                    //         axisX: daysAxis
+                    //         axisY: playtimeAxis
+                    //
+                    //         BarSet {
+                    //             label: "Playtime"
+                    //             // Sample data
+                    //             values: [3, 5, 2, 7, 6, 1, 4]
+                    //         }
+                    //     }
+                    //
+                    //     Component.onCompleted: {
+                    //         barSeries.append("Playtime", [3, 5, 2, 7, 6, 1, 4])
+                    //     }
+                    // }
+                    ColumnLayout {
+                        Text {
+                            Layout.fillWidth: true
+                            text: qsTr("Content path")
+                            color: "white"
+                            font.pointSize: 12
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                        }
+                        Pane {
+                            id: texxxxt
+                            // Layout.fillWidth: true
+                            padding: 4
+
+                            background: Rectangle {
+                                color: "black"
+                                radius: 8
+                            }
+
+                            contentItem: TextInput {
+                                padding: 4
+                                text: root.entryData.content_path
+                                font.family: Constants.regularFontFamily
+                                font.pointSize: 12
+                                color: "white"
+                                verticalAlignment: Text.AlignVCenter
+                                readOnly: true
+                            }
+                        }
+                        Text {
+                            text: "Active save slot: " + root.entryData.active_save_slot
+                            color: "white"
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 10
+                        }
+                        Text {
+                            text: "Added to library: " + root.entryData.created_at
+                            color: "white"
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 10
+                        }
+                        Item {
+                            Layout.fillHeight: true
+                        }
+                    }
+                    Flickable {
+                        contentHeight: !achievement_manager.loggedIn ? thing.height : achievementsList.height
+                        ColumnLayout {
+                            id: thing
+                            visible: !achievement_manager.loggedIn
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
+                            Text {
+                                text: "Log in blah blah"
+                                color: "white"
+                                font.family: Constants.regularFontFamily
+                                font.pointSize: 10
+                                Layout.alignment: Qt.AlignCenter
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            Button {
+                                Layout.alignment: Qt.AlignCenter
+                                Layout.preferredWidth: 140
+                                Layout.preferredHeight: 50
+                                background: Rectangle {
+                                    color: parent.hovered ? "#b8b8b8" : "white"
+                                    radius: 4
+                                }
+                                hoverEnabled: true
+                                contentItem: Text {
+                                    text: qsTr("Log in")
+                                    color: Constants.colorTestBackground
+                                    font.family: Constants.regularFontFamily
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    font.pointSize: 12
+                                }
+                                onClicked: {
+                                    Router.navigateTo("settings/achievements")
+                                }
+                            }
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
+                        }
+
+                        Column {
+                            id: achievementsList
+                            visible: achievement_manager.loggedIn && root.achievementsSummary.NumPossibleAchievements > 0
+                            width: parent.width
+                            spacing: 24
+
+                            Item {
+                                width: parent.width
+                                height: 24
+                            }
+
+                            Pane {
+                                width: 540
+                                height: 106
+                                padding: 8
+
+                                background: Rectangle {
+                                    color: "#292929"
+                                    radius: 8
+                                }
+
+                                contentItem: Item {
+                                    Image {
+                                        id: gameIcon
+                                        width: parent.height
+                                        height: parent.height
+                                        fillMode: Image.PreserveAspectFit
+                                        source: "https://media.retroachievements.org/Images/040155.png"
+                                    }
+                                    // Rectangle {
+                                    //     id: gameIcon
+                                    //     color: "red"
+                                    //     width: parent.height
+                                    //     height: parent.height
+                                    // }
+                                    ColumnLayout {
+                                        anchors.leftMargin: 12
+                                        anchors.left: gameIcon.right
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        anchors.right: parent.right
+                                        spacing: 4
+
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                            Layout.verticalStretchFactor: 3
+                                            spacing: 0
+                                            Text {
+                                                Layout.fillHeight: true
+                                                text: root.entryData.display_name
+                                                font.family: Constants.regularFontFamily
+                                                font.pointSize: 12
+                                                font.weight: Font.DemiBold
+                                                verticalAlignment: Text.AlignVCenter
+                                                color: "white"
+                                            }
+                                            Item {
+                                                Layout.fillWidth: true
+                                                Layout.fillHeight: true
+                                            }
+                                            Text {
+                                                id: first
+                                                text: root.achievementsSummary.NumAchievedHardcore
+                                                font.family: Constants.regularFontFamily
+                                                font.pointSize: 16
+                                                font.weight: Font.DemiBold
+                                                color: "white"
+                                                verticalAlignment: Text.AlignBottom
+                                                horizontalAlignment: Text.AlignRight
+                                                Layout.fillHeight: true
+                                            }
+
+                                            Text {
+                                                id: slash
+                                                text: " /"
+                                                Layout.fillHeight: true
+                                                font.family: Constants.regularFontFamily
+                                                font.pointSize: 15
+                                                color: "#aaaaaa"
+                                                verticalAlignment: Text.AlignBottom
+                                            }
+
+                                            Text {
+                                                text: root.achievementsSummary.NumPossibleAchievements
+                                                Layout.fillHeight: true
+                                                font.family: Constants.regularFontFamily
+                                                font.pointSize: 12
+                                                color: "#aaaaaa"
+                                                verticalAlignment: Text.AlignBottom
+                                            }
+
+                                            Text {
+                                                text: " earned"
+                                                Layout.fillHeight: true
+                                                font.family: Constants.regularFontFamily
+                                                font.pointSize: 10
+                                                color: "#aaaaaa"
+                                                verticalAlignment: Text.AlignBottom
+                                            }
+                                        }
+
+                                        Item {
+                                            Layout.fillHeight: true
+                                            Layout.fillWidth: true
+                                            Layout.verticalStretchFactor: 1
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width
+                                                height: 20
+                                                radius: height / 2
+                                                color: "black"
+                                            }
+
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width / 5
+                                                height: 20
+                                                radius: height / 2
+                                                border.color: "black"
+                                                color: "#bc8c0f"
+                                            }
+
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Rectangle {
+                            //     Rectangle {
+                            //         id: gameIcon
+                            //         width: 80
+                            //         height: 80
+                            //         anchors.left: parent.left
+                            //         anchors.top: parent.top
+                            //         anchors.leftMargin: 12
+                            //         anchors.topMargin: 12
+                            //         color: "red"
+                            //     }
+                            //     Text {
+                            //         text: root.entryData.display_name
+                            //         anchors.left: gameIcon.right
+                            //         anchors.top: parent.top
+                            //         anchors.leftMargin: 12
+                            //         anchors.topMargin: 12
+                            //         color: "white"
+                            //         font.family: Constants.regularFontFamily
+                            //         font.pointSize: 12
+                            //         font.weight: Font.DemiBold
+                            //     }
+                            //
+                            //     RowLayout {
+                            //         anchors.left: parent.left
+                            //         anchors.bottom: parent.bottom
+                            //         anchors.right: parent.right
+                            //         anchors.top: gameIcon.bottom
+                            //         anchors.topMargin: 12
+                            //         anchors.leftMargin: 12
+                            //         anchors.bottomMargin: 12
+                            //         spacing: 0
+                            //
+                            //         Text {
+                            //             id: first
+                            //             text: "300"
+                            //             font.family: Constants.regularFontFamily
+                            //             font.pointSize: 16
+                            //             font.weight: Font.DemiBold
+                            //             color: "white"
+                            //             verticalAlignment: Text.AlignBottom
+                            //             horizontalAlignment: Text.AlignRight
+                            //             Layout.fillHeight: true
+                            //         }
+                            //
+                            //         Text {
+                            //             id: slash
+                            //             text: " /"
+                            //             Layout.fillHeight: true
+                            //             font.family: Constants.regularFontFamily
+                            //             font.pointSize: 15
+                            //             color: "#aaaaaa"
+                            //             verticalAlignment: Text.AlignBottom
+                            //         }
+                            //
+                            //         Text {
+                            //             text: "200"
+                            //             Layout.fillHeight: true
+                            //             font.family: Constants.regularFontFamily
+                            //             font.pointSize: 12
+                            //             color: "#aaaaaa"
+                            //             verticalAlignment: Text.AlignBottom
+                            //         }
+                            //
+                            //         Rectangle {
+                            //             Layout.fillWidth: true
+                            //             Layout.preferredHeight: 20
+                            //             Layout.alignment: Qt.AlignCenter
+                            //             radius: height / 2
+                            //         }
+                            //     }
+                            //
+                            //     // Text {
+                            //     //     text: root.achievementsSummary.NumAchievedHardcore
+                            //     //     color: "white"
+                            //     //     font.family: Constants.regularFontFamily
+                            //     //     font.pointSize: 16
+                            //     //     font.weight: Font.DemiBold
+                            //     //     horizontalAlignment: Text.AlignHCenter
+                            //     //     verticalAlignment: Text.AlignVCenter
+                            //     // }
+                            // }
+
+                            ListView {
+                                model: root.achievements
+                                spacing: 12
+                                width: parent.width
+                                height: contentHeight
+                                interactive: false
+
+                                // section.property: root.achievements.sortType === "title" ? "name" : "earned"
+                                // section.criteria: ViewSection.FirstCharacter
+                                // section.delegate: ListViewSectionDelegate {
+                                //     required property string section
+                                //     text: section === "t" || section === "f" ? (section === "t" ? "Earned" : "Not earned") : section
+                                // }
+
+                                header: Pane {
+                                    width: achievementsList.width
+                                    background: Item {
+                                    }
+                                    verticalPadding: 12
+                                    horizontalPadding: 0
+                                    contentItem: RowLayout {
+                                        Item {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                        }
+                                        Text {
+                                            Layout.fillHeight: true
+                                            verticalAlignment: Text.AlignVCenter
+                                            text: "Sort by:"
+                                            color: "white"
+                                            font.family: Constants.regularFontFamily
+                                            font.pointSize: 10
+                                        }
+
+                                        MyComboBox {
+                                            id: sortBox
+                                            Layout.fillHeight: true
+                                            Layout.fillWidth: false
+                                            textRole: "text"
+                                            valueRole: "value"
+
+                                            model: [
+                                                {text: "Default", value: "default"},
+                                                {text: "A-Z", value: "title"},
+                                                {text: "Earned date", value: "earned_date"},
+                                                {text: "Points", value: "points"}
+                                            ]
+
+                                            Connections {
+                                                target: root
+
+                                                function onAchievementsChanged() {
+                                                    console.log("current sort type: " + root.achievements.sortType)
+                                                    sortBox.currentIndex = sortBox.indexOfValue(root.achievements.sortType)
+                                                }
+                                            }
+
+                                            onActivated: function () {
+                                                root.achievements.sortType = currentValue
+                                            }
+                                        }
+                                    }
+                                }
+
+                                delegate: AchievementListItem {
+                                    width: ListView.view.width
+                                }
+                            }
+                        }
+
+
+                    }
+
+                    Text {
+                        text: "and here too!"
+                        color: "white"
+                        font.family: Constants.regularFontFamily
+                        font.pointSize: 10
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.horizontalStretchFactor: 1
+            }
         }
     }
 }

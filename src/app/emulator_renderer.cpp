@@ -12,9 +12,9 @@ EmulatorRenderer::EmulatorRenderer(const EmulationManager *manager) {
   initializeOpenGLFunctions();
   m_manager = const_cast<EmulationManager *>(manager);
   m_manager->setReceiveVideoDataFunction(
-    [this](const void *data, unsigned width, unsigned height, size_t pitch) {
-      receiveVideoData(data, width, height, pitch);
-    });
+      [this](const void *data, unsigned width, unsigned height, size_t pitch) {
+        receiveVideoData(data, width, height, pitch);
+      });
 
   m_manager->setGetProcAddressFunction([this](const char *sym) {
     return QOpenGLContext::currentContext()->getProcAddress(sym);
@@ -84,7 +84,7 @@ void EmulatorRenderer::receiveVideoData(const void *data, unsigned width,
   QPainter painter(&paint_device);
 
   m_fbo->bind();
-  const QImage image((uchar *) data, width, height, pitch, QImage::Format_RGB16);
+  const QImage image((uchar *)data, width, height, pitch, QImage::Format_RGB16);
 
   painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), image,
                     image.rect());

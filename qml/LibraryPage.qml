@@ -125,22 +125,12 @@ Flickable {
                         verticalAlignment: Text.AlignVCenter
                     }
 
-                    ComboBox {
+                    MyComboBox {
                         textRole: "text"
                         valueRole: "value"
 
                         onActivated: library_short_model.sortType = currentValue
                         Component.onCompleted: currentIndex = indexOfValue(library_short_model.sortType)
-
-                        background: Rectangle {
-                            implicitWidth: 140
-                            implicitHeight: 40
-                            color: "#3e434b"
-                            radius: 12
-                            border.color: "#7d848c"
-                        }
-
-                        palette.buttonText: "white"
 
                         model: [
                             {text: "A-Z", value: "display_name"},

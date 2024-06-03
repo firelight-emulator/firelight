@@ -24,7 +24,7 @@
 constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 EmulationManager::EmulationManager(QQuickItem *parent)
-  : QQuickFramebufferObject(parent) {
+    : QQuickFramebufferObject(parent) {
   setTextureFollowsItemSize(false);
   setMirrorVertically(true);
   setFlag(ItemHasContents);
@@ -37,29 +37,29 @@ EmulationManager::EmulationManager(QQuickItem *parent)
           &QQuickFramebufferObject::update, Qt::QueuedConnection);
 
   connect(
-    this, &EmulationManager::gameLoadSucceeded, this,
-    [this] {
-      m_gameLoadedSignalReady = true;
-      if (m_achievementsLoadedSignalReady) {
-        emit readyToStart();
-        m_gameLoadedSignalReady = false;
-        m_achievementsLoadedSignalReady = false;
-      }
-    },
-    Qt::QueuedConnection);
+      this, &EmulationManager::gameLoadSucceeded, this,
+      [this] {
+        m_gameLoadedSignalReady = true;
+        if (m_achievementsLoadedSignalReady) {
+          emit readyToStart();
+          m_gameLoadedSignalReady = false;
+          m_achievementsLoadedSignalReady = false;
+        }
+      },
+      Qt::QueuedConnection);
 
   connect(
-    getAchievementManager(),
-    &firelight::achievements::RAClient::gameLoadSucceeded, this,
-    [this] {
-      m_achievementsLoadedSignalReady = true;
-      if (m_gameLoadedSignalReady) {
-        emit readyToStart();
-        m_gameLoadedSignalReady = false;
-        m_achievementsLoadedSignalReady = false;
-      }
-    },
-    Qt::QueuedConnection);
+      getAchievementManager(),
+      &firelight::achievements::RAClient::gameLoadSucceeded, this,
+      [this] {
+        m_achievementsLoadedSignalReady = true;
+        if (m_gameLoadedSignalReady) {
+          emit readyToStart();
+          m_gameLoadedSignalReady = false;
+          m_achievementsLoadedSignalReady = false;
+        }
+      },
+      Qt::QueuedConnection);
 
   m_autosaveTimer.setInterval(SAVE_FREQUENCY_MILLIS);
   m_autosaveTimer.setSingleShot(false);
@@ -104,7 +104,7 @@ QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
 }
 
 void EmulationManager::setGetProcAddressFunction(
-  const std::function<proc_address_t(const char *)> &getProcAddressFunction) {
+    const std::function<proc_address_t(const char *)> &getProcAddressFunction) {
   m_getProcAddressFunction = getProcAddressFunction;
 }
 
@@ -129,8 +129,8 @@ std::function<void()> EmulationManager::consumeContextDestroyFunction() {
 }
 
 void EmulationManager::setReceiveVideoDataFunction(
-  const std::function<void(const void *data, unsigned width, unsigned height,
-                           size_t pitch)> &receiveVideoDataFunction) {
+    const std::function<void(const void *data, unsigned width, unsigned height,
+                             size_t pitch)> &receiveVideoDataFunction) {
   m_receiveVideoDataFunction = receiveVideoDataFunction;
 }
 
@@ -171,7 +171,7 @@ void EmulationManager::setResetContextFunc(context_reset_func resetFunction) {
 }
 
 void EmulationManager::setDestroyContextFunc(
-  context_destroy_func destroyFunction) {
+    context_destroy_func destroyFunction) {
   printf("Setting destroy context function\n");
   m_usingHwRendering = true;
   m_destroyContextFunction = destroyFunction;
@@ -282,7 +282,7 @@ bool EmulationManager::isRunning() const { return m_isRunning; }
 
 void EmulationManager::save(const bool waitForFinish) {
   firelight::saves::Savefile saveData(
-    m_core->getMemoryData(libretro::SAVE_RAM));
+      m_core->getMemoryData(libretro::SAVE_RAM));
   // saveData.setImage(m_fbo->toImage());
 
   QFuture<bool> result =
@@ -573,8 +573,8 @@ void EmulationManager::loadLibraryEntry(int entryId) {
     m_core->init();
 
     libretro::Game game(
-      entry->contentPath,
-      vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
+        entry->contentPath,
+        vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
     m_core->loadGame(&game);
 
     if (m_saveData.size() > 0) {
@@ -584,9 +584,9 @@ void EmulationManager::loadLibraryEntry(int entryId) {
 
     auto md5 = calculateMD5(m_gameData.data(), m_gameData.size());
     QMetaObject::invokeMethod(
-      getAchievementManager(), "loadGame", Qt::QueuedConnection,
-      Q_ARG(int, m_currentEntry.platformId),
-      Q_ARG(QString, QString::fromStdString(entry->contentId)));
+        getAchievementManager(), "loadGame", Qt::QueuedConnection,
+        Q_ARG(int, m_currentEntry.platformId),
+        Q_ARG(QString, QString::fromStdString(entry->contentId)));
 
     emit gameLoadSucceeded();
   });

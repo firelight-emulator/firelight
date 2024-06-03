@@ -71,4 +71,4 @@ void SdlEventLoop::processEvents() const {
   }
 }
 
-} // namespace Firelight
+} // namespace firelight

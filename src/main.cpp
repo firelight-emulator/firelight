@@ -1,6 +1,7 @@
 #define SDL_MAIN_HANDLED
 
-#include <QGuiApplication>
+// #include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
@@ -16,6 +17,7 @@
 #include "app/db/sqlite_userdata_database.hpp"
 #include "app/emulation_manager.hpp"
 #include "app/fps_multiplier.hpp"
+#include "app/router.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
 #include "app/library/library_scanner.hpp"
@@ -50,29 +52,29 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::info);
   }
 
-  QGuiApplication::setOrganizationDomain("firelight-emulator.com");
-  QGuiApplication::setApplicationName("Firelight");
+  QApplication::setOrganizationDomain("firelight-emulator.com");
+  QApplication::setApplicationName("Firelight");
 
-  QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-  QGuiApplication app(argc, argv);
+  QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+  QApplication app(argc, argv);
 
-
-  //TODO:
-  // Roms
+  // TODO:
+  //  Roms
 
   // QSettings:
   // credentials?
 
   // images
-  auto cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+  auto cachePath =
+      QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
   // "C:/Users/<USER>/AppData/Local/Firelight/cache/"
 
   // saves files
   // userdata db
   // controller profiles
   // library db
-  auto appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-
+  auto appDataPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
   // C:/Users/<USER>/AppData/Roaming/Firelight/library.db
   // C:/Users/<USER>/AppData/Roaming/Firelight/patches/
@@ -91,10 +93,7 @@ int main(int argc, char *argv[]) {
   std::filesystem::path appdata_dir = ".";
   auto systemDir = appdata_dir / "system";
 
-  if (!create_dirs({
-    appdata_dir, systemDir, romsDir,
-    patchesDir, saveDir
-  })) {
+  if (!create_dirs({appdata_dir, systemDir, romsDir, patchesDir, saveDir})) {
     return 1;
   }
 
@@ -126,13 +125,14 @@ int main(int argc, char *argv[]) {
   auto contentDirs = libraryDatabase.getAllLibraryContentDirectories();
   if (contentDirs.empty()) {
     firelight::db::LibraryContentDirectory dir{
-      .path = canonical(romsDir).string()
+      .path =
+      canonical(romsDir).string()
     };
 
     libraryDatabase.createLibraryContentDirectory(dir);
   }
 
-  firelight::achievements::RAClient raClient;
+  firelight::achievements::RAClient raClient(contentDatabase);
   firelight::ManagerAccessor::setAchievementManager(&raClient);
 
   // Set up the models for QML ***********************************************
@@ -147,10 +147,10 @@ int main(int argc, char *argv[]) {
   LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  QObject::connect(&libraryDatabase,
-                   &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
-                   &libraryManager,
-                   &LibraryScanner::startScan);
+  QObject::connect(
+    &libraryDatabase,
+    &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
+    &libraryManager, &LibraryScanner::startScan);
 
   QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
                    &firelight::gui::LibraryItemModel::refresh);
@@ -160,14 +160,18 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
 
+  firelight::gui::Router router;
+
   QQmlApplicationEngine engine;
+  engine.rootContext()->setContextProperty("Router", &router);
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
   engine.rootContext()->setContextProperty("library_model", &libModel);
   engine.rootContext()->setContextProperty("library_short_model",
                                            &libSortModel);
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
-  engine.rootContext()->setContextProperty("library_database", &libraryDatabase);
+  engine.rootContext()->setContextProperty("library_database",
+                                           &libraryDatabase);
   engine.rootContext()->setContextProperty("library_scan_path_model",
                                            libraryManager.scanDirectoryModel());
   engine.rootContext()->setContextProperty("controller_manager",
@@ -187,7 +191,7 @@ int main(int argc, char *argv[]) {
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
 
-  int exitCode = QGuiApplication::exec();
+  int exitCode = QApplication::exec();
 
   sdlEventLoop.stopProcessing();
 

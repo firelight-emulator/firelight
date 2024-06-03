@@ -75,107 +75,115 @@ Flickable {
                     // }
                 }
 
-                ColumnLayout {
-                    visible: !achievement_manager.loggedIn
+                Pane {
+                    background: Item {
+                    }
+                    padding: 8
                     anchors.fill: parent
-                    Text {
-                        Layout.preferredWidth: parent.width * 0.75
-                        text: qsTr("You're not logged in to RetroAchievements.\nLog in to start earning achievements!")
-                        font.pointSize: 11
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Medium
-                        wrapMode: Text.WordWrap
-                        color: "#bebfbe"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        Layout.topMargin: 12
-                    }
-                    Item {
-                        Layout.fillHeight: true
-                    }
-                    Button {
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-
-                        implicitWidth: 140
-                        implicitHeight: 40
-
-                        contentItem: Text {
-                            text: qsTr("Log in")
-                            color: "#272727"
+                    visible: !achievement_manager.loggedIn
+                    contentItem: ColumnLayout {
+                        spacing: 8
+                        Text {
+                            Layout.preferredWidth: parent.width * 0.75
+                            text: qsTr("You're not logged in to RetroAchievements.\nLog in to start earning achievements!")
+                            font.pointSize: 11
                             font.family: Constants.regularFontFamily
+                            font.weight: Font.Medium
+                            wrapMode: Text.WordWrap
+                            color: "#bebfbe"
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pointSize: 11
+                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                            // Layout.topMargin: 12
                         }
-
-                        onClicked: {
-                            control.open()
+                        Item {
+                            Layout.fillHeight: true
                         }
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
-                        background: Rectangle {
-                            color: "white"
-                            radius: 4
+                            implicitWidth: 140
+                            implicitHeight: 40
+
+                            contentItem: Text {
+                                text: qsTr("Log in")
+                                color: "#272727"
+                                font.family: Constants.regularFontFamily
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pointSize: 11
+                            }
+
+                            onClicked: {
+                                control.open()
+                            }
+
+                            background: Rectangle {
+                                color: "white"
+                                radius: 4
+                            }
+
+                            // background: Rectangle {
+                            //     color: "#f16205"
+                            //     width: 130
+                            //     height: 50
+                            //     radius: 8
+                            // }
+                            // onClicked: {
+                            //     achievement_manager.showLoginDialog()
+                            // }
                         }
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                            Layout.bottomMargin: 4
 
-                        // background: Rectangle {
-                        //     color: "#f16205"
-                        //     width: 130
-                        //     height: 50
-                        //     radius: 8
-                        // }
-                        // onClicked: {
-                        //     achievement_manager.showLoginDialog()
+                            implicitWidth: 140
+                            implicitHeight: 40
+
+                            contentItem: Text {
+                                text: qsTr("Create an account")
+                                color: "white"
+                                font.family: Constants.regularFontFamily
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pointSize: 11
+                            }
+
+                            onClicked: {
+                                Qt.openUrlExternally("https://retroachievements.org/createaccount.php")
+                            }
+
+                            hoverEnabled: true
+
+                            background: Rectangle {
+                                color: parent.hovered ? "#474747" : "transparent"
+                                radius: 4
+                            }
+
+                            // background: Rectangle {
+                            //     color: "#f16205"
+                            //     width: 130
+                            //     height: 50
+                            //     radius: 8
+                            // }
+                            // onClicked: {
+                            //     achievement_manager.showLoginDialog()
+                            // }
+                        }
+                        // Text {
+                        //     // text: qsTr("<a href='https://retroachievements.org/createaccount.php'>Don't have an account?</a>")
+                        //     text: "Don't have an account?"
+                        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                        //     font.pointSize: 10
+                        //     // textFormat: Text.StyledText
+                        //     font.family: Constants.regularFontFamily
+                        //     font.weight: Font.Medium
+                        //     wrapMode: Text.WordWrap
+                        //     color: "#4673e4"
+                        //     Layout.topMargin: 2
+                        //     Layout.bottomMargin: 12
                         // }
                     }
-                    Button {
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        Layout.bottomMargin: 4
-
-                        implicitWidth: 140
-                        implicitHeight: 40
-
-                        contentItem: Text {
-                            text: qsTr("Create an account")
-                            color: "white"
-                            font.family: Constants.regularFontFamily
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pointSize: 11
-                        }
-
-                        onClicked: {
-                            control.open()
-                        }
-
-                        background: Rectangle {
-                            color: "transparent"
-                            radius: 4
-                        }
-
-                        // background: Rectangle {
-                        //     color: "#f16205"
-                        //     width: 130
-                        //     height: 50
-                        //     radius: 8
-                        // }
-                        // onClicked: {
-                        //     achievement_manager.showLoginDialog()
-                        // }
-                    }
-                    // Text {
-                    //     // text: qsTr("<a href='https://retroachievements.org/createaccount.php'>Don't have an account?</a>")
-                    //     text: "Don't have an account?"
-                    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    //     font.pointSize: 10
-                    //     // textFormat: Text.StyledText
-                    //     font.family: Constants.regularFontFamily
-                    //     font.weight: Font.Medium
-                    //     wrapMode: Text.WordWrap
-                    //     color: "#4673e4"
-                    //     Layout.topMargin: 2
-                    //     Layout.bottomMargin: 12
-                    // }
                 }
 
 

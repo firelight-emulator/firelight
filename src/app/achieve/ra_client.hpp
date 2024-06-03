@@ -1,14 +1,20 @@
 #pragma once
 
+#include <QAbstractItemModel>
+
 #include "rcheevos/rc_client.h"
 #include "rcheevos/rc_libretro.h"
 #include <QTimer>
+#include <QJsonObject>
+#include <firelight/content_database.hpp>
 #include <firelight/library_entry.hpp>
 #include <qsettings.h>
 #include <spdlog/spdlog.h>
+#include <QMap>
 #include <string>
 #include <utility>
-#include <firelight/content_database.hpp>
+
+#include "../../gui/achievement_list_sort_filter_model.hpp"
 
 namespace libretro {
   class Core;
@@ -20,21 +26,23 @@ namespace firelight::achievements {
     Q_PROPERTY(bool loggedIn MEMBER m_loggedIn NOTIFY loginStatusChanged)
     Q_PROPERTY(QString displayName MEMBER m_displayName NOTIFY loginSucceeded)
     Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY loginStatusChanged)
-    Q_PROPERTY(bool defaultToHardcore MEMBER m_defaultToHardcore WRITE setDefaultToHardcore NOTIFY defaultModeChanged)
+    Q_PROPERTY(bool defaultToHardcore MEMBER m_defaultToHardcore WRITE
+      setDefaultToHardcore NOTIFY defaultModeChanged)
     Q_PROPERTY(int points READ numPoints NOTIFY pointsChanged)
     Q_PROPERTY(
-      bool unlockNotificationsEnabled MEMBER m_unlockNotificationsEnabled WRITE setUnlockNotificationsEnabled NOTIFY
+      bool unlockNotificationsEnabled MEMBER m_unlockNotificationsEnabled WRITE
+      setUnlockNotificationsEnabled NOTIFY notificationSettingsChanged)
+    Q_PROPERTY(
+      bool progressNotificationsEnabled MEMBER m_progressNotificationsEnabled
+      WRITE setProgressNotificationsEnabled NOTIFY
       notificationSettingsChanged)
     Q_PROPERTY(
-      bool progressNotificationsEnabled MEMBER m_progressNotificationsEnabled WRITE setProgressNotificationsEnabled
-      NOTIFY notificationSettingsChanged)
-    Q_PROPERTY(
-      bool challengeIndicatorsEnabled MEMBER m_challengeIndicatorsEnabled WRITE setChallengeIndicatorsEnabled NOTIFY
-      notificationSettingsChanged)
+      bool challengeIndicatorsEnabled MEMBER m_challengeIndicatorsEnabled WRITE
+      setChallengeIndicatorsEnabled NOTIFY notificationSettingsChanged)
     // Q_PROPERTY(bool gameLoaded READ gameLoaded NOTIFY gameLoadSucceeded)
 
   public:
-    RAClient();
+    explicit RAClient(db::IContentDatabase &contentDb);
 
     ~RAClient() override;
 
@@ -56,6 +64,10 @@ namespace firelight::achievements {
 
     void setChallengeIndicatorsEnabled(bool enabled);
 
+    Q_INVOKABLE QAbstractItemModel *getAchievementsModelForGameId(int gameId);
+
+    Q_INVOKABLE void getAchievementsOverview(int gameId);
+
     // bool gameLoaded() const;
 
   signals:
@@ -71,9 +83,13 @@ namespace firelight::achievements {
 
     void loginStatusChanged();
 
-    void achievementUnlocked(QString imageUrl, QString title, QString description);
+    void achievementUnlocked(QString imageUrl, QString title,
+                             QString description);
 
-    void gameLoadSucceeded(QString imageUrl, QString title, int numEarned, int numTotal);
+    void gameLoadSucceeded(QString imageUrl, QString title, int numEarned,
+                           int numTotal);
+
+    void achievementSummaryAvailable(QJsonObject summary);
 
     void gameLoadFailed();
 
@@ -89,7 +105,8 @@ namespace firelight::achievements {
 
     void achievementProgressPercentUpdated(int achievementId, float percent);
 
-    void showChallengeIndicator(int id, QString imageUrl, QString title, QString description);
+    void showChallengeIndicator(int id, QString imageUrl, QString title,
+                                QString description);
 
     void hideChallengeIndicator(int id);
 
@@ -114,6 +131,10 @@ namespace firelight::achievements {
     bool m_progressNotificationsEnabled = true;
     bool m_challengeIndicatorsEnabled = true;
     bool m_defaultToHardcore = true;
+
+    db::IContentDatabase &m_contentDb;
+
+    QHash<int, std::shared_ptr<gui::AchievementListSortFilterModel> > m_achievementModels;
 
     rc_client_t *m_client;
 

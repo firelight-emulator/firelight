@@ -4,32 +4,30 @@
 
 #ifndef FPS_MULTIPLIER_H
 #define FPS_MULTIPLIER_H
-#include <iostream>
 #include <QObject>
+#include <iostream>
 #include <qobjectdefs.h>
 #include <qstring.h>
 #include <qtmetamacros.h>
 
-
 class FpsMultiplier : public QObject {
-    Q_OBJECT
-    Q_PROPERTY(double sliderValue READ sliderValue WRITE setSliderValue NOTIFY sliderValueChanged)
+  Q_OBJECT
+  Q_PROPERTY(double sliderValue READ sliderValue WRITE setSliderValue NOTIFY
+                 sliderValueChanged)
 
 public:
-    inline double sliderValue() const {
-        return m_sliderValue;
-    }
+  inline double sliderValue() const { return m_sliderValue; }
 
 signals:
-    void sliderValueChanged(double newValue);
+  void sliderValueChanged(double newValue);
 
 public slots:
-    void stop();
-    void start();
-    void setSliderValue(double);
+  void stop();
+  void start();
+  void setSliderValue(double);
 
 private:
-    double m_sliderValue = 1;
+  double m_sliderValue = 1;
 };
 
-#endif //FPS_MULTIPLIER_H
+#endif // FPS_MULTIPLIER_H

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "firelight/libretro/retropad_provider.hpp"
 #include "controller.hpp"
+#include "firelight/libretro/retropad_provider.hpp"
 #include <QAbstractListModel>
 #include <QObject>
 #include <SDL_events.h>

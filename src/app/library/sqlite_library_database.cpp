@@ -1,11 +1,11 @@
 #include "sqlite_library_database.hpp"
 
 #include <QDateTime>
+#include <QJsonObject>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlTableModel>
 #include <QThread>
-#include <QJsonObject>
 #include <QUrl>
 #include <spdlog/spdlog.h>
 #include <utility>
@@ -40,7 +40,8 @@ namespace firelight::db {
     }
 
     QSqlQuery createContentDirectories(db);
-    createContentDirectories.prepare("CREATE TABLE IF NOT EXISTS content_directories("
+    createContentDirectories.prepare(
+      "CREATE TABLE IF NOT EXISTS content_directories("
       "id INTEGER PRIMARY KEY AUTOINCREMENT,"
       "path TEXT UNIQUE NOT NULL,"
       "num_game_files INTEGER DEFAULT 0,"
@@ -136,8 +137,12 @@ namespace firelight::db {
     jsonObj["id"] = entry->id;
     jsonObj["display_name"] = QString::fromStdString(entry->displayName);
     jsonObj["platform_name"] = "Lol cool";
+    jsonObj["game_id"] = entry->gameId;
     jsonObj["parent_entry_id"] = entry->parentEntryId;
     jsonObj["is_patch"] = entry->type == LibraryEntry::EntryType::PATCH;
+    jsonObj["content_path"] = QString::fromStdString(entry->contentPath);
+    jsonObj["active_save_slot"] = static_cast<int>(entry->activeSaveSlot);
+    jsonObj["created_at"] = QJsonValue::fromVariant(entry->createdAt);
 
     return QVariant::fromValue(jsonObj);
   }
@@ -146,7 +151,8 @@ namespace firelight::db {
     const QString queryString =
         "INSERT INTO library_entries (display_name, content_id, "
         "platform_id, "
-        "parent_entry_id, game_id, mod_id, type, file_md5, file_crc32, source_directory, "
+        "parent_entry_id, game_id, mod_id, type, file_md5, file_crc32, "
+        "source_directory, "
         "content_path, "
         "created_at) VALUES"
         "(:displayName, :contentId, :platformId, :parentEntryId, :gameId, "
@@ -335,11 +341,12 @@ namespace firelight::db {
     return paths;
   }
 
-  bool SqliteLibraryDatabase::createLibraryContentDirectory(LibraryContentDirectory &directory) {
+  bool SqliteLibraryDatabase::createLibraryContentDirectory(
+    LibraryContentDirectory &directory) {
     // const auto path = QUrl(QString::fromStdString(directory.path)).toString();
 
-    const QString queryString =
-        "INSERT INTO content_directories (path, created_at) VALUES (:path, :createdAt);";
+    const QString queryString = "INSERT INTO content_directories (path, "
+        "created_at) VALUES (:path, :createdAt);";
     QSqlQuery query(getDatabase());
     query.prepare(queryString);
     query.bindValue(":path", QString::fromStdString(directory.path));
@@ -360,7 +367,8 @@ namespace firelight::db {
     return true;
   }
 
-  bool SqliteLibraryDatabase::updateLibraryContentDirectory(LibraryContentDirectory &directory) {
+  bool SqliteLibraryDatabase::updateLibraryContentDirectory(
+    LibraryContentDirectory &directory) {
     QSqlQuery q(getDatabase());
     q.prepare("UPDATE content_directories SET path = :path WHERE id = :id");
     q.bindValue(":path", QString::fromStdString(directory.path));
@@ -376,7 +384,8 @@ namespace firelight::db {
     return true;
   }
 
-  std::vector<LibraryContentDirectory> SqliteLibraryDatabase::getAllLibraryContentDirectories() const {
+  std::vector<LibraryContentDirectory>
+  SqliteLibraryDatabase::getAllLibraryContentDirectories() const {
     QSqlQuery q(getDatabase());
     q.prepare("SELECT * FROM content_directories");
 
@@ -512,7 +521,8 @@ namespace firelight::db {
   }
 
   LibraryContentDirectory
-  SqliteLibraryDatabase::createLibraryContentDirectoryFromQuery(const QSqlQuery &query) {
+  SqliteLibraryDatabase::createLibraryContentDirectoryFromQuery(
+    const QSqlQuery &query) {
     LibraryContentDirectory directory;
     directory.id = query.value(0).toInt();
     directory.path = query.value(1).toString().toStdString();

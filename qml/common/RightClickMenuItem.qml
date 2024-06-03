@@ -5,6 +5,22 @@ MenuItem {
     id: control
     padding: 6
 
+    property bool externalLink: false
+
+    Text {
+        id: externalIndicator
+        visible: control.externalLink
+        x: control.width - width - 8
+        y: control.height / 2 - height / 2
+        width: parent.height - parent.padding * 2
+        height: parent.height - parent.padding * 2
+        font.family: Constants.symbolFontFamily
+        font.pointSize: 12
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+        text: "\ue89e"
+        color: "white"
+    }
 
     arrow: Canvas {
         x: parent.width - width

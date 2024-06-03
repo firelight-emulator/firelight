@@ -19,4 +19,4 @@ private:
   QImage m_screenshot{};
 };
 
-} // namespace firelight::Saves
+} // namespace firelight::saves

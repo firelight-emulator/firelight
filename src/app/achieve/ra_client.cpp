@@ -7,7 +7,13 @@
 #include <QThreadPool>
 #include <algorithm>
 #include <cstdio>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <spdlog/spdlog.h>
+#include "firelight/achievement.hpp"
+
+#include "../../gui/achievement_list_model.hpp"
+#include "../../gui/achievement_list_sort_filter_model.hpp"
 
 namespace firelight::achievements {
   static ::libretro::Core *theCore;
@@ -20,10 +26,11 @@ namespace firelight::achievements {
         char urlBuffer[256];
 
         auto success = rc_client_achievement_get_image_url(
-          event->achievement, RC_CLIENT_ACHIEVEMENT_STATE_UNLOCKED, urlBuffer, 256);
-        emit raClient->achievementUnlocked(QString(urlBuffer),
-                                           QString(event->achievement->title),
-                                           QString(event->achievement->description));
+          event->achievement, RC_CLIENT_ACHIEVEMENT_STATE_UNLOCKED, urlBuffer,
+          256);
+        emit raClient->achievementUnlocked(
+          QString(urlBuffer), QString(event->achievement->title),
+          QString(event->achievement->description));
         emit raClient->pointsChanged();
         break;
       }
@@ -31,10 +38,12 @@ namespace firelight::achievements {
         char urlBuffer[256];
 
         auto success = rc_client_achievement_get_image_url(
-          event->achievement, RC_CLIENT_ACHIEVEMENT_STATE_UNLOCKED, urlBuffer, 256);
-        emit raClient->showChallengeIndicator(event->achievement->id, QString(urlBuffer),
-                                              QString(event->achievement->title),
-                                              QString(event->achievement->description));
+          event->achievement, RC_CLIENT_ACHIEVEMENT_STATE_UNLOCKED, urlBuffer,
+          256);
+        emit raClient->showChallengeIndicator(
+          event->achievement->id, QString(urlBuffer),
+          QString(event->achievement->title),
+          QString(event->achievement->description));
         break;
       }
       case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE: {
@@ -124,8 +133,8 @@ namespace firelight::achievements {
       }
 
       if (raClient->m_memorySeemsGood) {
-        return rc_libretro_memory_read(&raClient->m_memoryRegions, address, buffer,
-                                       num_bytes);
+        return rc_libretro_memory_read(&raClient->m_memoryRegions, address,
+                                       buffer, num_bytes);
       }
       return 0;
     }
@@ -168,7 +177,7 @@ namespace firelight::achievements {
     spdlog::info("[RetroAchievements] {}", message);
   }
 
-  RAClient::RAClient() {
+  RAClient::RAClient(db::IContentDatabase &contentDb) : m_contentDb(contentDb) {
     m_client = rc_client_create(readMemoryCallback, httpCallback);
     rc_client_enable_logging(m_client, RC_CLIENT_LOG_LEVEL_VERBOSE, logCallback);
     rc_client_set_event_handler(m_client, eventHandler);
@@ -180,11 +189,18 @@ namespace firelight::achievements {
 
     m_settings = std::make_unique<QSettings>();
 
-    m_progressNotificationsEnabled = m_settings->value("retroachievements/progressNotificationsEnabled", true).toBool();
-    m_unlockNotificationsEnabled = m_settings->value("retroachievements/unlockNotificationsEnabled", true).toBool();
-    m_challengeIndicatorsEnabled = m_settings->value("retroachievements/challengeIndicatorsEnabled", true).toBool();
+    m_progressNotificationsEnabled =
+        m_settings->value("retroachievements/progressNotificationsEnabled", true)
+        .toBool();
+    m_unlockNotificationsEnabled =
+        m_settings->value("retroachievements/unlockNotificationsEnabled", true)
+        .toBool();
+    m_challengeIndicatorsEnabled =
+        m_settings->value("retroachievements/challengeIndicatorsEnabled", true)
+        .toBool();
 
-    m_defaultToHardcore = m_settings->value("retroachievements/defaultToHardcore", true).toBool();
+    m_defaultToHardcore =
+        m_settings->value("retroachievements/defaultToHardcore", true).toBool();
     rc_client_set_hardcore_enabled(m_client, m_defaultToHardcore);
 
     const auto user =
@@ -270,11 +286,9 @@ namespace firelight::achievements {
       m_client, contentMd5.toStdString().c_str(),
       [](int result, const char *error_message, rc_client_t *client,
          void *userdata) {
-        // auto promise = static_cast<std::promise<bool> *>(userdata);
         const auto theThing =
             static_cast<RAClient *>(rc_client_get_userdata(client));
         if (result == 0) {
-          // promise->set_value(true);
           theThing->m_gameLoaded = true;
           rc_client_user_game_summary_t gameSummary;
           rc_client_get_user_game_summary(client, &gameSummary);
@@ -285,12 +299,10 @@ namespace firelight::achievements {
           char buffer[256];
 
           auto gameInfo = rc_client_get_game_info(client);
-          auto imageUrl = rc_client_game_get_image_url(gameInfo, buffer, 256);
+          rc_client_game_get_image_url(gameInfo, buffer, 256);
           emit theThing->gameLoadSucceeded(buffer, QString(gameInfo->title),
-                                           numEarned,
-                                           numTotal);
+                                           numEarned, numTotal);
         } else {
-          // promise->set_value(false);
           theThing->m_gameLoaded = false;
           emit theThing->gameLoadFailed();
         }
@@ -337,12 +349,160 @@ namespace firelight::achievements {
 
   void RAClient::setProgressNotificationsEnabled(bool enabled) {
     m_progressNotificationsEnabled = enabled;
-    m_settings->setValue("retroachievements/progressNotificationsEnabled", enabled);
+    m_settings->setValue("retroachievements/progressNotificationsEnabled",
+                         enabled);
   }
 
   void RAClient::setChallengeIndicatorsEnabled(bool enabled) {
     m_challengeIndicatorsEnabled = enabled;
     m_settings->setValue("retroachievements/challengeIndicatorsEnabled", enabled);
+  }
+
+  QAbstractItemModel *RAClient::getAchievementsModelForGameId(int gameId) {
+    if (!m_loggedIn) {
+      return {};
+    }
+
+    const auto id = m_contentDb.getRetroAchievementsIdForGame(gameId);
+    if (!id.has_value()) {
+      printf("No value\n");
+      return {};
+    }
+
+    gui::AchievementListSortFilterModel *sortModel = nullptr;
+    gui::AchievementListModel *listModel = nullptr;
+    if (!m_achievementModels.contains(gameId)) {
+      sortModel = new gui::AchievementListSortFilterModel(this);
+
+      listModel = new gui::AchievementListModel(this);
+      sortModel->setSourceModel(listModel);
+
+      m_achievementModels.insert(gameId, std::shared_ptr<gui::AchievementListSortFilterModel>(sortModel));
+    } else {
+      sortModel = m_achievementModels.value(gameId).get();
+      listModel = dynamic_cast<gui::AchievementListModel *>(sortModel->sourceModel());
+    }
+
+    QThreadPool::globalInstance()->start([&, listModel, gameId, id] {
+      const auto url = cpr::Url{"https://retroachievements.org/API/API_GetGameInfoAndUserProgress.php"};
+      const auto headers = cpr::Header{
+        {"User-Agent", "FirelightEmulator/1.0"},
+        {"Content-Type", "application/json"}
+      };
+
+      const auto userInfo = rc_client_get_user_info(m_client);
+
+      cpr::Parameters params = {
+        {"g", std::to_string(*id)},
+        {"z", userInfo->username},
+        {"y", ""},
+        {"u", userInfo->username}
+      };
+
+
+      const auto response = Post(url, headers, params);
+
+      if (response.status_code != 200) {
+        spdlog::error("[RetroAchievements] Failed to get achievements for game ID: {}",
+                      gameId);
+        return;
+      }
+
+      auto json = QJsonDocument::fromJson(QByteArray::fromStdString(response.text)).object();
+      if (json.isEmpty()) {
+        printf("json is empty\n");
+        return;
+      }
+      printf("GOT JSON\n");
+
+      auto achievements = json["Achievements"].toObject();
+
+      QVector<Achievement> results;
+      for (auto val = achievements.begin(); val != achievements.end(); ++val) {
+        auto jsonObj = val.value().toObject();
+
+        Achievement achievement;
+        achievement.id = jsonObj["ID"].toInt();
+        achievement.name = jsonObj["Title"].toString().toStdString();
+        achievement.description = jsonObj["Description"].toString().toStdString();
+        achievement.points = jsonObj["Points"].toInt();
+        achievement.earnedDate = jsonObj["DateEarned"].toString().toStdString();
+        achievement.earnedDateHardcore = jsonObj["DateEarnedHardcore"].toString().toStdString();
+        achievement.displayOrder = jsonObj["DisplayOrder"].toInt();
+
+        QString imageUrl;
+        if (jsonObj.contains("DateEarnedHardcore") && !jsonObj["DateEarnedHardcore"].toString().isEmpty()) {
+          achievement.earned = true;
+          imageUrl = "https://media.retroachievements.org/Badge/" + jsonObj["BadgeName"].toString() + ".png";
+        } else {
+          achievement.earned = false;
+          imageUrl = "https://media.retroachievements.org/Badge/" + jsonObj["BadgeName"].toString() + "_lock.png";
+        }
+
+        achievement.imageUrl = imageUrl.toStdString();
+
+        results.append(achievement);
+      }
+
+      std::ranges::sort(results, [](const Achievement &a, const Achievement &b) {
+        return a.displayOrder < b.displayOrder;
+      });
+
+      QMetaObject::invokeMethod(listModel, "refreshAchievements", Qt::QueuedConnection,
+                                Q_ARG(QVector<Achievement>, results));
+    });
+
+    return sortModel;
+  }
+
+  void RAClient::getAchievementsOverview(int gameId) {
+    if (!m_loggedIn) {
+      return;
+    }
+
+    const auto id = m_contentDb.getRetroAchievementsIdForGame(gameId);
+    if (!id.has_value()) {
+      return;
+    }
+
+    QThreadPool::globalInstance()->start([this, id, gameId] {
+      const auto url = cpr::Url{"https://retroachievements.org/API/API_GetUserProgress.php"};
+      const auto headers = cpr::Header{
+        {"User-Agent", "FirelightEmulator/1.0"},
+        {"Content-Type", "application/json"}
+      };
+
+      const auto userInfo = rc_client_get_user_info(m_client);
+
+      cpr::Parameters params = {
+        {"i", std::to_string(*id)},
+        {"z", userInfo->username},
+        {"y", ""},
+        {"u", userInfo->username}
+      };
+
+      const auto response = Post(url, headers, params);
+
+      if (response.status_code != 200) {
+        spdlog::error("[RetroAchievements] Failed to get achievements for game ID: {}",
+                      gameId);
+        return;
+      }
+
+
+      auto json = QJsonDocument::fromJson(QByteArray::fromStdString(response.text)).object();
+      if (json.isEmpty()) {
+        printf("json is empty\n");
+        return;
+      }
+
+      if (json.keys().length() != 1) {
+        printf("what the\n");
+        return;
+      }
+
+      emit achievementSummaryAvailable(json.value(json.keys().at(0)).toObject());
+    });
   }
 
   // bool RAClient::gameLoaded() const { return m_gameLoaded; }
@@ -452,7 +612,8 @@ namespace firelight::achievements {
       return {};
     }
 
-    if (char buf[255]; rc_client_user_get_image_url(userInfo, buf, 255) == RC_OK) {
+    if (char buf[255];
+      rc_client_user_get_image_url(userInfo, buf, 255) == RC_OK) {
       return {buf};
     }
 

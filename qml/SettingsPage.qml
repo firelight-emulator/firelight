@@ -5,6 +5,12 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    required property string section
+
+    Component.onCompleted: {
+        sectionChanged()
+    }
+
     Rectangle {
         color: "#101114"
         height: parent.height
@@ -56,10 +62,10 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    checked: true
+                    checked: root.section === "library"
                     onToggled: {
                         if (checked) {
-                            rightHalf.replace(librarySettings)
+                            root.section = "library"
                         }
                     }
                 }
@@ -69,9 +75,10 @@ Item {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                     Layout.preferredHeight: 40
+                    checked: root.section === "achievements"
                     onToggled: {
                         if (checked) {
-                            rightHalf.replace(retroAchievementSettings)
+                            root.section = "achievements"
                         }
                     }
                 }
@@ -82,9 +89,10 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    checked: root.section === "audiovideo"
                     onToggled: {
                         if (checked) {
-                            rightHalf.replace(videoSettings)
+                            root.section = "audiovideo"
                         }
                     }
                 }
@@ -147,7 +155,21 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.leftMargin: 36
 
-                initialItem: librarySettings
+                Connections {
+                    target: root
+
+                    function onSectionChanged() {
+                        if (root.section === "library") {
+                            rightHalf.replace(librarySettings)
+                        } else if (root.section === "achievements") {
+                            rightHalf.replace(retroAchievementSettings)
+                        } else if (root.section === "audiovideo") {
+                            rightHalf.replace(videoSettings)
+                        }
+                    }
+                }
+
+                // initialItem: librarySettings
 
                 pushEnter: Transition {
                 }

@@ -24,6 +24,22 @@ ApplicationWindow {
         color: "#1a1b1e"
     }
 
+    Connections {
+        target: Router
+
+        function onRouteChanged(route) {
+            let parts = route.split("/")
+            if (parts.length > 0) {
+                let id = parts[0]
+
+                if (id === "settings") {
+                    let section = parts.length > 1 ? parts[1] : "library"
+                    stackView.push(settingsPage, {section: section})
+                }
+            }
+        }
+    }
+
     GameLaunchPopup {
         id: gameLaunchPopup
 
@@ -198,7 +214,7 @@ ApplicationWindow {
                     }
 
                     Text {
-                        text: "alpha (0.4.0a)"
+                        text: "alpha (0.5.0a)"
                         opacity: parent.width > 48 ? 1 : 0
                         color: "#dadada"
                         font.pointSize: 8
@@ -215,8 +231,8 @@ ApplicationWindow {
                     NavMenuButton {
                         id: homeNavButton
                         KeyNavigation.down: libraryNavButton
-                        labelText: "Home"
-                        labelIcon: "\ue88a"
+                        labelText: "Dashboard"
+                        labelIcon: "\ue871"
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
                         enabled: false
@@ -226,8 +242,8 @@ ApplicationWindow {
                     NavMenuButton {
                         id: modNavButton
                         KeyNavigation.down: controllersNavButton
-                        labelText: "Discover"
-                        labelIcon: "\ue87a"
+                        labelText: "Mod Shop"
+                        labelIcon: "\uef48"
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
                         enabled: false
@@ -384,7 +400,7 @@ ApplicationWindow {
                             checkable: false
 
                             onClicked: {
-                                stackView.push(settingsPage)
+                                Router.navigateTo("settings")
                             }
                             // Layout.fillHeight: true
                             // Layout.fillWidth: true

@@ -7,10 +7,19 @@ project(firelight
 )
 
 include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
+#include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+#include(FetchContent)
+#FetchContent_Declare(
+#        QtAndroidCMake
+#        GIT_REPOSITORY https://github.com/LaurentGomila/qt-android-cmake
+#        GIT_TAG master
+#)
+#FetchContent_MakeAvailable(QtAndroidCMake)
 
 #set(CMAKE_INSTALL_RPATH "")
 
@@ -19,7 +28,7 @@ set(CMAKE_AUTOUIC ON)
 find_package(SDL2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql REQUIRED)
+find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql Charts QuickTest REQUIRED)
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
 
@@ -32,12 +41,7 @@ add_subdirectory(src/app)
 
 file(GLOB QML_FILES
         qml/*.qml
-        qml/common/*.qml
-        qml/mainmenu/*.qml
-        qml/controllers/*.qml
-        qml/settings/*.qml
-        qml/library/*.qml
-        qml/discover/*.qml
+        qml/**/*.qml
 )
 
 foreach (QML_FILE ${QML_FILES})
@@ -76,6 +80,9 @@ add_library(firelight_lib
         src/app/achieve/ra_client.cpp
         src/gui/window_resize_handler.cpp
         src/gui/library_path_model.cpp
+        src/gui/achievement_list_model.cpp
+        src/gui/achievement_list_sort_filter_model.cpp
+        src/app/router.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
@@ -91,6 +98,8 @@ target_link_libraries(firelight_lib PUBLIC
         Qt6::QuickControls2
         Qt6::Quick3D
         Qt6::Sql
+        Qt6::Charts
+        Qt6::QuickTest
         spdlog::spdlog
         cpr::cpr
         library
@@ -112,7 +121,7 @@ qt6_add_qml_module(firelight
         ${QML_FILES}
 )
 
-target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
+#target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
 #target_link_libraries(firelight PRIVATE firelight_lib)
 target_link_libraries(firelight PUBLIC
         firelight_lib)
@@ -124,7 +133,6 @@ target_link_libraries(firelight PUBLIC
 find_program(MINGW_PATH gcc)
 get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)
 set(SHARED_LIB_DIR "${MINGW_DIR}")
-message("Shared Library  Directory: ${SHARED_LIB_DIR}")
 
 #include(GNUInstallDirs)
 install(TARGETS firelight
@@ -171,6 +179,32 @@ add_executable(fl_test
         tests/app/db/sqlite_content_database_test.cpp
         tests/main.cpp
 )
+
+file(GLOB QML_TEST_FILES
+        qml_tests/*.qml
+        qml_tests/**/*.qml
+)
+
+foreach (QML_FILE ${QML_TEST_FILES})
+    get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
+    set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
+endforeach ()
+
+qt_add_executable(fl_qml_test
+        tests/qml_main.cpp
+)
+
+qt6_add_qml_module(fl_qml_test
+        URI QMLFirelightTest
+        VERSION 1.0
+        QML_FILES
+        ${QML_TEST_FILES}
+)
+
+target_link_libraries(fl_qml_test PUBLIC firelight_lib)
+add_definitions(-DQUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+add_test(NAME QMLTests COMMAND fl_qml_test -platform offscreen)
 
 #target_compile_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
 #target_link_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
