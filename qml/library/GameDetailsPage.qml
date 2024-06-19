@@ -238,6 +238,25 @@ Item {
                             cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                         }
                     }
+                    TabButton {
+                        width: root.tabWidth
+                        contentItem: Text {
+                            text: "Settings"
+                            color: parent.enabled ? "#ffffff" : "#666666"
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 11
+                            font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        background: Item {
+                        }
+
+                        HoverHandler {
+                            cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        }
+                    }
                 }
                 SwipeView {
                     id: view
@@ -331,7 +350,54 @@ Item {
                         }
                     }
                     Flickable {
+                        id: flickThing
                         contentHeight: !achievement_manager.loggedIn ? thing.height : achievementsList.height
+
+                        property real scrollMultiplier: 8.0  // Adjust this multiplier for desired scroll speed
+                        property real maxScrollSpeed: 1000  // Maximum scroll speed
+                        property real smoothScrollSpeed: 0.1 // Adjust this for smoothness
+
+                        // Behavior on contentY {
+                        //     NumberAnimation {
+                        //         duration: 120
+                        //         easing.type: Easing.InOutQuad
+                        //     }
+                        // }
+
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.NoButton
+                            // preventStealing: true
+                            onWheel: function (wheel) {
+                                var scrollDelta;
+                                if (wheel.pixelDelta.y !== 0) {
+                                    scrollDelta = wheel.pixelDelta.y;
+                                } else {
+                                    scrollDelta = wheel.angleDelta.y / 8;
+                                }
+
+                                flickThing.contentY -= scrollDelta * flickThing.scrollMultiplier
+                                if (flickThing.contentY < 0) {
+                                    flickThing.contentY = 0
+                                } else if (flickThing.contentY > flickThing.contentHeight - flickThing.height) {
+                                    flickThing.contentY = flickThing.contentHeight - flickThing.height
+                                }
+
+                                //
+                                // // Dynamic scaling factor for fast scrolling
+                                // var scaledDelta = scrollDelta * flickThing.scrollMultiplier;
+                                // var absDelta = Math.abs(scrollDelta);
+                                //
+                                // // Increase scroll speed for larger deltas (fast scrolling)
+                                // if (absDelta > 10) {
+                                //     scaledDelta *= (absDelta / 10);
+                                //     scaledDelta = Math.sign(scrollDelta) * Math.min(flickThing.maxScrollSpeed, Math.abs(scaledDelta));
+                                // }
+                                //
+                                // flickThing.contentY = Math.max(0, Math.min(flickThing.contentY + scaledDelta, flickThing.contentHeight - flickThing.height));
+                            }
+                        }
                         ColumnLayout {
                             id: thing
                             visible: !achievement_manager.loggedIn
@@ -386,122 +452,122 @@ Item {
                                 height: 24
                             }
 
-                            Pane {
-                                width: 540
-                                height: 106
-                                padding: 8
-
-                                background: Rectangle {
-                                    color: "#292929"
-                                    radius: 8
-                                }
-
-                                contentItem: Item {
-                                    Image {
-                                        id: gameIcon
-                                        width: parent.height
-                                        height: parent.height
-                                        fillMode: Image.PreserveAspectFit
-                                        source: "https://media.retroachievements.org/Images/040155.png"
-                                    }
-                                    // Rectangle {
-                                    //     id: gameIcon
-                                    //     color: "red"
-                                    //     width: parent.height
-                                    //     height: parent.height
-                                    // }
-                                    ColumnLayout {
-                                        anchors.leftMargin: 12
-                                        anchors.left: gameIcon.right
-                                        anchors.top: parent.top
-                                        anchors.bottom: parent.bottom
-                                        anchors.right: parent.right
-                                        spacing: 4
-
-                                        RowLayout {
-                                            Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                            Layout.verticalStretchFactor: 3
-                                            spacing: 0
-                                            Text {
-                                                Layout.fillHeight: true
-                                                text: root.entryData.display_name
-                                                font.family: Constants.regularFontFamily
-                                                font.pointSize: 12
-                                                font.weight: Font.DemiBold
-                                                verticalAlignment: Text.AlignVCenter
-                                                color: "white"
-                                            }
-                                            Item {
-                                                Layout.fillWidth: true
-                                                Layout.fillHeight: true
-                                            }
-                                            Text {
-                                                id: first
-                                                text: root.achievementsSummary.NumAchievedHardcore
-                                                font.family: Constants.regularFontFamily
-                                                font.pointSize: 16
-                                                font.weight: Font.DemiBold
-                                                color: "white"
-                                                verticalAlignment: Text.AlignBottom
-                                                horizontalAlignment: Text.AlignRight
-                                                Layout.fillHeight: true
-                                            }
-
-                                            Text {
-                                                id: slash
-                                                text: " /"
-                                                Layout.fillHeight: true
-                                                font.family: Constants.regularFontFamily
-                                                font.pointSize: 15
-                                                color: "#aaaaaa"
-                                                verticalAlignment: Text.AlignBottom
-                                            }
-
-                                            Text {
-                                                text: root.achievementsSummary.NumPossibleAchievements
-                                                Layout.fillHeight: true
-                                                font.family: Constants.regularFontFamily
-                                                font.pointSize: 12
-                                                color: "#aaaaaa"
-                                                verticalAlignment: Text.AlignBottom
-                                            }
-
-                                            Text {
-                                                text: " earned"
-                                                Layout.fillHeight: true
-                                                font.family: Constants.regularFontFamily
-                                                font.pointSize: 10
-                                                color: "#aaaaaa"
-                                                verticalAlignment: Text.AlignBottom
-                                            }
-                                        }
-
-                                        Item {
-                                            Layout.fillHeight: true
-                                            Layout.fillWidth: true
-                                            Layout.verticalStretchFactor: 1
-                                            Rectangle {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                width: parent.width
-                                                height: 20
-                                                radius: height / 2
-                                                color: "black"
-                                            }
-
-                                            Rectangle {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                width: parent.width / 5
-                                                height: 20
-                                                radius: height / 2
-                                                border.color: "black"
-                                                color: "#bc8c0f"
-                                            }
-
-                                        }
-                                    }
-                                }
-                            }
+                            // Pane {
+                            //     width: 540
+                            //     height: 106
+                            //     padding: 8
+                            //
+                            //     background: Rectangle {
+                            //         color: "#292929"
+                            //         radius: 8
+                            //     }
+                            //
+                            //     contentItem: Item {
+                            //         Image {
+                            //             id: gameIcon
+                            //             width: parent.height
+                            //             height: parent.height
+                            //             fillMode: Image.PreserveAspectFit
+                            //             source: "https://media.retroachievements.org/Images/040155.png"
+                            //         }
+                            //         // Rectangle {
+                            //         //     id: gameIcon
+                            //         //     color: "red"
+                            //         //     width: parent.height
+                            //         //     height: parent.height
+                            //         // }
+                            //         ColumnLayout {
+                            //             anchors.leftMargin: 12
+                            //             anchors.left: gameIcon.right
+                            //             anchors.top: parent.top
+                            //             anchors.bottom: parent.bottom
+                            //             anchors.right: parent.right
+                            //             spacing: 4
+                            //
+                            //             RowLayout {
+                            //                 Layout.fillWidth: true
+                            //                 Layout.fillHeight: true
+                            //                 Layout.verticalStretchFactor: 3
+                            //                 spacing: 0
+                            //                 Text {
+                            //                     Layout.fillHeight: true
+                            //                     text: root.entryData.display_name
+                            //                     font.family: Constants.regularFontFamily
+                            //                     font.pointSize: 12
+                            //                     font.weight: Font.DemiBold
+                            //                     verticalAlignment: Text.AlignVCenter
+                            //                     color: "white"
+                            //                 }
+                            //                 Item {
+                            //                     Layout.fillWidth: true
+                            //                     Layout.fillHeight: true
+                            //                 }
+                            //                 Text {
+                            //                     id: first
+                            //                     text: root.achievementsSummary.NumAchievedHardcore
+                            //                     font.family: Constants.regularFontFamily
+                            //                     font.pointSize: 16
+                            //                     font.weight: Font.DemiBold
+                            //                     color: "white"
+                            //                     verticalAlignment: Text.AlignBottom
+                            //                     horizontalAlignment: Text.AlignRight
+                            //                     Layout.fillHeight: true
+                            //                 }
+                            //
+                            //                 Text {
+                            //                     id: slash
+                            //                     text: " /"
+                            //                     Layout.fillHeight: true
+                            //                     font.family: Constants.regularFontFamily
+                            //                     font.pointSize: 15
+                            //                     color: "#aaaaaa"
+                            //                     verticalAlignment: Text.AlignBottom
+                            //                 }
+                            //
+                            //                 Text {
+                            //                     text: root.achievementsSummary.NumPossibleAchievements
+                            //                     Layout.fillHeight: true
+                            //                     font.family: Constants.regularFontFamily
+                            //                     font.pointSize: 12
+                            //                     color: "#aaaaaa"
+                            //                     verticalAlignment: Text.AlignBottom
+                            //                 }
+                            //
+                            //                 Text {
+                            //                     text: " earned"
+                            //                     Layout.fillHeight: true
+                            //                     font.family: Constants.regularFontFamily
+                            //                     font.pointSize: 10
+                            //                     color: "#aaaaaa"
+                            //                     verticalAlignment: Text.AlignBottom
+                            //                 }
+                            //             }
+                            //
+                            //             Item {
+                            //                 Layout.fillHeight: true
+                            //                 Layout.fillWidth: true
+                            //                 Layout.verticalStretchFactor: 1
+                            //                 Rectangle {
+                            //                     anchors.verticalCenter: parent.verticalCenter
+                            //                     width: parent.width
+                            //                     height: 20
+                            //                     radius: height / 2
+                            //                     color: "black"
+                            //                 }
+                            //
+                            //                 Rectangle {
+                            //                     anchors.verticalCenter: parent.verticalCenter
+                            //                     width: parent.width / 5
+                            //                     height: 20
+                            //                     radius: height / 2
+                            //                     border.color: "black"
+                            //                     color: "#bc8c0f"
+                            //                 }
+                            //
+                            //             }
+                            //         }
+                            //     }
+                            // }
 
                             // Rectangle {
                             //     Rectangle {
@@ -660,7 +726,16 @@ Item {
                     }
 
                     Text {
-                        text: "and here too!"
+                        text: "activity stuff"
+                        color: "white"
+                        font.family: Constants.regularFontFamily
+                        font.pointSize: 10
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        text: "settings stuff"
                         color: "white"
                         font.family: Constants.regularFontFamily
                         font.pointSize: 10

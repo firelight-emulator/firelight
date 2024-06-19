@@ -276,7 +276,7 @@ ApplicationWindow {
                         Layout.preferredWidth: parent.width
                         Layout.preferredHeight: 48
 
-                        enabled: false
+                        // enabled: true
 
                         checked: stackview.topLevelName === "controllers"
 

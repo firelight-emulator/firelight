@@ -59,7 +59,6 @@ namespace firelight::gui {
     }
 
     void AchievementListModel::refreshAchievements(const QVector<achievements::Achievement> &achievements) {
-        printf("REFRESHING\n");
         emit beginResetModel();
         m_achievements.clear();
         for (const auto &achievement: achievements) {
@@ -67,7 +66,6 @@ namespace firelight::gui {
         }
 
         emit endResetModel();
-        printf("DONE REFRESHING\n");
     }
 
     void AchievementListModel::setSortType(const QString &sortType) {
