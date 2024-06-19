@@ -17,6 +17,10 @@ namespace firelight::Input {
 
     printf("vendorId: %d\n", vendorId);
     printf("productId: %d\n", productId);
+    printf("Power status: %d\n", SDL_JoystickCurrentPowerLevel(m_SDLJoystick));
+    printf("Has rumble: %d\n", SDL_JoystickHasRumble(m_SDLJoystick));
+    printf("Has LED: %d\n", SDL_JoystickHasLED(m_SDLJoystick));
+    printf("Has rumble triggers: %d\n", SDL_JoystickHasRumbleTriggers(m_SDLJoystick));
   }
 
   bool Controller::isButtonPressed(const Button t_button) {

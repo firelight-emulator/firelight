@@ -129,7 +129,7 @@ Flickable {
                             id: icon
                             visible: model.model_name !== "Default"
 
-                            height: 220
+                            height: 280
                             width: 200
 
                             property Item dragParent: listThing
@@ -144,7 +144,6 @@ Flickable {
 
                                 onActiveChanged: function () {
                                     if (!dragHandler.active) {
-                                        console.log("No longer dragging")
                                         // console.log("\n" + JSON.stringify(listThing.model))
                                         // for each item in theModel.items, print the index
                                         let list = []
@@ -212,6 +211,7 @@ Flickable {
 
                             Column {
                                 anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 8
                                 Image {
                                     source: model.image_url
                                     anchors.horizontalCenter: parent.horizontalCenter
@@ -233,6 +233,23 @@ Flickable {
 
                                         }
                                     }
+                                }
+                                Item {
+                                    height: 6
+                                    width: 1
+                                }
+                                MyComboBox {
+                                    textRole: "text"
+                                    valueRole: "value"
+                                    width: parent.width
+
+                                    // onActivated: library_short_model.sortType = currentValue
+                                    // Component.onCompleted: currentIndex = indexOfValue(library_short_model.sortType)
+
+                                    model: [
+                                        {text: "Default profile", value: "display_name"},
+                                        {text: "Newest first", value: "created_at"}
+                                    ]
                                 }
                             }
                             // Text {
