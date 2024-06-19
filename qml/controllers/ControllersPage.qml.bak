@@ -16,7 +16,7 @@ Pane {
         anchors.centerIn: parent
         spacing: 6
 
-        model: controller_manager
+        model: controller_model
         delegate: RowLayout {
             implicitWidth: 300
             implicitHeight: 48
@@ -207,7 +207,7 @@ Pane {
     //             }
     //         }
     //
-    //         // model: controller_manager
+    //         // model: controller_model
     //         // delegate: Rectangle {
     //         //     width: 300
     //         //     height: 72
@@ -227,7 +227,7 @@ Pane {
     //
     //         model: DelegateModel {
     //             id: visualModel
-    //             model: controller_manager
+    //             model: controller_model
     //
     //             component Thing: Rectangle {
     //                 id: icon
@@ -305,7 +305,7 @@ Pane {
     //                                 //     }
     //                                 // }
     //
-    //                                 controller_manager.updateControllerOrder(newOrder)
+    //                                 controller_model.updateControllerOrder(newOrder)
     //                                 // for (var i = 0; i < visualModel.items.count; i++) {
     //                                 //     console.log("playerIndex: " + visualModel.items.get(i).model.playerIndex)
     //                                 // }
@@ -326,7 +326,7 @@ Pane {
     //
     //                 onEntered: function (drag) {
     //                     visualModel.items.move(drag.source.visualIndex, icon2.visualIndex)
-    //                     controller_manager.swap(drag.source.visualIndex, icon2.visualIndex)
+    //                     controller_model.swap(drag.source.visualIndex, icon2.visualIndex)
     //                 }
     //
     //                 property int visualIndex: DelegateModel.itemsIndex

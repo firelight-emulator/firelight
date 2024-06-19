@@ -83,6 +83,7 @@ add_library(firelight_lib
         src/gui/achievement_list_model.cpp
         src/gui/achievement_list_sort_filter_model.cpp
         src/app/router.cpp
+        src/app/input/gamepad_type.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)

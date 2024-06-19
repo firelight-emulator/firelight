@@ -12,6 +12,11 @@ namespace firelight::Input {
     : m_SDLController(t_controller), m_SDLJoystickDeviceIndex(t_joystickIndex) {
     m_SDLJoystick = SDL_GameControllerGetJoystick(t_controller);
     m_SDLJoystickInstanceId = SDL_JoystickInstanceID(m_SDLJoystick);
+    auto vendorId = SDL_JoystickGetVendor(m_SDLJoystick);
+    auto productId = SDL_JoystickGetProduct(m_SDLJoystick);
+
+    printf("vendorId: %d\n", vendorId);
+    printf("productId: %d\n", productId);
   }
 
   bool Controller::isButtonPressed(const Button t_button) {
@@ -112,5 +117,33 @@ namespace firelight::Input {
 
   bool Controller::isWired() const {
     return SDL_JoystickCurrentPowerLevel(m_SDLJoystick) == SDL_JOYSTICK_POWER_WIRED;
+  }
+
+  GamepadType Controller::getGamepadType() const {
+    auto vendorId = SDL_JoystickGetVendor(m_SDLJoystick);
+    auto productId = SDL_JoystickGetProduct(m_SDLJoystick);
+
+    switch (vendorId) {
+      case 1118:
+        switch (productId) {
+          case 767:
+            return MICROSOFT_XBOX_ONE;
+          default:
+            return UNKNOWN;
+        }
+      case 1406:
+        switch (productId) {
+          case 8201:
+            return NINTENDO_SWITCH_PRO;
+          case 8217:
+            return NINTENDO_NSO_N64;
+          case 8215:
+            return NINTENDO_NSO_SNES;
+          default:
+            return UNKNOWN;
+        }
+      default:
+        return UNKNOWN;
+    }
   }
 } // namespace firelight::Input

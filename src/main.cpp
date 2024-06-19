@@ -174,8 +174,10 @@ int main(int argc, char *argv[]) {
                                            &libraryDatabase);
   engine.rootContext()->setContextProperty("library_scan_path_model",
                                            libraryManager.scanDirectoryModel());
-  engine.rootContext()->setContextProperty("controller_manager",
+  engine.rootContext()->setContextProperty("controller_model",
                                            &controllerListModel);
+  engine.rootContext()->setContextProperty("controller_manager",
+                                           &controllerManager);
   engine.rootContext()->setContextProperty("mod_model", &modListModel);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();

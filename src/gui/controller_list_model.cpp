@@ -11,6 +11,9 @@ namespace firelight::gui {
     connect(&m_controllerManager,
             &Input::ControllerManager::controllerDisconnected, this,
             &ControllerListModel::refreshControllerList);
+    connect(&m_controllerManager,
+            &Input::ControllerManager::controllerOrderChanged, this,
+            &ControllerListModel::refreshControllerList);
   }
 
   int ControllerListModel::rowCount(const QModelIndex &parent) const {
@@ -31,6 +34,8 @@ namespace firelight::gui {
         return item.modelName;
       case Wired:
         return item.wired;
+      case ImageUrl:
+        return item.imageUrl;
       default:
         return QVariant{};
     }
@@ -41,6 +46,7 @@ namespace firelight::gui {
     roles[PlayerIndex] = "player_index";
     roles[ModelName] = "model_name";
     roles[Wired] = "wired";
+    roles[ImageUrl] = "image_url";
     return roles;
   }
 
@@ -51,10 +57,30 @@ namespace firelight::gui {
       auto con = m_controllerManager.getControllerForPlayer(i);
       if (con.has_value()) {
         beginInsertRows(QModelIndex{}, i, i);
+
+        QString imageUrl;
+        switch (con.value()->getGamepadType()) {
+          case MICROSOFT_XBOX_360:
+          case MICROSOFT_XBOX_ONE:
+            imageUrl = "file:system/_img/Xbox.svg";
+            break;
+          case NINTENDO_SWITCH_PRO:
+            imageUrl = "file:system/_img/SwitchPro.svg";
+            break;
+          case NINTENDO_NSO_N64:
+            imageUrl = "file:system/_img/N64.svg";
+            break;
+          case NINTENDO_NSO_SNES:
+            imageUrl = "file:system/_img/SNES.svg";
+            break;
+          default:
+            imageUrl = "file:system/_img/Xbox.svg";
+        }
+
         m_items.push_back(
           {
             i, QString::fromStdString(con.value()->getControllerName()),
-            "None", con.value()->isWired()
+            "None", con.value()->isWired(), imageUrl
           });
         endInsertRows();
       } else {

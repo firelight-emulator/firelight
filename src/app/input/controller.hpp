@@ -1,8 +1,12 @@
 #pragma once
 
+#include <map>
+
 #include "firelight/libretro/retropad.hpp"
 #include <SDL_gamecontroller.h>
 #include <string>
+
+#include "gamepad_type.hpp"
 
 namespace firelight::Input {
   class Controller final : public libretro::IRetroPad {
@@ -37,7 +41,12 @@ namespace firelight::Input {
 
     [[nodiscard]] bool isWired() const;
 
+    GamepadType getGamepadType() const;
+
   private:
+    static std::map<int, int> controllerTypeMap;
+
+
     SDL_GameController *m_SDLController = nullptr;
     SDL_Joystick *m_SDLJoystick = nullptr;
     int32_t m_SDLJoystickDeviceIndex = -1;

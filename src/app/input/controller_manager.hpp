@@ -7,31 +7,37 @@
 #include <SDL_events.h>
 
 namespace firelight::Input {
+  class ControllerManager final : public QObject,
+                                  public libretro::IRetropadProvider {
+    Q_OBJECT
 
-class ControllerManager final : public QObject,
-                                public libretro::IRetropadProvider {
-  Q_OBJECT
-public:
-  void handleSDLControllerEvent(const SDL_Event &event);
-  void refreshControllerList();
+  public:
+    void handleSDLControllerEvent(const SDL_Event &event);
 
-  [[nodiscard]] std::optional<Controller *>
-  getControllerForPlayer(int t_player) const;
-  std::optional<libretro::IRetroPad *>
-  getRetropadForPlayer(int t_player) override;
+    void refreshControllerList();
 
-public slots:
-  void updateControllerOrder(const QVariantMap &map);
+    [[nodiscard]] std::optional<Controller *>
+    getControllerForPlayer(int t_player) const;
 
-signals:
-  void controllerConnected();
-  void controllerDisconnected();
+    std::optional<libretro::IRetroPad *>
+    getRetropadForPlayer(int t_player) override;
 
-private:
-  int m_numControllers = 0;
-  std::array<std::unique_ptr<Controller>, 32> m_controllers{};
+    Q_INVOKABLE void updateControllerOrder(const QVector<int> &order);
 
-  void openControllerWithDeviceIndex(int32_t t_deviceIndex);
-};
+  public slots:
+    void updateControllerOrder(const QVariantMap &map);
 
+  signals:
+    void controllerConnected();
+
+    void controllerDisconnected();
+
+    void controllerOrderChanged();
+
+  private:
+    int m_numControllers = 0;
+    std::array<std::unique_ptr<Controller>, 32> m_controllers{};
+
+    void openControllerWithDeviceIndex(int32_t t_deviceIndex);
+  };
 } // namespace firelight::Input

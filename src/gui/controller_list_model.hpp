@@ -23,9 +23,10 @@ namespace firelight::gui {
       QString modelName;
       QString manufacturerName;
       bool wired;
+      QString imageUrl;
     };
 
-    enum Roles { PlayerIndex = Qt::UserRole + 1, ModelName, ManufacturerName, Wired };
+    enum Roles { PlayerIndex = Qt::UserRole + 1, ModelName, ManufacturerName, Wired, ImageUrl };
 
     Input::ControllerManager &m_controllerManager;
     std::vector<Item> m_items;
