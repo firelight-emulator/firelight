@@ -7,7 +7,7 @@ import QtQuick.Effects
 Menu {
     id: control
 
-    padding: Constants.rightClickMenu_Padding
+    padding: 4
     // overlap: 10
 
     // contentWidth: 260
@@ -19,9 +19,9 @@ Menu {
     background: Rectangle {
         id: bg
         implicitWidth: 260
-        implicitHeight: 48
-        color: Constants.rightClickMenu_BackgroundColor
-        radius: Constants.rightClickMenu_BackgroundRadius
+        implicitHeight: 60
+        color: "#1d1e22"
+        radius: 2
     }
 
     delegate: RightClickMenuItem {

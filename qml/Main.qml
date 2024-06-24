@@ -109,6 +109,15 @@ ApplicationWindow {
         }
     }
 
+
+    // Component {
+    //     id: controllerPage
+    //     ControllerProfilePage {
+    //         property bool topLevel: true
+    //         property string topLevelName: "controllers"
+    //     }
+    // }
+
     Component {
         id: settingsPage
         SettingsPage {

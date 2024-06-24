@@ -24,6 +24,8 @@ namespace firelight::Input {
 
     Q_INVOKABLE void updateControllerOrder(const QVector<int> &order);
 
+    Q_INVOKABLE QAbstractListModel *getPlatformInputModel(int platformId);
+
   public slots:
     void updateControllerOrder(const QVariantMap &map);
 

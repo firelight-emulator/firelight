@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ComboBox {
-    id: sortBox
+    id: control
 
     contentItem: Pane {
         background: Item {
@@ -13,7 +13,7 @@ ComboBox {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                sortBox.popup.visible = !sortBox.popup.visible
+                control.popup.visible = !control.popup.visible
             }
         }
 
@@ -23,7 +23,7 @@ ComboBox {
             leftPadding: 10
             rightPadding: 10
             anchors.fill: parent
-            text: sortBox.currentText
+            text: control.currentText
             color: "#ececec"
             font.family: Constants.regularFontFamily
             verticalAlignment: Text.AlignVCenter
@@ -36,7 +36,84 @@ ComboBox {
         implicitWidth: 140
         implicitHeight: 40
         color: "#32363a"
-        radius: 12
+        radius: 8
+    }
+
+    delegate: ItemDelegate {
+        id: delegate
+
+        required property var model
+        required property int index
+
+        background: Rectangle {
+            color: control.highlightedIndex === index ? "#25282c" : "#1d1e22"
+        }
+
+        width: control.width - 4
+        contentItem: Text {
+            text: delegate.model[control.textRole]
+            font.family: Constants.regularFontFamily
+            font.pointSize: 11
+            color: parent.highlighted ? "white" : "#cacaca"
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+        }
+        highlighted: control.highlightedIndex === index
+    }
+
+    popup: Popup {
+        y: control.height - 1
+        width: control.width
+        implicitHeight: contentItem.implicitHeight + padding * 2
+        padding: 4
+
+        contentItem: ListView {
+            id: theList
+            property real scrollMultiplier: 4.0
+            clip: true
+            implicitHeight: contentHeight > 400 ? 400 : contentHeight
+            model: control.popup.visible ? control.delegateModel : null
+
+            highlightFollowsCurrentItem: false
+
+            highlight: Item {
+            }
+
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+                // preventStealing: true
+                onWheel: function (wheel) {
+
+                    const numPixels = wheel.pixelDelta.y
+                    const numDegrees = wheel.angleDelta.y
+
+                    if (numPixels !== 0) {
+                        theList.contentY -= numPixels
+                        return
+                    }
+
+                    var scrollDelta = wheel.angleDelta.y / 8 * theList.scrollMultiplier;
+
+                    theList.contentY -= scrollDelta
+                    if (theList.contentY < 0) {
+                        theList.contentY = 0
+                    } else if (theList.contentY > theList.contentHeight - theList.height) {
+                        theList.contentY = theList.contentHeight - theList.height
+                    }
+                }
+            }
+
+            ScrollIndicator.vertical: ScrollIndicator {
+            }
+        }
+
+        background: Rectangle {
+            color: "#1d1e22"
+            radius: 2
+            border.color: "#32363a"
+        }
     }
 
     palette.buttonText: "white"

@@ -3,6 +3,7 @@
 //
 
 #include "controller_manager.hpp"
+#include "../../gui/PlatformInputListModel.hpp"
 
 #include <spdlog/spdlog.h>
 #include <string>
@@ -74,6 +75,8 @@ namespace firelight::Input {
         m_numControllers++;
         m_controllers[i] =
             std::make_unique<Controller>(controller, t_deviceIndex);
+        m_controllers[i]->setControllerProfile(std::make_shared<input::ControllerProfile>());
+        printf("ADDING CONTROLLER\n");
         break;
       }
     }
@@ -141,5 +144,13 @@ namespace firelight::Input {
 
     m_controllers = std::move(tempCon);
     emit controllerOrderChanged();
+  }
+
+  QAbstractListModel *ControllerManager::getPlatformInputModel(int platformId) {
+    if (platformId == 0) {
+      return new PlatformInputListModel(this);
+    }
+
+    return new PlatformInputListModel(this);
   }
 } // namespace firelight::Input

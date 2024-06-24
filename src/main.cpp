@@ -24,9 +24,11 @@
 #include "app/library/sqlite_library_database.hpp"
 #include "app/saves/save_manager.hpp"
 #include "gui/controller_list_model.hpp"
+#include "gui/gamepad_profile.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
 #include "gui/mod_item_model.hpp"
+#include "gui/platform_list_model.hpp"
 #include "gui/playlist_item_model.hpp"
 #include "gui/window_resize_handler.hpp"
 
@@ -144,6 +146,8 @@ int main(int argc, char *argv[]) {
   firelight::gui::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);
 
+  firelight::gui::PlatformListModel platformListModel;
+
   LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
@@ -157,8 +161,12 @@ int main(int argc, char *argv[]) {
 
   libraryManager.startScan();
 
+  // qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
+
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
+  qmlRegisterType<firelight::gui::GamepadMapping>("Firelight", 1, 0, "GamepadMapping");
+  qmlRegisterType<firelight::gui::GamepadProfile>("Firelight", 1, 0, "GamepadProfile");
 
   firelight::gui::Router router;
 
@@ -179,6 +187,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("controller_manager",
                                            &controllerManager);
   engine.rootContext()->setContextProperty("mod_model", &modListModel);
+  engine.rootContext()->setContextProperty("platform_model", &platformListModel);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",

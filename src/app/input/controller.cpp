@@ -7,6 +7,11 @@
 namespace firelight::Input {
   Controller::~Controller() = default;
 
+  void Controller::setControllerProfile(const std::shared_ptr<input::ControllerProfile> &profile) {
+    m_profile = profile;
+    printf("Setting profile to %p\n", m_profile.get());
+  }
+
   Controller::Controller(SDL_GameController *t_controller,
                          const int32_t t_joystickIndex)
     : m_SDLController(t_controller), m_SDLJoystickDeviceIndex(t_joystickIndex) {
@@ -24,6 +29,26 @@ namespace firelight::Input {
   }
 
   bool Controller::isButtonPressed(const Button t_button) {
+    if (m_profile) {
+      auto mapping = m_profile->getControllerMappingForPlatform(0);
+
+
+      if (t_button == LeftTrigger || t_button == RightTrigger) {
+        return SDL_GameControllerGetAxis(m_SDLController,
+                                         t_button == LeftTrigger
+                                           ? SDL_CONTROLLER_AXIS_TRIGGERLEFT
+                                           : SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 0;
+      }
+
+      const auto mappedButton = mapping.getMappedButton(t_button);
+
+      if (mappedButton == SDL_CONTROLLER_BUTTON_INVALID) {
+        return false;
+      }
+
+      return SDL_GameControllerGetButton(m_SDLController, mappedButton);
+    }
+
     switch (t_button) {
       case NorthFace:
         return SDL_GameControllerGetButton(m_SDLController,
@@ -79,19 +104,59 @@ namespace firelight::Input {
   }
 
   int16_t Controller::getLeftStickXPosition() {
-    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
+    const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
+
+    if (m_profile != nullptr) {
+      auto mapping = m_profile->getControllerMappingForPlatform(0);
+      const auto deadzone = mapping.getLeftStickXDeadzone();
+      if (value < deadzone && value > -deadzone) {
+        return 0;
+      }
+    }
+
+    return value;
   }
 
   int16_t Controller::getLeftStickYPosition() {
-    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
+    const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
+
+    if (m_profile != nullptr) {
+      auto mapping = m_profile->getControllerMappingForPlatform(0);
+      const auto deadzone = mapping.getLeftStickYDeadzone();
+      if (value < deadzone && value > -deadzone) {
+        return 0;
+      }
+    }
+
+    return value;
   }
 
   int16_t Controller::getRightStickXPosition() {
-    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
+    const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
+
+    if (m_profile != nullptr) {
+      auto mapping = m_profile->getControllerMappingForPlatform(0);
+      const auto deadzone = mapping.getRightStickXDeadzone();
+      if (value < deadzone && value > -deadzone) {
+        return 0;
+      }
+    }
+
+    return value;
   }
 
   int16_t Controller::getRightStickYPosition() {
-    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
+    const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
+
+    if (m_profile != nullptr) {
+      auto mapping = m_profile->getControllerMappingForPlatform(0);
+      const auto deadzone = mapping.getRightStickYDeadzone();
+      if (value < deadzone && value > -deadzone) {
+        return 0;
+      }
+    }
+
+    return value;
   }
 
   int32_t Controller::getInstanceId() const { return m_SDLJoystickInstanceId; }

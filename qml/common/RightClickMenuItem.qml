@@ -3,7 +3,7 @@ import QtQuick.Controls
 
 MenuItem {
     id: control
-    padding: 6
+    padding: 4
 
     property bool externalLink: false
 
@@ -39,11 +39,10 @@ MenuItem {
     }
 
     background: Rectangle {
-        x: 1
-        y: 1
-        width: control.width - 2
-        height: control.height - 2
-        radius: Constants.rightClickMenuItem_BackgroundRadius
+        // x: 1
+        // y: 1
+
+        // radius: Constants.rightClickMenuItem_BackgroundRadius
 
         HoverHandler {
             id: renameHover
@@ -51,17 +50,18 @@ MenuItem {
         }
 
         implicitWidth: 260
-        implicitHeight: Constants.rightClickMenuItem_DefaultHeight
-        color: enabled ? (renameHover.hovered ? Constants.rightClickMenuItem_HoverColor : "transparent") : "transparent"
+        implicitHeight: 40
+        // implicitHeight: Constants.rightClickMenuItem_DefaultHeight
+        color: enabled ? (renameHover.hovered ? "#25282c" : "transparent") : "transparent"
     }
 
     contentItem: CarouselText {
         hovered: renameHover.hovered
         text: control.text
-        color: enabled ? Constants.rightClickMenuItem_TextColor : "grey"
-        font.pointSize: 10
+        color: enabled ? hovered ? "white" : "#cacaca" : "grey"
+        font.pointSize: 11
         font.family: Constants.regularFontFamily
-        font.weight: Font.DemiBold
+        // font.weight: Font.DemiBold
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }

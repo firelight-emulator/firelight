@@ -1,11 +1,13 @@
 #pragma once
 
 #include <map>
+#include <memory>
 
 #include "firelight/libretro/retropad.hpp"
 #include <SDL_gamecontroller.h>
 #include <string>
 
+#include "controller_profile.hpp"
 #include "gamepad_type.hpp"
 
 namespace firelight::Input {
@@ -14,6 +16,8 @@ namespace firelight::Input {
     Controller(SDL_GameController *t_controller, int32_t t_joystickIndex);
 
     ~Controller() override;
+
+    void setControllerProfile(const std::shared_ptr<input::ControllerProfile> &profile);
 
     bool isButtonPressed(Button t_button) override;
 
@@ -46,6 +50,7 @@ namespace firelight::Input {
   private:
     static std::map<int, int> controllerTypeMap;
 
+    std::shared_ptr<input::ControllerProfile> m_profile = nullptr;
 
     SDL_GameController *m_SDLController = nullptr;
     SDL_Joystick *m_SDLJoystick = nullptr;

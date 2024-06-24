@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-
 Flickable {
     id: root
 
@@ -137,10 +136,15 @@ Flickable {
 
                             HoverHandler {
                                 cursorShape: icon.state === "Dragging" ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                                onGrabChanged: {
+                                    console.log("grabChanged")
+                                }
                             }
 
                             DragHandler {
                                 id: dragHandler
+
+                                grabPermissions: PointerHandler.TakeOverForbidden
 
                                 onActiveChanged: function () {
                                     if (!dragHandler.active) {
@@ -204,9 +208,9 @@ Flickable {
                                 anchors.topMargin: 8
                                 anchors.top: parent.top
 
-                                // onClicked: function () {
-                                //     rightClickMenu.popup()
-                                // }
+                                onClicked: function () {
+                                    profileDialog.open()
+                                }
                             }
 
                             Column {
@@ -277,6 +281,61 @@ Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
+        }
+    }
+
+    FirelightDialog {
+        id: profileDialog
+        width: parent.width * 5 / 6
+        height: parent.height * 5 / 6
+        contentItem: ControllerProfilePage {
+
+        }
+
+        footer: DialogButtonBox {
+            spacing: 2
+            alignment: Qt.AlignRight
+            Button {
+                background: Rectangle {
+                    implicitHeight: 44
+                    implicitWidth: 100
+                    color: "#03438c"
+                    radius: 8
+                }
+                contentItem: Text {
+                    text: qsTr("Save")
+                    color: "white"
+                    font.pointSize: 11
+                    font.weight: Font.DemiBold
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+
+                }
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+            }
+            Button {
+                background: Rectangle {
+                    implicitHeight: 44
+                    implicitWidth: 100
+
+                    color: "transparent"
+                    radius: 8
+                }
+                contentItem: Text {
+                    text: qsTr("Cancel")
+                    color: "white"
+                    font.pointSize: 11
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+
+                }
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+            }
+            buttonLayout: DialogButtonBox.MacLayout
+            background: Item {
+            }
         }
     }
 

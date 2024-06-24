@@ -403,6 +403,11 @@ Flickable {
                                 }
 
                                 MenuSeparator {
+                                    contentItem: Rectangle {
+                                        implicitWidth: 188
+                                        implicitHeight: 1
+                                        color: "#606060"
+                                    }
                                 }
 
                                 RightClickMenu {
@@ -433,6 +438,11 @@ Flickable {
                                 }
 
                                 MenuSeparator {
+                                    contentItem: Rectangle {
+                                        implicitWidth: 188
+                                        implicitHeight: 1
+                                        color: "#606060"
+                                    }
                                 }
 
                                 RightClickMenuItem {

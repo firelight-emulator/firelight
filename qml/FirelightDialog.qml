@@ -12,8 +12,8 @@ Dialog {
     property string text
     property bool showButtons: true
     modal: true
-    parent: Overlay.overlay
-    anchors.centerIn: parent
+    // parent: Overlay.overlay
+    anchors.centerIn: Overlay.overlay
     padding: 12
 
     background: Rectangle {
