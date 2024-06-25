@@ -6,7 +6,7 @@ project(firelight
         LANGUAGES CXX
 )
 
-include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
+#include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
 
 set(CMAKE_AUTOMOC ON)
@@ -35,6 +35,11 @@ find_package(GTest REQUIRED)
 qt6_standard_project_setup(REQUIRES 6.7)
 
 set(CMAKE_CXX_STANDARD 20)
+#set(QT_VERSION_MAJOR 6)
+
+#include(${CMAKE_SOURCE_DIR}/libs/qwindowkit/CMakeLists.txt)
+include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
+#include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(src/app)
@@ -85,7 +90,6 @@ add_library(firelight_lib
         src/app/router.cpp
         src/app/input/controller_profile.cpp
         src/app/input/input_mapping.cpp
-        src/app/input/IdkStuff.cpp
         src/gui/PlatformInputListModel.cpp
         src/gui/gamepad_profile.cpp
         src/gui/gamepad_mapping.cpp
@@ -119,6 +123,8 @@ target_link_libraries(firelight_lib PUBLIC
 qt6_add_executable(firelight
         resources.qrc
         src/main.cpp
+        include/firelight/controller_profile.hpp
+        include/firelight/input_mapping.hpp
 )
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)

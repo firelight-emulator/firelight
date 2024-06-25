@@ -6,27 +6,37 @@
 #include <vector>
 
 namespace firelight::db {
-class SqliteUserdataDatabase final : public IUserdataDatabase {
-public:
-  explicit SqliteUserdataDatabase(const std::filesystem::path &dbFile);
-  ~SqliteUserdataDatabase() override;
+  class SqliteUserdataDatabase final : public IUserdataDatabase {
+  public:
+    explicit SqliteUserdataDatabase(const std::filesystem::path &dbFile);
 
-  bool tableExists(std::string tableName) override;
+    ~SqliteUserdataDatabase() override;
 
-  std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId,
-                                                      int slotNumber) override;
-  bool updateSavefileMetadata(SavefileMetadata metadata) override;
-  bool createSavefileMetadata(SavefileMetadata &metadata) override;
-  std::vector<SavefileMetadata>
-  getSavefileMetadataForContent(std::string contentId) override;
+    bool tableExists(std::string tableName) override;
 
-  bool createPlaySession(PlaySession &session) override;
-  std::optional<PlaySession>
-  getLatestPlaySession(std::string contentId) override;
+    std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId,
+                                                        int slotNumber) override;
 
-private:
-  std::filesystem::path m_database_path;
-  QSqlDatabase m_database;
-};
+    bool updateSavefileMetadata(SavefileMetadata metadata) override;
 
+    bool createSavefileMetadata(SavefileMetadata &metadata) override;
+
+    std::vector<SavefileMetadata>
+    getSavefileMetadataForContent(std::string contentId) override;
+
+    bool createControllerProfile(ControllerProfile &profile) override;
+
+    std::optional<ControllerProfile> getControllerProfile(int id) override;
+
+    std::vector<ControllerProfile> getControllerProfiles() override;
+
+    bool createPlaySession(PlaySession &session) override;
+
+    std::optional<PlaySession>
+    getLatestPlaySession(std::string contentId) override;
+
+  private:
+    std::filesystem::path m_database_path;
+    QSqlDatabase m_database;
+  };
 } // namespace firelight::db

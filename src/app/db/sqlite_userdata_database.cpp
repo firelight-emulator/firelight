@@ -5,67 +5,130 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::db {
-
-SqliteUserdataDatabase::SqliteUserdataDatabase(
+  SqliteUserdataDatabase::SqliteUserdataDatabase(
     const std::filesystem::path &dbFile)
     : m_database_path(dbFile) {
-  m_database = QSqlDatabase::addDatabase("QSQLITE", "userdata");
-  m_database.setDatabaseName(QString::fromStdString(dbFile.string()));
-  if (!m_database.open()) {
-    throw std::runtime_error("Couldn't open Userdata database");
+    m_database = QSqlDatabase::addDatabase("QSQLITE", "userdata");
+    m_database.setDatabaseName(QString::fromStdString(dbFile.string()));
+    if (!m_database.open()) {
+      throw std::runtime_error("Couldn't open Userdata database");
+    }
+
+    QSqlQuery createSavefileMetadata(m_database);
+    createSavefileMetadata.prepare("CREATE TABLE IF NOT EXISTS savefile_metadata("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "content_id TEXT NOT NULL,"
+      "slot_number INTEGER NOT NULL,"
+      "savefile_md5 TEXT NOT NULL,"
+      "last_modified_at INTEGER NOT NULL,"
+      "created_at INTEGER NOT NULL, "
+      "UNIQUE(content_id, slot_number));");
+
+    if (!createSavefileMetadata.exec()) {
+      spdlog::error("Table creation failed: {}",
+                    createSavefileMetadata.lastError().text().toStdString());
+    }
+
+    QSqlQuery createPlaySessions(m_database);
+    createPlaySessions.prepare("CREATE TABLE IF NOT EXISTS play_sessions("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "content_id TEXT NOT NULL,"
+      "savefile_slot_number INTEGER NOT NULL,"
+      "start_time INTEGER NOT NULL,"
+      "end_time INTEGER NOT NULL,"
+      "unpaused_duration_seconds INTEGER NOT NULL);");
+
+    if (!createPlaySessions.exec()) {
+      spdlog::error("Table creation failed: {}",
+                    createPlaySessions.lastError().text().toStdString());
+    }
+
+    QSqlQuery createControllerProfiles(m_database);
+    createControllerProfiles.prepare("CREATE TABLE IF NOT EXISTS controller_profiles("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "display_name TEXT NOT NULL);");
+
+    if (!createControllerProfiles.exec()) {
+      spdlog::error("Table creation failed: {}",
+                    createControllerProfiles.lastError().text().toStdString());
+    }
+
+    QSqlQuery createInputMappings(m_database);
+    createInputMappings.prepare("CREATE TABLE IF NOT EXISTS input_mappings("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "controller_profile_id INTEGER NOT NULL,"
+      "platform_id INTEGER NOT NULL, "
+      "UNIQUE(controller_profile_id, platform_id));");
+
+    if (!createInputMappings.exec()) {
+      spdlog::error("Table creation failed: {}",
+                    createInputMappings.lastError().text().toStdString());
+    }
   }
 
-  QSqlQuery createSavefileMetadata(m_database);
-  createSavefileMetadata.prepare("CREATE TABLE IF NOT EXISTS savefile_metadata("
-                                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                                 "content_id TEXT NOT NULL,"
-                                 "slot_number INTEGER NOT NULL,"
-                                 "savefile_md5 TEXT NOT NULL,"
-                                 "last_modified_at INTEGER NOT NULL,"
-                                 "created_at INTEGER NOT NULL, "
-                                 "UNIQUE(content_id, slot_number));");
-
-  if (!createSavefileMetadata.exec()) {
-    spdlog::error("Table creation failed: {}",
-                  createSavefileMetadata.lastError().text().toStdString());
+  SqliteUserdataDatabase::~SqliteUserdataDatabase() {
+    m_database.close();
+    QSqlDatabase::removeDatabase(m_database.connectionName());
   }
 
-  QSqlQuery createPlaySessions(m_database);
-  createPlaySessions.prepare("CREATE TABLE IF NOT EXISTS play_sessions("
-                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                             "content_id TEXT NOT NULL,"
-                             "savefile_slot_number INTEGER NOT NULL,"
-                             "start_time INTEGER NOT NULL,"
-                             "end_time INTEGER NOT NULL,"
-                             "unpaused_duration_seconds INTEGER NOT NULL);");
-
-  if (!createPlaySessions.exec()) {
-    spdlog::error("Table creation failed: {}",
-                  createPlaySessions.lastError().text().toStdString());
-  }
-}
-
-SqliteUserdataDatabase::~SqliteUserdataDatabase() {
-  m_database.close();
-  QSqlDatabase::removeDatabase(m_database.connectionName());
-}
-
-std::vector<SavefileMetadata>
-SqliteUserdataDatabase::getSavefileMetadataForContent(
+  std::vector<SavefileMetadata>
+  SqliteUserdataDatabase::getSavefileMetadataForContent(
     const std::string contentId) {
-  QSqlQuery query(m_database);
-  query.prepare(
+    QSqlQuery query(m_database);
+    query.prepare(
       "SELECT * FROM savefile_metadata WHERE content_id = :contentId;");
-  query.bindValue(":contentId", QString::fromStdString(contentId));
+    query.bindValue(":contentId", QString::fromStdString(contentId));
 
-  if (!query.exec()) {
-    spdlog::warn("Could not retrieve savefile metadata: {}",
-                 query.lastError().text().toStdString());
-    return {};
+    if (!query.exec()) {
+      spdlog::warn("Could not retrieve savefile metadata: {}",
+                   query.lastError().text().toStdString());
+      return {};
+    }
+
+    std::vector<SavefileMetadata> metadataList;
+    while (query.next()) {
+      SavefileMetadata metadata;
+      metadata.id = query.value("id").toUInt();
+      metadata.contentId = query.value("content_id").toString().toStdString();
+      metadata.slotNumber = query.value("slot_number").toUInt();
+      metadata.savefileMd5 = query.value("savefile_md5").toString().toStdString();
+      metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
+      metadata.createdAt = query.value("created_at").toLongLong();
+      metadataList.emplace_back(metadata);
+    }
+
+    return metadataList;
   }
 
-  std::vector<SavefileMetadata> metadataList;
-  while (query.next()) {
+  bool SqliteUserdataDatabase::tableExists(const std::string tableName) {
+    QSqlQuery query(m_database);
+    query.prepare("SELECT 1 FROM " + QString::fromStdString(tableName) +
+                  " LIMIT 1;");
+
+    return query.exec();
+  }
+
+  std::optional<SavefileMetadata>
+  SqliteUserdataDatabase::getSavefileMetadata(const std::string contentId,
+                                              const int slotNumber) {
+    const QString queryString =
+        "SELECT * FROM savefile_metadata WHERE content_id = :contentId AND "
+        "slot_number = :slotNumber LIMIT 1;";
+    QSqlQuery query(m_database);
+    query.prepare(queryString);
+    query.bindValue(":contentId", QString::fromStdString(contentId));
+    query.bindValue(":slotNumber", slotNumber);
+
+    if (!query.exec()) {
+      spdlog::error("Failed to get savefile metadata: {}",
+                    query.lastError().text().toStdString());
+      return std::nullopt;
+    }
+
+    if (!query.next()) {
+      return std::nullopt;
+    }
+
     SavefileMetadata metadata;
     metadata.id = query.value("id").toUInt();
     metadata.contentId = query.value("content_id").toString().toStdString();
@@ -73,164 +136,145 @@ SqliteUserdataDatabase::getSavefileMetadataForContent(
     metadata.savefileMd5 = query.value("savefile_md5").toString().toStdString();
     metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
     metadata.createdAt = query.value("created_at").toLongLong();
-    metadataList.emplace_back(metadata);
+
+    return metadata;
   }
 
-  return metadataList;
-}
+  bool SqliteUserdataDatabase::updateSavefileMetadata(SavefileMetadata metadata) {
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE savefile_metadata SET savefile_md5 = :savefileMd5, "
+      "last_modified_at = :lastModifiedAt WHERE id = :id;");
+    query.bindValue(":savefileMd5", QString::fromStdString(metadata.savefileMd5));
+    query.bindValue(":lastModifiedAt", metadata.lastModifiedAt);
+    query.bindValue(":id", metadata.id);
 
-bool SqliteUserdataDatabase::tableExists(const std::string tableName) {
-  QSqlQuery query(m_database);
-  query.prepare("SELECT 1 FROM " + QString::fromStdString(tableName) +
-                " LIMIT 1;");
+    if (!query.exec()) {
+      spdlog::error("Update Savefile metadata failed: {}",
+                    query.lastError().text().toStdString());
+      return false;
+    }
 
-  return query.exec();
-}
-std::optional<SavefileMetadata>
-SqliteUserdataDatabase::getSavefileMetadata(const std::string contentId,
-                                            const int slotNumber) {
-  const QString queryString =
-      "SELECT * FROM savefile_metadata WHERE content_id = :contentId AND "
-      "slot_number = :slotNumber LIMIT 1;";
-  QSqlQuery query(m_database);
-  query.prepare(queryString);
-  query.bindValue(":contentId", QString::fromStdString(contentId));
-  query.bindValue(":slotNumber", slotNumber);
-
-  if (!query.exec()) {
-    spdlog::error("Failed to get savefile metadata: {}",
-                  query.lastError().text().toStdString());
-    return std::nullopt;
+    return query.numRowsAffected() >= 1;
   }
 
-  if (!query.next()) {
-    return std::nullopt;
-  }
-
-  SavefileMetadata metadata;
-  metadata.id = query.value("id").toUInt();
-  metadata.contentId = query.value("content_id").toString().toStdString();
-  metadata.slotNumber = query.value("slot_number").toUInt();
-  metadata.savefileMd5 = query.value("savefile_md5").toString().toStdString();
-  metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
-  metadata.createdAt = query.value("created_at").toLongLong();
-
-  return metadata;
-}
-
-bool SqliteUserdataDatabase::updateSavefileMetadata(SavefileMetadata metadata) {
-  QSqlQuery query(m_database);
-  query.prepare("UPDATE savefile_metadata SET savefile_md5 = :savefileMd5, "
-                "last_modified_at = :lastModifiedAt WHERE id = :id;");
-  query.bindValue(":savefileMd5", QString::fromStdString(metadata.savefileMd5));
-  query.bindValue(":lastModifiedAt", metadata.lastModifiedAt);
-  query.bindValue(":id", metadata.id);
-
-  if (!query.exec()) {
-    spdlog::error("Update Savefile metadata failed: {}",
-                  query.lastError().text().toStdString());
-    return false;
-  }
-
-  return query.numRowsAffected() >= 1;
-}
-
-bool SqliteUserdataDatabase::createSavefileMetadata(
+  bool SqliteUserdataDatabase::createSavefileMetadata(
     SavefileMetadata &metadata) {
-  if (!m_database.open()) {
-    spdlog::error("Couldn't open database: {}",
-                  m_database.lastError().text().toStdString());
-    return false;
-  }
+    if (!m_database.open()) {
+      spdlog::error("Couldn't open database: {}",
+                    m_database.lastError().text().toStdString());
+      return false;
+    }
 
-  const QString queryString = "INSERT INTO savefile_metadata (content_id, "
-                              "slot_number, savefile_md5, last_modified_at, "
-                              "created_at) VALUES (:contentId, :slotNumber, "
-                              ":savefileMd5, :lastModifiedAt, :createdAt);";
+    const QString queryString = "INSERT INTO savefile_metadata (content_id, "
+        "slot_number, savefile_md5, last_modified_at, "
+        "created_at) VALUES (:contentId, :slotNumber, "
+        ":savefileMd5, :lastModifiedAt, :createdAt);";
 
-  QSqlQuery query(m_database);
-  query.prepare(queryString);
-  query.bindValue(":contentId", QString::fromStdString(metadata.contentId));
-  query.bindValue(":slotNumber", metadata.slotNumber);
-  query.bindValue(":savefileMd5", QString::fromStdString(metadata.savefileMd5));
-  query.bindValue(":lastModifiedAt", metadata.lastModifiedAt);
-  query.bindValue(":createdAt",
-                  std::chrono::duration_cast<std::chrono::milliseconds>(
+    QSqlQuery query(m_database);
+    query.prepare(queryString);
+    query.bindValue(":contentId", QString::fromStdString(metadata.contentId));
+    query.bindValue(":slotNumber", metadata.slotNumber);
+    query.bindValue(":savefileMd5", QString::fromStdString(metadata.savefileMd5));
+    query.bindValue(":lastModifiedAt", metadata.lastModifiedAt);
+    query.bindValue(":createdAt",
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
                       std::chrono::system_clock::now().time_since_epoch())
-                      .count());
+                    .count());
 
-  if (!query.exec()) {
+    if (!query.exec()) {
+      query.finish();
+      return false;
+    }
+
+    metadata.id = query.lastInsertId().toInt();
+
     query.finish();
+    return true;
+  }
+
+  bool SqliteUserdataDatabase::createControllerProfile(ControllerProfile &profile) {
     return false;
   }
 
-  metadata.id = query.lastInsertId().toInt();
-
-  query.finish();
-  return true;
-}
-
-bool SqliteUserdataDatabase::createPlaySession(PlaySession &session) {
-  const QString queryString = "INSERT INTO play_sessions ("
-                              "content_id, "
-                              "savefile_slot_number, "
-                              "start_time, "
-                              "end_time, "
-                              "unpaused_duration_seconds) "
-                              "VALUES (:contentId, :slotNumber, :startTime,"
-                              ":endTime, :unpausedDurationSeconds);";
-  auto query = QSqlQuery(m_database);
-  query.prepare(queryString);
-
-  query.bindValue(":contentId", QString::fromStdString(session.contentId));
-  query.bindValue(":slotNumber", session.slotNumber);
-  query.bindValue(":startTime", session.startTime);
-  query.bindValue(":endTime", session.endTime);
-  query.bindValue(":unpausedDurationSeconds",
-                  static_cast<uint16_t>(session.unpausedDurationMillis / 1000));
-
-  if (!query.exec()) {
-    spdlog::warn("Insert into play_sessions failed: {}",
-                 query.lastError().text().toStdString());
-    return false;
+  std::optional<ControllerProfile> SqliteUserdataDatabase::getControllerProfile(const int id) {
+    printf("Getting controller profile: %d\n", id);
+    return {
+      {
+        id,
+        "Test",
+        {
+          {
+            0, id, 1
+          }
+        }
+      }
+    };
   }
 
-  session.id = query.lastInsertId().toInt();
+  std::vector<ControllerProfile> SqliteUserdataDatabase::getControllerProfiles() {
+    return {};
+  }
 
-  return true;
-}
+  bool SqliteUserdataDatabase::createPlaySession(PlaySession &session) {
+    const QString queryString = "INSERT INTO play_sessions ("
+        "content_id, "
+        "savefile_slot_number, "
+        "start_time, "
+        "end_time, "
+        "unpaused_duration_seconds) "
+        "VALUES (:contentId, :slotNumber, :startTime,"
+        ":endTime, :unpausedDurationSeconds);";
+    auto query = QSqlQuery(m_database);
+    query.prepare(queryString);
 
-std::optional<PlaySession>
-SqliteUserdataDatabase::getLatestPlaySession(const std::string contentId) {
-  return std::nullopt;
-  // const QString queryString = "SELECT * FROM play_sessions WHERE content_id
-  // = "
-  //                             ":contentId ORDER BY end_time DESC LIMIT 1;";
-  // auto query = QSqlQuery(m_database);
-  // query.prepare(queryString);
-  //
-  // query.bindValue(":contentId", QString::fromStdString(contentId));
-  //
-  // if (!query.exec()) {
-  //   spdlog::warn("Retrieving last play_session failed: {}",
-  //                query.lastError().text().toStdString());
-  //   return std::nullopt;
-  // }
-  //
-  // if (query.next()) {
-  //   PlaySession session;
-  //   session.id = query.value("id").toInt();
-  //   session.contentId = query.value("content_id").toString().toStdString();
-  //   session.slotNumber = query.value("savefile_slot_number").toUInt();
-  //   session.startTime = query.value("start_time").toLongLong();
-  //   session.endTime = query.value("end_time").toLongLong();
-  //   session.unpausedDurationSeconds =
-  //       query.value("unpaused_duration_seconds").toUInt();
-  //
-  //   return {session};
-  // }
-  //
-  // return std::nullopt;
-}
+    query.bindValue(":contentId", QString::fromStdString(session.contentId));
+    query.bindValue(":slotNumber", session.slotNumber);
+    query.bindValue(":startTime", session.startTime);
+    query.bindValue(":endTime", session.endTime);
+    query.bindValue(":unpausedDurationSeconds",
+                    static_cast<uint16_t>(session.unpausedDurationMillis / 1000));
 
+    if (!query.exec()) {
+      spdlog::warn("Insert into play_sessions failed: {}",
+                   query.lastError().text().toStdString());
+      return false;
+    }
+
+    session.id = query.lastInsertId().toInt();
+
+    return true;
+  }
+
+  std::optional<PlaySession>
+  SqliteUserdataDatabase::getLatestPlaySession(const std::string contentId) {
+    return std::nullopt;
+    // const QString queryString = "SELECT * FROM play_sessions WHERE content_id
+    // = "
+    //                             ":contentId ORDER BY end_time DESC LIMIT 1;";
+    // auto query = QSqlQuery(m_database);
+    // query.prepare(queryString);
+    //
+    // query.bindValue(":contentId", QString::fromStdString(contentId));
+    //
+    // if (!query.exec()) {
+    //   spdlog::warn("Retrieving last play_session failed: {}",
+    //                query.lastError().text().toStdString());
+    //   return std::nullopt;
+    // }
+    //
+    // if (query.next()) {
+    //   PlaySession session;
+    //   session.id = query.value("id").toInt();
+    //   session.contentId = query.value("content_id").toString().toStdString();
+    //   session.slotNumber = query.value("savefile_slot_number").toUInt();
+    //   session.startTime = query.value("start_time").toLongLong();
+    //   session.endTime = query.value("end_time").toLongLong();
+    //   session.unpausedDurationSeconds =
+    //       query.value("unpaused_duration_seconds").toUInt();
+    //
+    //   return {session};
+    // }
+    //
+    // return std::nullopt;
+  }
 } // namespace firelight::db

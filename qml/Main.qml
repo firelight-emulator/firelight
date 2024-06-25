@@ -15,6 +15,8 @@ ApplicationWindow {
     minimumHeight: 720
     minimumWidth: 1280
 
+    // flags: Qt.FramelessWindowHint
+
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
 
@@ -870,8 +872,29 @@ ApplicationWindow {
         }
     }
 
+    // Rectangle {
+    //     id: bar
+    //     color: "red"
+    //     anchors.top: parent.top
+    //     anchors.left: parent.left
+    //     anchors.right: parent.right
+    //     height: 40
+    //
+    //     DragHandler {
+    //         grabPermissions: TapHandler.CanTakeOverFromAnything
+    //         onActiveChanged: if (active) {
+    //             window.startSystemMove();
+    //         }
+    //     }
+    //
+    // }
+
     StackView {
         id: stackView
+        // anchors.left: parent.left
+        // anchors.right: parent.right
+        // anchors.bottom: parent.bottom
+        // anchors.top: bar.bottom
         anchors.fill: parent
         focus: true
 

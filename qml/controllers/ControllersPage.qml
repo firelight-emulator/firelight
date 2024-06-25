@@ -128,7 +128,7 @@ Flickable {
                             id: icon
                             visible: model.model_name !== "Default"
 
-                            height: 280
+                            height: contentColumn.height + 10
                             width: 200
 
                             property Item dragParent: listThing
@@ -163,8 +163,8 @@ Flickable {
 
                             Drag.active: dragHandler.active
                             Drag.source: icon
-                            Drag.hotSpot.x: 36
-                            Drag.hotSpot.y: 36
+                            Drag.hotSpot.x: icon.width / 2
+                            Drag.hotSpot.y: icon.height / 2
                             Drag.keys: ["good"]
 
                             states: [
@@ -207,13 +207,10 @@ Flickable {
                                 anchors.rightMargin: 8
                                 anchors.topMargin: 8
                                 anchors.top: parent.top
-
-                                onClicked: function () {
-                                    profileDialog.open()
-                                }
                             }
 
                             Column {
+                                id: contentColumn
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 spacing: 8
                                 Image {
@@ -224,24 +221,24 @@ Flickable {
                                     // mipmap: true
                                     sourceSize.width: 182
                                 }
-                                Row {
-                                    spacing: 4
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    Repeater {
-                                        model: myself.model.player_index + 1
-                                        delegate: Rectangle {
-                                            width: 8
-                                            height: 8
-                                            color: "#6bc80a"
-                                            radius: 4
-
-                                        }
-                                    }
-                                }
-                                Item {
-                                    height: 6
-                                    width: 1
-                                }
+                                // Row {
+                                //     spacing: 4
+                                //     anchors.horizontalCenter: parent.horizontalCenter
+                                //     Repeater {
+                                //         model: myself.model.player_index + 1
+                                //         delegate: Rectangle {
+                                //             width: 8
+                                //             height: 8
+                                //             color: "#6bc80a"
+                                //             radius: 4
+                                //
+                                //         }
+                                //     }
+                                // }
+                                // Item {
+                                //     height: 6
+                                //     width: 1
+                                // }
                                 MyComboBox {
                                     textRole: "text"
                                     valueRole: "value"
@@ -254,6 +251,28 @@ Flickable {
                                         {text: "Default profile", value: "display_name"},
                                         {text: "Newest first", value: "created_at"}
                                     ]
+                                }
+                                Button {
+                                    width: parent.width
+                                    padding: 8
+                                    background: Rectangle {
+                                        color: "#03438c"
+                                        radius: 8
+                                    }
+                                    contentItem: Text {
+                                        text: qsTr("Edit current profile")
+                                        color: "white"
+                                        font.pointSize: 11
+                                        font.weight: Font.DemiBold
+                                        font.family: Constants.regularFontFamily
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+
+                                    onClicked: function () {
+                                        root.StackView.view.push(profileEditor)
+                                        // profileDialog.open()
+                                    }
                                 }
                             }
                             // Text {
@@ -284,17 +303,29 @@ Flickable {
         }
     }
 
+    Component {
+        id: profileEditor
+        ControllerProfilePage {
+            controllerProfileId: 1
+        }
+    }
+
     FirelightDialog {
         id: profileDialog
         width: parent.width * 5 / 6
         height: parent.height * 5 / 6
+        // title: "Creating new controller profile"
         contentItem: ControllerProfilePage {
-
+            controllerProfileId: 1
         }
 
         footer: DialogButtonBox {
             spacing: 2
             alignment: Qt.AlignRight
+            onAccepted: {
+                console.log("Accepted")
+                profileDialog.contentItem.saveMapping()
+            }
             Button {
                 background: Rectangle {
                     implicitHeight: 44

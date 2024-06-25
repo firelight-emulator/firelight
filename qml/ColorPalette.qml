@@ -11,7 +11,6 @@ Item {
     readonly property color primary300: "#a9d3f3"
     readonly property color primary200: "#edf6fd"
 
-
     readonly property color neutral900: "#1a222c"
     readonly property color neutral800: "#212934"
     readonly property color neutral700: "#5f6b79"
@@ -25,6 +24,18 @@ Item {
     readonly property color red700: "#ca1f17"
     readonly property color red500: "#d62727"
     readonly property color red100: "#f8d7da"
+
+    readonly property color white: neutral200
+
+    readonly property color containerVeryLowColor: "#1d1e22"
+    readonly property color containerLowColor: "#25282C"
+    readonly property color containerMidColor: "#32363a"
+
+
+    readonly property color dropdownBackgroundColor: containerMidColor
+    readonly property color dropdownPopupBackgroundColor: containerVeryLowColor
+    readonly property color dropdownPopupBorderColor: containerMidColor
+    readonly property color dropdownInactiveTextColor: neutral400
 
 
     readonly property color backgroundColorOne: "#2d2d32"

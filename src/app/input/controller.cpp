@@ -29,25 +29,25 @@ namespace firelight::Input {
   }
 
   bool Controller::isButtonPressed(const Button t_button) {
-    if (m_profile) {
-      auto mapping = m_profile->getControllerMappingForPlatform(0);
-
-
-      if (t_button == LeftTrigger || t_button == RightTrigger) {
-        return SDL_GameControllerGetAxis(m_SDLController,
-                                         t_button == LeftTrigger
-                                           ? SDL_CONTROLLER_AXIS_TRIGGERLEFT
-                                           : SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 0;
-      }
-
-      const auto mappedButton = mapping.getMappedButton(t_button);
-
-      if (mappedButton == SDL_CONTROLLER_BUTTON_INVALID) {
-        return false;
-      }
-
-      return SDL_GameControllerGetButton(m_SDLController, mappedButton);
-    }
+    // if (m_profile) {
+    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
+    //
+    //
+    //   if (t_button == LeftTrigger || t_button == RightTrigger) {
+    //     return SDL_GameControllerGetAxis(m_SDLController,
+    //                                      t_button == LeftTrigger
+    //                                        ? SDL_CONTROLLER_AXIS_TRIGGERLEFT
+    //                                        : SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 0;
+    //   }
+    //
+    //   const auto mappedButton = mapping.getMappedButton(t_button);
+    //
+    //   if (mappedButton == SDL_CONTROLLER_BUTTON_INVALID) {
+    //     return false;
+    //   }
+    //
+    //   return SDL_GameControllerGetButton(m_SDLController, mappedButton);
+    // }
 
     switch (t_button) {
       case NorthFace:
@@ -106,13 +106,13 @@ namespace firelight::Input {
   int16_t Controller::getLeftStickXPosition() {
     const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
 
-    if (m_profile != nullptr) {
-      auto mapping = m_profile->getControllerMappingForPlatform(0);
-      const auto deadzone = mapping.getLeftStickXDeadzone();
-      if (value < deadzone && value > -deadzone) {
-        return 0;
-      }
-    }
+    // if (m_profile != nullptr) {
+    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
+    //   const auto deadzone = mapping.getLeftStickXDeadzone();
+    //   if (value < deadzone && value > -deadzone) {
+    //     return 0;
+    //   }
+    // }
 
     return value;
   }
@@ -120,13 +120,13 @@ namespace firelight::Input {
   int16_t Controller::getLeftStickYPosition() {
     const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
 
-    if (m_profile != nullptr) {
-      auto mapping = m_profile->getControllerMappingForPlatform(0);
-      const auto deadzone = mapping.getLeftStickYDeadzone();
-      if (value < deadzone && value > -deadzone) {
-        return 0;
-      }
-    }
+    // if (m_profile != nullptr) {
+    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
+    //   const auto deadzone = mapping.getLeftStickYDeadzone();
+    //   if (value < deadzone && value > -deadzone) {
+    //     return 0;
+    //   }
+    // }
 
     return value;
   }
@@ -134,13 +134,13 @@ namespace firelight::Input {
   int16_t Controller::getRightStickXPosition() {
     const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
 
-    if (m_profile != nullptr) {
-      auto mapping = m_profile->getControllerMappingForPlatform(0);
-      const auto deadzone = mapping.getRightStickXDeadzone();
-      if (value < deadzone && value > -deadzone) {
-        return 0;
-      }
-    }
+    // if (m_profile != nullptr) {
+    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
+    //   const auto deadzone = mapping.getRightStickXDeadzone();
+    //   if (value < deadzone && value > -deadzone) {
+    //     return 0;
+    //   }
+    // }
 
     return value;
   }
@@ -148,13 +148,13 @@ namespace firelight::Input {
   int16_t Controller::getRightStickYPosition() {
     const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
 
-    if (m_profile != nullptr) {
-      auto mapping = m_profile->getControllerMappingForPlatform(0);
-      const auto deadzone = mapping.getRightStickYDeadzone();
-      if (value < deadzone && value > -deadzone) {
-        return 0;
-      }
-    }
+    // if (m_profile != nullptr) {
+    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
+    //   const auto deadzone = mapping.getRightStickYDeadzone();
+    //   if (value < deadzone && value > -deadzone) {
+    //     return 0;
+    //   }
+    // }
 
     return value;
   }

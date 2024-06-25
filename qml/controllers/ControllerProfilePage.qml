@@ -7,59 +7,38 @@ import Firelight 1.0
 Item {
     id: root
 
-    property var sourceControllerType: 0
-    property var targetControllerType: 0
-    property int controllerProfileId: 0
+    property alias controllerProfileId: gamepadProfile.profileId
+    property var currentMapping: null
+
+    function saveMapping() {
+        // for every item in buttonList, print the modelData mapping ID and print out the value of the combo box
+        for (var i = 0; i < buttonList.count; i++) {
+            // console.log("hi")
+            console.log("Button: " + buttonList.itemAtIndex(i).modelData.display_name + " Mapping ID: " + buttonList.itemAtIndex(i).modelData.mapping_id + " Value: " + buttonList.itemAtIndex(i).currentMappingId)
+        }
+    }
 
     GamepadProfile {
         id: gamepadProfile
-        currentPlatformId: 1
+
+        onCurrentPlatformIdChanged: {
+            root.currentMapping = gamepadProfile.getCurrentMapping()
+            if (root.currentMapping) {
+                console.log("currentMapping: " + JSON.stringify(root.currentMapping))
+            } else {
+                console.log("currentMapping: null")
+            }
+        }
     }
 
-    // GamepadDescriptor {
-    //     id: targetDescriptor
-    //     gamepadType: root.sourceControllerType
-    // }
-    //
-    // GamepadDescriptor {
-    //     id: targetDescriptor
-    //     gamepadType: root.targetControllerType
-    // }
-
-    ColumnLayout {
+    RowLayout {
         anchors.fill: parent
 
-        // Text {
-        //     text: "Controllers"
-        //     color: "white"
-        //     font.pointSize: 24
-        //     font.family: Constants.regularFontFamily
-        //     horizontalAlignment: Text.AlignLeft
-        //     verticalAlignment: Text.AlignVCenter
-        // }
-        // Button {
-        //     text: "down"
-        //     onClicked: {
-        //         gamepadProfile.currentPlatformId = gamepadProfile.currentPlatformId - 1
-        //     }
-        // }
-        // Button {
-        //     text: "up"
-        //     onClicked: {
-        //         gamepadProfile.currentPlatformId = gamepadProfile.currentPlatformId + 1
-        //     }
-        // }
-        // Button {
-        //     text: "do mapping thing"
-        //     onClicked: {
-        //         gamepadProfile.currentMapping.rightStickXDeadzone = gamepadProfile.currentMapping.rightStickXDeadzone + 1
-        //     }
-        // }
-
         Pane {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.fillWidth: true
-            Layout.preferredHeight: 134 + padding * 2
+            // Layout.alignment: Qt.AlignLeft
+            Layout.fillHeight: true
+            Layout.preferredWidth: 200
+            // Layout.preferredHeight: 134 + padding * 2
 
             padding: 6
 
@@ -73,7 +52,7 @@ Item {
 
             contentItem: ListView {
                 id: platformList
-                orientation: ListView.Horizontal
+                orientation: ListView.Vertical
 
                 clip: true
 
@@ -99,8 +78,8 @@ Item {
                     checkable: model.platform_id !== -1
                     // hoverEnabled: true
 
-                    width: 100
-                    height: 134
+                    width: ListView.view.width
+                    height: 48
                     autoExclusive: true
 
                     checked: ListView.isCurrentItem
@@ -111,25 +90,26 @@ Item {
                         }
                     }
 
-                    contentItem: Column {
+                    contentItem: Row {
+                        spacing: 8
                         Image {
                             source: model.icon_url
-                            width: parent.width
+                            height: parent.height
                             // mipmap: true
-                            sourceSize.width: parent.width
+                            sourceSize.height: 48
                             fillMode: Image.PreserveAspectFit
-                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
                             text: model.display_name
-                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
                             color: "white"
-                            font.pointSize: 10
+                            font.pointSize: 11
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            width: parent.width
+                            height: parent.height
                             wrapMode: Text.WordWrap
 
                         }
@@ -146,226 +126,36 @@ Item {
             }
 
             contentItem: RowLayout {
-                // ListView {
-                //     id: buttonList222
-                //     Layout.fillHeight: true
-                //     Layout.fillWidth: true
-                //     Layout.horizontalStretchFactor: 1
-                //     clip: true
-                //
-                //     visible: platformList.currentItem.model.buttons.length > 0
-                //
-                //     spacing: 6
-                //
-                //     model: 0
-                //     delegate: Pane {
-                //         required property var modelData
-                //
-                //         width: buttonList222.width
-                //         height: 48
-                //         padding: 0
-                //         // background: Rectangle {
-                //         //     color: "#25282C"
-                //         //     radius: 4
-                //         // }
-                //
-                //         background: Item {
-                //         }
-                //
-                //         contentItem: RowLayout {
-                //             spacing: 16
-                //             // Image {
-                //             //     source: modelData.icon_url
-                //             //     anchors.verticalCenter: parent.verticalCenter
-                //             //     width: 40
-                //             //     height: 40
-                //             //     fillMode: Image.PreserveAspectFit
-                //             //
-                //             //     Rectangle {
-                //             //         color: "transparent"
-                //             //         anchors.fill: parent
-                //             //
-                //             //         radius: 4
-                //             //         border.color: "white"
-                //             //         border.width: 1
-                //             //         z: -1
-                //             //     }
-                //             // }
-                //             Text {
-                //                 Layout.leftMargin: 4
-                //                 Layout.preferredWidth: 100
-                //                 Layout.fillHeight: true
-                //                 text: modelData.display_name
-                //                 color: "white"
-                //                 font.pointSize: 12
-                //                 font.family: Constants.regularFontFamily
-                //                 font.weight: Font.DemiBold
-                //                 horizontalAlignment: Text.AlignRight
-                //                 verticalAlignment: Text.AlignVCenter
-                //             }
-                //
-                //             MyComboBox {
-                //                 id: dropdown
-                //                 Layout.fillWidth: true
-                //                 Layout.fillHeight: true
-                //                 textRole: "text"
-                //                 valueRole: "value"
-                //                 model: [
-                //                     {text: "Left Stick Up", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Left Stick Down", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Left Stick Left", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Left Stick Right", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Right Stick Up", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Right Stick Down", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Right Stick Left", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Right Stick Right", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "A", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "B", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "X", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Y", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "DPad Up", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "DPad Down", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "DPad Left", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "DPad Right", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "LB", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "LT", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "LSB", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "RB", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "RT", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "RSB", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Options", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Menu", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     {text: "Share", value: "file:system/_img/xboxseries/abutton.svg"}
-                //                 ]
-                //
-                //                 // currentIndex: 0
-                //                 // onCurrentIndexChanged: {
-                //                 //     controller_manager.setPlatformIndex(currentIndex)
-                //                 // }
-                //             }
-                //
-                //         }
-                //     }
-                // }
-
-                // ListView {
-                //     id: stickList
-                //     Layout.fillHeight: true
-                //     Layout.fillWidth: true
-                //     Layout.horizontalStretchFactor: 1
-                //
-                //     visible: platformList.currentItem.model.sticks.length > 0
-                //
-                //     interactive: false
-                //     height: contentHeight
-                //
-                //     spacing: 8
-                //
-                //     model: platformList.currentItem.model.sticks
-                //     delegate: Pane {
-                //         required property var modelData
-                //
-                //         width: stickList.width
-                //         height: 240
-                //         padding: 8
-                //         background: Rectangle {
-                //             color: "#25282C"
-                //             radius: 4
-                //         }
-                //
-                //         contentItem: ColumnLayout {
-                //             RowLayout {
-                //                 Layout.fillWidth: true
-                //                 spacing: 8
-                //                 Text {
-                //                     text: modelData.display_name
-                //                     color: "white"
-                //                     font.pointSize: 12
-                //                     font.family: Constants.regularFontFamily
-                //                     font.weight: Font.DemiBold
-                //                     horizontalAlignment: Text.AlignLeft
-                //                     verticalAlignment: Text.AlignVCenter
-                //                 }
-                //
-                //                 MyComboBox {
-                //                     id: stickDropdown
-                //                     Layout.preferredWidth: 200
-                //                     Layout.preferredHeight: 40
-                //                     Layout.alignment: Qt.AlignCenter
-                //                     textRole: "text"
-                //                     valueRole: "value"
-                //                     model: [
-                //                         {text: "Left Stick", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                         {text: "Right Stick", value: "file:system/_img/xboxseries/abutton.svg"},
-                //                     ]
-                //                 }
-                //
-                //             }
-                //             Text {
-                //                 Layout.fillWidth: true
-                //                 text: "Flip X (Horizontal) Axis"
-                //                 color: "white"
-                //                 font.pointSize: 12
-                //                 font.family: Constants.regularFontFamily
-                //                 font.weight: Font.DemiBold
-                //                 horizontalAlignment: Text.AlignLeft
-                //                 verticalAlignment: Text.AlignVCenter
-                //             }
-                //             Text {
-                //                 Layout.fillWidth: true
-                //                 text: "Flip Y (Vertical) Axis"
-                //                 color: "white"
-                //                 font.pointSize: 12
-                //                 font.family: Constants.regularFontFamily
-                //                 font.weight: Font.DemiBold
-                //                 horizontalAlignment: Text.AlignLeft
-                //                 verticalAlignment: Text.AlignVCenter
-                //             }
-                //             Text {
-                //                 Layout.fillWidth: true
-                //                 text: "Deadzone"
-                //                 color: "white"
-                //                 font.pointSize: 12
-                //                 font.family: Constants.regularFontFamily
-                //                 font.weight: Font.DemiBold
-                //                 horizontalAlignment: Text.AlignLeft
-                //                 verticalAlignment: Text.AlignVCenter
-                //             }
-                //             Text {
-                //                 Layout.fillWidth: true
-                //                 text: "Sensitivity"
-                //                 color: "white"
-                //                 font.pointSize: 12
-                //                 font.family: Constants.regularFontFamily
-                //                 font.weight: Font.DemiBold
-                //                 horizontalAlignment: Text.AlignLeft
-                //                 verticalAlignment: Text.AlignVCenter
-                //             }
-                //         }
-                //     }
-                // }
-
                 Image {
                     id: imagey
-                    Layout.fillHeight: true
+                    Layout.preferredHeight: parent.height / 2
                     source: platformList.currentItem.model.icon_url
-                    // width: width > parent.width / 2 ? parent.width / 2 : width
-                    // mipmap: true
-                    Layout.preferredWidth: parent.height
-                    sourceSize.width: 512
-                    sourceSize.height: 512
-                    // sourceSize.height: 512
-                    sourceClipRect: Qt.rect(0, 0, 1024, 1024)
+                    Layout.preferredWidth: parent.height / 2
+                    sourceSize.width: parent.height / 2
+                    sourceSize.height: parent.height / 2
+                    mipmap: true                    // sourceSize.height: 512
+                    // sourceClipRect: Qt.rect(0, 0, 1024, 1024)
                     fillMode: Image.PreserveAspectFit
+
+                    Rectangle {
+                        color: "transparent"
+                        anchors.fill: parent
+
+                        radius: 4
+                        border.color: "white"
+                        border.width: 1
+                    }
                 }
 
 
                 ListView {
                     id: buttonList
                     Layout.fillHeight: true
-                    Layout.fillWidth: true
-                    Layout.horizontalStretchFactor: 1
+                    Layout.preferredWidth: 300
                     clip: true
+
+                    ScrollBar.vertical: ScrollBar {
+                    }
 
                     visible: platformList.currentItem.model.buttons.length > 0
 
@@ -374,6 +164,7 @@ Item {
                     model: platformList.currentItem.model.buttons
                     delegate: Pane {
                         required property var modelData
+                        property alias currentMappingId: dropdown.currentIndex
 
                         width: buttonList.width
                         height: 48
@@ -424,32 +215,39 @@ Item {
                                 Layout.fillHeight: true
                                 textRole: "text"
                                 valueRole: "value"
+                                currentIndex: modelData.mapping_id
                                 model: [
-                                    {text: "Left Stick Up", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Left Stick Down", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Left Stick Left", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Left Stick Right", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Right Stick Up", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Right Stick Down", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Right Stick Left", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Right Stick Right", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "A", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "B", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "X", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Y", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "DPad Up", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "DPad Down", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "DPad Left", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "DPad Right", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "LB", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "LT", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "LSB", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "RB", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "RT", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "RSB", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Options", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Menu", value: "file:system/_img/xboxseries/abutton.svg"},
-                                    {text: "Share", value: "file:system/_img/xboxseries/abutton.svg"}
+                                    {text: "Y", value: 0},
+                                    {text: "A", value: 1},
+                                    {text: "B", value: 2},
+                                    {text: "X", value: 3},
+                                    {text: "DPad Up", value: 4},
+                                    {text: "DPad Down", value: 5},
+                                    {text: "DPad Left", value: 6},
+                                    {text: "DPad Right", value: 7},
+                                    {text: "Start", value: 8},
+                                    {text: "Select", value: 9},
+                                    {text: "Misc 1", value: 10},
+                                    {text: "Misc 2", value: 11},
+                                    {text: "Misc 3", value: 12},
+                                    {text: "Misc 4", value: 13},
+                                    {text: "Misc 5", value: 14},
+                                    {text: "Misc 6", value: 15},
+                                    {text: "Misc 7", value: 16},
+                                    {text: "R1", value: 17},
+                                    {text: "R2", value: 18},
+                                    {text: "R3", value: 19},
+                                    {text: "L1", value: 20},
+                                    {text: "L2", value: 21},
+                                    {text: "L3", value: 22},
+                                    {text: "Left Stick Up", value: 23},
+                                    {text: "Left Stick Down", value: 24},
+                                    {text: "Left Stick Left", value: 25},
+                                    {text: "Left Stick Right", value: 26},
+                                    {text: "Right Stick Up", value: 27},
+                                    {text: "Right Stick Down", value: 28},
+                                    {text: "Right Stick Left", value: 29},
+                                    {text: "Right Stick Right", value: 30}
                                 ]
 
                                 // currentIndex: 0
@@ -463,39 +261,6 @@ Item {
                 }
             }
         }
-
-
-        // Component {
-        //     id: buttonDropdown
-        //     MyComboBox {
-        //         id: dropdown
-        //         width: 200
-        //         height: 40
-        //         model: [
-        //             {display_name: "A", icon_url: "file:system/_img/xboxseries/abutton.svg"},
-        //             {display_name: "A", icon_url: "file:system/_img/xboxseries/abutton.svg"},
-        //             {display_name: "A", icon_url: "file:system/_img/xboxseries/abutton.svg"},
-        //             {display_name: "A", icon_url: "file:system/_img/xboxseries/abutton.svg"}
-        //         ]
-        //
-        //         // currentIndex: 0
-        //         // onCurrentIndexChanged: {
-        //         //     controller_manager.setPlatformIndex(currentIndex)
-        //         // }
-        //     }
-        // }
-
-        // RowLayout {
-        //     Layout.alignment: Qt.AlignHCenter
-        //     Layout.fillHeight: true
-        //     Layout.fillWidth: true
-        //
-        //     spacing: 8
-        //
-        //
-        //
-        //
-        // }
 
 
     }

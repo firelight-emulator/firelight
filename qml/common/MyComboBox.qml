@@ -50,13 +50,26 @@ ComboBox {
         }
 
         width: control.width - 4
-        contentItem: Text {
-            text: delegate.model[control.textRole]
-            font.family: Constants.regularFontFamily
-            font.pointSize: 11
-            color: parent.highlighted ? "white" : "#cacaca"
-            elide: Text.ElideRight
-            verticalAlignment: Text.AlignVCenter
+        contentItem: RowLayout {
+            Text {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                text: delegate.model[control.textRole]
+                font.family: Constants.regularFontFamily
+                font.pointSize: 11
+                color: parent.highlighted ? ColorPalette.white : ColorPalette.dropdownInactiveTextColor
+                elide: Text.ElideRight
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
+                text: "\ue86c"
+                font.family: Constants.symbolFontFamily
+                font.pixelSize: 18
+                color: "#17b317"
+                visible: control.currentIndex === index
+                Layout.alignment: Qt.AlignCenter
+            }
         }
         highlighted: control.highlightedIndex === index
     }
@@ -67,11 +80,16 @@ ComboBox {
         implicitHeight: contentItem.implicitHeight + padding * 2
         padding: 4
 
+
         contentItem: ListView {
             id: theList
             property real scrollMultiplier: 4.0
+            // property int maxHeight: delegate ? 8 * (delegate.height + 1) : 0
+            property int maxHeight: 398
+
+            boundsBehavior: Flickable.StopAtBounds
             clip: true
-            implicitHeight: contentHeight > 400 ? 400 : contentHeight
+            implicitHeight: contentHeight > maxHeight ? maxHeight : contentHeight
             model: control.popup.visible ? control.delegateModel : null
 
             highlightFollowsCurrentItem: false
@@ -80,39 +98,39 @@ ComboBox {
             }
 
 
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.NoButton
-                // preventStealing: true
-                onWheel: function (wheel) {
-
-                    const numPixels = wheel.pixelDelta.y
-                    const numDegrees = wheel.angleDelta.y
-
-                    if (numPixels !== 0) {
-                        theList.contentY -= numPixels
-                        return
-                    }
-
-                    var scrollDelta = wheel.angleDelta.y / 8 * theList.scrollMultiplier;
-
-                    theList.contentY -= scrollDelta
-                    if (theList.contentY < 0) {
-                        theList.contentY = 0
-                    } else if (theList.contentY > theList.contentHeight - theList.height) {
-                        theList.contentY = theList.contentHeight - theList.height
-                    }
-                }
-            }
+            // MouseArea {
+            //     anchors.fill: parent
+            //     acceptedButtons: Qt.NoButton
+            //     // preventStealing: true
+            //     onWheel: function (wheel) {
+            //
+            //         const numPixels = wheel.pixelDelta.y
+            //         const numDegrees = wheel.angleDelta.y
+            //
+            //         if (numPixels !== 0) {
+            //             theList.contentY -= numPixels
+            //             return
+            //         }
+            //
+            //         var scrollDelta = wheel.angleDelta.y / 8 * theList.scrollMultiplier;
+            //
+            //         theList.contentY -= scrollDelta
+            //         if (theList.contentY < 0) {
+            //             theList.contentY = 0
+            //         } else if (theList.contentY > theList.contentHeight - theList.height) {
+            //             theList.contentY = theList.contentHeight - theList.height
+            //         }
+            //     }
+            // }
 
             ScrollIndicator.vertical: ScrollIndicator {
             }
         }
 
         background: Rectangle {
-            color: "#1d1e22"
+            color: ColorPalette.dropdownPopupBackgroundColor
             radius: 2
-            border.color: "#32363a"
+            border.color: ColorPalette.dropdownPopupBorderColor
         }
     }
 

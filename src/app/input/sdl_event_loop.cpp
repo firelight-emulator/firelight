@@ -10,65 +10,70 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight {
-
-SdlEventLoop::SdlEventLoop(Input::ControllerManager *manager)
+  SdlEventLoop::SdlEventLoop(Input::ControllerManager *manager)
     : m_controllerManager(manager) {
-  SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
-  SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
+    SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
+    SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 
-  if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
-               SDL_INIT_TIMER) < 0) {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
+                 SDL_INIT_TIMER) < 0) {
+      printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    }
+
+    SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
   }
 
-  SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
-}
-SdlEventLoop::~SdlEventLoop() {
-  m_running = false;
-  SDL_Event quitEvent;
-  quitEvent.type = SDL_QUIT;
-  SDL_PushEvent(&quitEvent);
-}
+  SdlEventLoop::~SdlEventLoop() {
+    m_running = false;
+    SDL_Event quitEvent;
+    quitEvent.type = SDL_QUIT;
+    SDL_PushEvent(&quitEvent);
+  }
 
-void SdlEventLoop::stopProcessing() {
-  m_running = false;
-  SDL_Event quitEvent;
-  quitEvent.type = SDL_QUIT;
-  SDL_PushEvent(&quitEvent);
-}
+  void SdlEventLoop::stopProcessing() {
+    m_running = false;
+    SDL_Event quitEvent;
+    quitEvent.type = SDL_QUIT;
+    SDL_PushEvent(&quitEvent);
+  }
 
-void SdlEventLoop::run() {
-  processEvents();
-  SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
-                    SDL_INIT_TIMER);
-  SDL_Quit();
-}
+  void SdlEventLoop::run() {
+    processEvents();
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
+                      SDL_INIT_TIMER);
+    SDL_Quit();
+  }
 
-void SdlEventLoop::processEvents() const {
-  while (m_running) {
-    SDL_Event ev;
-    while (SDL_WaitEvent(&ev)) {
-      switch (ev.type) {
-      case SDL_CONTROLLERDEVICEADDED:
-      case SDL_CONTROLLERDEVICEREMOVED:
-        m_controllerManager->handleSDLControllerEvent(ev);
-        break;
-      case SDL_JOYAXISMOTION:
-      case SDL_CONTROLLERAXISMOTION:
-      case SDL_JOYBUTTONUP:
-      case SDL_JOYBUTTONDOWN:
-      case SDL_CONTROLLERBUTTONUP:
-      case SDL_CONTROLLERBUTTONDOWN:
-        break;
-      case SDL_QUIT:
-        spdlog::info("Got shut down signal; stopping SDL event loop");
-        return;
-      default:
-        spdlog::debug("Got an unhandled SDL event {}", ev.type);
-        break;
+  void SdlEventLoop::processEvents() const {
+    while (m_running) {
+      SDL_Event ev;
+      while (SDL_WaitEvent(&ev)) {
+        switch (ev.type) {
+          case SDL_CONTROLLERDEVICEADDED:
+          case SDL_CONTROLLERDEVICEREMOVED:
+            m_controllerManager->handleSDLControllerEvent(ev);
+            break;
+          case SDL_CONTROLLERAXISMOTION:
+            if (ev.caxis.value > 15000 || ev.caxis.value < -15000) {
+              printf("axis: %d, value: %d\n", ev.caxis.axis, ev.caxis.value);
+            }
+            break;
+          case SDL_CONTROLLERBUTTONUP:
+          case SDL_CONTROLLERBUTTONDOWN:
+            printf("button: %d, state: %d\n", ev.cbutton.button, ev.cbutton.state);
+            break;
+          case SDL_JOYAXISMOTION:
+          case SDL_JOYBUTTONUP:
+          case SDL_JOYBUTTONDOWN:
+            break;
+          case SDL_QUIT:
+            spdlog::info("Got shut down signal; stopping SDL event loop");
+            return;
+          default:
+            spdlog::debug("Got an unhandled SDL event {}", ev.type);
+            break;
+        }
       }
     }
   }
-}
-
 } // namespace firelight
