@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 
-Item {
+FocusScope {
     id: root
 
     signal resumeGamePressed()
@@ -38,6 +38,8 @@ Item {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 checkable: false
                 alignRight: true
+
+                focus: true
 
                 onClicked: function () {
                     resumeGamePressed()
