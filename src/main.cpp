@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
   QObject::connect(
     &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
     []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-  engine.loadFromModule("QMLFirelight", "Main");
+  engine.loadFromModule("QMLFirelight", "Main2");
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);

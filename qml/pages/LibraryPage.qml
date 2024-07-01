@@ -4,483 +4,493 @@ import QtQuick.Layouts
 import QtQml.Models
 
 
-Flickable {
+FocusScope {
     id: root
-
-    contentHeight: theColumn.height
-    boundsBehavior: Flickable.StopAtBounds
-
-    ScrollBar.vertical: ScrollBar {
-    }
+    objectName: "Library Focus Scope"
 
     signal entryClicked(int entryId)
 
-    RowLayout {
-        id: contentRow
+    Flickable {
+        id: flick
+        objectName: "Library Flickable"
         anchors.fill: parent
-        spacing: 0
+        contentHeight: theColumn.height
+        boundsBehavior: Flickable.StopAtBounds
+        // focus: true
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.horizontalStretchFactor: 1
+        ScrollBar.vertical: ScrollBar {
         }
 
-        Column {
-            id: theColumn
-            Layout.preferredWidth: Math.max(5, (Math.min(Math.floor(parent.width / libraryGrid.cellContentWidth), 8)) * libraryGrid.cellContentWidth)
+        RowLayout {
+            id: contentRow
+            anchors.fill: parent
+            spacing: 0
 
-            Pane {
-                id: header
-
-                width: parent.width
-                height: 120
-                background: Rectangle {
-                    color: "transparent"
-                    // border.color: "red"
-                }
-
-                horizontalPadding: 8
-
-                Text {
-                    anchors.fill: parent
-                    text: "All Games"
-                    color: "white"
-                    font.pointSize: 26
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.DemiBold
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                }
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.horizontalStretchFactor: 1
             }
 
-            Pane {
-                id: filters
-                background: Rectangle {
-                    color: "transparent"
-                    // border.color: "blue"
-                }
-                width: parent.width
+            Column {
+                id: theColumn
+                Layout.preferredWidth: Math.max(5, (Math.min(Math.floor(parent.width / libraryGrid.cellContentWidth), 8)) * libraryGrid.cellContentWidth)
 
-                horizontalPadding: 8
-                verticalPadding: 0
+                Pane {
+                    id: header
 
-                RowLayout {
-                    anchors.fill: parent
-
-                    spacing: 12
-                    Text {
-                        Layout.fillHeight: true
-                        Layout.alignment: Qt.AlignBottom
-                        text: "Showing " + library_model.count + " game" + (library_model.count === 1 ? "" : "s")
-                        color: "#C2BBBB"
-                        font.pointSize: 11
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignBottom
+                    width: parent.width
+                    height: 120
+                    background: Rectangle {
+                        color: "transparent"
+                        // border.color: "red"
                     }
 
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    // Button {
-                    //     id: melol
-                    //     Layout.preferredHeight: 32
-                    //     horizontalPadding: 12
-                    //     verticalPadding: 8
-                    //
-                    //     hoverEnabled: true
-                    //
-                    //     Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                    //     background: Rectangle {
-                    //         color: melol.hovered ? "#4e535b" : "#3e434b"
-                    //         radius: 12
-                    //         border.color: "#7d848c"
-                    //     }
-                    //
-                    //     contentItem: Text {
-                    //         text: "Show filters"
-                    //         color: "white"
-                    //         font.pointSize: 11
-                    //         font.family: Constants.regularFontFamily
-                    //         horizontalAlignment: Text.AlignHCenter
-                    //         verticalAlignment: Text.AlignVCenter
-                    //     }
-                    // }
-
-                    // Item {
-                    //     Layout.preferredWidth: 8
-                    // }
+                    horizontalPadding: 8
 
                     Text {
-                        Layout.fillHeight: true
-                        Layout.alignment: Qt.AlignVCenter
-                        text: "Sort by:"
+                        anchors.fill: parent
+                        text: "All Games"
                         color: "white"
-                        font.pointSize: 12
+                        font.pointSize: 26
                         font.family: Constants.regularFontFamily
+                        font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
+                }
 
-                    MyComboBox {
-                        textRole: "text"
-                        valueRole: "value"
-
-                        onActivated: library_short_model.sortType = currentValue
-                        Component.onCompleted: currentIndex = indexOfValue(library_short_model.sortType)
-
-                        model: [
-                            {text: "A-Z", value: "display_name"},
-                            {text: "Newest first", value: "created_at"}
-                        ]
+                Pane {
+                    id: filters
+                    background: Rectangle {
+                        color: "transparent"
+                        // border.color: "blue"
                     }
-                }
-            }
-
-            Pane {
-                background: Rectangle {
-                    color: "transparent"
-                    // border.color: "green"
-                }
-                width: parent.width
-                height: libraryGrid.contentHeight
-
-                horizontalPadding: 0
-
-                GridView {
-                    id: libraryGrid
                     width: parent.width
-                    height: 2000
-                    cellWidth: cellContentWidth
-                    cellHeight: cellContentHeight
 
-                    function itemsPerRow() {
-                        return Math.floor(width / cellWidth);
+                    horizontalPadding: 8
+                    verticalPadding: 0
+
+                    RowLayout {
+                        anchors.fill: parent
+
+                        spacing: 12
+                        Text {
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignBottom
+                            text: "Showing " + library_model.count + " game" + (library_model.count === 1 ? "" : "s")
+                            color: "#C2BBBB"
+                            font.pointSize: 11
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.Normal
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignBottom
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        // Button {
+                        //     id: melol
+                        //     Layout.preferredHeight: 32
+                        //     horizontalPadding: 12
+                        //     verticalPadding: 8
+                        //
+                        //     hoverEnabled: true
+                        //
+                        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
+                        //     background: Rectangle {
+                        //         color: melol.hovered ? "#4e535b" : "#3e434b"
+                        //         radius: 12
+                        //         border.color: "#7d848c"
+                        //     }
+                        //
+                        //     contentItem: Text {
+                        //         text: "Show filters"
+                        //         color: "white"
+                        //         font.pointSize: 11
+                        //         font.family: Constants.regularFontFamily
+                        //         horizontalAlignment: Text.AlignHCenter
+                        //         verticalAlignment: Text.AlignVCenter
+                        //     }
+                        // }
+
+                        // Item {
+                        //     Layout.preferredWidth: 8
+                        // }
+
+                        Text {
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignVCenter
+                            text: "Sort by:"
+                            color: "white"
+                            font.pointSize: 12
+                            font.family: Constants.regularFontFamily
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        MyComboBox {
+                            textRole: "text"
+                            valueRole: "value"
+
+                            onActivated: library_short_model.sortType = currentValue
+                            Component.onCompleted: currentIndex = indexOfValue(library_short_model.sortType)
+
+                            model: [
+                                {text: "A-Z", value: "display_name"},
+                                {text: "Newest first", value: "created_at"}
+                            ]
+                        }
                     }
+                }
 
-                    function rowWidth() {
-                        return itemsPerRow() * cellWidth;
+                Pane {
+                    background: Rectangle {
+                        color: "transparent"
+                        // border.color: "green"
                     }
+                    width: parent.width
+                    height: libraryGrid.contentHeight
 
-                    // onWidthChanged: {
-                    //     contentRow.middleSectionWidth = libraryGrid.rowWidth()
-                    // }
+                    horizontalPadding: 0
 
-                    cacheBuffer: 30
+                    GridView {
+                        id: libraryGrid
+                        width: parent.width
+                        height: 2000
+                        cellWidth: cellContentWidth
+                        cellHeight: cellContentHeight
+                        focus: true
 
-                    clip: true
+                        function itemsPerRow() {
+                            return Math.floor(width / cellWidth);
+                        }
 
-                    interactive: false
-                    readonly property int cellSpacing: 12
-                    readonly property int cellContentWidth: 180 + cellSpacing
-                    readonly property int cellContentHeight: 260 + cellSpacing
+                        function rowWidth() {
+                            return itemsPerRow() * cellWidth;
+                        }
 
-                    populate: Transition {
-                    }
+                        // onWidthChanged: {
+                        //     contentRow.middleSectionWidth = libraryGrid.rowWidth()
+                        // }
 
-                    currentIndex: 0
+                        cacheBuffer: 30
 
-                    model: library_short_model
-                    boundsBehavior: Flickable.StopAtBounds
-                    keyNavigationEnabled: true
+                        clip: true
 
-                    highlight: Item {
-                    }
+                        interactive: false
+                        readonly property int cellSpacing: 12
+                        readonly property int cellContentWidth: 180 + cellSpacing
+                        readonly property int cellContentHeight: 260 + cellSpacing
 
-                    delegate: Item {
-                        id: rootItem
-                        width: libraryGrid.cellContentWidth
-                        height: libraryGrid.cellContentHeight
+                        populate: Transition {
+                        }
 
-                        Button {
-                            id: libItemButton
-                            anchors {
-                                fill: parent
-                                margins: libraryGrid.cellSpacing / 2
-                            }
+                        currentIndex: 0
 
-                            scale: pressed ? 0.97 : 1
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 64
-                                    easing.type: Easing.InOutQuad
-                                }
-                            }
+                        model: library_short_model
+                        boundsBehavior: Flickable.StopAtBounds
+                        keyNavigationEnabled: true
 
-                            background: Rectangle {
-                                color: libItemButton.hovered ? "#3a3e45" : "#25282C"
-                                radius: 6
-                                // border.color: rootItem.GridView.isCurrentItem ? "white" : "transparent"
-                                // border.width: 2
-                                // leftInset: -2
-                                // rightInset: -2
-                                // topInset: -2
-                                // bottomInset: -2
-                            }
+                        highlight: Item {
+                        }
 
-                            contentItem: ColumnLayout {
-                                id: colLayout
-                                spacing: 0
+                        delegate: FocusScope {
+                            id: rootItem
+                            width: libraryGrid.cellContentWidth
+                            height: libraryGrid.cellContentHeight
+
+                            Button {
+                                id: libItemButton
                                 anchors {
                                     fill: parent
-                                    // margins: 2
+                                    margins: libraryGrid.cellSpacing / 2
                                 }
 
-                                // Image {
-                                //     asynchronous: true
-                                //     source: "file:system/_img/pmbox.jpg"
-                                //     // Layout.fillWidth: true
-                                //     // Layout.preferredHeight: 180
-                                //
-                                //     // implicitWidth: libItemMouse.hovered ? parent.width + 10 : parent.width
-                                //     // implicitHeight: libItemMouse.hovered ? parent.height + 10 : parent.height
-                                //
-                                //     // scale: libItemMouse.hovered ? 1.02 : 1
-                                //
-                                //     // Behavior on scale {
-                                //     //     NumberAnimation {
-                                //     //         duration: 200
-                                //     //         easing.type: Easing.InOutQuad
-                                //     //     }
-                                //     // }
-                                //
-                                //     width: 200
-                                //     height: 200
-                                //
-                                //     sourceSize.width: 180
-                                //     sourceSize.height: 180
-                                //
-                                //     horizontalAlignment: Image.AlignLeft
-                                //
-                                //     fillMode: Image.PreserveAspectCrop
-                                // }
-
-                                Rectangle {
-                                    color: "grey"
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: colLayout.width
-                                    topLeftRadius: 6
-                                    topRightRadius: 6
-
-                                    Text {
-                                        text: "Box art coming soon :)"
-                                        font.pointSize: 9
-                                        // font.weight: Font.Light
-                                        font.family: Constants.regularFontFamily
-                                        color: "#232323"
-                                        anchors.centerIn: parent
-                                        // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                                scale: pressed ? 0.97 : 1
+                                Behavior on scale {
+                                    NumberAnimation {
+                                        duration: 64
+                                        easing.type: Easing.InOutQuad
                                     }
                                 }
 
-                                Item {
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
+                                background: Rectangle {
+                                    color: libItemButton.hovered ? "#3a3e45" : "#25282C"
+                                    radius: 6
+                                    // border.color: rootItem.GridView.isCurrentItem ? "white" : "transparent"
+                                    // border.width: 2
+                                    // leftInset: -2
+                                    // rightInset: -2
+                                    // topInset: -2
+                                    // bottomInset: -2
+                                }
 
-                                    ColumnLayout {
-                                        spacing: 2
-                                        anchors {
-                                            fill: parent
-                                            margins: 6
-                                        }
+                                contentItem: ColumnLayout {
+                                    id: colLayout
+                                    spacing: 0
+                                    anchors {
+                                        fill: parent
+                                        // margins: 2
+                                    }
+
+                                    // Image {
+                                    //     asynchronous: true
+                                    //     source: "file:system/_img/pmbox.jpg"
+                                    //     // Layout.fillWidth: true
+                                    //     // Layout.preferredHeight: 180
+                                    //
+                                    //     // implicitWidth: libItemMouse.hovered ? parent.width + 10 : parent.width
+                                    //     // implicitHeight: libItemMouse.hovered ? parent.height + 10 : parent.height
+                                    //
+                                    //     // scale: libItemMouse.hovered ? 1.02 : 1
+                                    //
+                                    //     // Behavior on scale {
+                                    //     //     NumberAnimation {
+                                    //     //         duration: 200
+                                    //     //         easing.type: Easing.InOutQuad
+                                    //     //     }
+                                    //     // }
+                                    //
+                                    //     width: 200
+                                    //     height: 200
+                                    //
+                                    //     sourceSize.width: 180
+                                    //     sourceSize.height: 180
+                                    //
+                                    //     horizontalAlignment: Image.AlignLeft
+                                    //
+                                    //     fillMode: Image.PreserveAspectCrop
+                                    // }
+
+                                    Rectangle {
+                                        color: "grey"
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: colLayout.width
+                                        topLeftRadius: 6
+                                        topRightRadius: 6
 
                                         Text {
-                                            text: model.display_name
-                                            font.pointSize: 11
-                                            font.weight: Font.Bold
+                                            text: "Box art coming soon :)"
+                                            font.pointSize: 9
+                                            // font.weight: Font.Light
                                             font.family: Constants.regularFontFamily
-                                            color: "white"
-                                            Layout.fillWidth: true
-                                            elide: Text.ElideRight
-                                            maximumLineCount: 1
+                                            color: "#232323"
+                                            anchors.centerIn: parent
                                             // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
                                         }
-                                        Text {
-                                            text: model.platform_name
-                                            font.pointSize: 10
-                                            font.weight: Font.Medium
-                                            font.family: Constants.regularFontFamily
-                                            color: "#C2BBBB"
-                                            Layout.fillWidth: true
-                                            // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                                    }
+
+                                    Item {
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+
+                                        ColumnLayout {
+                                            spacing: 2
+                                            anchors {
+                                                fill: parent
+                                                margins: 6
+                                            }
+
+                                            Text {
+                                                text: model.display_name
+                                                font.pointSize: 11
+                                                font.weight: Font.Bold
+                                                font.family: Constants.regularFontFamily
+                                                color: "white"
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                                maximumLineCount: 1
+                                                // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                                            }
+                                            Text {
+                                                text: model.platform_name
+                                                font.pointSize: 10
+                                                font.weight: Font.Medium
+                                                font.family: Constants.regularFontFamily
+                                                color: "#C2BBBB"
+                                                Layout.fillWidth: true
+                                                // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                                            }
+                                            Item {
+                                                Layout.fillWidth: true
+                                                Layout.fillHeight: true
+                                            }
                                         }
-                                        Item {
-                                            Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                        }
+                                    }
+
+                                    // Pane {
+                                    //     Layout.fillWidth: true
+                                    //     Layout.fillHeight: true
+                                    //
+                                    //     // clip: true
+                                    //     background: Item {
+                                    //     }
+                                    //     padding: 8
+                                    //     ColumnLayout {
+                                    //         anchors.fill: parent
+                                    //         spacing: 2
+                                    //         Text {
+                                    //             text: model.display_name
+                                    //             font.pointSize: 11
+                                    //             font.weight: Font.Bold
+                                    //             font.family: Constants.regularFontFamily
+                                    //             color: "white"
+                                    //             Layout.fillWidth: true
+                                    //             elide: Text.ElideRight
+                                    //             maximumLineCount: 1
+                                    //             // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                                    //         }
+                                    //         Text {
+                                    //             text: model.platform_name
+                                    //             font.pointSize: 10
+                                    //             font.weight: Font.Medium
+                                    //             font.family: Constants.regularFontFamily
+                                    //             color: "#C2BBBB"
+                                    //             Layout.fillWidth: true
+                                    //             // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                                    //         }
+                                    //         Item {
+                                    //             Layout.fillWidth: true
+                                    //             Layout.fillHeight: true
+                                    //         }
+                                    //     }
+                                    //
+                                    // }
+                                }
+
+                                TapHandler {
+                                    acceptedButtons: Qt.RightButton
+                                    onTapped: {
+                                        rootItem.GridView.view.currentIndex = index
+                                        libraryEntryRightClickMenu.popup()
                                     }
                                 }
 
-                                // Pane {
-                                //     Layout.fillWidth: true
-                                //     Layout.fillHeight: true
-                                //
-                                //     // clip: true
-                                //     background: Item {
-                                //     }
-                                //     padding: 8
-                                //     ColumnLayout {
-                                //         anchors.fill: parent
-                                //         spacing: 2
-                                //         Text {
-                                //             text: model.display_name
-                                //             font.pointSize: 11
-                                //             font.weight: Font.Bold
-                                //             font.family: Constants.regularFontFamily
-                                //             color: "white"
-                                //             Layout.fillWidth: true
-                                //             elide: Text.ElideRight
-                                //             maximumLineCount: 1
-                                //             // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-                                //         }
-                                //         Text {
-                                //             text: model.platform_name
-                                //             font.pointSize: 10
-                                //             font.weight: Font.Medium
-                                //             font.family: Constants.regularFontFamily
-                                //             color: "#C2BBBB"
-                                //             Layout.fillWidth: true
-                                //             // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-                                //         }
-                                //         Item {
-                                //             Layout.fillWidth: true
-                                //             Layout.fillHeight: true
-                                //         }
-                                //     }
-                                //
-                                // }
-                            }
-
-                            TapHandler {
-                                acceptedButtons: Qt.RightButton
-                                onTapped: {
-                                    rootItem.GridView.view.currentIndex = index
-                                    libraryEntryRightClickMenu.popup()
-                                }
-                            }
-
-                            Keys.onReturnPressed: {
-                                doubleClicked()
-                            }
-
-                            onClicked: function () {
-                                rootItem.GridView.view.currentIndex = model.index
-                                root.StackView.view.push(gameDetailsPage, {"entryId": model.id})
-                                // libraryEntryRightClickMenu.popup()
-                            }
-
-                            onDoubleClicked: function () {
-                                entryClicked(model.id)
-                            }
-
-                            RightClickMenu {
-                                id: libraryEntryRightClickMenu
-
-                                RightClickMenuItem {
-                                    text: "Play " + model.display_name
-                                    onTriggered: {
-                                        entryClicked(model.id)
-                                    }
+                                Keys.onReturnPressed: {
+                                    doubleClicked()
                                 }
 
-                                // RightClickMenuItem {
-                                //     text: "Patch stuff"
-                                //     visible: model.parent_game_name !== ""
-                                //     onTriggered: function () {
-                                //         selectLibEntryDialog.open()
-                                //     }
-                                // }
-
-                                RightClickMenuItem {
-                                    // enabled: false
-                                    text: "View details"
-                                    onTriggered: {
-                                        root.StackView.view.push(gameDetailsPage, {"entryId": model.id})
-                                    }
+                                onClicked: function () {
+                                    rootItem.GridView.view.currentIndex = model.index
+                                    root.StackView.view.push(gameDetailsPage, {
+                                        "objectName": "Game Details Page",
+                                        "entryId": model.id
+                                    })
+                                    // libraryEntryRightClickMenu.popup()
                                 }
 
-                                MenuSeparator {
-                                    contentItem: Rectangle {
-                                        implicitWidth: 188
-                                        implicitHeight: 1
-                                        color: "#606060"
-                                    }
+                                onDoubleClicked: function () {
+                                    entryClicked(model.id)
                                 }
 
                                 RightClickMenu {
-                                    id: addPlaylistRightClickMenu
-                                    enabled: ins.count > 0
+                                    id: libraryEntryRightClickMenu
 
-                                    title: "Add to folder"
+                                    RightClickMenuItem {
+                                        text: "Play " + model.display_name
+                                        onTriggered: {
+                                            entryClicked(model.id)
+                                        }
+                                    }
 
-                                    Instantiator {
-                                        id: ins
-                                        model: playlist_model
-                                        delegate: RightClickMenuItem {
-                                            text: model.display_name
-                                            onTriggered: {
-                                                playlist_model.addEntryToPlaylist(model.id, libraryEntryRightClickMenu.entryId)
-                                                library_model.updatePlaylistsForEntry(libraryEntryRightClickMenu.entryId)
-                                                // Add your action here
+                                    // RightClickMenuItem {
+                                    //     text: "Patch stuff"
+                                    //     visible: model.parent_game_name !== ""
+                                    //     onTriggered: function () {
+                                    //         selectLibEntryDialog.open()
+                                    //     }
+                                    // }
+
+                                    RightClickMenuItem {
+                                        // enabled: false
+                                        text: "View details"
+                                        onTriggered: {
+                                            root.StackView.view.push(gameDetailsPage, {"entryId": model.id})
+                                        }
+                                    }
+
+                                    MenuSeparator {
+                                        contentItem: Rectangle {
+                                            implicitWidth: 188
+                                            implicitHeight: 1
+                                            color: "#606060"
+                                        }
+                                    }
+
+                                    RightClickMenu {
+                                        id: addPlaylistRightClickMenu
+                                        enabled: ins.count > 0
+
+                                        title: "Add to folder"
+
+                                        Instantiator {
+                                            id: ins
+                                            model: playlist_model
+                                            delegate: RightClickMenuItem {
+                                                text: model.display_name
+                                                onTriggered: {
+                                                    playlist_model.addEntryToPlaylist(model.id, libraryEntryRightClickMenu.entryId)
+                                                    library_model.updatePlaylistsForEntry(libraryEntryRightClickMenu.entryId)
+                                                    // Add your action here
+                                                }
+                                            }
+
+                                            onObjectAdded: function (index, object) {
+                                                addPlaylistRightClickMenu.insertItem(index, object)
+                                            }
+                                            onObjectRemoved: function (index, object) {
+                                                addPlaylistRightClickMenu.removeItem(object)
                                             }
                                         }
+                                    }
 
-                                        onObjectAdded: function (index, object) {
-                                            addPlaylistRightClickMenu.insertItem(index, object)
-                                        }
-                                        onObjectRemoved: function (index, object) {
-                                            addPlaylistRightClickMenu.removeItem(object)
+                                    MenuSeparator {
+                                        contentItem: Rectangle {
+                                            implicitWidth: 188
+                                            implicitHeight: 1
+                                            color: "#606060"
                                         }
                                     }
-                                }
 
-                                MenuSeparator {
-                                    contentItem: Rectangle {
-                                        implicitWidth: 188
-                                        implicitHeight: 1
-                                        color: "#606060"
+                                    RightClickMenuItem {
+                                        enabled: false
+                                        text: "Manage save data"
+                                        // onTriggered: {
+                                        //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
+                                        //     addPlaylistRightClickMenu.popup()
+                                        // }
                                     }
-                                }
-
-                                RightClickMenuItem {
-                                    enabled: false
-                                    text: "Manage save data"
-                                    // onTriggered: {
-                                    //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
-                                    //     addPlaylistRightClickMenu.popup()
-                                    // }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.horizontalStretchFactor: 1
-        }
-    }
-
-    SelectLibraryEntryDialog {
-        id: selectLibEntryDialog
-    }
-
-    Component {
-        id: gameDetailsPage
-        GameDetailsPage {
-            entryId: -1
-
-            onPlayPressed: function () {
-                entryClicked(entryId)
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.horizontalStretchFactor: 1
             }
         }
+
+        SelectLibraryEntryDialog {
+            id: selectLibEntryDialog
+        }
+
+        Component {
+            id: gameDetailsPage
+            GameDetailsPage {
+                entryId: -1
+
+                onPlayPressed: function () {
+                    entryClicked(entryId)
+                }
+            }
+        }
+
     }
-
-
 }

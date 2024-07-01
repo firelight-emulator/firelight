@@ -260,6 +260,8 @@ Item {
                 }
                 SwipeView {
                     id: view
+
+                    objectName: "Content Swipe View"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
@@ -305,6 +307,7 @@ Item {
                     //     }
                     // }
                     ColumnLayout {
+                        objectName: "Details Tab Content"
                         Text {
                             Layout.fillWidth: true
                             text: qsTr("Content path")
@@ -351,6 +354,7 @@ Item {
                     }
                     Flickable {
                         id: flickThing
+                        objectName: "Achievements Tab Content"
                         contentHeight: !achievement_manager.loggedIn ? thing.height : achievementsList.height
 
                         property real scrollMultiplier: 8.0  // Adjust this multiplier for desired scroll speed
@@ -366,6 +370,7 @@ Item {
 
 
                         MouseArea {
+                            objectName: "Wheel Mouse Handler"
                             anchors.fill: parent
                             acceptedButtons: Qt.NoButton
                             // preventStealing: true
@@ -400,6 +405,7 @@ Item {
                         }
                         ColumnLayout {
                             id: thing
+                            objectName: "Log in column"
                             visible: !achievement_manager.loggedIn
                             Item {
                                 Layout.fillWidth: true
@@ -443,11 +449,14 @@ Item {
 
                         Column {
                             id: achievementsList
+
+                            objectName: "Achievements List"
                             visible: achievement_manager.loggedIn && root.achievementsSummary.NumPossibleAchievements > 0
                             width: parent.width
                             spacing: 24
 
                             Item {
+                                objectName: "Spacer"
                                 width: parent.width
                                 height: 24
                             }
@@ -653,6 +662,8 @@ Item {
                             // }
 
                             ListView {
+
+                                objectName: "Achievements List View"
                                 model: root.achievements
                                 spacing: 12
                                 width: parent.width
@@ -717,6 +728,7 @@ Item {
                                 }
 
                                 delegate: AchievementListItem {
+                                    objectName: "Achievement List Item (" + model.achievement_id + ")"
                                     width: ListView.view.width
                                 }
                             }

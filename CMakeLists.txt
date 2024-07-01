@@ -34,6 +34,7 @@ find_package(GTest REQUIRED)
 
 qt6_standard_project_setup(REQUIRES 6.7)
 
+add_compile_definitions(QT_QML_DEBUG)
 set(CMAKE_CXX_STANDARD 20)
 #set(QT_VERSION_MAJOR 6)
 

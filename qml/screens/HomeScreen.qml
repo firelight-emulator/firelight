@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Window
 import QtQuick.Layouts 1.0
-import QtQuick.Effects
 import Firelight 1.0
 
 FocusScope {
@@ -25,6 +24,19 @@ FocusScope {
         }
     }
 
+    Component {
+        id: libraryPage2
+        LibraryPage2 {
+            objectName: "Library Page 2"
+            property bool topLevel: true
+            property string topLevelName: "library"
+
+            // onEntryClicked: function (id) {
+            //     emulatorScreen.loadGame(id)
+            // }
+        }
+    }
+
 
     Component {
         id: controllerPage
@@ -39,13 +51,12 @@ FocusScope {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        width: 250
+        width: 200
         background: Rectangle {
             color: "#101114"
         }
         padding: 4
-
-        KeyNavigation.right: stackview
+        focus: true
 
         ColumnLayout {
             anchors.fill: parent
@@ -91,7 +102,9 @@ FocusScope {
                 Layout.preferredHeight: 48
                 enabled: false
 
-                checked: stackview.topLevelName === "home"
+
+                checked: contentStack.currentPageName === "home"
+                // checked: stackview.topLevelName === "home"
             }
             NavMenuButton {
                 id: modNavButton
@@ -101,11 +114,13 @@ FocusScope {
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 48
                 enabled: false
+                checked: contentStack.currentPageName === "mods"
 
-                checked: stackview.topLevelName === "mods"
+                // checked: stackview.topLevelName === "mods"
 
                 onToggled: function () {
-                    stackview.replace(null, modsPage)
+                    // stackview.replace(null, modsPage)
+                    contentStack.goTo(modsPage)
                 }
             }
             NavMenuButton {
@@ -115,11 +130,14 @@ FocusScope {
                 labelIcon: "\uf53e"
                 Layout.preferredWidth: parent.width
                 Layout.preferredHeight: 48
+                focus: true
 
-                checked: stackview.topLevelName === "library"
+                // checked: stackview.topLevelName === "library"
+                checked: contentStack.currentPageName === "library"
 
                 onToggled: function () {
-                    stackview.replace(null, libraryPage)
+                    // stackview.replace(null, libraryPage)
+                    contentStack.goTo(libraryPage)
                 }
             }
             NavMenuButton {
@@ -132,10 +150,12 @@ FocusScope {
 
                 // enabled: true
 
-                checked: stackview.topLevelName === "controllers"
+                // checked: stackview.topLevelName === "controllers"
+                checked: contentStack.currentPageName === "controllers"
 
                 onToggled: function () {
-                    stackview.replace(null, controllerPage)
+                    contentStack.goTo(controllerPage)
+                    // stackview.replace(null, controllerPage)
                 }
             }
             Item {
@@ -218,70 +238,81 @@ FocusScope {
     }
 
     StackView {
-        id: stackview
+        id: contentStack
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.left: drawer.right
+        KeyNavigation.left: drawer
+
+        //
+        objectName: "Home Content Stack View"
+        // anchors.fill: parent
+
+        property alias currentPageName: contentStack.topLevelName
+
+        function goTo(page) {
+            contentStack.replace(null, page)
+        }
 
         property string topLevelName: ""
 
         onCurrentItemChanged: {
             if (currentItem) {
-                let top = stackview.find(function (item, index) {
+                let top = contentStack.find(function (item, index) {
                     return item.topLevel === true
                 })
 
-                stackview.topLevelName = top ? top.topLevelName : ""
+                contentStack.topLevelName = top ? top.topLevelName : ""
             }
         }
 
-        Pane {
-            width: 48
-            height: 48
+        // Pane {
+        //     width: 48
+        //     height: 48
+        //
+        //     z: 2
+        //
+        //     background: Item {
+        //     }
+        //
+        //     Button {
+        //         id: melol
+        //         anchors.left: parent.left
+        //         anchors.verticalCenter: parent.verticalCenter
+        //         // horizontalPadding: 12
+        //         // verticalPadding: 8
+        //
+        //         enabled: stackview.depth > 1
+        //
+        //         hoverEnabled: false
+        //
+        //         HoverHandler {
+        //             id: myHover
+        //             cursorShape: melol.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+        //         }
+        //
+        //         background: Rectangle {
+        //             color: enabled ? myHover.hovered ? "#4e535b" : "#3e434b" : "#3e434b"
+        //             radius: height / 2
+        //         }
+        //
+        //         contentItem: Text {
+        //             text: "\ue5c4"
+        //             color: enabled ? "white" : "#7d848c"
+        //             font.pointSize: 11
+        //             font.family: Constants.symbolFontFamily
+        //             horizontalAlignment: Text.AlignHCenter
+        //             verticalAlignment: Text.AlignVCenter
+        //         }
+        //
+        //         onClicked: {
+        //             stackview.pop()
+        //         }
+        //     }
+        // }
 
-            z: 2
-
-            background: Item {
-            }
-
-            Button {
-                id: melol
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                // horizontalPadding: 12
-                // verticalPadding: 8
-
-                enabled: stackview.depth > 1
-
-                hoverEnabled: false
-
-                HoverHandler {
-                    id: myHover
-                    cursorShape: melol.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                }
-
-                background: Rectangle {
-                    color: enabled ? myHover.hovered ? "#4e535b" : "#3e434b" : "#3e434b"
-                    radius: height / 2
-                }
-
-                contentItem: Text {
-                    text: "\ue5c4"
-                    color: enabled ? "white" : "#7d848c"
-                    font.pointSize: 11
-                    font.family: Constants.symbolFontFamily
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: {
-                    stackview.pop()
-                }
-            }
-        }
-
-        initialItem: libraryPage
+        initialItem: libraryPage2
 
         pushEnter: Transition {
         }
@@ -296,6 +327,17 @@ FocusScope {
         replaceExit: Transition {
         }
     }
+
+    // HomeContentPane {
+    //     id: homeContentPane
+    //     anchors.top: parent.top
+    //     anchors.right: parent.right
+    //     anchors.bottom: parent.bottom
+    //     anchors.left: drawer.right
+    //
+    //     KeyNavigation.left: drawer
+    // }
+
 
     FirelightDialog {
         id: closeAppConfirmationDialog

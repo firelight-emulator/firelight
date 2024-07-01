@@ -2,12 +2,14 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Window
+import QtQml.Models
 import QtQuick.Layouts 1.0
 import QtQuick.Effects
 import Firelight 1.0
 
 ApplicationWindow {
     id: window
+    objectName: "Application Window"
 
     width: 1280
     height: 720
@@ -21,6 +23,111 @@ ApplicationWindow {
 
     background: Rectangle {
         color: "#1a1b1e"
+    }
+
+    function getStuff(item, depth): string {
+        if (!item) {
+            return ""
+        }
+
+        let str = ""
+
+        str += " ".repeat(depth) + item.objectName + " " + item.height + "\n"
+
+        // if (item.children.length === 0) {
+        //     return
+        // }
+
+        // console.log("num children: " + item.children.length)
+
+        for (let i = 0; i < item.children.length; i++) {
+            let child = item.children[i]
+            if (!child) {
+                continue
+            }
+            // str += " ".repeat(depth) + child.objectName + " " + child.id + "\n"
+            str += getStuff(child, depth + 1)
+        }
+
+        return str
+    }
+
+    Window {
+        id: debugWindow
+        objectName: "Debug Window"
+        width: 400
+        height: 400
+        visible: false
+
+
+        property bool locked: false
+
+        // ListView {
+        //     anchors.fill: parent
+        //     model: window.contentItem.children
+        //     delegate: ListView {
+        //         required property var modelData
+        //         width: parent.width
+        //         header: Text {
+        //             width: parent.width
+        //             height: 20
+        //             // text: modelData.objectName
+        //             text: "Item"
+        //         }
+        //         model: modelData.children
+        //         delegate: Text {
+        //             width: parent.width
+        //             height: 20
+        //
+        //             required property var modelData
+        //             text: modelData.height
+        //         }
+        //     }
+        // }
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            Text {
+                Layout.fillWidth: true
+                text: debugWindow.locked ? "Locked (F11 to unlock)" : "Unlocked (F11 to lock)"
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                font.pointSize: 11
+                color: "black"
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentHeight: debugText.height
+                contentWidth: debugText.width
+                Text {
+                    id: debugText
+                    text: ""
+                }
+            }
+        }
+
+        Component.onCompleted: {
+            // debugText.text = getStuff(window.activeFocusItem, 0)
+        }
+    }
+
+    onActiveFocusItemChanged: function () {
+        if (!debugWindow.visible || debugWindow.locked) {
+            return
+        }
+
+        // for (let key in window.activeFocusControl) {
+        //     console.log(key + ": " + window.activeFocusControl[key])
+        // }
+
+        if (window.activeFocusItem && window.activeFocusItem.parent) {
+            debugText.text = "Active Focus Item: " + window.activeFocusItem.objectName + "\n  parent: "
+                + window.activeFocusItem["parent"]
+        }
+        // debugText.text = getStuff(window.activeFocusItem, 0)
     }
 
     Connections {
@@ -43,6 +150,7 @@ ApplicationWindow {
         id: homeScreen
 
         HomeScreen {
+            objectName: "Home Screen"
             showNowPlayingButton: emulatorScreen.emulatorIsRunning
         }
     }
@@ -50,6 +158,7 @@ ApplicationWindow {
     Component {
         id: settingsScreen
         SettingsScreen {
+            objectName: "Settings Screen"
             property bool topLevel: true
             property string topLevelName: "settings"
 
@@ -63,45 +172,22 @@ ApplicationWindow {
 
     EmulatorScreen {
         id: emulatorScreen
+        objectName: "Emulator Screen"
         onGameReady: function () {
             overlayFadeIn.start()
         }
     }
 
-    onActiveFocusControlChanged: function () {
-        let str = ""
-        for (let key in window.activeFocusControl) {
-            str += key + ": " + window.activeFocusControl[key] + "\n"
-        }
-
-        debugText.text = str
-    }
-
     Rectangle {
+        objectName: "Active focus highlight"
         color: "transparent"
         border.color: "red"
         anchors.fill: parent
-        parent: window.activeFocusControl
-    }
-
-    Window {
-        id: debugWindow
-        width: 400
-        height: 400
-        visible: false
-
-        ScrollView {
-            anchors.fill: parent
-            contentHeight: debugText.height
-            contentWidth: debugText.width
-            Text {
-                id: debugText
-                text: ""
-            }
-        }
+        parent: window.activeFocusItem
     }
 
     GameLaunchPopup {
+        objectName: "Game Launch Popup"
         id: gameLaunchPopup
 
         Connections {
@@ -113,37 +199,10 @@ ApplicationWindow {
         }
     }
 
-    // AchievementProgressIndicator {
-    //     id: achievementProgressIndicator
-    //
-    //     Connections {
-    //         target: achievement_manager
-    //
-    //         function onAchievementProgressUpdated(imageUrl, id, name, description, current, desired) {
-    //             if (achievement_manager.progressNotificationsEnabled) {
-    //                 achievementProgressIndicator.openWith(imageUrl, name, description, current, desired)
-    //             }
-    //         }
-    //     }
-    // }
-    //
-    // AchievementUnlockIndicator {
-    //     id: achievementUnlockIndicator
-    //
-    //     Connections {
-    //         target: achievement_manager
-    //
-    //         function onAchievementUnlocked(imageUrl, name, description) {
-    //             if (achievement_manager.unlockNotificationsEnabled) {
-    //                 achievementUnlockIndicator.openWith(imageUrl, name, description)
-    //             }
-    //         }
-    //     }
-    // }
-
     Component {
         id: libraryPage
         LibraryPage {
+            objectName: "Library Page"
             property bool topLevel: true
             property string topLevelName: "library"
 
@@ -153,34 +212,9 @@ ApplicationWindow {
         }
     }
 
-    // Component {
-    //     id: nowPlayingPage
-    //     NowPlayingPage {
-    //         id: me
-    //         property bool topLevel: true
-    //         property string topLevelName: "nowPlaying"
-    //
-    //         onBackToMainMenuPressed: function () {
-    //             stackView.push(homeScreen)
-    //         }
-    //
-    //         onResumeGamePressed: function () {
-    //             emulatorStack.pop()
-    //         }
-    //
-    //         onRestartGamePressed: function () {
-    //             emulator.resetGame()
-    //             emulatorStack.pop()
-    //         }
-    //
-    //         onCloseGamePressed: function () {
-    //             closeGameAnimation.start()
-    //         }
-    //     }
-    // }
-
     SequentialAnimation {
         id: closeGameAnimation
+        objectName: "Close Game Animation"
         ScriptAction {
             script: {
                 stackView.push(homeScreen)
@@ -191,15 +225,11 @@ ApplicationWindow {
                 emulatorScreen.stopEmulator()
             }
         }
-        // ScriptAction {
-        //     script: {
-        //         emulatorStack.pop()
-        //     }
-        // }
     }
 
     SequentialAnimation {
         id: overlayFadeIn
+        objectName: "Start Game Animation"
         PropertyAction {
             target: overlay
             property: "opacity"
@@ -251,281 +281,23 @@ ApplicationWindow {
         }
     }
 
-    // EmulatorPage {
-    //     id: emulator
-    //     visible: false
-    //
-    //     onReadyToStart: function () {
-    //         overlayFadeIn.start()
-    //     }
-    //
-    //     ChallengeIndicatorList {
-    //         id: challengeIndicators
-    //         visible: achievement_manager.challengeIndicatorsEnabled
-    //
-    //         anchors.top: parent.top
-    //         anchors.right: parent.right
-    //         anchors.topMargin: 16
-    //         anchors.rightMargin: 16
-    //         height: 100
-    //         width: 300
-    //     }
-    //
-    //     states: [
-    //         State {
-    //             name: "stopped"
-    //         },
-    //         State {
-    //             name: "suspended"
-    //             PropertyChanges {
-    //                 target: emulatorDimmer
-    //                 opacity: 0.4
-    //             }
-    //             PropertyChanges {
-    //                 emulator {
-    //                     layer.enabled: true
-    //                     blurAmount: 1
-    //                 }
-    //             }
-    //         },
-    //         State {
-    //             name: "running"
-    //             PropertyChanges {
-    //                 target: emulatorDimmer
-    //                 opacity: 0
-    //             }
-    //             PropertyChanges {
-    //                 emulator {
-    //                     layer.enabled: false
-    //                     blurAmount: 0
-    //                 }
-    //             }
-    //         }
-    //     ]
-    //
-    //     transitions: [
-    //         Transition {
-    //             from: "*"
-    //             to: "suspended"
-    //             SequentialAnimation {
-    //                 ScriptAction {
-    //                     script: {
-    //                         emulator.pauseGame()
-    //                     }
-    //                 }
-    //                 PropertyAction {
-    //                     target: emulator
-    //                     property: "layer.enabled"
-    //                     value: true
-    //                 }
-    //                 ParallelAnimation {
-    //                     NumberAnimation {
-    //                         properties: "blurAmount"
-    //                         duration: 250
-    //                         easing.type: Easing.InOutQuad
-    //                     }
-    //                     NumberAnimation {
-    //                         target: emulatorDimmer
-    //                         properties: "opacity"
-    //                         duration: 250
-    //                         easing.type: Easing.InOutQuad
-    //                     }
-    //                 }
-    //             }
-    //         },
-    //         Transition {
-    //             from: "*"
-    //             to: "running"
-    //             SequentialAnimation {
-    //                 ParallelAnimation {
-    //                     NumberAnimation {
-    //                         properties: "blurAmount"
-    //                         duration: 250
-    //                         easing.type: Easing.InOutQuad
-    //                     }
-    //                     NumberAnimation {
-    //                         target: emulatorDimmer
-    //                         properties: "opacity"
-    //                         duration: 250
-    //                         easing.type: Easing.InOutQuad
-    //                     }
-    //                 }
-    //                 PropertyAction {
-    //                     target: emulator
-    //                     property: "layer.enabled"
-    //                     value: false
-    //                 }
-    //
-    //                 ScriptAction {
-    //                     script: {
-    //                         emulator.resumeGame()
-    //                     }
-    //
-    //                 }
-    //             }
-    //         }
-    //     ]
-    //
-    //     StackView.visible: true
-    //
-    //     StackView.onActivating: {
-    //         state = "running"
-    //     }
-    //
-    //     StackView.onDeactivating: {
-    //         state = "suspended"
-    //     }
-    //
-    //     property double blurAmount: 0
-    //
-    //     Behavior on blurAmount {
-    //         NumberAnimation {
-    //             duration: 250
-    //             easing.type: Easing.InOutQuad
-    //         }
-    //     }
-    //
-    //     layer.enabled: false
-    //     layer.effect: MultiEffect {
-    //         source: emulator
-    //         anchors.fill: emulator
-    //         blurEnabled: true
-    //         blurMultiplier: 1.0
-    //         blurMax: 64
-    //         blur: emulator.blurAmount
-    //     }
-    //
-    //     Rectangle {
-    //         id: emulatorDimmer
-    //         anchors.fill: parent
-    //         color: "black"
-    //         opacity: 0
-    //
-    //         Behavior on opacity {
-    //             NumberAnimation {
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //     }
-    //
-    //     Connections {
-    //         target: window_resize_handler
-    //
-    //         function onWindowResizeStarted() {
-    //             if (emulator.StackView.view.currentItem === emulator) {
-    //                 emulator.pauseGame()
-    //             }
-    //         }
-    //
-    //         function onWindowResizeFinished() {
-    //             if (emulator.StackView.view.currentItem === emulator) {
-    //                 emulator.resumeGame()
-    //             }
-    //         }
-    //     }
-    // }
-
-    // StackView {
-    //     id: emulatorStack
-    //     visible: false
-    //
-    //     initialItem: emulator
-    //
-    //     Keys.onEscapePressed: function (event) {
-    //         if (event.isAutoRepeat) {
-    //             return
-    //         }
-    //
-    //         if (emulatorStack.currentItem === emulator) {
-    //             // emulatorStack.pop()
-    //             emulatorStack.push(nowPlayingPage)
-    //         } else {
-    //             emulatorStack.pop()
-    //             // emulatorStack.push(homeScreen)
-    //         }
-    //     }
-    //
-    //     property bool suspended: false
-    //     property bool running: false
-    //
-    //     pushEnter: Transition {
-    //         ParallelAnimation {
-    //             PropertyAnimation {
-    //                 property: "opacity"
-    //                 from: 0
-    //                 to: 1
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //             PropertyAnimation {
-    //                 property: "x"
-    //                 from: -20
-    //                 to: 0
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //     }
-    //     pushExit: Transition {
-    //
-    //     }
-    //     popEnter: Transition {
-    //     }
-    //     popExit: Transition {
-    //         ParallelAnimation {
-    //             PropertyAnimation {
-    //                 property: "opacity"
-    //                 from: 1
-    //                 to: 0
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //             PropertyAnimation {
-    //                 property: "x"
-    //                 from: 0
-    //                 to: -20
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //     }
-    //     replaceEnter: Transition {
-    //     }
-    //     replaceExit: Transition {
-    //     }
-    // }
-
-    // Rectangle {
-    //     id: bar
-    //     color: "red"
-    //     anchors.top: parent.top
-    //     anchors.left: parent.left
-    //     anchors.right: parent.right
-    //     height: 40
-    //
-    //     DragHandler {
-    //         grabPermissions: TapHandler.CanTakeOverFromAnything
-    //         onActiveChanged: if (active) {
-    //             window.startSystemMove();
-    //         }
-    //     }
-    //
-    // }
-
     StackView {
         id: stackView
-        anchors.fill: parent
-        focus: true
+        objectName: "Screen Stack View"
 
+        anchors.fill: parent
         initialItem: emulatorScreen
+        focus: true
 
         Component.onCompleted: stackView.push(homeScreen, {}, StackView.Immediate)
 
         Keys.onReleased: function (event) {
             if (event.key === Qt.Key_F12) {
                 debugWindow.visible = !debugWindow.visible
-                event.accept()
+                event.accepted = true
+            } else if (event.key === Qt.Key_F11) {
+                debugWindow.locked = !debugWindow.locked
+                event.accepted = true
             }
         }
 
@@ -603,8 +375,10 @@ ApplicationWindow {
         }
     }
 
+
     Rectangle {
         id: overlay
+        objectName: "Screen Overlay"
         anchors.fill: parent
         color: "black"
         visible: false

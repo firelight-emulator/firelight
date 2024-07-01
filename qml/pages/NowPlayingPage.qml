@@ -39,8 +39,6 @@ FocusScope {
                 checkable: false
                 alignRight: true
 
-                focus: true
-
                 onClicked: function () {
                     resumeGamePressed()
                 }

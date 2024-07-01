@@ -32,8 +32,6 @@ FocusScope {
 
         initialItem: emulator
 
-        focus: true
-
         Keys.onEscapePressed: function (event) {
             if (event.isAutoRepeat) {
                 return
