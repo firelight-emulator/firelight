@@ -197,8 +197,10 @@ add_executable(fl_test
 )
 
 file(GLOB QML_TEST_FILES
-        qml_tests/*.qml
-        qml_tests/**/*.qml
+        qml/ColorPalette.qml
+        qml/Constants.qml
+        qml/common/DetailsButton.qml
+        qml_tests/common/tst_DetailsButton.qml
 )
 
 foreach (QML_FILE ${QML_TEST_FILES})
@@ -215,6 +217,11 @@ qt6_add_qml_module(fl_qml_test
         VERSION 1.0
         QML_FILES
         ${QML_TEST_FILES}
+        #        IMPORTS QMLFirelight
+)
+
+set_target_properties(fl_qml_test PROPERTIES
+        QT_QML_IMPORT_PATHS ${CMAKE_BINARY_DIR}/qml
 )
 
 target_link_libraries(fl_qml_test PUBLIC firelight_lib)
