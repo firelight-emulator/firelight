@@ -14,6 +14,8 @@ ApplicationWindow {
     width: 1280
     height: 720
 
+    // font.family: "Segoe UI"
+
     // flags: Qt.FramelessWindowHint
 
     visible: true
@@ -24,15 +26,16 @@ ApplicationWindow {
         color: "#1a1b1e"
     }
 
-    Rectangle {
-        id: cursor
-        parent: window.activeFocusItem
-        anchors.fill: parent
-        color: "transparent"
-        border.color: "lightblue"
-        border.width: 3
-        radius: 4
-    }
+    // Rectangle {
+    //     id: cursor
+    //     parent: window.activeFocusItem
+    //     anchors.fill: parent
+    //     anchors.margins: -2
+    //     color: "transparent"
+    //     border.color: "lightblue"
+    //     border.width: 3
+    //     radius: 4
+    // }
 
     onActiveFocusItemChanged: {
         console.log("Active focus item changed to: " + activeFocusItem)

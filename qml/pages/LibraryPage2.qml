@@ -1,202 +1,218 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
-import QtQml.Models
 
-GridView {
-    id: listView
-    clip: true
+FocusScope {
+    GridView {
+        id: listView
+        clip: true
+        width: Math.min(Math.floor(parent.width / cellContentWidth), 8) * cellContentWidth
+        // width: Math.max(5, (Math.min(Math.floor(width / listView.cellContentWidth), 8)) * listView.cellContentWidth)
+        anchors.horizontalCenter: parent.horizontalCenter
+        height: parent.height
+        // anchors.horizontalCenter: parent.horizontalCenter
+        // width: Math.min(model.count, Math.floor(parent.width/cellWidth)) * cellWidth
+        // anchors.horizontalCenter: parent.horizontalCenter
 
-    onActiveFocusChanged: {
-        console.log("Active focus changed")
-    }
+        // property var actualWidth: Math.max(5, (Math.min(Math.floor(width / listView.cellContentWidth), 8)) * listView.cellContentWidth)
 
-    ScrollBar.vertical: ScrollBar {
-        // policy: ScrollBar.AlwaysOn
-    }
+        // Set actualWidth to the width of the number of items that can fit in the view (max of 8)
+        // If the number of items is less than 8, set the width to the width of the items
+        // If the number of items is greater than 8, set the width to the width of 8 items
+        //     property var actualWidth: Math.min(Math.floor(width / listView.cellWidth), 8) * listView.cellWidth + 16
 
-    preferredHighlightBegin: 0.33 * listView.height
-    preferredHighlightEnd: 0.66 * listView.height
-    highlightRangeMode: GridView.ApplyRange
+        // property var actualWidth: listView.count > 8 ? listView.cellWidth * 8 : listView.cellContentWidth * listView.count
+        // onActualWidthChanged: function() {
+        //     console.log("Actual width changed: ", actualWidth)
+        // }
+        // leftMargin: (width - actualWidth) / 2
+        // rightMargin: (width - actualWidth) / 2
 
-    // snapMode: GridView.SnapToRow
+        // property var ww: Math.max(5, (Math.min(Math.floor(parent.width / libraryGrid.cellContentWidth), 8)) * libraryGrid.cellContentWidth)
 
-    // cacheBuffer: 100
-    // reuseItems: true
-    contentY: 0
+        // ScrollBar.vertical: ScrollBar {
+        //     // policy: ScrollBar.AlwaysOn
+        // }
 
-    header: Pane {
-        id: header
-
-        width: parent.width
-        height: 120
-        background: Rectangle {
-            color: "transparent"
-            // border.color: "red"
+        function itemsPerRow() {
+            return Math.floor(width / cellContentWidth);
         }
 
-        horizontalPadding: 8
+        function rowWidth() {
+            return itemsPerRow() * cellContentWidth;
+        }
 
-        Text {
-            anchors.fill: parent
-            text: "All Games"
-            color: "white"
-            font.pointSize: 26
-            font.family: Constants.regularFontFamily
-            font.weight: Font.DemiBold
-            horizontalAlignment: Text.AlignLeft
-            verticalAlignment: Text.AlignVCenter
-        }
-    }
+        // onWidthChanged: function() {
+        //
+        //     console.log("Used: " + rowWidth() + ", Extra: " + (width - rowWidth()) + ", ContentWidth: " + contentWidth)
+        // }
 
-    // height: contentHeight
+        // onWidthChanged: {
+        //     leftMargin = Math.round(Math.ceil((parent.width - rowWidth())) / 2)
+        //     rightMargin = leftMargin
+        //
+        //     // if (leftMargin % 2 !== 0) {
+        //     //     leftMargin += 1
+        //     // }
+        //     // if (rightMargin % 2 !== 0) {
+        //     //     rightMargin += 1
+        //     // }
+        // }
+        //
+        // onLeftMarginChanged: {
+        //     console.log("Width: ", width)
+        //     console.log("Items per row: ", itemsPerRow())
+        //     console.log("Row width: ", rowWidth())
+        //     console.log("Margin: ", leftMargin)
+        //
+        // }
 
-    readonly property int cellSpacing: 12
-    readonly property int cellContentWidth: 180 + cellSpacing
-    readonly property int cellContentHeight: 260 + cellSpacing
+        preferredHighlightBegin: 0.33 * listView.height
+        preferredHighlightEnd: 0.66 * listView.height
+        highlightRangeMode: GridView.ApplyRange
 
-    // readonly property int cellSpacing: 4
-    // readonly property int cellContentWidth: 120 + cellSpacing
-    // readonly property int cellContentHeight: 120 + cellSpacing
+        // snapMode: GridView.SnapToRow
 
-    cellWidth: cellContentWidth
-    cellHeight: cellContentHeight
-    focus: true
+        // cacheBuffer: 100
+        // reuseItems: true
+        contentY: 0
 
-    currentIndex: 0
+        header: Pane {
+            id: header
 
-    model: ListModel {
-        ListElement {
-            thing: "074224"
-        }
-        ListElement {
-            thing: "066393"
-        }
-        ListElement {
-            thing: "069326"
-        }
-        ListElement {
-            thing: "047942"
-        }
-        ListElement {
-            thing: "091553"
-        }
-        ListElement {
-            thing: "091555"
-        }
-        ListElement {
-            thing: "029672"
-        }
-        ListElement {
-            thing: "040625"
-        }
-        ListElement {
-            thing: "027488"
-        }
-        ListElement {
-            thing: "074224"
-        }
-        ListElement {
-            thing: "066393"
-        }
-        ListElement {
-            thing: "069326"
-        }
-        ListElement {
-            thing: "047942"
-        }
-        ListElement {
-            thing: "091553"
-        }
-        ListElement {
-            thing: "091555"
-        }
-        ListElement {
-            thing: "029672"
-        }
-        ListElement {
-            thing: "040625"
-        }
-        ListElement {
-            thing: "027488"
-        }
-        ListElement {
-            thing: "066393"
-        }
-        ListElement {
-            thing: "069326"
-        }
-        ListElement {
-            thing: "047942"
-        }
-        ListElement {
-            thing: "040155"
-        }
-        ListElement {
-            thing: "091553"
-        }
-        ListElement {
-            thing: "091555"
-        }
-        ListElement {
-            thing: "040625"
-        }
-        ListElement {
-            thing: "027488"
-        }
-    }
-    // model: library_short_model
-    boundsBehavior: Flickable.StopAtBounds
-
-    delegate: FocusScope {
-        width: GridView.view.cellWidth
-        height: GridView.view.cellHeight
-        Button {
-            anchors {
-                fill: parent
-                margins: listView.cellSpacing / 2
-            }
-            focus: true
-            onClicked: {
-                console.log("Button clicked: " + model.thing)
-                // parent.GridView.view.currentIndex = index
-            }
-
-            hoverEnabled: true
-
+            width: parent.width
+            height: 120
             background: Rectangle {
-                color: parent.hovered ? "#3a3e45" : "#25282C"
+                color: "transparent"
+                // border.color: "red"
             }
 
-            // contentItem: Text {
-            //     anchors.centerIn: parent
-            //     text: model.display_name
-            //     color: "white"
-            // }
+            horizontalPadding: 8
 
-            contentItem: Item {
-                Image {
-                    id: image
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    sourceSize.width: parent.width
-                    source: "https://media.retroachievements.org/Images/" + model.thing + ".png"
-                    fillMode: Image.PreserveAspectFit
-                    cache: true
-                }
-                Text {
-                    anchors.top: image.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    text: model.thing
-                    color: "white"
-                    font.pixelSize: 12
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+            Text {
+                anchors.fill: parent
+                text: "All Games"
+                color: "white"
+                font.pointSize: 26
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
             }
+
+            Rectangle {
+                width: 100
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+            }
+        }
+
+        // height: contentHeight
+
+        readonly property int cellSpacing: 12
+        readonly property int cellContentWidth: 180 + cellSpacing
+        readonly property int cellContentHeight: 260 + cellSpacing
+
+        // readonly property int cellSpacing: 4
+        // readonly property int cellContentWidth: 120 + cellSpacing
+        // readonly property int cellContentHeight: 120 + cellSpacing
+
+        cellWidth: cellContentWidth
+        cellHeight: cellContentHeight
+        focus: true
+
+        currentIndex: 0
+
+        // model: ListModel {
+        //     ListElement {
+        //         thing: "074224"
+        //     }
+        //     ListElement {
+        //         thing: "066393"
+        //     }
+        //     ListElement {
+        //         thing: "069326"
+        //     }
+        //     ListElement {
+        //         thing: "047942"
+        //     }
+        //     ListElement {
+        //         thing: "091553"
+        //     }
+        //     ListElement {
+        //         thing: "091555"
+        //     }
+        //     ListElement {
+        //         thing: "029672"
+        //     }
+        //     ListElement {
+        //         thing: "040625"
+        //     }
+        //     ListElement {
+        //         thing: "027488"
+        //     }
+        //     ListElement {
+        //         thing: "074224"
+        //     }
+        //     ListElement {
+        //         thing: "066393"
+        //     }
+        //     ListElement {
+        //         thing: "069326"
+        //     }
+        //     ListElement {
+        //         thing: "047942"
+        //     }
+        //     ListElement {
+        //         thing: "091553"
+        //     }
+        //     ListElement {
+        //         thing: "091555"
+        //     }
+        //     ListElement {
+        //         thing: "029672"
+        //     }
+        //     ListElement {
+        //         thing: "040625"
+        //     }
+        //     ListElement {
+        //         thing: "027488"
+        //     }
+        //     ListElement {
+        //         thing: "066393"
+        //     }
+        //     ListElement {
+        //         thing: "069326"
+        //     }
+        //     ListElement {
+        //         thing: "047942"
+        //     }
+        //     ListElement {
+        //         thing: "040155"
+        //     }
+        //     ListElement {
+        //         thing: "091553"
+        //     }
+        //     ListElement {
+        //         thing: "091555"
+        //     }
+        //     ListElement {
+        //         thing: "040625"
+        //     }
+        //     ListElement {
+        //         thing: "027488"
+        //     }
+        // }
+        model: library_short_model
+        boundsBehavior: Flickable.StopAtBounds
+
+        delegate: GameGridItemDelegate {
+            cellSpacing: listView.cellSpacing
+            cellWidth: listView.cellContentWidth
+            cellHeight: listView.cellContentHeight
         }
     }
 }
+

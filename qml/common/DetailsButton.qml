@@ -14,7 +14,7 @@ Button {
     }
 
     contentItem: Text {
-        // font.family: "Segoe UI"
+        font.family: Constants.symbolFontFamily
         text: "\ue5d4"
         color: "white"
         font.pointSize: 16

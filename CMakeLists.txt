@@ -200,7 +200,12 @@ file(GLOB QML_TEST_FILES
         qml/ColorPalette.qml
         qml/Constants.qml
         qml/common/DetailsButton.qml
+        qml/common/RightClickMenu.qml
+        qml/common/RightClickMenuItem.qml
+        qml/common/CarouselText.qml
+        qml/library/GameGridItemDelegate.qml
         qml_tests/common/tst_DetailsButton.qml
+        qml_tests/library/tst_GameGridItemDelegate.qml
 )
 
 foreach (QML_FILE ${QML_TEST_FILES})
@@ -210,6 +215,7 @@ endforeach ()
 
 qt_add_executable(fl_qml_test
         tests/qml_main.cpp
+        resources.qrc
 )
 
 qt6_add_qml_module(fl_qml_test

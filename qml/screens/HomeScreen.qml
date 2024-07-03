@@ -137,7 +137,7 @@ FocusScope {
 
                 onToggled: function () {
                     // stackview.replace(null, libraryPage)
-                    contentStack.goTo(libraryPage)
+                    contentStack.goTo(libraryPage2)
                 }
             }
             NavMenuButton {

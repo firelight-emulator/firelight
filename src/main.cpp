@@ -11,6 +11,7 @@
 #include <qstringlistmodel.h>
 
 #include <spdlog/spdlog.h>
+#include <stdlib.h>
 
 #include "app/achieve/ra_client.hpp"
 #include "app/db/sqlite_content_database.hpp"
@@ -48,6 +49,8 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
 }
 
 int main(int argc, char *argv[]) {
+  SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
+
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
   } else {
