@@ -10,7 +10,6 @@ Item {
     signal playPressed()
 
     required property int entryId
-    property int tabWidth: 150
     property var achievements: null
     property var achievementsSummary: {
         "NumPossibleAchievements": 0,
@@ -116,111 +115,18 @@ Item {
                 Layout.preferredWidth: parent.width * 3 / 4
                 Layout.fillHeight: true
 
-                TabBar {
+                NavigationTabBar {
                     id: bar
-                    // Layout.topMargin: 16
+                    tabs: ["Details", "Achievements", "Activity", "Settings"]
+                    tabWidth: 150
                     Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
                     Layout.preferredHeight: 40
-                    currentIndex: -1
 
                     onCurrentIndexChanged: function () {
                         view.setCurrentIndex(currentIndex)
                     }
-
-                    background: Rectangle {
-                        width: root.tabWidth
-                        visible: bar.contentChildren[bar.currentIndex].enabled
-                        height: 2
-                        radius: 1
-                        color: "white"
-                        x: root.tabWidth * bar.currentIndex
-                        y: bar.height
-
-                        Behavior on x {
-                            NumberAnimation {
-                                duration: 120
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
-                    }
-
-                    TabButton {
-                        width: root.tabWidth
-                        contentItem: Text {
-                            text: "Details"
-                            color: parent.enabled ? "#ffffff" : "#666666"
-                            font.family: Constants.regularFontFamily
-                            font.pointSize: 11
-                            font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Item {
-                        }
-
-                        HoverHandler {
-                            cursorShape: Qt.PointingHandCursor
-                        }
-                    }
-                    TabButton {
-                        width: root.tabWidth
-                        contentItem: Text {
-                            text: "Achievements"
-                            color: parent.enabled ? "#ffffff" : "#666666"
-                            font.family: Constants.regularFontFamily
-                            font.pointSize: 11
-                            font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Item {
-                        }
-
-                        HoverHandler {
-                            cursorShape: Qt.PointingHandCursor
-                        }
-                    }
-                    TabButton {
-                        width: root.tabWidth
-                        contentItem: Text {
-                            text: "Activity"
-                            color: parent.enabled ? "#ffffff" : "#666666"
-                            font.family: Constants.regularFontFamily
-                            font.pointSize: 11
-                            font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Item {
-                        }
-
-                        HoverHandler {
-                            cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        }
-                    }
-                    TabButton {
-                        width: root.tabWidth
-                        contentItem: Text {
-                            text: "Settings"
-                            color: parent.enabled ? "#ffffff" : "#666666"
-                            font.family: Constants.regularFontFamily
-                            font.pointSize: 11
-                            font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Item {
-                        }
-
-                        HoverHandler {
-                            cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        }
-                    }
                 }
+
                 SwipeView {
                     id: view
 

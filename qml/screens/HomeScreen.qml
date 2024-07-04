@@ -34,6 +34,14 @@ FocusScope {
 
             onOpenDetails: function (id) {
                 console.log("Opening details for", id)
+                contentStack.push(gameDetailsPage)
+            }
+
+            Component {
+                id: gameDetailsPage
+                GameDetailsPage {
+                    entryId: 115
+                }
             }
 
             // onEntryClicked: function (id) {
