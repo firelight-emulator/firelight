@@ -204,8 +204,10 @@ file(GLOB QML_TEST_FILES
         qml/common/RightClickMenuItem.qml
         qml/common/CarouselText.qml
         qml/library/GameGridItemDelegate.qml
+        qml/pages/LibraryPage2.qml
         qml_tests/common/tst_DetailsButton.qml
         qml_tests/library/tst_GameGridItemDelegate.qml
+        qml_tests/library/tst_LibraryPage2.qml
 )
 
 foreach (QML_FILE ${QML_TEST_FILES})

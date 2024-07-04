@@ -26,6 +26,39 @@ ApplicationWindow {
         color: "#1a1b1e"
     }
 
+    onActiveFocusItemChanged: {
+        if (activeFocusItem === null) {
+            return
+        }
+
+        activeFocusItem.grabToImage(function (result) {
+            debugImage.width = result.width
+            debugImage.height = result.height
+            debugImage.source = result.url
+        })
+    }
+
+    Window {
+        id: debugWindow
+        objectName: "DebugWindow"
+
+        width: 400
+        height: 400
+
+        visible: false
+        title: "Debug"
+
+        color: "black"
+
+        Image {
+            id: debugImage
+            source: ""
+            anchors.centerIn: parent
+            fillMode: Image.PreserveAspectFit
+        }
+
+    }
+
     // Rectangle {
     //     id: cursor
     //     parent: window.activeFocusItem
@@ -37,15 +70,17 @@ ApplicationWindow {
     //     radius: 4
     // }
 
-    onActiveFocusItemChanged: {
-        console.log("Active focus item changed to: " + activeFocusItem)
-    }
-
     StackView {
         id: screenStack
         anchors.fill: parent
         initialItem: homeScreen
         focus: true
+
+        Keys.onPressed: function (event) {
+            if (event.key === Qt.Key_F12) {
+                debugWindow.visible = !debugWindow.visible
+            }
+        }
     }
 
     Component {

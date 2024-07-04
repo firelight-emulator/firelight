@@ -30,6 +30,7 @@ FocusScope {
             objectName: "Library Page 2"
             property bool topLevel: true
             property string topLevelName: "library"
+            model: library_short_model
 
             // onEntryClicked: function (id) {
             //     emulatorScreen.loadGame(id)

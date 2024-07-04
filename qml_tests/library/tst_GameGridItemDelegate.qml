@@ -3,6 +3,7 @@ import QtTest 1.0
 import QMLFirelightTest
 
 Item {
+    id: root
     width: 400
     height: 400
 
@@ -67,7 +68,7 @@ Item {
             mouseClick(button, button.width / 2, button.height / 2, Qt.RightButton)
             compare(rightClick.visible, true, "Right click is visible")
 
-            mouseClick(button, -10, -10, Qt.LeftButton)
+            mouseClick(button, button.width, button.height, Qt.LeftButton)
             compare(rightClick.visible, false, "Right click is not visible")
         }
 
