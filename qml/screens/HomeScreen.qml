@@ -32,6 +32,10 @@ FocusScope {
             property string topLevelName: "library"
             model: library_short_model
 
+            onOpenDetails: function (id) {
+                console.log("Opening details for", id)
+            }
+
             // onEntryClicked: function (id) {
             //     emulatorScreen.loadGame(id)
             // }

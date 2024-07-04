@@ -4,7 +4,10 @@ import QtQuick
 import QtQuick.Controls
 
 FocusScope {
+    id: page
     property alias model: listView.model
+
+    signal openDetails(entryId: int)
 
     GridView {
         id: listView
@@ -18,10 +21,6 @@ FocusScope {
         preferredHighlightEnd: 0.66 * listView.height
         highlightRangeMode: GridView.ApplyRange
 
-        // snapMode: GridView.SnapToRow
-
-        // cacheBuffer: 100
-        // reuseItems: true
         contentY: 0
 
         header: Pane {
@@ -53,110 +52,28 @@ FocusScope {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
             }
-        }
 
-        // height: contentHeight
+        }
 
         readonly property int cellSpacing: 12
         readonly property int cellContentWidth: 180 + cellSpacing
         readonly property int cellContentHeight: 260 + cellSpacing
-
-        // readonly property int cellSpacing: 4
-        // readonly property int cellContentWidth: 120 + cellSpacing
-        // readonly property int cellContentHeight: 120 + cellSpacing
 
         cellWidth: cellContentWidth
         cellHeight: cellContentHeight
         focus: true
 
         currentIndex: 0
-
-        // model: ListModel {
-        //     ListElement {
-        //         thing: "074224"
-        //     }
-        //     ListElement {
-        //         thing: "066393"
-        //     }
-        //     ListElement {
-        //         thing: "069326"
-        //     }
-        //     ListElement {
-        //         thing: "047942"
-        //     }
-        //     ListElement {
-        //         thing: "091553"
-        //     }
-        //     ListElement {
-        //         thing: "091555"
-        //     }
-        //     ListElement {
-        //         thing: "029672"
-        //     }
-        //     ListElement {
-        //         thing: "040625"
-        //     }
-        //     ListElement {
-        //         thing: "027488"
-        //     }
-        //     ListElement {
-        //         thing: "074224"
-        //     }
-        //     ListElement {
-        //         thing: "066393"
-        //     }
-        //     ListElement {
-        //         thing: "069326"
-        //     }
-        //     ListElement {
-        //         thing: "047942"
-        //     }
-        //     ListElement {
-        //         thing: "091553"
-        //     }
-        //     ListElement {
-        //         thing: "091555"
-        //     }
-        //     ListElement {
-        //         thing: "029672"
-        //     }
-        //     ListElement {
-        //         thing: "040625"
-        //     }
-        //     ListElement {
-        //         thing: "027488"
-        //     }
-        //     ListElement {
-        //         thing: "066393"
-        //     }
-        //     ListElement {
-        //         thing: "069326"
-        //     }
-        //     ListElement {
-        //         thing: "047942"
-        //     }
-        //     ListElement {
-        //         thing: "040155"
-        //     }
-        //     ListElement {
-        //         thing: "091553"
-        //     }
-        //     ListElement {
-        //         thing: "091555"
-        //     }
-        //     ListElement {
-        //         thing: "040625"
-        //     }
-        //     ListElement {
-        //         thing: "027488"
-        //     }
-        // }
         boundsBehavior: Flickable.StopAtBounds
 
         delegate: GameGridItemDelegate {
             cellSpacing: listView.cellSpacing
             cellWidth: listView.cellContentWidth
             cellHeight: listView.cellContentHeight
+
+            Component.onCompleted: {
+                openDetails.connect(page.openDetails)
+            }
         }
     }
 }

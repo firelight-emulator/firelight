@@ -5,20 +5,22 @@
 #include <qthread.h>
 
 namespace firelight {
+  class SdlEventLoop final : public QThread {
+  public:
+    explicit SdlEventLoop(QObject *window, Input::ControllerManager *manager);
 
-class SdlEventLoop final : public QThread {
-public:
-  explicit SdlEventLoop(Input::ControllerManager *manager);
-  ~SdlEventLoop() override;
-  void stopProcessing();
+    ~SdlEventLoop() override;
 
-protected:
-  void run() override;
+    void stopProcessing();
 
-private:
-  void processEvents() const;
-  bool m_running = true;
-  Input::ControllerManager *m_controllerManager;
-};
+  protected:
+    void run() override;
 
+  private:
+    void processEvents() const;
+
+    QObject *m_window;
+    bool m_running = true;
+    Input::ControllerManager *m_controllerManager;
+  };
 } // namespace firelight

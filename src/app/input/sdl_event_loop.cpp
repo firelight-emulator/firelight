@@ -5,13 +5,15 @@
 #include "sdl_event_loop.hpp"
 
 #define SDL_MAIN_HANDLED
+#include <QApplication>
+#include <qevent.h>
 #include <SDL.h>
 #include <SDL_hints.h>
 #include <spdlog/spdlog.h>
 
 namespace firelight {
-  SdlEventLoop::SdlEventLoop(Input::ControllerManager *manager)
-    : m_controllerManager(manager) {
+  SdlEventLoop::SdlEventLoop(QObject *window, Input::ControllerManager *manager)
+    : m_window(window), m_controllerManager(manager) {
     SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 
@@ -58,10 +60,52 @@ namespace firelight {
               printf("axis: %d, value: %d\n", ev.caxis.axis, ev.caxis.value);
             }
             break;
-          case SDL_CONTROLLERBUTTONUP:
-          case SDL_CONTROLLERBUTTONDOWN:
-            printf("button: %d, state: %d\n", ev.cbutton.button, ev.cbutton.state);
+          case SDL_CONTROLLERBUTTONUP: {
+            Qt::Key key;
+
+            auto button = ev.cbutton.button;
+            if (button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
+              key = Qt::Key_Right;
+            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_LEFT) {
+              key = Qt::Key_Left;
+            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
+              key = Qt::Key_Up;
+            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
+              key = Qt::Key_Down;
+            } else if (button == SDL_CONTROLLER_BUTTON_X) {
+              key = Qt::Key_Menu;
+            } else {
+              break;
+            }
+
+            QApplication::postEvent(
+              m_window, new QKeyEvent(QEvent::KeyRelease, key, Qt::KeyboardModifier::NoModifier));
             break;
+          }
+          case SDL_CONTROLLERBUTTONDOWN: {
+            Qt::Key key;
+
+            auto button = ev.cbutton.button;
+            if (button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
+              key = Qt::Key_Right;
+            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_LEFT) {
+              key = Qt::Key_Left;
+            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
+              key = Qt::Key_Up;
+            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
+              key = Qt::Key_Down;
+            } else if (button == SDL_CONTROLLER_BUTTON_X) {
+              key = Qt::Key_Menu;
+            } else {
+              break;
+            }
+
+            QApplication::postEvent(
+              m_window, new QKeyEvent(QEvent::KeyPress, key, Qt::KeyboardModifier::NoModifier));
+            break;
+          }
+          // printf("button: %d, state: %d\n", ev.cbutton.button, ev.cbutton.state);
+          // break;
           case SDL_JOYAXISMOTION:
           case SDL_JOYBUTTONUP:
           case SDL_JOYBUTTONDOWN:

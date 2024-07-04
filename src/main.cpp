@@ -103,13 +103,10 @@ int main(int argc, char *argv[]) {
   }
 
   firelight::Input::ControllerManager controllerManager;
-  firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
 
   controllerManager.refreshControllerList();
-
-  sdlEventLoop.start();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   firelight::db::SqliteUserdataDatabase userdata_database(appDataDir /
@@ -204,6 +201,10 @@ int main(int argc, char *argv[]) {
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
+
+
+  firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
+  sdlEventLoop.start();
 
   int exitCode = QApplication::exec();
 

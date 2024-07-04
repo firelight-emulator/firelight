@@ -484,6 +484,7 @@ FocusScope {
         Component {
             id: gameDetailsPage
             GameDetailsPage {
+                objectName: "GameDetailsPage"
                 entryId: -1
 
                 onPlayPressed: function () {
@@ -491,6 +492,5 @@ FocusScope {
                 }
             }
         }
-
     }
 }

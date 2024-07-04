@@ -4,6 +4,13 @@ import QtQuick.Layouts
 
 FocusScope {
     id: myDelegate
+
+    signal startGame(entryId: int)
+
+    signal openDetails(entryId: int)
+
+    signal manageSaveData(entryId: int)
+
     required property var index
     required property var model
 
@@ -22,13 +29,20 @@ FocusScope {
         }
         focus: true
 
+        Keys.onPressed: function (event) {
+            if (event.key === Qt.Key_Menu) {
+                rightClickMenu.popup(400, 400)
+            }
+        }
+
         TapHandler {
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             onTapped: function (event, button) {
                 if (button === Qt.RightButton) {
                     rightClickMenu.popup()
                 } else if (button === Qt.LeftButton) {
-                    console.log("Tapped")
+                    // Router.navigateTo("library/" + myDelegate.model.id + "/details")
+                    myDelegate.openDetails(myDelegate.model.id)
                 }
             }
         }
@@ -40,13 +54,16 @@ FocusScope {
             RightClickMenuItem {
                 text: "Play " + myDelegate.model.display_name
                 onTriggered: {
-                    console.log("Edit clicked")
+                    myDelegate.startGame(myDelegate.model.id)
                 }
             }
 
             RightClickMenuItem {
                 // enabled: false
                 text: "View details"
+                onTriggered: {
+                    myDelegate.openDetails(myDelegate.model.id)
+                }
             }
 
             MenuSeparator {
@@ -60,6 +77,9 @@ FocusScope {
             RightClickMenuItem {
                 enabled: false
                 text: "Manage save data"
+                onTriggered: {
+                    myDelegate.manageSaveData(myDelegate.model.id)
+                }
                 // onTriggered: {
                 //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
                 //     addPlaylistRightClickMenu.popup()

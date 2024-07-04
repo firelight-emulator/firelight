@@ -42,43 +42,6 @@ Item {
         // }
     }
 
-    // Rectangle {
-    //     width: parent.width + 24
-    //     height: topRow.height + 12
-    //     x: -12
-    //     y: -12
-    //
-    //     color: "#101114"
-    // }
-
-    // Image {
-    //     id: headerBanner
-    //     width: parent.width + 24
-    //     height: topRow.height
-    //     x: -12
-    //     y: -12
-    //
-    //     source: "file:system/_img/smw_beachkoopa_slope.png"
-    //     fillMode: Image.Stretch
-    //
-    //     layer.enabled: true
-    //     layer.effect: MultiEffect {
-    //         autoPaddingEnabled: false
-    //         source: headerBanner
-    //         anchors.fill: headerBanner
-    //         blurEnabled: true
-    //         blurMultiplier: 1.0
-    //         blurMax: 64
-    //         blur: 1
-    //     }
-    //
-    //     Rectangle {
-    //         anchors.fill: parent
-    //         color: "black"
-    //         opacity: 0.3
-    //     }
-    // }
-
     ColumnLayout {
         spacing: 0
         anchors.fill: parent

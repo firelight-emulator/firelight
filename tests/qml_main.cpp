@@ -28,6 +28,6 @@ public slots:
     }
 };
 
-QUICK_TEST_MAIN_WITH_SETUP(example, Setup)
+QUICK_TEST_MAIN_WITH_SETUP(Firelight, Setup)
 
 #include "qml_main.moc"

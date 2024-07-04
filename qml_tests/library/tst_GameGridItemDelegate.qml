@@ -7,6 +7,24 @@ Item {
     width: 400
     height: 400
 
+    SignalSpy {
+        id: spy
+        target: button
+        signalName: "openDetails"
+    }
+
+    SignalSpy {
+        id: startGameSpy
+        target: button
+        signalName: "startGame"
+    }
+
+    SignalSpy {
+        id: manageSaveDataSpy
+        target: button
+        signalName: "manageSaveData"
+    }
+
     GameGridItemDelegate {
         id: button
         cellWidth: 100
@@ -17,6 +35,7 @@ Item {
         index: 0
         model: {
             return {
+                "id": 5,
                 "display_name": "Test",
                 "platform_name": "Test description"
             }
@@ -26,6 +45,11 @@ Item {
     TestCase {
         name: "GameGridItemDelegate"
         when: windowShown
+
+        function init() {
+            spy.clear()
+            startGameSpy.clear()
+        }
 
         function test_size_is_correct() {
             compare(button.width, 100, "Width is correct")
@@ -40,6 +64,12 @@ Item {
             compare(background.color, "#3a3e45", "Background is correct when hovering")
         }
 
+        function test_left_click_emits_detailsOpened() {
+            mouseClick(button)
+            compare(spy.count, 1, "openDetails signal was emitted")
+            compare(spy.signalArguments[0][0], 5, "openDetails signal was emitted with correct id")
+        }
+
         function test_right_click_opens_menu() {
             const rightClick = findChild(button, "rightClickMenu")
 
@@ -50,6 +80,42 @@ Item {
 
             mouseClick(button, 10, 10, Qt.RightButton)
             compare(rightClick.visible, true, "Right click is still visible")
+        }
+
+        function test_right_click_menu_play_game() {
+            const rightClick = findChild(button, "rightClickMenu")
+            mouseClick(button, button.width / 2, button.height / 2, Qt.RightButton)
+
+            const play = rightClick.itemAt(0)
+            compare(play.enabled, true, "Play button is enabled")
+            mouseClick(play)
+
+            compare(startGameSpy.count, 1, "startGame signal was emitted")
+            compare(startGameSpy.signalArguments[0][0], 5, "startGame signal was emitted with correct id")
+        }
+
+        function test_right_click_menu_view_details() {
+            const rightClick = findChild(button, "rightClickMenu")
+            mouseClick(button, button.width / 2, button.height / 2, Qt.RightButton)
+
+            const viewDetails = rightClick.itemAt(1)
+            compare(viewDetails.enabled, true, "View details is enabled")
+            mouseClick(viewDetails)
+
+            compare(spy.count, 1, "openDetails signal was emitted")
+            compare(spy.signalArguments[0][0], 5, "openDetails signal was emitted with correct id")
+        }
+
+        function test_right_click_menu_manage_save_data() {
+            const rightClick = findChild(button, "rightClickMenu")
+            mouseClick(button, button.width / 2, button.height / 2, Qt.RightButton)
+
+            const manageSaveDataSpy = rightClick.itemAt(3)
+            compare(manageSaveDataSpy.enabled, true, "View details is enabled")
+            mouseClick(manageSaveDataSpy)
+
+            compare(manageSaveDataSpy.count, 1, "manageSaveDataSpy signal was emitted")
+            compare(manageSaveDataSpy.signalArguments[0][0], 5, "manageSaveDataSpy signal was emitted with correct id")
         }
 
         function test_esc_closes_right_click_menu() {
