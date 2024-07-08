@@ -149,45 +149,5 @@ Pane {
                 rightClickMenu.popup()
             }
         }
-
-        // Row {
-        //     Layout.fillHeight: true
-        //     Layout.preferredWidth: 24
-        //     Layout.rightMargin: 12
-        //     spacing: 4
-        //
-        //     Text {
-        //         id: pointsText
-        //         anchors.verticalCenter: parent.verticalCenter
-        //         text: row.model.points
-        //         font.pointSize: 16
-        //         font.family: Constants.regularFontFamily
-        //         font.weight: Font.DemiBold
-        //         verticalAlignment: Text.AlignVCenter
-        //         horizontalAlignment: Text.AlignHCenter
-        //         color: "white"
-        //     }
-        //
-        //     Text {
-        //         anchors.verticalCenter: parent.verticalCenter
-        //         height: pointsText.height
-        //         text: "pts"
-        //         font.pointSize: 10
-        //         font.family: Constants.regularFontFamily
-        //         verticalAlignment: Text.AlignBottom
-        //         horizontalAlignment: Text.AlignHCenter
-        //         color: "white"
-        //     }
-        // }
-        // Text {
-        //     id: earnedSection
-        //     Layout.fillHeight: true
-        //     Layout.preferredWidth: 260
-        //     text: row.model.earned ? "Earned on " + row.model.earned_date_hardcore : "Not earned"
-        //     font.pointSize: 11
-        //     font.family: Constants.regularFontFamily
-        //     font.weight: Font.Normal
-        //     color: "white"
-        // }
     }
 }
