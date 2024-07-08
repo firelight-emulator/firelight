@@ -203,9 +203,11 @@ file(GLOB QML_TEST_FILES
         qml/common/RightClickMenu.qml
         qml/common/RightClickMenuItem.qml
         qml/common/CarouselText.qml
+        qml/common/NavigationTabBar.qml
         qml/library/GameGridItemDelegate.qml
         qml/pages/LibraryPage2.qml
         qml_tests/common/tst_DetailsButton.qml
+        qml_tests/common/tst_NavigationTabBar.qml
         qml_tests/library/tst_GameGridItemDelegate.qml
         qml_tests/library/tst_LibraryPage2.qml
 )

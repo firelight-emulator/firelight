@@ -11,6 +11,7 @@ TabBar {
     currentIndex: 0
 
     background: Rectangle {
+        objectName: "background"
         width: control.tabWidth
         height: 2
         radius: 1
@@ -30,9 +31,13 @@ TabBar {
         model: control.tabs
         delegate: TabButton {
             required property var modelData
+            required property var index
+
+            objectName: "button" + index
 
             width: control.tabWidth
             contentItem: Text {
+                objectName: "text"
                 text: modelData
                 color: parent.enabled ? "#ffffff" : "#666666"
                 font.family: Constants.regularFontFamily
@@ -46,6 +51,7 @@ TabBar {
             }
 
             HoverHandler {
+                objectName: "hoverHandler"
                 cursorShape: Qt.PointingHandCursor
             }
         }
