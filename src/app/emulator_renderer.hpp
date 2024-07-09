@@ -9,32 +9,55 @@
 
 class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,
                                public QOpenGLFunctions,
-                               public firelight::ManagerAccessor {
+                               public firelight::ManagerAccessor,
+                               public firelight::libretro::IVideoDataReceiver {
 public:
-  explicit EmulatorRenderer(const EmulationManager *manager, std::shared_ptr<libretro::Core> core);
+    explicit EmulatorRenderer();
+
+    void receive(const void *data, unsigned width, unsigned height, size_t pitch) override;
+
+    proc_address_t getProcAddress(const char *sym) override;
+
+    void setResetContextFunc(context_reset_func) override;
+
+    void setDestroyContextFunc(context_destroy_func) override;
+
+    uintptr_t getCurrentFramebufferId() override;
+
+    void setSystemAVInfo(retro_system_av_info *info) override;
 
 protected:
-  ~EmulatorRenderer() override;
+    ~EmulatorRenderer() override;
 
-  void synchronize(QQuickFramebufferObject *fbo) override;
+    void synchronize(QQuickFramebufferObject *fbo) override;
 
-  QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
 
-  void render() override;
+    void render() override;
 
 private:
-  std::shared_ptr<libretro::Core> m_core;
-  EmulationManager *m_manager = nullptr;
-  QOpenGLFramebufferObject *m_fbo = nullptr;
+    std::unique_ptr<libretro::Core> m_core = nullptr;
+    QOpenGLFramebufferObject *m_fbo = nullptr;
+    bool m_fboIsNew = true;
 
-  bool m_runAFrame = false;
+    QByteArray m_gameData;
+    QByteArray m_saveData;
+    QString m_corePath;
+    firelight::db::LibraryEntry m_currentEntry;
 
-  int m_nativeWidth = 0;
-  int m_nativeHeight = 0;
+    bool m_paused = false;
+    bool m_gameReady = false;
 
-  void receiveVideoData(const void *data, unsigned width, unsigned height,
-                        size_t pitch) const;
+    bool m_running = false;
 
-  std::function<void()> m_resetContextFunction = nullptr;
-  std::function<void()> m_destroyContextFunction = nullptr;
+    bool m_usingHwRendering = false;
+
+    bool m_runAFrame = false;
+
+    int m_nativeWidth = 0;
+    int m_nativeHeight = 0;
+    float m_nativeAspectRatio = 0.0f;
+
+    std::function<void()> m_resetContextFunction = nullptr;
+    std::function<void()> m_destroyContextFunction = nullptr;
 };

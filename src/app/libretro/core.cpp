@@ -1114,11 +1114,6 @@ namespace libretro {
   }
 
   void Core::unloadGame() {
-    // if (destroyContextFunction) {
-    //   destroyContextFunction();
-    //   destroyContextFunction = nullptr;
-    // }
-
     symRetroUnloadGame();
   }
 

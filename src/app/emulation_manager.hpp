@@ -10,8 +10,7 @@
 #include <firelight/play_session.hpp>
 
 class EmulationManager : public QQuickFramebufferObject,
-                         public firelight::ManagerAccessor,
-                         public firelight::libretro::IVideoDataReceiver {
+                         public firelight::ManagerAccessor {
     Q_OBJECT
     Q_PROPERTY(QString currentGameName READ currentGameName NOTIFY
         currentGameNameChanged)
@@ -27,21 +26,6 @@ public:
 
     ~EmulationManager() override;
 
-    void setCurrentFboId(int fboId);
-
-    void
-    setGetProcAddressFunction(const std::function<proc_address_t(const char *)>
-        &getProcAddressFunction);
-
-    [[nodiscard]] std::function<void()> consumeContextResetFunction();
-
-    [[nodiscard]] std::function<void()> consumeContextDestroyFunction();
-
-    void setReceiveVideoDataFunction(
-        const std::function<void(const void *data, unsigned width,
-                                 unsigned height, size_t pitch)>
-        &receiveVideoDataFunction);
-
     [[nodiscard]] QString currentGameName() const;
 
     [[nodiscard]] int nativeWidth() const;
@@ -50,20 +34,19 @@ public:
 
     [[nodiscard]] float nativeAspectRatio() const;
 
-    void receive(const void *data, unsigned width, unsigned height,
-                 size_t pitch) override;
+    void setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio);
 
-    proc_address_t getProcAddress(const char *sym) override;
+    QByteArray m_gameData;
+    QByteArray m_saveData;
+    QString m_corePath;
+    firelight::db::LibraryEntry m_currentEntry;
+    bool m_paused = false;
 
-    void setResetContextFunc(context_reset_func) override;
+    bool m_running = false;
 
-    void setDestroyContextFunc(context_destroy_func) override;
+    bool m_gameReady = false;
 
-    uintptr_t getCurrentFramebufferId() override;
-
-    void setSystemAVInfo(retro_system_av_info *info) override;
-
-    [[nodiscard]] bool runFrame();
+    void setIsRunning(bool running);
 
 public slots:
     void loadLibraryEntry(int entryId);
@@ -105,38 +88,18 @@ private:
     bool shouldUnload = false;
 
     std::shared_ptr<libretro::Core> m_core;
-    firelight::db::LibraryEntry m_currentEntry;
 
     bool m_gameLoadedSignalReady = false;
     bool m_achievementsLoadedSignalReady = false;
-
-    bool m_paused = false;
 
     std::unique_ptr<firelight::db::PlaySession> m_currentPlaySession;
     std::vector<SuspendPoint> m_suspendPoints;
     QElapsedTimer m_playtimeTimer;
     QTimer m_autosaveTimer;
 
-    QByteArray m_gameData;
-    QByteArray m_saveData;
-    QString m_corePath;
-
     int m_nativeWidth = 0;
     int m_nativeHeight = 0;
     float m_nativeAspectRatio = 0;
 
     int numFramesRun = 0;
-
-    /****************************************************************************
-     * Ugly rendering stuff
-     ***************************************************************************/
-    std::function<proc_address_t(const char *)> m_getProcAddressFunction =
-            nullptr;
-    std::function<void()> m_resetContextFunction = nullptr;
-    std::function<void()> m_destroyContextFunction = nullptr;
-    std::function<void(const void *data, unsigned width, unsigned height,
-                       size_t pitch)>
-    m_receiveVideoDataFunction = nullptr;
-    bool m_usingHwRendering = false;
-    int m_currentFboId = -1;
 };

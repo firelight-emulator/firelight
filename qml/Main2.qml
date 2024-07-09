@@ -62,6 +62,14 @@ ApplicationWindow {
     EmulatorScreen {
         id: emulatorScreen
 
+        Component.onCompleted: {
+            console.log("Graphics Info:")
+            console.log("  API:", emulatorScreen.GraphicsInfo.api)
+            console.log("  Major Version:", emulatorScreen.GraphicsInfo.majorVersion)
+            console.log("  Minor Version:", emulatorScreen.GraphicsInfo.minorVersion)
+            console.log("  Profile:", emulatorScreen.GraphicsInfo.profile)
+        }
+
         onGameAboutToStop: function () {
             screenStack.pushItem(homeScreen, {}, StackView.PushTransition)
         }
