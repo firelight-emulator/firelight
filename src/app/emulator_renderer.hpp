@@ -11,9 +11,11 @@ class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,
                                public QOpenGLFunctions,
                                public firelight::ManagerAccessor {
 public:
-  explicit EmulatorRenderer(const EmulationManager *manager);
+  explicit EmulatorRenderer(const EmulationManager *manager, std::shared_ptr<libretro::Core> core);
 
 protected:
+  ~EmulatorRenderer() override;
+
   void synchronize(QQuickFramebufferObject *fbo) override;
 
   QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
@@ -21,6 +23,7 @@ protected:
   void render() override;
 
 private:
+  std::shared_ptr<libretro::Core> m_core;
   EmulationManager *m_manager = nullptr;
   QOpenGLFramebufferObject *m_fbo = nullptr;
 

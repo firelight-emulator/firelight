@@ -16,10 +16,6 @@ Rectangle {
     property alias currentGameName: emulatorView.currentGameName
     property alias running: emulatorView.running
 
-    signal gameLoaded()
-
-    signal readyToStart()
-
     function loadGame(entryId) {
         emulatorView.loadLibraryEntry(entryId)
     }
@@ -44,14 +40,6 @@ Rectangle {
         return emulatorView.isRunning()
     }
 
-    function startEmulation() {
-        emulatorView.startEmulation()
-    }
-
-    function stopEmulation() {
-        emulatorView.stopEmulation()
-    }
-
     EmulatorView {
         id: emulatorView
 
@@ -68,11 +56,6 @@ Rectangle {
         // Component.onCompleted: {
         //     this.load(currentLibraryEntryId, romData, saveData, corePath)
         // }
-
-        onGameLoadSucceeded: function () {
-            emulatorContainer.gameLoaded()
-            emulatorContainer.readyToStart()
-        }
 
         // onReadyToStart: function () {
         //     emulatorContainer.readyToStart()
@@ -128,4 +111,3 @@ Rectangle {
         ]
     }
 }
-// color: "black"

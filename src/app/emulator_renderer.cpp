@@ -8,17 +8,27 @@
 #include <QSGTextureProvider>
 #include <spdlog/spdlog.h>
 
-EmulatorRenderer::EmulatorRenderer(const EmulationManager *manager) {
+EmulatorRenderer::EmulatorRenderer(const EmulationManager *manager, std::shared_ptr<libretro::Core> core)
+  : m_core(std::move(core)) {
   initializeOpenGLFunctions();
   m_manager = const_cast<EmulationManager *>(manager);
   m_manager->setReceiveVideoDataFunction(
-      [this](const void *data, unsigned width, unsigned height, size_t pitch) {
-        receiveVideoData(data, width, height, pitch);
-      });
+    [this](const void *data, unsigned width, unsigned height, size_t pitch) {
+      receiveVideoData(data, width, height, pitch);
+    });
 
   m_manager->setGetProcAddressFunction([this](const char *sym) {
     return QOpenGLContext::currentContext()->getProcAddress(sym);
   });
+}
+
+EmulatorRenderer::~EmulatorRenderer() {
+  printf("Calling emulator renderer destructor\n");
+  if (m_destroyContextFunction) {
+    printf("Calling destroy function\n");
+    m_destroyContextFunction();
+    m_destroyContextFunction = nullptr;
+  }
 }
 
 void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
@@ -37,9 +47,9 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     m_resetContextFunction = manager->consumeContextResetFunction();
   }
 
-  // if (!m_destroyContextFunction) {
-  //   m_destroyContextFunction = manager->consumeContextDestroyFunction();
-  // }
+  if (!m_destroyContextFunction) {
+    m_destroyContextFunction = manager->consumeContextDestroyFunction();
+  }
 
   m_nativeWidth = manager->nativeWidth();
   m_nativeHeight = manager->nativeHeight();
@@ -61,6 +71,10 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 }
 
 void EmulatorRenderer::render() {
+  if (!m_fbo || m_nativeHeight == 0 || m_nativeWidth == 0) {
+    return;
+  }
+
   if (m_resetContextFunction) {
     m_resetContextFunction();
     m_resetContextFunction = nullptr;
@@ -84,7 +98,7 @@ void EmulatorRenderer::receiveVideoData(const void *data, unsigned width,
   QPainter painter(&paint_device);
 
   m_fbo->bind();
-  const QImage image((uchar *)data, width, height, pitch, QImage::Format_RGB16);
+  const QImage image((uchar *) data, width, height, pitch, QImage::Format_RGB16);
 
   painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), image,
                     image.rect());

@@ -62,6 +62,10 @@ ApplicationWindow {
     EmulatorScreen {
         id: emulatorScreen
 
+        onGameStopped: function () {
+            screenStack.pushItem(homeScreen, {}, StackView.Immediate)
+        }
+
     }
 
     // Rectangle {

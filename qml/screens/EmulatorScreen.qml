@@ -13,19 +13,12 @@ FocusScope {
 
     signal gameReady()
 
+    signal gameStopped()
+
     function loadGame(id) {
         emulatorStack.pushItem(emulatorComponent, {entryId: id}, StackView.Immediate)
         // emulator.loadGame(id)
     }
-
-    // function startEmulator() {
-    //     emulator.startEmulation()
-    // }
-    //
-    // function stopEmulator() {
-    //     emulatorStack.pop()
-    //     emulator.stopEmulation()
-    // }
 
     StackView {
         id: emulatorStack
@@ -94,17 +87,12 @@ FocusScope {
                 emulator.loadGame(entryId)
             }
 
-            onReadyToStart: function () {
-                emulator.startEmulation()
-            }
-
             Keys.onEscapePressed: function (event) {
                 if (event.isAutoRepeat) {
                     return
                 }
 
                 if (emulator.StackView.status === StackView.Active) {
-                    // emulatorStack.pop()
                     emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
                 }
             }
@@ -297,7 +285,8 @@ FocusScope {
             }
 
             onBackToMainMenuPressed: function () {
-                stackView.push(homeScreen)
+                // root.StackView.view.popCurrentItem()
+                // stackView.push(homeScreen)
             }
 
             onResumeGamePressed: function () {
@@ -310,7 +299,10 @@ FocusScope {
             }
 
             onCloseGamePressed: function () {
-                closeGameAnimation.start()
+                me.StackView.view.clear()
+                root.gameStopped()
+                // emulatorStack.popCurrentItem()
+                // closeGameAnimation.start()
             }
         }
     }

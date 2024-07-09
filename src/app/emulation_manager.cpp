@@ -24,6 +24,7 @@ constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 EmulationManager::EmulationManager(QQuickItem *parent)
   : QQuickFramebufferObject(parent) {
+  printf("Creating EmulationManager\n");
   setTextureFollowsItemSize(false);
   setMirrorVertically(true);
   setFlag(ItemHasContents);
@@ -38,12 +39,16 @@ EmulationManager::EmulationManager(QQuickItem *parent)
   connect(
     this, &EmulationManager::gameLoadSucceeded, this,
     [this] {
-      m_gameLoadedSignalReady = true;
-      if (m_achievementsLoadedSignalReady) {
-        emit readyToStart();
-        m_gameLoadedSignalReady = false;
-        m_achievementsLoadedSignalReady = false;
-      }
+      m_currentPlaySession = std::make_unique<firelight::db::PlaySession>();
+      m_currentPlaySession->contentId = m_currentEntry.contentId;
+      m_currentPlaySession->startTime = QDateTime::currentMSecsSinceEpoch();
+      m_currentPlaySession->slotNumber = m_currentEntry.activeSaveSlot;
+
+      m_isRunning = true;
+      m_playtimeTimer.start();
+      QMetaObject::invokeMethod(&m_autosaveTimer, "start", Qt::QueuedConnection);
+
+      emit emulationStarted();
     },
     Qt::QueuedConnection);
 
@@ -69,9 +74,7 @@ EmulationManager::EmulationManager(QQuickItem *parent)
 }
 
 EmulationManager::~EmulationManager() {
-  if (!m_isRunning) {
-    return;
-  }
+  printf("Destroying EmulationManager\n");
 
   QMetaObject::invokeMethod(&m_autosaveTimer, "stop", Qt::QueuedConnection);
 
@@ -91,15 +94,11 @@ EmulationManager::~EmulationManager() {
 
   save(true);
 
-  if (m_core) {
-    // m_core->unloadGame();
-    // m_core->deinit();
-    // m_core.reset();
-  }
+  getAchievementManager()->unloadGame();
 }
 
 QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
-  return new EmulatorRenderer(this);
+  return new EmulatorRenderer(this, m_core);
 }
 
 void EmulationManager::setGetProcAddressFunction(
@@ -113,6 +112,7 @@ std::function<void()> EmulationManager::consumeContextResetFunction() {
     m_resetContextFunction = nullptr;
     return func;
   }
+
 
   return nullptr;
 }
@@ -164,23 +164,17 @@ proc_address_t EmulationManager::getProcAddress(const char *sym) {
 }
 
 void EmulationManager::setResetContextFunc(context_reset_func resetFunction) {
-  printf("Setting reset context function\n");
   m_usingHwRendering = true;
   m_resetContextFunction = resetFunction;
 }
 
 void EmulationManager::setDestroyContextFunc(
   context_destroy_func destroyFunction) {
-  printf("Setting destroy context function\n");
   m_usingHwRendering = true;
   m_destroyContextFunction = destroyFunction;
 }
 
 void EmulationManager::pauseGame() {
-  if (!m_isRunning) {
-    return;
-  }
-
   if (!m_paused) {
     m_currentPlaySession->unpausedDurationMillis += m_playtimeTimer.restart();
     emit gamePaused();
@@ -190,84 +184,12 @@ void EmulationManager::pauseGame() {
 }
 
 void EmulationManager::resumeGame() {
-  if (!m_isRunning) {
-    return;
-  }
-
   if (m_paused) {
     m_playtimeTimer.restart();
     emit gameResumed();
   }
 
   m_paused = false;
-}
-
-void EmulationManager::startEmulation() {
-  if (m_isRunning) {
-    return;
-  }
-
-  QThreadPool::globalInstance()->start([this] {
-    m_currentPlaySession = std::make_unique<firelight::db::PlaySession>();
-    m_currentPlaySession->contentId = m_currentEntry.contentId;
-    m_currentPlaySession->startTime = QDateTime::currentMSecsSinceEpoch();
-    m_currentPlaySession->slotNumber = m_currentEntry.activeSaveSlot;
-
-    m_isRunning = true;
-    m_paused = false;
-    m_playtimeTimer.start();
-    QMetaObject::invokeMethod(&m_autosaveTimer, "start", Qt::QueuedConnection);
-
-    emit emulationStarted();
-  });
-}
-
-void EmulationManager::stopEmulation() {
-  if (!m_isRunning) {
-    return;
-  }
-
-  QMetaObject::invokeMethod(&m_autosaveTimer, "stop", Qt::QueuedConnection);
-
-  QThreadPool::globalInstance()->start([this] {
-    m_currentPlaySession->endTime = QDateTime::currentMSecsSinceEpoch();
-
-    const auto timerValue = m_playtimeTimer.restart();
-    if (!m_paused) {
-      m_currentPlaySession->unpausedDurationMillis += timerValue;
-    }
-
-    const auto session = m_currentPlaySession.get();
-    getUserdataManager()->createPlaySession(*session);
-    m_currentPlaySession.reset();
-
-    getAchievementManager()->unloadGame();
-    m_achievementsLoadedSignalReady = false;
-    m_gameLoadedSignalReady = false;
-
-    m_isRunning = false;
-    save(true);
-    m_nativeWidth = 0;
-    m_nativeHeight = 0;
-    m_nativeAspectRatio = 0;
-
-    emit nativeWidthChanged();
-    emit nativeHeightChanged();
-
-    // if (m_destroyContextFunction) {
-    //   m_destroyContextFunction();
-    // }
-    shouldUnload = true;
-
-    m_usingHwRendering = false;
-    // m_core->unloadGame();
-    // m_core->deinit();
-    // m_core.reset();
-
-    emit emulationStopped();
-  });
-
-  update();
 }
 
 void EmulationManager::resetEmulation() {
@@ -319,14 +241,6 @@ void EmulationManager::setSystemAVInfo(retro_system_av_info *info) {
 }
 
 bool EmulationManager::runFrame() {
-  if (shouldUnload) {
-    m_core->unloadGame();
-    m_core->deinit();
-    m_core.reset();
-
-    shouldUnload = false;
-  }
-
   if (m_isRunning && !m_paused) {
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
@@ -422,9 +336,6 @@ bool EmulationManager::runFrame() {
 }
 
 void EmulationManager::loadLibraryEntry(int entryId) {
-  m_gameLoadedSignalReady = false;
-  m_achievementsLoadedSignalReady = false;
-
   QThreadPool::globalInstance()->start([this, entryId] {
     spdlog::info("Loading entry with id {}", entryId);
     auto entry = getLibraryDatabase()->getLibraryEntry(entryId);
@@ -564,7 +475,7 @@ void EmulationManager::loadLibraryEntry(int entryId) {
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString());
 
     m_core->setVideoReceiver(this);
-    m_core->setAudioReceiver(new AudioManager());
+    m_core->setAudioReceiver(std::make_shared<AudioManager>());
     m_core->setRetropadProvider(getControllerManager());
 
     m_core->setSystemDirectory("./system");
@@ -581,7 +492,7 @@ void EmulationManager::loadLibraryEntry(int entryId) {
                               vector(m_saveData.begin(), m_saveData.end()));
     }
 
-    auto md5 = calculateMD5(m_gameData.data(), m_gameData.size());
+    // auto md5 = calculateMD5(m_gameData.data(), m_gameData.size());
     QMetaObject::invokeMethod(
       getAchievementManager(), "loadGame", Qt::QueuedConnection,
       Q_ARG(int, m_currentEntry.platformId),

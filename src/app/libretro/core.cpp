@@ -193,8 +193,8 @@ namespace libretro {
 
         if (renderCallback->context_destroy) {
           printf("context destroy is not null!\n");
-          // currentCore->videoReceiver->setDestroyContextFunc(
-          //     renderCallback->context_destroy);
+          currentCore->videoReceiver->setDestroyContextFunc(
+            renderCallback->context_destroy);
           currentCore->destroyContextFunction = renderCallback->context_destroy;
         }
 
@@ -1074,13 +1074,14 @@ namespace libretro {
   }
 
   Core::~Core() {
+    printf("Destroying core\n");
     // if (destroyContextFunction) {
     //   printf("Destroying context\n");
     //   destroyContextFunction();
     // }
 
-    // unloadGame();
-    // deinit();
+    unloadGame();
+    deinit();
 
     // SDL_UnloadObject(dll);
     //
@@ -1113,11 +1114,10 @@ namespace libretro {
   }
 
   void Core::unloadGame() {
-    if (destroyContextFunction) {
-      printf("Destroying context\n");
-      destroyContextFunction();
-      destroyContextFunction = nullptr;
-    }
+    // if (destroyContextFunction) {
+    //   destroyContextFunction();
+    //   destroyContextFunction = nullptr;
+    // }
 
     symRetroUnloadGame();
   }
@@ -1216,7 +1216,7 @@ namespace libretro {
     return m_retropadProvider;
   }
 
-  void Core::setAudioReceiver(IAudioDataReceiver *receiver) {
-    audioReceiver = receiver;
+  void Core::setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) {
+    audioReceiver = std::move(receiver);
   }
 } // namespace libretro
