@@ -29,22 +29,9 @@ FocusScope {
     StackView {
         id: emulatorStack
         anchors.fill: parent
+        focus: true
 
         initialItem: emulator
-
-        Keys.onEscapePressed: function (event) {
-            if (event.isAutoRepeat) {
-                return
-            }
-
-            if (emulatorStack.currentItem === emulator) {
-                // emulatorStack.pop()
-                emulatorStack.push(nowPlayingPage)
-            } else {
-                emulatorStack.pop()
-                // emulatorStack.push(homeScreen)
-            }
-        }
 
         property bool suspended: false
         property bool running: false
@@ -101,7 +88,18 @@ FocusScope {
         visible: false
 
         onReadyToStart: function () {
-            root.gameReady()
+            emulator.startEmulation()
+        }
+
+        Keys.onEscapePressed: function (event) {
+            if (event.isAutoRepeat) {
+                return
+            }
+
+            if (emulator.StackView.status === StackView.Active) {
+                // emulatorStack.pop()
+                emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
+            }
         }
 
         ChallengeIndicatorList {
@@ -278,6 +276,17 @@ FocusScope {
             id: me
             property bool topLevel: true
             property string topLevelName: "nowPlaying"
+
+            Keys.onEscapePressed: function (event) {
+                if (event.isAutoRepeat) {
+                    return
+                }
+
+                if (me.StackView.status === StackView.Active) {
+                    // emulatorStack.pop()
+                    me.StackView.view.popCurrentItem()
+                }
+            }
 
             onBackToMainMenuPressed: function () {
                 stackView.push(homeScreen)

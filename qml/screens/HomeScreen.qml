@@ -8,6 +8,8 @@ import Firelight 1.0
 FocusScope {
     id: root
 
+    signal startGame(entryId: int)
+
     property bool showNowPlayingButton: false
 
     Keys.onEscapePressed: function (event) {
@@ -35,6 +37,10 @@ FocusScope {
             onOpenDetails: function (id) {
                 console.log("Opening details for", id)
                 contentStack.push(gameDetailsPage)
+            }
+
+            Component.onCompleted: {
+                startGame.connect(root.startGame)
             }
 
             Component {

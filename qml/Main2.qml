@@ -59,6 +59,11 @@ ApplicationWindow {
 
     }
 
+    EmulatorScreen {
+        id: emulatorScreen
+
+    }
+
     // Rectangle {
     //     id: cursor
     //     parent: window.activeFocusItem
@@ -73,8 +78,11 @@ ApplicationWindow {
     StackView {
         id: screenStack
         anchors.fill: parent
-        initialItem: homeScreen
         focus: true
+
+        Component.onCompleted: {
+            screenStack.pushItems([emulatorScreen, homeScreen])
+        }
 
         Keys.onPressed: function (event) {
             if (event.key === Qt.Key_F12) {
@@ -87,19 +95,15 @@ ApplicationWindow {
         id: homeScreen
 
         HomeScreen {
+            onStartGame: function (entryId) {
+                screenStack.popCurrentItem()
+                emulatorScreen.loadGame(entryId)
+            }
         }
     }
 
     Component {
         id: settingsScreen
-
-        Rectangle {
-            color: "red"
-        }
-    }
-
-    Component {
-        id: emulatorScreen
 
         Rectangle {
             color: "red"

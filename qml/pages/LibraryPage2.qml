@@ -8,6 +8,7 @@ FocusScope {
     property alias model: listView.model
 
     signal openDetails(entryId: int)
+    signal startGame(entryId: int)
 
     GridView {
         id: listView
@@ -73,6 +74,7 @@ FocusScope {
 
             Component.onCompleted: {
                 openDetails.connect(page.openDetails)
+                startGame.connect(page.startGame)
             }
         }
     }
