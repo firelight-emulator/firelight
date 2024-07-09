@@ -13,7 +13,7 @@ FocusScope {
     property bool showNowPlayingButton: false
 
     Keys.onEscapePressed: function (event) {
-        if (!event.isAutoRepeat) {
+        if (root.StackView.status !== StackView.Active && !event.isAutoRepeat) {
             closeAppConfirmationDialog.open()
         }
     }

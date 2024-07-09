@@ -62,8 +62,8 @@ ApplicationWindow {
     EmulatorScreen {
         id: emulatorScreen
 
-        onGameStopped: function () {
-            screenStack.pushItem(homeScreen, {}, StackView.Immediate)
+        onGameAboutToStop: function () {
+            screenStack.pushItem(homeScreen, {}, StackView.PushTransition)
         }
 
     }
@@ -93,6 +93,133 @@ ApplicationWindow {
                 debugWindow.visible = !debugWindow.visible
             }
         }
+
+        pushEnter: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "scale"
+                    from: 1.05
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        pushExit: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "scale"
+                    from: 1
+                    to: 0.95
+                    duration: 250
+                    easing.type: Easing.OutQuad
+                }
+            }
+        }
+        popEnter: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "scale"
+                    from: 0.95
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InQuad
+                }
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        popExit: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "scale"
+                    from: 1
+                    to: 1.05
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+    }
+
+
+    Rectangle {
+        id: overlay
+        objectName: "Screen Overlay"
+        anchors.fill: parent
+        color: "black"
+        visible: false
+    }
+
+    SequentialAnimation {
+        id: gameStartAnimation
+        running: false
+
+        property int entryId: -1
+
+        PropertyAction {
+            target: overlay
+            property: "opacity"
+            value: 0
+        }
+
+        PropertyAction {
+            target: overlay
+            property: "visible"
+            value: true
+        }
+
+        PropertyAnimation {
+            target: overlay
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 350
+            easing.type: Easing.InQuad
+        }
+
+        ScriptAction {
+            script: {
+                screenStack.popCurrentItem(StackView.Immediate)
+                emulatorScreen.loadGame(gameStartAnimation.entryId)
+            }
+        }
+
+        PauseAnimation {
+            duration: 1000
+        }
+
+        PropertyAction {
+            target: overlay
+            property: "visible"
+            value: false
+        }
     }
 
     Component {
@@ -100,8 +227,8 @@ ApplicationWindow {
 
         HomeScreen {
             onStartGame: function (entryId) {
-                screenStack.popCurrentItem()
-                emulatorScreen.loadGame(entryId)
+                gameStartAnimation.entryId = entryId
+                gameStartAnimation.running = true
             }
         }
     }

@@ -14,7 +14,8 @@ Rectangle {
     color: "black"
 
     property alias currentGameName: emulatorView.currentGameName
-    property alias running: emulatorView.running
+
+    signal emulationStarted()
 
     function loadGame(entryId) {
         emulatorView.loadLibraryEntry(entryId)
@@ -36,10 +37,6 @@ Rectangle {
         emulatorView.resumeGame()
     }
 
-    function isRunning() {
-        return emulatorView.isRunning()
-    }
-
     EmulatorView {
         id: emulatorView
 
@@ -47,6 +44,10 @@ Rectangle {
         property bool isFullScreen: false
         anchors.centerIn: parent
         smooth: false
+
+        onEmulationStarted: {
+            emulatorContainer.emulationStarted()
+        }
 
         // onOrphanPatchDetected: {
         //     console.log("orphan patch detected")

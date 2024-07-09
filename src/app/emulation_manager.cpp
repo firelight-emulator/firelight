@@ -44,7 +44,6 @@ EmulationManager::EmulationManager(QQuickItem *parent)
       m_currentPlaySession->startTime = QDateTime::currentMSecsSinceEpoch();
       m_currentPlaySession->slotNumber = m_currentEntry.activeSaveSlot;
 
-      m_isRunning = true;
       m_playtimeTimer.start();
       QMetaObject::invokeMethod(&m_autosaveTimer, "start", Qt::QueuedConnection);
 
@@ -77,8 +76,6 @@ EmulationManager::~EmulationManager() {
   printf("Destroying EmulationManager\n");
 
   QMetaObject::invokeMethod(&m_autosaveTimer, "stop", Qt::QueuedConnection);
-
-  m_isRunning = false;
 
   if (m_currentPlaySession) {
     m_currentPlaySession->endTime = QDateTime::currentMSecsSinceEpoch();
@@ -199,8 +196,6 @@ void EmulationManager::resetEmulation() {
   }
 }
 
-bool EmulationManager::isRunning() const { return m_isRunning; }
-
 void EmulationManager::save(const bool waitForFinish) {
   firelight::saves::Savefile saveData(
     m_core->getMemoryData(libretro::SAVE_RAM));
@@ -241,7 +236,7 @@ void EmulationManager::setSystemAVInfo(retro_system_av_info *info) {
 }
 
 bool EmulationManager::runFrame() {
-  if (m_isRunning && !m_paused) {
+  if (!m_paused) {
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
     return true;

@@ -13,11 +13,19 @@ FocusScope {
 
     signal gameReady()
 
+    signal gameAboutToStop()
+
     signal gameStopped()
 
     function loadGame(id) {
         emulatorStack.pushItem(emulatorComponent, {entryId: id}, StackView.Immediate)
         // emulator.loadGame(id)
+    }
+
+    Rectangle {
+        id: background
+        color: "black"
+        anchors.fill: parent
     }
 
     StackView {
@@ -27,6 +35,18 @@ FocusScope {
 
         property bool suspended: false
         property bool running: false
+
+        // Keys.onEscapePressed: function (event) {
+        //     if (event.isAutoRepeat) {
+        //         return
+        //     }
+        //
+        //     if (emulatorStack.depth === 1) {
+        //         emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
+        //     } else if (emulatorStack.depth === 2) {
+        //         emulatorStack.pop()
+        //     }
+        // }
 
         pushEnter: Transition {
             ParallelAnimation {
@@ -81,20 +101,16 @@ FocusScope {
         EmulatorPage {
             id: emulator
 
+            property bool loaded: false
+
             required property int entryId
 
             Component.onCompleted: {
                 emulator.loadGame(entryId)
             }
 
-            Keys.onEscapePressed: function (event) {
-                if (event.isAutoRepeat) {
-                    return
-                }
-
-                if (emulator.StackView.status === StackView.Active) {
-                    emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
-                }
+            onEmulationStarted: function () {
+                emulator.loaded = true
             }
 
             ChallengeIndicatorList {
@@ -107,6 +123,16 @@ FocusScope {
                 anchors.rightMargin: 16
                 height: 100
                 width: 300
+            }
+
+            Keys.onEscapePressed: function (event) {
+                if (event.isAutoRepeat || !emulator.loaded) {
+                    return
+                }
+
+                if (emulator.StackView.status === StackView.Active) {
+                    emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
+                }
             }
 
             states: [
@@ -265,6 +291,34 @@ FocusScope {
         }
     }
 
+    SequentialAnimation {
+        id: closeGameAnimation
+
+        ScriptAction {
+            script: {
+                root.gameAboutToStop()
+            }
+        }
+
+        PauseAnimation {
+            duration: 500
+        }
+
+        ScriptAction {
+            script: {
+                emulatorStack.clear()
+            }
+        }
+
+        ScriptAction {
+            script: {
+                root.gameStopped()
+            }
+        }
+
+
+    }
+
 
     Component {
         id: nowPlayingPage
@@ -299,8 +353,7 @@ FocusScope {
             }
 
             onCloseGamePressed: function () {
-                me.StackView.view.clear()
-                root.gameStopped()
+                closeGameAnimation.running = true
                 // emulatorStack.popCurrentItem()
                 // closeGameAnimation.start()
             }
