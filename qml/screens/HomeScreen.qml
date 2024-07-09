@@ -35,7 +35,6 @@ FocusScope {
             model: library_short_model
 
             onOpenDetails: function (id) {
-                console.log("Opening details for", id)
                 contentStack.push(gameDetailsPage)
             }
 

@@ -9,29 +9,28 @@ import Firelight 1.0
 FocusScope {
     id: root
 
-    property bool emulatorIsRunning: emulator.running
+    property bool emulatorIsRunning: emulatorStack.depth > 0
 
     signal gameReady()
 
     function loadGame(id) {
-        emulator.loadGame(id)
+        emulatorStack.pushItem(emulatorComponent, {entryId: id}, StackView.Immediate)
+        // emulator.loadGame(id)
     }
 
-    function startEmulator() {
-        emulator.startEmulation()
-    }
-
-    function stopEmulator() {
-        emulatorStack.pop()
-        emulator.stopEmulation()
-    }
+    // function startEmulator() {
+    //     emulator.startEmulation()
+    // }
+    //
+    // function stopEmulator() {
+    //     emulatorStack.pop()
+    //     emulator.stopEmulation()
+    // }
 
     StackView {
         id: emulatorStack
         anchors.fill: parent
         focus: true
-
-        initialItem: emulator
 
         property bool suspended: false
         property bool running: false
@@ -83,187 +82,196 @@ FocusScope {
         }
     }
 
-    EmulatorPage {
-        id: emulator
-        visible: false
+    Component {
+        id: emulatorComponent
 
-        onReadyToStart: function () {
-            emulator.startEmulation()
-        }
+        EmulatorPage {
+            id: emulator
 
-        Keys.onEscapePressed: function (event) {
-            if (event.isAutoRepeat) {
-                return
+            required property int entryId
+
+            Component.onCompleted: {
+                emulator.loadGame(entryId)
             }
 
-            if (emulator.StackView.status === StackView.Active) {
-                // emulatorStack.pop()
-                emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
+            onReadyToStart: function () {
+                emulator.startEmulation()
             }
-        }
 
-        ChallengeIndicatorList {
-            id: challengeIndicators
-            visible: achievement_manager.challengeIndicatorsEnabled
+            Keys.onEscapePressed: function (event) {
+                if (event.isAutoRepeat) {
+                    return
+                }
 
-            anchors.top: parent.top
-            anchors.right: parent.right
-            anchors.topMargin: 16
-            anchors.rightMargin: 16
-            height: 100
-            width: 300
-        }
-
-        states: [
-            State {
-                name: "stopped"
-            },
-            State {
-                name: "suspended"
-                PropertyChanges {
-                    target: emulatorDimmer
-                    opacity: 0.4
-                }
-                PropertyChanges {
-                    emulator {
-                        layer.enabled: true
-                        blurAmount: 1
-                    }
-                }
-            },
-            State {
-                name: "running"
-                PropertyChanges {
-                    target: emulatorDimmer
-                    opacity: 0
-                }
-                PropertyChanges {
-                    emulator {
-                        layer.enabled: false
-                        blurAmount: 0
-                    }
+                if (emulator.StackView.status === StackView.Active) {
+                    // emulatorStack.pop()
+                    emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
                 }
             }
-        ]
 
-        transitions: [
-            Transition {
-                from: "*"
-                to: "suspended"
-                SequentialAnimation {
-                    ScriptAction {
-                        script: {
-                            emulator.pauseGame()
+            ChallengeIndicatorList {
+                id: challengeIndicators
+                visible: achievement_manager.challengeIndicatorsEnabled
+
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.topMargin: 16
+                anchors.rightMargin: 16
+                height: 100
+                width: 300
+            }
+
+            states: [
+                State {
+                    name: "stopped"
+                },
+                State {
+                    name: "suspended"
+                    PropertyChanges {
+                        target: emulatorDimmer
+                        opacity: 0.4
+                    }
+                    PropertyChanges {
+                        emulator {
+                            layer.enabled: true
+                            blurAmount: 1
                         }
                     }
-                    PropertyAction {
-                        target: emulator
-                        property: "layer.enabled"
-                        value: true
+                },
+                State {
+                    name: "running"
+                    PropertyChanges {
+                        target: emulatorDimmer
+                        opacity: 0
                     }
-                    ParallelAnimation {
-                        NumberAnimation {
-                            properties: "blurAmount"
-                            duration: 250
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            target: emulatorDimmer
-                            properties: "opacity"
-                            duration: 250
-                            easing.type: Easing.InOutQuad
+                    PropertyChanges {
+                        emulator {
+                            layer.enabled: false
+                            blurAmount: 0
                         }
                     }
                 }
-            },
-            Transition {
-                from: "*"
-                to: "running"
-                SequentialAnimation {
-                    ParallelAnimation {
-                        NumberAnimation {
-                            properties: "blurAmount"
-                            duration: 250
-                            easing.type: Easing.InOutQuad
+            ]
+
+            transitions: [
+                Transition {
+                    from: "*"
+                    to: "suspended"
+                    SequentialAnimation {
+                        ScriptAction {
+                            script: {
+                                emulator.pauseGame()
+                            }
                         }
-                        NumberAnimation {
-                            target: emulatorDimmer
-                            properties: "opacity"
-                            duration: 250
-                            easing.type: Easing.InOutQuad
+                        PropertyAction {
+                            target: emulator
+                            property: "layer.enabled"
+                            value: true
+                        }
+                        ParallelAnimation {
+                            NumberAnimation {
+                                properties: "blurAmount"
+                                duration: 250
+                                easing.type: Easing.InOutQuad
+                            }
+                            NumberAnimation {
+                                target: emulatorDimmer
+                                properties: "opacity"
+                                duration: 250
+                                easing.type: Easing.InOutQuad
+                            }
                         }
                     }
-                    PropertyAction {
-                        target: emulator
-                        property: "layer.enabled"
-                        value: false
-                    }
-
-                    ScriptAction {
-                        script: {
-                            emulator.resumeGame()
+                },
+                Transition {
+                    from: "*"
+                    to: "running"
+                    SequentialAnimation {
+                        ParallelAnimation {
+                            NumberAnimation {
+                                properties: "blurAmount"
+                                duration: 250
+                                easing.type: Easing.InOutQuad
+                            }
+                            NumberAnimation {
+                                target: emulatorDimmer
+                                properties: "opacity"
+                                duration: 250
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                        PropertyAction {
+                            target: emulator
+                            property: "layer.enabled"
+                            value: false
                         }
 
+                        ScriptAction {
+                            script: {
+                                emulator.resumeGame()
+                            }
+
+                        }
                     }
                 }
+            ]
+
+            StackView.visible: true
+
+            StackView.onActivating: {
+                state = "running"
             }
-        ]
 
-        StackView.visible: true
-
-        StackView.onActivating: {
-            state = "running"
-        }
-
-        StackView.onDeactivating: {
-            state = "suspended"
-        }
-
-        property double blurAmount: 0
-
-        Behavior on blurAmount {
-            NumberAnimation {
-                duration: 250
-                easing.type: Easing.InOutQuad
+            StackView.onDeactivating: {
+                state = "suspended"
             }
-        }
 
-        layer.enabled: false
-        layer.effect: MultiEffect {
-            source: emulator
-            anchors.fill: emulator
-            blurEnabled: true
-            blurMultiplier: 1.0
-            blurMax: 64
-            blur: emulator.blurAmount
-        }
+            property double blurAmount: 0
 
-        Rectangle {
-            id: emulatorDimmer
-            anchors.fill: parent
-            color: "black"
-            opacity: 0
-
-            Behavior on opacity {
+            Behavior on blurAmount {
                 NumberAnimation {
                     duration: 250
                     easing.type: Easing.InOutQuad
                 }
             }
-        }
 
-        Connections {
-            target: window_resize_handler
+            layer.enabled: false
+            layer.effect: MultiEffect {
+                source: emulator
+                anchors.fill: emulator
+                blurEnabled: true
+                blurMultiplier: 1.0
+                blurMax: 64
+                blur: emulator.blurAmount
+            }
 
-            function onWindowResizeStarted() {
-                if (root.StackView.view.currentItem === emulator) {
-                    emulator.pauseGame()
+            Rectangle {
+                id: emulatorDimmer
+                anchors.fill: parent
+                color: "black"
+                opacity: 0
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.InOutQuad
+                    }
                 }
             }
 
-            function onWindowResizeFinished() {
-                if (root.StackView.view.currentItem === emulator) {
-                    emulator.resumeGame()
+            Connections {
+                target: window_resize_handler
+
+                function onWindowResizeStarted() {
+                    if (emulator.StackView.status === StackView.Active) {
+                        emulator.pauseGame()
+                    }
+                }
+
+                function onWindowResizeFinished() {
+                    if (emulator.StackView.status === StackView.Active) {
+                        emulator.resumeGame()
+                    }
                 }
             }
         }
