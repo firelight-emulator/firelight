@@ -56,9 +56,6 @@ namespace firelight {
             m_controllerManager->handleSDLControllerEvent(ev);
             break;
           case SDL_CONTROLLERAXISMOTION:
-            if (ev.caxis.value > 15000 || ev.caxis.value < -15000) {
-              printf("axis: %d, value: %d\n", ev.caxis.axis, ev.caxis.value);
-            }
             break;
           case SDL_CONTROLLERBUTTONUP: {
             Qt::Key key;

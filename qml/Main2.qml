@@ -26,6 +26,22 @@ ApplicationWindow {
         color: "#1a1b1e"
     }
 
+    Connections {
+        target: Router
+
+        function onRouteChanged(route) {
+            let parts = route.split("/")
+            if (parts.length > 0) {
+                let id = parts[0]
+
+                if (id === "settings") {
+                    let section = parts.length > 1 ? parts[1] : "library"
+                    screenStack.push(settingsScreen, {section: section})
+                }
+            }
+        }
+    }
+
     onActiveFocusItemChanged: {
         if (activeFocusItem === null) {
             return
@@ -244,8 +260,7 @@ ApplicationWindow {
     Component {
         id: settingsScreen
 
-        Rectangle {
-            color: "red"
+        SettingsScreen {
         }
     }
 }

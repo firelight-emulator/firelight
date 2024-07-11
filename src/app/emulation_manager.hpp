@@ -36,6 +36,8 @@ public:
 
     void setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio);
 
+    void setIsRunning(bool running);
+
     QByteArray m_gameData;
     QByteArray m_saveData;
     QString m_corePath;
@@ -45,8 +47,6 @@ public:
     bool m_running = false;
 
     bool m_gameReady = false;
-
-    void setIsRunning(bool running);
 
 public slots:
     void loadLibraryEntry(int entryId);
@@ -82,16 +82,7 @@ signals:
 
     void nativeAspectRatioChanged();
 
-    void loadAchievements(QString contentId);
-
 private:
-    bool shouldUnload = false;
-
-    std::shared_ptr<libretro::Core> m_core;
-
-    bool m_gameLoadedSignalReady = false;
-    bool m_achievementsLoadedSignalReady = false;
-
     std::unique_ptr<firelight::db::PlaySession> m_currentPlaySession;
     std::vector<SuspendPoint> m_suspendPoints;
     QElapsedTimer m_playtimeTimer;
@@ -100,6 +91,4 @@ private:
     int m_nativeWidth = 0;
     int m_nativeHeight = 0;
     float m_nativeAspectRatio = 0;
-
-    int numFramesRun = 0;
 };

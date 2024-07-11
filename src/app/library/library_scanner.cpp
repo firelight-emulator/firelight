@@ -13,9 +13,9 @@
 constexpr int MAX_FILESIZE_BYTES = 750000000;
 
 LibraryScanner::LibraryScanner(
-    firelight::db::ILibraryDatabase *lib_database,
-    firelight::db::IContentDatabase *content_database)
-    : library_database_(lib_database), content_database_(content_database) {
+  firelight::db::ILibraryDatabase *lib_database,
+  firelight::db::IContentDatabase *content_database)
+  : library_database_(lib_database), content_database_(content_database) {
   scanner_thread_pool_ = std::make_unique<QThreadPool>();
   scanner_thread_pool_->setMaxThreadCount(thread_pool_size_);
   // directory_watcher_.addPath(
@@ -54,8 +54,8 @@ void LibraryScanner::startScan() {
         ScanResults scan_results;
 
         auto paths = library_database_->getAllLibraryContentDirectories();
-        for (const auto &path : paths) {
-          for (const auto &entry :
+        for (const auto &path: paths) {
+          for (const auto &entry:
                std::filesystem::recursive_directory_iterator(path.path)) {
             if (entry.is_directory()) {
               continue;
@@ -73,7 +73,7 @@ void LibraryScanner::startScan() {
             scan_results.all_filenames.emplace_back(filename);
 
             auto existing = library_database_->getMatchingLibraryEntries(
-                firelight::db::LibraryEntry{.contentPath = filename});
+              firelight::db::LibraryEntry{.contentPath = filename});
             if (!existing.empty()) {
               spdlog::debug("Found library entry with filename {}; skipping",
                             filename);
@@ -87,9 +87,9 @@ void LibraryScanner::startScan() {
             // Check against content database
 
             if (auto ext = entry.path().extension();
-                ext.string() == ".mod" || ext.string() == ".ips" ||
-                ext.string() == ".ups" || ext.string() == ".bps" ||
-                ext.string() == ".ups") {
+              ext.string() == ".mod" || ext.string() == ".ips" ||
+              ext.string() == ".ups" || ext.string() == ".bps" ||
+              ext.string() == ".ups") {
               // std::vector<char> contents(filesize);
               // std::ifstream file(entry.path(), std::ios::binary);
               //
@@ -153,9 +153,9 @@ void LibraryScanner::startScan() {
             } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
                        ext.string() == ".v64" || ext.string() == ".z64" ||
                        ext.string() == ".gb" || ext.string() == ".gbc" ||
-                       ext.string() == ".gba" || ext.string() == ".sfc") {
+                       ext.string() == ".gba" || ext.string() == ".sfc" || ext.string() == ".md") {
               auto platforms = content_database_->getMatchingPlatforms(
-                  {.supportedExtensions = {ext.string()}});
+                {.supportedExtensions = {ext.string()}});
 
               if (platforms.empty()) {
                 printf("File extension not recognized: %s\n",
@@ -193,15 +193,16 @@ void LibraryScanner::startScan() {
               auto display_name = entry.path().filename().string();
 
               firelight::db::LibraryEntry e = {
-                  .displayName = display_name,
-                  .contentId = contentId,
-                  .platformId = platforms.at(0).id,
-                  .type = firelight::db::LibraryEntry::EntryType::ROM,
-                  .fileMd5 = md5,
-                  .fileCrc32 = md5, // TODO: Calculate CRC32
-                  .sourceDirectory =
-                      canonical(entry.path().parent_path()).string(),
-                  .contentPath = canonical(entry.path()).string()};
+                .displayName = display_name,
+                .contentId = contentId,
+                .platformId = platforms.at(0).id,
+                .type = firelight::db::LibraryEntry::EntryType::ROM,
+                .fileMd5 = md5,
+                .fileCrc32 = md5, // TODO: Calculate CRC32
+                .sourceDirectory =
+                canonical(entry.path().parent_path()).string(),
+                .contentPath = canonical(entry.path()).string()
+              };
 
               auto roms =
                   content_database_->getMatchingRoms({.md5 = contentId});
@@ -222,17 +223,17 @@ void LibraryScanner::startScan() {
 
         auto allPaths = library_database_->getAllContentPaths();
 
-        for (const auto &path : allPaths) {
+        for (const auto &path: allPaths) {
           if (std::ranges::find(scan_results.all_filenames, path) ==
               scan_results.all_filenames.end()) {
             auto matchingEntry = library_database_->getMatchingLibraryEntries(
-                {.contentPath = path});
+              {.contentPath = path});
 
             library_database_->deleteLibraryEntry(matchingEntry.at(0).id);
           }
         }
 
-        for (auto &new_entry : scan_results.new_entries) {
+        for (auto &new_entry: scan_results.new_entries) {
           library_database_->createLibraryEntry(new_entry);
         }
 
@@ -254,11 +255,12 @@ bool LibraryScanner::scanning() const { return scanning_; }
 void LibraryScanner::refreshDirectories() {
   auto dirs = library_database_->getAllLibraryContentDirectories();
 
-  for (const auto &dir : dirs) {
+  for (const auto &dir: dirs) {
     directory_watcher_.addPath(QString::fromStdString(dir.path));
   }
 }
 
 void LibraryScanner::handleScannedPatchFile(
-    const std::filesystem::directory_entry &entry,
-    ScanResults &scan_results) const {}
+  const std::filesystem::directory_entry &entry,
+  ScanResults &scan_results) const {
+}

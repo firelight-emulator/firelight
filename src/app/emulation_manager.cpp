@@ -119,23 +119,23 @@ void EmulationManager::resumeGame() {
 }
 
 void EmulationManager::resetEmulation() {
-  if (m_core) {
-    m_core->reset();
-    update();
-  }
+  // if (m_core) {
+  //   m_core->reset();
+  //   update();
+  // }
 }
 
 void EmulationManager::save(const bool waitForFinish) {
-  firelight::saves::Savefile saveData(
-    m_core->getMemoryData(libretro::SAVE_RAM));
-  // saveData.setImage(m_fbo->toImage());
-
-  QFuture<bool> result =
-      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
-
-  if (waitForFinish) {
-    result.waitForFinished();
-  }
+  // firelight::saves::Savefile saveData(
+  //   m_core->getMemoryData(libretro::SAVE_RAM));
+  // // saveData.setImage(m_fbo->toImage());
+  //
+  // QFuture<bool> result =
+  //     getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
+  //
+  // if (waitForFinish) {
+  //   result.waitForFinished();
+  // }
 }
 
 void EmulationManager::setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio) {

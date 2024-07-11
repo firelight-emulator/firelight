@@ -26,6 +26,8 @@ public:
 
     void setSystemAVInfo(retro_system_av_info *info) override;
 
+    void setPixelFormat(retro_pixel_format *format) override;
+
 protected:
     ~EmulatorRenderer() override;
 
@@ -44,6 +46,9 @@ private:
     QByteArray m_saveData;
     QString m_corePath;
     firelight::db::LibraryEntry m_currentEntry;
+
+    // Default according to libretro docs
+    QImage::Format m_pixelFormat = QImage::Format_RGB16;
 
     bool m_paused = false;
     bool m_gameReady = false;

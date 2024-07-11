@@ -14,6 +14,16 @@ EmulatorRenderer::EmulatorRenderer() {
   initializeOpenGLFunctions();
 }
 
+EmulatorRenderer::~EmulatorRenderer() {
+  getAchievementManager()->unloadGame();
+
+  // TODO: SAVE
+
+  if (m_destroyContextFunction) {
+    m_destroyContextFunction();
+  }
+}
+
 proc_address_t EmulatorRenderer::getProcAddress(const char *sym) {
   return QOpenGLContext::currentContext()->getProcAddress(sym);
 }
@@ -50,19 +60,24 @@ void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
         static_cast<float>(width) / static_cast<float>(height);
     m_nativeAspectRatio = aspectRatio;
   }
+
+  update();
 }
 
-EmulatorRenderer::~EmulatorRenderer() {
-  // printf("Calling emulator renderer destructor\n");
-
-  getAchievementManager()->unloadGame();
-
-  // TODO: SAVE
-
-  if (m_destroyContextFunction) {
-    printf("Calling destroy function\n");
-    m_destroyContextFunction();
-    m_destroyContextFunction = nullptr;
+void EmulatorRenderer::setPixelFormat(retro_pixel_format *format) {
+  switch (*format) {
+    case RETRO_PIXEL_FORMAT_0RGB1555:
+      printf("Pixel format: 0RGB1555\n");
+      break;
+    case RETRO_PIXEL_FORMAT_XRGB8888:
+      m_pixelFormat = QImage::Format_RGB32;
+      break;
+    case RETRO_PIXEL_FORMAT_RGB565:
+      m_pixelFormat = QImage::Format_RGB16;
+      break;
+    case RETRO_PIXEL_FORMAT_UNKNOWN:
+      printf("Pixel format: UNKNOWN\n");
+      break;
   }
 }
 
@@ -89,12 +104,17 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
 
 QOpenGLFramebufferObject *
 EmulatorRenderer::createFramebufferObject(const QSize &size) {
-  printf("Begin createFramebufferObject\n");
+  printf("Begin createFramebufferObject (Thread: %p)\n", QThread::currentThreadId());
   if (m_nativeWidth != 0 && m_nativeHeight != 0) {
     m_fboIsNew = true;
     m_fbo =
         Renderer::createFramebufferObject(QSize(m_nativeWidth, m_nativeHeight));
     printf("End createFramebufferObject\n");
+
+    if (m_resetContextFunction) {
+      printf("Resetting context\n");
+      m_resetContextFunction();
+    }
     return m_fbo;
   }
 
@@ -105,6 +125,7 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 
 void EmulatorRenderer::render() {
   if (!m_core && m_gameReady) {
+    printf("Creating core (Thread: %p)\n", QThread::currentThreadId());
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString());
 
     m_core->setVideoReceiver(this);
@@ -134,23 +155,15 @@ void EmulatorRenderer::render() {
     return;
   }
 
-  if (m_fboIsNew && m_resetContextFunction) {
-    printf("Resetting context\n");
-    m_resetContextFunction();
-    m_fboIsNew = false;
-    update();
-    return;
-  }
-
   if (m_fbo && m_core && !m_paused) {
     m_running = true;
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
   } else if (m_fboIsNew) {
-    m_fbo->bind();
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    m_fbo->release();
+    // m_fbo->bind();
+    // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // m_fbo->release();
   }
 
   update();
@@ -164,7 +177,7 @@ void EmulatorRenderer::receive(const void *data, unsigned width,
     QPainter painter(&paint_device);
 
     m_fbo->bind();
-    const QImage image((uchar *) data, width, height, pitch, QImage::Format_RGB16);
+    const QImage image((uchar *) data, width, height, pitch, m_pixelFormat);
 
     painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), image,
                       image.rect());

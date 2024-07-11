@@ -61,6 +61,11 @@ int main(int argc, char *argv[]) {
   QApplication::setApplicationName("Firelight");
 
   QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+  QSurfaceFormat format;
+  format.setProfile(QSurfaceFormat::OpenGLContextProfile::CompatibilityProfile);
+  format.setVersion(4, 1);
+  QSurfaceFormat::setDefaultFormat(format);
+
   QApplication app(argc, argv);
 
   // TODO:

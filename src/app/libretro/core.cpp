@@ -127,9 +127,8 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
-        auto ptr = (retro_pixel_format *) data;
-        // TODO: Implement
-        //    video->setPixelFormat((retro_pixel_format *)data);
+        auto ptr = static_cast<retro_pixel_format *>(data);
+        videoReceiver->setPixelFormat(ptr);
         return true;
       }
       case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS: {
@@ -177,6 +176,10 @@ namespace libretro {
         // TODO I think this is actually mostly stuff informing the frontend
         printf("Setting hw render\n");
         auto *renderCallback = static_cast<retro_hw_render_callback *>(data);
+
+        renderCallback->context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
+        renderCallback->version_major = 4;
+        renderCallback->version_minor = 1;
 
         renderCallback->get_proc_address =
             [](const char *sym) -> retro_proc_address_t {
@@ -228,6 +231,13 @@ namespace libretro {
             // auto val2 = "angrylion";
             // if (strcmp(opt.key, strr2) == 0) {
             //   printf("Setting rdp plugin to %s\n", val2);
+            //   ptr->value = val2;
+            // }
+
+            // strr2 = "mupen64plus-rsp-plugin";
+            // val2 = "parallel";
+            // if (strcmp(opt.key, strr2) == 0) {
+            //   printf("Setting rsp plugin to %s\n", val2);
             //   ptr->value = val2;
             // }
             return true;
@@ -519,16 +529,22 @@ namespace libretro {
         auto ptr = static_cast<retro_hw_render_interface *>(data);
         ptr->interface_type = RETRO_HW_RENDER_INTERFACE_DUMMY;
         ptr->interface_version = 0;
+        return true;
       }
       case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS");
         supportsAchievements = *static_cast<bool *>(data);
         return true;
       }
-      case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+      case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE");
+        auto ptr = static_cast<retro_hw_render_context_negotiation_interface *>(data);
+        auto type = ptr->interface_type;
+        auto version = ptr->interface_version;
+
         break;
+      }
       case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS");
         break;
