@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 Option {
     id: root
-    control: ComboBox {
+    control: MyComboBox {
         model: ["Windowed", "Fullscreen"]
     }
 }

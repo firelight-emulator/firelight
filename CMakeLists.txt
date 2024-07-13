@@ -65,7 +65,6 @@ add_library(firelight_lib
         src/app/libretro/game.cpp
         src/app/emulation_manager.cpp
         src/app/db/sqlite_content_database.cpp
-        src/app/fps_multiplier.cpp
         src/app/input/controller.cpp
         src/app/input/controller_manager.cpp
         src/app/input/sdl_event_loop.cpp

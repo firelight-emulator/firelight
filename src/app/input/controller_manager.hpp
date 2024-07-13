@@ -20,7 +20,7 @@ namespace firelight::Input {
     getControllerForPlayer(int t_player) const;
 
     std::optional<libretro::IRetroPad *>
-    getRetropadForPlayer(int t_player) override;
+    getRetropadForPlayerIndex(int t_player) override;
 
     Q_INVOKABLE void updateControllerOrder(const QVector<int> &order);
 

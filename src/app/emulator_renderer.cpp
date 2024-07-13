@@ -112,7 +112,6 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
     printf("End createFramebufferObject\n");
 
     if (m_resetContextFunction) {
-      printf("Resetting context\n");
       m_resetContextFunction();
     }
     return m_fbo;
@@ -159,6 +158,12 @@ void EmulatorRenderer::render() {
     m_running = true;
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
+    m_core->run(0);
+    getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
+    m_core->run(0);
+    getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
+    m_core->run(0);
+    getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
   } else if (m_fboIsNew) {
     // m_fbo->bind();
     // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -179,6 +184,7 @@ void EmulatorRenderer::receive(const void *data, unsigned width,
     m_fbo->bind();
     const QImage image((uchar *) data, width, height, pitch, m_pixelFormat);
 
+    // TODO: Check native size, etc. make sure we use max size and base size correctly
     painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), image,
                       image.rect());
     m_fbo->release();

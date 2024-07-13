@@ -45,7 +45,7 @@ namespace firelight::Input {
   }
 
   std::optional<libretro::IRetroPad *>
-  ControllerManager::getRetropadForPlayer(const int t_player) {
+  ControllerManager::getRetropadForPlayerIndex(const int t_player) {
     return getControllerForPlayer(t_player);
   }
 

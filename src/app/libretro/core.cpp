@@ -31,7 +31,7 @@ namespace libretro {
     }
 
     const auto controllerOpt =
-        currentCore->getRetropadProvider()->getRetropadForPlayer(port);
+        currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
     if (!controllerOpt.has_value()) {
       return 0;
     }
@@ -260,8 +260,15 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE");
-        *static_cast<bool *>(data) = false; // TODO: actually implement
-        return true;
+
+        // const auto configProvider = currentCore->m_configurationProvider;
+        // if (configProvider != nullptr) {
+        //   *static_cast<bool *>(data) = configProvider->anyOptionValueHasChanged();
+        // } else {
+        //   *static_cast<bool *>(data) = false;
+        // }
+        *static_cast<bool *>(data) = false;
+        break;
       }
       case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME");
@@ -294,7 +301,7 @@ namespace libretro {
         ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
                                    uint16_t strength) {
           const auto con =
-              currentCore->getRetropadProvider()->getRetropadForPlayer(port);
+              currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
           if (!con.has_value()) {
             return true;
           }
@@ -305,10 +312,7 @@ namespace libretro {
           } else if (effect == RETRO_RUMBLE_WEAK) {
             controller->setWeakRumble(strength);
           }
-
-          return true;
         };
-        return true;
       }
       case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES: {
         environmentCalls.emplace_back(
@@ -599,6 +603,7 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_GET_FASTFORWARDING: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_FASTFORWARDING");
+        // TODO: Get from video provider?
         auto ptr = static_cast<bool *>(data);
         *ptr = fastforwarding;
         return true;
@@ -611,27 +616,66 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION");
-        // TODO: Set this behind some user-settable flag?
         auto ptr = static_cast<unsigned *>(data);
         *ptr = 2;
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS");
         auto ptr = static_cast<retro_core_option_definition **>(data);
-        // TODO sane default
-        for (int i = 0; i < 200; ++i) {
-          auto opt = *ptr[i];
-          printf("OPTION KEY: %s\n", opt.key);
-          if (opt.key == nullptr) {
+
+        if (ptr == nullptr) {
+          fprintf(stderr, "Error: data is null\n");
+          return false;
+        }
+
+
+        // Safe iteration with a reasonable limit or better yet, an actual limit
+        for (int i = 1; i < 200; ++i) {
+          if (ptr[i] == nullptr) {
+            break; // End of array
+          }
+
+          auto arrayStartAddr = ptr[i];
+
+          // Check if arrayStartAddr is valid
+          if (arrayStartAddr == nullptr) {
+            fprintf(stderr, "Error: arrayStartAddr is null at index %d\n", i);
             break;
           }
 
-          // TODO: pointer?
-          CoreOption coreOption(opt);
-          options.emplace_back(coreOption);
+          // Check if the key is valid
+          if (arrayStartAddr->key == nullptr) {
+            fprintf(stderr, "Error: key is null at index %d\n", i);
+            break;
+          }
+
+          printf("OPTION KEY: %s\n", arrayStartAddr->key);
+
+          // firelight::libretro::IConfigurationProvider::Option option;
+          // option.key = opt.key;
+          // option.label = opt.desc;
+          // option.description = opt.info;
+          //
+          // for (int j = 0; j < 100; ++j) {
+          //   auto val = opt.values[j];
+          //   if (val.label == nullptr) {
+          //     break;
+          //   }
+          //
+          //   firelight::libretro::IConfigurationProvider::OptionValue optionValue;
+          //   optionValue.key = val.value;
+          //   if (val.label != nullptr) {
+          //     optionValue.label = val.label;
+          //   } else {
+          //     optionValue.label = val.value;
+          //   }
+          //
+          //   option.possibleValues.emplace_back(optionValue);
+          // }
+
+          // configProvider->registerOption(option);
         }
-        return true;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL");
@@ -844,8 +888,10 @@ namespace libretro {
       default:
         printf("Unimplemented env command: %d\n", cmd);
         environmentCalls.emplace_back("UNIMPLEMENTED");
+        return false;
     }
-    return false;
+
+    return true;
   }
 
   template<typename T>
@@ -1225,6 +1271,10 @@ namespace libretro {
 
   firelight::libretro::IRetropadProvider *Core::getRetropadProvider() const {
     return m_retropadProvider;
+  }
+
+  void Core::setConfigurationProvider(firelight::libretro::IConfigurationProvider *provider) {
+    m_configurationProvider = provider;
   }
 
   void Core::setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) {

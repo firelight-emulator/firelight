@@ -17,7 +17,6 @@
 #include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
 #include "app/emulation_manager.hpp"
-#include "app/fps_multiplier.hpp"
 #include "app/router.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
@@ -169,7 +168,6 @@ int main(int argc, char *argv[]) {
   // qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
-  qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
   qmlRegisterType<firelight::gui::GamepadMapping>("Firelight", 1, 0, "GamepadMapping");
   qmlRegisterType<firelight::gui::GamepadProfile>("Firelight", 1, 0, "GamepadProfile");
 

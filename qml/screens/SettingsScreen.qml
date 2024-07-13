@@ -127,6 +127,19 @@ Item {
                     Layout.preferredHeight: 40
                     enabled: false
                 }
+                FirelightMenuItem {
+                    labelText: "Game Boy Color"
+                    // labelIcon: "\ue88e"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    checked: root.section === "platforms/gbc"
+                    onToggled: {
+                        if (checked) {
+                            root.section = "platforms/gbc"
+                        }
+                    }
+                }
                 // FirelightMenuItem {
                 //     labelText: "Debug"
                 //     // labelIcon: "\ue88e"
@@ -165,6 +178,8 @@ Item {
                             rightHalf.replace(retroAchievementSettings)
                         } else if (root.section === "audiovideo") {
                             rightHalf.replace(videoSettings)
+                        } else if (root.section === "platforms/gbc") {
+                            rightHalf.replace(gbcSettings)
                         }
                     }
                 }
@@ -273,6 +288,12 @@ Item {
     Component {
         id: retroAchievementSettings
         RetroAchievementSettings {
+        }
+    }
+
+    Component {
+        id: gbcSettings
+        GameBoyColorSettings {
         }
     }
 

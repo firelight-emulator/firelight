@@ -4,6 +4,7 @@
 #include "firelight/libretro/audio_data_receiver.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
 #include "firelight/libretro/video_data_receiver.hpp"
+#include "firelight/libretro/configuration_provider.hpp"
 #include "game.hpp"
 #include "libretro/libretro.h"
 
@@ -52,6 +53,8 @@ namespace libretro {
 
     firelight::libretro::IRetropadProvider *getRetropadProvider() const;
 
+    void setConfigurationProvider(firelight::libretro::IConfigurationProvider *provider);
+
     void setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver);
 
     bool handleEnvironmentCall(unsigned cmd, void *data);
@@ -97,6 +100,7 @@ namespace libretro {
 
     firelight::libretro::IRetropadProvider *m_retropadProvider;
     std::shared_ptr<IAudioDataReceiver> audioReceiver;
+    firelight::libretro::IConfigurationProvider *m_configurationProvider;
 
     retro_vfs_interface m_vfsInterface;
 
