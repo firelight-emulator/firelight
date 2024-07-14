@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include "audio_manager.hpp"
+#include "libretro/core_configuration.hpp"
 
 EmulatorRenderer::EmulatorRenderer() {
   initializeOpenGLFunctions();
@@ -125,7 +126,7 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 void EmulatorRenderer::render() {
   if (!m_core && m_gameReady) {
     printf("Creating core (Thread: %p)\n", QThread::currentThreadId());
-    m_core = std::make_unique<libretro::Core>(m_corePath.toStdString());
+    m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), std::make_shared<CoreConfiguration>());
 
     m_core->setVideoReceiver(this);
     m_core->setAudioReceiver(std::make_shared<AudioManager>());
@@ -156,12 +157,6 @@ void EmulatorRenderer::render() {
 
   if (m_fbo && m_core && !m_paused) {
     m_running = true;
-    m_core->run(0);
-    getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
-    m_core->run(0);
-    getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
-    m_core->run(0);
-    getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
   } else if (m_fboIsNew) {

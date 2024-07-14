@@ -1,6 +1,5 @@
 #pragma once
 
-#include "coreoption.hpp"
 #include "firelight/libretro/audio_data_receiver.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
 #include "firelight/libretro/video_data_receiver.hpp"
@@ -9,7 +8,6 @@
 #include "libretro/libretro.h"
 
 #include <functional>
-#include <iostream>
 #include <qlibrary.h>
 #include <vector>
 
@@ -43,7 +41,7 @@ namespace libretro {
   public:
     std::basic_string<char> dumpJson();
 
-    Core(const std::string &libPath);
+    Core(const std::string &libPath, std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider);
 
     virtual ~Core();
 
@@ -52,8 +50,6 @@ namespace libretro {
     void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
 
     firelight::libretro::IRetropadProvider *getRetropadProvider() const;
-
-    void setConfigurationProvider(firelight::libretro::IConfigurationProvider *provider);
 
     void setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver);
 
@@ -100,7 +96,7 @@ namespace libretro {
 
     firelight::libretro::IRetropadProvider *m_retropadProvider;
     std::shared_ptr<IAudioDataReceiver> audioReceiver;
-    firelight::libretro::IConfigurationProvider *m_configurationProvider;
+    std::shared_ptr<firelight::libretro::IConfigurationProvider> m_configurationProvider;
 
     retro_vfs_interface m_vfsInterface;
 
@@ -143,9 +139,6 @@ namespace libretro {
     retro_netpacket_callback *netpacketCallback;
     retro_device_power *devicePower;
     bool fastforwarding;
-
-    unsigned coreOptionsVersion;
-    std::vector<CoreOption> options;
 
     retro_sensor_interface *sensorInterface;
     retro_camera_callback *cameraCallback;

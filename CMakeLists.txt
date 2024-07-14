@@ -96,6 +96,8 @@ add_library(firelight_lib
         src/gui/gamepad_mapping.hpp
         src/gui/platform_list_model.cpp
         src/gui/platform_list_model.hpp
+        src/app/libretro/core_configuration.cpp
+        src/app/libretro/core_configuration.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
