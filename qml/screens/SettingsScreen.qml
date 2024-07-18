@@ -15,6 +15,8 @@ Item {
         color: "#101114"
         height: parent.height
         width: leftSpacer.width + menu.width + contentPane.horizontalPadding + 6
+
+
     }
 
     RowLayout {
@@ -39,6 +41,7 @@ Item {
 
             background: Item {
             }
+
 
             ColumnLayout {
                 id: menu

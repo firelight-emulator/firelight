@@ -22,10 +22,21 @@ std::shared_ptr<CoreConfiguration> EmulatorConfigManager::getCoreConfigFor(const
     return m_coreConfigs.at(key);
 }
 
-void EmulatorConfigManager::setOptionValueForPlatform(int platformId, QString key, QString value) {
+void EmulatorConfigManager::setOptionValueForPlatform(int platformId, const QString &key, const QString &value) {
     printf("Changing PLATFORM option %s to %s\n", key.toStdString().c_str(), value.toStdString().c_str());
 }
 
-void EmulatorConfigManager::setOptionValueForEntry(int entryId, QString key, QString value) {
+void EmulatorConfigManager::setOptionValueForEntry(int entryId, const QString &key, const QString &value) {
     printf("Changing ENTRY option %s to %s\n", key.toStdString().c_str(), value.toStdString().c_str());
 }
+
+QString EmulatorConfigManager::getOptionValueForPlatform(int platformId, const QString &key) {
+    printf("Getting PLATFORM option %s\n", key.toStdString().c_str());
+    return "";
+}
+
+QString EmulatorConfigManager::getOptionValueForEntry(int entryId, const QString &key) {
+    printf("Getting ENTRY option %s\n", key.toStdString().c_str());
+    return "";
+}
+

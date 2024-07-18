@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 FocusScope {
+    id: root
     Flickable {
         anchors.fill: parent
         contentHeight: column.height
@@ -18,26 +19,54 @@ FocusScope {
             //     fillMode: Image.PreserveAspectFit
             // }
 
-
-            Text {
+            RowLayout {
                 Layout.fillWidth: true
-                text: qsTr("Default SNES Settings")
-                font.pointSize: 16
-                font.family: Constants.regularFontFamily
-                font.weight: Font.Bold
-                Layout.bottomMargin: 8
-                color: "white"
-            }
+                Layout.preferredHeight: 40
+                spacing: 8
 
-            Text {
-                Layout.fillWidth: true
-                text: qsTr("These are the default settings for SNES games. These settings can be overridden on a per-game basis by selecting the game in your library and going to 'Settings'.")
-                font.pointSize: 11
-                font.family: Constants.regularFontFamily
-                font.weight: Font.Normal
-                wrapMode: Text.WordWrap
+                Button {
+                    id: backButton
+                    background: Rectangle {
+                        color: enabled ? (backButton.hovered ? "#404143" : "transparent") : "transparent"
+                        radius: height / 2
+
+                    }
+
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: parent.height
+
+                    hoverEnabled: true
+
+                    contentItem: Text {
+                        text: "\ue5e0"
+                        font.family: Constants.symbolFontFamily
+                        leftPadding: 8
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 24
+                        color: "#c3c3c3"
+                    }
+
+                    checkable: false
+
+                    onClicked: {
+                        console.log(":)")
+                        root.StackView.view.pop()
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    text: qsTr("Default SNES Settings")
+                    font.pointSize: 16
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.Bold
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    color: "white"
+                }
                 Layout.bottomMargin: 8
-                color: "white"
             }
 
             Rectangle {
@@ -76,6 +105,15 @@ FocusScope {
                     }]
                     textRole: "text"
                     valueRole: "value"
+
+                    Component.onCompleted: {
+                        // currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region"))
+                        emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region")
+                    }
+
+                    onCurrentValueChanged: {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_region", currentValue)
+                    }
                 }
             }
 
@@ -90,6 +128,19 @@ FocusScope {
                 Layout.minimumHeight: 42
                 label: "Allow opposing D-Pad directions"
                 description: "Enabling this will allow pressing / quickly alternating / holding both left and right (or up and down) directions at the same time. This may cause movement-based glitches."
+
+                Component.onCompleted: {
+                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed")
+                }
+
+                onCheckedChanged: function () {
+                    if (checked) {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "enabled")
+                    } else {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "disabled")
+                    }
+                }
             }
 
             Rectangle {
@@ -103,6 +154,20 @@ FocusScope {
                 Layout.minimumHeight: 42
                 label: "Crop overscan"
                 description: "Remove the borders at the top and bottom of the screen, typically unused by games and hidden by the bezel of a standard-definition television. 'Auto' will attempt to detect and crop the ~8 pixel overscan based on the current content."
+
+                Component.onCompleted: {
+                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_overscan")
+                }
+
+                onCheckedChanged: function () {
+                    if (checked) {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overscan", "enabled")
+                    } else {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overscan", "disabled")
+                    }
+                }
+
             }
 
             Rectangle {
@@ -116,6 +181,19 @@ FocusScope {
                 Layout.minimumHeight: 42
                 label: "Enable graphic clip windows"
                 description: "TBD."
+
+                Component.onCompleted: {
+                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_gfx_clip")
+                }
+
+                onCheckedChanged: function () {
+                    if (checked) {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_clip", "enabled")
+                    } else {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_clip", "disabled")
+                    }
+                }
             }
 
             Rectangle {
@@ -129,6 +207,19 @@ FocusScope {
                 Layout.minimumHeight: 42
                 label: "Enable transparency effects"
                 description: "TBD."
+
+                Component.onCompleted: {
+                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_gfx_transp")
+                }
+
+                onCheckedChanged: function () {
+                    if (checked) {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_transp", "enabled")
+                    } else {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_transp", "disabled")
+                    }
+                }
             }
 
             Rectangle {
@@ -142,6 +233,20 @@ FocusScope {
                 Layout.minimumHeight: 42
                 label: "Hi-Res blending"
                 description: "Blend adjacent pixels when game switches to hi-res mode (512x448). Required for certain games that use hi-res mode to produce transparency effects (Kirby's Dream Land, Jurassic Park...)."
+
+
+                Component.onCompleted: {
+                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_hires_blend")
+                }
+
+                onCheckedChanged: function () {
+                    if (checked) {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_hires_blend", "blur")
+                    } else {
+                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_hires_blend", "disabled")
+                    }
+                }
             }
 
             Rectangle {
@@ -225,6 +330,15 @@ FocusScope {
                             currentIndex: 5
                             textRole: "text"
                             valueRole: "value"
+
+                            Component.onCompleted: {
+                                // currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region"))
+                                emulator_config_manager.getOptionValueForPlatform(1, "snes9x_overclock_superfx")
+                            }
+
+                            onCurrentValueChanged: {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overclock_superfx", currentValue)
+                            }
                         }
                     }
 
@@ -255,6 +369,15 @@ FocusScope {
                             }]
                             textRole: "text"
                             valueRole: "value"
+
+                            Component.onCompleted: {
+                                // currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region"))
+                                emulator_config_manager.getOptionValueForPlatform(1, "snes9x_overclock_cycles")
+                            }
+
+                            onCurrentValueChanged: {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overclock_cycles", currentValue)
+                            }
                         }
                     }
                 }
@@ -284,6 +407,20 @@ FocusScope {
                     ToggleOption {
                         Layout.fillWidth: true
                         label: "Increase sprite limit to reduce flickering"
+
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_reduce_sprite_flicker")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_reduce_sprite_flicker", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_reduce_sprite_flicker", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -295,6 +432,19 @@ FocusScope {
                     ToggleOption {
                         Layout.fillWidth: true
                         label: "Randomize system RAM at startup"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_randomize_memory")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_randomize_memory", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_randomize_memory", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -308,6 +458,19 @@ FocusScope {
                         Layout.minimumHeight: 42
                         label: "Block invalid VRAM access"
                         description: "Some homebrew/ROM hacks require this option to be disabled for correct operation."
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_block_invalid_vram_access")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_block_invalid_vram_access", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_block_invalid_vram_access", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -321,6 +484,18 @@ FocusScope {
                         Layout.minimumHeight: 42
                         label: "Echo buffer hack"
                         description: "Some homebrew/ROM hacks require this option to be enabled for correct operation."
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_echo_buffer_hack")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_echo_buffer_hack", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_echo_buffer_hack", "disabled")
+                            }
+                        }
                     }
                 }
             }
@@ -350,6 +525,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 20
                         label: "Show layer 1"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_layer_1")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_1", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_1", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -362,6 +550,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 20
                         label: "Show layer 2"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_layer_2")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_2", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_2", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -374,6 +575,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 20
                         label: "Show layer 3"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_layer_3")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_3", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_3", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -386,6 +600,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 20
                         label: "Show layer 4"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_layer_4")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_4", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_4", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -398,6 +625,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 20
                         label: "Show layer 5 (sprite layer)"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_layer_5")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_5", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_layer_5", "disabled")
+                            }
+                        }
                     }
                 }
             }
@@ -427,6 +667,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 1"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_1")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_1", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_1", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -439,6 +692,20 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 2"
+
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_2")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_2", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_2", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -451,6 +718,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 3"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_3")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_3", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_3", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -463,6 +743,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 4"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_4")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_4", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_4", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -475,6 +768,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 5"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_5")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_5", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_5", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -487,6 +793,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 6"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_6")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_6", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_6", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -499,6 +818,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 7"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_7")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_7", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_7", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -511,6 +843,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 8"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_8")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_8", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_8", "disabled")
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -523,6 +868,19 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 24
                         label: "Enable channel 9"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_sndchan_9")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_9", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_sndchan_9", "disabled")
+                            }
+                        }
                     }
                 }
             }

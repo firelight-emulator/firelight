@@ -6,24 +6,12 @@ FocusScope {
     ColumnLayout {
         anchors.fill: parent
 
-
         Text {
             Layout.fillWidth: true
             text: qsTr("Default Game Boy Settings")
             font.pointSize: 16
             font.family: Constants.regularFontFamily
             font.weight: Font.Bold
-            Layout.bottomMargin: 8
-            color: "white"
-        }
-
-        Text {
-            Layout.fillWidth: true
-            text: qsTr("These are the default settings for Game Boy games. These settings can be overridden on a per-game basis by selecting the game in your library and going to 'Settings'.")
-            font.pointSize: 11
-            font.family: Constants.regularFontFamily
-            font.weight: Font.Normal
-            wrapMode: Text.WordWrap
             Layout.bottomMargin: 8
             color: "white"
         }
