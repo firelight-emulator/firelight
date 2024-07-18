@@ -7,6 +7,8 @@
 #include <QOpenGLFunctions>
 #include <QQuickFramebufferObject>
 
+#include "libretro/core_configuration.hpp"
+
 class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,
                                public QOpenGLFunctions,
                                public firelight::ManagerAccessor,
@@ -39,6 +41,8 @@ protected:
 
 private:
     std::unique_ptr<libretro::Core> m_core = nullptr;
+    std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
+
     QOpenGLFramebufferObject *m_fbo = nullptr;
     bool m_fboIsNew = true;
 

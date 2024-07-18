@@ -155,6 +155,9 @@ int main(int argc, char *argv[]) {
   LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
+  auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>();
+  firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
+
   QObject::connect(
     &libraryDatabase,
     &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
@@ -175,6 +178,7 @@ int main(int argc, char *argv[]) {
 
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("Router", &router);
+  engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
   engine.rootContext()->setContextProperty("library_model", &libModel);

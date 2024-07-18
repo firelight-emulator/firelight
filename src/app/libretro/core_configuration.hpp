@@ -12,14 +12,21 @@ public:
 
     bool anyOptionValueHasChanged() override;
 
-    void setOptionValue(std::string key, std::string value) override;
+    void setDefaultValue(std::string key, std::string value) override;
 
     std::optional<OptionValue> getOptionValue(std::string key) override;
 
     void setOptionVisibility(std::string key, bool visible) override;
 
+    void setPlatformValue(const std::string &key, const std::string &value);
+
+    void setGameValue(const std::string &key, const std::string &value);
+
 private:
-    std::map<std::string, int> m_optionValueIndices;
     std::map<std::string, Option> m_options;
     bool m_changedSinceLastChecked = false;
+
+    std::map<std::string, std::string> m_defaultValues;
+    std::map<std::string, std::string> m_platformValues;
+    std::map<std::string, std::string> m_gameValues;
 };

@@ -4,7 +4,10 @@
 
 void CoreConfiguration::registerOption(Option option) {
     m_options.emplace(option.key, option);
-    setOptionValue(option.key, option.defaultValueKey);
+
+    if (!m_defaultValues.contains(option.key)) {
+        setDefaultValue(option.key, option.defaultValueKey);
+    }
 }
 
 bool CoreConfiguration::anyOptionValueHasChanged() {
@@ -14,15 +17,15 @@ bool CoreConfiguration::anyOptionValueHasChanged() {
     return val;
 }
 
-void CoreConfiguration::setOptionValue(std::string key, std::string value) {
+void CoreConfiguration::setDefaultValue(const std::string key, const std::string value) {
     const auto opt = m_options.find(key);
     if (opt == m_options.end()) {
         return;
     }
 
-    for (int i = 0; i < opt->second.possibleValues.size(); i++) {
-        if (opt->second.possibleValues[i].key == value) {
-            m_optionValueIndices[key] = i;
+    for (auto &possibleValue: opt->second.possibleValues) {
+        if (possibleValue.key == value) {
+            m_defaultValues[key] = value;
             m_changedSinceLastChecked = true;
             break;
         }
@@ -32,22 +35,44 @@ void CoreConfiguration::setOptionValue(std::string key, std::string value) {
 std::optional<firelight::libretro::IConfigurationProvider::OptionValue>
 CoreConfiguration::getOptionValue(const std::string key) {
     printf("Getting value for key %s...", key.c_str());
-    const auto opt = m_options.find(key);
-    if (opt == m_options.end()) {
+    if (!m_options.contains(key)) {
         return std::nullopt;
     }
 
-    const auto index = m_optionValueIndices.find(key);
-    if (index == m_optionValueIndices.end()) {
-        return std::nullopt;
+    // First, check for values set by core
+    // Second, check for values set specifically for game
+    // Third, check for values set specifically for platformconst
+    //
+    auto value = m_gameValues.find(key);
+    if (value != m_gameValues.end()) {
+        printf("found game value %s\n", value->second.c_str());
+        return {{value->second, value->second}};
     }
 
-    auto val = opt->second.possibleValues.at(index->second);
+    value = m_platformValues.find(key);
+    if (value != m_platformValues.end()) {
+        printf("found platform value %s\n", value->second.c_str());
+        return {{value->second, value->second}};
+    }
 
-    printf("found value %s\n", val.key.c_str());
+    value = m_defaultValues.find(key);
+    if (value != m_defaultValues.end()) {
+        printf("found default value %s\n", value->second.c_str());
+        return {{value->second, value->second}};
+    }
 
-    return {val};
+    return std::nullopt;
 }
 
 void CoreConfiguration::setOptionVisibility(std::string key, bool visible) {
+}
+
+void CoreConfiguration::setPlatformValue(const std::string &key, const std::string &value) {
+    m_platformValues[key] = value;
+    m_changedSinceLastChecked = true;
+}
+
+void CoreConfiguration::setGameValue(const std::string &key, const std::string &value) {
+    m_gameValues[key] = value;
+    m_changedSinceLastChecked = true;
 }

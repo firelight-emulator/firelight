@@ -61,7 +61,6 @@ set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_
 
 add_library(firelight_lib
         src/app/libretro/core.cpp
-        src/app/libretro/coreoption.cpp
         src/app/libretro/game.cpp
         src/app/emulation_manager.cpp
         src/app/db/sqlite_content_database.cpp
@@ -93,11 +92,10 @@ add_library(firelight_lib
         src/gui/PlatformInputListModel.cpp
         src/gui/gamepad_profile.cpp
         src/gui/gamepad_mapping.cpp
-        src/gui/gamepad_mapping.hpp
         src/gui/platform_list_model.cpp
-        src/gui/platform_list_model.hpp
         src/app/libretro/core_configuration.cpp
         src/app/libretro/core_configuration.hpp
+        src/app/emulator_config_manager.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)

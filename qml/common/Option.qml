@@ -63,7 +63,7 @@ Pane {
         // }
 
         Loader {
-            Layout.fillHeight: true
+            // Layout.fillHeight: true
             Layout.alignment: Qt.AlignRight | Qt.AlignTop
 
             sourceComponent: control

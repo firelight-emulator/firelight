@@ -96,6 +96,10 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     m_currentEntry = manager->m_currentEntry;
   }
 
+  if (m_coreConfiguration) {
+    manager->m_coreConfiguration = m_coreConfiguration;
+  }
+
   manager->setGeometry(m_nativeWidth, m_nativeHeight, m_nativeAspectRatio);
   manager->setIsRunning(m_running);
 
@@ -126,7 +130,9 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 void EmulatorRenderer::render() {
   if (!m_core && m_gameReady) {
     printf("Creating core (Thread: %p)\n", QThread::currentThreadId());
-    m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), std::make_shared<CoreConfiguration>());
+
+    auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_currentEntry.platformId, m_currentEntry.id);
+    m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
 
     m_core->setVideoReceiver(this);
     m_core->setAudioReceiver(std::make_shared<AudioManager>());

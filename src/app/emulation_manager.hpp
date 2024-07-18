@@ -9,6 +9,8 @@
 #include <QQuickFramebufferObject>
 #include <firelight/play_session.hpp>
 
+#include "libretro/core_configuration.hpp"
+
 class EmulationManager : public QQuickFramebufferObject,
                          public firelight::ManagerAccessor {
     Q_OBJECT
@@ -42,6 +44,7 @@ public:
     QByteArray m_saveData;
     QString m_corePath;
     firelight::db::LibraryEntry m_currentEntry;
+    std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
     bool m_paused = false;
 
     bool m_running = false;

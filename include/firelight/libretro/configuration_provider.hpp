@@ -31,7 +31,7 @@ namespace firelight::libretro {
 
         virtual bool anyOptionValueHasChanged() = 0;
 
-        virtual void setOptionValue(std::string key, std::string value) = 0;
+        virtual void setDefaultValue(std::string key, std::string value) = 0;
 
         virtual std::optional<OptionValue> getOptionValue(std::string key) = 0;
 

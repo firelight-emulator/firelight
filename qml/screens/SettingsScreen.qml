@@ -32,7 +32,7 @@ Item {
         Pane {
             id: contentPane
             Layout.fillWidth: true
-            Layout.horizontalStretchFactor: 6
+            Layout.horizontalStretchFactor: 10
             Layout.fillHeight: true
 
             verticalPadding: 80
@@ -97,6 +97,19 @@ Item {
                     }
                 }
                 FirelightMenuItem {
+                    labelText: "Platforms"
+                    // labelIcon: "\ue88e"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    Layout.preferredHeight: 40
+                    checked: root.section === "platforms"
+                    onToggled: {
+                        if (checked) {
+                            root.section = "platforms"
+                        }
+                    }
+                }
+                FirelightMenuItem {
                     labelText: "System"
                     // labelIcon: "\uf522"
                     Layout.fillWidth: true
@@ -126,19 +139,6 @@ Item {
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                     Layout.preferredHeight: 40
                     enabled: false
-                }
-                FirelightMenuItem {
-                    labelText: "Game Boy Color"
-                    // labelIcon: "\ue88e"
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    Layout.preferredHeight: 40
-                    checked: root.section === "platforms/gbc"
-                    onToggled: {
-                        if (checked) {
-                            root.section = "platforms/gbc"
-                        }
-                    }
                 }
                 // FirelightMenuItem {
                 //     labelText: "Debug"
@@ -180,6 +180,12 @@ Item {
                             rightHalf.replace(videoSettings)
                         } else if (root.section === "platforms/gbc") {
                             rightHalf.replace(gbcSettings)
+                        } else if (root.section === "platforms/snes") {
+                            rightHalf.replace(snesSettings)
+                        } else if (root.section === "platforms") {
+                            rightHalf.replace(platformSettings)
+                        } else if (root.section === "platforms/gba") {
+                            rightHalf.replace(gbaSettings)
                         }
                     }
                 }
@@ -274,6 +280,12 @@ Item {
     }
 
     Component {
+        id: platformSettings
+        PlatformSettingsPage {
+        }
+    }
+
+    Component {
         id: librarySettings
         LibrarySettings {
         }
@@ -294,6 +306,18 @@ Item {
     Component {
         id: gbcSettings
         GameBoyColorSettings {
+        }
+    }
+
+    Component {
+        id: gbaSettings
+        GbaSettings {
+        }
+    }
+
+    Component {
+        id: snesSettings
+        SnesSettings {
         }
     }
 

@@ -130,7 +130,7 @@ namespace libretro {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
         auto ptr = static_cast<retro_pixel_format *>(data);
         videoReceiver->setPixelFormat(ptr);
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS");
@@ -256,6 +256,7 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME");
         canRunWithNoGame = *static_cast<bool *>(data);
+        break;
       }
       case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH");
@@ -295,7 +296,10 @@ namespace libretro {
           } else if (effect == RETRO_RUMBLE_WEAK) {
             controller->setWeakRumble(strength);
           }
+
+          return true;
         };
+        break;
       }
       case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES: {
         environmentCalls.emplace_back(
@@ -309,7 +313,7 @@ namespace libretro {
         // RETRO_DEVICE_ANALOG).
 
         *ptr = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG);
-        return false;
+        return true;
       }
       case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE");
@@ -595,7 +599,8 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_BITMASKS");
-        break;
+      // TODO: Implement
+        return false;
       case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION");
         auto ptr = static_cast<unsigned *>(data);
@@ -714,43 +719,43 @@ namespace libretro {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
         *static_cast<unsigned *>(data) = RETRO_HW_CONTEXT_OPENGL;
         return true;
-      case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION");
-        break;
-      case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE");
-        break;
-      case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION");
-        break;
-      case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
-        environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_MESSAGE_EXT");
-        break;
-      case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
-        environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS");
-        break;
-      case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK");
-        break;
-      case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY");
-        break;
-      case RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE");
-        break;
-      case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE");
-        break;
-      case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT:
-        environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
-        break;
+      // case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION");
+      //   return false;
+      // case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE");
+      //   return false;
+      // case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION");
+      //   return false;
+      // case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
+      //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_MESSAGE_EXT");
+      //   return false;
+      // case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
+      //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS");
+      //   return false;
+      // case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK");
+      //   break;
+      // case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY");
+      //   break;
+      // case RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE");
+      //   break;
+      // case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE");
+      //   break;
+      // case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT:
+      //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
+      //   break;
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2");
         auto ptr = static_cast<retro_core_options_v2 *>(data);

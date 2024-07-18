@@ -26,6 +26,7 @@ FocusScope {
         id: background
         color: "black"
         anchors.fill: parent
+        visible: root.emulatorIsRunning
     }
 
     StackView {
