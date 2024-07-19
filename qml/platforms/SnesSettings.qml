@@ -258,8 +258,8 @@ FocusScope {
             Text {
                 Layout.topMargin: 30
                 Layout.fillWidth: true
-                text: qsTr("OVERCLOCKING")
-                font.pointSize: 10
+                text: qsTr("Overclocking")
+                font.pointSize: 11
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 4
@@ -380,14 +380,77 @@ FocusScope {
                             }
                         }
                     }
+
+                    Slider {
+                        id: slider
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 32
+                        from: 0
+                        to: 3
+                        stepSize: 1
+                        snapMode: Slider.SnapAlways
+
+                        handle: Rectangle {
+                            color: "white"
+                            width: 10
+                            height: 24
+                            radius: 2
+                            x: slider.width * slider.visualPosition - (width / 2)
+                            y: (slider.height / 2) - (height / 2)
+                            z: 4
+                        }
+
+                        background: Rectangle {
+                            height: 8
+                            y: parent.height / 2 - (height / 2)
+                            color: "grey"
+                            Rectangle {
+                                height: 24
+                                color: "grey"
+                                width: 2
+                                x: -(width / 2)
+                                y: -height / 2 + (parent.height / 2)
+                            }
+
+                            Rectangle {
+                                height: 24
+                                color: "grey"
+                                width: 2
+                                x: slider.width / 3 - (width / 2)
+                                y: -height / 2 + (parent.height / 2)
+                            }
+
+                            Rectangle {
+                                height: 24
+                                width: 2
+                                color: "grey"
+                                x: slider.width * 2 / 3 - (width / 2)
+                                y: -height / 2 + (parent.height / 2)
+                            }
+
+                            Rectangle {
+                                height: 24
+                                width: 2
+                                color: "grey"
+                                x: slider.width - (width / 2)
+                                y: -height / 2 + (parent.height / 2)
+                            }
+
+                            Rectangle {
+                                color: "lightblue"
+                                height: parent.height
+                                width: slider.width * slider.visualPosition
+                            }
+                        }
+                    }
                 }
             }
 
             Text {
                 Layout.topMargin: 30
                 Layout.fillWidth: true
-                text: qsTr("EMULATION HACKS")
-                font.pointSize: 10
+                text: qsTr("Emulation hacks")
+                font.pointSize: 11
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 4
@@ -503,8 +566,8 @@ FocusScope {
             Text {
                 Layout.topMargin: 30
                 Layout.fillWidth: true
-                text: qsTr("GRAPHICAL LAYERS")
-                font.pointSize: 10
+                text: qsTr("Graphical layers")
+                font.pointSize: 11
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 4
@@ -645,8 +708,8 @@ FocusScope {
             Text {
                 Layout.topMargin: 30
                 Layout.fillWidth: true
-                text: qsTr("SOUND CHANNELS")
-                font.pointSize: 10
+                text: qsTr("Sound channels")
+                font.pointSize: 11
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 4
