@@ -21,3 +21,5 @@ build-old
 .obsidian
 
 .vscode
+
+.DS_Store

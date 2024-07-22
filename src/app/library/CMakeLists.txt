@@ -7,4 +7,4 @@ set(LIBRARY_SOURCES
 
 add_library(library ${LIBRARY_SOURCES})
 
-target_link_libraries(library PUBLIC Qt6::Concurrent Qt6::Sql spdlog::spdlog fmt::fmt ssl crypto)
+target_link_libraries(library PUBLIC Qt6::Concurrent Qt6::Sql spdlog::spdlog fmt::fmt ${OPENSSL_LIBRARIES})
