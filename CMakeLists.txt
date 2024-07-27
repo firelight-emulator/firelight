@@ -99,6 +99,11 @@ add_library(firelight_lib
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
+
+if (WIN32)
+    target_link_libraries(firelight_lib PUBLIC mingw32)
+endif ()
+
 target_link_libraries(firelight_lib PUBLIC
         SDL2::SDL2
         ${OPENSSL_LIBRARIES}
@@ -125,11 +130,11 @@ qt6_add_executable(firelight
         include/firelight/input_mapping.hpp
 )
 
-if(APPLE)
+if (APPLE)
     set_target_properties(firelight PROPERTIES
             MACOSX_BUNDLE ON
     )
-endif()
+endif ()
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
 
