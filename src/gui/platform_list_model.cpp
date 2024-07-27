@@ -10,7 +10,7 @@ namespace firelight::gui {
         m_items.push_back({
             0,
             "NES",
-            "file:system/_img/nes.svg",
+                "qrc:images/platform-icons/nes.svg",
             {
                 {
                     {"display_name", "A"},
@@ -58,7 +58,7 @@ namespace firelight::gui {
         m_items.push_back({
             1,
             "SNES",
-            "file:system/_img/SNES.svg",
+                "qrc:images/platform-icons/snes.svg",
             {
                 {
                     {"display_name", "A"},
@@ -126,7 +126,7 @@ namespace firelight::gui {
         m_items.push_back({
             2,
             "Game Boy",
-            "file:system/_img/gb.svg",
+                "qrc:images/platform-icons/gb.svg",
             {
                 {
                     {"display_name", "A"},
@@ -174,7 +174,7 @@ namespace firelight::gui {
         m_items.push_back({
             3,
             "Game Boy Color",
-            "file:system/_img/gbc.svg",
+                "qrc:images/platform-icons/gbc.svg",
             {
                 {
                     {"display_name", "A"},
@@ -222,7 +222,7 @@ namespace firelight::gui {
         m_items.push_back({
             4,
             "Game Boy Advance",
-            "file:system/_img/gba.svg",
+                "qrc:images/platform-icons/gba.svg",
             {
                 {
                     {"display_name", "A"},
@@ -280,7 +280,7 @@ namespace firelight::gui {
         m_items.push_back({
                 5,
                 "Nintendo 64",
-                "file:system/_img/N64.svg",
+                "qrc:images/platform-icons/n64.svg",
                 {
                     {
                         {"display_name", "A"},

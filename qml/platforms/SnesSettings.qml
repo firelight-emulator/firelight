@@ -44,7 +44,7 @@ FocusScope {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 24
-                        color: "#c3c3c3"
+                        color: ColorPalette.neutral400
                     }
 
                     checkable: false
@@ -59,12 +59,12 @@ FocusScope {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: qsTr("Default SNES Settings")
-                    font.pointSize: 16
+                    font.pixelSize: 20
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Bold
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
-                    color: "white"
+                    color: ColorPalette.neutral100
                 }
                 Layout.bottomMargin: 8
             }
@@ -80,186 +80,221 @@ FocusScope {
             Text {
                 Layout.fillWidth: true
                 text: qsTr("Advanced settings")
-                font.pointSize: 11
+                font.pixelSize: 14
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 8
+                color: ColorPalette.neutral400
+            }
+
+            // Option {
+            //     Layout.fillWidth: true
+            //     Layout.minimumHeight: 42
+            //     label: "Console region"
+            //     description: "Specify which region the system is from. 'PAL' is 50hz, 'NTSC' is 60hz. Games will run faster or slower than normal if the incorrect region is selected."
+            //     control: MyComboBox {
+            //         model: [{
+            //             text: "Auto",
+            //             value: "auto"
+            //         }, {
+            //             text: "NTSC",
+            //             value: "ntsc"
+            //         }, {
+            //             text: "PAL",
+            //             value: "pal"
+            //         }]
+            //         textRole: "text"
+            //         valueRole: "value"
+            //
+            //         Component.onCompleted: {
+            //             // currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region"))
+            //             emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region")
+            //         }
+            //
+            //         onCurrentValueChanged: {
+            //             emulator_config_manager.setOptionValueForPlatform(1, "snes9x_region", currentValue)
+            //         }
+            //     }
+            // }
+
+            // Text {
+            //     Layout.fillWidth: true
+            //     text: "Console region"
+            //     color: ColorPalette.neutral100
+            //     font.pixelSize: 15
+            //     Layout.alignment: Qt.AlignLeft
+            //     font.family: Constants.regularFontFamily
+            //     font.weight: Font.DemiBold
+            //     verticalAlignment: Text.AlignVCenter
+            // }
+
+            RadioButtonGroup {
+                Layout.fillWidth: true
+
+                label: "Console region"
+                // description: "Specify which region the system is from. 'PAL' is 50hz, 'NTSC' is 60hz. Games will run faster or slower than normal if the incorrect region is selected."
+
+                model: [{
+                    label: "Auto",
+                    description: "Chooses NTSC or PAL based on the game when it is loaded."
+                },{
+                    label: "NTSC",
+                    description: "Runs games at 60hz."
+                },{
+                    label: "PAL",
+                    description: "Run games at 50hz"
+                }]
+            }
+
+            Text {
+                Layout.topMargin: 30
+                Layout.fillWidth: true
+                text: qsTr("Stuff")
+                font.pixelSize: 14
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                Layout.bottomMargin: 4
                 color: "#a6a6a6"
             }
 
-            Option {
+            Pane {
                 Layout.fillWidth: true
-                Layout.minimumHeight: 42
-                label: "Console region"
-                description: "Specify which region the system is from. 'PAL' is 50hz, 'NTSC' is 60hz. Games will run faster or slower than normal if the incorrect region is selected."
-                control: MyComboBox {
-                    model: [{
-                        text: "Auto",
-                        value: "auto"
-                    }, {
-                        text: "NTSC",
-                        value: "ntsc"
-                    }, {
-                        text: "PAL",
-                        value: "pal"
-                    }]
-                    textRole: "text"
-                    valueRole: "value"
+                verticalPadding: overclockCol.stuffCol
+                background: Rectangle {
+                    radius: 8
+                    color: ColorPalette.neutral800
+                }
 
-                    Component.onCompleted: {
-                        // currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region"))
-                        emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region")
+                contentItem: ColumnLayout {
+                    id: stuffCol
+
+                    ToggleOption {
+                        Layout.fillWidth: true
+                        label: "Allow opposing D-Pad directions"
+                        description: "Enabling this will allow pressing / quickly alternating / holding both left and right (or up and down) directions at the same time. This may cause movement-based glitches."
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "disabled")
+                            }
+                        }
                     }
 
-                    onCurrentValueChanged: {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_region", currentValue)
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "#333333"
+                    }
+
+                    ToggleOption {
+                        Layout.fillWidth: true
+                        label: "Crop overscan"
+                        description: "Remove the borders at the top and bottom of the screen, typically unused by games and hidden by the bezel of a standard-definition television. 'Auto' will attempt to detect and crop the ~8 pixel overscan based on the current content."
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_overscan")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overscan", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overscan", "disabled")
+                            }
+                        }
+
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "#333333"
+                    }
+
+                    ToggleOption {
+                        Layout.fillWidth: true
+                        label: "Enable graphic clip windows"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_gfx_clip")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_clip", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_clip", "disabled")
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "#333333"
+                    }
+
+                    ToggleOption {
+                        Layout.fillWidth: true
+                        label: "Enable transparency effects"
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_gfx_transp")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_transp", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_transp", "disabled")
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "#333333"
+                    }
+
+                    ToggleOption {
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 42
+                        label: "Hi-Res blending"
+                        description: "Blend adjacent pixels when game switches to hi-res mode (512x448). Required for certain games that use hi-res mode to produce transparency effects (Kirby's Dream Land, Jurassic Park...)."
+
+
+                        Component.onCompleted: {
+                            // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
+                            emulator_config_manager.getOptionValueForPlatform(1, "snes9x_hires_blend")
+                        }
+
+                        onCheckedChanged: function () {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_hires_blend", "blur")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_hires_blend", "disabled")
+                            }
+                        }
                     }
                 }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
-            }
-
-            ToggleOption {
-                Layout.fillWidth: true
-                Layout.minimumHeight: 42
-                label: "Allow opposing D-Pad directions"
-                description: "Enabling this will allow pressing / quickly alternating / holding both left and right (or up and down) directions at the same time. This may cause movement-based glitches."
-
-                Component.onCompleted: {
-                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
-                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed")
-                }
-
-                onCheckedChanged: function () {
-                    if (checked) {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "enabled")
-                    } else {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "disabled")
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
-            }
-
-            ToggleOption {
-                Layout.fillWidth: true
-                Layout.minimumHeight: 42
-                label: "Crop overscan"
-                description: "Remove the borders at the top and bottom of the screen, typically unused by games and hidden by the bezel of a standard-definition television. 'Auto' will attempt to detect and crop the ~8 pixel overscan based on the current content."
-
-                Component.onCompleted: {
-                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
-                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_overscan")
-                }
-
-                onCheckedChanged: function () {
-                    if (checked) {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overscan", "enabled")
-                    } else {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overscan", "disabled")
-                    }
-                }
-
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
-            }
-
-            ToggleOption {
-                Layout.fillWidth: true
-                Layout.minimumHeight: 42
-                label: "Enable graphic clip windows"
-                description: "TBD."
-
-                Component.onCompleted: {
-                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
-                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_gfx_clip")
-                }
-
-                onCheckedChanged: function () {
-                    if (checked) {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_clip", "enabled")
-                    } else {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_clip", "disabled")
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
-            }
-
-            ToggleOption {
-                Layout.fillWidth: true
-                Layout.minimumHeight: 42
-                label: "Enable transparency effects"
-                description: "TBD."
-
-                Component.onCompleted: {
-                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
-                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_gfx_transp")
-                }
-
-                onCheckedChanged: function () {
-                    if (checked) {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_transp", "enabled")
-                    } else {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_gfx_transp", "disabled")
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
-            }
-
-            ToggleOption {
-                Layout.fillWidth: true
-                Layout.minimumHeight: 42
-                label: "Hi-Res blending"
-                description: "Blend adjacent pixels when game switches to hi-res mode (512x448). Required for certain games that use hi-res mode to produce transparency effects (Kirby's Dream Land, Jurassic Park...)."
-
-
-                Component.onCompleted: {
-                    // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
-                    emulator_config_manager.getOptionValueForPlatform(1, "snes9x_hires_blend")
-                }
-
-                onCheckedChanged: function () {
-                    if (checked) {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_hires_blend", "blur")
-                    } else {
-                        emulator_config_manager.setOptionValueForPlatform(1, "snes9x_hires_blend", "disabled")
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
             }
 
             Text {
                 Layout.topMargin: 30
                 Layout.fillWidth: true
                 text: qsTr("Overclocking")
-                font.pointSize: 11
+                font.pixelSize: 14
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 4
@@ -271,7 +306,7 @@ FocusScope {
                 verticalPadding: overclockCol.spacing
                 background: Rectangle {
                     radius: 8
-                    color: "#25282C"
+                    color: ColorPalette.neutral800
                 }
 
                 contentItem: ColumnLayout {
@@ -353,32 +388,32 @@ FocusScope {
                         Layout.minimumHeight: 42
                         label: "CPU overclock"
                         description: "Overclock SNES CPU. May cause games to crash! Use 'Light' for shorter loading times, 'Compatible' for most games exhibiting slowdown and 'Max' only if absolutely required (Gradius 3, Super R-type...)."
-                        control: MyComboBox {
-                            model: [{
-                                text: "None",
-                                value: "disabled"
-                            }, {
-                                text: "Light",
-                                value: "light"
-                            }, {
-                                text: "Compatible",
-                                value: "compatible"
-                            }, {
-                                text: "Max",
-                                value: "max"
-                            }]
-                            textRole: "text"
-                            valueRole: "value"
-
-                            Component.onCompleted: {
-                                // currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region"))
-                                emulator_config_manager.getOptionValueForPlatform(1, "snes9x_overclock_cycles")
-                            }
-
-                            onCurrentValueChanged: {
-                                emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overclock_cycles", currentValue)
-                            }
-                        }
+                        // control: MyComboBox {
+                        //     model: [{
+                        //         text: "None",
+                        //         value: "disabled"
+                        //     }, {
+                        //         text: "Light",
+                        //         value: "light"
+                        //     }, {
+                        //         text: "Compatible",
+                        //         value: "compatible"
+                        //     }, {
+                        //         text: "Max",
+                        //         value: "max"
+                        //     }]
+                        //     textRole: "text"
+                        //     valueRole: "value"
+                        //
+                        //     Component.onCompleted: {
+                        //         // currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "snes9x_region"))
+                        //         emulator_config_manager.getOptionValueForPlatform(1, "snes9x_overclock_cycles")
+                        //     }
+                        //
+                        //     onCurrentValueChanged: {
+                        //         emulator_config_manager.setOptionValueForPlatform(1, "snes9x_overclock_cycles", currentValue)
+                        //     }
+                        // }
                     }
 
                     Slider {
@@ -450,11 +485,11 @@ FocusScope {
                 Layout.topMargin: 30
                 Layout.fillWidth: true
                 text: qsTr("Emulation hacks")
-                font.pointSize: 11
+                font.pixelSize: 14
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 4
-                color: "#a6a6a6"
+                color: ColorPalette.neutral400
             }
 
             Pane {
@@ -462,7 +497,7 @@ FocusScope {
                 verticalPadding: hackCol.spacing
                 background: Rectangle {
                     radius: 8
-                    color: "#25282C"
+                    color: ColorPalette.neutral800
                 }
 
                 contentItem: ColumnLayout {
@@ -567,11 +602,11 @@ FocusScope {
                 Layout.topMargin: 30
                 Layout.fillWidth: true
                 text: qsTr("Graphical layers")
-                font.pointSize: 11
+                font.pixelSize: 14
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 4
-                color: "#a6a6a6"
+                color: ColorPalette.neutral400
             }
 
             Pane {
@@ -579,7 +614,7 @@ FocusScope {
                 verticalPadding: layerCol.spacing
                 background: Rectangle {
                     radius: 8
-                    color: "#25282C"
+                    color: ColorPalette.neutral800
                 }
 
                 contentItem: ColumnLayout {
@@ -709,11 +744,11 @@ FocusScope {
                 Layout.topMargin: 30
                 Layout.fillWidth: true
                 text: qsTr("Sound channels")
-                font.pointSize: 11
+                font.pixelSize: 14
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 Layout.bottomMargin: 4
-                color: "#a6a6a6"
+                color: ColorPalette.neutral400
             }
 
             Pane {
@@ -721,7 +756,7 @@ FocusScope {
                 verticalPadding: soundCol.spacing
                 background: Rectangle {
                     radius: 8
-                    color: "#25282C"
+                    color: ColorPalette.neutral800
                 }
 
                 contentItem: ColumnLayout {

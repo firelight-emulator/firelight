@@ -65,7 +65,7 @@ namespace firelight::gui {
             imageUrl = "file:system/_img/Xbox.svg";
             break;
           case NINTENDO_SWITCH_PRO:
-            imageUrl = "file:system/_img/SwitchPro.svg";
+            imageUrl = "qrc:/images/platform-icons/switch-pro.svg";
             break;
           case NINTENDO_NSO_N64:
             imageUrl = "file:system/_img/N64.svg";

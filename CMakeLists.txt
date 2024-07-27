@@ -125,9 +125,11 @@ qt6_add_executable(firelight
         include/firelight/input_mapping.hpp
 )
 
-set_target_properties(firelight PROPERTIES
-        MACOSX_BUNDLE ON
-)
+if(APPLE)
+    set_target_properties(firelight PROPERTIES
+            MACOSX_BUNDLE ON
+    )
+endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
 
@@ -275,11 +277,11 @@ install(
         SCRIPT ${deploy_script}
 )
 
-install(
-        PROGRAMS
-        ${SHARED_LIB_DIR}/libsqlite3-0.dll
-        TYPE BIN
-)
+#install(
+#        PROGRAMS
+#        ${SHARED_LIB_DIR}/libsqlite3-0.dll
+#        TYPE BIN
+#)
 
 install(
         FILES

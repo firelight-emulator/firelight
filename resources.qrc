@@ -5,10 +5,22 @@
     <qresource prefix="/fonts">
         <!--        <file alias="lexend">assets/Lexend-Regular.ttf</file>-->
         <!--        <file alias="lexend-light">assets/Lexend-Light.ttf</file>-->
-        <file alias="lexend">assets/Lexend-VariableFont_wght.ttf</file>
+        <file alias="lexend">assets/LexendDeca[wght].ttf</file>
         <file alias="lexend-light">assets/NunitoSans_10pt-Regular.ttf</file>
         <file alias="font-semibold">assets/Lexend-Medium.ttf</file>
         <file alias="lexend-black">assets/NunitoSans_10pt_SemiCondensed-Black.ttf</file>
         <file alias="symbols">assets/MaterialSymbols.ttf</file>
+    </qresource>
+    <qresource prefix="/images/platform-icons">
+        <file alias="nes.svg">_img/nes.svg</file>
+        <file alias="snes.svg">_img/SNES.svg</file>
+        <file alias="gb.svg">_img/gb.svg</file>
+        <file alias="gbc.svg">_img/gbc.svg</file>
+        <file alias="gba.svg">_img/gba.svg</file>
+        <file alias="n64.svg">_img/N64.svg</file>
+        <file alias="switch-pro.svg">_img/SwitchPro.svg</file>
+    </qresource>
+    <qresource prefix="/images/controllers">
+        <file alias="switch-pro">_img/SwitchPro.svg</file>
     </qresource>
 </RCC>

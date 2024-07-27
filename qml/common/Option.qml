@@ -7,7 +7,8 @@ Pane {
 
     required property string label
     property string description
-    required property Component control
+    // required property Component control
+    property Component control
 
     background: Item {
     }
@@ -25,8 +26,8 @@ Pane {
             Text {
                 Layout.fillWidth: true
                 text: root.label
-                color: "white"
-                font.pointSize: 12
+                color: ColorPalette.neutral100
+                font.pixelSize: 15
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
@@ -36,11 +37,12 @@ Pane {
                 Layout.fillWidth: true
                 visible: root.description !== ""
                 text: root.description
-                font.pointSize: 11
+                font.pixelSize: 13
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
+                // font.weight: Font.
                 wrapMode: Text.WordWrap
-                color: "#c1c1c1"
+                color: ColorPalette.neutral300
             }
         }
 

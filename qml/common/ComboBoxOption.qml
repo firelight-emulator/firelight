@@ -19,6 +19,7 @@ Option {
     control: MyComboBox {
         id: control
         model: root.model
+        visible: currentIndex !== -1
         currentIndex: root.currentIndex
         onCurrentIndexChanged: function () {
             root.currentIndex = control.currentIndex
