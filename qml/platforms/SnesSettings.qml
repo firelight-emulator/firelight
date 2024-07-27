@@ -419,7 +419,7 @@ FocusScope {
                     Slider {
                         id: slider
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 32
+                        Layout.preferredHeight: 48
                         from: 0
                         to: 3
                         stepSize: 1
@@ -431,50 +431,90 @@ FocusScope {
                             height: 24
                             radius: 2
                             x: slider.width * slider.visualPosition - (width / 2)
-                            y: (slider.height / 2) - (height / 2)
+                            y: ((slider.height * 2 / 3) / 2) - (height / 2)
                             z: 4
                         }
 
-                        background: Rectangle {
-                            height: 8
-                            y: parent.height / 2 - (height / 2)
-                            color: "grey"
-                            Rectangle {
-                                height: 24
-                                color: "grey"
-                                width: 2
-                                x: -(width / 2)
-                                y: -height / 2 + (parent.height / 2)
-                            }
+                        background: Item {
+                            Item {
+                                height: parent.height * 2 / 3
+                                width: parent.width
+                                Rectangle {
+                                    height: 8
+                                    width: parent.width
+                                    y: parent.height / 2 - (height / 2)
+                                    color: "grey"
+                                    Rectangle {
+                                        height: 24
+                                        color: "grey"
+                                        width: 2
+                                        x: -(width / 2)
+                                        y: -height / 2 + (parent.height / 2)
+                                    }
 
-                            Rectangle {
-                                height: 24
-                                color: "grey"
-                                width: 2
-                                x: slider.width / 3 - (width / 2)
-                                y: -height / 2 + (parent.height / 2)
-                            }
+                                    Rectangle {
+                                        height: 24
+                                        color: "grey"
+                                        width: 2
+                                        x: slider.width / 3 - (width / 2)
+                                        y: -height / 2 + (parent.height / 2)
+                                    }
 
-                            Rectangle {
-                                height: 24
-                                width: 2
-                                color: "grey"
-                                x: slider.width * 2 / 3 - (width / 2)
-                                y: -height / 2 + (parent.height / 2)
-                            }
+                                    Rectangle {
+                                        height: 24
+                                        width: 2
+                                        color: "grey"
+                                        x: slider.width * 2 / 3 - (width / 2)
+                                        y: -height / 2 + (parent.height / 2)
+                                    }
 
-                            Rectangle {
-                                height: 24
-                                width: 2
-                                color: "grey"
-                                x: slider.width - (width / 2)
-                                y: -height / 2 + (parent.height / 2)
-                            }
+                                    Rectangle {
+                                        height: 24
+                                        width: 2
+                                        color: "grey"
+                                        x: slider.width - (width / 2)
+                                        y: -height / 2 + (parent.height / 2)
+                                    }
 
-                            Rectangle {
-                                color: "lightblue"
-                                height: parent.height
-                                width: slider.width * slider.visualPosition
+                                    Rectangle {
+                                        color: "lightblue"
+                                        height: parent.height
+                                        width: slider.width * slider.visualPosition
+                                    }
+                                }
+                            }
+                            Item {
+                                width: parent.width
+                                height: parent.height / 3
+                                y: parent.height * 2 / 3
+
+                                Text {
+                                    text: "None"
+                                    font.pointSize: 8
+                                    color: "white"
+                                    x: -(width / 2)
+                                }
+
+                                Text {
+                                    text: "Light"
+                                    font.pointSize: 8
+                                    color: "white"
+                                    x: slider.width / 3 - (width / 2)
+                                }
+
+                                Text {
+                                    text: "Compatible"
+                                    font.pointSize: 8
+                                    color: "white"
+                                    x: slider.width * 2 / 3 - (width / 2)
+                                }
+
+                                Text {
+                                    text: "Max"
+                                    font.pointSize: 8
+                                    color: "white"
+                                    x: slider.width - (width / 2)
+                                }
                             }
                         }
                     }
