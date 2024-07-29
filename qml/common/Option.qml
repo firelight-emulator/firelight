@@ -10,6 +10,8 @@ Pane {
     // required property Component control
     property Component control
 
+    property bool isSubItem: false
+
     background: Item {
     }
 
@@ -19,10 +21,24 @@ Pane {
     RowLayout {
         anchors.fill: parent
 
+        Text {
+            Layout.fillHeight: true
+            visible: root.isSubItem
+            leftPadding: 8
+            rightPadding: 8
+            text: "\ue5da"
+            font.family: Constants.symbolFontFamily
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            font.pixelSize: 24
+            color: ColorPalette.neutral600
+        }
+
         ColumnLayout {
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.horizontalStretchFactor: 3
+
             Text {
                 Layout.fillWidth: true
                 text: root.label

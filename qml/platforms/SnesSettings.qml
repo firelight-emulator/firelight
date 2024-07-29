@@ -59,7 +59,7 @@ FocusScope {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: qsTr("Default SNES Settings")
-                    font.pixelSize: 20
+                    font.pixelSize: 26
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Bold
                     horizontalAlignment: Text.AlignLeft
@@ -137,10 +137,10 @@ FocusScope {
                 model: [{
                     label: "Auto",
                     description: "Chooses NTSC or PAL based on the game when it is loaded."
-                },{
+                }, {
                     label: "NTSC",
                     description: "Runs games at 60hz."
-                },{
+                }, {
                     label: "PAL",
                     description: "Run games at 50hz"
                 }]
@@ -269,7 +269,6 @@ FocusScope {
 
                     ToggleOption {
                         Layout.fillWidth: true
-                        Layout.minimumHeight: 42
                         label: "Hi-Res blending"
                         description: "Blend adjacent pixels when game switches to hi-res mode (512x448). Required for certain games that use hi-res mode to produce transparency effects (Kirby's Dream Land, Jurassic Park...)."
 
@@ -313,7 +312,6 @@ FocusScope {
                     id: overclockCol
                     Option {
                         Layout.fillWidth: true
-                        Layout.minimumHeight: 42
                         label: "SuperFX overclock"
                         description: "SuperFX coprocessor frequency multiplier. Can improve frame rate or cause timing errors. Values under 100% can improve game performance on slow devices."
 

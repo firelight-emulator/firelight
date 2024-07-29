@@ -34,7 +34,7 @@ Item {
         Pane {
             id: contentPane
             Layout.fillWidth: true
-            Layout.horizontalStretchFactor: 10
+            Layout.horizontalStretchFactor: 8
             Layout.fillHeight: true
 
             verticalPadding: 80

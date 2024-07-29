@@ -19,7 +19,8 @@ Item {
     readonly property color accent300: "#ebc299"
     readonly property color accent200: "#f6e1c7"
 
-    readonly property color neutral900: "#121212"
+    readonly property color neutral1000: "#0e0e0e"
+    readonly property color neutral900: "#1e1e1e"
     readonly property color neutral800: "#2a2a2a"
     readonly property color neutral700: "#444444"
     readonly property color neutral600: "#666666"
@@ -28,13 +29,6 @@ Item {
     readonly property color neutral300: "#cccccc"
     readonly property color neutral200: "#e6e6e6"
     readonly property color neutral100: "#f9f9f9"
-
-
-
-
-
-
-
 
 
     readonly property color red900: "#b71c1c"

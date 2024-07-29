@@ -53,7 +53,7 @@ FocusScope {
             Text {
                 Layout.fillWidth: true
                 text: qsTr("Platform settings")
-                font.pointSize: 16
+                font.pixelSize: 26
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Bold
                 Layout.bottomMargin: 8
@@ -63,12 +63,12 @@ FocusScope {
             Text {
                 Layout.fillWidth: true
                 text: qsTr("Here's where you can change settings for each platform. You can change settings on a per-game basis by selecting the game in your library and going to 'Settings'.")
-                font.pointSize: 11
+                font.pixelSize: 15
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Normal
                 wrapMode: Text.WordWrap
+                color: ColorPalette.neutral300
                 Layout.bottomMargin: 8
-                color: "white"
             }
 
             Rectangle {
@@ -280,6 +280,78 @@ FocusScope {
                     }
                     Text {
                         text: qsTr("Nintendo 64")
+                        height: parent.height
+                        font.pointSize: 14
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                        color: "white"
+                    }
+
+                }
+
+            }
+
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 80
+
+                onClicked: function () {
+                    root.StackView.view.push(n64Settings)
+                }
+                hoverEnabled: true
+                background: Rectangle {
+                    color: parent.hovered ? "#333333" : "transparent"
+                    radius: 8
+                }
+                contentItem: Row {
+                    spacing: 8
+                    Image {
+                        source: "file:system/_img/DS.svg"
+                        width: parent.height
+                        height: parent.height
+                        fillMode: Image.PreserveAspectFit
+                        sourceSize.height: parent.height
+                    }
+                    Text {
+                        text: qsTr("Nintendo DS")
+                        height: parent.height
+                        font.pointSize: 14
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                        color: "white"
+                    }
+
+                }
+
+            }
+
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 80
+
+                onClicked: function () {
+                    root.StackView.view.push(n64Settings)
+                }
+                hoverEnabled: true
+                background: Rectangle {
+                    color: parent.hovered ? "#333333" : "transparent"
+                    radius: 8
+                }
+                contentItem: Row {
+                    spacing: 8
+                    Image {
+                        source: "file:system/_img/genesis.svg"
+                        width: parent.height
+                        height: parent.height
+                        fillMode: Image.PreserveAspectFit
+                        sourceSize.height: parent.height
+                    }
+                    Text {
+                        text: qsTr("Sega Genesis")
                         height: parent.height
                         font.pointSize: 14
                         font.family: Constants.regularFontFamily
