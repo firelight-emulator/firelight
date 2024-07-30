@@ -35,6 +35,10 @@ namespace firelight::db {
     std::optional<PlaySession>
     getLatestPlaySession(std::string contentId) override;
 
+    std::optional<std::string> getPlatformSettingValue(int platformId, std::string key) override;
+
+    void setPlatformSettingValue(int platformId, std::string key, std::string value) override;
+
   private:
     std::filesystem::path m_database_path;
     QSqlDatabase m_database;

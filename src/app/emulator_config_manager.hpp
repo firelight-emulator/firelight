@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <firelight/userdata_database.hpp>
 
 #include "libretro/core_configuration.hpp"
 
@@ -8,7 +9,7 @@ class EmulatorConfigManager : public QObject {
     Q_OBJECT
 
 public:
-    explicit EmulatorConfigManager(QObject *parent = nullptr);
+    explicit EmulatorConfigManager(firelight::db::IUserdataDatabase &userdataDatabase);
 
     ~EmulatorConfigManager() override;
 
@@ -23,5 +24,6 @@ public:
     Q_INVOKABLE QString getOptionValueForEntry(int entryId, const QString &key);
 
 private:
+    firelight::db::IUserdataDatabase &m_userdataDatabase;
     std::map<std::string, std::shared_ptr<CoreConfiguration> > m_coreConfigs;
 };

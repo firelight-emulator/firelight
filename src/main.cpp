@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
   LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
-  auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>();
+  auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>(userdata_database);
   firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
 
   QObject::connect(

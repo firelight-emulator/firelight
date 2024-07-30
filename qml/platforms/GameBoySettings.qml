@@ -95,21 +95,18 @@ FocusScope {
                             valueRole: "value"
 
                             Component.onCompleted: {
-                                const value = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gb_internal_palette")
+                                const value = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gb_colorization")
 
                                 if (value) {
-                                    currentIndex = find(value)
+                                    currentIndex = indexOfValue(value)
                                     colorizePalette.currentValue = value
                                 } else {
                                     currentIndex = 0
                                 }
                             }
 
-                            onCurrentValueChanged: function () {
-                                if (!currentValue) {
-                                    return
-                                }
-                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_internal_palette", currentValue)
+                            onActivated: function (index) {
+                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_colorization", currentValue)
                                 colorizePalette.currentValue = currentValue
                             }
                         }
@@ -282,17 +279,14 @@ FocusScope {
                                 const value = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gb_internal_palette")
 
                                 if (value) {
-                                    currentIndex = find(value)
+                                    currentIndex = indexOfValue(value)
                                     colorizationOption.currentValue = value
                                 } else {
                                     currentIndex = 0
                                 }
                             }
 
-                            onCurrentValueChanged: function () {
-                                if (!currentValue) {
-                                    return
-                                }
+                            onActivated: function (index) {
                                 emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_internal_palette", currentValue)
                                 colorizationOption.currentValue = currentValue
                             }
@@ -349,10 +343,11 @@ FocusScope {
                         Layout.fillWidth: true
                         label: "Simulate LCD ghosting"
                         // description: "Enables simulation of LCD ghosting effects by blending the current and previous frames."
+                        checked: emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
 
-                        Component.onCompleted: {
-                            checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
-                        }
+                        // Component.onCompleted: {
+                        //     checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
+                        // }
 
                         onCheckedChanged: {
                             if (checked) {
@@ -376,9 +371,7 @@ FocusScope {
                         // label: "Color correction"
                         // description: "Make the screen colors more accurate to the original hardware."
 
-                        Component.onCompleted: {
-                            checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gbc_color_correction") === "GBC only"
-                        }
+                        checked: emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gbc_color_correction") === "GBC only"
 
                         onCheckedChanged: function () {
                             if (checked) {
@@ -389,12 +382,6 @@ FocusScope {
                         }
                     },
 
-                    // Rectangle {
-                    //     Layout.fillWidth: true
-                    //     Layout.preferredHeight: 1
-                    //     color: "#333333"
-                    // },
-
                     Option {
                         Layout.fillWidth: true
                         // Layout.leftMargin: 36
@@ -403,6 +390,7 @@ FocusScope {
                         label: "Frontlight position"
                         // description: "Simulates the physical response of the Game Boy Color LCD panel when illuminated from different angles."
                         control: MyComboBox {
+                            id: frontlightPositionComboBox
                             enabled: colorCorrectionOption.checked
                             model: [{
                                 text: "Center of screen",
@@ -418,10 +406,15 @@ FocusScope {
                             valueRole: "value"
 
                             Component.onCompleted: {
-                                currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gbc_frontlight_position"))
+                                const val = frontlightPositionComboBox.indexOfValue(emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gbc_frontlight_position"))
+                                console.log("VALUE: " + val)
+                                frontlightPositionComboBox.currentIndex = val
                             }
 
-                            onCurrentValueChanged: function () {
+                            onActivated: function (index) {
+                                if (!currentValue) {
+                                    return
+                                }
                                 emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_frontlight_position", currentValue)
                             }
                         }
@@ -446,159 +439,19 @@ FocusScope {
                         stepSize: 5
                         snapMode: Slider.SnapOnRelease
                         live: false
+
+                        value: emulator_config_manager.getOptionValueForPlatform(1, "gambatte_dark_filter_level")
+
+                        onValueChanged: function () {
+                            emulator_config_manager.setOptionValueForPlatform(1, "gambatte_dark_filter_level", value)
+                        }
                     }
 
 
                 ]
             }
 
-            // OptionGroup {
-            //     Layout.topMargin: 30
-            //     Layout.fillWidth: true
-            //     label: "Darken screen to reduce harshness"
-            //
-            //     MySlider {
-            //         Layout.fillWidth: true
-            //         Layout.preferredHeight: 48
-            //         from: 0
-            //         to: 50
-            //         stepSize: 5
-            //         snapMode: Slider.SnapAlways
-            //     }
-            // }
 
-
-            // Pane {
-            //     Layout.fillWidth: true
-            //     verticalPadding: stuffCol.spacing
-            //     background: Rectangle {
-            //         radius: 8
-            //         color: ColorPalette.neutral800
-            //     }
-            //
-            //     contentItem: ColumnLayout {
-            //         id: stuffCol
-            //
-            //         ToggleOption {
-            //             Layout.fillWidth: true
-            //             label: "Simulate LCD ghosting"
-            //             // description: "Enables simulation of LCD ghosting effects by blending the current and previous frames."
-            //
-            //             Component.onCompleted: {
-            //                 checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
-            //             }
-            //
-            //             onCheckedChanged: {
-            //                 if (checked) {
-            //                     emulator_config_manager.setOptionValueForPlatform(1, "gambatte_mix_frames", "accurate")
-            //                 } else {
-            //                     emulator_config_manager.setOptionValueForPlatform(1, "gambatte_mix_frames", "disabled")
-            //                 }
-            //             }
-            //
-            //         }
-            //
-            //         ToggleOption {
-            //             Layout.fillWidth: true
-            //             label: "Allow opposing D-Pad directions"
-            //             // description: "Enabling this will allow pressing / quickly alternating / holding both left and right (or up and down) directions at the same time. This may cause movement-based glitches."
-            //
-            //             Component.onCompleted: {
-            //                 // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
-            //                 emulator_config_manager.getOptionValueForPlatform(1, "gambatte_up_down_allowed")
-            //             }
-            //
-            //             onCheckedChanged: function () {
-            //                 if (checked) {
-            //                     emulator_config_manager.setOptionValueForPlatform(1, "gambatte_up_down_allowed", "enabled")
-            //                 } else {
-            //                     emulator_config_manager.setOptionValueForPlatform(1, "gambatte_up_down_allowed", "disabled")
-            //                 }
-            //             }
-            //         }
-            //
-            //         Rectangle {
-            //             Layout.fillWidth: true
-            //             Layout.preferredHeight: 1
-            //             color: "#333333"
-            //         }
-            //
-            //         ToggleOption {
-            //             id: colorCorrectionOption
-            //             Layout.fillWidth: true
-            //             label: "Correct colors to be more accurate to the original hardware"
-            //             // label: "Color correction"
-            //             // description: "Make the screen colors more accurate to the original hardware."
-            //
-            //             Component.onCompleted: {
-            //                 checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gbc_color_correction") === "GBC only"
-            //             }
-            //
-            //             onCheckedChanged: function () {
-            //                 if (checked) {
-            //                     emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_color_correction", "GBC only")
-            //                 } else {
-            //                     emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_color_correction", "disabled")
-            //                 }
-            //             }
-            //         }
-            //
-            //         Option {
-            //             Layout.fillWidth: true
-            //             Layout.leftMargin: 36
-            //             enabled: colorCorrectionOption.checked
-            //             label: "Frontlight position"
-            //             description: "Simulates the physical response of the Game Boy Color LCD panel when illuminated from different angles."
-            //             control: MyComboBox {
-            //                 enabled: colorCorrectionOption.checked
-            //                 model: [{
-            //                     text: "Off",
-            //                     value: "off"
-            //                 }, {
-            //                     text: "Top",
-            //                     value: "top"
-            //                 }]
-            //                 textRole: "text"
-            //                 valueRole: "value"
-            //
-            //                 Component.onCompleted: {
-            //                     currentIndex = find(emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gbc_color_correction"))
-            //                 }
-            //
-            //                 onCurrentValueChanged: function () {
-            //                     emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_color_correction", currentValue)
-            //                 }
-            //             }
-            //         }
-            //
-            //         Rectangle {
-            //             Layout.fillWidth: true
-            //             Layout.preferredHeight: 1
-            //             color: "#333333"
-            //         }
-            //
-            //         Option {
-            //             Layout.fillWidth: true
-            //             label: "Darken screen to reduce harshness"
-            //             // description: "Darken the screen to reduce glare and/or eye strain. This is useful for games with white backgrounds, as they appear harsher than intended on modern displays."
-            //         }
-            //
-            //         MySlider {
-            //             Layout.fillWidth: true
-            //             Layout.preferredHeight: 48
-            //             from: 0
-            //             to: 50
-            //             stepSize: 5
-            //             snapMode: Slider.SnapAlways
-            //         }
-            //
-            //         Rectangle {
-            //             Layout.fillWidth: true
-            //             Layout.preferredHeight: 1
-            //             color: "#333333"
-            //         }
-            //     }
-            // }
         }
     }
 }

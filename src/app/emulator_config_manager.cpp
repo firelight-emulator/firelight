@@ -4,7 +4,8 @@
 
 static QString thing = "disabled";
 
-EmulatorConfigManager::EmulatorConfigManager(QObject *parent) : QObject(parent) {
+EmulatorConfigManager::EmulatorConfigManager(firelight::db::IUserdataDatabase &userdataDatabase) : m_userdataDatabase(
+    userdataDatabase) {
 }
 
 EmulatorConfigManager::~EmulatorConfigManager() = default;
@@ -22,16 +23,25 @@ std::shared_ptr<CoreConfiguration> EmulatorConfigManager::getCoreConfigFor(const
     return m_coreConfigs.at(key);
 }
 
-void EmulatorConfigManager::setOptionValueForPlatform(int platformId, const QString &key, const QString &value) {
-    printf("Changing PLATFORM option %s to %s\n", key.toStdString().c_str(), value.toStdString().c_str());
+void EmulatorConfigManager::setOptionValueForPlatform(const int platformId, const QString &key, const QString &value) {
+    printf("Setting PLATFORM option %s to %s\n", key.toStdString().c_str(), value.toStdString().c_str());
+    m_userdataDatabase.setPlatformSettingValue(platformId, key.toStdString(), value.toStdString());
 }
 
 void EmulatorConfigManager::setOptionValueForEntry(int entryId, const QString &key, const QString &value) {
     printf("Changing ENTRY option %s to %s\n", key.toStdString().c_str(), value.toStdString().c_str());
 }
 
-QString EmulatorConfigManager::getOptionValueForPlatform(int platformId, const QString &key) {
+QString EmulatorConfigManager::getOptionValueForPlatform(const int platformId, const QString &key) {
     printf("Getting PLATFORM option %s\n", key.toStdString().c_str());
+
+    auto val = m_userdataDatabase.getPlatformSettingValue(platformId, key.toStdString());
+    if (val.has_value()) {
+        printf("Found value (%s)!\n", val.value().c_str());
+        return QString::fromStdString(val.value());
+    }
+
+    printf("No value\n");
     return "";
 }
 

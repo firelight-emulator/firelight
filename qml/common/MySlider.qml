@@ -73,7 +73,7 @@ Slider {
                 // }
 
                 Rectangle {
-                    color: "lightblue"
+                    color: "#d14c20"
                     height: parent.height
                     width: control.availableWidth * control.visualPosition
                 }
