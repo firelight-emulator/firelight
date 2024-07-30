@@ -35,7 +35,8 @@ namespace firelight::db {
     std::optional<PlaySession>
     getLatestPlaySession(std::string contentId) override;
 
-    std::optional<std::string> getPlatformSettingValue(int platformId, std::string key) override;
+    std::optional<std::string>
+    getPlatformSettingValue(int platformId, std::string key, bool defaultIfNotFound) override;
 
     void setPlatformSettingValue(int platformId, std::string key, std::string value) override;
 

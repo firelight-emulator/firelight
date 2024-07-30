@@ -320,6 +320,10 @@ namespace firelight::db {
       return {Platform{.id = 13}};
     }
 
+    if (ext == ".nes") {
+      return {Platform{.id = 5}};
+    }
+
     return {};
   }
 

@@ -35,7 +35,7 @@ void EmulatorConfigManager::setOptionValueForEntry(int entryId, const QString &k
 QString EmulatorConfigManager::getOptionValueForPlatform(const int platformId, const QString &key) {
     printf("Getting PLATFORM option %s\n", key.toStdString().c_str());
 
-    auto val = m_userdataDatabase.getPlatformSettingValue(platformId, key.toStdString());
+    auto val = m_userdataDatabase.getPlatformSettingValue(platformId, key.toStdString(), true);
     if (val.has_value()) {
         printf("Found value (%s)!\n", val.value().c_str());
         return QString::fromStdString(val.value());

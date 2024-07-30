@@ -153,7 +153,8 @@ void LibraryScanner::startScan() {
             } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
                        ext.string() == ".v64" || ext.string() == ".z64" ||
                        ext.string() == ".gb" || ext.string() == ".gbc" ||
-                       ext.string() == ".gba" || ext.string() == ".sfc" || ext.string() == ".md") {
+                       ext.string() == ".gba" || ext.string() == ".sfc" ||
+                       ext.string() == ".md" || ext.string() == ".nes") {
               auto platforms = content_database_->getMatchingPlatforms(
                 {.supportedExtensions = {ext.string()}});
 
@@ -187,6 +188,16 @@ void LibraryScanner::startScan() {
                   // std::vector<char> new_thing(size - 512);
                   // std::copy(thing.begin() + 512, thing.end(),
                   // new_thing.begin());
+                }
+              } else if (ext == ".nes") {
+                auto firstFourAsString = std::string(thing.begin(), thing.begin() + 4);
+                if (firstFourAsString == "NES\x1A") {
+                  printf("FOUND HEADER!!! %s\n",
+                         entry.path().filename().string().c_str());
+                  thing.erase(thing.begin(), thing.begin() + 16);
+                  filesize -= 16;
+
+                  contentId = calculateMD5(thing.data(), filesize);
                 }
               }
 

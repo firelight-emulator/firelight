@@ -458,17 +458,31 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO");
         auto ptr = static_cast<retro_controller_info *>(data);
-        for (unsigned i = 0; i < ptr->num_types; ++i) {
-          auto info = ptr->types[i];
-          if (info.desc == nullptr) {
+
+
+        for (unsigned i = 0; i < 100; ++i) {
+          auto info = ptr[i];
+
+          if (!info.types) {
             break;
           }
 
-          controllerInfo.emplace_back(info);
-          if (i == 100) {
-            recordPotentialAPIViolation("Over 100 controller infos");
+          for (unsigned j = 0; j < info.num_types; ++j) {
+            auto type = info.types[j];
+            printf("Type: %d, Value: %s\n", type.id, type.desc);
           }
         }
+        // for (unsigned i = 0; i < ptr->num_types; ++i) {
+        //   auto info = ptr->types[i];
+        //   if (info.desc == nullptr) {
+        //     break;
+        //   }
+        //
+        //   controllerInfo.emplace_back(info);
+        //   if (i == 100) {
+        //     recordPotentialAPIViolation("Over 100 controller infos");
+        //   }
+        // }
         return true;
       }
       case RETRO_ENVIRONMENT_SET_MEMORY_MAPS: {
@@ -727,35 +741,68 @@ namespace libretro {
       //   environmentCalls.emplace_back(
       //     "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE");
       //   return false;
-      // case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
-      //   environmentCalls.emplace_back(
-      //     "RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION");
-      //   return false;
-      // case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
-      //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_MESSAGE_EXT");
-      //   return false;
+      case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION: {
+        environmentCalls.emplace_back(
+          "RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION");
+        auto ptr = static_cast<unsigned *>(data);
+        *ptr = 1;
+        break;
+      }
+      case RETRO_ENVIRONMENT_SET_MESSAGE_EXT: {
+        environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_MESSAGE_EXT");
+        auto ptr = static_cast<retro_message_ext *>(data);
+
+        // TODO
+        printf("Msg: %s\n", ptr->msg);
+        break;
+      }
       // case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
       //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS");
       //   return false;
-      // case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK:
-      //   environmentCalls.emplace_back(
-      //     "RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK");
-      //   break;
-      // case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY:
-      //   environmentCalls.emplace_back(
-      //     "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY");
-      //   break;
+      case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK: {
+        environmentCalls.emplace_back(
+          "RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK");
+        if (!data) {
+          break;
+        }
+
+        auto ptr = static_cast<retro_audio_buffer_status_callback *>(data);
+
+        ptr->callback = [](bool active, unsigned occupancy, bool underrun_likely) {
+          printf("Active: %d, Occupancy: %d, Underrun Likely: %d\n", active, occupancy, underrun_likely);
+        };
+
+        break;
+      }
+      case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY: {
+        environmentCalls.emplace_back(
+          "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY");
+        // TODO
+        break;
+      }
       // case RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE:
       //   environmentCalls.emplace_back(
       //     "RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE");
       //   break;
-      // case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
-      //   environmentCalls.emplace_back(
-      //     "RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE");
-      //   break;
-      // case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT:
-      //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
-      //   break;
+      case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE: {
+        environmentCalls.emplace_back(
+          "RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE");
+        auto ptr = static_cast<retro_system_content_info_override *>(data);
+        for (int i = 0; i < 100; ++i) {
+          auto info = ptr[i];
+          if (info.extensions == nullptr) {
+            break;
+          }
+        }
+        return false;
+        // break;
+      }
+      case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT: {
+        environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
+        auto ptr = static_cast<retro_game_info_ext *>(data);
+        return false;
+        // break;
+      }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2");
         auto ptr = static_cast<retro_core_options_v2 *>(data);
@@ -890,11 +937,11 @@ namespace libretro {
         };
         return true;
       }
-      // case RETRO_ENVIRONMENT_SET_VARIABLE: {
-      //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_VARIABLE");
-      //   // TODO: Implement
-      //   break;
-      // }
+      case RETRO_ENVIRONMENT_SET_VARIABLE: {
+        environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_VARIABLE");
+        // TODO: Implement
+        break;
+      }
       case RETRO_ENVIRONMENT_GET_THROTTLE_STATE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_THROTTLE_STATE");
         auto ptr = static_cast<retro_throttle_state *>(data);
@@ -1097,7 +1144,7 @@ namespace libretro {
         reinterpret_cast<void (*)(unsigned int, unsigned int)>(
           coreLib->resolve("retro_set_controller_port_device"));
     symRetroReset = coreLib->resolve("retro_reset");
-    symRetroRun = reinterpret_cast<void (*)()>(coreLib->resolve("retro_run"));
+    symRetroRun = coreLib->resolve("retro_run");
     symRetroSerializeSize =
         reinterpret_cast<size_t (*)()>(coreLib->resolve("retro_serialize_size"));
     symRetroSerialize = reinterpret_cast<bool (*)(void *, size_t)>(
@@ -1105,7 +1152,7 @@ namespace libretro {
     symRetroUnserialize = reinterpret_cast<bool (*)(const void *, size_t)>(
       coreLib->resolve("retro_unserialize"));
     symRetroCheatReset =
-        reinterpret_cast<void (*)()>(coreLib->resolve("retro_cheat_reset"));
+        coreLib->resolve("retro_cheat_reset");
     symRetroCheatSet = reinterpret_cast<void (*)(unsigned, bool, const char *)>(
       coreLib->resolve("retro_cheat_set"));
 
@@ -1115,7 +1162,7 @@ namespace libretro {
         reinterpret_cast<bool (*)(unsigned int, const retro_game_info *, size_t)>(
           coreLib->resolve("retro_load_game_special"));
     symRetroUnloadGame =
-        reinterpret_cast<void (*)()>(coreLib->resolve("retro_unload_game"));
+        coreLib->resolve("retro_unload_game");
     symRetroGetRegion = reinterpret_cast<unsigned int (*)()>(
       coreLib->resolve("retro_get_region"));
 
@@ -1210,8 +1257,6 @@ namespace libretro {
     // loadRetroFunc<RetroInputPoll>(dll, "retro_set_input_poll")([]() {});
     // loadRetroFunc<RetroInputState>(dll,
     // "retro_set_input_state")(inputStateCallback);
-
-    symRetroSetControllerPortDevice(0, RETRO_DEVICE_ANALOG);
   }
 
   Core::~Core() {

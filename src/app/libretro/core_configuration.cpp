@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+static bool firstAccess = true;
+
 void CoreConfiguration::registerOption(Option option) {
     m_options.emplace(option.key, option);
 
@@ -34,7 +36,26 @@ void CoreConfiguration::setDefaultValue(const std::string key, const std::string
 
 std::optional<firelight::libretro::IConfigurationProvider::OptionValue>
 CoreConfiguration::getOptionValue(const std::string key) {
+    if (firstAccess) {
+        // print all keys and possible values
+        for (const auto &option: m_options) {
+            printf("Option %s\n", option.first.c_str());
+            for (const auto &possibleValue: option.second.possibleValues) {
+                printf("  %s\n", possibleValue.key.c_str());
+            }
+        }
+
+
+        firstAccess = false;
+    }
+
     printf("Getting value for key %s...", key.c_str());
+
+    if (key == "genesis_plus_gx_overclock") {
+        printf("RETURNING 100\n");
+        return {{"genesis_plus_gx_overclock", "100"}};
+    }
+
     if (!m_options.contains(key)) {
         return std::nullopt;
     }

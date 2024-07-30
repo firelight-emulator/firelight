@@ -250,6 +250,8 @@ void EmulationManager::loadLibraryEntry(int entryId) {
         corePath = "./system/_cores/mupen64plus_next_libretro.dll";
       } else if (parent->platformId == 6) {
         corePath = "./system/_cores/snes9x_libretro.dll";
+      } else if (entry->platformId == 5) {
+        corePath = "./system/_cores/fceumm_libretro.dll";
       } else if (parent->platformId == 2) {
         corePath = "./system/_cores/gambatte_libretro.dll";
       } else if (parent->platformId == 1) {
@@ -271,6 +273,8 @@ void EmulationManager::loadLibraryEntry(int entryId) {
         corePath = "./system/_cores/mupen64plus_next_libretro.dll";
       } else if (entry->platformId == 6) {
         corePath = "./system/_cores/snes9x_libretro.dll";
+      } else if (entry->platformId == 5) {
+        corePath = "./system/_cores/fceumm_libretro.dll";
       } else if (entry->platformId == 2) {
         corePath = "./system/_cores/gambatte_libretro.dll";
       } else if (entry->platformId == 1) {
