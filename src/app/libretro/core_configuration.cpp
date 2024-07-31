@@ -39,10 +39,10 @@ CoreConfiguration::getOptionValue(const std::string key) {
     if (firstAccess) {
         // print all keys and possible values
         for (const auto &option: m_options) {
-            printf("Option %s\n", option.first.c_str());
-            for (const auto &possibleValue: option.second.possibleValues) {
-                printf("  %s\n", possibleValue.key.c_str());
-            }
+            printf("Option %s (default: %s)\n", option.first.c_str(), option.second.defaultValueKey.c_str());
+            //for (const auto &possibleValue: option.second.possibleValues) {
+            //    printf("  %s\n", possibleValue.key.c_str());
+            //}
         }
 
 

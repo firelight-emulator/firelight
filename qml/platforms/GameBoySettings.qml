@@ -49,7 +49,7 @@ FocusScope {
                 Text {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    text: qsTr("Default Game Boy Settings")
+                    text: qsTr("Default Game Boy settings")
                     font.pixelSize: 26
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Bold

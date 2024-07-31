@@ -14,13 +14,17 @@ EmulatorConfigManager::~EmulatorConfigManager() = default;
 std::shared_ptr<CoreConfiguration> EmulatorConfigManager::getCoreConfigFor(const int platformId, const int entryId) {
     const auto key = std::to_string(platformId) + "_" + std::to_string(entryId);
 
-    if (m_coreConfigs.contains(key)) {
-        m_coreConfigs[key]->setPlatformValue("gambatte_gb_colorization", thing.toStdString());
-        return m_coreConfigs.at(key);
+    if (!m_coreConfigs.contains(key)) {
+        m_coreConfigs[key] = std::make_shared<CoreConfiguration>();
     }
 
-    m_coreConfigs[key] = std::make_shared<CoreConfiguration>();
-    m_coreConfigs[key]->setPlatformValue("gambatte_gb_colorization", thing.toStdString());
+    // m_coreConfigs[key] = std::make_shared<CoreConfiguration>();
+
+    const auto allSettings = m_userdataDatabase.getAllPlatformSettings(platformId);
+    for (const auto &setting: allSettings) {
+        m_coreConfigs[key]->setPlatformValue(setting.first, setting.second);
+    }
+
     return m_coreConfigs.at(key);
 }
 

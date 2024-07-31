@@ -3,7 +3,6 @@
 #include "firelight/userdata_database.hpp"
 #include <QSqlDatabase>
 #include <filesystem>
-#include <vector>
 
 namespace firelight::db {
   class SqliteUserdataDatabase final : public IUserdataDatabase {
@@ -37,6 +36,8 @@ namespace firelight::db {
 
     std::optional<std::string>
     getPlatformSettingValue(int platformId, std::string key) override;
+
+    std::map<std::string, std::string> getAllPlatformSettings(int platformId) override;
 
     void setPlatformSettingValue(int platformId, std::string key, std::string value) override;
 

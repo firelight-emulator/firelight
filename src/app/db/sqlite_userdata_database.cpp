@@ -315,6 +315,28 @@ namespace firelight::db {
     return std::nullopt;
   }
 
+  std::map<std::string, std::string> SqliteUserdataDatabase::getAllPlatformSettings(int platformId) {
+    const QString queryString = "SELECT key, value FROM platform_settings "
+        "WHERE platform_id = :platformId;";
+    auto query = QSqlQuery(m_database);
+    query.prepare(queryString);
+
+    query.bindValue(":platformId", platformId);
+
+    if (!query.exec()) {
+      spdlog::warn("Get all from platform_settings failed: {}",
+                   query.lastError().text().toStdString());
+      return {};
+    }
+
+    std::map<std::string, std::string> settings;
+    while (query.next()) {
+      settings[query.value("key").toString().toStdString()] = query.value("value").toString().toStdString();
+    }
+
+    return settings;
+  }
+
   void SqliteUserdataDatabase::setPlatformSettingValue(const int platformId, const std::string key,
                                                        const std::string value) {
     const QString queryString = "INSERT OR REPLACE INTO platform_settings "
