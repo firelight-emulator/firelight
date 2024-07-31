@@ -341,7 +341,7 @@ FocusScope {
                 content: [
                     ToggleOption {
                         Layout.fillWidth: true
-                        label: "Simulate LCD ghosting"
+                        label: "Simulate LCD ghosting effects"
                         // description: "Enables simulation of LCD ghosting effects by blending the current and previous frames."
                         checked: emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
 
@@ -367,7 +367,7 @@ FocusScope {
                     ToggleOption {
                         id: colorCorrectionOption
                         Layout.fillWidth: true
-                        label: "Make colors more accurate to the original hardware"
+                        label: "Adjust output colors to match original hardware"
                         // label: "Color correction"
                         // description: "Make the screen colors more accurate to the original hardware."
 

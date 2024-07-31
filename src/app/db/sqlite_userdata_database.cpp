@@ -7,183 +7,6 @@
 namespace firelight::db {
   constexpr auto DATABASE_PREFIX = "userdata_";
 
-  const std::map<int, std::map<std::string, std::string> > defaultPlatformValues = {
-    {
-      // GB
-      1, {
-        {"gambatte_gbc_color_correction", "GBC only"},
-        {"gambatte_gbc_color_correction_mode", "accurate"},
-        {"gambatte_gbc_frontlight_position", "central"},
-        {"gambatte_dark_filter_level", "0"},
-        {"gambatte_up_down_allowed", "disabled"},
-        {"gambatte_mix_frames", "disabled"},
-        {"gambatte_gb_colorization", "auto"},
-        {"gambatte_gb_internal_palette", "GB - DMG"},
-        {"gambatte_gb_bootloader", "disabled"},
-        {"gambatte_gb_hwmode", "auto"}
-      }
-    },
-    // GBC
-    {
-      2, {
-        {"gambatte_gbc_color_correction", "GBC only"},
-        {"gambatte_gbc_color_correction_mode", "accurate"},
-        {"gambatte_gbc_frontlight_position", "central"},
-        {"gambatte_dark_filter_level", "0"},
-        {"gambatte_up_down_allowed", "disabled"},
-        {"gambatte_mix_frames", "disabled"},
-        {"gambatte_gb_colorization", "auto"},
-        {"gambatte_gb_internal_palette", "GB - DMG"},
-        {"gambatte_gb_bootloader", "disabled"},
-        {"gambatte_gb_hwmode", "auto"}
-      }
-    },
-    // GBA
-    {
-      3, {
-        {"mgba_solar_sensor_level", "0"},
-        {"mgba_gb_model", "Autodetect"},
-        {"mgba_sgb_borders", "ON"},
-        {"mgba_gb_colors_preset", "0"},
-        {"mgba_gb_colors", "Grayscale"},
-        {"mgba_use_bios", "OFF"},
-        {"mgba_skip_bios", "ON"},
-        {"mgba_sgb_borders", "ON"},
-        {"mgba_frameskip", "disabled"},
-        {"mgba_frameskip_threshold", "33"},
-        {"mgba_frameskip_interval", "0"},
-        {"mgba_audio_low_pass_filter", "disabled"},
-        {"mgba_audio_low_pass_range", "60"},
-        {"mgba_idle_optimization", "Remove Known"},
-        {"mgba_force_gbp", "OFF"},
-        {"mgba_color_correction", "OFF"},
-        {"mgba_interframe_blending", "OFF"}
-      }
-    },
-    // NES
-    // {
-    //   5, {
-    //     {"gambatte_gbc_color_correction", "GBC only"},
-    //     {"gambatte_gbc_color_correction_mode", "accurate"},
-    //     {"gambatte_gbc_frontlight_position", "central"},
-    //     {"gambatte_dark_filter_level", "0"},
-    //     {"gambatte_up_down_allowed", "disabled"},
-    //     {"gambatte_mix_frames", "disabled"},
-    //     {"gambatte_gb_colorization", "disabled"}
-    //   }
-    // },
-    // SNES
-    {
-      6, {
-        {"snes9x_hires_blend", "disabled"},
-        {"snes9x_overclock_superfx", "100%"},
-        {"snes9x_up_down_allowed", "disabled"},
-        {"snes9x_sndchan_1", "enabled"},
-        {"snes9x_sndchan_2", "enabled"},
-        {"snes9x_sndchan_3", "enabled"},
-        {"snes9x_sndchan_4", "enabled"},
-        {"snes9x_sndchan_5", "enabled"},
-        {"snes9x_sndchan_6", "enabled"},
-        {"snes9x_sndchan_7", "enabled"},
-        {"snes9x_sndchan_8", "enabled"},
-        {"snes9x_layer_1", "enabled"},
-        {"snes9x_layer_2", "enabled"},
-        {"snes9x_layer_3", "enabled"},
-        {"snes9x_layer_4", "enabled"},
-        {"snes9x_layer_5", "enabled"},
-        {"snes9x_gfx_clip", "enabled"},
-        {"snes9x_gfx_transp", "enabled"},
-        {"snes9x_audio_interpolation", "gaussian"},
-        {"snes9x_overclock_cycles", "disabled"},
-        {"snes9x_reduce_sprite_flicker", "disabled"},
-        {"snes9x_randomize_memory", "disabled"},
-        {"snes9x_overscan", "enabled"},
-        {"snes9x_aspect", "4:3"},
-        {"snes9x_region", "auto"},
-        {"snes9x_lightgun_mode", "Lightgun"},
-        {"snes9x_superscope_reverse_buttons", "disabled"},
-        {"snes9x_superscope_crosshair", "2"},
-        {"snes9x_superscope_color", "White"},
-        {"snes9x_justifier1_crosshair", "4"},
-        {"snes9x_justifier1_color", "Blue"},
-        {"snes9x_justifier2_crosshair", "4"},
-        {"snes9x_justifier2_color", "Pink"},
-        {"snes9x_rifle_crosshair", "2"},
-        {"snes9x_rifle_color", "White"},
-        {"snes9x_block_invalid_vram_access", "enabled"},
-        {"snes9x_echo_buffer_hack", "disabled"},
-        {"snes9x_blargg", "disabled"}
-      }
-    },
-    // N64
-    {
-      7, {
-        {"mupen64plus-rdp-plugin", "gliden64"},
-        {"mupen64plus-rsp-plugin", "hle"},
-        {"mupen64plus-ThreadedRenderer", "False"},
-        {"mupen64plus-BilinearMode", "standard"},
-        {"mupen64plus-HybridFilter", "True"},
-        {"mupen64plus-DitheringPattern", "False"},
-        {"mupen64plus-DitheringQuantization", "False"},
-        {"mupen64plus-RDRAMImageDitheringMode", "False"},
-        {"mupen64plus-FXAA", "0"},
-        {"mupen64plus-MultiSampling", "0"},
-        {"mupen64plus-FrameDuping", "False"},
-        {"mupen64plus-Framerate", "Original"},
-        {"mupen64plus-virefresh", "Auto"},
-        {"mupen64plus-EnableLODEmulation", "True"},
-        {"mupen64plus-EnableFBEmulation", "True"},
-        {"mupen64plus-EnableN64DepthCompare", "False"},
-        {"mupen64plus-EnableCopyColorToRDRAM", "Async"},
-        {"mupen64plus-EnableCopyDepthToRDRAM", "Software"},
-        {"mupen64plus-EnableHWLighting", "False"},
-        {"mupen64plus-CorrectTexrectCoords", "Off"},
-        {"mupen64plus-EnableTexCoordBounds", "False"},
-        {"mupen64plus-BackgroundMode", "OnePiece"},
-        {"mupen64plus-EnableNativeResTexrects", "Disabled"},
-        {"mupen64plus-txFilterMode", "None"},
-        {"mupen64plus-txEnhancementMode", "None"},
-        {"mupen64plus-txFilterIgnoreBG", "True"},
-        {"mupen64plus-txHiresEnable", "False"},
-        {"mupen64plus-txCacheCompression", "True"},
-        {"mupen64plus-txHiresFullAlphaChannel", "False"},
-        {"mupen64plus-MaxTxCacheSize", "8000"},
-        {"mupen64plus-EnableLegacyBlending", "False"},
-        {"mupen64plus-EnableFragmentDepthWrite", "True"},
-        {"mupen64plus-EnableShadersStorage", "True"},
-        {"mupen64plus-EnableTextureCache", "True"},
-        {"mupen64plus-EnableEnhancedTextureStorage", "False"},
-        {"mupen64plus-EnableEnhancedHighResStorage", "False"},
-        {"mupen64plus-EnableHiResAltCRC", "False"},
-        {"mupen64plus-EnableCopyAuxToRDRAM", "False"},
-        {"mupen64plus-GLideN64IniBehaviour", "late"},
-        {"mupen64plus-cpucore", "dynamic_recompiler"},
-        {"mupen64plus-aspect", "4:3"},
-        {"mupen64plus-EnableNativeResFactor", "0"},
-        {"mupen64plus-43screensize", "640x480"},
-        {"mupen64plus-astick-deadzone", "15"},
-        {"mupen64plus-astick-sensitivity", "100"},
-        {"mupen64plus-CountPerOp", "0"},
-        {"mupen64plus-r-cbutton", "C1"},
-        {"mupen64plus-l-cbutton", "C2"},
-        {"mupen64plus-d-cbutton", "C3"},
-        {"mupen64plus-u-cbutton", "C4"},
-        {"mupen64plus-EnableOverscan", "Enabled"},
-        {"mupen64plus-OverscanTop", "0"},
-        {"mupen64plus-OverscanLeft", "0"},
-        {"mupen64plus-OverscanRight", "0"},
-        {"mupen64plus-OverscanBottom", "0"},
-        {"mupen64plus-alt-map", "False"},
-        {"mupen64plus-ForceDisableExtraMem", "False"},
-        {"mupen64plus-IgnoreTLBExceptions", "False"},
-        {"mupen64plus-pak1", "memory"},
-        {"mupen64plus-pak2", "none"},
-        {"mupen64plus-pak3", "none"},
-        {"mupen64plus-pak4", "none"}
-      }
-    }
-  };
-
   SqliteUserdataDatabase::SqliteUserdataDatabase(
     const std::filesystem::path &dbFile)
     : m_database_path(dbFile) {
@@ -470,7 +293,7 @@ namespace firelight::db {
   }
 
   std::optional<std::string> SqliteUserdataDatabase::getPlatformSettingValue(
-    int platformId, std::string key, bool defaultIfNotFound) {
+    const int platformId, const std::string key) {
     const QString queryString = "SELECT value FROM platform_settings "
         "WHERE platform_id = :platformId AND key = :key LIMIT 1;";
     auto query = QSqlQuery(m_database);
@@ -487,8 +310,6 @@ namespace firelight::db {
 
     if (query.next()) {
       return query.value("value").toString().toStdString();
-    } else if (defaultIfNotFound) {
-      return defaultPlatformValues.at(platformId).at(key);
     }
 
     return std::nullopt;

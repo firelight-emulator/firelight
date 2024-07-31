@@ -51,11 +51,6 @@ CoreConfiguration::getOptionValue(const std::string key) {
 
     printf("Getting value for key %s...", key.c_str());
 
-    if (key == "genesis_plus_gx_overclock") {
-        printf("RETURNING 100\n");
-        return {{"genesis_plus_gx_overclock", "100"}};
-    }
-
     if (!m_options.contains(key)) {
         return std::nullopt;
     }

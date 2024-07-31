@@ -3,146 +3,213 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 FocusScope {
-    ColumnLayout {
+    id: root
+    Flickable {
         anchors.fill: parent
+        contentHeight: column.height
+        ColumnLayout {
+            id: column
+            width: parent.width
 
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 40
+                spacing: 8
 
-        Text {
-            Layout.fillWidth: true
-            text: qsTr("Default Nintendo 64 Settings")
-            font.pointSize: 16
-            font.family: Constants.regularFontFamily
-            font.weight: Font.Bold
-            Layout.bottomMargin: 8
-            color: "white"
-        }
+                Button {
+                    id: backButton
+                    background: Rectangle {
+                        color: enabled ? (backButton.hovered ? "#404143" : "transparent") : "transparent"
+                        radius: height / 2
 
-        Text {
-            Layout.fillWidth: true
-            text: qsTr("These are the default settings for Nintendo 64 games. These settings can be overridden on a per-game basis by selecting the game in your library and going to 'Settings'.")
-            font.pointSize: 11
-            font.family: Constants.regularFontFamily
-            font.weight: Font.Normal
-            wrapMode: Text.WordWrap
-            Layout.bottomMargin: 8
-            color: "white"
-        }
+                    }
 
-        Rectangle {
-            Layout.topMargin: 8
-            Layout.bottomMargin: 8
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: "#333333"
-        }
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: parent.height
 
-        Text {
-            Layout.fillWidth: true
-            text: qsTr("General")
-            font.pointSize: 11
-            font.family: Constants.regularFontFamily
-            font.weight: Font.DemiBold
-            Layout.bottomMargin: 8
-            color: "#a6a6a6"
-        }
+                    hoverEnabled: true
 
-        // TODO: Advanced option
-        // ToggleOption {
-        //     Layout.fillWidth: true
-        //     label: "Allow Opposing Directions"
-        //     description: "Allow pressing (D-Pad Up + D-Pad Down) or (D-Pad Left + D-Pad Right) simultaneously. This isn't allowed on original hardware, so it may cause issues in some games."
-        //
-        //     checked: achievement_manager.unlockNotificationsEnabled
-        //
-        //     onCheckedChanged: {
-        //         achievement_manager.unlockNotificationsEnabled = checked
-        //     }
-        // }
+                    contentItem: Text {
+                        text: "\ue5e0"
+                        font.family: Constants.symbolFontFamily
+                        leftPadding: 8
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 24
+                        color: ColorPalette.neutral400
+                    }
 
-        // ToggleOption {
-        //     Layout.fillWidth: true
-        //     label: "Play sound"
-        //     Layout.leftMargin: 24
-        // }
+                    checkable: false
 
-        // Rectangle {
-        //     Layout.fillWidth: true
-        //     Layout.preferredHeight: 1
-        //     color: "#333333"
-        // }
-
-        ToggleOption {
-            id: colorCorrectionOption
-            Layout.fillWidth: true
-            Layout.minimumHeight: 42
-            label: "Color correction"
-            description: "Make the screen colors more accurate to the original hardware."
-        }
-
-        Option {
-            Layout.fillWidth: true
-            Layout.minimumHeight: 42
-            Layout.leftMargin: 24
-            visible: colorCorrectionOption.checked
-            label: "Frontlight position"
-            description: "Simulates the physical response of the Game Boy Color LCD panel when illuminated from different angles."
-            control: MyComboBox {
-                model: [{
-                    text: "Off",
-                    value: "off"
-                }, {
-                    text: "Top",
-                    value: "top"
-                }]
-                textRole: "text"
-                valueRole: "value"
-            }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: "#333333"
-        }
-
-        SliderOption {
-            Layout.fillWidth: true
-            Layout.minimumHeight: 42
-            label: "Dark filter level"
-            description: "Darken the screen to reduce glare and/or eye strain. This is useful for games with white backgrounds, as they appear harsher than intended on modern displays."
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: "#333333"
-        }
-
-        ToggleOption {
-            Layout.fillWidth: true
-            Layout.minimumHeight: 42
-            label: "Simulate LCD ghosting"
-            description: "Enables simulation of LCD ghosting effects by blending the current and previous frames."
-
-            onCheckedChanged: {
-                if (checked) {
-                    emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_colorization", "auto")
-                } else {
-                    emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_colorization", "disabled")
+                    onClicked: {
+                        root.StackView.view.pop()
+                    }
                 }
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    text: qsTr("Default Game Boy Advance Settings")
+                    font.pixelSize: 26
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.Bold
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    color: ColorPalette.neutral100
+                }
+                Layout.bottomMargin: 8
             }
 
-        }
+            Rectangle {
+                Layout.topMargin: 8
+                Layout.bottomMargin: 8
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: "#333333"
+            }
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: "#333333"
-        }
+            OptionGroup {
+                Layout.fillWidth: true
+                label: "General"
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+                content: [
+                    // ToggleOption {
+                    //     Layout.fillWidth: true
+                    //     label: "Allow opposing D-Pad directions"
+                    //     description: "Enabling this will allow pressing / quickly alternating / holding both left and right (or up and down) directions at the same time. This may cause movement-based glitches."
+                    // },
+                    //
+                    // Rectangle {
+                    //     Layout.fillWidth: true
+                    //     Layout.preferredHeight: 1
+                    //     color: "#333333"
+                    // },
+
+                    ToggleOption {
+                        Layout.fillWidth: true
+                        label: "Filter out overly harsh audio"
+                        // description: "Enables a low pass audio filter to reduce the 'harshness' of generated audio."
+
+                        checked: emulator_config_manager.getOptionValueForPlatform(3, "mgba_audio_low_pass_filter") === "enabled"
+
+                        onCheckedChanged: {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_audio_low_pass_filter", "enabled")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_audio_low_pass_filter", "disabled")
+                            }
+                        }
+                    },
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "#333333"
+                    },
+
+                    ToggleOption {
+                        Layout.fillWidth: true
+                        label: "Adjust output colors to match original hardware"
+                        // description: "Adjusts output colors to match the display of real GBA hardware."
+
+                        checked: emulator_config_manager.getOptionValueForPlatform(3, "mgba_color_correction") === "Auto"
+
+                        onCheckedChanged: {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_color_correction", "Auto")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_color_correction", "OFF")
+                            }
+                        }
+                    },
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "#333333"
+                    },
+
+                    // ToggleOption {
+                    //     Layout.fillWidth: true
+                    //     label: "Game Boy Player Rumble (Restart)"
+                    //     description: "Enabling this will allow compatible games with the Game Boy Player boot logo to make the controller rumble. Due to how Nintendo decided this feature should work, it may cause glitches such as flickering or lag in some of these games."
+                    // },
+                    //
+                    // Rectangle {
+                    //     Layout.fillWidth: true
+                    //     Layout.preferredHeight: 1
+                    //     color: "#333333"
+                    // },
+
+                    // ToggleOption {
+                    //     Layout.fillWidth: true
+                    //     label: "Idle Loop Optimization"
+                    //     description: "Reduce system load by optimizing so-called 'idle-loops' - sections in the code where nothing happens, but the CPU runs at full speed (like a car revving in neutral). Improves performance, and should be enabled on low-end hardware."
+                    // },
+                    //
+                    // Rectangle {
+                    //     Layout.fillWidth: true
+                    //     Layout.preferredHeight: 1
+                    //     color: "#333333"
+                    // },
+
+                    ToggleOption {
+                        Layout.fillWidth: true
+                        label: "Simulate LCD ghosting effects"
+                        // description: "Simulates LCD ghosting effects. 'Simple' performs a 50:50 mix of the current and previous frames. 'Smart' attempts to detect screen flickering, and only performs a 50:50 mix on affected pixels. 'LCD Ghosting' mimics natural LCD response times by combining multiple buffered frames. 'Simple' or 'Smart' blending is required when playing games that aggressively exploit LCD ghosting for transparency effects (Wave Race, Chikyuu Kaihou Gun ZAS, F-Zero, the Boktai series...)."
+
+                        checked: emulator_config_manager.getOptionValueForPlatform(3, "mgba_interframe_blending") === "mix_smart"
+
+                        onCheckedChanged: {
+                            if (checked) {
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_interframe_blending", "mix_smart")
+                            } else {
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_interframe_blending", "OFF")
+                            }
+                        }
+                    },
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "#333333"
+                    },
+
+                    Option {
+                        Layout.fillWidth: true
+                        label: "Solar sensor level"
+                        // description: "Sets ambient sunlight intensity. Can be used by games that included a solar sensor in their cartridges, e.g: the Boktai series."
+                    },
+
+                    MySlider {
+                        Layout.fillWidth: true
+                        // Layout.preferredHeight: 48
+                        from: 0
+                        to: 100
+                        stepSize: 10
+                        snapMode: Slider.SnapOnRelease
+                        live: false
+
+                        value: emulator_config_manager.getOptionValueForPlatform(3, "mgba_solar_sensor_level") * 10
+
+                        onValueChanged: function () {
+                            emulator_config_manager.setOptionValueForPlatform(3, "mgba_solar_sensor_level", value / 10)
+                        }
+                    }
+
+                    // Rectangle {
+                    //     Layout.fillWidth: true
+                    //     Layout.preferredHeight: 1
+                    //     color: "#333333"
+                    // },
+                    //
+                    // ToggleOption {
+                    //     Layout.fillWidth: true
+                    //     label: "Use BIOS"
+                    //     description: "Use official BIOS/bootloader for emulated hardware, if present in RetroArch's system directory."
+                    // }
+                ]
+            }
         }
     }
 }

@@ -42,8 +42,7 @@ namespace firelight::db {
     virtual std::optional<PlaySession>
     getLatestPlaySession(std::string contentId) = 0;
 
-    virtual std::optional<std::string> getPlatformSettingValue(int platformId, std::string key,
-                                                               bool defaultIfNotFound) = 0;
+    virtual std::optional<std::string> getPlatformSettingValue(int platformId, std::string key) = 0;
 
     virtual void setPlatformSettingValue(int platformId, std::string key, std::string value) = 0;
   };

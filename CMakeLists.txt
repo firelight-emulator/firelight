@@ -96,6 +96,7 @@ add_library(firelight_lib
         src/app/libretro/core_configuration.cpp
         src/app/libretro/core_configuration.hpp
         src/app/emulator_config_manager.cpp
+        src/app/platform_metadata.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
