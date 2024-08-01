@@ -7,31 +7,70 @@
 #include <QOpenGLFunctions>
 #include <QQuickFramebufferObject>
 
+#include "libretro/core_configuration.hpp"
+
 class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,
                                public QOpenGLFunctions,
-                               public firelight::ManagerAccessor {
+                               public firelight::ManagerAccessor,
+                               public firelight::libretro::IVideoDataReceiver {
 public:
-  explicit EmulatorRenderer(const EmulationManager *manager);
+    explicit EmulatorRenderer();
+
+    void receive(const void *data, unsigned width, unsigned height, size_t pitch) override;
+
+    proc_address_t getProcAddress(const char *sym) override;
+
+    void setResetContextFunc(context_reset_func) override;
+
+    void setDestroyContextFunc(context_destroy_func) override;
+
+    uintptr_t getCurrentFramebufferId() override;
+
+    void setSystemAVInfo(retro_system_av_info *info) override;
+
+    void setPixelFormat(retro_pixel_format *format) override;
 
 protected:
-  void synchronize(QQuickFramebufferObject *fbo) override;
+    ~EmulatorRenderer() override;
 
-  QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
+    void synchronize(QQuickFramebufferObject *fbo) override;
 
-  void render() override;
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
+
+    void render() override;
 
 private:
-  EmulationManager *m_manager = nullptr;
-  QOpenGLFramebufferObject *m_fbo = nullptr;
+    void save(bool waitForFinish = false);
 
-  bool m_runAFrame = false;
+    std::unique_ptr<libretro::Core> m_core = nullptr;
+    std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
 
-  int m_nativeWidth = 0;
-  int m_nativeHeight = 0;
+    QOpenGLFramebufferObject *m_fbo = nullptr;
+    bool m_fboIsNew = true;
 
-  void receiveVideoData(const void *data, unsigned width, unsigned height,
-                        size_t pitch) const;
+    QByteArray m_gameData;
+    QByteArray m_saveData;
+    QString m_corePath;
+    firelight::db::LibraryEntry m_currentEntry;
 
-  std::function<void()> m_resetContextFunction = nullptr;
-  std::function<void()> m_destroyContextFunction = nullptr;
+    // Default according to libretro docs
+    QImage::Format m_pixelFormat = QImage::Format_RGB16;
+
+    bool m_paused = false;
+    bool m_gameReady = false;
+
+    bool m_running = false;
+
+    bool m_usingHwRendering = false;
+
+    QTimer autosaveTimer;
+    bool m_shouldSave = false;
+    bool m_runAFrame = false;
+
+    int m_nativeWidth = 0;
+    int m_nativeHeight = 0;
+    float m_nativeAspectRatio = 0.0f;
+
+    std::function<void()> m_resetContextFunction = nullptr;
+    std::function<void()> m_destroyContextFunction = nullptr;
 };

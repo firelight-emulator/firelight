@@ -8,9 +8,7 @@ Option {
     property bool checked: false
 
     control: Switch {
-        id: control
-        Layout.fillHeight: true
-        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+        id: theControl
         checked: root.checked
         onCheckedChanged: {
             root.checked = checked
@@ -19,11 +17,11 @@ Option {
         indicator: Rectangle {
             implicitWidth: 50
             implicitHeight: 28
-            x: control.leftPadding
+            x: theControl.leftPadding
             y: parent.height / 2 - height / 2
             radius: height / 2
-            color: control.checked ? "#17a81a" : "#ffffff"
-            border.color: control.checked ? "#17a81a" : "#cccccc"
+            color: theControl.checked ? "#17a81a" : "#ffffff"
+            border.color: theControl.checked ? "#17a81a" : "#cccccc"
 
             Behavior on color {
                 ColorAnimation {
@@ -33,7 +31,7 @@ Option {
             }
 
             Rectangle {
-                x: control.checked ? parent.width - width : 0
+                x: theControl.checked ? parent.width - width : 0
                 y: (parent.height - height) / 2
 
                 Behavior on x {
@@ -46,8 +44,8 @@ Option {
                 width: 26
                 height: 26
                 radius: height / 2
-                color: control.down ? "#cccccc" : "#ffffff"
-                border.color: control.checked ? (control.down ? "#17a81a" : "#21be2b") : "#999999"
+                color: theControl.down ? "#cccccc" : "#ffffff"
+                border.color: theControl.checked ? (theControl.down ? "#17a81a" : "#21be2b") : "#999999"
             }
         }
 

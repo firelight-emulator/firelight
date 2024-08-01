@@ -5,6 +5,8 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::db {
+  constexpr auto DATABASE_PREFIX = "userdata_";
+
   SqliteUserdataDatabase::SqliteUserdataDatabase(
     const std::filesystem::path &dbFile)
     : m_database_path(dbFile) {
@@ -63,6 +65,18 @@ namespace firelight::db {
     if (!createInputMappings.exec()) {
       spdlog::error("Table creation failed: {}",
                     createInputMappings.lastError().text().toStdString());
+    }
+
+    QSqlQuery createPlatformSettings(m_database);
+    createPlatformSettings.prepare("CREATE TABLE IF NOT EXISTS platform_settings("
+      "platform_id INTEGER NOT NULL, "
+      "key TEXT NOT NULL,"
+      "value TEXT NOT NULL,"
+      "UNIQUE(platform_id, key));");
+
+    if (!createPlatformSettings.exec()) {
+      spdlog::error("Table creation failed: {}",
+                    createPlatformSettings.lastError().text().toStdString());
     }
   }
 
@@ -276,5 +290,68 @@ namespace firelight::db {
     // }
     //
     // return std::nullopt;
+  }
+
+  std::optional<std::string> SqliteUserdataDatabase::getPlatformSettingValue(
+    const int platformId, const std::string key) {
+    const QString queryString = "SELECT value FROM platform_settings "
+        "WHERE platform_id = :platformId AND key = :key LIMIT 1;";
+    auto query = QSqlQuery(m_database);
+    query.prepare(queryString);
+
+    query.bindValue(":platformId", platformId);
+    query.bindValue(":key", QString::fromStdString(key));
+
+    if (!query.exec()) {
+      spdlog::warn("Get from platform_settings failed: {}",
+                   query.lastError().text().toStdString());
+      return std::nullopt;
+    }
+
+    if (query.next()) {
+      return query.value("value").toString().toStdString();
+    }
+
+    return std::nullopt;
+  }
+
+  std::map<std::string, std::string> SqliteUserdataDatabase::getAllPlatformSettings(int platformId) {
+    const QString queryString = "SELECT key, value FROM platform_settings "
+        "WHERE platform_id = :platformId;";
+    auto query = QSqlQuery(m_database);
+    query.prepare(queryString);
+
+    query.bindValue(":platformId", platformId);
+
+    if (!query.exec()) {
+      spdlog::warn("Get all from platform_settings failed: {}",
+                   query.lastError().text().toStdString());
+      return {};
+    }
+
+    std::map<std::string, std::string> settings;
+    while (query.next()) {
+      settings[query.value("key").toString().toStdString()] = query.value("value").toString().toStdString();
+    }
+
+    return settings;
+  }
+
+  void SqliteUserdataDatabase::setPlatformSettingValue(const int platformId, const std::string key,
+                                                       const std::string value) {
+    const QString queryString = "INSERT OR REPLACE INTO platform_settings "
+        "(platform_id, key, value) "
+        "VALUES (:platformId, :key, :value);";
+    auto query = QSqlQuery(m_database);
+    query.prepare(queryString);
+
+    query.bindValue(":platformId", platformId);
+    query.bindValue(":key", QString::fromStdString(key));
+    query.bindValue(":value", QString::fromStdString(value));
+
+    if (!query.exec()) {
+      spdlog::warn("Insert into platform_settings failed: {}",
+                   query.lastError().text().toStdString());
+    }
   }
 } // namespace firelight::db

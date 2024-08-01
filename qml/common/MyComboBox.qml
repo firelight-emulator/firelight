@@ -4,38 +4,47 @@ import QtQuick.Layouts
 
 ComboBox {
     id: control
+    implicitContentWidthPolicy: ComboBox.WidestText
 
-    contentItem: Pane {
-        background: Item {
-        }
-        padding: 0
+    indicator: Text {
+        x: control.mirrored ? control.padding : control.width - width - control.padding
+        y: control.topPadding + (control.availableHeight - height) / 2
+        text: "\ue5c5"
+        font.family: Constants.symbolFontFamily
+        font.pixelSize: 32
+        padding: 4
+        color: "#ececec"
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    contentItem: TextInput {
+        topPadding: 8
+        bottomPadding: 8
+        leftPadding: 10
+        rightPadding: 10
+        text: control.currentText
+        color: "#ececec"
+        font.family: Constants.regularFontFamily
+        verticalAlignment: Text.AlignVCenter
+        font.pointSize: 11
+        font.weight: Font.DemiBold
+
+        readOnly: true
 
         MouseArea {
             anchors.fill: parent
             onClicked: {
+                control.forceActiveFocus(Qt.MouseFocusReason)
                 control.popup.visible = !control.popup.visible
             }
-        }
-
-        Text {
-            topPadding: 8
-            bottomPadding: 8
-            leftPadding: 10
-            rightPadding: 10
-            anchors.fill: parent
-            text: control.currentText
-            color: "#ececec"
-            font.family: Constants.regularFontFamily
-            verticalAlignment: Text.AlignVCenter
-            font.pointSize: 11
-            font.weight: Font.DemiBold
         }
     }
 
     background: Rectangle {
-        implicitWidth: 140
+        // implicitWidth: 140
         implicitHeight: 40
-        color: "#32363a"
+        color: ColorPalette.neutral700
         radius: 8
     }
 
@@ -46,7 +55,7 @@ ComboBox {
         required property int index
 
         background: Rectangle {
-            color: control.highlightedIndex === index ? "#25282c" : "#1d1e22"
+            color: control.highlightedIndex === index ? ColorPalette.neutral800 : ColorPalette.neutral900
         }
 
         width: control.width - 4
@@ -57,7 +66,7 @@ ComboBox {
                 text: delegate.model[control.textRole]
                 font.family: Constants.regularFontFamily
                 font.pointSize: 11
-                color: parent.highlighted ? ColorPalette.white : ColorPalette.dropdownInactiveTextColor
+                color: control.currentIndex === index ? ColorPalette.neutral100 : ColorPalette.neutral300
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
             }
@@ -128,9 +137,9 @@ ComboBox {
         }
 
         background: Rectangle {
-            color: ColorPalette.dropdownPopupBackgroundColor
+            color: ColorPalette.neutral900
             radius: 2
-            border.color: ColorPalette.dropdownPopupBorderColor
+            border.color: ColorPalette.neutral700
         }
     }
 

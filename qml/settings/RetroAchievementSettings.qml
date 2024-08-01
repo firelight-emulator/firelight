@@ -215,130 +215,131 @@ Flickable {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.bottomMargin: 12
-                text: "You can change this setting for individual games."
-                font.pointSize: 10
+                text: "Only Hardcore mode is available at the moment."
+                font.pixelSize: 14
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
+                // font.weight: Font.
                 wrapMode: Text.WordWrap
-                color: "#c1c1c1"
+                color: ColorPalette.neutral300
             }
 
-            RadioButton {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 140
-                checked: achievement_manager.defaultToHardcore
-                horizontalPadding: 12
-                verticalPadding: 6
-
-                background: Rectangle {
-                    radius: 8
-                    color: "#333333"
-                    border.color: parent.checked ? "#f16205" : "transparent"
-                    border.width: 3
-                }
-
-                indicator: Item {
-                }
-
-                onCheckedChanged: {
-                    if (checked) {
-                        achievement_manager.defaultToHardcore = true
-                    }
-                }
-
-                HoverHandler {
-                    id: hardcoreHover
-                    cursorShape: Qt.PointingHandCursor
-                }
-
-                contentItem: ColumnLayout {
-                    Text {
-                        Layout.fillWidth: true
-                        text: "Hardcore mode"
-                        color: "white"
-                        font.pointSize: 11
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                    }
-
-                    Text {
-                        text: "Challenge yourself and earn Mastery points by disabling save states, cheats, and rewinding."
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        font.pointSize: 11
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        color: "#c1c1c1"
-                    }
-                    Item {
-                        Layout.fillHeight: true
-                    }
-                }
-            }
-
-            RadioButton {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 60
-                horizontalPadding: 12
-                checked: !achievement_manager.defaultToHardcore
-                verticalPadding: 6
-
-                background: Rectangle {
-                    radius: 8
-                    color: "#333333"
-                    border.color: parent.checked ? "#f16205" : "transparent"
-                    border.width: 3
-                }
-
-                indicator: Item {
-                }
-
-                onCheckedChanged: {
-                    if (checked) {
-                        achievement_manager.defaultToHardcore = false
-                    }
-                }
-
-                Connections {
-                    target: achievement_manager
-
-                    function onDefaultToHardcoreChanged() {
-                        console.log(":)")
-                    }
-                }
-
-                HoverHandler {
-                    id: casualHover
-                    cursorShape: Qt.PointingHandCursor
-                }
-
-                contentItem: ColumnLayout {
-                    Text {
-                        Layout.fillWidth: true
-                        text: "Casual mode"
-                        color: "white"
-                        font.pointSize: 11
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                    }
-
-                    Text {
-                        text: "Play with save states, cheats, and rewinding enabled."
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        font.pointSize: 11
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        color: "#c1c1c1"
-                    }
-
-                    Item {
-                        Layout.fillHeight: true
-                    }
-                }
-            }
+            // RadioButton {
+            //     Layout.fillWidth: true
+            //     Layout.preferredHeight: 140
+            //     checked: achievement_manager.defaultToHardcore
+            //     horizontalPadding: 12
+            //     verticalPadding: 6
+            //
+            //     background: Rectangle {
+            //         radius: 8
+            //         color: "#333333"
+            //         border.color: parent.checked ? "#f16205" : "transparent"
+            //         border.width: 3
+            //     }
+            //
+            //     indicator: Item {
+            //     }
+            //
+            //     onCheckedChanged: {
+            //         if (checked) {
+            //             achievement_manager.defaultToHardcore = true
+            //         }
+            //     }
+            //
+            //     HoverHandler {
+            //         id: hardcoreHover
+            //         cursorShape: Qt.PointingHandCursor
+            //     }
+            //
+            //     contentItem: ColumnLayout {
+            //         Text {
+            //             Layout.fillWidth: true
+            //             text: "Hardcore mode"
+            //             color: "white"
+            //             font.pointSize: 11
+            //             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            //             font.family: Constants.regularFontFamily
+            //             font.weight: Font.DemiBold
+            //         }
+            //
+            //         Text {
+            //             text: "Challenge yourself and earn Mastery points by disabling save states, cheats, and rewinding."
+            //             Layout.fillWidth: true
+            //             wrapMode: Text.WordWrap
+            //             font.pointSize: 11
+            //             font.family: Constants.regularFontFamily
+            //             font.weight: Font.Normal
+            //             color: "#c1c1c1"
+            //         }
+            //         Item {
+            //             Layout.fillHeight: true
+            //         }
+            //     }
+            // }
+            //
+            // RadioButton {
+            //     Layout.fillWidth: true
+            //     Layout.preferredHeight: 60
+            //     horizontalPadding: 12
+            //     checked: !achievement_manager.defaultToHardcore
+            //     verticalPadding: 6
+            //
+            //     background: Rectangle {
+            //         radius: 8
+            //         color: "#333333"
+            //         border.color: parent.checked ? "#f16205" : "transparent"
+            //         border.width: 3
+            //     }
+            //
+            //     indicator: Item {
+            //     }
+            //
+            //     onCheckedChanged: {
+            //         if (checked) {
+            //             achievement_manager.defaultToHardcore = false
+            //         }
+            //     }
+            //
+            //     Connections {
+            //         target: achievement_manager
+            //
+            //         function onDefaultToHardcoreChanged() {
+            //             console.log(":)")
+            //         }
+            //     }
+            //
+            //     HoverHandler {
+            //         id: casualHover
+            //         cursorShape: Qt.PointingHandCursor
+            //     }
+            //
+            //     contentItem: ColumnLayout {
+            //         Text {
+            //             Layout.fillWidth: true
+            //             text: "Casual mode"
+            //             color: "white"
+            //             font.pointSize: 11
+            //             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            //             font.family: Constants.regularFontFamily
+            //             font.weight: Font.DemiBold
+            //         }
+            //
+            //         Text {
+            //             text: "Play with save states, cheats, and rewinding enabled."
+            //             Layout.fillWidth: true
+            //             wrapMode: Text.WordWrap
+            //             font.pointSize: 11
+            //             font.family: Constants.regularFontFamily
+            //             font.weight: Font.Normal
+            //             color: "#c1c1c1"
+            //         }
+            //
+            //         Item {
+            //             Layout.fillHeight: true
+            //         }
+            //     }
+            // }
 
             // ToggleOption {
             //     Layout.fillWidth: true

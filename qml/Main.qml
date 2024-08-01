@@ -2,18 +2,17 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Window
+import QtQml.Models
 import QtQuick.Layouts 1.0
 import QtQuick.Effects
 import Firelight 1.0
 
 ApplicationWindow {
     id: window
+    objectName: "Application Window"
 
     width: 1280
     height: 720
-
-    minimumHeight: 720
-    minimumWidth: 1280
 
     // flags: Qt.FramelessWindowHint
 
@@ -26,6 +25,111 @@ ApplicationWindow {
         color: "#1a1b1e"
     }
 
+    function getStuff(item, depth): string {
+        if (!item) {
+            return ""
+        }
+
+        let str = ""
+
+        str += " ".repeat(depth) + item.objectName + " " + item.height + "\n"
+
+        // if (item.children.length === 0) {
+        //     return
+        // }
+
+        // console.log("num children: " + item.children.length)
+
+        for (let i = 0; i < item.children.length; i++) {
+            let child = item.children[i]
+            if (!child) {
+                continue
+            }
+            // str += " ".repeat(depth) + child.objectName + " " + child.id + "\n"
+            str += getStuff(child, depth + 1)
+        }
+
+        return str
+    }
+
+    Window {
+        id: debugWindow
+        objectName: "Debug Window"
+        width: 400
+        height: 400
+        visible: false
+
+
+        property bool locked: false
+
+        // ListView {
+        //     anchors.fill: parent
+        //     model: window.contentItem.children
+        //     delegate: ListView {
+        //         required property var modelData
+        //         width: parent.width
+        //         header: Text {
+        //             width: parent.width
+        //             height: 20
+        //             // text: modelData.objectName
+        //             text: "Item"
+        //         }
+        //         model: modelData.children
+        //         delegate: Text {
+        //             width: parent.width
+        //             height: 20
+        //
+        //             required property var modelData
+        //             text: modelData.height
+        //         }
+        //     }
+        // }
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            Text {
+                Layout.fillWidth: true
+                text: debugWindow.locked ? "Locked (F11 to unlock)" : "Unlocked (F11 to lock)"
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                font.pointSize: 11
+                color: "black"
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentHeight: debugText.height
+                contentWidth: debugText.width
+                Text {
+                    id: debugText
+                    text: ""
+                }
+            }
+        }
+
+        Component.onCompleted: {
+            // debugText.text = getStuff(window.activeFocusItem, 0)
+        }
+    }
+
+    onActiveFocusItemChanged: function () {
+        if (!debugWindow.visible || debugWindow.locked) {
+            return
+        }
+
+        // for (let key in window.activeFocusControl) {
+        //     console.log(key + ": " + window.activeFocusControl[key])
+        // }
+
+        if (window.activeFocusItem && window.activeFocusItem.parent) {
+            debugText.text = "Active Focus Item: " + window.activeFocusItem.objectName + "\n  parent: "
+                + window.activeFocusItem["parent"]
+        }
+        // debugText.text = getStuff(window.activeFocusItem, 0)
+    }
+
     Connections {
         target: Router
 
@@ -36,94 +140,25 @@ ApplicationWindow {
 
                 if (id === "settings") {
                     let section = parts.length > 1 ? parts[1] : "library"
-                    stackView.push(settingsPage, {section: section})
-                }
-            }
-        }
-    }
-
-    GameLaunchPopup {
-        id: gameLaunchPopup
-
-        Connections {
-            target: achievement_manager
-
-            function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
-                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore)
-            }
-        }
-    }
-
-    AchievementProgressIndicator {
-        id: achievementProgressIndicator
-
-        Connections {
-            target: achievement_manager
-
-            function onAchievementProgressUpdated(imageUrl, id, name, description, current, desired) {
-                if (achievement_manager.progressNotificationsEnabled) {
-                    achievementProgressIndicator.openWith(imageUrl, name, description, current, desired)
-                }
-            }
-        }
-    }
-
-    AchievementUnlockIndicator {
-        id: achievementUnlockIndicator
-
-        Connections {
-            target: achievement_manager
-
-            function onAchievementUnlocked(imageUrl, name, description) {
-                if (achievement_manager.unlockNotificationsEnabled) {
-                    achievementUnlockIndicator.openWith(imageUrl, name, description)
+                    stackView.push(settingsScreen, {section: section})
                 }
             }
         }
     }
 
     Component {
-        id: libraryPage
-        LibraryPage {
-            property bool topLevel: true
-            property string topLevelName: "library"
+        id: homeScreen
 
-            onEntryClicked: function (id) {
-                emulator.loadGame(id)
-            }
+        HomeScreen {
+            objectName: "Home Screen"
+            showNowPlayingButton: emulatorScreen.emulatorIsRunning
         }
     }
 
     Component {
-        id: modsPage
-        DiscoverPage {
-            property bool topLevel: true
-            property string topLevelName: "mods"
-        }
-    }
-
-
-    Component {
-        id: controllerPage
-        ControllersPage {
-            property bool topLevel: true
-            property string topLevelName: "controllers"
-        }
-    }
-
-
-    // Component {
-    //     id: controllerPage
-    //     ControllerProfilePage {
-    //         property bool topLevel: true
-    //         property string topLevelName: "controllers"
-    //     }
-    // }
-
-    Component {
-        id: settingsPage
-        SettingsPage {
-            id: me
+        id: settingsScreen
+        SettingsScreen {
+            objectName: "Settings Screen"
             property bool topLevel: true
             property string topLevelName: "settings"
 
@@ -135,434 +170,66 @@ ApplicationWindow {
         }
     }
 
+    EmulatorScreen {
+        id: emulatorScreen
+        objectName: "Emulator Screen"
+        onGameReady: function () {
+            overlayFadeIn.start()
+        }
+    }
+
+    Rectangle {
+        objectName: "Active focus highlight"
+        color: "transparent"
+        border.color: "red"
+        anchors.fill: parent
+        parent: window.activeFocusItem
+    }
+
+    GameLaunchPopup {
+        objectName: "Game Launch Popup"
+        id: gameLaunchPopup
+
+        Connections {
+            target: achievement_manager
+
+            function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
+                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore)
+            }
+        }
+    }
+
     Component {
-        id: nowPlayingPage
-        NowPlayingPage {
-            id: me
+        id: libraryPage
+        LibraryPage {
+            objectName: "Library Page"
             property bool topLevel: true
-            property string topLevelName: "nowPlaying"
+            property string topLevelName: "library"
 
-            onBackToMainMenuPressed: function () {
-                stackView.push(mainMenu)
-            }
-
-            onResumeGamePressed: function () {
-                emulatorStack.pop()
-            }
-
-            onRestartGamePressed: function () {
-                emulator.resetGame()
-                emulatorStack.pop()
-            }
-
-            onCloseGamePressed: function () {
-                closeGameAnimation.start()
+            onEntryClicked: function (id) {
+                emulatorScreen.loadGame(id)
             }
         }
     }
 
     SequentialAnimation {
         id: closeGameAnimation
+        objectName: "Close Game Animation"
         ScriptAction {
             script: {
-                stackView.push(mainMenu)
+                stackView.push(homeScreen)
             }
         }
         ScriptAction {
             script: {
-                emulator.stopEmulation()
-            }
-        }
-        ScriptAction {
-            script: {
-                emulatorStack.pop()
-            }
-        }
-    }
-
-    Component {
-        id: mainMenu
-
-        Item {
-
-            Keys.onEscapePressed: function (event) {
-                if (!event.isAutoRepeat) {
-                    closeAppConfirmationDialog.open()
-                }
-            }
-            focus: true
-
-            Pane {
-                id: drawer
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                width: 250
-                background: Rectangle {
-                    color: "#101114"
-                }
-                padding: 4
-                KeyNavigation.right: stackview
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: 0
-
-                    Item {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 10
-                    }
-
-                    Text {
-                        text: "Firelight"
-                        opacity: parent.width > 48 ? 1 : 0
-                        color: "#dadada"
-                        font.pointSize: 12
-                        font.weight: Font.DemiBold
-                        font.family: Constants.regularFontFamily
-                        Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-
-                    Text {
-                        text: "alpha (0.5.0a)"
-                        opacity: parent.width > 48 ? 1 : 0
-                        color: "#dadada"
-                        font.pointSize: 8
-                        font.weight: Font.DemiBold
-                        font.family: Constants.regularFontFamily
-                        Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 12
-                    }
-                    NavMenuButton {
-                        id: homeNavButton
-                        KeyNavigation.down: libraryNavButton
-                        labelText: "Dashboard"
-                        labelIcon: "\ue871"
-                        Layout.preferredWidth: parent.width
-                        Layout.preferredHeight: 48
-                        enabled: false
-
-                        checked: stackview.topLevelName === "home"
-                    }
-                    NavMenuButton {
-                        id: modNavButton
-                        KeyNavigation.down: controllersNavButton
-                        labelText: "Mod Shop"
-                        labelIcon: "\uef48"
-                        Layout.preferredWidth: parent.width
-                        Layout.preferredHeight: 48
-                        enabled: false
-
-                        checked: stackview.topLevelName === "mods"
-
-                        onToggled: function () {
-                            stackview.replace(null, modsPage)
-                        }
-                    }
-                    NavMenuButton {
-                        id: libraryNavButton
-                        KeyNavigation.down: modNavButton
-                        labelText: "My Library"
-                        labelIcon: "\uf53e"
-                        Layout.preferredWidth: parent.width
-                        Layout.preferredHeight: 48
-
-                        checked: stackview.topLevelName === "library"
-
-                        onToggled: function () {
-                            stackview.replace(null, libraryPage)
-                        }
-                    }
-                    NavMenuButton {
-                        id: controllersNavButton
-                        // KeyNavigation.down: nowPlayingNavButton
-                        labelText: "Controllers"
-                        labelIcon: "\uf135"
-                        Layout.preferredWidth: parent.width
-                        Layout.preferredHeight: 48
-
-                        // enabled: true
-
-                        checked: stackview.topLevelName === "controllers"
-
-                        onToggled: function () {
-                            stackview.replace(null, controllerPage)
-                        }
-                    }
-                    // Rectangle {
-                    //     Layout.topMargin: 8
-                    //     Layout.bottomMargin: 8
-                    //     Layout.preferredWidth: parent.width
-                    //     Layout.preferredHeight: 1
-                    //     opacity: 0.3
-                    //     color: "#dadada"
-                    // }
-                    // NavMenuButton {
-                    //     id: nowPlayingNavButton
-                    //     KeyNavigation.down: settingsNavButton
-                    //     labelText: "Now Playing"
-                    //     labelIcon: "\ue037"
-                    //     Layout.preferredWidth: parent.width
-                    //     Layout.preferredHeight: 48
-                    //
-                    //     onToggled: function () {
-                    //         stackview.replace(nowPlayingPage)
-                    //     }
-                    // }
-                    Item {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                    }
-                    NavMenuButton {
-                        id: nowPlayingNavButton
-                        labelText: "Back to game"
-                        labelIcon: "\ue037"
-                        Layout.preferredWidth: parent.width
-                        Layout.preferredHeight: 48
-
-                        visible: emulator.running
-
-                        checkable: false
-
-                        onClicked: function () {
-                            stackView.pop()
-                            // stackview.push(nowPlayingPage)
-                        }
-                    }
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.topMargin: 8
-                        Layout.bottomMargin: 4
-                        Layout.preferredHeight: 1
-                        color: "#404143"
-                    }
-                    // NavMenuButton {
-                    //     id: settingsNavButton
-                    //     labelText: "Settings"
-                    //     labelIcon: "\ue8b8"
-                    //     Layout.preferredWidth: parent.width
-                    //     Layout.preferredHeight: 48
-                    //
-                    //     checked: stackview.topLevelName === "settings"
-                    //
-                    //     onToggled: function () {
-                    //         stackView.push(settingsPage)
-                    //     }
-                    // }
-
-                    RowLayout {
-                        Layout.preferredWidth: parent.width
-                        Layout.preferredHeight: 48
-                        Layout.maximumHeight: 48
-                        spacing: 8
-
-                        Button {
-                            background: Rectangle {
-                                color: "transparent"
-                                radius: 4
-                            }
-                            Layout.preferredHeight: 42
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-
-                            checkable: false
-                            // Layout.fillHeight: true
-                            // Layout.fillWidth: true
-                        }
-
-                        // NavMenuButton {
-                        //     labelText: "Profile"
-                        //     labelIcon: "\ue853"
-                        //     Layout.fillWidth: true
-                        //     Layout.fillHeight: true
-                        //
-                        //     checked: stackview.topLevelName === "profile"
-                        //
-                        //     enabled: false
-                        // }
-
-                        Button {
-                            id: me
-                            background: Rectangle {
-                                color: enabled ? (me.hovered ? "#404143" : "transparent") : "transparent"
-                                radius: 4
-                            }
-                            Layout.preferredHeight: 42
-                            Layout.preferredWidth: 42
-                            Layout.alignment: Qt.AlignCenter
-
-                            hoverEnabled: true
-
-                            contentItem: Text {
-                                text: "\ue8b8"
-                                font.family: Constants.symbolFontFamily
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                                font.pixelSize: 26
-                                color: "#c3c3c3"
-                            }
-
-                            checkable: false
-
-                            onClicked: {
-                                Router.navigateTo("settings")
-                            }
-                            // Layout.fillHeight: true
-                            // Layout.fillWidth: true
-                        }
-                    }
-
-
-                }
-            }
-
-            Pane {
-                id: rightSide
-
-                anchors.top: parent.top
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.left: drawer.right
-
-                background: Item {
-                }
-
-                Pane {
-                    width: parent.width
-                    height: 48
-
-                    z: 2
-
-                    background: Item {
-                    }
-
-                    Button {
-                        id: melol
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        // horizontalPadding: 12
-                        // verticalPadding: 8
-
-                        enabled: stackview.depth > 1
-
-                        hoverEnabled: false
-
-                        HoverHandler {
-                            id: myHover
-                            cursorShape: melol.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                        }
-
-                        background: Rectangle {
-                            color: enabled ? myHover.hovered ? "#4e535b" : "#3e434b" : "#3e434b"
-                            radius: height / 2
-                            // border.color: "#7d848c"
-                        }
-
-                        contentItem: Text {
-                            text: "\ue5c4"
-                            color: enabled ? "white" : "#7d848c"
-                            font.pointSize: 11
-                            font.family: Constants.symbolFontFamily
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        onClicked: {
-                            stackview.pop()
-                        }
-                    }
-                }
-
-                StackView {
-                    id: stackview
-                    anchors.fill: parent
-
-                    property string topLevelName: ""
-
-                    onCurrentItemChanged: {
-                        if (currentItem) {
-                            let top = stackview.find(function (item, index) {
-                                return item.topLevel === true
-                            })
-
-                            stackview.topLevelName = top ? top.topLevelName : ""
-                        }
-                    }
-
-                    initialItem: libraryPage
-
-                    pushEnter: Transition {
-                        // PropertyAnimation {
-                        //     property: "opacity"
-                        //     from: 0
-                        //     to: 1
-                        //     duration: 200
-                        // }
-                    }
-                    pushExit: Transition {
-                        // PropertyAnimation {
-                        //     property: "opacity"
-                        //     from: 1
-                        //     to: 0
-                        //     duration: 200
-                        // }
-                    }
-                    popEnter: Transition {
-                        // PropertyAnimation {
-                        //     property: "opacity"
-                        //     from: 0
-                        //     to: 1
-                        //     duration: 200
-                        // }
-                    }
-                    popExit: Transition {
-                        // PropertyAnimation {
-                        //     property: "opacity"
-                        //     from: 1
-                        //     to: 0
-                        //     duration: 200
-                        // }
-                    }
-                    replaceEnter: Transition {
-                        // ParallelAnimation {
-                        //     PropertyAnimation {
-                        //         property: "opacity"
-                        //         from: 0
-                        //         to: 1
-                        //         duration: 400
-                        //     }
-                        //     PropertyAnimation {
-                        //         property: "x"
-                        //         from: 20
-                        //         to: 0
-                        //         duration: 250
-                        //     }
-                        // }
-                    }
-                    replaceExit: Transition {
-                    }
-                }
-            }
-
-            FirelightDialog {
-                id: closeAppConfirmationDialog
-                text: "Are you sure you want to close Firelight?"
-
-                onAccepted: {
-                    Qt.callLater(Qt.quit)
-                }
+                emulatorScreen.stopEmulator()
             }
         }
     }
 
     SequentialAnimation {
         id: overlayFadeIn
+        objectName: "Start Game Animation"
         PropertyAction {
             target: overlay
             property: "opacity"
@@ -608,299 +275,31 @@ ApplicationWindow {
         ScriptAction {
             script: {
                 // gameLaunchPopup.open()
-                emulator.startEmulation()
+                emulatorScreen.startEmulator()
                 // emulator.resumeGame()
             }
         }
     }
 
-    // GameLoader {
-    //     id: gameLoader
-    //
-    //     onGameLoaded: function (entryId, romData, saveData, corePath) {
-    //         emulator.loadTheThing(entryId, romData, saveData, corePath)
-    //         overlayFadeIn.start()
-    //     }
-    //
-    //     onGameLoadFailedOrphanedPatch: function (entryId) {
-    //         patchClickedDialog.open()
-    //     }
-    // }
-
-    EmulatorPage {
-        id: emulator
-        visible: false
-
-        onReadyToStart: function () {
-            overlayFadeIn.start()
-        }
-
-        ChallengeIndicatorList {
-            id: challengeIndicators
-            visible: achievement_manager.challengeIndicatorsEnabled
-
-            anchors.top: parent.top
-            anchors.right: parent.right
-            anchors.topMargin: 16
-            anchors.rightMargin: 16
-            height: 100
-            width: 300
-        }
-
-        states: [
-            State {
-                name: "stopped"
-            },
-            State {
-                name: "suspended"
-                PropertyChanges {
-                    target: emulatorDimmer
-                    opacity: 0.4
-                }
-                PropertyChanges {
-                    emulator {
-                        layer.enabled: true
-                        blurAmount: 1
-                    }
-                }
-            },
-            State {
-                name: "running"
-                PropertyChanges {
-                    target: emulatorDimmer
-                    opacity: 0
-                }
-                PropertyChanges {
-                    emulator {
-                        layer.enabled: false
-                        blurAmount: 0
-                    }
-                }
-            }
-        ]
-
-        transitions: [
-            Transition {
-                from: "*"
-                to: "suspended"
-                SequentialAnimation {
-                    ScriptAction {
-                        script: {
-                            emulator.pauseGame()
-                        }
-                    }
-                    PropertyAction {
-                        target: emulator
-                        property: "layer.enabled"
-                        value: true
-                    }
-                    ParallelAnimation {
-                        NumberAnimation {
-                            properties: "blurAmount"
-                            duration: 250
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            target: emulatorDimmer
-                            properties: "opacity"
-                            duration: 250
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
-                }
-            },
-            Transition {
-                from: "*"
-                to: "running"
-                SequentialAnimation {
-                    ParallelAnimation {
-                        NumberAnimation {
-                            properties: "blurAmount"
-                            duration: 250
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            target: emulatorDimmer
-                            properties: "opacity"
-                            duration: 250
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
-                    PropertyAction {
-                        target: emulator
-                        property: "layer.enabled"
-                        value: false
-                    }
-
-                    ScriptAction {
-                        script: {
-                            emulator.resumeGame()
-                        }
-
-                    }
-                }
-            }
-        ]
-
-        StackView.visible: true
-
-        StackView.onActivating: {
-            state = "running"
-        }
-
-        StackView.onDeactivating: {
-            state = "suspended"
-        }
-
-        property double blurAmount: 0
-
-        Behavior on blurAmount {
-            NumberAnimation {
-                duration: 250
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        layer.enabled: false
-        layer.effect: MultiEffect {
-            source: emulator
-            anchors.fill: emulator
-            blurEnabled: true
-            blurMultiplier: 1.0
-            blurMax: 64
-            blur: emulator.blurAmount
-        }
-
-        Rectangle {
-            id: emulatorDimmer
-            anchors.fill: parent
-            color: "black"
-            opacity: 0
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-
-        Connections {
-            target: window_resize_handler
-
-            function onWindowResizeStarted() {
-                if (emulator.StackView.view.currentItem === emulator) {
-                    emulator.pauseGame()
-                }
-            }
-
-            function onWindowResizeFinished() {
-                if (emulator.StackView.view.currentItem === emulator) {
-                    emulator.resumeGame()
-                }
-            }
-        }
-    }
-
-    StackView {
-        id: emulatorStack
-        visible: false
-
-        initialItem: emulator
-
-        Keys.onEscapePressed: function (event) {
-            if (event.isAutoRepeat) {
-                return
-            }
-
-            if (emulatorStack.currentItem === emulator) {
-                // emulatorStack.pop()
-                emulatorStack.push(nowPlayingPage)
-            } else {
-                emulatorStack.pop()
-                // emulatorStack.push(mainMenu)
-            }
-        }
-
-        property bool suspended: false
-        property bool running: false
-
-        pushEnter: Transition {
-            ParallelAnimation {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-                PropertyAnimation {
-                    property: "x"
-                    from: -20
-                    to: 0
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-        pushExit: Transition {
-
-        }
-        popEnter: Transition {
-        }
-        popExit: Transition {
-            ParallelAnimation {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-                PropertyAnimation {
-                    property: "x"
-                    from: 0
-                    to: -20
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-        replaceEnter: Transition {
-        }
-        replaceExit: Transition {
-        }
-    }
-
-    // Rectangle {
-    //     id: bar
-    //     color: "red"
-    //     anchors.top: parent.top
-    //     anchors.left: parent.left
-    //     anchors.right: parent.right
-    //     height: 40
-    //
-    //     DragHandler {
-    //         grabPermissions: TapHandler.CanTakeOverFromAnything
-    //         onActiveChanged: if (active) {
-    //             window.startSystemMove();
-    //         }
-    //     }
-    //
-    // }
-
     StackView {
         id: stackView
-        // anchors.left: parent.left
-        // anchors.right: parent.right
-        // anchors.bottom: parent.bottom
-        // anchors.top: bar.bottom
+        objectName: "Screen Stack View"
+
         anchors.fill: parent
+        initialItem: emulatorScreen
         focus: true
 
-        initialItem: emulatorStack
+        Component.onCompleted: stackView.push(homeScreen, {}, StackView.Immediate)
 
-        Component.onCompleted: stackView.push(mainMenu, {}, StackView.Immediate)
+        Keys.onReleased: function (event) {
+            if (event.key === Qt.Key_F12) {
+                debugWindow.visible = !debugWindow.visible
+                event.accepted = true
+            } else if (event.key === Qt.Key_F11) {
+                debugWindow.locked = !debugWindow.locked
+                event.accepted = true
+            }
+        }
 
         pushEnter: Transition {
             ParallelAnimation {
@@ -976,8 +375,10 @@ ApplicationWindow {
         }
     }
 
+
     Rectangle {
         id: overlay
+        objectName: "Screen Overlay"
         anchors.fill: parent
         color: "black"
         visible: false

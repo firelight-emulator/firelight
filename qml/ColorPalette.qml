@@ -3,22 +3,33 @@ import QtQuick
 pragma Singleton
 
 Item {
-    readonly property color primary800: "#203d54"
-    readonly property color primary700: "#1a4970"
-    readonly property color primary600: "#2368a1"
-    readonly property color primary500: "#3182c7"
-    readonly property color primary400: "#63a1d7"
-    readonly property color primary300: "#a9d3f3"
-    readonly property color primary200: "#edf6fd"
+    readonly property color primary800: "#142850"
+    readonly property color primary700: "#27496d"
+    readonly property color primary600: "#0c7b93"
+    readonly property color primary500: "#00a8cc"
+    readonly property color primary400: "#3bc9db"
+    readonly property color primary300: "#76e4ef"
+    readonly property color primary200: "#c4f1fa"
 
-    readonly property color neutral900: "#1a222c"
-    readonly property color neutral800: "#212934"
-    readonly property color neutral700: "#5f6b79"
-    readonly property color neutral600: "#8794a6"
-    readonly property color neutral500: "#b7c3cd"
-    readonly property color neutral400: "#ced5dd"
-    readonly property color neutral300: "#e0e6eb"
-    readonly property color neutral200: "#f6f7f8"
+    readonly property color accent800: "#623d1a"
+    readonly property color accent700: "#7a4f23"
+    readonly property color accent600: "#94622d"
+    readonly property color accent500: "#b77c38"
+    readonly property color accent400: "#d89e61"
+    readonly property color accent300: "#ebc299"
+    readonly property color accent200: "#f6e1c7"
+
+    readonly property color neutral1000: "#0e0e0e"
+    readonly property color neutral900: "#1e1e1e"
+    readonly property color neutral800: "#2a2a2a"
+    readonly property color neutral700: "#444444"
+    readonly property color neutral600: "#666666"
+    readonly property color neutral500: "#888888"
+    readonly property color neutral400: "#aaaaaa"
+    readonly property color neutral300: "#cccccc"
+    readonly property color neutral200: "#e6e6e6"
+    readonly property color neutral100: "#f9f9f9"
+
 
     readonly property color red900: "#b71c1c"
     readonly property color red700: "#ca1f17"
@@ -27,9 +38,9 @@ Item {
 
     readonly property color white: neutral200
 
-    readonly property color containerVeryLowColor: "#1d1e22"
-    readonly property color containerLowColor: "#25282C"
-    readonly property color containerMidColor: "#32363a"
+    readonly property color containerVeryLowColor: neutral900
+    readonly property color containerLowColor: neutral800
+    readonly property color containerMidColor: neutral700
 
 
     readonly property color dropdownBackgroundColor: containerMidColor

@@ -7,7 +7,10 @@ Pane {
 
     required property string label
     property string description
-    required property Component control
+    // required property Component control
+    property Component control
+
+    property bool isSubItem: false
 
     background: Item {
     }
@@ -18,15 +21,29 @@ Pane {
     RowLayout {
         anchors.fill: parent
 
+        Text {
+            Layout.fillHeight: true
+            visible: root.isSubItem
+            leftPadding: 8
+            rightPadding: 8
+            text: "\ue5da"
+            font.family: Constants.symbolFontFamily
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            font.pixelSize: 24
+            color: ColorPalette.neutral600
+        }
+
         ColumnLayout {
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.horizontalStretchFactor: 3
+
             Text {
                 Layout.fillWidth: true
                 text: root.label
-                color: "white"
-                font.pointSize: 12
+                color: ColorPalette.neutral100
+                font.pixelSize: 15
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
@@ -36,11 +53,12 @@ Pane {
                 Layout.fillWidth: true
                 visible: root.description !== ""
                 text: root.description
-                font.pointSize: 11
+                font.pixelSize: 13
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
+                // font.weight: Font.
                 wrapMode: Text.WordWrap
-                color: "#c1c1c1"
+                color: ColorPalette.neutral300
             }
         }
 
@@ -63,7 +81,7 @@ Pane {
         // }
 
         Loader {
-            Layout.fillHeight: true
+            // Layout.fillHeight: true
             Layout.alignment: Qt.AlignRight | Qt.AlignTop
 
             sourceComponent: control

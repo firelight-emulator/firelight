@@ -11,12 +11,12 @@
 #include <qstringlistmodel.h>
 
 #include <spdlog/spdlog.h>
+#include <stdlib.h>
 
 #include "app/achieve/ra_client.hpp"
 #include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
 #include "app/emulation_manager.hpp"
-#include "app/fps_multiplier.hpp"
 #include "app/router.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
@@ -48,6 +48,8 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
 }
 
 int main(int argc, char *argv[]) {
+  SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
+
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
   } else {
@@ -58,6 +60,11 @@ int main(int argc, char *argv[]) {
   QApplication::setApplicationName("Firelight");
 
   QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+  QSurfaceFormat format;
+  format.setProfile(QSurfaceFormat::OpenGLContextProfile::CompatibilityProfile);
+  format.setVersion(4, 1);
+  QSurfaceFormat::setDefaultFormat(format);
+
   QApplication app(argc, argv);
 
   // TODO:
@@ -75,6 +82,11 @@ int main(int argc, char *argv[]) {
   // userdata db
   // controller profiles
   // library db
+
+  auto docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+
+  printf("Documents Path: %s\n", docPath.toStdString().c_str());
+
   auto appDataPath =
       QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
@@ -100,13 +112,10 @@ int main(int argc, char *argv[]) {
   }
 
   firelight::Input::ControllerManager controllerManager;
-  firelight::SdlEventLoop sdlEventLoop(&controllerManager);
 
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
 
   controllerManager.refreshControllerList();
-
-  sdlEventLoop.start();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   firelight::db::SqliteUserdataDatabase userdata_database(appDataDir /
@@ -151,6 +160,9 @@ int main(int argc, char *argv[]) {
   LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
+  auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>(userdata_database);
+  firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
+
   QObject::connect(
     &libraryDatabase,
     &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
@@ -164,7 +176,6 @@ int main(int argc, char *argv[]) {
   // qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
-  qmlRegisterType<FpsMultiplier>("Firelight", 1, 0, "FpsMultiplier");
   qmlRegisterType<firelight::gui::GamepadMapping>("Firelight", 1, 0, "GamepadMapping");
   qmlRegisterType<firelight::gui::GamepadProfile>("Firelight", 1, 0, "GamepadProfile");
 
@@ -172,6 +183,7 @@ int main(int argc, char *argv[]) {
 
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("Router", &router);
+  engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
   engine.rootContext()->setContextProperty("library_model", &libModel);
@@ -196,11 +208,15 @@ int main(int argc, char *argv[]) {
   QObject::connect(
     &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
     []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-  engine.loadFromModule("QMLFirelight", "Main");
+  engine.loadFromModule("QMLFirelight", "Main2");
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
+
+
+  firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
+  sdlEventLoop.start();
 
   int exitCode = QApplication::exec();
 

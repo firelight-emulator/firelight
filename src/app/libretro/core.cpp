@@ -3,6 +3,7 @@
 #include "SDL2/SDL.h"
 #include "virtual_filesystem.hpp"
 #include <cstdarg>
+#include <utility>
 
 #include <spdlog/spdlog.h>
 
@@ -31,7 +32,7 @@ namespace libretro {
     }
 
     const auto controllerOpt =
-        currentCore->getRetropadProvider()->getRetropadForPlayer(port);
+        currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
     if (!controllerOpt.has_value()) {
       return 0;
     }
@@ -127,10 +128,9 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
-        auto ptr = (retro_pixel_format *) data;
-        // TODO: Implement
-        //    video->setPixelFormat((retro_pixel_format *)data);
-        return true;
+        auto ptr = static_cast<retro_pixel_format *>(data);
+        videoReceiver->setPixelFormat(ptr);
+        break;
       }
       case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS");
@@ -174,9 +174,11 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_SET_HW_RENDER: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
-        // TODO I think this is actually mostly stuff informing the frontend
-        printf("Setting hw render\n");
         auto *renderCallback = static_cast<retro_hw_render_callback *>(data);
+
+        renderCallback->context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
+        renderCallback->version_major = 4;
+        renderCallback->version_minor = 1;
 
         renderCallback->get_proc_address =
             [](const char *sym) -> retro_proc_address_t {
@@ -187,75 +189,74 @@ namespace libretro {
           return currentCore->videoReceiver->getCurrentFramebufferId();
         };
 
-        // printf("huh\n");
         currentCore->videoReceiver->setResetContextFunc(
           renderCallback->context_reset);
 
         if (renderCallback->context_destroy) {
           printf("context destroy is not null!\n");
-          // currentCore->videoReceiver->setDestroyContextFunc(
-          //     renderCallback->context_destroy);
+          currentCore->videoReceiver->setDestroyContextFunc(
+            renderCallback->context_destroy);
           currentCore->destroyContextFunction = renderCallback->context_destroy;
         }
 
-        // return false;
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_GET_VARIABLE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VARIABLE");
         auto ptr = static_cast<retro_variable *>(data);
-        for (const auto &opt: options) {
-          if (strcmp(opt.key, ptr->key) == 0) {
-            // auto strr = "mupen64plus-pak1";
-            // auto val = "rumble";
-            // if (strcmp(opt.key, strr) == 0) {
-            //   ptr->value = val;
-            // } else {
-            //   ptr->value = opt.currentValue;
-            // }
-            // auto strr = "mupen64plus-rsp-plugin";
-            // auto val = "parallel";
-            // if (strcmp(opt.key, strr) == 0) {
-            //   printf("Setting rsp plugin to %s\n", val);
-            //   ptr->value = val;
-            // } else {
-            //   ptr->value = opt.currentValue;
-            // }
 
-            ptr->value = opt.currentValue;
-
-            // auto strr2 = "mupen64plus-rdp-plugin";
-            // auto val2 = "angrylion";
-            // if (strcmp(opt.key, strr2) == 0) {
-            //   printf("Setting rdp plugin to %s\n", val2);
-            //   ptr->value = val2;
-            // }
-            return true;
-          }
+        auto configProvider = currentCore->m_configurationProvider;
+        if (!configProvider) {
+          return false;
         }
-        return true;
+
+        auto val = configProvider->getOptionValue(ptr->key);
+        if (!val.has_value()) {
+          return false;
+        }
+
+        ptr->value = val->key.c_str();
+        break;
       }
+
       case RETRO_ENVIRONMENT_SET_VARIABLES: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_VARIABLES");
         auto ptr = static_cast<retro_variable *>(data);
-        // TODO sane default
-        for (int i = 0; i < 100; ++i) {
+
+        auto configProvider = currentCore->m_configurationProvider;
+        if (!configProvider) {
+          return false;
+        }
+
+        for (int i = 0; i < 200; ++i) {
           auto opt = ptr[i];
-          printf("Variable KEY: %s VALUE: %s\n", opt.key, opt.value);
           if (opt.key == nullptr) {
             break;
           }
+
+          firelight::libretro::IConfigurationProvider::Option option;
+          option.key = opt.key;
+          option.label = opt.value;
+
+          configProvider->registerOption(option);
         }
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE");
-        *static_cast<bool *>(data) = false; // TODO: actually implement
-        return true;
+
+        const auto configProvider = currentCore->m_configurationProvider;
+        if (!configProvider) {
+          *static_cast<bool *>(data) = configProvider->anyOptionValueHasChanged();
+        } else {
+          *static_cast<bool *>(data) = false;
+        }
+        break;
       }
       case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME");
         canRunWithNoGame = *static_cast<bool *>(data);
+        break;
       }
       case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH");
@@ -284,7 +285,7 @@ namespace libretro {
         ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
                                    uint16_t strength) {
           const auto con =
-              currentCore->getRetropadProvider()->getRetropadForPlayer(port);
+              currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
           if (!con.has_value()) {
             return true;
           }
@@ -298,7 +299,7 @@ namespace libretro {
 
           return true;
         };
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES: {
         environmentCalls.emplace_back(
@@ -312,7 +313,7 @@ namespace libretro {
         // RETRO_DEVICE_ANALOG).
 
         *ptr = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG);
-        return false;
+        return true;
       }
       case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE");
@@ -432,13 +433,12 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
         videoReceiver->setSystemAVInfo(static_cast<retro_system_av_info *>(data));
-        //    video->setGameGeometry(&retroSystemAVInfo->geometry);
         return true;
       }
-      case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK");
-        break;
+      // case RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK");
+      //   break;
       case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO");
         auto ptr = static_cast<retro_subsystem_info *>(data);
@@ -458,17 +458,31 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO");
         auto ptr = static_cast<retro_controller_info *>(data);
-        for (unsigned i = 0; i < ptr->num_types; ++i) {
-          auto info = ptr->types[i];
-          if (info.desc == nullptr) {
+
+
+        for (unsigned i = 0; i < 100; ++i) {
+          auto info = ptr[i];
+
+          if (!info.types) {
             break;
           }
 
-          controllerInfo.emplace_back(info);
-          if (i == 100) {
-            recordPotentialAPIViolation("Over 100 controller infos");
+          for (unsigned j = 0; j < info.num_types; ++j) {
+            auto type = info.types[j];
+            printf("Type: %d, Value: %s\n", type.id, type.desc);
           }
         }
+        // for (unsigned i = 0; i < ptr->num_types; ++i) {
+        //   auto info = ptr->types[i];
+        //   if (info.desc == nullptr) {
+        //     break;
+        //   }
+        //
+        //   controllerInfo.emplace_back(info);
+        //   if (i == 100) {
+        //     recordPotentialAPIViolation("Over 100 controller infos");
+        //   }
+        // }
         return true;
       }
       case RETRO_ENVIRONMENT_SET_MEMORY_MAPS: {
@@ -519,16 +533,22 @@ namespace libretro {
         auto ptr = static_cast<retro_hw_render_interface *>(data);
         ptr->interface_type = RETRO_HW_RENDER_INTERFACE_DUMMY;
         ptr->interface_version = 0;
+        return true;
       }
       case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS");
         supportsAchievements = *static_cast<bool *>(data);
         return true;
       }
-      case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+      case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE");
+        auto ptr = static_cast<retro_hw_render_context_negotiation_interface *>(data);
+        auto type = ptr->interface_type;
+        auto version = ptr->interface_version;
+
         break;
+      }
       case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS");
         break;
@@ -583,6 +603,7 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_GET_FASTFORWARDING: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_FASTFORWARDING");
+        // TODO: Get from video provider?
         auto ptr = static_cast<bool *>(data);
         *ptr = fastforwarding;
         return true;
@@ -592,138 +613,319 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_BITMASKS");
-        break;
+      // TODO: Implement
+        return false;
       case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION");
-        // TODO: Set this behind some user-settable flag?
         auto ptr = static_cast<unsigned *>(data);
         *ptr = 2;
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS");
         auto ptr = static_cast<retro_core_option_definition **>(data);
-        // TODO sane default
+
+        auto configProvider = currentCore->m_configurationProvider;
+        if (!configProvider) {
+          return false;
+        }
+
         for (int i = 0; i < 200; ++i) {
-          auto opt = *ptr[i];
-          printf("OPTION KEY: %s\n", opt.key);
-          if (opt.key == nullptr) {
+          auto opt = ptr[i];
+          if (opt->key == nullptr) {
             break;
           }
 
-          // TODO: pointer?
-          CoreOption coreOption(opt);
-          options.emplace_back(coreOption);
+          firelight::libretro::IConfigurationProvider::Option option;
+          option.key = opt->key;
+          option.label = opt->desc;
+          option.description = opt->info;
+
+          if (opt->default_value != nullptr) {
+            option.defaultValueKey = opt->default_value;
+          } else {
+            option.defaultValueKey = opt->values[0].value;
+          }
+
+          for (int j = 0; j < 100; ++j) {
+            auto val = opt->values[j];
+            if (val.value == nullptr) {
+              break;
+            }
+
+            firelight::libretro::IConfigurationProvider::OptionValue optionValue;
+            optionValue.key = val.value;
+            if (val.label != nullptr) {
+              optionValue.label = val.label;
+            } else {
+              optionValue.label = val.value;
+            }
+
+            option.possibleValues.emplace_back(optionValue);
+          }
+
+          configProvider->registerOption(option);
         }
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL");
         auto ptr = static_cast<retro_core_options_intl *>(data);
-        // TODO sane default
+
+        auto configProvider = currentCore->m_configurationProvider;
+        if (!configProvider) {
+          return false;
+        }
+
         for (int i = 0; i < 200; ++i) {
           auto opt = ptr->us[i];
           if (opt.key == nullptr) {
             break;
           }
 
-          CoreOption coreOption(opt);
-          options.emplace_back(coreOption);
+          firelight::libretro::IConfigurationProvider::Option option;
+          option.key = opt.key;
+          option.label = opt.desc;
+          option.description = opt.info;
+
+          if (opt.default_value != nullptr) {
+            option.defaultValueKey = opt.default_value;
+          } else {
+            option.defaultValueKey = opt.values[0].value;
+          }
+
+          for (int j = 0; j < 100; ++j) {
+            auto val = opt.values[j];
+            if (val.value == nullptr) {
+              break;
+            }
+
+            firelight::libretro::IConfigurationProvider::OptionValue optionValue;
+            optionValue.key = val.value;
+            if (val.label != nullptr) {
+              optionValue.label = val.label;
+            } else {
+              optionValue.label = val.value;
+            }
+
+            option.possibleValues.emplace_back(optionValue);
+          }
+
+          configProvider->registerOption(option);
         }
-        return true;
+
+
+        break;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY");
         auto ptr = static_cast<retro_core_option_display *>(data);
-        for (auto opt: options) {
-          if (strcmp(ptr->key, opt.key) == 0) {
-            opt.displayToUser = ptr->visible;
-            return true;
-          }
+
+        auto configProvider = currentCore->m_configurationProvider;
+        if (!configProvider) {
+          return false;
         }
-        return false;
+
+        configProvider->setOptionVisibility(ptr->key, ptr->visible);
+        break;
       }
       case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
         *static_cast<unsigned *>(data) = RETRO_HW_CONTEXT_OPENGL;
         return true;
-      case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION");
-        break;
-      case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE");
-        break;
-      case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
+      // case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION");
+      //   return false;
+      // case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE");
+      //   return false;
+      case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION");
+        auto ptr = static_cast<unsigned *>(data);
+        *ptr = 1;
         break;
-      case RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
+      }
+      case RETRO_ENVIRONMENT_SET_MESSAGE_EXT: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_MESSAGE_EXT");
+        auto ptr = static_cast<retro_message_ext *>(data);
+
+        // TODO
+        printf("Msg: %s\n", ptr->msg);
         break;
-      case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
-        environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS");
-        break;
-      case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK:
+      }
+      // case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
+      //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS");
+      //   return false;
+      case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK");
+        if (!data) {
+          break;
+        }
+
+        auto ptr = static_cast<retro_audio_buffer_status_callback *>(data);
+
+        ptr->callback = [](bool active, unsigned occupancy, bool underrun_likely) {
+          printf("Active: %d, Occupancy: %d, Underrun Likely: %d\n", active, occupancy, underrun_likely);
+        };
+
         break;
-      case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY:
+      }
+      case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY");
+        // TODO
         break;
-      case RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE:
-        environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE");
-        break;
-      case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE:
+      }
+      // case RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE:
+      //   environmentCalls.emplace_back(
+      //     "RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE");
+      //   break;
+      case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE");
-        break;
-      case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT:
+        auto ptr = static_cast<retro_system_content_info_override *>(data);
+        for (int i = 0; i < 100; ++i) {
+          auto info = ptr[i];
+          if (info.extensions == nullptr) {
+            break;
+          }
+        }
+        return false;
+        // break;
+      }
+      case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
-        break;
+        auto ptr = static_cast<retro_game_info_ext *>(data);
+        return false;
+        // break;
+      }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2");
         auto ptr = static_cast<retro_core_options_v2 *>(data);
+
+        auto configProvider = currentCore->m_configurationProvider;
+        if (!configProvider) {
+          return false;
+        }
+
         for (int i = 0; i < 100; ++i) {
           auto opt = ptr->categories[i];
           if (opt.key == nullptr) {
             break;
           }
         }
+
         for (int i = 0; i < 200; ++i) {
           auto opt = ptr->definitions[i];
           if (opt.key == nullptr) {
             break;
           }
 
-          CoreOption coreOption(opt);
-          options.emplace_back(coreOption);
+          firelight::libretro::IConfigurationProvider::Option option;
+          option.key = opt.key;
+
+          if (opt.default_value != nullptr) {
+            option.defaultValueKey = opt.default_value;
+          } else {
+            option.defaultValueKey = opt.values[0].value;
+          }
+
+          if (opt.desc_categorized != nullptr) {
+            option.label = opt.desc_categorized;
+          } else {
+            option.label = opt.desc;
+          }
+
+          if (opt.info_categorized != nullptr) {
+            option.description = opt.info_categorized;
+          } else {
+            option.description = opt.info;
+          }
+
+          for (int j = 0; j < 100; ++j) {
+            auto val = opt.values[j];
+            if (val.value == nullptr) {
+              break;
+            }
+
+            firelight::libretro::IConfigurationProvider::OptionValue optionValue;
+            optionValue.key = val.value;
+            if (val.label != nullptr) {
+              optionValue.label = val.label;
+            } else {
+              optionValue.label = val.value;
+            }
+
+            option.possibleValues.emplace_back(optionValue);
+          }
+
+          configProvider->registerOption(option);
         }
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL");
         // TODO
         auto ptr = static_cast<retro_core_options_v2_intl *>(data);
-        for (int i = 0; i < 100; ++i) {
-          auto opt = ptr->us->categories[i];
-          if (opt.key == nullptr) {
-            break;
-          }
+
+        auto configProvider = currentCore->m_configurationProvider;
+        if (!configProvider) {
+          return false;
         }
+
         for (int i = 0; i < 200; ++i) {
           auto opt = ptr->us->definitions[i];
           if (opt.key == nullptr) {
             break;
           }
 
-          CoreOption coreOption(opt);
-          options.emplace_back(coreOption);
+          firelight::libretro::IConfigurationProvider::Option option;
+          option.key = opt.key;
+
+          if (opt.default_value != nullptr) {
+            option.defaultValueKey = opt.default_value;
+          } else {
+            option.defaultValueKey = opt.values[0].value;
+          }
+
+          if (opt.desc_categorized != nullptr) {
+            option.label = opt.desc_categorized;
+          } else if (opt.desc != nullptr) {
+            option.label = opt.desc;
+          } else {
+            option.label = opt.key;
+          }
+
+          if (opt.info_categorized != nullptr) {
+            option.description = opt.info_categorized;
+          } else if (opt.info != nullptr) {
+            option.description = opt.info;
+          }
+
+          for (int j = 0; j < 100; ++j) {
+            auto val = opt.values[j];
+            if (val.value == nullptr) {
+              break;
+            }
+
+            firelight::libretro::IConfigurationProvider::OptionValue optionValue;
+            optionValue.key = val.value;
+            if (val.label != nullptr) {
+              optionValue.label = val.label;
+            } else {
+              optionValue.label = val.value;
+            }
+
+            option.possibleValues.emplace_back(optionValue);
+          }
+
+          configProvider->registerOption(option);
         }
-        return true;
+        break;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK: {
         environmentCalls.emplace_back(
@@ -737,26 +939,8 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_SET_VARIABLE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_VARIABLE");
-        auto ptr = static_cast<retro_variable *>(data);
-        if (ptr == nullptr) {
-          return true;
-        }
-
-        for (auto opt: options) {
-          if (strcmp(opt.key, ptr->key) == 0) {
-            for (auto v: opt.values) {
-              if (strcmp(ptr->value, v.value) == 0) {
-                opt.currentValue = ptr->value;
-                return true;
-              }
-              recordPotentialAPIViolation(
-                "SET_VARIABLE with unknown value for key TODO");
-            }
-            // TODO: Make sure value is one of the allowed strings
-          }
-        }
-
-        return true;
+        // TODO: Implement
+        break;
       }
       case RETRO_ENVIRONMENT_GET_THROTTLE_STATE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_THROTTLE_STATE");
@@ -828,8 +1012,10 @@ namespace libretro {
       default:
         printf("Unimplemented env command: %d\n", cmd);
         environmentCalls.emplace_back("UNIMPLEMENTED");
+        return false;
     }
-    return false;
+
+    return true;
   }
 
   template<typename T>
@@ -936,7 +1122,9 @@ namespace libretro {
   //        return j.dump();
   //    }
 
-  Core::Core(const std::string &libPath) {
+  Core::Core(const std::string &libPath,
+             std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider) : m_configurationProvider(
+    std::move(configProvider)) {
     coreLib = std::make_unique<QLibrary>(QString::fromStdString(libPath));
 
     // dll = SDL_LoadObject(libPath.c_str());
@@ -956,7 +1144,7 @@ namespace libretro {
         reinterpret_cast<void (*)(unsigned int, unsigned int)>(
           coreLib->resolve("retro_set_controller_port_device"));
     symRetroReset = coreLib->resolve("retro_reset");
-    symRetroRun = reinterpret_cast<void (*)()>(coreLib->resolve("retro_run"));
+    symRetroRun = coreLib->resolve("retro_run");
     symRetroSerializeSize =
         reinterpret_cast<size_t (*)()>(coreLib->resolve("retro_serialize_size"));
     symRetroSerialize = reinterpret_cast<bool (*)(void *, size_t)>(
@@ -964,7 +1152,7 @@ namespace libretro {
     symRetroUnserialize = reinterpret_cast<bool (*)(const void *, size_t)>(
       coreLib->resolve("retro_unserialize"));
     symRetroCheatReset =
-        reinterpret_cast<void (*)()>(coreLib->resolve("retro_cheat_reset"));
+        coreLib->resolve("retro_cheat_reset");
     symRetroCheatSet = reinterpret_cast<void (*)(unsigned, bool, const char *)>(
       coreLib->resolve("retro_cheat_set"));
 
@@ -974,7 +1162,7 @@ namespace libretro {
         reinterpret_cast<bool (*)(unsigned int, const retro_game_info *, size_t)>(
           coreLib->resolve("retro_load_game_special"));
     symRetroUnloadGame =
-        reinterpret_cast<void (*)()>(coreLib->resolve("retro_unload_game"));
+        coreLib->resolve("retro_unload_game");
     symRetroGetRegion = reinterpret_cast<unsigned int (*)()>(
       coreLib->resolve("retro_get_region"));
 
@@ -1069,18 +1257,17 @@ namespace libretro {
     // loadRetroFunc<RetroInputPoll>(dll, "retro_set_input_poll")([]() {});
     // loadRetroFunc<RetroInputState>(dll,
     // "retro_set_input_state")(inputStateCallback);
-
-    symRetroSetControllerPortDevice(0, RETRO_DEVICE_ANALOG);
   }
 
   Core::~Core() {
+    printf("Destroying core\n");
     // if (destroyContextFunction) {
     //   printf("Destroying context\n");
     //   destroyContextFunction();
     // }
 
-    // unloadGame();
-    // deinit();
+    unloadGame();
+    deinit();
 
     // SDL_UnloadObject(dll);
     //
@@ -1113,12 +1300,6 @@ namespace libretro {
   }
 
   void Core::unloadGame() {
-    if (destroyContextFunction) {
-      printf("Destroying context\n");
-      destroyContextFunction();
-      destroyContextFunction = nullptr;
-    }
-
     symRetroUnloadGame();
   }
 
@@ -1216,7 +1397,7 @@ namespace libretro {
     return m_retropadProvider;
   }
 
-  void Core::setAudioReceiver(IAudioDataReceiver *receiver) {
-    audioReceiver = receiver;
+  void Core::setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) {
+    audioReceiver = std::move(receiver);
   }
 } // namespace libretro

@@ -4,6 +4,7 @@
 #include "savefile_metadata.hpp"
 
 #include <optional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -41,5 +42,11 @@ namespace firelight::db {
 
     virtual std::optional<PlaySession>
     getLatestPlaySession(std::string contentId) = 0;
+
+    virtual std::optional<std::string> getPlatformSettingValue(int platformId, std::string key) = 0;
+
+    virtual std::map<std::string, std::string> getAllPlatformSettings(int platformId) = 0;
+
+    virtual void setPlatformSettingValue(int platformId, std::string key, std::string value) = 0;
   };
 } // namespace firelight::db

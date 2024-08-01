@@ -44,7 +44,6 @@ Dialog {
         TextInput {
             id: playlistNameInput
             anchors.fill: parent
-            focus: true
             text: "text"
             color: Constants.colorTestTextActive
             padding: 12

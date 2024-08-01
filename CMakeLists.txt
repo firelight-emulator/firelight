@@ -34,6 +34,7 @@ find_package(GTest REQUIRED)
 
 qt6_standard_project_setup(REQUIRES 6.7)
 
+#add_compile_definitions(QT_QML_DEBUG)
 set(CMAKE_CXX_STANDARD 20)
 #set(QT_VERSION_MAJOR 6)
 
@@ -60,11 +61,9 @@ set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_
 
 add_library(firelight_lib
         src/app/libretro/core.cpp
-        src/app/libretro/coreoption.cpp
         src/app/libretro/game.cpp
         src/app/emulation_manager.cpp
         src/app/db/sqlite_content_database.cpp
-        src/app/fps_multiplier.cpp
         src/app/input/controller.cpp
         src/app/input/controller_manager.cpp
         src/app/input/sdl_event_loop.cpp
@@ -93,17 +92,22 @@ add_library(firelight_lib
         src/gui/PlatformInputListModel.cpp
         src/gui/gamepad_profile.cpp
         src/gui/gamepad_mapping.cpp
-        src/gui/gamepad_mapping.hpp
         src/gui/platform_list_model.cpp
-        src/gui/platform_list_model.hpp
+        src/app/libretro/core_configuration.cpp
+        src/app/libretro/core_configuration.hpp
+        src/app/emulator_config_manager.cpp
+        src/app/platform_metadata.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
+
+if (WIN32)
+    target_link_libraries(firelight_lib PUBLIC mingw32)
+endif ()
+
 target_link_libraries(firelight_lib PUBLIC
-        mingw32
         SDL2::SDL2
-        OpenSSL::SSL
-        OpenSSL::Crypto
+        ${OPENSSL_LIBRARIES}
         z
         Qt6::Gui
         Qt6::Quick
@@ -126,6 +130,12 @@ qt6_add_executable(firelight
         include/firelight/controller_profile.hpp
         include/firelight/input_mapping.hpp
 )
+
+if (APPLE)
+    set_target_properties(firelight PROPERTIES
+            MACOSX_BUNDLE ON
+    )
+endif ()
 
 configure_file(${CMAKE_SOURCE_DIR}/qtquickcontrols2.conf ${CMAKE_BINARY_DIR}/qtquickcontrols2.conf COPYONLY)
 
@@ -157,6 +167,7 @@ install(TARGETS firelight
         DIRECTORIES ${SHARED_LIB_DIR}
         BUNDLE DESTINATION .
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
@@ -196,8 +207,19 @@ add_executable(fl_test
 )
 
 file(GLOB QML_TEST_FILES
-        qml_tests/*.qml
-        qml_tests/**/*.qml
+        qml/ColorPalette.qml
+        qml/Constants.qml
+        qml/common/DetailsButton.qml
+        qml/common/RightClickMenu.qml
+        qml/common/RightClickMenuItem.qml
+        qml/common/CarouselText.qml
+        qml/common/NavigationTabBar.qml
+        qml/library/GameGridItemDelegate.qml
+        qml/pages/LibraryPage2.qml
+        qml_tests/common/tst_DetailsButton.qml
+        qml_tests/common/tst_NavigationTabBar.qml
+        qml_tests/library/tst_GameGridItemDelegate.qml
+        qml_tests/library/tst_LibraryPage2.qml
 )
 
 foreach (QML_FILE ${QML_TEST_FILES})
@@ -207,6 +229,7 @@ endforeach ()
 
 qt_add_executable(fl_qml_test
         tests/qml_main.cpp
+        resources.qrc
 )
 
 qt6_add_qml_module(fl_qml_test
@@ -214,6 +237,11 @@ qt6_add_qml_module(fl_qml_test
         VERSION 1.0
         QML_FILES
         ${QML_TEST_FILES}
+        #        IMPORTS QMLFirelight
+)
+
+set_target_properties(fl_qml_test PROPERTIES
+        QT_QML_IMPORT_PATHS ${CMAKE_BINARY_DIR}/qml
 )
 
 target_link_libraries(fl_qml_test PUBLIC firelight_lib)
@@ -227,7 +255,7 @@ add_test(NAME QMLTests COMMAND fl_qml_test -platform offscreen)
 add_dependencies(fl_test copy_resources)
 #
 target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include)
-target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES} gmock)
+target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
 #ctest_coverage_collect_gcov()
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
@@ -255,11 +283,11 @@ install(
         SCRIPT ${deploy_script}
 )
 
-install(
-        PROGRAMS
-        ${SHARED_LIB_DIR}/libsqlite3-0.dll
-        TYPE BIN
-)
+#install(
+#        PROGRAMS
+#        ${SHARED_LIB_DIR}/libsqlite3-0.dll
+#        TYPE BIN
+#)
 
 install(
         FILES
