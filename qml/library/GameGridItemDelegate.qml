@@ -42,7 +42,8 @@ FocusScope {
                     rightClickMenu.popup()
                 } else if (button === Qt.LeftButton) {
                     // Router.navigateTo("library/" + myDelegate.model.id + "/details")
-                    myDelegate.openDetails(myDelegate.model.id)
+                    // myDelegate.openDetails(myDelegate.model.id)
+                    myDelegate.startGame(myDelegate.model.id)
                 }
             }
         }
@@ -59,7 +60,7 @@ FocusScope {
             }
 
             RightClickMenuItem {
-                // enabled: false
+                enabled: false
                 text: "View details"
                 onTriggered: {
                     myDelegate.openDetails(myDelegate.model.id)
