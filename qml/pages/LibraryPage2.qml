@@ -47,13 +47,6 @@ FocusScope {
                 verticalAlignment: Text.AlignVCenter
             }
 
-            Rectangle {
-                width: 100
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.right: parent.right
-            }
-
         }
 
         readonly property int cellSpacing: 12
