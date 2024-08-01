@@ -10,13 +10,24 @@
 
 #include "audio_manager.hpp"
 
+static constexpr int AUTOSAVE_INTERVAL_MILLIS = 10000;
+
 EmulatorRenderer::EmulatorRenderer() {
   initializeOpenGLFunctions();
+  autosaveTimer.setSingleShot(false);
+  autosaveTimer.setInterval(AUTOSAVE_INTERVAL_MILLIS);
+  QObject::connect(&autosaveTimer, &QTimer::timeout,
+                   [this] {
+                     m_shouldSave = true;
+                   }
+  );
 }
 
 EmulatorRenderer::~EmulatorRenderer() {
+  autosaveTimer.stop();
   getAchievementManager()->unloadGame();
 
+  save(true);
   // TODO: SAVE
 
   if (m_destroyContextFunction) {
@@ -78,6 +89,20 @@ void EmulatorRenderer::setPixelFormat(retro_pixel_format *format) {
     case RETRO_PIXEL_FORMAT_UNKNOWN:
       printf("Pixel format: UNKNOWN\n");
       break;
+  }
+}
+
+void EmulatorRenderer::save(const bool waitForFinish) {
+  spdlog::debug("Saving game data\n");
+  firelight::saves::Savefile saveData(
+    m_core->getMemoryData(libretro::SAVE_RAM));
+  // saveData.setImage(m_fbo->toImage());
+
+  QFuture<bool> result =
+      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
+
+  if (waitForFinish) {
+    result.waitForFinished();
   }
 }
 
@@ -151,6 +176,8 @@ void EmulatorRenderer::render() {
                               vector(m_saveData.begin(), m_saveData.end()));
     }
 
+    autosaveTimer.start();
+
     QMetaObject::invokeMethod(
       getAchievementManager(), "loadGame", Qt::QueuedConnection,
       Q_ARG(int, m_currentEntry.platformId),
@@ -164,6 +191,11 @@ void EmulatorRenderer::render() {
     m_running = true;
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
+
+    if (m_shouldSave) {
+      save(false);
+      m_shouldSave = false;
+    }
   } else if (m_fboIsNew) {
     // m_fbo->bind();
     // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

@@ -40,6 +40,8 @@ protected:
     void render() override;
 
 private:
+    void save(bool waitForFinish = false);
+
     std::unique_ptr<libretro::Core> m_core = nullptr;
     std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
 
@@ -61,6 +63,8 @@ private:
 
     bool m_usingHwRendering = false;
 
+    QTimer autosaveTimer;
+    bool m_shouldSave = false;
     bool m_runAFrame = false;
 
     int m_nativeWidth = 0;

@@ -100,22 +100,11 @@ float EmulationManager::nativeAspectRatio() const {
 }
 
 void EmulationManager::pauseGame() {
-  // if (!m_paused) {
-  //   m_currentPlaySession->unpausedDurationMillis += m_playtimeTimer.restart();
-  //   emit gamePaused();
-  // }
-
-
   m_paused = true;
   update();
 }
 
 void EmulationManager::resumeGame() {
-  // if (m_paused) {
-  //   m_playtimeTimer.restart();
-  //   emit gameResumed();
-  // }
-
   m_paused = false;
   update();
 }
@@ -123,23 +112,6 @@ void EmulationManager::resumeGame() {
 void EmulationManager::resetEmulation() {
   m_shouldReset = true;
   update();
-  // if (m_core) {
-  //   m_core->reset();
-  //   update();
-  // }
-}
-
-void EmulationManager::save(const bool waitForFinish) {
-  // firelight::saves::Savefile saveData(
-  //   m_core->getMemoryData(libretro::SAVE_RAM));
-  // // saveData.setImage(m_fbo->toImage());
-  //
-  // QFuture<bool> result =
-  //     getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
-  //
-  // if (waitForFinish) {
-  //   result.waitForFinished();
-  // }
 }
 
 void EmulationManager::setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio) {

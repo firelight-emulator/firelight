@@ -202,12 +202,12 @@ Flickable {
                                 radius: 6
                             }
 
-                            DetailsButton {
-                                anchors.right: parent.right
-                                anchors.rightMargin: 8
-                                anchors.topMargin: 8
-                                anchors.top: parent.top
-                            }
+                            // DetailsButton {
+                            //     anchors.right: parent.right
+                            //     anchors.rightMargin: 8
+                            //     anchors.topMargin: 8
+                            //     anchors.top: parent.top
+                            // }
 
                             Column {
                                 id: contentColumn
@@ -239,41 +239,41 @@ Flickable {
                                 //     height: 6
                                 //     width: 1
                                 // }
-                                MyComboBox {
-                                    textRole: "text"
-                                    valueRole: "value"
-                                    width: parent.width
-
-                                    // onActivated: library_short_model.sortType = currentValue
-                                    // Component.onCompleted: currentIndex = indexOfValue(library_short_model.sortType)
-
-                                    model: [
-                                        {text: "Default profile", value: "display_name"},
-                                        {text: "Newest first", value: "created_at"}
-                                    ]
-                                }
-                                Button {
-                                    width: parent.width
-                                    padding: 8
-                                    background: Rectangle {
-                                        color: "#03438c"
-                                        radius: 8
-                                    }
-                                    contentItem: Text {
-                                        text: qsTr("Edit current profile")
-                                        color: "white"
-                                        font.pointSize: 11
-                                        font.weight: Font.DemiBold
-                                        font.family: Constants.regularFontFamily
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-
-                                    onClicked: function () {
-                                        root.StackView.view.push(profileEditor)
-                                        // profileDialog.open()
-                                    }
-                                }
+                                // MyComboBox {
+                                //     textRole: "text"
+                                //     valueRole: "value"
+                                //     width: parent.width
+                                //
+                                //     // onActivated: library_short_model.sortType = currentValue
+                                //     // Component.onCompleted: currentIndex = indexOfValue(library_short_model.sortType)
+                                //
+                                //     model: [
+                                //         {text: "Default profile", value: "display_name"},
+                                //         {text: "Newest first", value: "created_at"}
+                                //     ]
+                                // }
+                                // Button {
+                                //     width: parent.width
+                                //     padding: 8
+                                //     background: Rectangle {
+                                //         color: "#03438c"
+                                //         radius: 8
+                                //     }
+                                //     contentItem: Text {
+                                //         text: qsTr("Edit current profile")
+                                //         color: "white"
+                                //         font.pointSize: 11
+                                //         font.weight: Font.DemiBold
+                                //         font.family: Constants.regularFontFamily
+                                //         horizontalAlignment: Text.AlignHCenter
+                                //         verticalAlignment: Text.AlignVCenter
+                                //     }
+                                //
+                                //     onClicked: function () {
+                                //         root.StackView.view.push(profileEditor)
+                                //         // profileDialog.open()
+                                //     }
+                                // }
                             }
                             // Text {
                             //     text: model.model_name

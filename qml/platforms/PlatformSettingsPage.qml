@@ -62,7 +62,8 @@ FocusScope {
 
             Text {
                 Layout.fillWidth: true
-                text: qsTr("Here's where you can change settings for each platform. You can change settings on a per-game basis by selecting the game in your library and going to 'Settings'.")
+                // text: qsTr("Here's where you can change settings for each platform. You can change settings on a per-game basis by selecting the game in your library and going to 'Settings'.")
+                text: qsTr("Here's where you can change the default settings for each platform. Later you'll be able to change them on a per-game basis.")
                 font.pixelSize: 15
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Normal

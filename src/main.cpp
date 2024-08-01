@@ -82,6 +82,11 @@ int main(int argc, char *argv[]) {
   // userdata db
   // controller profiles
   // library db
+
+  auto docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+
+  printf("Documents Path: %s\n", docPath.toStdString().c_str());
+
   auto appDataPath =
       QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 

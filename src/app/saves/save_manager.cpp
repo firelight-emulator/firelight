@@ -30,11 +30,11 @@ namespace firelight::saves {
           m_userdataDatabase.getSavefileMetadata(entry.contentId, slot);
 
       if (metadataOpt.has_value()) {
-        printf("Metadata exists\n");
+        // printf("Metadata exists\n");
         metadata = metadataOpt.value();
         exists = true;
       } else {
-        printf("Metadata DOES NOT exist\n");
+        // printf("Metadata DOES NOT exist\n");
         metadata.contentId = entry.contentId;
         metadata.slotNumber = slot;
       }

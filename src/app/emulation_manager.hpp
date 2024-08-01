@@ -61,8 +61,6 @@ public slots:
 
     void resetEmulation();
 
-    void save(bool waitForFinish = false);
-
 signals:
     void gameLoadSucceeded();
 
