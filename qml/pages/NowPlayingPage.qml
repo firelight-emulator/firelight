@@ -20,18 +20,19 @@ FocusScope {
         anchors.right: parent.right
         height: 40
     }
-    NavigationTabBar {
-        id: navBar
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        tabs: ["Stuff", "Controller", "Achievements", "Settings"]
-        tabWidth: 150
-        height: 40
-    }
+    // NavigationTabBar {
+    //     id: navBar
+    //     anchors.horizontalCenter: parent.horizontalCenter
+    //
+    //     tabs: ["Stuff", "Controller", "Achievements", "Settings"]
+    //     tabWidth: 150
+    //     height: 40
+    // }
 
     RowLayout {
         id: contentRow
-        anchors.top: navBar.bottom
+        // anchors.top: navBar.bottom
+        anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -134,6 +135,7 @@ FocusScope {
                 Layout.preferredHeight: 40
                 checkable: false
                 alignRight: true
+                enabled: false
 
                 onClicked: function () {
                     backToMainMenuPressed()

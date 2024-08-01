@@ -237,5 +237,27 @@ namespace firelight {
 
       return defaultPlatformValues.at(platformId).at(key);
     }
+
+    static std::string getCoreDllPath(const int platformId) {
+      switch (platformId) {
+        case 1:
+        case 2:
+          return "./system/_cores/gambatte_libretro.dll";
+        case 3:
+          return "./system/_cores/mgba_libretro.dll";
+        case 5:
+          return "./system/_cores/fceumm_libretro.dll";
+        case 6:
+          return "./system/_cores/snes9x_libretro.dll";
+        case 7:
+          return "./system/_cores/mupen64plus_next_libretro.dll";
+        case 10:
+          return "./system/_cores/melondsds_libretro.dll";
+        case 13:
+          return "./system/_cores/genesis_plus_gx_libretro.dll";
+        default:
+          return "";
+      }
+    }
   };
 } // firelight

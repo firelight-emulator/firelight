@@ -9,7 +9,6 @@
 #include <spdlog/spdlog.h>
 
 #include "audio_manager.hpp"
-#include "libretro/core_configuration.hpp"
 
 EmulatorRenderer::EmulatorRenderer() {
   initializeOpenGLFunctions();
@@ -83,11 +82,17 @@ void EmulatorRenderer::setPixelFormat(retro_pixel_format *format) {
 }
 
 void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
-  printf("Begin synchronize\n");
   const auto manager = reinterpret_cast<EmulationManager *>(fbo);
 
   m_paused = manager->m_paused;
   m_gameReady = manager->m_gameReady;
+
+  if (manager->m_shouldReset) {
+    if (m_core) {
+      m_core->reset();
+    }
+    manager->m_shouldReset = false;
+  }
 
   if (!m_core && m_gameReady) {
     m_gameData = manager->m_gameData;
@@ -104,17 +109,14 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   manager->setIsRunning(m_running);
 
   Renderer::synchronize(fbo);
-  printf("End synchronize\n");
 }
 
 QOpenGLFramebufferObject *
 EmulatorRenderer::createFramebufferObject(const QSize &size) {
-  printf("Begin createFramebufferObject (Thread: %p)\n", QThread::currentThreadId());
   if (m_nativeWidth != 0 && m_nativeHeight != 0) {
     m_fboIsNew = true;
     m_fbo =
         Renderer::createFramebufferObject(QSize(m_nativeWidth, m_nativeHeight));
-    printf("End createFramebufferObject\n");
 
     if (m_resetContextFunction) {
       m_resetContextFunction();
@@ -123,14 +125,11 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
   }
 
   m_fbo = Renderer::createFramebufferObject(size);
-  printf("End createFramebufferObject\n");
   return m_fbo;
 }
 
 void EmulatorRenderer::render() {
   if (!m_core && m_gameReady) {
-    printf("Creating core (Thread: %p)\n", QThread::currentThreadId());
-
     auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_currentEntry.platformId, m_currentEntry.id);
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
 

@@ -46,6 +46,7 @@ public:
     firelight::db::LibraryEntry m_currentEntry;
     std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
     bool m_paused = false;
+    bool m_shouldReset = false;
 
     bool m_running = false;
 

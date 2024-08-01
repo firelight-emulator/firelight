@@ -36,18 +36,18 @@ void CoreConfiguration::setDefaultValue(const std::string key, const std::string
 
 std::optional<firelight::libretro::IConfigurationProvider::OptionValue>
 CoreConfiguration::getOptionValue(const std::string key) {
-    if (firstAccess) {
-        // print all keys and possible values
-        for (const auto &option: m_options) {
-            printf("Option %s (default: %s)\n", option.first.c_str(), option.second.defaultValueKey.c_str());
-            //for (const auto &possibleValue: option.second.possibleValues) {
-            //    printf("  %s\n", possibleValue.key.c_str());
-            //}
-        }
-
-
-        firstAccess = false;
-    }
+    // if (firstAccess) {
+    //     // print all keys and possible values
+    //     for (const auto &option: m_options) {
+    //         printf("Option %s (default: %s)\n", option.first.c_str(), option.second.defaultValueKey.c_str());
+    //         //for (const auto &possibleValue: option.second.possibleValues) {
+    //         //    printf("  %s\n", possibleValue.key.c_str());
+    //         //}
+    //     }
+    //
+    //
+    //     firstAccess = false;
+    // }
 
     printf("Getting value for key %s...", key.c_str());
 
