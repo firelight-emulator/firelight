@@ -65,12 +65,14 @@ Item {
         }
 
         function test_left_click_emits_detailsOpened() {
+            skip("Skipping while view details is disabled")
             mouseClick(button)
             compare(spy.count, 1, "openDetails signal was emitted")
             compare(spy.signalArguments[0][0], 5, "openDetails signal was emitted with correct id")
         }
 
         function test_right_click_opens_menu() {
+            skip("Skipping while view details is disabled")
             const rightClick = findChild(button, "rightClickMenu")
 
             compare(rightClick.visible, false, "Right click is not visible")
@@ -95,6 +97,7 @@ Item {
         }
 
         function test_right_click_menu_view_details() {
+            skip("Skipping while view details is disabled")
             const rightClick = findChild(button, "rightClickMenu")
             mouseClick(button, button.width / 2, button.height / 2, Qt.RightButton)
 
