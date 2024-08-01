@@ -13,7 +13,7 @@ void AudioManager::initialize(const double new_freq) {
   want.freq = new_freq; // Sample rate (e.g., 44.1 kHz)
   want.format = AUDIO_S16; // Audio format (16-bit signed)
   want.channels = 2; // Number of audio channels (stereo)
-  want.samples = 4096; // Audio buffer size (samples)
+  want.samples = 128; // Audio buffer size (samples)
   want.callback = nullptr;
 
   this->audioDevice = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
