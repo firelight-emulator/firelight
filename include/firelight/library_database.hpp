@@ -2,6 +2,9 @@
 
 #include "library_entry.hpp"
 #include "playlist.hpp"
+#include "library/entry.hpp"
+#include "library/patch_entry.hpp"
+#include "library/rom_entry.hpp"
 
 #include <optional>
 #include <string>
@@ -10,8 +13,8 @@
 #include "library_content_directory.hpp"
 
 namespace firelight::db {
-class ILibraryDatabase {
-public:
+ class ILibraryDatabase {
+ public:
   virtual ~ILibraryDatabase() = default;
 
   /**
@@ -67,5 +70,5 @@ public:
   [[nodiscard]] virtual std::vector<Playlist> getAllPlaylists() = 0;
 
   virtual std::vector<Playlist> getPlaylistsForEntry(int entryId) = 0;
-};
+ };
 } // namespace firelight::db

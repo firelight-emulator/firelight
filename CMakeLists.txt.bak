@@ -27,13 +27,10 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(PkgConfig REQUIRED)
 find_package(SDL2 REQUIRED)
-find_package(OpenSSL REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql Charts QuickTest REQUIRED)
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
-
-message(STATUS "OPENSSL LIBRARIES: ${OPENSSL_SSL_LIBRARY}")
 
 qt6_standard_project_setup(REQUIRES 6.7)
 
@@ -44,7 +41,7 @@ set(CMAKE_CXX_STANDARD 20)
 include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
-include_directories(${CMAKE_SOURCE_DIR}/include ${OPENSSL_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(src/app)
 
 file(GLOB QML_FILES
@@ -104,7 +101,6 @@ add_library(firelight_lib
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
 target_link_libraries(firelight_lib PUBLIC
         SDL2::SDL2
-        ${OPENSSL_LIBRARIES}
         z
         Qt6::Gui
         Qt6::Quick

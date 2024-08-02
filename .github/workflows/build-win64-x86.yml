@@ -39,7 +39,6 @@ jobs:
             SDL2:p
             cpr:p
             spdlog:p
-            openssl:p
             nsis:p
 
       - run: ln -s "${MSYSTEM_PREFIX}/bin/qtpaths-qt6.exe" "${MSYSTEM_PREFIX}/bin/qtpaths.exe"

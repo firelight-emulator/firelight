@@ -21,6 +21,7 @@
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
 #include "app/library/library_scanner.hpp"
+#include "app/library/library_scanner2.hpp"
 #include "app/library/sqlite_library_database.hpp"
 #include "app/saves/save_manager.hpp"
 #include "gui/controller_list_model.hpp"
@@ -48,7 +49,7 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
 }
 
 int main(int argc, char *argv[]) {
-  SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
+  // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
@@ -66,6 +67,9 @@ int main(int argc, char *argv[]) {
   QSurfaceFormat::setDefaultFormat(format);
 
   QApplication app(argc, argv);
+
+  firelight::library::LibraryScanner2 libScanner2;
+  libScanner2.scanAllPaths();
 
   // TODO:
   //  Roms

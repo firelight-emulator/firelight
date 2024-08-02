@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
-// #include <openssl/crypto.h>
 //
 #include <zlib.h>
 class BPSPatchTest : public testing::Test {};

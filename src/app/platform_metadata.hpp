@@ -226,6 +226,16 @@ namespace firelight {
 
   class PlatformMetadata {
   public:
+    static constexpr int PLATFORM_ID_UNKNOWN = -1;
+    static constexpr int PLATFORM_ID_GAMEBOY = 1;
+    static constexpr int PLATFORM_ID_GAMEBOY_COLOR = 2;
+    static constexpr int PLATFORM_ID_GAMEBOY_ADVANCE = 3;
+    static constexpr int PLATFORM_ID_NES = 5;
+    static constexpr int PLATFORM_ID_SNES = 6;
+    static constexpr int PLATFORM_ID_N64 = 7;
+    static constexpr int PLATFORM_ID_NINTENDO_DS = 10;
+    static constexpr int PLATFORM_ID_SEGA_GENESIS = 13;
+
     static std::optional<std::string> getDefaultConfigValue(int platformId, std::string key) {
       if (defaultPlatformValues.find(platformId) == defaultPlatformValues.end()) {
         return std::nullopt;
@@ -238,22 +248,50 @@ namespace firelight {
       return defaultPlatformValues.at(platformId).at(key);
     }
 
+    static int getIdFromFileExtension(const std::string &extension) {
+      if (extension == "gb") {
+        return PLATFORM_ID_GAMEBOY;
+      }
+      if (extension == "gbc") {
+        return PLATFORM_ID_GAMEBOY_COLOR;
+      }
+      if (extension == "gba") {
+        return PLATFORM_ID_GAMEBOY_ADVANCE;
+      }
+      if (extension == "nes") {
+        return PLATFORM_ID_NES;
+      }
+      if (extension == "sfc" || extension == "smc") {
+        return PLATFORM_ID_SNES;
+      }
+      if (extension == "n64" || extension == "v64" || extension == "z64") {
+        return PLATFORM_ID_N64;
+      }
+      if (extension == "nds") {
+        return PLATFORM_ID_NINTENDO_DS;
+      }
+      if (extension == "md") {
+        return PLATFORM_ID_SEGA_GENESIS;
+      }
+      return PLATFORM_ID_UNKNOWN;
+    }
+
     static std::string getCoreDllPath(const int platformId) {
       switch (platformId) {
-        case 1:
-        case 2:
+        case PLATFORM_ID_GAMEBOY:
+        case PLATFORM_ID_GAMEBOY_COLOR:
           return "./system/_cores/gambatte_libretro.dll";
-        case 3:
+        case PLATFORM_ID_GAMEBOY_ADVANCE:
           return "./system/_cores/mgba_libretro.dll";
-        case 5:
+        case PLATFORM_ID_NES:
           return "./system/_cores/fceumm_libretro.dll";
-        case 6:
+        case PLATFORM_ID_SNES:
           return "./system/_cores/snes9x_libretro.dll";
-        case 7:
+        case PLATFORM_ID_N64:
           return "./system/_cores/mupen64plus_next_libretro.dll";
-        case 10:
+        case PLATFORM_ID_NINTENDO_DS:
           return "./system/_cores/melondsds_libretro.dll";
-        case 13:
+        case PLATFORM_ID_SEGA_GENESIS:
           return "./system/_cores/genesis_plus_gx_libretro.dll";
         default:
           return "";

@@ -4,9 +4,9 @@
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
-#include <openssl/crypto.h>
 
 #include <zlib.h>
+
 class UPSPatchTest : public testing::Test {
 protected:
   // Common setup code that runs before each test case

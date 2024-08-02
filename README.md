@@ -27,7 +27,6 @@ Here are the things you need to build the application:
             - Quick3D
             - Sql
     - SDL2
-    - OpenSSL
     - spdlog
     - GTest (currently required even without running tests, but this will be fixed later)
 
@@ -171,8 +170,6 @@ This project is licensed under the GPL-3.0 License - see the [LICENSE.md](LICENS
 [//]: # (    * pacman -S mingw-w64-x86_64-qt6 &#40;hit enter for all&#41;)
 
 [//]: # (    * pacman -S mingw-w64-x86_64-SDL2)
-
-[//]: # (    * pacman -S mingw-w64-x86_64-openssl)
 
 [//]: # (    * pacman -S mingw-w64-x86_64-glew)
 

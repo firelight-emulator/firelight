@@ -26,7 +26,6 @@ set(CMAKE_AUTOUIC ON)
 #set(QT_ENABLE_VERBOSE_DEPLOYMENT ON)
 
 find_package(SDL2 REQUIRED)
-find_package(OpenSSL REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql Charts QuickTest REQUIRED)
 find_package(cpr REQUIRED)
@@ -107,7 +106,6 @@ endif ()
 
 target_link_libraries(firelight_lib PUBLIC
         SDL2::SDL2
-        ${OPENSSL_LIBRARIES}
         z
         Qt6::Gui
         Qt6::Quick

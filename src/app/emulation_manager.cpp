@@ -12,7 +12,6 @@
 #include "patching/yay_0_codec.hpp"
 #include "saves/save_manager.hpp"
 #include "saves/savefile.hpp"
-#include "util/md5.hpp"
 
 #include <QPainter>
 #include <QtConcurrent>

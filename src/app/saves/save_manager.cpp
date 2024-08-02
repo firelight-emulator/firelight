@@ -1,9 +1,9 @@
 #include "save_manager.hpp"
 
-#include "../util/md5.hpp"
 #include "firelight/library_entry.hpp"
 
 #include <fstream>
+#include <qcryptographichash.h>
 #include <qfuture.h>
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
@@ -41,7 +41,7 @@ namespace firelight::saves {
 
       const auto bytes = saveData.getSaveRamData();
 
-      auto savefileMd5 = calculateMD5(bytes);
+      auto savefileMd5 = QCryptographicHash::hash(bytes, QCryptographicHash::Md5).toHex().toStdString();
 
       if (metadata.savefileMd5 == savefileMd5) {
         return true;
