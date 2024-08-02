@@ -76,21 +76,23 @@ ApplicationWindow {
 
     }
 
-    EmulatorScreen {
+    Component {
         id: emulatorScreen
+        EmulatorScreen {
 
-        Component.onCompleted: {
-            console.log("Graphics Info:")
-            console.log("  API:", emulatorScreen.GraphicsInfo.api)
-            console.log("  Major Version:", emulatorScreen.GraphicsInfo.majorVersion)
-            console.log("  Minor Version:", emulatorScreen.GraphicsInfo.minorVersion)
-            console.log("  Profile:", emulatorScreen.GraphicsInfo.profile)
+            // Component.onCompleted: {
+            //     console.log("Graphics Info:")
+            //     console.log("  API:", emulatorScreen.GraphicsInfo.api)
+            //     console.log("  Major Version:", emulatorScreen.GraphicsInfo.majorVersion)
+            //     console.log("  Minor Version:", emulatorScreen.GraphicsInfo.minorVersion)
+            //     console.log("  Profile:", emulatorScreen.GraphicsInfo.profile)
+            // }
+
+            onGameAboutToStop: function () {
+                screenStack.pushItem(homeScreen, {}, StackView.PushTransition)
+            }
+
         }
-
-        onGameAboutToStop: function () {
-            screenStack.pushItem(homeScreen, {}, StackView.PushTransition)
-        }
-
     }
 
     // Rectangle {
@@ -232,7 +234,8 @@ ApplicationWindow {
         ScriptAction {
             script: {
                 screenStack.popCurrentItem(StackView.Immediate)
-                emulatorScreen.loadGame(gameStartAnimation.entryId)
+                screenStack.currentItem.loadGame(gameStartAnimation.entryId)
+                // emulatorScreen
             }
         }
 

@@ -47,74 +47,74 @@ namespace firelight {
   }
 
   void SdlEventLoop::processEvents() const {
-    while (m_running) {
-      SDL_Event ev;
-      while (SDL_WaitEvent(&ev)) {
-        switch (ev.type) {
-          case SDL_CONTROLLERDEVICEADDED:
-          case SDL_CONTROLLERDEVICEREMOVED:
-            m_controllerManager->handleSDLControllerEvent(ev);
-            break;
-          case SDL_CONTROLLERAXISMOTION:
-            break;
-          case SDL_CONTROLLERBUTTONUP: {
-            Qt::Key key;
-
-            auto button = ev.cbutton.button;
-            if (button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
-              key = Qt::Key_Right;
-            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_LEFT) {
-              key = Qt::Key_Left;
-            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
-              key = Qt::Key_Up;
-            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
-              key = Qt::Key_Down;
-            } else if (button == SDL_CONTROLLER_BUTTON_X) {
-              key = Qt::Key_Menu;
-            } else {
-              break;
-            }
-
-            QApplication::postEvent(
-              m_window, new QKeyEvent(QEvent::KeyRelease, key, Qt::KeyboardModifier::NoModifier));
-            break;
-          }
-          case SDL_CONTROLLERBUTTONDOWN: {
-            Qt::Key key;
-
-            auto button = ev.cbutton.button;
-            if (button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
-              key = Qt::Key_Right;
-            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_LEFT) {
-              key = Qt::Key_Left;
-            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
-              key = Qt::Key_Up;
-            } else if (button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
-              key = Qt::Key_Down;
-            } else if (button == SDL_CONTROLLER_BUTTON_X) {
-              key = Qt::Key_Menu;
-            } else {
-              break;
-            }
-
-            QApplication::postEvent(
-              m_window, new QKeyEvent(QEvent::KeyPress, key, Qt::KeyboardModifier::NoModifier));
-            break;
-          }
-          // printf("button: %d, state: %d\n", ev.cbutton.button, ev.cbutton.state);
-          // break;
-          case SDL_JOYAXISMOTION:
-          case SDL_JOYBUTTONUP:
-          case SDL_JOYBUTTONDOWN:
-            break;
-          case SDL_QUIT:
-            spdlog::info("Got shut down signal; stopping SDL event loop");
-            return;
-          default:
-            spdlog::debug("Got an unhandled SDL event {}", ev.type);
-            break;
-        }
-      }
-    }
+    // while (m_running) {
+    //   SDL_Event ev;
+    //   while (SDL_WaitEvent(&ev)) {
+    //     switch (ev.type) {
+    //       case SDL_CONTROLLERDEVICEADDED:
+    //       case SDL_CONTROLLERDEVICEREMOVED:
+    //         m_controllerManager->handleSDLControllerEvent(ev);
+    //         break;
+    //       case SDL_CONTROLLERAXISMOTION:
+    //         break;
+    //       case SDL_CONTROLLERBUTTONUP: {
+    //         Qt::Key key;
+    //
+    //         auto button = ev.cbutton.button;
+    //         if (button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
+    //           key = Qt::Key_Right;
+    //         } else if (button == SDL_CONTROLLER_BUTTON_DPAD_LEFT) {
+    //           key = Qt::Key_Left;
+    //         } else if (button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
+    //           key = Qt::Key_Up;
+    //         } else if (button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
+    //           key = Qt::Key_Down;
+    //         } else if (button == SDL_CONTROLLER_BUTTON_X) {
+    //           key = Qt::Key_Menu;
+    //         } else {
+    //           break;
+    //         }
+    //
+    //         QApplication::postEvent(
+    //           m_window, new QKeyEvent(QEvent::KeyRelease, key, Qt::KeyboardModifier::NoModifier));
+    //         break;
+    //       }
+    //       case SDL_CONTROLLERBUTTONDOWN: {
+    //         Qt::Key key;
+    //
+    //         auto button = ev.cbutton.button;
+    //         if (button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
+    //           key = Qt::Key_Right;
+    //         } else if (button == SDL_CONTROLLER_BUTTON_DPAD_LEFT) {
+    //           key = Qt::Key_Left;
+    //         } else if (button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
+    //           key = Qt::Key_Up;
+    //         } else if (button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
+    //           key = Qt::Key_Down;
+    //         } else if (button == SDL_CONTROLLER_BUTTON_X) {
+    //           key = Qt::Key_Menu;
+    //         } else {
+    //           break;
+    //         }
+    //
+    //         QApplication::postEvent(
+    //           m_window, new QKeyEvent(QEvent::KeyPress, key, Qt::KeyboardModifier::NoModifier));
+    //         break;
+    //       }
+    //       // printf("button: %d, state: %d\n", ev.cbutton.button, ev.cbutton.state);
+    //       // break;
+    //       case SDL_JOYAXISMOTION:
+    //       case SDL_JOYBUTTONUP:
+    //       case SDL_JOYBUTTONDOWN:
+    //         break;
+    //       case SDL_QUIT:
+    //         spdlog::info("Got shut down signal; stopping SDL event loop");
+    //         return;
+    //       default:
+    //         spdlog::debug("Got an unhandled SDL event {}", ev.type);
+    //         break;
+    //     }
+    //   }
+    // }
   }
 } // namespace firelight

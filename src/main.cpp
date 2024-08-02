@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
 
   firelight::library::LibraryScanner2 libScanner2;
-  libScanner2.scanAllPaths();
+  // libScanner2.scanAllPaths();
 
   // TODO:
   //  Roms
@@ -212,12 +212,15 @@ int main(int argc, char *argv[]) {
   QObject::connect(
     &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
     []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
+  // QObject::connect(
+  //   &engine, &QQmlApplicationEngine::objectCreated, &app,
+  //   [](QObject *item, const QUrl &url) { printf("Created: %s\n", url.toDisplayString().toStdString().c_str()); },
+  //   Qt::QueuedConnection);
   engine.loadFromModule("QMLFirelight", "Main2");
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
-
 
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
   sdlEventLoop.start();
@@ -229,6 +232,8 @@ int main(int argc, char *argv[]) {
   sdlEventLoop.quit();
   sdlEventLoop.wait();
 
+
+  printf("We still gucci\n");
   // TODO: Let daemons finish
 
   return exitCode;
