@@ -1,6 +1,9 @@
 #include "library_scanner.hpp"
 
 #include <fstream>
+#include <qcryptographichash.h>
+#include <qfile.h>
+#include <openssl/evp.h>
 #include <qfuture.h>
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
@@ -153,79 +156,83 @@ void LibraryScanner::startScan() {
                        ext.string() == ".gb" || ext.string() == ".gbc" ||
                        ext.string() == ".gba" || ext.string() == ".sfc" ||
                        ext.string() == ".nes") {
-              // auto platforms = content_database_->getMatchingPlatforms(
-              //   {.supportedExtensions = {ext.string()}});
-              //
-              // if (platforms.empty()) {
-              //   printf("File extension not recognized: %s\n",
-              //          ext.string().c_str());
-              //   continue;
-              // }
-              //
-              // std::vector<char> thing(filesize);
-              // std::ifstream file(entry.path(), std::ios::binary);
-              //
-              // file.read(thing.data(), filesize);
-              // file.close();
-              //
-              // // auto md5 = calculateMD5(thing.data(), filesize);
-              // // scan_results.all_md5s.emplace_back(md5);
-              // //
-              // // auto contentId = md5;
-              //
-              // // TODO: Determine if ROM has a header
-              // if (ext == ".sfc" || ext == ".smc") {
-              //   if (filesize % 1024 == 512) {
-              //     printf("FOUND HEADER!!! %s\n",
-              //            entry.path().filename().string().c_str());
-              //     thing.erase(thing.begin(), thing.begin() + 512);
-              //     filesize -= 512;
-              //
-              //     // contentId = calculateMD5(thing.data(), filesize);
-              //     // Copy thing into a new vector without the header
-              //     // std::vector<char> new_thing(size - 512);
-              //     // std::copy(thing.begin() + 512, thing.end(),
-              //     // new_thing.begin());
-              //   }
-              // } else if (ext == ".nes") {
-              //   auto firstFourAsString = std::string(thing.begin(), thing.begin() + 4);
-              //   if (firstFourAsString == "NES\x1A") {
-              //     printf("FOUND HEADER!!! %s\n",
-              //            entry.path().filename().string().c_str());
-              //     thing.erase(thing.begin(), thing.begin() + 16);
-              //     filesize -= 16;
-              //
-              //     // contentId = calculateMD5(thing.data(), filesize);
-              //   }
-              // }
-              //
-              // auto display_name = entry.path().filename().string();
-              //
-              // firelight::db::LibraryEntry e = {
-              //   .displayName = display_name,
-              //   .contentId = contentId,
-              //   .platformId = platforms.at(0).id,
-              //   .type = firelight::db::LibraryEntry::EntryType::ROM,
-              //   .fileMd5 = md5,
-              //   .fileCrc32 = md5, // TODO: Calculate CRC32
-              //   .sourceDirectory =
-              //   canonical(entry.path().parent_path()).string(),
-              //   .contentPath = canonical(entry.path()).string()
-              // };
-              //
-              // auto roms =
-              //     content_database_->getMatchingRoms({.md5 = contentId});
-              // if (!roms.empty()) {
-              //   auto rom = roms.at(0);
-              //
-              //   auto game = content_database_->getGame(rom.gameId);
-              //   if (game.has_value()) {
-              //     e.gameId = game->id;
-              //     e.displayName = game->name;
-              //   }
-              // }
-              //
-              // scan_results.new_entries.emplace_back(e);
+              auto platforms = content_database_->getMatchingPlatforms(
+                {.supportedExtensions = {ext.string()}});
+
+              if (platforms.empty()) {
+                printf("File extension not recognized: %s\n",
+                       ext.string().c_str());
+                continue;
+              }
+
+              QFile file(entry.path().string().c_str());
+              if (!file.open(QIODeviceBase::ReadOnly)) {
+                printf(":(\n");
+              }
+
+              auto fileData = file.readAll();
+              file.close();
+
+              auto md5 = QCryptographicHash::hash(fileData, QCryptographicHash::Algorithm::Md5).toHex();
+              printf("Md5: %s\n", md5.toStdString().c_str());
+              scan_results.all_md5s.emplace_back(md5);
+
+              auto contentId = md5;
+
+              // TODO: Determine if ROM has a header
+              if (ext == ".sfc" || ext == ".smc") {
+                if (filesize % 1024 == 512) {
+                  printf("FOUND HEADER!!! %s\n",
+                         entry.path().filename().string().c_str());
+                  fileData.remove(0, 512);
+                  filesize -= 512;
+
+                  contentId = QCryptographicHash::hash(fileData, QCryptographicHash::Algorithm::Md5).toHex();
+                  // Copy thing into a new vector without the header
+                  // std::vector<char> new_thing(size - 512);
+                  // std::copy(thing.begin() + 512, thing.end(),
+                  // new_thing.begin());
+                }
+              } else if (ext == ".nes") {
+                if (fileData.startsWith("NES\x1A")) {
+                  printf("FOUND HEADER!!! %s\n",
+                         entry.path().filename().string().c_str());
+                  fileData.remove(0, 16);
+                  filesize -= 16;
+
+                  contentId = QCryptographicHash::hash(fileData, QCryptographicHash::Algorithm::Md5).toHex();
+                }
+              }
+
+
+              auto display_name = entry.path().filename().string();
+              printf("display name: %s\n", display_name.c_str());
+
+              firelight::db::LibraryEntry e = {
+                .displayName = display_name,
+                .contentId = contentId.toStdString(),
+                .platformId = platforms.at(0).id,
+                .type = firelight::db::LibraryEntry::EntryType::ROM,
+                .fileMd5 = md5.toStdString(),
+                .fileCrc32 = md5.toStdString(), // TODO: Calculate CRC32
+                .sourceDirectory =
+                canonical(entry.path().parent_path()).string(),
+                .contentPath = canonical(entry.path()).string()
+              };
+
+              auto roms =
+                  content_database_->getMatchingRoms({.md5 = contentId.toStdString()});
+              if (!roms.empty()) {
+                auto rom = roms.at(0);
+
+                auto game = content_database_->getGame(rom.gameId);
+                if (game.has_value()) {
+                  e.gameId = game->id;
+                  e.displayName = game->name;
+                }
+              }
+
+              scan_results.new_entries.emplace_back(e);
             }
           }
         }
@@ -243,6 +250,7 @@ void LibraryScanner::startScan() {
         }
 
         for (auto &new_entry: scan_results.new_entries) {
+          printf("Creating library entry: %s\n", new_entry.displayName.c_str());
           library_database_->createLibraryEntry(new_entry);
         }
 

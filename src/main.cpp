@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 
   QApplication app(argc, argv);
 
-  firelight::library::LibraryScanner2 libScanner2;
+  // firelight::library::LibraryScanner2 libScanner2;
   // libScanner2.scanAllPaths();
 
   // TODO:

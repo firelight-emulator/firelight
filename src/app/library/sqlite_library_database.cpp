@@ -178,6 +178,8 @@ namespace firelight::db {
                     .count());
 
     if (!query.exec()) {
+      spdlog::error("Failed to create library entry: {}",
+                    query.lastError().text().toStdString());
       query.finish();
       return false;
     }
