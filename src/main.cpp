@@ -32,6 +32,7 @@
 #include "gui/platform_list_model.hpp"
 #include "gui/playlist_item_model.hpp"
 #include "gui/window_resize_handler.hpp"
+#include "gui/models/shop/shop_item_model.hpp"
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
@@ -160,6 +161,7 @@ int main(int argc, char *argv[]) {
   libSortModel.setSourceModel(&libModel);
 
   firelight::gui::PlatformListModel platformListModel;
+  firelight::shop::ShopItemModel shopItemModel(contentDatabase);
 
   LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
   firelight::ManagerAccessor::setLibraryManager(&libraryManager);
@@ -204,6 +206,7 @@ int main(int argc, char *argv[]) {
                                            &controllerManager);
   engine.rootContext()->setContextProperty("mod_model", &modListModel);
   engine.rootContext()->setContextProperty("platform_model", &platformListModel);
+  engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",

@@ -36,8 +36,8 @@ Button {
             text: control.labelText
             Layout.fillHeight: true
             Layout.fillWidth: true
-            font.pointSize: 11
-            // font.family: Constants.regularFontFamily
+            font.pixelSize: 14
+            font.family: Constants.regularFontFamily
             color: control.enabled ? "white" : "#aaaaaa"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter

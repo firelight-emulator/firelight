@@ -1,5 +1,3 @@
-pragma ComponentBehavior: Bound
-
 import QtQuick
 import QtQuick.Controls
 
@@ -8,6 +6,7 @@ FocusScope {
     property alias model: listView.model
 
     signal openDetails(entryId: int)
+
     signal startGame(entryId: int)
 
     GridView {
@@ -21,6 +20,31 @@ FocusScope {
         preferredHighlightBegin: 0.33 * listView.height
         preferredHighlightEnd: 0.66 * listView.height
         highlightRangeMode: GridView.ApplyRange
+
+        populate: Transition {
+            id: popTransition
+            SequentialAnimation {
+                PauseAnimation {
+                    duration: popTransition.ViewTransition.index * 10
+                }
+                ParallelAnimation {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                    PropertyAnimation {
+                        property: "y"
+                        from: popTransition.ViewTransition.destination.y + 20
+                        to: popTransition.ViewTransition.destination.y
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+        }
 
         contentY: 0
 
@@ -61,6 +85,7 @@ FocusScope {
         boundsBehavior: Flickable.StopAtBounds
 
         delegate: GameGridItemDelegate {
+            opacity: 0
             cellSpacing: listView.cellSpacing
             cellWidth: listView.cellContentWidth
             cellHeight: listView.cellContentHeight

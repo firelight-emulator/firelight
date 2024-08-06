@@ -19,10 +19,11 @@ FocusScope {
     }
 
     Component {
-        id: modsPage
-        DiscoverPage {
+        id: shopPage
+        ShopLandingPage {
             property bool topLevel: true
-            property string topLevelName: "mods"
+            property string topLevelName: "shop"
+            model: shop_item_model
         }
     }
 
@@ -117,7 +118,7 @@ FocusScope {
                 labelText: "Dashboard"
                 labelIcon: "\ue871"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 48
+                Layout.preferredHeight: 40
                 enabled: false
 
 
@@ -130,15 +131,15 @@ FocusScope {
                 labelText: "Mod Shop"
                 labelIcon: "\uef48"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 48
-                enabled: false
-                checked: contentStack.currentPageName === "mods"
+                Layout.preferredHeight: 40
+                // enabled: false
+                checked: contentStack.currentPageName === "shop"
 
                 // checked: stackview.topLevelName === "mods"
 
                 onToggled: function () {
                     // stackview.replace(null, modsPage)
-                    contentStack.goTo(modsPage)
+                    contentStack.goTo(shopPage)
                 }
             }
             NavMenuButton {
@@ -147,7 +148,7 @@ FocusScope {
                 labelText: "My Library"
                 labelIcon: "\uf53e"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 48
+                Layout.preferredHeight: 40
                 focus: true
 
                 // checked: stackview.topLevelName === "library"
@@ -164,7 +165,7 @@ FocusScope {
                 labelText: "Controllers"
                 labelIcon: "\uf135"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 48
+                Layout.preferredHeight: 40
 
                 // enabled: true
 
@@ -185,7 +186,7 @@ FocusScope {
                 labelText: "Back to game"
                 labelIcon: "\ue037"
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 48
+                Layout.preferredHeight: 40
 
                 visible: root.showNowPlayingButton
                 // visible: emulator.running
@@ -206,8 +207,8 @@ FocusScope {
 
             RowLayout {
                 Layout.preferredWidth: parent.width
-                Layout.preferredHeight: 48
-                Layout.maximumHeight: 48
+                Layout.preferredHeight: 40
+                Layout.maximumHeight: 40
                 spacing: 8
 
                 Button {
