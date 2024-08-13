@@ -3,163 +3,387 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 
 Flickable {
     id: page
     // property alias model: gridView.model
 
-    contentHeight: 4000
-    Rectangle {
-        id: sososo
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 400
-        color: "red"
-    }
+    contentHeight: contentColumn.height + contentPane.verticalPadding * 2
+    // Item {
+    //     id: sososo
+    //     anchors.top: parent.top
+    //     anchors.left: parent.left
+    //     anchors.right: parent.right
+    //     height: 480
+    //     clip: true
+    //
+    //     Image {
+    //         id: sourceImage
+    //         anchors.horizontalCenter: parent.horizontalCenter
+    //         anchors.top: parent.top
+    //         fillMode: Image.PreserveAspectCrop
+    //         width: parent.width
+    //         height: Math.max(width / 3, 600)
+    //         // visible: false
+    //
+    //         source: "file:system/_img/ampedup_hero.jpg"
+    //     }
+    //
+    //     // MultiEffect {
+    //     //     source: sourceImage
+    //     //     anchors.fill: sourceImage
+    //     //     blurEnabled: true
+    //     //     blurMax: 64
+    //     //     blur: 1.0
+    //     // }
+    // }
+
+    // Rectangle {
+    //     id: sososo
+    //     anchors.top: parent.top
+    //     anchors.left: parent.left
+    //     anchors.right: parent.right
+    //     height: 400
+    //     color: "#930000"
+    // }
 
     Pane {
-        id: main
-        padding: 20
-        background: Rectangle {
-            color: "black"
-            // border.color: "black"
-            // border.width: 3
-            radius: 24
-        }
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.left: parent.left
-        anchors.topMargin: 36
-        anchors.rightMargin: parent.width / 20
-        anchors.leftMargin: parent.width / 20
-        height: 400
+        id: contentPane
+        horizontalPadding: 20
+        width: parent.width
+        background: Item {}
+        ColumnLayout {
+            id: contentColumn
+            width: Math.min(parent.width, 1600)
+            // width: parent.width
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 8
 
-        contentItem: Item {
-            ColumnLayout  {
-                id: thing
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: parent.width * 27 / 50
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: width / (16 / 9)
-                    color: "grey"
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 78
-                    color: "blue"
-                }
-                Item {
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-                }
+            Text {
+                Layout.topMargin: 48
+                text: "Mario Kart 64: Amped Up"
+                font.pixelSize: 26
+                font.family: Constants.regularFontFamily
+                font.weight: Font.Bold
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                color: ColorPalette.neutral100
             }
-            ColumnLayout {
-                spacing: 16
-                anchors.leftMargin: 12
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.left: thing.right
 
-                Text {
-                    text: "Super Cool Game 2024"
-                    font.pixelSize: 26
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.Bold
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                    color: ColorPalette.neutral100
-                }
-
-                Text {
-                    text: qsTr("Nintendo 64")
-                    font.pixelSize: 15
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.Normal
-                    wrapMode: Text.WordWrap
-                    color: ColorPalette.neutral300
-                }
-                Item {
+            Text {
+                text: qsTr("Nintendo 64")
+                font.pixelSize: 15
+                font.family: Constants.regularFontFamily
+                font.weight: Font.Normal
+                wrapMode: Text.WordWrap
+                color: ColorPalette.neutral300
+                Layout.bottomMargin: 12
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                ColumnLayout {
+                    // Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.fillWidth: true
-                }
-                Text {
-                    text: "Version: 1.0.0 (latest)"
-                    font.pixelSize: 15
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.Normal
-                    horizontalAlignment: Text.AlignHCenter
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                    color: ColorPalette.neutral300
-                }
-
-                Button {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 48
-                    background: Rectangle {
-                        color: "#d14c20"
-                        radius: 12
+                    ImageViewer {
+                        id: thing
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                     }
-                    contentItem: Text {
-                        text: "Download"
-                        verticalAlignment: Text.AlignVCenter
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 12
+                        Layout.bottomMargin: 12
+                        topPadding: 12
+                        bottomPadding: 12
+                        text: "Something about a tagline"
                         horizontalAlignment: Text.AlignHCenter
-                        font.pixelSize: 18
+                        verticalAlignment: Text.AlignVCenter
                         font.family: Constants.regularFontFamily
-                        font.weight: Font.Bold
-                        color: "white"
+                        font.pixelSize: 18
+                        color: ColorPalette.neutral100
                     }
-
-                    onClicked: {
-                        console.log("Install button clicked")
+                    Pane {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 60
+                        background: Rectangle {
+                            color: ColorPalette.neutral800
+                            radius: 12
+                        }
+                        contentItem: Text {
+                            text: "Tags!"
+                            font.pixelSize: 16
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.Bold
+                            color: ColorPalette.neutral200
+                        }
+                    }
+                    Text {
+                        text: "This is a mod for the game Mario Kart 64.\n" +
+                            "\n" +
+                            "It adds 16 brand new courses, as well as additional game modes, music, modern visuals, gameplay techniques, and much more!\n" +
+                            "\n" +
+                            "\n" +
+                            "*Available game modes*\n" +
+                            "\n" +
+                            "For Grand Prix:\n" +
+                            "- Default\n" +
+                            "- N64 Coin Mode\n" +
+                            "- Elimination Mode\n" +
+                            "- Balloon Race\n" +
+                            "\n" +
+                            "For Versus:\n" +
+                            "- Default\n" +
+                            "- Elimination Mode\n" +
+                            "- Balloon Race\n" +
+                            "\n" +
+                            "For Time Trial:\n" +
+                            "- Default\n" +
+                            "- N64 Coin Mode\n" +
+                            "- Target Zones\n" +
+                            "- Mini Turbos"
+                        font.pixelSize: 16
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        color: ColorPalette.neutral100
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                     }
                 }
+                ColumnLayout {
+                    Layout.preferredWidth: 500
+                    Layout.leftMargin: 24
+                    Layout.fillHeight: true
+                    Image {
+                        source: "file:system/_img/mklogoclear.png"
+                        fillMode: Image.PreserveAspectFit
+                        Layout.fillWidth: true
+                    }
+                    Pane {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 60
+                        background: Rectangle {
+                            color: ColorPalette.neutral800
+                            radius: 12
+                        }
+                        contentItem: Text {
+                            text: "Requires Mario Kart 64"
+                            font.pixelSize: 16
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.Bold
+                            color: ColorPalette.neutral200
+                        }
+                    }
+                    Text {
+                        text: "Version: 2.9A (latest)"
+                        font.pixelSize: 15
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        horizontalAlignment: Text.AlignHCenter
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        color: ColorPalette.neutral300
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 48
+                        background: Rectangle {
+                            color: "#d14c20"
+                            radius: 12
+                        }
+                        contentItem: Text {
+                            text: "Download"
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            font.pixelSize: 18
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.Bold
+                            color: "white"
+                        }
+
+                        onClicked: {
+                            console.log("Install button clicked")
+                        }
+                    }
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 48
+                        hoverEnabled: true
+                        background: Rectangle {
+                            color: parent.hovered ? ColorPalette.neutral800 : "transparent"
+                            radius: 12
+                        }
+                        contentItem: Text {
+                            text: "Download older versions"
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            font.pixelSize: 14
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                            color: parent.hovered ? ColorPalette.neutral300 : ColorPalette.neutral400
+                        }
+
+                        onClicked: {
+                            console.log("Install button clicked")
+                        }
+                    }
+                    Item {
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                    }
+                }
+
             }
+            // Item {
+            //     Layout.fillWidth: true
+            //     Layout.preferredHeight: 500
+            //     ColumnLayout {
+            //         id: stuff
+            //         anchors.right: parent.right
+            //         anchors.top: parent.top
+            //         anchors.bottom: parent.bottom
+            //         width: 300
+            //     }
+            // }
+
+
+
+            // Pane {
+            //     id: main
+            //     padding: 20
+            //     background: Item {
+            //         Rectangle {
+            //             id: sourceItem
+            //             color: ColorPalette.neutral900
+            //             anchors.fill: parent
+            //             // border.color: "black"
+            //             // border.width: 3
+            //             radius: width >= 1240 ? 24 : 0
+            //         }
+            //         MultiEffect {
+            //             source: sourceItem
+            //             anchors.fill: sourceItem
+            //             shadowEnabled: true
+            //         }
+            //     }
+            //
+            //     Layout.fillWidth: true
+            //     Layout.topMargin: width >= 1240 ? 36 : 0
+            //
+            //     Behavior on Layout.topMargin {
+            //         NumberAnimation {
+            //             duration: 200
+            //             easing.type: Easing.InOutQuad
+            //         }
+            //     }
+            //     Layout.preferredHeight: 520
+            //
+            //     contentItem: Item {
+            //
+            //
+            //         ColumnLayout {
+            //             spacing: 16
+            //             anchors.leftMargin: 12
+            //             anchors.right: parent.right
+            //             anchors.top: parent.top
+            //             anchors.bottom: parent.bottom
+            //             anchors.left: thing.right
+            //
+            //
+            //             Item {
+            //                 Layout.fillHeight: true
+            //                 Layout.fillWidth: true
+            //             }
+            //             Text {
+            //                 text: "Version: 2.9A (latest)"
+            //                 font.pixelSize: 15
+            //                 font.family: Constants.regularFontFamily
+            //                 font.weight: Font.Normal
+            //                 horizontalAlignment: Text.AlignHCenter
+            //                 Layout.fillWidth: true
+            //                 wrapMode: Text.WordWrap
+            //                 color: ColorPalette.neutral300
+            //             }
+            //
+            //             Button {
+            //                 Layout.fillWidth: true
+            //                 Layout.preferredHeight: 48
+            //                 background: Rectangle {
+            //                     color: "#d14c20"
+            //                     radius: 12
+            //                 }
+            //                 contentItem: Text {
+            //                     text: "Download"
+            //                     verticalAlignment: Text.AlignVCenter
+            //                     horizontalAlignment: Text.AlignHCenter
+            //                     font.pixelSize: 18
+            //                     font.family: Constants.regularFontFamily
+            //                     font.weight: Font.Bold
+            //                     color: "white"
+            //                 }
+            //
+            //                 onClicked: {
+            //                     console.log("Install button clicked")
+            //                 }
+            //             }
+            //         }
+            //     }
+            //     // anchors.horizontalCenter: parent.horizontalCenter
+            // }
+            //
+            // Pane {
+            //     padding: 20
+            //     background: Rectangle {
+            //         color: "transparent"
+            //         // border.color: "black"
+            //         // border.width: 3
+            //         radius: 24
+            //     }
+            //     Layout.fillWidth: true
+            //
+            //     contentItem: Text {
+            //         text: "This is a mod for the game Mario Kart 64.\n" +
+            //             "\n" +
+            //             "It adds 16 brand new courses, as well as additional game modes, music, modern visuals, gameplay techniques, and much more!\n" +
+            //             "\n" +
+            //             "\n" +
+            //             "*Available game modes*\n" +
+            //             "\n" +
+            //             "For Grand Prix:\n" +
+            //             "- Default\n" +
+            //             "- N64 Coin Mode\n" +
+            //             "- Elimination Mode\n" +
+            //             "- Balloon Race\n" +
+            //             "\n" +
+            //             "For Versus:\n" +
+            //             "- Default\n" +
+            //             "- Elimination Mode\n" +
+            //             "- Balloon Race\n" +
+            //             "\n" +
+            //             "For Time Trial:\n" +
+            //             "- Default\n" +
+            //             "- N64 Coin Mode\n" +
+            //             "- Target Zones\n" +
+            //             "- Mini Turbos"
+            //         font.pixelSize: 16
+            //         font.family: Constants.regularFontFamily
+            //         font.weight: Font.Normal
+            //         horizontalAlignment: Text.AlignLeft
+            //         verticalAlignment: Text.AlignVCenter
+            //         color: ColorPalette.neutral100
+            //         wrapMode: Text.WordWrap
+            //     }
+            // }
         }
-        // anchors.horizontalCenter: parent.horizontalCenter
     }
 
-    Pane {
-        padding: 20
-        background: Rectangle {
-            color: "transparent"
-            // border.color: "black"
-            // border.width: 3
-            radius: 24
-        }
-        anchors.top: main.bottom
-        anchors.right: parent.right
-        anchors.left: parent.left
-        anchors.topMargin: 12
-        anchors.rightMargin: parent.width / 20
-        anchors.leftMargin: parent.width / 20
 
-        contentItem: Text {
-            text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In rutrum mauris a ante tempor vulputate. Suspendisse malesuada velit vitae neque interdum, vitae euismod metus convallis. Fusce id feugiat nisl. Duis eu tempus purus. Donec quis ultricies orci, a dignissim enim. Nunc placerat ex sit amet felis molestie, vitae rhoncus urna dapibus. Donec ac lacus auctor, posuere lacus eget, commodo justo. In tempor aliquet sagittis. Curabitur eget enim massa. Etiam eleifend eget arcu ut sodales. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Phasellus sit amet congue ligula. Etiam quis turpis commodo, molestie diam in, interdum urna.\n" +
-                "\n" +
-                "Vestibulum nec blandit orci. Quisque non metus quis nibh porta venenatis. Etiam vel fermentum sem, eget vestibulum metus. Maecenas at viverra magna, sed convallis nibh. Proin quis enim sollicitudin, dapibus arcu nec, tincidunt turpis. Donec bibendum varius nisl, et pharetra tellus blandit et. Aenean commodo tellus tortor, id scelerisque lacus pharetra vel. Etiam malesuada ex vel iaculis elementum. Integer lobortis quam metus, id pharetra ex volutpat vitae.\n" +
-                "\n" +
-                "Phasellus ac nulla at metus placerat cursus. Cras eget magna a felis consequat suscipit. Mauris tristique lorem vel mauris sagittis dictum. Fusce sit amet dolor orci. Donec ultrices imperdiet lorem. Morbi vel hendrerit tortor. Pellentesque ut mauris tellus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vestibulum, velit condimentum commodo suscipit, dolor enim rutrum nibh, vitae commodo dui lorem non arcu. Nulla pellentesque leo ante, et tincidunt velit luctus vel. Nullam ullamcorper finibus condimentum. Quisque hendrerit vehicula quam id pulvinar. Suspendisse urna diam, facilisis et cursus vel, tempus vel nulla. Maecenas sed lacus dapibus, vehicula massa sed, ullamcorper nulla.\n" +
-                "\n" +
-                "Vestibulum id tincidunt eros. Ut imperdiet diam et mollis gravida. Curabitur ullamcorper odio dolor, vel bibendum neque egestas quis. Aenean quis arcu nibh. Suspendisse mi lectus, tristique vitae cursus eu, sollicitudin id erat. Fusce id varius sem. Maecenas molestie metus cursus, mattis magna vel, venenatis nibh. Sed mollis, ex in sollicitudin tempor, felis neque venenatis libero, et accumsan odio nisi ac velit. Cras ullamcorper arcu non mattis laoreet. Ut ut elementum mauris. In vulputate ac eros sed venenatis.\n" +
-                "\n" +
-                "Maecenas et sagittis justo, a tempor nulla. Morbi et sapien congue velit euismod fringilla eu vitae nisl. Nulla scelerisque ac lacus non hendrerit. Proin sodales tempor libero dapibus porttitor. Nam eu interdum odio, vitae eleifend libero. Curabitur vel facilisis sem. Nullam sed nunc at augue auctor convallis sit amet vel dolor. Donec congue risus at nisi interdum, et porta odio iaculis. Suspendisse pellentesque aliquet urna, vel rutrum purus pharetra et. Suspendisse porta lectus tellus, vitae iaculis leo hendrerit dictum. Sed vel arcu ut arcu tincidunt ultrices eu quis erat. Pellentesque luctus, odio a faucibus ultrices, libero metus tincidunt est, quis pellentesque est erat dignissim nulla. Nam non lacinia lorem, at porta nibh. Curabitur aliquam nibh nec nisl feugiat rutrum."
-            font.pixelSize: 16
-            font.family: Constants.regularFontFamily
-            font.weight: Font.Normal
-            horizontalAlignment: Text.AlignLeft
-            verticalAlignment: Text.AlignVCenter
-            color: ColorPalette.neutral100
-            wrapMode: Text.WordWrap
-        }
-    }
+
+
 
     // ColumnLayout {
     //     id: content

@@ -1,5 +1,3 @@
-pragma ComponentBehavior: Bound
-
 import QtQuick
 import QtQuick.Controls
 
@@ -89,13 +87,17 @@ FocusScope {
             cellHeight: gridView.cellHeight
             cellSpacing: gridView.cellSpacing
 
-            Button {
-                anchors.centerIn: parent
-
-                onClicked: function() {
-                    page.StackView.view.push(shopItemPage)
-                }
+            onDoTheThing: {
+                page.StackView.view.push(shopItemPage)
             }
+
+            // Button {
+            //     anchors.centerIn: parent
+            //
+            //     onClicked: function() {
+            //         page.StackView.view.push(shopItemPage)
+            //     }
+            // }
         }
     }
 

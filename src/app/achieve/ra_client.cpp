@@ -395,7 +395,7 @@ namespace firelight::achievements {
       cpr::Parameters params = {
         {"g", std::to_string(*id)},
         {"z", userInfo->username},
-        {"y", ""},
+        {"y", "5wMVoSCizWMtXXYJHx5ZpJhCttTuQk84"},
         {"u", userInfo->username}
       };
 
@@ -477,7 +477,7 @@ namespace firelight::achievements {
       cpr::Parameters params = {
         {"i", std::to_string(*id)},
         {"z", userInfo->username},
-        {"y", ""},
+        {"y", "5wMVoSCizWMtXXYJHx5ZpJhCttTuQk84"},
         {"u", userInfo->username}
       };
 

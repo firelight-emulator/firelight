@@ -52,7 +52,7 @@ namespace firelight::shop {
             .creatorName = "Enneagram",
             .modId = 1,
             .platformId = 1,
-            .platformName = "N64",
+            .platformName = "Nintendo 64",
             .targetGameId = 1,
             .targetGameName = "Paper Mario",
             .capsuleImageUrl = "file:system/_img/ultimategoomboss.png",
@@ -66,7 +66,539 @@ namespace firelight::shop {
             .creatorName = "rovertronic",
             .modId = 1,
             .platformId = 1,
-            .platformName = "N64",
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
+            .targetGameId = 1,
+            .targetGameName = "Super Mario 64",
+            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .userHasRequiredGame = true
+        });
+        m_items.emplace_back(Item{
+            .id = 1,
+            .title = "SM64: Beyond the Cursed Mirror",
+            .tagline = "Tagline",
+            .description = "Description",
+            .creatorName = "rovertronic",
+            .modId = 1,
+            .platformId = 1,
+            .platformName = "Nintendo 64",
             .targetGameId = 1,
             .targetGameName = "Super Mario 64",
             .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",

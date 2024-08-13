@@ -224,6 +224,34 @@ FocusScope {
                 }
 
                 Button {
+                    id: me2
+                    background: Rectangle {
+                        color: enabled ? (me2.hovered ? "#404143" : "transparent") : "transparent"
+                        radius: 4
+                    }
+                    Layout.preferredHeight: 42
+                    Layout.preferredWidth: 42
+                    Layout.alignment: Qt.AlignCenter
+
+                    hoverEnabled: true
+
+                    contentItem: Text {
+                        text: "\ue8b2"
+                        font.family: Constants.symbolFontFamily
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 26
+                        color: "#c3c3c3"
+                    }
+
+                    checkable: false
+
+                    onClicked: {
+                        drawer.width = 50
+                    }
+                }
+
+                Button {
                     id: me
                     background: Rectangle {
                         color: enabled ? (me.hovered ? "#404143" : "transparent") : "transparent"

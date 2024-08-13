@@ -11,7 +11,9 @@ FocusScope {
     //
     // signal manageSaveData(entryId: int)
 
-    signal onClicked()
+    signal doTheThing()
+
+    signal click()
 
     required property var index
     required property var model
@@ -32,7 +34,7 @@ FocusScope {
         focus: true
 
         onClicked: function () {
-            myDelegate.onClicked()
+            myDelegate.doTheThing()
         }
 
         hoverEnabled: true
