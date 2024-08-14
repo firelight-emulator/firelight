@@ -19,7 +19,7 @@ Item {
     readonly property color accent300: "#ebc299"
     readonly property color accent200: "#f6e1c7"
 
-    readonly property color neutral1000: "#0e0e0e"
+    readonly property color neutral1000: "#101014"
     readonly property color neutral900: "#1e1e1e"
     readonly property color neutral800: "#2a2a2a"
     readonly property color neutral700: "#444444"

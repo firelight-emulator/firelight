@@ -24,7 +24,7 @@ ApplicationWindow {
     title: qsTr("Firelight")
 
     background: Rectangle {
-        color: ColorPalette.neutral900
+        color: ColorPalette.neutral1000
     }
 
     Connections {

@@ -64,22 +64,22 @@ FocusScope {
         }
         model: ListModel {
             ListElement {
-                source: "file:system/_img/ampedup1.png"
+                source: "file:system/_img/cursedmirror1.png"
             }
             ListElement {
-                source: "file:system/_img/ampedup2.png"
+                source: "file:system/_img/cursedmirror2.png"
             }
             ListElement {
-                source: "file:system/_img/ampedup3.png"
+                source: "file:system/_img/cursedmirror3.png"
             }
             ListElement {
-                source: "file:system/_img/ampedup4.png"
+                source: "file:system/_img/cursedmirror4.png"
             }
             ListElement {
-                source: "file:system/_img/ampedup5.png"
+                source: "file:system/_img/cursedmirror5.png"
             }
             ListElement {
-                source: "file:system/_img/ampedup6.png"
+                source: "file:system/_img/cursedmirror6.png"
             }
         }
         // delegate: Image {

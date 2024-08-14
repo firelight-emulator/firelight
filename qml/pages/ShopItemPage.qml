@@ -62,10 +62,10 @@ Flickable {
 
             Text {
                 Layout.topMargin: 48
-                text: "Mario Kart 64: Amped Up"
-                font.pixelSize: 26
+                text: "Super Mario 64: Beyond the Cursed Mirror"
+                font.pixelSize: 36
                 font.family: Constants.regularFontFamily
-                font.weight: Font.Bold
+                font.weight: Font.Black
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
                 color: ColorPalette.neutral100
@@ -83,110 +83,180 @@ Flickable {
             RowLayout {
                 Layout.fillWidth: true
                 ColumnLayout {
-                    // Layout.fillWidth: true
+                    Layout.fillWidth: true
                     Layout.fillHeight: true
                     ImageViewer {
                         id: thing
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }
+                    // Text {
+                    //     Layout.fillWidth: true
+                    //     topPadding: 24
+                    //     bottomPadding: 24
+                    //     text: "16 brand new courses, additional game modes, new music and gameplay techniques, modern visuals, and much more!"
+                    //     font.family: Constants.regularFontFamily
+                    //     font.pixelSize: 16
+                    //     lineHeight: 1.2
+                    //     font.weight: Font.DemiBold
+                    //     color: "white"
+                    //     wrapMode: Text.WordWrap
+                    // }
                     Text {
                         Layout.fillWidth: true
-                        Layout.topMargin: 12
-                        Layout.bottomMargin: 12
-                        topPadding: 12
-                        bottomPadding: 12
-                        text: "Something about a tagline"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+                        topPadding: 24
+                        bottomPadding: 24
+                        text: "Greetings Superstar, did you know that your nemesis hid in the decrepit castle all this time? It appears he fosters his strength in a hidden compartment behind one cursed mirror. I implore you to defeat him, once and for all – for the sake of the kingdom. -Yours truly, The Showrunner"
                         font.family: Constants.regularFontFamily
-                        font.pixelSize: 18
-                        color: ColorPalette.neutral100
+                        font.pixelSize: 16
+                        lineHeight: 1.2
+                        font.weight: Font.DemiBold
+                        color: "white"
+                        wrapMode: Text.WordWrap
                     }
-                    Pane {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 60
-                        background: Rectangle {
-                            color: ColorPalette.neutral800
-                            radius: 12
-                        }
-                        contentItem: Text {
-                            text: "Tags!"
-                            font.pixelSize: 16
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.Bold
-                            color: ColorPalette.neutral200
-                        }
-                    }
+                    // Flow {
+                    //     Layout.fillWidth: true
+                    //     spacing: 4
+                    //     Repeater {
+                    //         model: ListModel {
+                    //             ListElement { name: "Single Player" }
+                    //             ListElement { name: "Multiplayer" }
+                    //             ListElement { name: "Time Trials" }
+                    //             ListElement { name: "Grand Prix" }
+                    //             ListElement { name: "Versus" }
+                    //             ListElement { name: "Single Player" }
+                    //             ListElement { name: "Multiplayer" }
+                    //             ListElement { name: "Time Trials" }
+                    //             ListElement { name: "Grand Prix" }
+                    //             ListElement { name: "Versus" }
+                    //             ListElement { name: "Single Player" }
+                    //             ListElement { name: "Multiplayer" }
+                    //         }
+                    //
+                    //         delegate: TextArea {
+                    //             readOnly: true
+                    //             required property var model
+                    //             background: Rectangle {
+                    //                 color: ColorPalette.neutral800
+                    //                 radius: height / 2
+                    //             }
+                    //             topPadding: 4
+                    //             bottomPadding: 4
+                    //             leftPadding: 8
+                    //             rightPadding: 8
+                    //             text: model.name
+                    //             font.pixelSize: 14
+                    //             font.family: Constants.regularFontFamily
+                    //             font.weight: Font.Normal
+                    //             Layout.fillWidth: true
+                    //             wrapMode: Text.WordWrap
+                    //             color: ColorPalette.neutral300
+                    //         }
+                    //     }
+                    // }
+                    // Pane {
+                    //     Layout.fillWidth: true
+                    //     Layout.preferredHeight: 60
+                    //     background: Rectangle {
+                    //         color: ColorPalette.neutral800
+                    //         radius: 12
+                    //     }
+                    //     contentItem: Text {
+                    //         text: "Tags!"
+                    //         font.pixelSize: 16
+                    //         font.family: Constants.regularFontFamily
+                    //         font.weight: Font.Bold
+                    //         color: ColorPalette.neutral200
+                    //     }
+                    // }
+                    // Text {
+                    //     Layout.topMargin: 16
+                    //     leftPadding: 12
+                    //     text: "Description"
+                    //     font.pixelSize: 15
+                    //     font.family: Constants.regularFontFamily
+                    //     font.weight: Font.Normal
+                    //     Layout.fillWidth: true
+                    //     wrapMode: Text.WordWrap
+                    //     color: ColorPalette.neutral400
+                    // }
                     Text {
-                        text: "This is a mod for the game Mario Kart 64.\n" +
-                            "\n" +
-                            "It adds 16 brand new courses, as well as additional game modes, music, modern visuals, gameplay techniques, and much more!\n" +
-                            "\n" +
-                            "\n" +
-                            "*Available game modes*\n" +
-                            "\n" +
-                            "For Grand Prix:\n" +
-                            "- Default\n" +
-                            "- N64 Coin Mode\n" +
-                            "- Elimination Mode\n" +
-                            "- Balloon Race\n" +
-                            "\n" +
-                            "For Versus:\n" +
-                            "- Default\n" +
-                            "- Elimination Mode\n" +
-                            "- Balloon Race\n" +
-                            "\n" +
-                            "For Time Trial:\n" +
-                            "- Default\n" +
-                            "- N64 Coin Mode\n" +
-                            "- Target Zones\n" +
-                            "- Mini Turbos"
+                        text: "SM64: Beyond the Cursed Mirror is a major Super Mario 64 ROM hack created by Rovert, which contains 15 custom-made courses and 120 stars waiting to be collected. With a unique in-depth story, original characters, and new mechanics, this SM64 ROM hack will provide a traditional yet unique experience."
+                        textFormat: Text.RichText
                         font.pixelSize: 16
                         font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
+                        font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignLeft
+                        lineHeight: 1.2
                         verticalAlignment: Text.AlignVCenter
-                        color: ColorPalette.neutral100
+                        color: ColorPalette.neutral400
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
                     }
+                    // Text {
+                    //     text: "<h4>Grand Prix Modes:</h4>" +
+                    //         "<ul><li>Default</li>" +
+                    //         "<li>N64 Coin Mode</li>" +
+                    //         "<li>Elimination Mode</li>" +
+                    //         "<li>Balloon Race</li></ul>" +
+                    //
+                    //         "<h4>Versus Modes:</h4>" +
+                    //         "<ul><li>Default</li>" +
+                    //         "<li>Elimination Mode</li>" +
+                    //         "<li>Balloon Race</li></ul>" +
+                    //
+                    //         "<h4>Time Trial Modes:</h4>" +
+                    //         "<ul><li>Default</li>" +
+                    //         "<li>N64 Coin Mode</li>" +
+                    //         "<li>Target Zones</li>" +
+                    //         "<li>Mini Turbos</li></ul>"
+                    //     textFormat: Text.RichText
+                    //     font.pixelSize: 16
+                    //     font.family: Constants.regularFontFamily
+                    //     font.weight: Font.Normal
+                    //     horizontalAlignment: Text.AlignLeft
+                    //     verticalAlignment: Text.AlignVCenter
+                    //     color: ColorPalette.neutral400
+                    //     wrapMode: Text.WordWrap
+                    //     Layout.fillWidth: true
+                    // }
                 }
                 ColumnLayout {
-                    Layout.preferredWidth: 500
+                    Layout.preferredWidth: 350
+                    Layout.maximumWidth: 350
+                    Layout.minimumWidth: 350
                     Layout.leftMargin: 24
                     Layout.fillHeight: true
                     Image {
-                        source: "file:system/_img/mklogoclear.png"
+                        source: "file:system/_img/cursedmirrorclear.png"
                         fillMode: Image.PreserveAspectFit
                         Layout.fillWidth: true
                     }
-                    Pane {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 60
-                        background: Rectangle {
-                            color: ColorPalette.neutral800
-                            radius: 12
-                        }
-                        contentItem: Text {
-                            text: "Requires Mario Kart 64"
-                            font.pixelSize: 16
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.Bold
-                            color: ColorPalette.neutral200
-                        }
-                    }
-                    Text {
-                        text: "Version: 2.9A (latest)"
-                        font.pixelSize: 15
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        horizontalAlignment: Text.AlignHCenter
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        color: ColorPalette.neutral300
-                    }
+                    // Pane {
+                    //     Layout.fillWidth: true
+                    //     Layout.preferredHeight: 60
+                    //     background: Rectangle {
+                    //         color: ColorPalette.neutral800
+                    //         radius: 12
+                    //     }
+                    //     contentItem: Text {
+                    //         text: "Requires Mario Kart 64"
+                    //         font.pixelSize: 16
+                    //         font.family: Constants.regularFontFamily
+                    //         font.weight: Font.Bold
+                    //         color: ColorPalette.neutral200
+                    //     }
+                    // }
+                    // Text {
+                    //     text: "Version: 2.9A (latest)"
+                    //     font.pixelSize: 15
+                    //     font.family: Constants.regularFontFamily
+                    //     font.weight: Font.Normal
+                    //     horizontalAlignment: Text.AlignHCenter
+                    //     Layout.fillWidth: true
+                    //     wrapMode: Text.WordWrap
+                    //     color: ColorPalette.neutral300
+                    // }
 
                     Button {
                         Layout.fillWidth: true
@@ -196,7 +266,7 @@ Flickable {
                             radius: 12
                         }
                         contentItem: Text {
-                            text: "Download"
+                            text: "Add to Library"
                             verticalAlignment: Text.AlignVCenter
                             horizontalAlignment: Text.AlignHCenter
                             font.pixelSize: 18
@@ -231,6 +301,59 @@ Flickable {
                             console.log("Install button clicked")
                         }
                     }
+                    Text {
+                        Layout.topMargin: 16
+                        leftPadding: 12
+                        text: "Author"
+                        font.pixelSize: 15
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.DemiBold
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        color: ColorPalette.neutral400
+                    }
+                    Pane {
+                        Layout.fillWidth: true
+                        background: Rectangle {
+                            color: ColorPalette.neutral800
+                            radius: 12
+                        }
+                        contentItem: Text {
+                            text: "Rovertronic"
+                            font.pixelSize: 16
+                            font.family: Constants.regularFontFamily
+                            // font.weight: Font.DemiBold
+                            wrapMode: Text.WordWrap
+                            color: ColorPalette.neutral100
+                        }
+                    }
+                    // Text {
+                    //     Layout.topMargin: 8
+                    //     text: "Credits"
+                    //     font.pixelSize: 15
+                    //     font.family: Constants.regularFontFamily
+                    //     font.weight: Font.Normal
+                    //     Layout.fillWidth: true
+                    //     wrapMode: Text.WordWrap
+                    //     color: ColorPalette.neutral300
+                    // }
+                    // Pane {
+                    //     Layout.fillWidth: true
+                    //     Layout.preferredHeight: 240
+                    //     background: Rectangle {
+                    //         color: ColorPalette.neutral800
+                    //         radius: 12
+                    //     }
+                    //     contentItem: Text {
+                    //         text: "Blah"
+                    //         font.pixelSize: 16
+                    //         font.family: Constants.regularFontFamily
+                    //         font.weight: Font.Bold
+                    //         color: ColorPalette.neutral200
+                    //     }
+                    // }
+
+
                     Item {
                         Layout.fillHeight: true
                         Layout.fillWidth: true
@@ -238,6 +361,23 @@ Flickable {
                 }
 
             }
+
+            Pane {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
+                Layout.topMargin: 24
+                background: Item {}
+                contentItem: Text {
+                    text: "Trademarks, tradenames, and copyrights are property of their respective owners."
+                    font.pixelSize: 14
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                    color: ColorPalette.neutral400
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
             // Item {
             //     Layout.fillWidth: true
             //     Layout.preferredHeight: 500

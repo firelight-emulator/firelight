@@ -17,11 +17,15 @@ FocusScope {
         anchors.left: parent.left
         anchors.right: parent.right
         text: root.label
+        leftPadding: 12
+
         font.pixelSize: 15
         font.family: Constants.regularFontFamily
-        font.weight: Font.DemiBold
-        Layout.bottomMargin: 4
+        font.weight: Font.Normal
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
         color: ColorPalette.neutral400
+        Layout.bottomMargin: 4
     }
 
     Pane {
