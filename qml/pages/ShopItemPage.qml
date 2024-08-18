@@ -7,6 +7,30 @@ import QtQuick.Effects
 
 Flickable {
     id: page
+
+    // required property var modId
+    required property var model
+
+    boundsBehavior: Flickable.StopAtBounds
+    // StackView.onActivating: function() {
+    //     model = {
+    //         name: "Super Mario 64: Beyond the Cursed Mirror",
+    //         platformName: "Nintendo 64",
+    //         tagline: "Greetings Superstar, did you know that your nemesis hid in the decrepit castle all this time? It appears he fosters his strength in a hidden compartment behind one cursed mirror. I implore you to defeat him, once and for all – for the sake of the kingdom. -Yours truly, The Showrunner",
+    //         author: "Rovertronic",
+    //         description: "SM64: Beyond the Cursed Mirror is a major Super Mario 64 ROM hack created by Rovert, which contains 15 custom-made courses and 120 stars waiting to be collected. With a unique in-depth story, original characters, and new mechanics, this SM64 ROM hack will provide a traditional yet unique experience.",
+    //         clearLogoImageUrl: \"file:system/_img/cursedmirrorclear.png",
+    //         images: [
+    //             "file:system/_img/cursedmirror1.png",
+    //             "file:system/_img/cursedmirror2.png",
+    //             "file:system/_img/cursedmirror3.png",
+    //             "file:system/_img/cursedmirror4.png",
+    //             "file:system/_img/cursedmirror5.png",
+    //             "file:system/_img/cursedmirror6.png"
+    //         ]
+    //     }
+    // }
+
     // property alias model: gridView.model
 
     contentHeight: contentColumn.height + contentPane.verticalPadding * 2
@@ -62,7 +86,7 @@ Flickable {
 
             Text {
                 Layout.topMargin: 48
-                text: "Super Mario 64: Beyond the Cursed Mirror"
+                text: (page.model !== null) ? page.model.title : ""
                 font.pixelSize: 36
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Black
@@ -72,7 +96,7 @@ Flickable {
             }
 
             Text {
-                text: qsTr("Nintendo 64")
+                text: (page.model !== null) ? page.model.platform_name : ""
                 font.pixelSize: 15
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Normal
@@ -89,6 +113,7 @@ Flickable {
                         id: thing
                         Layout.fillWidth: true
                         Layout.fillHeight: true
+                        imageUrls: page.model === null ? [] : page.model.screenshot_urls
                     }
                     // Text {
                     //     Layout.fillWidth: true
@@ -106,7 +131,7 @@ Flickable {
                         Layout.fillWidth: true
                         topPadding: 24
                         bottomPadding: 24
-                        text: "Greetings Superstar, did you know that your nemesis hid in the decrepit castle all this time? It appears he fosters his strength in a hidden compartment behind one cursed mirror. I implore you to defeat him, once and for all – for the sake of the kingdom. -Yours truly, The Showrunner"
+                        text: (page.model !== null) ? page.model.tagline : ""
                         font.family: Constants.regularFontFamily
                         font.pixelSize: 16
                         lineHeight: 1.2
@@ -181,7 +206,7 @@ Flickable {
                     //     color: ColorPalette.neutral400
                     // }
                     Text {
-                        text: "SM64: Beyond the Cursed Mirror is a major Super Mario 64 ROM hack created by Rovert, which contains 15 custom-made courses and 120 stars waiting to be collected. With a unique in-depth story, original characters, and new mechanics, this SM64 ROM hack will provide a traditional yet unique experience."
+                        text: (page.model !== null) ? page.model.description : ""
                         textFormat: Text.RichText
                         font.pixelSize: 16
                         font.family: Constants.regularFontFamily
@@ -228,7 +253,7 @@ Flickable {
                     Layout.leftMargin: 24
                     Layout.fillHeight: true
                     Image {
-                        source: "file:system/_img/cursedmirrorclear.png"
+                        source: (page.model !== null) ? page.model.clear_logo_image_url : ""
                         fillMode: Image.PreserveAspectFit
                         Layout.fillWidth: true
                     }
@@ -279,28 +304,28 @@ Flickable {
                             console.log("Install button clicked")
                         }
                     }
-                    Button {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 48
-                        hoverEnabled: true
-                        background: Rectangle {
-                            color: parent.hovered ? ColorPalette.neutral800 : "transparent"
-                            radius: 12
-                        }
-                        contentItem: Text {
-                            text: "Download older versions"
-                            verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
-                            font.pixelSize: 14
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.DemiBold
-                            color: parent.hovered ? ColorPalette.neutral300 : ColorPalette.neutral400
-                        }
-
-                        onClicked: {
-                            console.log("Install button clicked")
-                        }
-                    }
+                    // Button {
+                    //     Layout.fillWidth: true
+                    //     Layout.preferredHeight: 48
+                    //     hoverEnabled: true
+                    //     background: Rectangle {
+                    //         color: parent.hovered ? ColorPalette.neutral800 : "transparent"
+                    //         radius: 12
+                    //     }
+                    //     contentItem: Text {
+                    //         text: "Download older versions"
+                    //         verticalAlignment: Text.AlignVCenter
+                    //         horizontalAlignment: Text.AlignHCenter
+                    //         font.pixelSize: 14
+                    //         font.family: Constants.regularFontFamily
+                    //         font.weight: Font.DemiBold
+                    //         color: parent.hovered ? ColorPalette.neutral300 : ColorPalette.neutral400
+                    //     }
+                    //
+                    //     onClicked: {
+                    //         console.log("Install button clicked")
+                    //     }
+                    // }
                     Text {
                         Layout.topMargin: 16
                         leftPadding: 12
@@ -319,7 +344,7 @@ Flickable {
                             radius: 12
                         }
                         contentItem: Text {
-                            text: "Rovertronic"
+                            text: (page.model !== null) ? page.model.creator_name : ""
                             font.pixelSize: 16
                             font.family: Constants.regularFontFamily
                             // font.weight: Font.DemiBold

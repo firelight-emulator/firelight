@@ -5,6 +5,25 @@ FocusScope {
     id: page
     property alias model: gridView.model
 
+    // readonly property var Mods: [
+    //     {
+    //         name: "Super Mario 64: Beyond the Cursed Mirror",
+    //         platformName: "Nintendo 64",
+    //         tagline: "Greetings Superstar, did you know that your nemesis hid in the decrepit castle all this time? It appears he fosters his strength in a hidden compartment behind one cursed mirror. I implore you to defeat him, once and for all – for the sake of the kingdom. -Yours truly, The Showrunner",
+    //         author: "Rovertronic",
+    //         description: "SM64: Beyond the Cursed Mirror is a major Super Mario 64 ROM hack created by Rovert, which contains 15 custom-made courses and 120 stars waiting to be collected. With a unique in-depth story, original characters, and new mechanics, this SM64 ROM hack will provide a traditional yet unique experience.",
+    //         clearLogoImageUrl: "file:system/_img/cursedmirrorclear.png",
+    //         images: [
+    //             "file:system/_img/cursedmirror1.png",
+    //             "file:system/_img/cursedmirror2.png",
+    //             "file:system/_img/cursedmirror3.png",
+    //             "file:system/_img/cursedmirror4.png",
+    //             "file:system/_img/cursedmirror5.png",
+    //             "file:system/_img/cursedmirror6.png"
+    //         ]
+    //     }
+    // ]
+
     GridView {
         id: gridView
         objectName: "GridView"
@@ -20,6 +39,10 @@ FocusScope {
         populate: Transition {
             id: popTransition
             SequentialAnimation {
+                PropertyAction {
+                    property: "opacity"
+                    value: 0
+                }
                 PauseAnimation {
                     duration: popTransition.ViewTransition.index * 50
                 }
@@ -82,13 +105,13 @@ FocusScope {
 
         delegate: ShopGridItemDelegate {
             id: delegate
-            opacity: 0
+            // opacity: 0
             cellWidth: gridView.cellWidth
             cellHeight: gridView.cellHeight
             cellSpacing: gridView.cellSpacing
 
             onDoTheThing: {
-                page.StackView.view.push(shopItemPage)
+                page.StackView.view.push(shopItemPage, {model: delegate.model})
             }
 
             // Button {

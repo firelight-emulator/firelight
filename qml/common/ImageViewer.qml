@@ -5,6 +5,21 @@ import QtQuick.Layouts
 FocusScope {
     id: root
 
+    required property list<string> imageUrls
+
+    // onImageUrlsChanged: {
+    //     listModel.clear()
+    //     for (let i = 0; i < imageUrls.length; i++) {
+    //         listModel.append({source: imageUrls[i]})
+    //     }
+    // }
+
+    Component.onCompleted: function() {
+        for (let i = 0; i < imageUrls.length; i++) {
+            listModel.append({source: imageUrls[i]})
+        }
+    }
+
     implicitHeight: imageContainer.height + previewList.height + 12
 
     Rectangle {
@@ -20,7 +35,7 @@ FocusScope {
             mipmap: true
             height: parent.height
             anchors.horizontalCenter: parent.horizontalCenter
-            source: previewList.model.get(previewList.currentIndex).source
+            source: previewList.count === 0 ? "" : previewList.model.get(previewList.currentIndex).source
             fillMode: Image.PreserveAspectFit
         }
     }
@@ -63,24 +78,7 @@ FocusScope {
             }
         }
         model: ListModel {
-            ListElement {
-                source: "file:system/_img/cursedmirror1.png"
-            }
-            ListElement {
-                source: "file:system/_img/cursedmirror2.png"
-            }
-            ListElement {
-                source: "file:system/_img/cursedmirror3.png"
-            }
-            ListElement {
-                source: "file:system/_img/cursedmirror4.png"
-            }
-            ListElement {
-                source: "file:system/_img/cursedmirror5.png"
-            }
-            ListElement {
-                source: "file:system/_img/cursedmirror6.png"
-            }
+            id: listModel
         }
         // delegate: Image {
         //     required property var model

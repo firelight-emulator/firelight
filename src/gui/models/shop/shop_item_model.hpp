@@ -23,8 +23,10 @@ namespace firelight::shop {
       PlatformName,
       TargetGameId,
       TargetGameName,
+      ClearLogoImageUrl,
       CapsuleImageUrl,
-      UserHasRequiredGame
+      UserHasRequiredGame,
+      ScreenshotUrls
     };
 
     explicit ShopItemModel(db::IContentDatabase &contentDatabase);
@@ -52,8 +54,10 @@ namespace firelight::shop {
       QString platformName;
       int targetGameId;
       QString targetGameName;
+      QString clearLogoImageUrl;
       QString capsuleImageUrl;
       bool userHasRequiredGame;
+      QStringList screenshotUrls;
     };
 
     db::IContentDatabase &m_contentDatabase;
