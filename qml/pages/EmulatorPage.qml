@@ -14,6 +14,15 @@ Rectangle {
     color: "black"
 
     property alias currentGameName: emulatorView.currentGameName
+    property bool paused: false
+
+    onPausedChanged: function () {
+        if (paused) {
+            pauseGame()
+        } else {
+            resumeGame()
+        }
+    }
 
     signal emulationStarted()
 
@@ -111,4 +120,6 @@ Rectangle {
             }
         ]
     }
+
+
 }

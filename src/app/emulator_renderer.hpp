@@ -63,6 +63,8 @@ private:
 
     bool m_usingHwRendering = false;
 
+    QTimer suspendPointTimer;
+    bool m_shouldCreateSuspendPoint = false;
     QTimer autosaveTimer;
     bool m_shouldSave = false;
     bool m_runAFrame = false;

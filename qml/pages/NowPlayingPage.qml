@@ -14,6 +14,8 @@ FocusScope {
 
     signal closeGamePressed()
 
+    signal rewindPressed()
+
     Item {
         anchors.top: parent.top
         anchors.left: parent.left
@@ -81,8 +83,13 @@ FocusScope {
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
-                enabled: false
+                enabled: true
+                checkable: false
                 alignRight: true
+
+                onClicked: function () {
+                    rewindPressed()
+                }
             }
             Rectangle {
                 Layout.fillWidth: true

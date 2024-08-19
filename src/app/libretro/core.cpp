@@ -551,6 +551,7 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS");
+        spdlog::warn("Ignoring serialization quirks");
         break;
       case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT");

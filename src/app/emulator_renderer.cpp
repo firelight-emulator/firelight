@@ -21,6 +21,12 @@ EmulatorRenderer::EmulatorRenderer() {
                      m_shouldSave = true;
                    }
   );
+  suspendPointTimer.setSingleShot(false);
+  suspendPointTimer.setInterval(10000);
+  QObject::connect(&suspendPointTimer, &QTimer::timeout,
+                   [this] {
+                     m_shouldCreateSuspendPoint = true;
+                   });
 }
 
 EmulatorRenderer::~EmulatorRenderer() {
@@ -177,6 +183,7 @@ void EmulatorRenderer::render() {
     }
 
     autosaveTimer.start();
+    suspendPointTimer.start();
 
     QMetaObject::invokeMethod(
       getAchievementManager(), "loadGame", Qt::QueuedConnection,
@@ -195,6 +202,15 @@ void EmulatorRenderer::render() {
     if (m_shouldSave) {
       save(false);
       m_shouldSave = false;
+    }
+
+    if (m_shouldCreateSuspendPoint) {
+      spdlog::info("Creating suspend point");
+      auto state = m_core->serializeState();
+      if (m_fbo->size() != QSize(0, 0)) {
+        auto image = m_fbo->toImage();
+      }
+      m_shouldCreateSuspendPoint = false;
     }
   } else if (m_fboIsNew) {
     // m_fbo->bind();

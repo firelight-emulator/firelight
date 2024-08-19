@@ -1,18 +1,8 @@
-//
-// Created by alexs on 8/18/2024.
-//
+#pragma once
+#include "../saves/suspend_point.hpp"
 
-#ifndef REWINDBRO_HPP
-#define REWINDBRO_HPP
-
-namespace firelight {
-namespace emu {
-
-class RewindBro {
-
-};
-
-} // emu
-} // firelight
-
-#endif //REWINDBRO_HPP
+namespace firelight::emu {
+    class RewindBro {
+        void pushState(SuspendPoint &state);
+    };
+} // firelight::emu
