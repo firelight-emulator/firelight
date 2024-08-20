@@ -22,7 +22,7 @@ EmulatorRenderer::EmulatorRenderer() {
                    }
   );
   suspendPointTimer.setSingleShot(false);
-  suspendPointTimer.setInterval(10000);
+  suspendPointTimer.setInterval(3000);
   QObject::connect(&suspendPointTimer, &QTimer::timeout,
                    [this] {
                      m_shouldCreateSuspendPoint = true;
@@ -115,8 +115,15 @@ void EmulatorRenderer::save(const bool waitForFinish) {
 void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   const auto manager = reinterpret_cast<EmulationManager *>(fbo);
 
+  auto wasPaused = m_paused;
   m_paused = manager->m_paused;
   m_gameReady = manager->m_gameReady;
+
+  if (m_core && !wasPaused && m_paused) {
+    SuspendPoint point;
+    point.image = m_fbo->toImage();
+    getSaveManager()->addSuspendPoint(point);
+  }
 
   if (manager->m_shouldReset) {
     if (m_core) {
@@ -160,6 +167,7 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 }
 
 void EmulatorRenderer::render() {
+  auto currentTime = QDateTime::currentMSecsSinceEpoch();
   if (!m_core && m_gameReady) {
     auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_currentEntry.platformId, m_currentEntry.id);
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
@@ -206,10 +214,13 @@ void EmulatorRenderer::render() {
 
     if (m_shouldCreateSuspendPoint) {
       spdlog::info("Creating suspend point");
-      auto state = m_core->serializeState();
+      SuspendPoint suspendPoint;
+      // suspendPoint.state = m_core->serializeState();
       if (m_fbo->size() != QSize(0, 0)) {
-        auto image = m_fbo->toImage();
+        suspendPoint.image = m_fbo->toImage();
       }
+
+      getSaveManager()->addSuspendPoint(suspendPoint);
       m_shouldCreateSuspendPoint = false;
     }
   } else if (m_fboIsNew) {
@@ -217,6 +228,12 @@ void EmulatorRenderer::render() {
     // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     // glClear(GL_COLOR_BUFFER_BIT);
     // m_fbo->release();
+  }
+
+  auto newTime = QDateTime::currentMSecsSinceEpoch();
+  auto elapsed = newTime - currentTime;
+  if (elapsed > 10) {
+    spdlog::info("Frame took {} ms", elapsed);
   }
 
   update();

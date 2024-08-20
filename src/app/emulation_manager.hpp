@@ -11,6 +11,10 @@
 
 #include "libretro/core_configuration.hpp"
 
+namespace firelight::emulation {
+    class RewindModel;
+}
+
 class EmulationManager : public QQuickFramebufferObject,
                          public firelight::ManagerAccessor {
     Q_OBJECT
@@ -39,6 +43,8 @@ public:
     void setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio);
 
     void setIsRunning(bool running);
+
+    void setRewindModel(firelight::emulation::RewindModel &model);
 
     QByteArray m_gameData;
     QByteArray m_saveData;

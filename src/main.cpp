@@ -18,6 +18,7 @@
 #include "app/db/sqlite_userdata_database.hpp"
 #include "app/emulation_manager.hpp"
 #include "app/router.hpp"
+#include "app/audio/SfxPlayer.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
 #include "app/library/library_scanner.hpp"
@@ -26,6 +27,7 @@
 #include "app/saves/save_manager.hpp"
 #include "gui/controller_list_model.hpp"
 #include "gui/gamepad_profile.hpp"
+#include "gui/game_image_provider.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
 #include "gui/mod_item_model.hpp"
@@ -127,8 +129,11 @@ int main(int argc, char *argv[]) {
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
-  firelight::saves::SaveManager saveManager(saveDir, userdata_database);
+  auto rewindModel = new firelight::emulation::RewindModel();
+  firelight::saves::SaveManager saveManager(saveDir, userdata_database, rewindModel);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
+
+  firelight::gui::GameImageProvider gameImageProvider(rewindModel);
 
   // **** Load Content Database ****
   firelight::db::SqliteContentDatabase contentDatabase(systemDir /
@@ -188,9 +193,11 @@ int main(int argc, char *argv[]) {
   firelight::gui::Router router;
 
   QQmlApplicationEngine engine;
+  engine.addImageProvider("gameImages", &gameImageProvider);
   engine.rootContext()->setContextProperty("Router", &router);
   engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
+  engine.rootContext()->setContextProperty("rewind_model", rewindModel);
   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
   engine.rootContext()->setContextProperty("library_model", &libModel);
   engine.rootContext()->setContextProperty("library_short_model",
@@ -227,6 +234,7 @@ int main(int argc, char *argv[]) {
 
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
   sdlEventLoop.start();
+  engine.rootContext()->setContextProperty("sfx_player", new firelight::audio::SfxPlayer());
 
   int exitCode = QApplication::exec();
 

@@ -7,6 +7,7 @@
 #include <QOpenGLFunctions>
 #include <QQuickFramebufferObject>
 
+#include "../gui/models/rewind_model.hpp"
 #include "libretro/core_configuration.hpp"
 
 class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,

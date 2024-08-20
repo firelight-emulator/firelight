@@ -100,6 +100,12 @@ add_library(firelight_lib
         src/gui/models/shop/shop_item_model.hpp
         src/app/emulation/RewindBro.cpp
         src/app/emulation/RewindBro.hpp
+        src/gui/models/rewind_model.cpp
+        src/gui/models/rewind_model.hpp
+        src/gui/game_image_provider.cpp
+        src/gui/game_image_provider.hpp
+        src/app/audio/SfxPlayer.cpp
+        src/app/audio/SfxPlayer.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
