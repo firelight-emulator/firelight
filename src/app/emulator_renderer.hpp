@@ -66,6 +66,8 @@ private:
 
     bool m_usingHwRendering = false;
 
+    std::function<void()> m_runAfterNextFrame = nullptr;
+
     QTimer suspendPointTimer;
     bool m_shouldCreateSuspendPoint = false;
     QTimer autosaveTimer;

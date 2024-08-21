@@ -9,31 +9,36 @@ import Firelight 1.0
 
 FocusScope {
     id: root
-    // color: "black"
-    state: "hidden"
 
     required property var model
+    property var barHeight: 150
 
     Rectangle {
         color: "black"
         anchors.fill: parent
     }
 
-    signal hidden()
+    signal rewindPointSelected(var index)
 
-    signal showing()
+    function close() {
+        exitAnimationWithoutBackToZero.start()
+    }
 
-    property bool thing: false
-
-    Keys.onSpacePressed: function (event) {
+    Keys.onEscapePressed: function (event) {
         // root.StackView.view.popCurrentItem(StackView.Immediate)
         exitAnimation.start()
     }
 
+    Keys.onSpacePressed: function (event) {
+        if (theList.currentIndex === 0) {
+            exitAnimation.start()
+        } else {
+            rewindPointSelected(theList.currentIndex)
+        }
+    }
+
     StackView.onActivated: function () {
-        // enterAnimation.play()
         enterAnimation.start()
-        // coverImage.height = root.height - 150
     }
 
     ParallelAnimation {
@@ -42,7 +47,7 @@ FocusScope {
             target: barthing
             property: "y"
             from: root.height
-            to: root.height - 150
+            to: root.height - root.barHeight
             duration: 220
             easing.type: Easing.InOutQuad
         }
@@ -50,19 +55,22 @@ FocusScope {
             target: coverImage
             property: "height"
             from: root.height
-            to: root.height - 150
+            to: root.height - root.barHeight
             duration: 220
             easing.type: Easing.InOutQuad
         }
     }
 
     SequentialAnimation {
-        id: exitAnimation
+        id: exitAnimationWithoutBackToZero
+        PauseAnimation {
+            duration: 100
+        }
         ParallelAnimation {
             NumberAnimation {
                 target: barthing
                 property: "y"
-                from: root.height - 150
+                from: root.height - root.barHeight
                 to: root.height
                 duration: 220
                 easing.type: Easing.InOutQuad
@@ -70,7 +78,7 @@ FocusScope {
             NumberAnimation {
                 target: coverImage
                 property: "height"
-                from: root.height - 150
+                from: root.height - root.barHeight
                 to: root.height
                 duration: 220
                 easing.type: Easing.InOutQuad
@@ -83,150 +91,49 @@ FocusScope {
         }
     }
 
-    // SequentialAnimation {
-    //     id: enterAnimation
-    //     ParallelAnimation {
-    //         NumberAnimation {
-    //             target: barthing
-    //             property: "y"
-    //             to: parent.height - 150
-    //             duration: 220
-    //             easing.type: Easing.InOutQuad
-    //         }
-    //         NumberAnimation {
-    //             target: coverImage
-    //             property: "height"
-    //             from: parent.height
-    //             to: parent.height - 150
-    //             duration: 220
-    //             easing.type: Easing.InOutQuad
-    //         }
-    //     }
-    //
-    // }
-
-    // function show() {
-    //     console.log("showing")
-    //     state = "showing"
-    // }
-    //
-    // function goaway() {
-    //     console.log("hiding")
-    //     state = "hidden"
-    // }
-
-    // onThingChanged: function () {
-    //     console.log("thing changed", thing)
-    // }
-    //
-    // onStateChanged: function () {
-    //     console.log("state changed", state)
-    //     theList.reset()
-    // }
-
-    // states: [
-    //     State {
-    //         name: "showing"
-    //         when: coverImageBg.thing
-    //
-    //         PropertyChanges {
-    //             target: coverImageBg
-    //             opacity: 1
-    //         }
-    //         PropertyChanges {
-    //             target: coverImage
-    //             width: parent.width
-    //             height: parent.height - 150
-    //         }
-    //         PropertyChanges {
-    //             target: barthing
-    //             y: parent.height - 150
-    //         }
-    //     },
-    //     State {
-    //         name: "hidden"
-    //         when: !coverImageBg.thing
-    //
-    //         PropertyChanges {
-    //             target: coverImageBg
-    //             opacity: 0
-    //         }
-    //         PropertyChanges {
-    //             target: coverImage
-    //             width: parent.width
-    //             height: parent.height
-    //         }
-    //         PropertyChanges {
-    //             target: barthing
-    //             y: parent.height
-    //         }
-    //     }
-    // ]
-
-    // transitions: [
-    //     Transition {
-    //         from: "hidden"
-    //         to: "showing"
-    //         SequentialAnimation {
-    //             PropertyAction {
-    //                 target: coverImageBg
-    //                 property: "opacity"
-    //                 value: 1
-    //             }
-    //             ParallelAnimation {
-    //                 NumberAnimation {
-    //                     target: coverImage
-    //                     properties: "width, height"
-    //                     duration: 220
-    //                     easing.type: Easing.InOutQuad
-    //                 }
-    //                 NumberAnimation {
-    //                     target: barthing
-    //                     properties: "y"
-    //                     duration: 220
-    //                     easing.type: Easing.InOutQuad
-    //                 }
-    //             }
-    //         }
-    //     },
-    //     Transition {
-    //         from: "showing"
-    //         to: "hidden"
-    //         SequentialAnimation {
-    //             ParallelAnimation {
-    //                 NumberAnimation {
-    //                     target: barthing
-    //                     properties: "y"
-    //                     duration: 220
-    //                     easing.type: Easing.InOutQuad
-    //                 }
-    //                 NumberAnimation {
-    //                     target: coverImage
-    //                     properties: "width, height"
-    //                     duration: 220
-    //                     easing.type: Easing.InOutQuad
-    //                 }
-    //             }
-    //             PropertyAction {
-    //                 target: coverImageBg
-    //                 property: "opacity"
-    //                 value: 0
-    //             }
-    //             ScriptAction {
-    //                 script: {
-    //                     coverImageBg.hidden()
-    //                 }
-    //             }
-    //         }
-    //     }
-    // ]
+    SequentialAnimation {
+        id: exitAnimation
+        NumberAnimation {
+            target: theList
+            property: "currentIndex"
+            to: 0
+            duration: (theList.currentIndex * 40)
+            easing.type: Easing.OutQuad
+        }
+        PauseAnimation {
+            duration: 100
+        }
+        ParallelAnimation {
+            NumberAnimation {
+                target: barthing
+                property: "y"
+                from: root.height - root.barHeight
+                to: root.height
+                duration: 220
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: coverImage
+                property: "height"
+                from: root.height - root.barHeight
+                to: root.height
+                duration: 220
+                easing.type: Easing.InOutQuad
+            }
+        }
+        ScriptAction {
+            script: {
+                root.StackView.view.popCurrentItem(StackView.Immediate)
+            }
+        }
+    }
 
     Image {
         id: coverImage
         anchors.horizontalCenter: parent.horizontalCenter
         // height: parent.height
         width: parent.width
-        height: parent.height - 150
+        height: parent.height - root.barHeight
         mipmap: true
         smooth: false
         cache: false
@@ -240,18 +147,11 @@ FocusScope {
 
 
         width: parent.width
-        height: 150
-        y: parent.height - 150
+        height: root.barHeight
+        y: parent.height - root.barHeight
         background: Rectangle {
             color: "grey"
         }
-
-        // Behavior on y {
-        //     NumberAnimation {
-        //         duration: 220
-        //         easing.type: Easing.InOutQuad
-        //     }
-        // }
 
         contentItem: ListView {
             id: theList
@@ -265,12 +165,8 @@ FocusScope {
             preferredHighlightBegin: width / 2 - 75
             preferredHighlightEnd: width / 2 + 75
             currentIndex: 0
+            spacing: 8
             highlight: Item {
-            }
-
-            Component.onCompleted: {
-                console.log("count: " + theList.count)
-                theList.currentIndex = 0
             }
 
             // SoundEffect {
@@ -290,36 +186,8 @@ FocusScope {
                 // }
             }
 
-            // Keys.onEscapePressed: function (event) {
-            //     console.log(":)")
-            //     rewindList.visible = false
-            // }
-            spacing: 8
-            // model: ListModel {
-            //     id: theModel
-            //     ListElement {
-            //         imageSource: "file:system/_img/cursedmirror1.png"
-            //     }
-            //     ListElement {
-            //         imageSource: "file:system/_img/cursedmirror2.png"
-            //     }
-            //     ListElement {
-            //         imageSource: "file:system/_img/cursedmirror3.png"
-            //     }
-            //     ListElement {
-            //         imageSource: "file:system/_img/cursedmirror4.png"
-            //     }
-            //     ListElement {
-            //         imageSource: "file:system/_img/cursedmirror5.png"
-            //     }
-            // }
-            // model: rewind_model
+
             model: root.model
-            // delegate: Rectangle {
-            //     color: "red"
-            //     width: 100
-            //     height: 100
-            // }
             delegate: Image {
                 required property var model
                 required property var index
@@ -333,15 +201,6 @@ FocusScope {
                     color: "white"
                 }
 
-                Component.onCompleted: {
-                    // print all keys in model
-                    // for (const key in model.model) {
-                    //     console.log("key: " + key)
-                    //     console.log("value: " + model[key])
-                    // }
-
-                    console.log("modelData: " + JSON.stringify(model.modelData))
-                }
                 cache: false
                 TapHandler {
                     onTapped: {
@@ -352,7 +211,6 @@ FocusScope {
 
                 mipmap: true
                 smooth: false
-                // source: rewindList.imageSource !== null ? rewindList.imageSource : ""
                 source: model.modelData.image_url
                 anchors.verticalCenter: ListView.view.contentItem.verticalCenter
                 height: ListView.isCurrentItem ? ListView.view.height + 20 : ListView.view.height

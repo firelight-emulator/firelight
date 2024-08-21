@@ -28,6 +28,10 @@ Rectangle {
 
     signal rewindPointsReady(var points)
 
+    function loadRewindPoint(index) {
+        emulatorView.loadRewindPoint(index)
+    }
+
     function createRewindPoints() {
         emulatorView.createRewindPoints()
     }

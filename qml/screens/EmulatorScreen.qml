@@ -149,6 +149,10 @@ FocusScope {
                 // openRewindMenuAnimation.start()
             }
 
+            function loadRewindPoint(index) {
+                emulator.loadRewindPoint(index)
+            }
+
             Connections {
                 target: emulator
 
@@ -286,6 +290,14 @@ FocusScope {
     Component {
         id: rewindPage
         RewindMenu {
+            id: theActualMenu
+            onRewindPointSelected: function (index) {
+                const emu = emulatorStack.get(0)
+                emu.loadRewindPoint(index)
+                // emulator.resetGame()
+                theActualMenu.close()
+
+            }
         }
     }
 

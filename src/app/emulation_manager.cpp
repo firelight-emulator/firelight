@@ -123,6 +123,10 @@ void EmulationManager::createRewindPoints() {
   update();
 }
 
+void EmulationManager::loadRewindPoint(int index) {
+  m_rewindPointIndex = index;
+}
+
 void EmulationManager::setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio) {
   if (m_nativeWidth != nativeWidth) {
     m_nativeWidth = nativeWidth;

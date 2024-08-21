@@ -119,6 +119,19 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   m_paused = manager->m_paused;
   m_gameReady = manager->m_gameReady;
 
+  if (m_core && manager->m_rewindPointIndex != -1) {
+    spdlog::info("Loading rewind point {}", manager->m_rewindPointIndex);
+    m_core->deserializeState(m_suspendPoints[manager->m_rewindPointIndex - 1].state);
+    // m_suspendPoints.removeAt(manager->m_rewindPointIndex);
+    manager->m_rewindPointIndex = -1;
+    manager->rewindPointLoaded();
+
+    m_runAfterNextFrame = [this, manager] {
+      m_core->run(0);
+      manager->rewindPointLoaded();
+    };
+  }
+
   if (m_core && manager->m_shouldGetRewindPoints) {
     QList<QJsonObject> points;
     int i = 1;
@@ -215,6 +228,11 @@ void EmulatorRenderer::render() {
     return;
   }
 
+  if (m_runAfterNextFrame) {
+    m_runAfterNextFrame();
+    m_runAfterNextFrame = nullptr;
+  }
+
   if (m_fbo && m_core && !m_paused) {
     m_running = true;
     m_core->run(0);
@@ -226,10 +244,10 @@ void EmulatorRenderer::render() {
     }
 
     if (m_shouldCreateSuspendPoint) {
-      // suspendPoint.state = m_core->serializeState();
       if (m_fbo->size() != QSize(0, 0)) {
         spdlog::info("Creating suspend point");
         SuspendPoint suspendPoint;
+        suspendPoint.state = m_core->serializeState();
         suspendPoint.image = m_fbo->toImage();
         m_suspendPoints.push_front(suspendPoint);
       }

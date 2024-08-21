@@ -62,6 +62,8 @@ public:
 
     bool m_shouldGetRewindPoints = false;
 
+    int m_rewindPointIndex = -1;
+
 public slots:
     void loadLibraryEntry(int entryId);
 
@@ -74,6 +76,8 @@ public slots:
     void createSuspendPoint();
 
     void createRewindPoints();
+
+    void loadRewindPoint(int index);
 
 signals:
     void gameLoadSucceeded();
@@ -99,6 +103,8 @@ signals:
     void nativeAspectRatioChanged();
 
     void rewindPointsReady(QList<QJsonObject> points);
+
+    void rewindPointLoaded();
 
 private:
     std::unique_ptr<firelight::db::PlaySession> m_currentPlaySession;
