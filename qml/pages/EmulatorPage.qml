@@ -26,6 +26,16 @@ Rectangle {
 
     signal emulationStarted()
 
+    signal rewindPointsReady(var points)
+
+    function createRewindPoints() {
+        emulatorView.createRewindPoints()
+    }
+
+    function createSuspendPoint() {
+        emulatorView.createSuspendPoint()
+    }
+
     function loadGame(entryId) {
         emulatorView.loadLibraryEntry(entryId)
     }
@@ -56,6 +66,10 @@ Rectangle {
 
         onEmulationStarted: {
             emulatorContainer.emulationStarted()
+        }
+
+        onRewindPointsReady: function (points) {
+            emulatorContainer.rewindPointsReady(points)
         }
 
         // onOrphanPatchDetected: {

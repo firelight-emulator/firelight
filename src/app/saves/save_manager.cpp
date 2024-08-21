@@ -10,8 +10,8 @@
 
 namespace firelight::saves {
   SaveManager::SaveManager(std::filesystem::path saveDir,
-                           db::IUserdataDatabase &userdataDatabase, emulation::RewindModel *rewindModel)
-    : m_userdataDatabase(userdataDatabase), m_saveDir(std::move(saveDir)), m_rewindModel(rewindModel) {
+                           db::IUserdataDatabase &userdataDatabase)
+    : m_userdataDatabase(userdataDatabase), m_saveDir(std::move(saveDir)) {
     m_ioThreadPool = std::make_unique<QThreadPool>();
     m_ioThreadPool->setMaxThreadCount(1);
   }
@@ -117,10 +117,5 @@ namespace firelight::saves {
     Savefile saveData(fileContents);
 
     return {saveData};
-  }
-
-  void SaveManager::addSuspendPoint(const SuspendPoint &suspendPoint) {
-    printf("Adding suspend point\n");
-    m_rewindModel->addSuspendPoint(suspendPoint);
   }
 } // namespace firelight::saves

@@ -1,5 +1,4 @@
 #pragma once
-#include <QQuickImageProvider>
 
 #include "models/rewind_model.hpp"
 
@@ -9,12 +8,16 @@ namespace firelight::gui {
         Q_OBJECT
 
     public:
-        explicit GameImageProvider(emulation::RewindModel *rewindModel);
+        GameImageProvider();
 
         QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
 
+        void setImage(const QString &id, const QImage &image);
+
     private:
-        emulation::RewindModel *m_rewindModel;
+        QStringList m_ids;
+        QMap<QString, QImage> m_images{};
+        // emulation::RewindModel *m_rewindModel;
     };
 } // gui
 // firelight

@@ -10,6 +10,7 @@ namespace firelight {
   db::ILibraryDatabase *ManagerAccessor::m_libraryDatabase;
   achievements::RAClient *ManagerAccessor::m_achievementManager;
   std::shared_ptr<EmulatorConfigManager> ManagerAccessor::m_emulatorConfigManager;
+  gui::GameImageProvider *ManagerAccessor::m_gameImageProvider;
 
   void ManagerAccessor::setControllerManager(
     Input::ControllerManager *t_manager) {
@@ -43,6 +44,10 @@ namespace firelight {
     m_emulatorConfigManager = std::move(t_emulatorConfigManager);
   }
 
+  void ManagerAccessor::setGameImageProvider(gui::GameImageProvider *t_gameImageProvider) {
+    m_gameImageProvider = t_gameImageProvider;
+  }
+
   Input::ControllerManager *ManagerAccessor::getControllerManager() {
     // TODO: Check for nullptr and throw exception or something
     return m_controllerManager;
@@ -68,5 +73,9 @@ namespace firelight {
 
   std::shared_ptr<EmulatorConfigManager> ManagerAccessor::getEmulatorConfigManager() {
     return m_emulatorConfigManager;
+  }
+
+  gui::GameImageProvider *ManagerAccessor::getGameImageProvider() {
+    return m_gameImageProvider;
   }
 } // namespace firelight

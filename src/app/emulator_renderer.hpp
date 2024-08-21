@@ -62,6 +62,8 @@ private:
 
     bool m_running = false;
 
+    QList<SuspendPoint> m_suspendPoints;
+
     bool m_usingHwRendering = false;
 
     QTimer suspendPointTimer;

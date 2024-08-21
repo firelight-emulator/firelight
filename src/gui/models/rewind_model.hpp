@@ -28,11 +28,13 @@ namespace firelight::emulation {
 
         void addSuspendPoint(const SuspendPoint &suspendPoint);
 
+        void setCurrentImage(QImage *image);
+
         QImage getImageAtIndex(int index) const;
 
-    private
-    :
+    private:
         // db::IContentDatabase &m_contentDatabase;
+        QImage *currentImage = nullptr;
         QList<SuspendPoint> m_items;
     };
 } // firelight::emulation

@@ -113,6 +113,16 @@ void EmulationManager::resetEmulation() {
   update();
 }
 
+void EmulationManager::createSuspendPoint() {
+  m_shouldCreateSuspendPoint = true;
+  update();
+}
+
+void EmulationManager::createRewindPoints() {
+  m_shouldGetRewindPoints = true;
+  update();
+}
+
 void EmulationManager::setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio) {
   if (m_nativeWidth != nativeWidth) {
     m_nativeWidth = nativeWidth;

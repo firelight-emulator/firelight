@@ -129,11 +129,11 @@ int main(int argc, char *argv[]) {
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
-  auto rewindModel = new firelight::emulation::RewindModel();
-  firelight::saves::SaveManager saveManager(saveDir, userdata_database, rewindModel);
+  firelight::saves::SaveManager saveManager(saveDir, userdata_database);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
-  firelight::gui::GameImageProvider gameImageProvider(rewindModel);
+  firelight::gui::GameImageProvider gameImageProvider;
+  firelight::ManagerAccessor::setGameImageProvider(&gameImageProvider);
 
   // **** Load Content Database ****
   firelight::db::SqliteContentDatabase contentDatabase(systemDir /
@@ -197,7 +197,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("Router", &router);
   engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
-  engine.rootContext()->setContextProperty("rewind_model", rewindModel);
   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
   engine.rootContext()->setContextProperty("library_model", &libModel);
   engine.rootContext()->setContextProperty("library_short_model",

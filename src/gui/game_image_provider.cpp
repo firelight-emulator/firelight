@@ -1,19 +1,19 @@
 #include "game_image_provider.hpp"
 
 namespace firelight::gui {
-    GameImageProvider::GameImageProvider(emulation::RewindModel *rewindModel) : QQuickImageProvider(
-            Image),
-        m_rewindModel(rewindModel) {
+    GameImageProvider::GameImageProvider() : QQuickImageProvider(
+        Image) {
     }
 
     QImage GameImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize) {
-        auto index = id.toInt();
-        if (index >= m_rewindModel->rowCount(QModelIndex())) {
-            return QImage{};
-        }
+        return m_images[id];
+    }
 
-        return m_rewindModel->getImageAtIndex(index);
-        // // return m_items.at(index).image;
-        // return QQuickImageProvider::requestImage(id, size, requestedSize);
+    void GameImageProvider::setImage(const QString &id, const QImage &image) {
+        printf("Got image: %s\n", id.toStdString().c_str());
+        // m_ids.push_back(id);
+        m_images[id] = image;
+        // m_images.insert(id, image);
+        // m_images[id] = image.copy();
     }
 } // firelight::gui

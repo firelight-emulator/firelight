@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include "audio_manager.hpp"
+#include "../gui/game_image_provider.hpp"
 
 static constexpr int AUTOSAVE_INTERVAL_MILLIS = 10000;
 
@@ -115,14 +116,26 @@ void EmulatorRenderer::save(const bool waitForFinish) {
 void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   const auto manager = reinterpret_cast<EmulationManager *>(fbo);
 
-  auto wasPaused = m_paused;
   m_paused = manager->m_paused;
   m_gameReady = manager->m_gameReady;
 
-  if (m_core && !wasPaused && m_paused) {
-    SuspendPoint point;
-    point.image = m_fbo->toImage();
-    getSaveManager()->addSuspendPoint(point);
+  if (m_core && manager->m_shouldGetRewindPoints) {
+    QList<QJsonObject> points;
+    int i = 1;
+    for (const auto &point: m_suspendPoints) {
+      QJsonObject obj;
+      getGameImageProvider()->setImage(QString::number(i), point.image);
+      obj["image_url"] = "image://gameimages/" + QString::number(i++);
+      points.append(obj);
+    }
+
+    QJsonObject obj;
+    getGameImageProvider()->setImage("0", m_fbo->toImage());
+    obj["image_url"] = "image://gameimages/0";
+    points.prepend(obj);
+
+    manager->rewindPointsReady(points);
+    manager->m_shouldGetRewindPoints = false;
   }
 
   if (manager->m_shouldReset) {
@@ -213,14 +226,15 @@ void EmulatorRenderer::render() {
     }
 
     if (m_shouldCreateSuspendPoint) {
-      spdlog::info("Creating suspend point");
-      SuspendPoint suspendPoint;
       // suspendPoint.state = m_core->serializeState();
       if (m_fbo->size() != QSize(0, 0)) {
+        spdlog::info("Creating suspend point");
+        SuspendPoint suspendPoint;
         suspendPoint.image = m_fbo->toImage();
+        m_suspendPoints.push_front(suspendPoint);
       }
 
-      getSaveManager()->addSuspendPoint(suspendPoint);
+      // getSaveManager()->addSuspendPoint(suspendPoint);
       m_shouldCreateSuspendPoint = false;
     }
   } else if (m_fboIsNew) {

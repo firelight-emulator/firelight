@@ -8,6 +8,10 @@
 #include "saves/save_manager.hpp"
 
 namespace firelight {
+    namespace gui {
+        class GameImageProvider;
+    }
+
     class ManagerAccessor {
     public:
         static void setControllerManager(Input::ControllerManager *t_manager);
@@ -26,6 +30,8 @@ namespace firelight {
         static void setEmulatorConfigManager(
             std::shared_ptr<EmulatorConfigManager> t_emulatorConfigManager);
 
+        static void setGameImageProvider(gui::GameImageProvider *t_gameImageProvider);
+
         static Input::ControllerManager *getControllerManager();
 
         static saves::SaveManager *getSaveManager();
@@ -40,6 +46,8 @@ namespace firelight {
 
         static std::shared_ptr<EmulatorConfigManager> getEmulatorConfigManager();
 
+        static gui::GameImageProvider *getGameImageProvider();
+
     private:
         static Input::ControllerManager *m_controllerManager;
         static saves::SaveManager *m_saveManager;
@@ -48,5 +56,6 @@ namespace firelight {
         static db::ILibraryDatabase *m_libraryDatabase;
         static achievements::RAClient *m_achievementManager;
         static std::shared_ptr<EmulatorConfigManager> m_emulatorConfigManager;
+        static gui::GameImageProvider *m_gameImageProvider;
     };
 } // namespace firelight
