@@ -231,6 +231,19 @@ int main(int argc, char *argv[]) {
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
 
+  // QObject::connect(
+  //   window, &QQuickWindow::frameSwapped, window,
+  //   []() {
+  //     static qint64 last = 0;
+  //     auto now = QDateTime::currentMSecsSinceEpoch();
+  //     auto elapsed = now - last;
+  //     if (elapsed >= 20) {
+  //       spdlog::info("Time since last frame: {}ms", elapsed);
+  //     }
+  //     last = now;
+  //   }, Qt::QueuedConnection);
+
+
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
   sdlEventLoop.start();
   engine.rootContext()->setContextProperty("sfx_player", new firelight::audio::SfxPlayer());

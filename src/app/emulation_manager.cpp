@@ -125,6 +125,7 @@ void EmulationManager::createRewindPoints() {
 
 void EmulationManager::loadRewindPoint(int index) {
   m_rewindPointIndex = index;
+  update();
 }
 
 void EmulationManager::setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio) {

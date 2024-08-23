@@ -11,7 +11,7 @@ FocusScope {
     id: root
 
     required property var model
-    property var barHeight: 150
+    property var barHeight: 220
 
     Rectangle {
         color: "black"
@@ -86,6 +86,7 @@ FocusScope {
         }
         ScriptAction {
             script: {
+                console.log("Popping rewind menu")
                 root.StackView.view.popCurrentItem(StackView.Immediate)
             }
         }
@@ -150,7 +151,7 @@ FocusScope {
         height: root.barHeight
         y: parent.height - root.barHeight
         background: Rectangle {
-            color: "grey"
+            color: ColorPalette.neutral1000
         }
 
         contentItem: ListView {
@@ -188,45 +189,96 @@ FocusScope {
 
 
             model: root.model
-            delegate: Image {
+            delegate: Item {
+                id: dele
                 required property var model
                 required property var index
-                Rectangle {
-                    visible: parent.ListView.isCurrentItem
-                    z: -1
-                    width: parent.width + 8
-                    height: parent.height + 8
-                    x: -4
-                    y: -4
-                    color: "white"
-                }
+                height: dele.ListView.view.height
+                width: imageThing.width
 
-                cache: false
-                TapHandler {
-                    onTapped: {
-                        theList.currentIndex = index
+                Item {
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.left: parent.left
+                    anchors.bottom: timeLabel.top
+
+                    Image {
+                        id: imageThing
+                        Rectangle {
+                            visible: dele.ListView.isCurrentItem
+                            z: -1
+                            width: parent.width + 8
+                            height: parent.height + 8
+                            x: -4
+                            y: -4
+                            color: "white"
+                        }
+
+                        cache: false
+                        TapHandler {
+                            onTapped: {
+                                theList.currentIndex = index
+                            }
+                        }
+
+
+                        mipmap: true
+                        smooth: false
+                        source: dele.model.modelData.image_url
+                        height: parent.height
+                        // height: dele.ListView.isCurrentItem ? dele.height - 20 : dele.height - 40
+                        // height: dele.height - 20
+                        Behavior on height {
+                            NumberAnimation {
+                                duration: 100
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                        Behavior on width {
+                            NumberAnimation {
+                                duration: 100
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                        fillMode: Image.PreserveAspectFit
                     }
                 }
 
 
-                mipmap: true
-                smooth: false
-                source: model.modelData.image_url
-                anchors.verticalCenter: ListView.view.contentItem.verticalCenter
-                height: ListView.isCurrentItem ? ListView.view.height + 20 : ListView.view.height
-                Behavior on height {
-                    NumberAnimation {
-                        duration: 100
-                        easing.type: Easing.InOutQuad
-                    }
+                Text {
+                    id: timeLabel
+                    anchors.left: parent.left
+                    // anchors.bottom: timeAgoLabel.top
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    height: 24
+                    text: dele.model.modelData.time
+                    font.pixelSize: 14
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.Medium
+                    wrapMode: Text.WordWrap
+                    padding: 8
+                    color: ColorPalette.neutral300
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
-                Behavior on width {
-                    NumberAnimation {
-                        duration: 100
-                        easing.type: Easing.InOutQuad
-                    }
-                }
-                fillMode: Image.PreserveAspectFit
+
+
+                // Text {
+                //     id: timeAgoLabel
+                //     anchors.left: parent.left
+                //     anchors.bottom: parent.bottom
+                //     anchors.right: parent.right
+                //     height: 24
+                //     text: dele.model.modelData.ago
+                //     font.pixelSize: 15
+                //     font.family: Constants.regularFontFamily
+                //     font.weight: Font.DemiBold
+                //     wrapMode: Text.WordWrap
+                //     color: ColorPalette.neutral200
+                //     horizontalAlignment: Text.AlignHCenter
+                //     verticalAlignment: Text.AlignVCenter
+                // }
             }
         }
     }

@@ -28,6 +28,8 @@ Rectangle {
 
     signal rewindPointsReady(var points)
 
+    signal rewindPointLoaded()
+
     function loadRewindPoint(index) {
         emulatorView.loadRewindPoint(index)
     }
@@ -74,6 +76,10 @@ Rectangle {
 
         onRewindPointsReady: function (points) {
             emulatorContainer.rewindPointsReady(points)
+        }
+
+        onRewindPointLoaded: function () {
+            emulatorContainer.rewindPointLoaded()
         }
 
         // onOrphanPatchDetected: {

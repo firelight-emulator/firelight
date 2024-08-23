@@ -149,6 +149,10 @@ FocusScope {
                 // openRewindMenuAnimation.start()
             }
 
+            Keys.onDigit1Pressed: function () {
+                emulator.resumeGame()
+            }
+
             function loadRewindPoint(index) {
                 emulator.loadRewindPoint(index)
             }
@@ -202,6 +206,12 @@ FocusScope {
 
                 onEmulationStarted: function () {
                     emulator.loaded = true
+                }
+
+                onRewindPointLoaded: function () {
+                    console.log("Rewind point loaded; closing")
+                    const rewind = emulatorStack.get(1)
+                    rewind.close()
                 }
 
                 ChallengeIndicatorList {
@@ -295,7 +305,6 @@ FocusScope {
                 const emu = emulatorStack.get(0)
                 emu.loadRewindPoint(index)
                 // emulator.resetGame()
-                theActualMenu.close()
 
             }
         }

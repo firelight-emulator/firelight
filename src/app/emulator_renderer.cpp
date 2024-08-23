@@ -122,29 +122,44 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   if (m_core && manager->m_rewindPointIndex != -1) {
     spdlog::info("Loading rewind point {}", manager->m_rewindPointIndex);
     m_core->deserializeState(m_suspendPoints[manager->m_rewindPointIndex - 1].state);
-    // m_suspendPoints.removeAt(manager->m_rewindPointIndex);
-    manager->m_rewindPointIndex = -1;
-    manager->rewindPointLoaded();
 
-    m_runAfterNextFrame = [this, manager] {
-      m_core->run(0);
-      manager->rewindPointLoaded();
-    };
+    for (auto i = manager->m_rewindPointIndex - 1; i >= 0; --i) {
+      m_suspendPoints.remove(i);
+    }
+
+
+    // m_suspendPoints.removeAt(manager->m_rewindPointIndex);
+    // manager->rewindPointLoaded();
+
+    // const auto image = m_suspendPoints[manager->m_rewindPointIndex - 1].image;
+    manager->m_rewindPointIndex = -1;
+
+    manager->rewindPointLoaded();
   }
 
   if (m_core && manager->m_shouldGetRewindPoints) {
     QList<QJsonObject> points;
     int i = 1;
+
+    auto now = QDateTime::currentMSecsSinceEpoch();
     for (const auto &point: m_suspendPoints) {
+      auto time = QDateTime::fromMSecsSinceEpoch(point.timestamp).time();
+      auto diff = time.secsTo(QDateTime::fromMSecsSinceEpoch(now).time());
+
       QJsonObject obj;
       getGameImageProvider()->setImage(QString::number(i), point.image);
       obj["image_url"] = "image://gameimages/" + QString::number(i++);
+      // obj["time"] = now - point.timestamp;
+      obj["time"] = time.toString();
+      obj["ago"] = QString::number(diff) + " seconds ago";
       points.append(obj);
     }
 
     QJsonObject obj;
     getGameImageProvider()->setImage("0", m_fbo->toImage());
     obj["image_url"] = "image://gameimages/0";
+    obj["time"] = QDateTime::fromMSecsSinceEpoch(now).time().toString();
+    obj["ago"] = "Just now";
     points.prepend(obj);
 
     manager->rewindPointsReady(points);
@@ -228,16 +243,10 @@ void EmulatorRenderer::render() {
     return;
   }
 
-  if (m_runAfterNextFrame) {
-    m_runAfterNextFrame();
-    m_runAfterNextFrame = nullptr;
-  }
-
   if (m_fbo && m_core && !m_paused) {
     m_running = true;
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
-
     if (m_shouldSave) {
       save(false);
       m_shouldSave = false;
@@ -245,14 +254,14 @@ void EmulatorRenderer::render() {
 
     if (m_shouldCreateSuspendPoint) {
       if (m_fbo->size() != QSize(0, 0)) {
-        spdlog::info("Creating suspend point");
+        // spdlog::info("Creating suspend point");
         SuspendPoint suspendPoint;
         suspendPoint.state = m_core->serializeState();
         suspendPoint.image = m_fbo->toImage();
+        suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
         m_suspendPoints.push_front(suspendPoint);
       }
 
-      // getSaveManager()->addSuspendPoint(suspendPoint);
       m_shouldCreateSuspendPoint = false;
     }
   } else if (m_fboIsNew) {
