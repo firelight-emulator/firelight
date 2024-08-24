@@ -37,6 +37,14 @@ FocusScope {
         }
     }
 
+    Keys.onSelectPressed: function (event) {
+        if (theList.currentIndex === 0) {
+            exitAnimation.start()
+        } else {
+            rewindPointSelected(theList.currentIndex)
+        }
+    }
+
     StackView.onActivated: function () {
         sfx_player.play("rewindopen")
         enterAnimation.start()
@@ -148,6 +156,7 @@ FocusScope {
 
     Pane {
         id: barthing
+        focus: true
 
 
         width: parent.width
@@ -161,9 +170,9 @@ FocusScope {
             id: theList
             orientation: ListView.Horizontal
             layoutDirection: Qt.RightToLeft
-            focus: true
             highlightMoveDuration: 80
             highlightMoveVelocity: -1
+            focus: true
             keyNavigationEnabled: true
             highlightRangeMode: ListView.StrictlyEnforceRange
             preferredHighlightBegin: width / 2 - 75
@@ -199,6 +208,7 @@ FocusScope {
                 required property var index
                 height: dele.ListView.view.height
                 width: imageThing.width
+                focus: true
 
                 Item {
                     anchors.top: parent.top

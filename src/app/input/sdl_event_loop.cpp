@@ -71,6 +71,8 @@ namespace firelight {
               key = Qt::Key_Down;
             } else if (button == SDL_CONTROLLER_BUTTON_X) {
               key = Qt::Key_Menu;
+            } else if (button == SDL_CONTROLLER_BUTTON_A) {
+              key = Qt::Key_Select;
             } else {
               break;
             }
@@ -93,6 +95,8 @@ namespace firelight {
               key = Qt::Key_Down;
             } else if (button == SDL_CONTROLLER_BUTTON_X) {
               key = Qt::Key_Menu;
+            } else if (button == SDL_CONTROLLER_BUTTON_A) {
+              key = Qt::Key_Select;
             } else {
               break;
             }
