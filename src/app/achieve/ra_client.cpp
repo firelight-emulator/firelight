@@ -209,7 +209,7 @@ namespace firelight::achievements {
         m_settings->value("retroachievements/token", "").toString();
 
     if (!user.isEmpty() && !token.isEmpty()) {
-      logInUserWithToken(user, token);
+      // logInUserWithToken(user, token);
     }
   }
 

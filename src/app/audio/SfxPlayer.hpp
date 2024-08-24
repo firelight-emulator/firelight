@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <QMap>
 #include <SDL_audio.h>
 
 
@@ -13,6 +14,8 @@ namespace firelight::audio {
         ~SfxPlayer();
 
         Q_INVOKABLE void play();
+
+        Q_INVOKABLE void play(QString id);
 
         // SDL_AudioSpec want, have;
         //
@@ -30,9 +33,13 @@ namespace firelight::audio {
         //
         // SDL_PauseAudioDevice(audioDevice, muted); // Start audio playback
     private:
-        SDL_AudioDeviceID audioDevice = 0;
-        Uint8 *m_wavBuffer{};
-        Uint32 m_wavLength;
+        struct sfxStuff {
+            SDL_AudioDeviceID audioDeviceId{};
+            Uint8 *m_wavBuffer{};
+            Uint32 m_wavLength{};
+        };
+
+        QMap<QString, sfxStuff> m_sfxMap;
     };
 } // audio
 // firelight

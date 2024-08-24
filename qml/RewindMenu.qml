@@ -38,6 +38,7 @@ FocusScope {
     }
 
     StackView.onActivated: function () {
+        sfx_player.play("rewindopen")
         enterAnimation.start()
     }
 
@@ -139,6 +140,8 @@ FocusScope {
         smooth: false
         cache: false
         source: theList.count > 0 ? theList.itemAtIndex(theList.currentIndex).model.modelData.image_url : ""
+        // onSourceChanged: function () {
+        // }
         fillMode: Image.PreserveAspectFit
     }
 
@@ -173,18 +176,19 @@ FocusScope {
             // SoundEffect {
             //     id: scrollSound
             //     loops: 0
-            //     source: "file:system/sfx/glass_001.wav"
+            //     source: "file:system/sfx/cursor5.wav"
             // }
 
             onCurrentIndexChanged: {
+                // scrollSound.play()
                 // if (currentIndex == 0) {
                 //     coverImage.source = "image://gameImages/0"
                 // } else {
                 //     coverImage.source = theList.itemAtIndex(currentIndex).model.image_url
                 // }
                 // if (coverImageBg.state === "showing") {
-                //     sfx_player.play()
                 // }
+                sfx_player.play("rewindscroll")
             }
 
 
@@ -255,10 +259,10 @@ FocusScope {
                     text: dele.model.modelData.time
                     font.pixelSize: 14
                     font.family: Constants.regularFontFamily
-                    font.weight: Font.Medium
+                    font.weight: Font.DemiBold
                     wrapMode: Text.WordWrap
-                    padding: 8
-                    color: ColorPalette.neutral300
+                    padding: 12
+                    color: ColorPalette.neutral200
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }

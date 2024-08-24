@@ -318,6 +318,10 @@ FocusScope {
             property bool topLevel: true
             property string topLevelName: "nowPlaying"
 
+            StackView.onActivating: function () {
+                // sfx_player.play()
+            }
+
             Keys.onEscapePressed: function (event) {
                 if (event.isAutoRepeat) {
                     return
