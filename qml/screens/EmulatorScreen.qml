@@ -143,6 +143,10 @@ FocusScope {
                 emulator.paused = false
             }
 
+            function createRewindPoints() {
+                emulator.createRewindPoints()
+            }
+
             Keys.onSpacePressed: function () {
                 emulator.paused = true
                 emulator.createRewindPoints()
@@ -162,7 +166,11 @@ FocusScope {
 
                 function onRewindPointsReady(points) {
                     // console.log("Points ready: " + JSON.stringify(points))
-                    emulatorStack.pushItem(rewindPage, {model: points}, StackView.Immediate)
+                    if (scope.StackView.status === StackView.Active) {
+                        emulatorStack.pushItem(rewindPage, {model: points}, StackView.Immediate)
+                    } else {
+                        emulatorStack.replaceCurrentItem(rewindPage, {model: points}, StackView.Immediate)
+                    }
                 }
             }
 
@@ -351,9 +359,10 @@ FocusScope {
 
             onRewindPressed: function () {
                 const emu = emulatorStack.get(0)
-                emu.rewinding = true
                 // emulator.resetGame()
-                emulatorStack.pop()
+                // emu.paused = true
+                emu.createRewindPoints()
+                // emulatorStack.replaceCurrentItem(rewindPage, {})
             }
 
             onCloseGamePressed: function () {
