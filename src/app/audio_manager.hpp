@@ -9,13 +9,11 @@ public:
 
   void initialize(double new_freq) override;
 
-  bool is_muted() override;
-
-  void toggle_mute() override;
+  void setMuted(bool muted);
 
   ~AudioManager() override;
 
 private:
   SDL_AudioDeviceID audioDevice = 0;
-  bool muted = false;
+  bool m_isMuted = false;
 };

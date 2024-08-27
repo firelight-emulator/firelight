@@ -7,6 +7,7 @@
 #include <QOpenGLFunctions>
 #include <QQuickFramebufferObject>
 
+#include "audio_manager.hpp"
 #include "../gui/models/rewind_model.hpp"
 #include "libretro/core_configuration.hpp"
 
@@ -45,6 +46,8 @@ private:
 
     std::unique_ptr<libretro::Core> m_core = nullptr;
     std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
+
+    std::shared_ptr<AudioManager> m_audioManager = nullptr;
 
     QOpenGLFramebufferObject *m_fbo = nullptr;
     bool m_fboIsNew = true;

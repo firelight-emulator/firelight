@@ -1,7 +1,7 @@
 #include "audio_manager.hpp"
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
-  if (audioDevice != 0) {
+  if (!m_isMuted && audioDevice != 0) {
     SDL_QueueAudio(audioDevice, data, numFrames * 4);
     auto queued = SDL_GetQueuedAudioSize(audioDevice);
     // printf("given: %llu, Queued: %d\n", numFrames * 4, queued);
@@ -25,17 +25,14 @@ void AudioManager::initialize(const double new_freq) {
     printf("SDL_OpenAudioDevice failed: %s\n", SDL_GetError());
   }
 
-  SDL_PauseAudioDevice(audioDevice, muted); // Start audio playback
+  SDL_PauseAudioDevice(audioDevice, false); // Start audio playback
 }
 
-bool AudioManager::is_muted() { return muted; }
-
-void AudioManager::toggle_mute() {
-  muted = !muted;
-  SDL_PauseAudioDevice(audioDevice, muted);
+void AudioManager::setMuted(bool muted) {
+  m_isMuted = muted;
+  SDL_PauseAudioDevice(audioDevice, m_isMuted);
 }
 
 AudioManager::~AudioManager() {
-  printf("Destroying AudioManager\n");
   SDL_CloseAudioDevice(this->audioDevice);
 }

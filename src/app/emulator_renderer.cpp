@@ -118,7 +118,14 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
 
   m_paused = manager->m_paused;
   m_gameReady = manager->m_gameReady;
-  m_gameSpeed = manager->m_playSpeed;
+  if (m_gameSpeed != manager->m_playSpeed) {
+    m_gameSpeed = manager->m_playSpeed;
+    if (m_gameSpeed > 1) {
+      m_audioManager->setMuted(true);
+    } else {
+      m_audioManager->setMuted(false);
+    }
+  }
 
   if (m_core && manager->m_rewindPointIndex != -1) {
     spdlog::info("Loading rewind point {}", manager->m_rewindPointIndex);
@@ -215,7 +222,8 @@ void EmulatorRenderer::render() {
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
 
     m_core->setVideoReceiver(this);
-    m_core->setAudioReceiver(std::make_shared<AudioManager>());
+    m_audioManager = std::make_shared<AudioManager>();
+    m_core->setAudioReceiver(m_audioManager);
     m_core->setRetropadProvider(getControllerManager());
 
     m_core->setSystemDirectory("./system");

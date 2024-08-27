@@ -162,6 +162,11 @@ FocusScope {
                 emulator.setPlaySpeedMultiplier(2)
             }
 
+
+            Keys.onDigit8Pressed: function (event) {
+                emulator.setPlaySpeedMultiplier(1)
+            }
+
             function loadRewindPoint(index) {
                 emulator.loadRewindPoint(index)
             }
