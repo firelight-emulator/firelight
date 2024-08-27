@@ -154,12 +154,23 @@ namespace firelight::achievements {
 
     QThreadPool::globalInstance()->start([=] {
       if (postData != "") {
+        const auto raClient =
+            static_cast<RAClient *>(rc_client_get_userdata(client));
+
         const auto response = Post(url, headers, postData);
 
         rc_api_server_response_t rcResponse;
         if (response.error) {
           printf("NOOO GOT AN ERROR: %s\n", response.error.message.c_str());
+          if (response.status_code == 0) {
+            raClient->m_connected = false;
+            return;
+            // TODO: Got connectivity error
+          } else {
+            raClient->m_connected = true;
+          }
         } else {
+          raClient->m_connected = true;
           rcResponse.body = response.text.c_str();
           rcResponse.body_length = response.text.size();
         }
@@ -209,7 +220,7 @@ namespace firelight::achievements {
         m_settings->value("retroachievements/token", "").toString();
 
     if (!user.isEmpty() && !token.isEmpty()) {
-      // logInUserWithToken(user, token);
+      logInUserWithToken(user, token);
     }
   }
 

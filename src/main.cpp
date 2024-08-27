@@ -11,7 +11,7 @@
 #include <qstringlistmodel.h>
 
 #include <spdlog/spdlog.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "app/achieve/ra_client.hpp"
 #include "app/db/sqlite_content_database.hpp"
@@ -94,9 +94,10 @@ int main(int argc, char *argv[]) {
 
   printf("Documents Path: %s\n", docPath.toStdString().c_str());
 
-  auto appDataPath =
-      QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+  // auto appDataPath =
+  //     QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
+  QString appDataPath = "./userdata";
   // C:/Users/<USER>/AppData/Roaming/Firelight/library.db
   // C:/Users/<USER>/AppData/Roaming/Firelight/patches/
   // C:/Users/<USER>/AppData/Roaming/Firelight/saves/<content_id>/slot<n>/
@@ -105,7 +106,7 @@ int main(int argc, char *argv[]) {
   auto appDataDir = std::filesystem::path(appDataPath.toStdString());
   auto saveDir = appDataDir / "saves";
   auto romsDir = appDataDir / "roms";
-  auto patchesDir = appDataDir / "patches";
+  // auto patchesDir = appDataDir / "patches";
 
   // If missing system directory, throw an error
   // TODO
@@ -114,7 +115,7 @@ int main(int argc, char *argv[]) {
   std::filesystem::path appdata_dir = ".";
   auto systemDir = appdata_dir / "system";
 
-  if (!create_dirs({appdata_dir, systemDir, romsDir, patchesDir, saveDir})) {
+  if (!create_dirs({appdata_dir, systemDir, romsDir, saveDir})) {
     return 1;
   }
 

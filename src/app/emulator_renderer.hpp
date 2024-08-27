@@ -78,6 +78,8 @@ private:
     int m_nativeHeight = 0;
     float m_nativeAspectRatio = 0.0f;
 
+    float m_gameSpeed = 1.0f;
+
     bool m_doingFrameByFrame = false;
     bool m_pausedForFrameByFrame = false;
 

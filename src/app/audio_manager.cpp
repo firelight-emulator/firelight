@@ -1,7 +1,11 @@
 #include "audio_manager.hpp"
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
-  SDL_QueueAudio(audioDevice, data, numFrames * 4);
+  if (audioDevice != 0) {
+    SDL_QueueAudio(audioDevice, data, numFrames * 4);
+    auto queued = SDL_GetQueuedAudioSize(audioDevice);
+    // printf("given: %llu, Queued: %d\n", numFrames * 4, queued);
+  }
 
   return numFrames;
 }
@@ -13,7 +17,7 @@ void AudioManager::initialize(const double new_freq) {
   want.freq = new_freq; // Sample rate (e.g., 44.1 kHz)
   want.format = AUDIO_S16; // Audio format (16-bit signed)
   want.channels = 2; // Number of audio channels (stereo)
-  want.samples = 128; // Audio buffer size (samples)
+  want.samples = 512; // Audio buffer size (samples)
   want.callback = nullptr;
 
   this->audioDevice = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);

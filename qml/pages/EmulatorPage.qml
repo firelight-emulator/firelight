@@ -30,6 +30,10 @@ Rectangle {
 
     signal rewindPointLoaded()
 
+    function setPlaySpeedMultiplier(multiplier) {
+        emulatorView.playSpeedMultiplier = multiplier
+    }
+
     function loadRewindPoint(index) {
         emulatorView.loadRewindPoint(index)
     }

@@ -23,6 +23,7 @@ namespace libretro {
 namespace firelight::achievements {
   class RAClient : public QObject {
     Q_OBJECT
+    Q_PROPERTY(bool connected MEMBER m_connected NOTIFY connectedChanged)
     Q_PROPERTY(bool loggedIn MEMBER m_loggedIn NOTIFY loginStatusChanged)
     Q_PROPERTY(QString displayName MEMBER m_displayName NOTIFY loginSucceeded)
     Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY loginStatusChanged)
@@ -55,6 +56,7 @@ namespace firelight::achievements {
     rc_libretro_memory_regions_t m_memoryRegions{};
     bool m_memorySeemsGood = false;
     int m_consoleId = 0;
+    bool m_connected = false;
 
     void setDefaultToHardcore(bool hardcore);
 
@@ -71,6 +73,8 @@ namespace firelight::achievements {
     // bool gameLoaded() const;
 
   signals:
+    void connectedChanged();
+
     void loginSucceeded();
 
     void loginFailedWithInvalidCredentials();

@@ -98,6 +98,16 @@ float EmulationManager::nativeAspectRatio() const {
   return m_nativeAspectRatio;
 }
 
+float EmulationManager::playSpeed() const {
+  return m_playSpeed;
+}
+
+void EmulationManager::setPlaySpeed(float speed) {
+  m_playSpeed = speed;
+  printf("Setting play speed\n");
+  update();
+}
+
 void EmulationManager::pauseGame() {
   m_paused = true;
   update();

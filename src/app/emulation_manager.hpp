@@ -24,6 +24,8 @@ class EmulationManager : public QQuickFramebufferObject,
     Q_PROPERTY(int nativeHeight READ nativeHeight NOTIFY nativeHeightChanged)
     Q_PROPERTY(float nativeAspectRatio READ nativeAspectRatio NOTIFY
         nativeAspectRatioChanged)
+    Q_PROPERTY(float playSpeedMultiplier READ playSpeed WRITE setPlaySpeed NOTIFY
+        playSpeedMultiplierChanged)
 
 public:
     [[nodiscard]] Renderer *createRenderer() const override;
@@ -39,6 +41,10 @@ public:
     [[nodiscard]] int nativeHeight() const;
 
     [[nodiscard]] float nativeAspectRatio() const;
+
+    [[nodiscard]] float playSpeed() const;
+
+    void setPlaySpeed(float speed);
 
     void setGeometry(int nativeWidth, int nativeHeight, float nativeAspectRatio);
 
@@ -63,6 +69,8 @@ public:
     bool m_shouldGetRewindPoints = false;
 
     int m_rewindPointIndex = -1;
+
+    float m_playSpeed = 1.0;
 
 public slots:
     void loadLibraryEntry(int entryId);
@@ -105,6 +113,8 @@ signals:
     void rewindPointsReady(QList<QJsonObject> points);
 
     void rewindPointLoaded();
+
+    void playSpeedMultiplierChanged();
 
 private:
     std::unique_ptr<firelight::db::PlaySession> m_currentPlaySession;

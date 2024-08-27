@@ -291,7 +291,7 @@ Flickable {
                             radius: 12
                         }
                         contentItem: Text {
-                            text: "Add to Library"
+                            text: "Available soon"
                             verticalAlignment: Text.AlignVCenter
                             horizontalAlignment: Text.AlignHCenter
                             font.pixelSize: 18
@@ -299,6 +299,8 @@ Flickable {
                             font.weight: Font.Bold
                             color: "white"
                         }
+
+                        enabled: false
 
                         onClicked: {
                             console.log("Install button clicked")

@@ -118,6 +118,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
 
   m_paused = manager->m_paused;
   m_gameReady = manager->m_gameReady;
+  m_gameSpeed = manager->m_playSpeed;
 
   if (m_core && manager->m_rewindPointIndex != -1) {
     spdlog::info("Loading rewind point {}", manager->m_rewindPointIndex);
@@ -245,6 +246,11 @@ void EmulatorRenderer::render() {
 
   if (m_fbo && m_core && !m_paused) {
     m_running = true;
+    if (static_cast<int>(m_gameSpeed) > 1) {
+      m_core->run(0);
+      getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
+    }
+
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
     if (m_shouldSave) {

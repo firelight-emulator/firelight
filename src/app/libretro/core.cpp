@@ -595,6 +595,7 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE");
+        printf("Getting audio video enable\n");
         auto value = static_cast<int *>(data);
         *value = 1 << 0 | 1 << 1;
         return true;
