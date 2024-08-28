@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(firelight
-        VERSION 0.4.0
+        VERSION 0.5.0
         DESCRIPTION "An emulation frontend that just works"
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -273,9 +273,13 @@ gtest_discover_tests(fl_test)
 #file(COPY LICENSE.md README.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 #install(FILES LICENSE.md README.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-set(CPACK_PACKAGE_NAME "Firelight")
+set(CPACK_PACKAGE_NAME "firelight-emulator")
 set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY, "Firelight")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY, "firelight")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION "0.5.0")
 #set(CPACK_RESOURCE_FILE_LICENSE, "C:/msys64/mingw64/share/cmake/Templates/ALEX.txt")
 #set(CPACK_RESOURCE_FILE_README, "${CMAKE_CURRENT_BINARY_DIR}/README.md")
 #set(CPACK_RESOURCE_FILE_WELCOME, "Firelight")
@@ -319,4 +323,11 @@ install(
         DIRECTORY
         ${CMAKE_SOURCE_DIR}/_mods
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
+)
+
+install(
+        FILES
+        ${CMAKE_SOURCE_DIR}/assets/openrewind.wav
+        ${CMAKE_SOURCE_DIR}/assets/click.wav
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/sfx/
 )
