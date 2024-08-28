@@ -6,15 +6,18 @@
 #include <QOpenGLPaintDevice>
 #include <QPainter>
 #include <QSGTextureProvider>
+#include <QtConcurrent>
 #include <spdlog/spdlog.h>
 
 #include "audio_manager.hpp"
 #include "../gui/game_image_provider.hpp"
+#include "../../../libs/tracy/public/tracy/Tracy.hpp"
 
 static constexpr int AUTOSAVE_INTERVAL_MILLIS = 10000;
 
 EmulatorRenderer::EmulatorRenderer() {
   initializeOpenGLFunctions();
+  m_threadPool.setMaxThreadCount(2);
   autosaveTimer.setSingleShot(false);
   autosaveTimer.setInterval(AUTOSAVE_INTERVAL_MILLIS);
   QObject::connect(&autosaveTimer, &QTimer::timeout,
@@ -28,6 +31,14 @@ EmulatorRenderer::EmulatorRenderer() {
                    [this] {
                      m_shouldCreateSuspendPoint = true;
                    });
+
+  m_frameTimer.setInterval(1000);
+  m_frameTimer.setSingleShot(false);
+  QObject::connect(&m_frameTimer, &QTimer::timeout, [this] {
+    printf("num frames in last 60s: %d\n", static_cast<int>(m_frameCounter));
+    m_frameCounter = 0;
+  });
+  m_frameTimer.start();
 }
 
 EmulatorRenderer::~EmulatorRenderer() {
@@ -35,7 +46,6 @@ EmulatorRenderer::~EmulatorRenderer() {
   getAchievementManager()->unloadGame();
 
   save(true);
-  // TODO: SAVE
 
   if (m_destroyContextFunction) {
     m_destroyContextFunction();
@@ -216,6 +226,7 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 }
 
 void EmulatorRenderer::render() {
+  ZoneScoped;
   auto currentTime = QDateTime::currentMSecsSinceEpoch();
   if (!m_core && m_gameReady) {
     auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_currentEntry.platformId, m_currentEntry.id);
@@ -253,6 +264,17 @@ void EmulatorRenderer::render() {
   }
 
   if (m_fbo && m_core && !m_paused) {
+    ++m_frameCounter;
+    // auto startGettingLock = QDateTime::currentMSecsSinceEpoch();
+    // m_mutex.lock();
+    // auto endGettingLock = QDateTime::currentMSecsSinceEpoch();
+    // auto waited = endGettingLock - startGettingLock;
+
+    // if (waited > 0) {
+    // printf("Waited %lld ms for lock\n", waited);
+    // }
+
+    // printf("msecs since last frame: %lld, since end of render: %lld\n", msecs, msecsSinceLastRender);
     m_running = true;
     if (static_cast<int>(m_gameSpeed) > 1) {
       m_core->run(0);
@@ -261,12 +283,33 @@ void EmulatorRenderer::render() {
 
     m_core->run(0);
     getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
+
+    // m_mutex.unlock();
+
+    m_lastFrameTime = QDateTime::currentMSecsSinceEpoch();
     if (m_shouldSave) {
       save(false);
       m_shouldSave = false;
     }
 
     if (m_shouldCreateSuspendPoint) {
+      // m_threadPool.start([this] {
+      //   auto start = QDateTime::currentMSecsSinceEpoch();
+      //   m_mutex.lock();
+      //   if (m_fbo->size() != QSize(0, 0)) {
+      //     // spdlog::info("Creating suspend point");
+      //     SuspendPoint suspendPoint;
+      //     suspendPoint.state = m_core->serializeState();
+      //     suspendPoint.image = m_fbo->toImage();
+      //     suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
+      //     m_suspendPoints.push_front(suspendPoint);
+      //   }
+      //
+      //   m_shouldCreateSuspendPoint = false;
+      //   printf("Work took %lld ms\n", QDateTime::currentMSecsSinceEpoch() - start);
+      //
+      //   m_mutex.unlock();
+      // });
       if (m_fbo->size() != QSize(0, 0)) {
         // spdlog::info("Creating suspend point");
         SuspendPoint suspendPoint;
@@ -290,6 +333,8 @@ void EmulatorRenderer::render() {
   if (elapsed > 10) {
     spdlog::info("Frame took {} ms", elapsed);
   }
+
+  m_lastRenderEndTime = QDateTime::currentMSecsSinceEpoch();
 
   update();
 }

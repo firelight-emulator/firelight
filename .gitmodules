@@ -1,3 +1,6 @@
 [submodule "libs/rcheevos"]
 	path = libs/rcheevos
 	url = https://github.com/RetroAchievements/rcheevos.git
+[submodule "libs/tracy"]
+	path = libs/tracy
+	url = https://github.com/wolfpld/tracy.git

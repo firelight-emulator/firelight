@@ -12,6 +12,7 @@
 #include "patching/yay_0_codec.hpp"
 #include "saves/save_manager.hpp"
 #include "saves/savefile.hpp"
+#include <QQuickWindow>
 
 #include <QPainter>
 #include <QtConcurrent>
@@ -29,57 +30,10 @@ EmulationManager::EmulationManager(QQuickItem *parent)
   setTextureFollowsItemSize(false);
   setMirrorVertically(true);
   setFlag(ItemHasContents);
-
-  // connect(this, &EmulationManager::emulationStarted, this,
-  //         &QQuickFramebufferObject::update, Qt::QueuedConnection);
-  // connect(this, &EmulationManager::gamePaused, this,
-  //         &QQuickFramebufferObject::update, Qt::QueuedConnection);
-  // connect(this, &EmulationManager::gameResumed, this,
-  //         &QQuickFramebufferObject::update, Qt::QueuedConnection);
-
-  // connect(
-  //   this, &EmulationManager::gameLoadSucceeded, this,
-  //   [this] {
-  //     m_currentPlaySession = std::make_unique<firelight::db::PlaySession>();
-  //     m_currentPlaySession->contentId = m_currentEntry.contentId;
-  //     m_currentPlaySession->startTime = QDateTime::currentMSecsSinceEpoch();
-  //     m_currentPlaySession->slotNumber = m_currentEntry.activeSaveSlot;
-  //
-  //     m_playtimeTimer.start();
-  //     QMetaObject::invokeMethod(&m_autosaveTimer, "start", Qt::QueuedConnection);
-  //
-  //     emit emulationStarted();
-  //   },
-  //   Qt::QueuedConnection);
-
-  // m_autosaveTimer.setInterval(SAVE_FREQUENCY_MILLIS);
-  // m_autosaveTimer.setSingleShot(false);
-  // m_autosaveTimer.callOnTimeout([this] {
-  //   spdlog::info("Autosaving SRAM data (interval {}ms)", SAVE_FREQUENCY_MILLIS);
-  //   save();
-  // });
 }
 
 EmulationManager::~EmulationManager() {
   printf("Destroying EmulationManager\n");
-
-  // QMetaObject::invokeMethod(&m_autosaveTimer, "stop", Qt::QueuedConnection);
-  //
-  // if (m_currentPlaySession) {
-  //   m_currentPlaySession->endTime = QDateTime::currentMSecsSinceEpoch();
-  //
-  //   const auto timerValue = m_playtimeTimer.restart();
-  //   if (!m_paused) {
-  //     m_currentPlaySession->unpausedDurationMillis += timerValue;
-  //   }
-  //
-  //   const auto session = m_currentPlaySession.release();
-  //   getUserdataManager()->createPlaySession(*session);
-  // }
-  //
-  // save(true);
-
-  // getAchievementManager()->unloadGame();
 }
 
 QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
@@ -104,7 +58,6 @@ float EmulationManager::playSpeed() const {
 
 void EmulationManager::setPlaySpeed(float speed) {
   m_playSpeed = speed;
-  printf("Setting play speed\n");
   update();
 }
 

@@ -195,7 +195,6 @@ ApplicationWindow {
         }
     }
 
-
     Rectangle {
         id: overlay
         objectName: "Screen Overlay"

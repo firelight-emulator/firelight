@@ -44,6 +44,9 @@ protected:
 private:
     void save(bool waitForFinish = false);
 
+    qint64 m_lastFrameTime = 0;
+    qint64 m_lastRenderEndTime = 0;
+
     std::unique_ptr<libretro::Core> m_core = nullptr;
     std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
 
@@ -59,6 +62,12 @@ private:
 
     // Default according to libretro docs
     QImage::Format m_pixelFormat = QImage::Format_RGB16;
+
+    QThreadPool m_threadPool;
+    QMutex m_mutex;
+
+    QTimer m_frameTimer;
+    std::atomic_int m_frameCounter = 0;
 
     bool m_paused = false;
     bool m_gameReady = false;

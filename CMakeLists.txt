@@ -9,9 +9,23 @@ project(firelight
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
 
+include(FetchContent)
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+FetchContent_Declare(
+        tracy
+        GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+        GIT_TAG master
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(tracy)
+
+add_definitions(-DTRACY_ENABLE)
+
 
 #include(FetchContent)
 #FetchContent_Declare(
@@ -106,6 +120,7 @@ add_library(firelight_lib
         src/gui/game_image_provider.hpp
         src/app/audio/SfxPlayer.cpp
         src/app/audio/SfxPlayer.hpp
+        libs/tracy/public/TracyClient.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
@@ -129,7 +144,8 @@ target_link_libraries(firelight_lib PUBLIC
         cpr::cpr
         library
         patching
-        rcheevos)
+        rcheevos
+        TracyClient)
 
 # main code
 qt6_add_executable(firelight

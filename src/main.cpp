@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <qstandardpaths.h>
 #include <qstringlistmodel.h>
+#include "libs/tracy/public/tracy/Tracy.hpp"
 
 #include <spdlog/spdlog.h>
 #include <cstdlib>
@@ -231,6 +232,13 @@ int main(int argc, char *argv[]) {
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
+
+  // QElapsedTimer timer;
+  // timer.start();
+
+  QObject::connect(window, &QQuickWindow::frameSwapped, window, [] {
+    FrameMark;
+  }, Qt::DirectConnection);
 
   // QObject::connect(
   //   window, &QQuickWindow::frameSwapped, window,
