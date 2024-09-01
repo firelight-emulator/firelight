@@ -11,6 +11,9 @@ FocusScope {
     id: root
 
     required property var model
+    required property SoundEffect scrollSfx
+    required property SoundEffect openSfx
+
     property var barHeight: 220
 
     Rectangle {
@@ -46,6 +49,9 @@ FocusScope {
     }
 
     StackView.onActivated: function () {
+        // root.openSfx.stop()
+        // root.openSfx.play()
+        // console.log(root.openSfx.mediaStatus)
         sfx_player.play("rewindopen")
         enterAnimation.start()
     }
@@ -197,6 +203,10 @@ FocusScope {
                 // }
                 // if (coverImageBg.state === "showing") {
                 // }
+
+                // console.log(root.scrollSfx.mediaStatus)
+                // root.scrollSfx.stop()
+                // root.scrollSfx.play()
                 sfx_player.play("rewindscroll")
             }
 

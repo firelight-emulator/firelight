@@ -2,18 +2,21 @@
 
 #include "../libretro/core.hpp"
 #include "../manager_accessor.hpp"
-#include "cpr/cpr.h"
 #include "rcheevos/rc_consoles.h"
 #include <QThreadPool>
 #include <algorithm>
+#include "cpr/cpr.h"
 #include <cstdio>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <spdlog/spdlog.h>
+
+#include "RegularHttpClient.hpp"
 #include "firelight/achievement.hpp"
 
 #include "../../gui/achievement_list_model.hpp"
 #include "../../gui/achievement_list_sort_filter_model.hpp"
+#include "cache/ra_cache_dumb.hpp"
 
 namespace firelight::achievements {
   static ::libretro::Core *theCore;
@@ -81,31 +84,19 @@ namespace firelight::achievements {
           event->achievement->id, event->achievement->measured_percent);
 
         break;
+      // Intentionally ignored as we dynamically update the same popup and set out own duration.
       case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_HIDE:
-        // printf("progress: %s\n", event->achievement->measured_progress);
-        break;
       case RC_CLIENT_EVENT_GAME_COMPLETED:
-        break;
       case RC_CLIENT_EVENT_LEADERBOARD_STARTED:
-        break;
       case RC_CLIENT_EVENT_LEADERBOARD_FAILED:
-        break;
       case RC_CLIENT_EVENT_LEADERBOARD_SUBMITTED:
-        break;
       case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_SHOW:
-        break;
       case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_UPDATE:
-        break;
       case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_HIDE:
-        break;
       case RC_CLIENT_EVENT_LEADERBOARD_SCOREBOARD:
-        break;
       case RC_CLIENT_EVENT_RESET:
-        break;
       case RC_CLIENT_EVENT_SERVER_ERROR:
-        break;
       case RC_CLIENT_EVENT_DISCONNECTED:
-        break;
       case RC_CLIENT_EVENT_RECONNECTED:
         break;
       default:
@@ -145,40 +136,19 @@ namespace firelight::achievements {
   static void httpCallback(const rc_api_request_t *request,
                            rc_client_server_callback_t callback,
                            void *callback_data, rc_client_t *client) {
-    const auto url = cpr::Url{std::string(request->url)};
-    const auto headers = cpr::Header{
-      {"User-Agent", "FirelightEmulator/1.0"},
-      {"Content-Type", request->content_type}
-    };
-    const auto postData = cpr::Body{request->post_data};
+    const std::string url = request->url;
+    const std::string postData = request->post_data;
+    const std::string contentType = request->content_type;
 
     QThreadPool::globalInstance()->start([=] {
-      if (postData != "") {
+      if (!postData.empty()) {
         const auto raClient =
             static_cast<RAClient *>(rc_client_get_userdata(client));
 
-        const auto response = Post(url, headers, postData);
-
-        rc_api_server_response_t rcResponse;
-        if (response.error) {
-          printf("NOOO GOT AN ERROR: %s\n", response.error.message.c_str());
-          if (response.status_code == 0) {
-            raClient->m_connected = false;
-            return;
-            // TODO: Got connectivity error
-          } else {
-            raClient->m_connected = true;
-          }
-        } else {
-          raClient->m_connected = true;
-          rcResponse.body = response.text.c_str();
-          rcResponse.body_length = response.text.size();
-        }
-
-        rcResponse.http_status_code = response.status_code;
+        const auto response = raClient->m_httpClient->sendRequest(url, postData, contentType);
 
         if (callback) {
-          callback(&rcResponse, callback_data);
+          callback(&response, callback_data);
         }
       }
     });
@@ -193,6 +163,9 @@ namespace firelight::achievements {
     rc_client_enable_logging(m_client, RC_CLIENT_LOG_LEVEL_VERBOSE, logCallback);
     rc_client_set_event_handler(m_client, eventHandler);
     rc_client_set_userdata(m_client, this);
+
+    m_cache = std::make_shared<DumbAchievementCache>();
+    m_httpClient = std::make_unique<RegularHttpClient>(m_cache);
 
     m_idleTimer.setInterval(2000);
     connect(&m_idleTimer, &QTimer::timeout, this,
@@ -520,6 +493,7 @@ namespace firelight::achievements {
 
   void RAClient::logInUserWithPassword(const QString &username,
                                        const QString &password) {
+    m_expectToBeLoggedIn = true;
     rc_client_begin_login_with_password(
       m_client, username.toStdString().c_str(), password.toStdString().c_str(),
       [](int result, const char *error_message, rc_client_t *client,
@@ -562,6 +536,7 @@ namespace firelight::achievements {
   }
 
   void RAClient::logout() {
+    m_expectToBeLoggedIn = false;
     rc_client_logout(m_client);
     m_loggedIn = false;
     m_settings->remove("retroachievements/username");
@@ -572,6 +547,7 @@ namespace firelight::achievements {
 
   void RAClient::logInUserWithToken(const QString &username,
                                     const QString &token) {
+    m_expectToBeLoggedIn = true;
     rc_client_begin_login_with_token(
       m_client, username.toStdString().c_str(), token.toStdString().c_str(),
       [](int result, const char *error_message, rc_client_t *client,
@@ -629,5 +605,9 @@ namespace firelight::achievements {
     }
 
     return {};
+  }
+
+  bool RAClient::expectToBeLoggedIn() const {
+    return m_expectToBeLoggedIn;
   }
 } // namespace firelight::achievements

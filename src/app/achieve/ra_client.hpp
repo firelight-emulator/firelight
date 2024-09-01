@@ -3,7 +3,9 @@
 #include <QAbstractItemModel>
 
 #include "rcheevos/rc_client.h"
+#include "ra_http_client.hpp"
 #include "rcheevos/rc_libretro.h"
+#include "cache/ra_cache.hpp"
 #include <QTimer>
 #include <QJsonObject>
 #include <firelight/content_database.hpp>
@@ -24,6 +26,7 @@ namespace firelight::achievements {
   class RAClient : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool connected MEMBER m_connected NOTIFY connectedChanged)
+    Q_PROPERTY(bool expectToBeLoggedIn READ expectToBeLoggedIn NOTIFY loginStatusChanged)
     Q_PROPERTY(bool loggedIn MEMBER m_loggedIn NOTIFY loginStatusChanged)
     Q_PROPERTY(QString displayName MEMBER m_displayName NOTIFY loginSucceeded)
     Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY loginStatusChanged)
@@ -51,6 +54,8 @@ namespace firelight::achievements {
 
     QString avatarUrl() const;
 
+    bool expectToBeLoggedIn() const;
+
     void doFrame(::libretro::Core *core, const db::LibraryEntry &currentEntry);
 
     rc_libretro_memory_regions_t m_memoryRegions{};
@@ -69,6 +74,8 @@ namespace firelight::achievements {
     Q_INVOKABLE QAbstractItemModel *getAchievementsModelForGameId(int gameId);
 
     Q_INVOKABLE void getAchievementsOverview(int gameId);
+
+    std::unique_ptr<IRetroAchievementsHttpClient> m_httpClient = nullptr;
 
     // bool gameLoaded() const;
 
@@ -135,10 +142,13 @@ namespace firelight::achievements {
     bool m_progressNotificationsEnabled = true;
     bool m_challengeIndicatorsEnabled = true;
     bool m_defaultToHardcore = true;
+    bool m_expectToBeLoggedIn = false;
 
     db::IContentDatabase &m_contentDb;
 
     QHash<int, std::shared_ptr<gui::AchievementListSortFilterModel> > m_achievementModels;
+
+    std::shared_ptr<IAchievementCache> m_cache = nullptr;
 
     rc_client_t *m_client;
 

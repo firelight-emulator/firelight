@@ -9,19 +9,34 @@
 
 namespace firelight::audio {
     SfxPlayer::SfxPlayer() {
-        SDL_AudioSpec wavSpec1;
-        SDL_AudioSpec wavSpec2;
-        sfxStuff sfx1;
-        sfxStuff sfx2;
+        // SDL_AudioSpec wavSpec1;
+        // SDL_AudioSpec wavSpec2;
+        // sfxStuff sfx1;
+        // sfxStuff sfx2;
+        //
+        // SDL_LoadWAV("system/sfx/click.wav", &wavSpec1, &sfx1.m_wavBuffer, &sfx1.m_wavLength);
+        // SDL_LoadWAV("system/sfx/openrewind.wav", &wavSpec2, &sfx2.m_wavBuffer, &sfx2.m_wavLength);
+        //
+        // sfx1.audioDeviceId = SDL_OpenAudioDevice(nullptr, 0, &wavSpec1, nullptr, 0);
+        // sfx2.audioDeviceId = SDL_OpenAudioDevice(nullptr, 0, &wavSpec2, nullptr, 0);
+        //
+        //
+        // wavSpec1.callback = nullptr;
+        // wavSpec2.callback = nullptr;
+        // sfx1.wavSpec = wavSpec1;
+        // sfx2.wavSpec = wavSpec2;
 
-        SDL_LoadWAV("system/sfx/click.wav", &wavSpec1, &sfx1.m_wavBuffer, &sfx1.m_wavLength);
-        SDL_LoadWAV("system/sfx/openrewind.wav", &wavSpec2, &sfx2.m_wavBuffer, &sfx2.m_wavLength);
+        m_sfxs["rewindscroll"] = new QSoundEffect();
+        m_sfxs["rewindscroll"]->setSource(QUrl::fromLocalFile("system/sfx/click.wav"));
 
-        sfx1.audioDeviceId = SDL_OpenAudioDevice(nullptr, 0, &wavSpec1, nullptr, 0);
-        sfx2.audioDeviceId = SDL_OpenAudioDevice(nullptr, 0, &wavSpec2, nullptr, 0);
+        m_sfxs["rewindopen"] = new QSoundEffect();
+        m_sfxs["rewindopen"]->setSource(QUrl::fromLocalFile("system/sfx/openrewind.wav"));
 
-        m_sfxMap["rewindscroll"] = sfx1;
-        m_sfxMap["rewindopen"] = sfx2;
+        // m_sfxs["rewindscroll"] = std::move(effect1);
+        // m_sfxs["rewindopen"] = std::move(effect2);
+
+        // m_sfxMap["rewindscroll"] = sfx1;
+        // m_sfxMap["rewindopen"] = sfx2;
         // m_sfxMap.insert("rewindscroll", {m_wavBuffer, m_wavLength});
     }
 
@@ -42,15 +57,20 @@ namespace firelight::audio {
         // SDL_PauseAudioDevice(audioDevice, 0);
     }
 
-    void SfxPlayer::play(QString id) {
-        auto sfx = m_sfxMap[id];
-        SDL_ClearQueuedAudio(sfx.audioDeviceId);
-        int success = SDL_QueueAudio(sfx.audioDeviceId, sfx.m_wavBuffer, sfx.m_wavLength);
-        if (success == -1) {
-            auto message = SDL_GetError();
-            printf("error: %s\n", message);
+    void SfxPlayer::play(const QString &id) {
+        if (m_sfxs.contains(id)) {
+            // m_sfxs[id]->stop();
+            m_sfxs[id]->play();
         }
-        SDL_PauseAudioDevice(sfx.audioDeviceId, 0);
+
+        // auto sfx = m_sfxMap[id];
+        // SDL_ClearQueuedAudio(sfx.audioDeviceId);
+        // int success = SDL_QueueAudio(sfx.audioDeviceId, sfx.m_wavBuffer, sfx.m_wavLength);
+        // if (success == -1) {
+        //     auto message = SDL_GetError();
+        //     printf("error: %s\n", message);
+        // }
+        // SDL_PauseAudioDevice(sfx.audioDeviceId, 0);
     }
 } // audio
 // firelight

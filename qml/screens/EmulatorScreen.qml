@@ -143,6 +143,15 @@ FocusScope {
                 emulator.paused = false
             }
 
+            SoundEffect {
+                id: scroll
+                source: "file:system/sfx/click.wav"
+            }
+            SoundEffect {
+                id: open
+                source: "file:system/sfx/openrewind.wav"
+            }
+
             function createRewindPoints() {
                 emulator.createRewindPoints()
             }
@@ -177,9 +186,17 @@ FocusScope {
                 function onRewindPointsReady(points) {
                     // console.log("Points ready: " + JSON.stringify(points))
                     if (scope.StackView.status === StackView.Active) {
-                        emulatorStack.pushItem(rewindPage, {model: points}, StackView.Immediate)
+                        emulatorStack.pushItem(rewindPage, {
+                            model: points,
+                            scrollSfx: scroll,
+                            openSfx: open
+                        }, StackView.Immediate)
                     } else {
-                        emulatorStack.replaceCurrentItem(rewindPage, {model: points}, StackView.Immediate)
+                        emulatorStack.replaceCurrentItem(rewindPage, {
+                            model: points,
+                            scrollSfx: scroll,
+                            openSfx: open
+                        }, StackView.Immediate)
                     }
                 }
             }

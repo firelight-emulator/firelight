@@ -27,9 +27,10 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql Charts QuickTest REQUIRED)
+find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql Charts QuickTest Multimedia REQUIRED)
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 qt6_standard_project_setup(REQUIRES 6.7)
 
@@ -106,6 +107,14 @@ add_library(firelight_lib
         src/gui/game_image_provider.hpp
         src/app/audio/SfxPlayer.cpp
         src/app/audio/SfxPlayer.hpp
+        src/app/achieve/RegularHttpClient.cpp
+        src/app/achieve/RegularHttpClient.hpp
+        src/app/achieve/cache/earned_achievement.hpp
+        src/app/achieve/cache/ra_cache_dumb.hpp
+        src/app/achieve/cache/ra_cache_dumb.cpp
+        src/app/achieve/cache/login2_response.hpp
+        src/app/achieve/cache/patch_response.hpp
+        src/app/achieve/cache/startsession_response.hpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
@@ -117,6 +126,7 @@ endif ()
 target_link_libraries(firelight_lib PUBLIC
         SDL2::SDL2
         z
+        nlohmann_json::nlohmann_json
         Qt6::Gui
         Qt6::Quick
         Qt6::OpenGL
@@ -125,6 +135,7 @@ target_link_libraries(firelight_lib PUBLIC
         Qt6::Sql
         Qt6::Charts
         Qt6::QuickTest
+        Qt6::Multimedia
         spdlog::spdlog
         cpr::cpr
         library
@@ -295,11 +306,11 @@ install(
         SCRIPT ${deploy_script}
 )
 
-#install(
-#        PROGRAMS
-#        ${SHARED_LIB_DIR}/libsqlite3-0.dll
-#        TYPE BIN
-#)
+install(
+        PROGRAMS
+        ${SHARED_LIB_DIR}/libsqlite3-0.dll
+        TYPE BIN
+)
 
 install(
         FILES

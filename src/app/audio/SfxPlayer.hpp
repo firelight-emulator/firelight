@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QMap>
 #include <SDL_audio.h>
+#include <QSoundEffect>
 
 
 namespace firelight::audio {
@@ -15,7 +16,7 @@ namespace firelight::audio {
 
         Q_INVOKABLE void play();
 
-        Q_INVOKABLE void play(QString id);
+        Q_INVOKABLE void play(const QString &id);
 
         // SDL_AudioSpec want, have;
         //
@@ -35,11 +36,13 @@ namespace firelight::audio {
     private:
         struct sfxStuff {
             SDL_AudioDeviceID audioDeviceId{};
+            SDL_AudioSpec wavSpec;
             Uint8 *m_wavBuffer{};
             Uint32 m_wavLength{};
         };
 
         QMap<QString, sfxStuff> m_sfxMap;
+        QMap<QString, QSoundEffect *> m_sfxs;
     };
 } // audio
 // firelight
