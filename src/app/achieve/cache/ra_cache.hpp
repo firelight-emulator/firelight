@@ -3,34 +3,48 @@
 #include <string>
 #include <optional>
 #include <vector>
-#include "earned_achievement.hpp"
+#include "cached_achievement.hpp"
 #include "login2_response.hpp"
 #include "patch_response.hpp"
 #include "startsession_response.hpp"
+#include "earned_achievement.hpp"
 
 namespace firelight::achievements {
-    class IAchievementCache {
+    class RetroAchievementsCache {
     public:
-        virtual ~IAchievementCache() = default;
+        std::optional<int> getGameIdFromAchievementId(int achievementId);
 
-        virtual void setGameId(const std::string &hash, int id) = 0;
+        std::optional<int> getGameIdFromHash(std::string hash);
 
-        virtual std::optional<int> getGameId(const std::string &hash) = 0;
+        int getNumRemainingAchievements(const std::string &username, int gameId);
 
-        virtual void setPatchResponse(int gameId, PatchResponse patch) = 0;
+        bool awardAchievement(const std::string &username, const std::string &token, int achievementId,
+                              bool hardcore);
 
-        virtual std::optional<PatchResponse> getPatchResponse(int gameId) = 0;
+        std::vector<CachedAchievement> getUserAchievements(std::string username, int gameId);
 
-        virtual void setLastLoginResponse(Login2Response response) = 0;
+        int getUserScore(std::string username, bool hardcore);
 
-        virtual void setStartSessionResponse(StartSessionResponse response) = 0;
+        ~RetroAchievementsCache() = default;
 
-        virtual void prepareEarnedAchievement(EarnedAchievement achievement) = 0;
+        std::optional<PatchResponse> getPatchResponse(int gameId);
 
-        virtual void releaseEarnedAchievement(int id) = 0;
+        void setLastLoginResponse(Login2Response response);
 
-        virtual void commitAllEarnedAchievements() = 0;
+        void setPatchResponse(int gameId, PatchResponse patch);
 
-        virtual std::vector<EarnedAchievement> getEarnedAchievements() = 0;
+        void setGameId(const std::string &hash, int id);
+
+    private:
+        std::unordered_map<int, StartSessionResponse> m_startSessionResponses;
+        std::unordered_map<int, PatchResponse> m_patchResponses;
+        std::unordered_map<std::string, int> m_gameIds;
+        std::optional<Login2Response> m_lastLoginResponse;
+        std::vector<EarnedAchievement> m_earnedAchievements;
+
+        std::unordered_map<int, CachedAchievement> m_cachedAchievements;
+
+        int m_lastKnownScore = 0;
+        int m_lastKnownSoftcoreScore = 0;
     };
 } // namespace firelight::retroachievements

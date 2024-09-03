@@ -6,7 +6,7 @@ namespace firelight::achievements {
     struct EarnedAchievement {
         int id;
         int gameId;
-        uint64_t earnedTimestampEpochMs;
+        long long earnedTimestampEpochMs;
         std::string hash;
         bool hardcore;
     };

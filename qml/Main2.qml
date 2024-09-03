@@ -119,6 +119,16 @@ ApplicationWindow {
             if (event.key === Qt.Key_F12) {
                 debugWindow.visible = !debugWindow.visible
             }
+
+            if (event.key === Qt.Key_F11) {
+                console.log("Going offline")
+                achievement_manager.setOnlineForTesting(false)
+            }
+
+            if (event.key === Qt.Key_F10) {
+                console.log("Going online")
+                achievement_manager.setOnlineForTesting(true)
+            }
         }
 
         pushEnter: Transition {

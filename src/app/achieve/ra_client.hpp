@@ -16,6 +16,7 @@
 #include <string>
 #include <utility>
 
+#include "regular_http_client.hpp"
 #include "../../gui/achievement_list_sort_filter_model.hpp"
 
 namespace libretro {
@@ -75,7 +76,9 @@ namespace firelight::achievements {
 
     Q_INVOKABLE void getAchievementsOverview(int gameId);
 
-    std::unique_ptr<IRetroAchievementsHttpClient> m_httpClient = nullptr;
+    Q_INVOKABLE void setOnlineForTesting(bool online) const;
+
+    std::unique_ptr<RegularHttpClient> m_httpClient = nullptr;
 
     // bool gameLoaded() const;
 
@@ -148,7 +151,7 @@ namespace firelight::achievements {
 
     QHash<int, std::shared_ptr<gui::AchievementListSortFilterModel> > m_achievementModels;
 
-    std::shared_ptr<IAchievementCache> m_cache = nullptr;
+    std::shared_ptr<RetroAchievementsCache> m_cache = nullptr;
 
     rc_client_t *m_client;
 

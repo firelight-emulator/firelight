@@ -99,22 +99,22 @@ add_library(firelight_lib
         src/app/platform_metadata.hpp
         src/gui/models/shop/shop_item_model.cpp
         src/gui/models/shop/shop_item_model.hpp
-        src/app/emulation/RewindBro.cpp
-        src/app/emulation/RewindBro.hpp
         src/gui/models/rewind_model.cpp
         src/gui/models/rewind_model.hpp
         src/gui/game_image_provider.cpp
         src/gui/game_image_provider.hpp
         src/app/audio/SfxPlayer.cpp
         src/app/audio/SfxPlayer.hpp
-        src/app/achieve/RegularHttpClient.cpp
-        src/app/achieve/RegularHttpClient.hpp
+        src/app/achieve/regular_http_client.cpp
+        src/app/achieve/regular_http_client.hpp
         src/app/achieve/cache/earned_achievement.hpp
-        src/app/achieve/cache/ra_cache_dumb.hpp
-        src/app/achieve/cache/ra_cache_dumb.cpp
+        src/app/achieve/cache/ra_cache.cpp
         src/app/achieve/cache/login2_response.hpp
         src/app/achieve/cache/patch_response.hpp
         src/app/achieve/cache/startsession_response.hpp
+        src/app/achieve/cache/award_achievement_response.hpp
+        src/app/achieve/cache/rcheevos_offline_client.hpp
+        src/app/achieve/cache/rcheevos_offline_client.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)

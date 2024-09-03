@@ -4,6 +4,19 @@
 #include <string>
 
 namespace firelight::achievements {
+    // {\"ID\":1998,\"Mem\":\"STA:0xh13bf=h44_0xh1411=1_0xhf31=3_0xRda4=1::CAN:0xh77>0::SUB:0xh1dff=hc::VAL:0xhf30_0xhf33*100_0xhf32*1000_0xhf31*10000\",\"Format\":\"VALUE\",\"LowerIsBetter\":0,\"Title\":\"Everything Is Lava Achievement\",\"Description\":\"Wall touch alert and best time (does not track enemy contact)\",\"Hidden\":true}
+    struct PatchLeaderboard {
+        int ID{};
+        std::string Mem{};
+        std::string Format{};
+        int LowerIsBetter{};
+        std::string Title{};
+        std::string Description{};
+        bool Hidden{};
+    };
+
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PatchLeaderboard, ID, Mem, Format, LowerIsBetter, Title, Description, Hidden)
+
     struct PatchAchievement {
         int ID{};
         std::string MemAddr{};
@@ -93,6 +106,7 @@ namespace firelight::achievements {
         int ConsoleID{};
         std::string ImageIconURL{};
         std::vector<PatchAchievement> Achievements{};
+        std::vector<PatchLeaderboard> Leaderboards{};
     };
 
 
@@ -112,6 +126,9 @@ namespace firelight::achievements {
             j.at("ImageIconURL").get_to(p.ImageIconURL);
         }
         j.at("Achievements").get_to(p.Achievements);
+        if (j.contains("Leaderboards") && !j.at("Leaderboards").is_null()) {
+            j.at("Leaderboards").get_to(p.Leaderboards);
+        }
     }
 
     inline void to_json(nlohmann::json &j, const PatchDataStruct &p) {
@@ -122,13 +139,12 @@ namespace firelight::achievements {
             {"RichPresencePatch", p.RichPresencePatch},
             {"ConsoleID", p.ConsoleID},
             {"ImageIconURL", p.ImageIconURL},
-            {"Achievements", p.Achievements}
+            {"Achievements", p.Achievements},
+            {"Leaderboards", p.Leaderboards}
         };
     }
 
     struct PatchResponse {
-        PatchResponse() = default;
-
         bool Success{};
         PatchDataStruct PatchData{};
     };

@@ -11,12 +11,11 @@
 #include <QJsonObject>
 #include <spdlog/spdlog.h>
 
-#include "RegularHttpClient.hpp"
+#include "regular_http_client.hpp"
 #include "firelight/achievement.hpp"
 
 #include "../../gui/achievement_list_model.hpp"
 #include "../../gui/achievement_list_sort_filter_model.hpp"
-#include "cache/ra_cache_dumb.hpp"
 
 namespace firelight::achievements {
   static ::libretro::Core *theCore;
@@ -164,8 +163,9 @@ namespace firelight::achievements {
     rc_client_set_event_handler(m_client, eventHandler);
     rc_client_set_userdata(m_client, this);
 
-    m_cache = std::make_shared<DumbAchievementCache>();
-    m_httpClient = std::make_unique<RegularHttpClient>(m_cache);
+    m_cache = std::make_shared<RetroAchievementsCache>();
+    m_httpClient = std::make_unique<RegularHttpClient>(std::make_shared<RetroAchievementsOfflineClient>(m_cache),
+                                                       m_cache);
 
     m_idleTimer.setInterval(2000);
     connect(&m_idleTimer, &QTimer::timeout, this,
@@ -487,6 +487,10 @@ namespace firelight::achievements {
 
       emit achievementSummaryAvailable(json.value(json.keys().at(0)).toObject());
     });
+  }
+
+  void RAClient::setOnlineForTesting(const bool online) const {
+    m_httpClient->setOnlineForTesting(online);
   }
 
   // bool RAClient::gameLoaded() const { return m_gameLoaded; }
