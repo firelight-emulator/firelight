@@ -163,7 +163,7 @@ namespace firelight::achievements {
     rc_client_set_event_handler(m_client, eventHandler);
     rc_client_set_userdata(m_client, this);
 
-    m_cache = std::make_shared<RetroAchievementsCache>();
+    m_cache = std::make_shared<RetroAchievementsCache>("./system/rcheevos.db");
     m_httpClient = std::make_unique<RegularHttpClient>(std::make_shared<RetroAchievementsOfflineClient>(m_cache),
                                                        m_cache);
 

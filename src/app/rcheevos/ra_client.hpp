@@ -5,7 +5,7 @@
 #include "rcheevos/rc_client.h"
 #include "ra_http_client.hpp"
 #include "rcheevos/rc_libretro.h"
-#include "cache/ra_cache.hpp"
+#include "offline/ra_cache.hpp"
 #include <QTimer>
 #include <QJsonObject>
 #include <firelight/content_database.hpp>

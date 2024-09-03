@@ -107,14 +107,14 @@ add_library(firelight_lib
         src/app/audio/SfxPlayer.hpp
         src/app/rcheevos/regular_http_client.cpp
         src/app/rcheevos/regular_http_client.hpp
-        src/app/rcheevos/cache/earned_achievement.hpp
-        src/app/rcheevos/cache/ra_cache.cpp
-        src/app/rcheevos/cache/login2_response.hpp
-        src/app/rcheevos/cache/patch_response.hpp
-        src/app/rcheevos/cache/startsession_response.hpp
-        src/app/rcheevos/cache/award_achievement_response.hpp
-        src/app/rcheevos/cache/rcheevos_offline_client.hpp
-        src/app/rcheevos/cache/rcheevos_offline_client.cpp
+        src/app/rcheevos/offline/earned_achievement.hpp
+        src/app/rcheevos/offline/ra_cache.cpp
+        src/app/rcheevos/login2_response.hpp
+        src/app/rcheevos/patch_response.hpp
+        src/app/rcheevos/startsession_response.hpp
+        src/app/rcheevos/award_achievement_response.hpp
+        src/app/rcheevos/offline/rcheevos_offline_client.hpp
+        src/app/rcheevos/offline/rcheevos_offline_client.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)

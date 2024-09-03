@@ -1,7 +1,7 @@
 #pragma once
 
 #include "emulator_config_manager.hpp"
-#include "achieve/ra_client.hpp"
+#include "rcheevos/ra_client.hpp"
 #include "firelight/userdata_database.hpp"
 #include "input/controller_manager.hpp"
 #include "library/library_scanner.hpp"

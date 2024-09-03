@@ -1,11 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
 
 #include "ra_http_client.hpp"
-#include "cache/ra_cache.hpp"
-#include "cache/rcheevos_offline_client.hpp"
+#include "offline/ra_cache.hpp"
+#include "offline/rcheevos_offline_client.hpp"
 
 namespace firelight::achievements {
     class RegularHttpClient final : public IRetroAchievementsHttpClient {

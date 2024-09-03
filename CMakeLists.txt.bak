@@ -82,7 +82,7 @@ add_library(firelight_lib
         src/gui/savefile_list_model.cpp
         src/gui/mod_item_model.cpp
         src/app/mods/mod_manager.cpp
-        src/app/achieve/ra_client.cpp
+        src/app/rcheevos/ra_client.cpp
         src/gui/window_resize_handler.cpp
         src/gui/library_path_model.cpp
         src/gui/achievement_list_model.cpp
