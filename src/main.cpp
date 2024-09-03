@@ -13,7 +13,7 @@
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
-#include "app/achieve/ra_client.hpp"
+#include "app/rcheevos/ra_client.hpp"
 #include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
 #include "app/emulation_manager.hpp"

@@ -81,7 +81,7 @@ add_library(firelight_lib
         src/gui/savefile_list_model.cpp
         src/gui/mod_item_model.cpp
         src/app/mods/mod_manager.cpp
-        src/app/achieve/ra_client.cpp
+        src/app/rcheevos/ra_client.cpp
         src/gui/window_resize_handler.cpp
         src/gui/library_path_model.cpp
         src/gui/achievement_list_model.cpp
@@ -105,16 +105,16 @@ add_library(firelight_lib
         src/gui/game_image_provider.hpp
         src/app/audio/SfxPlayer.cpp
         src/app/audio/SfxPlayer.hpp
-        src/app/achieve/regular_http_client.cpp
-        src/app/achieve/regular_http_client.hpp
-        src/app/achieve/cache/earned_achievement.hpp
-        src/app/achieve/cache/ra_cache.cpp
-        src/app/achieve/cache/login2_response.hpp
-        src/app/achieve/cache/patch_response.hpp
-        src/app/achieve/cache/startsession_response.hpp
-        src/app/achieve/cache/award_achievement_response.hpp
-        src/app/achieve/cache/rcheevos_offline_client.hpp
-        src/app/achieve/cache/rcheevos_offline_client.cpp
+        src/app/rcheevos/regular_http_client.cpp
+        src/app/rcheevos/regular_http_client.hpp
+        src/app/rcheevos/cache/earned_achievement.hpp
+        src/app/rcheevos/cache/ra_cache.cpp
+        src/app/rcheevos/cache/login2_response.hpp
+        src/app/rcheevos/cache/patch_response.hpp
+        src/app/rcheevos/cache/startsession_response.hpp
+        src/app/rcheevos/cache/award_achievement_response.hpp
+        src/app/rcheevos/cache/rcheevos_offline_client.hpp
+        src/app/rcheevos/cache/rcheevos_offline_client.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
