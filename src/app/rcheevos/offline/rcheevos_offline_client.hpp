@@ -29,6 +29,9 @@ namespace firelight::achievements {
                                                                int achievementId,
                                                                bool hardcore) const;
 
+        rc_api_server_response_t handleLogin2Response(const std::string &username, const std::string &password,
+                                                      const std::string &token) const;
+
         rc_api_server_response_t handlePingRequest();
 
         rc_api_server_response_t handleSubmitLbEntryRequest();

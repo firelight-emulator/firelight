@@ -32,9 +32,9 @@ namespace firelight::achievements {
 
         int getUserScore(const std::string &username, bool hardcore) const;
 
-        std::optional<PatchResponse> getPatchResponse(int gameId);
+        std::optional<PatchResponse> getPatchResponse(int gameId) const;
 
-        void setPatchResponse(int gameId, const PatchResponse &patch);
+        void setPatchResponse(int gameId, const PatchResponse &patch) const;
 
         void setGameId(const std::string &hash, int id) const;
 

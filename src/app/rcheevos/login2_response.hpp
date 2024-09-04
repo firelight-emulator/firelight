@@ -5,8 +5,6 @@
 
 namespace firelight::achievements {
     struct Login2Response {
-        Login2Response() = default;
-
         std::string AccountType{};
         int Messages{};
         int Permissions{};

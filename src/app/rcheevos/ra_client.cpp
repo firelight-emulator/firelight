@@ -95,8 +95,14 @@ namespace firelight::achievements {
       case RC_CLIENT_EVENT_LEADERBOARD_SCOREBOARD:
       case RC_CLIENT_EVENT_RESET:
       case RC_CLIENT_EVENT_SERVER_ERROR:
+        printf("server error\n");
+        break;
       case RC_CLIENT_EVENT_DISCONNECTED:
+        printf("disconnected\n");
+        break;
       case RC_CLIENT_EVENT_RECONNECTED:
+        printf("reconnected\n");
+        break;
         break;
       default:
         printf("Unhandled event! (%d)\n", event->type);

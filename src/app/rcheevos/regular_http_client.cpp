@@ -17,10 +17,13 @@ namespace firelight::achievements {
             rcResponse.http_status_code = response.status_code;
 
             if (response.error) {
-                rcResponse.body = "";
-                rcResponse.body_length = 0;
-                return rcResponse;
+                // printf("Woah theah boah I said woah theah\n");
+                // m_online = false;
+                //  TODO: I don't love this buttttttt it might be fine.
+                return m_offlineClient->handleRequest(url, postBody, contentType);
             }
+
+            m_online = true;
 
             rcResponse.body = strdup(response.text.c_str());
             rcResponse.body_length = response.text.size();

@@ -167,12 +167,25 @@ namespace firelight::achievements {
     //     return score;
     // }
 
-    std::optional<PatchResponse> RetroAchievementsCache::getPatchResponse(const int gameId) {
-        if (m_patchResponses.contains(gameId)) {
-            return m_patchResponses[gameId];
+    std::optional<PatchResponse> RetroAchievementsCache::getPatchResponse(const int gameId) const {
+        QSqlQuery query(getDatabase());
+        query.prepare(
+            "SELECT cached_value FROM patch_response_cache WHERE game_id == :gameId");
+
+        query.bindValue(":gameId", gameId);
+
+        if (!query.exec()) {
+            spdlog::error("Failed to get patch response: {}",
+                          query.lastError().text().toStdString());
         }
 
-        return std::nullopt;
+        if (!query.next()) {
+            return std::nullopt;
+        }
+
+        auto val = query.value(0).toString().toStdString();
+
+        return {nlohmann::json::parse(val).get<PatchResponse>()};
     }
 
     // void DumbAchievementCache::setStartSessionResponse(const int gameId, const StartSessionResponse &response) {
@@ -192,19 +205,36 @@ namespace firelight::achievements {
     //     }
     // }
 
-    void RetroAchievementsCache::setPatchResponse(const int gameId, const PatchResponse &patch) {
-        // m_patchResponses[gameId] = patch;
-        // for (const auto a&: patch.PatchData.Achievements) {
-        //     if (!m_cachedAchievements.contains(a.ID)) {
-        //         m_cachedAchievements[a.ID] = CachedAchievement{
-        //             .ID = a.ID,
-        //             .Points = a.Points,
-        //             .GameID = gameId,
-        //             .Earned = false,
-        //             .EarnedHardcore = false
-        //         };
-        //     }
-        // }
+    void RetroAchievementsCache::setPatchResponse(const int gameId, const PatchResponse &patch) const {
+        const auto json = nlohmann::json(patch).dump();
+
+        QSqlQuery patchQuery(getDatabase());
+        patchQuery.prepare(
+            "INSERT OR IGNORE INTO patch_response_cache (game_id, cached_value) VALUES (:gameId, :cachedValue)");
+        patchQuery.bindValue(":gameId", gameId);
+        patchQuery.bindValue(":cachedValue", QString::fromStdString(json));
+
+        if (!patchQuery.exec()) {
+            spdlog::error("Failed to add patch response: {}",
+                          patchQuery.lastError().text().toStdString());
+        }
+
+        for (const auto &a: patch.PatchData.Achievements) {
+            QSqlQuery query(getDatabase());
+            query.prepare(
+                "INSERT OR IGNORE INTO achievements (id, name, description, achievement_set_id, points) VALUES (:id, :name, :description, :gameId, :points)");
+
+            query.bindValue(":id", a.ID);
+            query.bindValue(":name", QString::fromStdString(a.Title));
+            query.bindValue(":description", QString::fromStdString(a.Description));
+            query.bindValue(":gameId", gameId);
+            query.bindValue(":points", a.Points);
+
+            if (!query.exec()) {
+                spdlog::error("Failed to add achievement: {}",
+                              query.lastError().text().toStdString());
+            }
+        }
     }
 
     void RetroAchievementsCache::setGameId(const std::string &hash, const int id) const {
@@ -220,8 +250,6 @@ namespace firelight::achievements {
             spdlog::error("Failed to update hash: {}",
                           query.lastError().text().toStdString());
         }
-
-        query.finish();
     }
 
     void RetroAchievementsCache::setUserScore(const std::string &username, const int score, const bool hardcore) const {
@@ -241,8 +269,6 @@ namespace firelight::achievements {
         if (!query.exec()) {
             spdlog::error("Failed to create user: {}",
                           query.lastError().text().toStdString());
-
-            query.finish();
             return;
         }
 
@@ -261,11 +287,7 @@ namespace firelight::achievements {
                 spdlog::error("Failed to update user points: {}",
                               updateQuery.lastError().text().toStdString());
             }
-
-            updateQuery.finish();
         }
-
-        query.finish();
     }
 
     QSqlDatabase RetroAchievementsCache::getDatabase() const {

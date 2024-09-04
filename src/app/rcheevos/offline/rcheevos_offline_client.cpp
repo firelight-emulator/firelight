@@ -80,11 +80,7 @@ namespace firelight::achievements {
         }
 
         if (params["r"] == LOGIN2) {
-            // TODO
-            // Get the last login response
-            // Update the scores somehow??
-            // Update the last login response
-            // Return the response
+            return handleLogin2Response(params["u"], params["p"], params["t"]);
         }
 
         if (params["r"] == PING) {
@@ -206,6 +202,30 @@ namespace firelight::achievements {
         };
 
         const auto json = nlohmann::json(resp).dump();
+
+        rc_api_server_response_t rcResponse;
+        rcResponse.http_status_code = 200;
+        rcResponse.body = strdup(json.c_str());
+        rcResponse.body_length = strlen(rcResponse.body);
+        return rcResponse;
+    }
+
+    rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Response(const std::string &username,
+        const std::string &password, const std::string &token) const {
+        // TODO: How to handle unknown user.....
+
+        Login2Response response{
+            .AccountType = "1",
+            .Messages = 0,
+            .Permissions = 0,
+            .Score = m_cache->getUserScore(username, true),
+            .SoftcoreScore = m_cache->getUserScore(username, false),
+            .Success = true,
+            .Token = token, // TODO: uhh
+            .User = username
+        };
+
+        const auto json = nlohmann::json(response).dump();
 
         rc_api_server_response_t rcResponse;
         rcResponse.http_status_code = 200;
