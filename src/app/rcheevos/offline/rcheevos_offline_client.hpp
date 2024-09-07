@@ -40,7 +40,7 @@ namespace firelight::achievements {
 
         void processGameIdResponse(const std::string &hash, const std::string &response) const;
 
-        void processPatchResponse(int gameId, const std::string &response) const;
+        void processPatchResponse(const std::string &username, int gameId, const std::string &response) const;
 
         void processStartSessionResponse(const std::string &username, const std::string &response) const;
 

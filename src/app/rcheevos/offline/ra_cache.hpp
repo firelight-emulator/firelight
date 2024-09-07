@@ -21,20 +21,21 @@ namespace firelight::achievements {
 
         std::optional<int> getGameIdFromHash(const std::string &hash) const;
 
-        int getNumRemainingAchievements(const std::string &username, int gameId) const;
+        int getNumRemainingAchievements(const std::string &username, int gameId, bool hardcore) const;
 
         bool awardAchievement(const std::string &username, const std::string &token, int achievementId,
-                              bool hardcore);
+                              bool hardcore) const;
 
-        bool markAchievementUnlocked(const std::string &username, int achievementId, bool hardcore);
+        bool markAchievementUnlocked(const std::string &username, int achievementId, bool hardcore,
+                                     long long epochMillis) const;
 
-        std::vector<CachedAchievement> getUserAchievements(const std::string &username, int gameId);
+        std::vector<CachedAchievement> getUserAchievements(const std::string &username, int gameId) const;
 
         int getUserScore(const std::string &username, bool hardcore) const;
 
         std::optional<PatchResponse> getPatchResponse(int gameId) const;
 
-        void setPatchResponse(int gameId, const PatchResponse &patch) const;
+        void setPatchResponse(const std::string &username, int gameId, const PatchResponse &patch) const;
 
         void setGameId(const std::string &hash, int id) const;
 

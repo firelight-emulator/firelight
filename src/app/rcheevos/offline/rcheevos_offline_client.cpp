@@ -102,7 +102,7 @@ namespace firelight::achievements {
         } else if (params["r"] == "gameid") {
             processGameIdResponse(params["m"], response);
         } else if (params["r"] == "patch") {
-            processPatchResponse(stoi(params["g"]), response);
+            processPatchResponse(params["u"], stoi(params["g"]), response);
         } else if (params["r"] == "startsession") {
             processStartSessionResponse(params["u"], response);
         } else if (params["r"] == "awardachievement") {
@@ -198,7 +198,7 @@ namespace firelight::achievements {
             .Score = m_cache->getUserScore(username, true),
             .SoftcoreScore = m_cache->getUserScore(username, false),
             .AchievementID = achievementId,
-            .AchievementsRemaining = m_cache->getNumRemainingAchievements(username, gameId)
+            .AchievementsRemaining = m_cache->getNumRemainingAchievements(username, gameId, hardcore)
         };
 
         const auto json = nlohmann::json(resp).dump();
@@ -261,38 +261,41 @@ namespace firelight::achievements {
         m_cache->setGameId(hash, gameidResponse.GameID);
     }
 
-    void RetroAchievementsOfflineClient::processPatchResponse(const int gameId, const std::string &response) const {
+    void RetroAchievementsOfflineClient::processPatchResponse(const std::string &username, const int gameId,
+                                                              const std::string &response) const {
         const auto json = nlohmann::json::parse(response);
         const auto patchResponse = json.get<PatchResponse>();
-        m_cache->setPatchResponse(gameId, patchResponse);
+        m_cache->setPatchResponse(username, gameId, patchResponse);
     }
 
     void RetroAchievementsOfflineClient::processStartSessionResponse(const std::string &username,
                                                                      const std::string &response) const {
         auto json = nlohmann::json::parse(response);
         // nlohmann lib doesn't support optional/nullable fields...
-        if (!json.contains("Unlocks") || !json.at("Unlocks").is_null()) {
+        if (!json.contains("Unlocks")) {
             json["Unlocks"] = std::vector<Unlock>();
         }
 
-        if (!json.contains("HardcoreUnlocks") || !json.at("HardcoreUnlocks").is_null()) {
+        if (!json.contains("HardcoreUnlocks")) {
             json["HardcoreUnlocks"] = std::vector<Unlock>();
         }
 
         auto startSessionResponse = json.get<StartSessionResponse>();
 
         for (const auto &a: startSessionResponse.Unlocks) {
-            m_cache->markAchievementUnlocked(username, a.ID, false);
+            m_cache->markAchievementUnlocked(username, a.ID, false, a.When);
         }
 
         for (const auto &a: startSessionResponse.HardcoreUnlocks) {
-            m_cache->markAchievementUnlocked(username, a.ID, true);
+            m_cache->markAchievementUnlocked(username, a.ID, true, a.When);
         }
     }
 
     void RetroAchievementsOfflineClient::processAwardAchievementResponse(
         const std::string &username, const bool hardcore,
         const std::string &response) const {
+        const auto duration = std::chrono::system_clock::now().time_since_epoch();
+        const auto epochMillis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
         auto json = nlohmann::json::parse(response);
 
         if (json.contains("Score") && json["Score"].is_number()) {
@@ -304,7 +307,7 @@ namespace firelight::achievements {
         }
 
         if (json.contains("AchievementID") && json["AchievementID"].is_number()) {
-            m_cache->markAchievementUnlocked(username, json["AchievementID"], hardcore);
+            m_cache->markAchievementUnlocked(username, json["AchievementID"], hardcore, epochMillis);
         }
     }
 }
