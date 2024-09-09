@@ -133,8 +133,8 @@ int main(int argc, char *argv[]) {
   firelight::saves::SaveManager saveManager(saveDir, userdata_database);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
-  firelight::gui::GameImageProvider gameImageProvider;
-  firelight::ManagerAccessor::setGameImageProvider(&gameImageProvider);
+  auto gameImageProvider = new firelight::gui::GameImageProvider();
+  firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
 
   // **** Load Content Database ****
   firelight::db::SqliteContentDatabase contentDatabase(systemDir /
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
   firelight::gui::Router router;
 
   QQmlApplicationEngine engine;
-  engine.addImageProvider("gameImages", &gameImageProvider);
+  engine.addImageProvider("gameImages", gameImageProvider);
   engine.rootContext()->setContextProperty("Router", &router);
   engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
@@ -256,6 +256,7 @@ int main(int argc, char *argv[]) {
   sdlEventLoop.quit();
   sdlEventLoop.wait();
 
+  engine.removeImageProvider("gameImages");
 
   printf("We still gucci\n");
   // TODO: Let daemons finish

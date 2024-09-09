@@ -10,6 +10,8 @@ namespace firelight::gui {
     public:
         GameImageProvider();
 
+      ~GameImageProvider();
+
         QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
 
         void setImage(const QString &id, const QImage &image);

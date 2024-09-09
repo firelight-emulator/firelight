@@ -1,7 +1,7 @@
 #pragma once
 #include "rom_patch.hpp"
 
-#include <stdexcept>
+#include <cstddef>
 #include <string>
 
 namespace firelight::patching {

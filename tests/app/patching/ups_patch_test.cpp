@@ -1,6 +1,5 @@
 
 #include "../../../src/app/patching/ups_patch.hpp"
-#include <SDL2/SDL_stdinc.h>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>

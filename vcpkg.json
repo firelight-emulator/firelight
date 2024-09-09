@@ -1,0 +1,9 @@
+{
+  "dependencies": [
+    "nlohmann-json",
+    "cpr",
+    "gtest",
+    "spdlog",
+    "sdl2"
+  ]
+}

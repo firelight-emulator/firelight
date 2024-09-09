@@ -5,6 +5,8 @@ namespace firelight::gui {
         Image) {
     }
 
+    GameImageProvider::~GameImageProvider()= default;
+
     QImage GameImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize) {
         return m_images[id];
     }
