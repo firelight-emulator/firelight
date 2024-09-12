@@ -1,4 +1,4 @@
-find_package(Qt6 6.5 REQUIRED COMPONENTS Concurrent Sql REQUIRED)
+find_package(Qt6 6.7 REQUIRED COMPONENTS Concurrent Sql REQUIRED)
 
 set(LIBRARY_SOURCES
         library_scanner.cpp

@@ -71,6 +71,13 @@ int main(int argc, char *argv[]) {
 
   QApplication app(argc, argv);
 
+  auto defaultUserPathString = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+  auto defaultUserPath = std::filesystem::path(defaultUserPathString.toStdString()) / "Firelight";
+
+  auto defaultAppDataPathString = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+  auto defaultAppDataPath = std::filesystem::path(defaultAppDataPathString.toStdString());
+
+
   // firelight::library::LibraryScanner2 libScanner2;
   // libScanner2.scanAllPaths();
 
@@ -81,8 +88,8 @@ int main(int argc, char *argv[]) {
   // credentials?
 
   // images
-  auto cachePath =
-      QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+  // auto cachePath =
+  //     QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
   // "C:/Users/<USER>/AppData/Local/Firelight/cache/"
 
   // saves files
@@ -90,32 +97,27 @@ int main(int argc, char *argv[]) {
   // controller profiles
   // library db
 
-  auto docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-
-  printf("Documents Path: %s\n", docPath.toStdString().c_str());
+  // auto docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+  //
+  // printf("Documents Path: %s\n", docPath.toStdString().c_str());
 
   // auto appDataPath =
   //     QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-
-  QString appDataPath = "./userdata";
   // C:/Users/<USER>/AppData/Roaming/Firelight/library.db
   // C:/Users/<USER>/AppData/Roaming/Firelight/patches/
   // C:/Users/<USER>/AppData/Roaming/Firelight/saves/<content_id>/slot<n>/
   // C:/Users/<USER>/AppData/Roaming/Firelight/userdata.db
 
-  auto appDataDir = std::filesystem::path(appDataPath.toStdString());
-  auto saveDir = appDataDir / "saves";
-  auto romsDir = appDataDir / "roms";
+  auto saveDir = defaultUserPath / "saves";
+  auto romsDir = defaultUserPath / "roms";
   // auto patchesDir = appDataDir / "patches";
 
   // If missing system directory, throw an error
   // TODO
 
   // **** Make sure all directories are good ****
-  std::filesystem::path appdata_dir = ".";
-  auto systemDir = appdata_dir / "system";
 
-  if (!create_dirs({appdata_dir, systemDir, romsDir, saveDir})) {
+  if (!create_dirs({defaultUserPath, defaultAppDataPath, romsDir, saveDir})) {
     return 1;
   }
 
@@ -126,7 +128,7 @@ int main(int argc, char *argv[]) {
   controllerManager.refreshControllerList();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-  firelight::db::SqliteUserdataDatabase userdata_database(appDataDir /
+  firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPath /
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
@@ -137,10 +139,10 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
 
   // **** Load Content Database ****
-  firelight::db::SqliteContentDatabase contentDatabase(systemDir /
+  firelight::db::SqliteContentDatabase contentDatabase(defaultAppDataPath /
                                                        "content.db");
 
-  firelight::db::SqliteLibraryDatabase libraryDatabase(appDataDir /
+  firelight::db::SqliteLibraryDatabase libraryDatabase(defaultAppDataPath /
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 

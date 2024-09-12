@@ -18,6 +18,8 @@ system
 roms
 build-old
 
+vcpkg_installed
+
 .obsidian
 
 .vscode

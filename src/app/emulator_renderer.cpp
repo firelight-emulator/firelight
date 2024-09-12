@@ -226,7 +226,7 @@ void EmulatorRenderer::render() {
     m_core->setAudioReceiver(m_audioManager);
     m_core->setRetropadProvider(getControllerManager());
 
-    m_core->setSystemDirectory("./system");
+//    m_core->setSystemDirectory("/Users/alexcharles/cool");
     // m_core->setSaveDirectory(".");
     m_core->init();
 

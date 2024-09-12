@@ -236,12 +236,13 @@ namespace firelight {
     static constexpr int PLATFORM_ID_NINTENDO_DS = 10;
     static constexpr int PLATFORM_ID_SEGA_GENESIS = 13;
 
-    static std::optional<std::string> getDefaultConfigValue(int platformId, std::string key) {
-      if (defaultPlatformValues.find(platformId) == defaultPlatformValues.end()) {
+    static std::optional<std::string> getDefaultConfigValue(const int platformId,
+                                                            const std::string &key) {
+      if (!defaultPlatformValues.contains(platformId)) {
         return std::nullopt;
       }
 
-      if (defaultPlatformValues.at(platformId).find(key) == defaultPlatformValues.at(platformId).end()) {
+      if (!defaultPlatformValues.at(platformId).contains(key)) {
         return std::nullopt;
       }
 
@@ -280,7 +281,8 @@ namespace firelight {
       switch (platformId) {
         case PLATFORM_ID_GAMEBOY:
         case PLATFORM_ID_GAMEBOY_COLOR:
-          return "./system/_cores/gambatte_libretro.dll";
+          // return "./system/_cores/gambatte_libretro.dll";
+        return "/Users/alexcharles/gambatte_libretro.dylib";
         case PLATFORM_ID_GAMEBOY_ADVANCE:
           return "./system/_cores/mgba_libretro.dll";
         case PLATFORM_ID_NES:
@@ -288,7 +290,8 @@ namespace firelight {
         case PLATFORM_ID_SNES:
           return "./system/_cores/snes9x_libretro.dll";
         case PLATFORM_ID_N64:
-          return "./system/_cores/mupen64plus_next_libretro.dll";
+          // return "./system/_cores/mupen64plus_next_libretro.dll";
+            return "/Users/alexcharles/mupen64plus_next_libretro.dylib";
         case PLATFORM_ID_NINTENDO_DS:
           return "./system/_cores/melondsds_libretro.dll";
         case PLATFORM_ID_SEGA_GENESIS:

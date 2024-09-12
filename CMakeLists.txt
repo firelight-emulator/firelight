@@ -8,10 +8,19 @@ project(firelight
 
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
+set(CMAKE_OSX_ARCHITECTURES "arm64")
+
+set(CMAKE_BUILD_RPATH ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
+
+list(APPEND CMAKE_PREFIX_PATH "/Users/alexcharles/Qt/6.7.2/macos" "/opt/homebrew")
+
+list(APPEND CMAKE_INCLUDE_PATH "/opt/homebrew/include")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+set(VCPKG_TRACE_FIND_PACKAGE ON)
 
 #include(FetchContent)
 #FetchContent_Declare(
@@ -43,6 +52,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(/opt/homebrew/include)
 add_subdirectory(src/app)
 
 file(GLOB QML_FILES
@@ -124,7 +134,7 @@ if (WIN32)
 endif ()
 
 target_link_libraries(firelight_lib PUBLIC
-        SDL2::SDL2
+        SDL2::SDL2-static
         z
         nlohmann_json::nlohmann_json
         Qt6::Gui
@@ -151,6 +161,7 @@ qt6_add_executable(firelight
 )
 
 if (APPLE)
+    set(CMAKE_MACOSX_RPATH 1)
     set_target_properties(firelight PROPERTIES
             MACOSX_BUNDLE ON
     )
@@ -295,10 +306,19 @@ set(CPACK_PACKAGE_VERSION "0.5.0")
 #set(CPACK_RESOURCE_FILE_README, "${CMAKE_CURRENT_BINARY_DIR}/README.md")
 #set(CPACK_RESOURCE_FILE_WELCOME, "Firelight")
 
-include(CPack)
+
+set(deploy_tool_options_arg "")
+if(APPLE)
+    set(deploy_tool_options_arg -hardened-runtime)
+elseif(WIN32)
+    set(deploy_tool_options_arg --no-compiler-runtime)
+endif()
+
 qt6_generate_deploy_qml_app_script(
         TARGET firelight
         OUTPUT_SCRIPT deploy_script
+#        MACOS_BUNDLE_POST_BUILD
+        DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
 )
 
 
@@ -306,11 +326,13 @@ install(
         SCRIPT ${deploy_script}
 )
 
-install(
-        PROGRAMS
-        ${SHARED_LIB_DIR}/libsqlite3-0.dll
-        TYPE BIN
-)
+if (WIN32)
+    install(
+            PROGRAMS
+            ${SHARED_LIB_DIR}/libsqlite3-0.dll
+            TYPE BIN
+    )
+endif ()
 
 install(
         FILES
@@ -342,3 +364,23 @@ install(
         ${CMAKE_SOURCE_DIR}/assets/click.wav
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/sfx/
 )
+
+
+#install(CODE [[
+#  file(GET_RUNTIME_DEPENDENCIES
+#    RESOLVED_DEPENDENCIES_VAR RESOLVED
+#    EXECUTABLES firelight.app/Contents/MacOS/firelight
+#    )
+#  message(${RESOLVED})
+#  ]])
+
+#install(CODE [[
+#    include(BundleUtilities)
+#    message ("=======VERIFYING=======")
+#    fixup_bundle("/Users/alexcharles/git/firelight/build/debug/firelight-other.app" "" "")
+#    message ("=======DONE VERIFYING=======")
+#]])
+
+
+
+include(CPack)
