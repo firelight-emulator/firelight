@@ -21,8 +21,9 @@ Button {
 
         text: control.labelText
 
-        font.pointSize: 11
+        font.pixelSize: 16
         font.family: Constants.regularFontFamily
+        font.weight: Font.DemiBold
         color: control.enabled ? "white" : "#aaaaaa"
         horizontalAlignment: alignRight ? Text.AlignRight : Text.AlignLeft
         verticalAlignment: Text.AlignVCenter

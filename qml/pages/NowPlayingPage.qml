@@ -46,6 +46,10 @@ FocusScope {
             Layout.horizontalStretchFactor: 1
         }
 
+        ButtonGroup {
+            id: navButtonGroup
+        }
+
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -61,6 +65,7 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    rightSide.clear(StackView.PopTransition)
                     resumeGamePressed()
                 }
             }
@@ -74,6 +79,7 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    rightSide.clear(StackView.PopTransition)
                     restartGamePressed()
                 }
             }
@@ -88,6 +94,7 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    rightSide.clear(StackView.PopTransition)
                     rewindPressed()
                 }
             }
@@ -105,8 +112,18 @@ FocusScope {
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
-                enabled: false
+                checkable: true
+                enabled: true
                 alignRight: true
+
+                ButtonGroup.group: navButtonGroup
+
+                onToggled: function (checked) {
+                    if (rightSide.depth === 0) {
+                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                    }
+                    console.log("clicked create")
+                }
             }
             FirelightMenuItem {
                 labelText: "Load Suspend Point"
@@ -114,17 +131,33 @@ FocusScope {
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
-                enabled: false
+                checkable: true
+                enabled: true
                 alignRight: true
+
+                ButtonGroup.group: navButtonGroup
+
+                onToggled: function (checked) {
+                    if (rightSide.depth === 0) {
+                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                    }
+                    console.log("clicked load")
+                }
             }
             FirelightMenuItem {
+                id: undo
                 labelText: "Undo Last Load"
                 Layout.fillWidth: true
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
-                enabled: false
+                checkable: false
+                enabled: true
                 alignRight: true
+
+                onClicked: function () {
+                    console.log(undo.ButtonGroup.group)
+                }
             }
             Rectangle {
                 Layout.fillWidth: true
@@ -145,6 +178,7 @@ FocusScope {
                 enabled: false
 
                 onClicked: function () {
+                    rightSide.clear(StackView.PopTransition)
                     backToMainMenuPressed()
                 }
             }
@@ -158,7 +192,46 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    navButtonGroup.checkedButton.checked = false
+                    rightSide.clear(StackView.PopTransition)
                     closeGameConfirmationDialog.open()
+                }
+            }
+        }
+
+        StackView {
+            id: rightSide
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.horizontalStretchFactor: 4
+
+            pushEnter: Transition {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 0.0
+                    to: 1.0
+                    duration: 200
+                }
+                NumberAnimation {
+                    property: "x"
+                    from: 20
+                    to: 0
+                    duration: 200
+                }
+            }
+
+            popExit: Transition {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 1.0
+                    to: 0.0
+                    duration: 200
+                }
+                NumberAnimation {
+                    property: "x"
+                    from: 0;
+                    to: 20
+                    duration: 200
                 }
             }
         }
@@ -166,13 +239,101 @@ FocusScope {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.horizontalStretchFactor: 3
-        }
-
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
+        }
+    }
+
+    Component {
+        id: suspendPoints
+        Item {
+            ListView {
+                width: Math.min(800, parent.width - 64)
+                height: parent.height
+                anchors.horizontalCenter: parent.horizontalCenter
+                model: 40
+                spacing: 12
+
+                header: Rectangle {
+                    height: 140
+                    width: ListView.view.width
+                    color: "transparent"
+                }
+                delegate: Button {
+                    id: dele
+                    padding: 6
+                    required property var index
+                    width: ListView.view.width
+                    height: 120
+                    hoverEnabled: true
+                    background: Rectangle {
+                        color: dele.hovered && !details.hovered ? ColorPalette.neutral700 : ColorPalette.neutral800
+                        opacity: 0.8
+                        radius: 8
+                    }
+                    contentItem: Item {
+                        DetailsButton {
+                            id: details
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            width: 36
+                            height: 36
+                        }
+                        Rectangle {
+                            id: pic
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            width: parent.height
+                        }
+                        Text {
+                            id: label
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.left: pic.right
+                            height: parent.height / 2
+                            topPadding: 8
+                            bottomPadding: 8
+                            leftPadding: 10
+                            rightPadding: 10
+                            font.pixelSize: 16
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                            horizontalAlignment: Text.AlignLeft
+                            lineHeight: 1.2
+                            verticalAlignment: Text.AlignTop
+                            color: ColorPalette.neutral100
+                            wrapMode: Text.WordWrap
+
+                            text: "Suspend point " + dele.index
+                        }
+                        Text {
+                            id: date
+                            anchors.top: label.bottom
+                            anchors.right: parent.right
+                            anchors.left: pic.right
+                            anchors.bottom: parent.bottom
+                            topPadding: 8
+                            bottomPadding: 8
+                            leftPadding: 10
+                            rightPadding: 10
+                            font.pixelSize: 15
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                            horizontalAlignment: Text.AlignLeft
+                            lineHeight: 1.2
+                            verticalAlignment: Text.AlignBottom
+                            color: ColorPalette.neutral400
+                            wrapMode: Text.WordWrap
+
+                            text: "Last updated 10/4/2024 5:12:25"
+                        }
+
+                    }
+                    // contentItem: Rectangle {
+                    //     color: "red"
+                    // }
+                }
+            }
         }
     }
 

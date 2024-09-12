@@ -281,8 +281,8 @@ namespace firelight {
       switch (platformId) {
         case PLATFORM_ID_GAMEBOY:
         case PLATFORM_ID_GAMEBOY_COLOR:
-          // return "./system/_cores/gambatte_libretro.dll";
-        return "/Users/alexcharles/gambatte_libretro.dylib";
+          return "./system/_cores/gambatte_libretro.dll";
+        // return "/Users/alexcharles/gambatte_libretro.dylib";
         case PLATFORM_ID_GAMEBOY_ADVANCE:
           return "./system/_cores/mgba_libretro.dll";
         case PLATFORM_ID_NES:
@@ -290,8 +290,8 @@ namespace firelight {
         case PLATFORM_ID_SNES:
           return "./system/_cores/snes9x_libretro.dll";
         case PLATFORM_ID_N64:
-          // return "./system/_cores/mupen64plus_next_libretro.dll";
-            return "/Users/alexcharles/mupen64plus_next_libretro.dylib";
+          return "./system/_cores/mupen64plus_next_libretro.dll";
+        // return "/Users/alexcharles/mupen64plus_next_libretro.dylib";
         case PLATFORM_ID_NINTENDO_DS:
           return "./system/_cores/melondsds_libretro.dll";
         case PLATFORM_ID_SEGA_GENESIS:
