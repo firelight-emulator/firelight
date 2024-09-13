@@ -73,6 +73,10 @@ namespace firelight {
               key = Qt::Key_Menu;
             } else if (button == SDL_CONTROLLER_BUTTON_A) {
               key = Qt::Key_Select;
+            } else if (button == SDL_CONTROLLER_BUTTON_B) {
+              key = Qt::Key_Back;
+            } else if (button == SDL_CONTROLLER_BUTTON_GUIDE) {
+              key = Qt::Key_Home;
             } else {
               break;
             }
@@ -97,6 +101,10 @@ namespace firelight {
               key = Qt::Key_Menu;
             } else if (button == SDL_CONTROLLER_BUTTON_A) {
               key = Qt::Key_Select;
+            } else if (button == SDL_CONTROLLER_BUTTON_B) {
+              key = Qt::Key_Back;
+            } else if (button == SDL_CONTROLLER_BUTTON_GUIDE) {
+              key = Qt::Key_Home;
             } else {
               break;
             }

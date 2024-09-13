@@ -204,6 +204,14 @@ FocusScope {
 
             Keys.onEscapePressed: function (event) {
                 emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
+                event.accepted = true
+            }
+
+            Keys.onPressed: function (event) {
+                if (event.key === Qt.Key_Home) {
+                    emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
+                    event.accepted = true
+                }
             }
 
             // SequentialAnimation {
@@ -365,6 +373,19 @@ FocusScope {
                 if (me.StackView.status === StackView.Active) {
                     // emulatorStack.pop()
                     me.StackView.view.popCurrentItem()
+                    event.accepted = true
+                }
+            }
+
+            Keys.onBackPressed: function (event) {
+                if (event.isAutoRepeat) {
+                    return
+                }
+
+                if (me.StackView.status === StackView.Active) {
+                    // emulatorStack.pop()
+                    me.StackView.view.popCurrentItem()
+                    event.accepted = true
                 }
             }
 

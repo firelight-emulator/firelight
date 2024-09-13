@@ -16,6 +16,13 @@ FocusScope {
 
     signal rewindPressed()
 
+    property Item previouslyFocusedItem
+
+    onFocusChanged: function () {
+        console.log("Focus changed on root: " + focus)
+    }
+
+
     Item {
         anchors.top: parent.top
         anchors.left: parent.left
@@ -56,8 +63,11 @@ FocusScope {
             Layout.horizontalStretchFactor: 2
 
             FirelightMenuItem {
+                id: resumeGameButton
                 labelText: "Resume Game"
+                focus: true
                 Layout.fillWidth: true
+                KeyNavigation.down: restartGameButton
                 // Layout.preferredWidth: parent.width / 2
                 Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -65,13 +75,14 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
-                    rightSide.clear(StackView.PopTransition)
                     resumeGamePressed()
                 }
             }
             FirelightMenuItem {
+                id: restartGameButton
                 labelText: "Restart Game"
                 Layout.fillWidth: true
+                KeyNavigation.down: rewindButton
                 // Layout.preferredWidth: parent.width / 2
                 Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -79,12 +90,13 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
-                    rightSide.clear(StackView.PopTransition)
                     restartGamePressed()
                 }
             }
             FirelightMenuItem {
+                id: rewindButton
                 labelText: "Rewind"
+                KeyNavigation.down: loadSuspendPointButton
                 Layout.fillWidth: true
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -94,7 +106,6 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
-                    rightSide.clear(StackView.PopTransition)
                     rewindPressed()
                 }
             }
@@ -107,47 +118,152 @@ FocusScope {
                 color: "#dadada"
             }
             FirelightMenuItem {
+                id: loadSuspendPointButton
+                labelText: "Load Suspend Point"
+                Layout.fillWidth: true
+                KeyNavigation.down: createSuspendPointButton
+                // Layout.preferredWidth: parent.width / 2
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                Layout.preferredHeight: 40
+                checkable: false
+                enabled: true
+                alignRight: true
+                pseudoChildFocused: root.previouslyFocusedItem === loadSuspendPointButton
+
+                ButtonGroup.group: navButtonGroup
+
+                // onToggled: function () {
+                //     if (checked) {
+                //         console.log("toggled load")
+                //         if (rightSide.depth === 0) {
+                //             rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                //         }
+                //     }
+                // }
+
+                Keys.onRightPressed: function (event) {
+                    if (rightSide.depth === 0) {
+                        previouslyFocusedItem = loadSuspendPointButton
+                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                        rightSide.forceActiveFocus()
+
+                        event.accepted = true
+                    }
+                }
+
+
+                Component {
+                    id: loadSuspendPointLoader
+                    Loader {
+                        asynchronous: true
+                        sourceComponent: suspendPoints
+                    }
+                }
+
+                onFocusChanged: function () {
+                    console.log("Focus changed on load button: " + focus)
+                }
+
+                onClicked: function () {
+                    if (rightSide.depth === 0) {
+                        previouslyFocusedItem = loadSuspendPointButton
+                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                        rightSide.forceActiveFocus()
+                    } else if (root.previouslyFocusedItem === createSuspendPointButton) {
+                        root.previouslyFocusedItem = loadSuspendPointButton
+                        rightSide.forceActiveFocus()
+                    }
+                }
+
+                // onActiveFocusChanged: function () {
+                //     if (activeFocus && rightSide.depth === 0) {
+                //         rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                //         rightSide.forceActiveFocus()
+                //     }
+                //
+                //     if (!(activeFocus || rightSide.activeFocus) && !createSuspendPointButton.activeFocus) {
+                //         rightSide.clear(StackView.PopTransition)
+                //     }
+                // }
+            }
+            FirelightMenuItem {
+                id: createSuspendPointButton
+                KeyNavigation.down: undo
                 labelText: "Create Suspend Point"
                 Layout.fillWidth: true
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
-                checkable: true
+                checkable: false
                 enabled: true
                 alignRight: true
+                pseudoChildFocused: root.previouslyFocusedItem === createSuspendPointButton
 
                 ButtonGroup.group: navButtonGroup
 
-                onToggled: function (checked) {
-                    if (rightSide.depth === 0) {
-                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
-                    }
-                    console.log("clicked create")
-                }
-            }
-            FirelightMenuItem {
-                labelText: "Load Suspend Point"
-                Layout.fillWidth: true
-                // Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 40
-                checkable: true
-                enabled: true
-                alignRight: true
+                // onToggled: function () {
+                //     if (checked) {
+                //         console.log("toggled create")
+                //         if (rightSide.depth === 0) {
+                //             rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                //         }
+                //     }
+                // }
 
-                ButtonGroup.group: navButtonGroup
-
-                onToggled: function (checked) {
+                Keys.onRightPressed: function (event) {
                     if (rightSide.depth === 0) {
+                        previouslyFocusedItem = createSuspendPointButton
                         rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                        rightSide.forceActiveFocus()
+
+                        event.accepted = true
                     }
-                    console.log("clicked load")
                 }
+
+                Component {
+                    id: createSuspendPointLoader
+                    Loader {
+                        asynchronous: true
+                        sourceComponent: suspendPoints
+                    }
+                }
+
+                onFocusChanged: function () {
+                    console.log("Focus changed on create button: " + focus)
+                }
+
+                onClicked: function () {
+                    if (rightSide.depth === 0) {
+                        previouslyFocusedItem = createSuspendPointButton
+                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                        rightSide.forceActiveFocus()
+                    } else if (root.previouslyFocusedItem === loadSuspendPointButton) {
+                        root.previouslyFocusedItem = createSuspendPointButton
+                        rightSide.forceActiveFocus()
+                    }
+                }
+
+                // onToggled: function () {
+                //     if (checked) {
+                //         console.log("This is when I would go to the right")
+                //     }
+                // }
+
+                // onActiveFocusChanged: function () {
+                //     if (activeFocus && rightSide.depth === 0) {
+                //         rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                //     }
+                //
+                //     if (!(activeFocus || rightSide.activeFocus) && !loadSuspendPointButton.activeFocus) {
+                //         rightSide.clear(StackView.PopTransition)
+                //     }
+                // }
             }
             FirelightMenuItem {
                 id: undo
                 labelText: "Undo Last Load"
                 Layout.fillWidth: true
+                KeyNavigation.down: closeGameButton
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
@@ -156,6 +272,9 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    if (navButtonGroup.checkedButton) {
+                        navButtonGroup.checkedButton.checked = false
+                    }
                     console.log(undo.ButtonGroup.group)
                 }
             }
@@ -178,11 +297,11 @@ FocusScope {
                 enabled: false
 
                 onClicked: function () {
-                    rightSide.clear(StackView.PopTransition)
                     backToMainMenuPressed()
                 }
             }
             FirelightMenuItem {
+                id: closeGameButton
                 labelText: "Close Game"
                 Layout.fillWidth: true
                 // Layout.preferredWidth: parent.width / 2
@@ -192,8 +311,6 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
-                    navButtonGroup.checkedButton.checked = false
-                    rightSide.clear(StackView.PopTransition)
                     closeGameConfirmationDialog.open()
                 }
             }
@@ -203,7 +320,31 @@ FocusScope {
             id: rightSide
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.horizontalStretchFactor: 4
+            Layout.horizontalStretchFactor: 3
+
+            Keys.onBackPressed: function (event) {
+                if (rightSide.depth > 0) {
+                    rightSide.popCurrentItem()
+                    root.previouslyFocusedItem.forceActiveFocus()
+                    root.previouslyFocusedItem = null
+
+                    event.accepted = true
+                }
+            }
+
+            Keys.onLeftPressed: function (event) {
+                if (rightSide.depth > 0) {
+                    rightSide.popCurrentItem()
+                    root.previouslyFocusedItem.forceActiveFocus()
+                    root.previouslyFocusedItem = null
+
+                    event.accepted = true
+                }
+            }
+
+            onFocusChanged: function () {
+                console.log("Focus changed on right side: " + focus)
+            }
 
             pushEnter: Transition {
                 NumberAnimation {
@@ -211,12 +352,14 @@ FocusScope {
                     from: 0.0
                     to: 1.0
                     duration: 200
+                    easing.type: Easing.InOutQuad
                 }
                 NumberAnimation {
                     property: "x"
-                    from: 20
+                    from: 30
                     to: 0
                     duration: 200
+                    easing.type: Easing.InOutQuad
                 }
             }
 
@@ -226,12 +369,14 @@ FocusScope {
                     from: 1.0
                     to: 0.0
                     duration: 200
+                    easing.type: Easing.InOutQuad
                 }
                 NumberAnimation {
                     property: "x"
                     from: 0;
-                    to: 20
+                    to: 30
                     duration: 200
+                    easing.type: Easing.InOutQuad
                 }
             }
         }
@@ -245,93 +390,338 @@ FocusScope {
 
     Component {
         id: suspendPoints
-        Item {
+        FocusScope {
             ListView {
-                width: Math.min(800, parent.width - 64)
-                height: parent.height
+                id: suspendPointList
+                width: Math.min(800, parent.width - 128)
+                focus: true
+                // height: parent.height
+                height: Math.min(parent.height, contentHeight)
+                // topMargin: contentHeight < parent.height ? 0 : 100
+                // bottomMargin: contentHeight < parent.height ? 0 : 100
+                anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
-                model: 40
-                spacing: 12
-
-                header: Rectangle {
-                    height: 140
-                    width: ListView.view.width
+                currentIndex: 0
+                highlightMoveDuration: 80
+                highlightMoveVelocity: -1
+                keyNavigationEnabled: true
+                highlightRangeMode: ListView.StrictlyEnforceRange
+                preferredHighlightBegin: height / 3
+                preferredHighlightEnd: height * 2 / 3
+                highlight: Rectangle {
+                    border.color: ColorPalette.neutral100
+                    radius: 6
                     color: "transparent"
                 }
-                delegate: Button {
-                    id: dele
-                    padding: 6
-                    required property var index
+                // model: 8
+                model: ListModel {
+                    ListElement {
+                        hasData: true
+                        source: "file:system/_img/rr1.png"
+                        locked: true
+                    }
+                    ListElement {
+                        hasData: true
+                        source: "file:system/_img/rr2.png"
+                        locked: false
+                    }
+                    ListElement {
+                        hasData: true
+                        source: "file:system/_img/rr3.png"
+                        locked: false
+                    }
+                    ListElement {
+                        hasData: true
+                        source: "file:system/_img/rr4.png"
+                        locked: false
+                    }
+                    ListElement {
+                        hasData: true
+                        source: "file:system/_img/rr5.png"
+                        locked: false
+                    }
+                    ListElement {
+                        hasData: false
+                        source: "file:system/_img/rr6.png"
+                        locked: false
+                    }
+                    ListElement {
+                        hasData: false
+                        source: "file:system/_img/rr7.png"
+                        locked: false
+                    }
+                    ListElement {
+                        hasData: false
+                        source: "file:system/_img/rr8.png"
+                        locked: false
+                    }
+                }
+                spacing: 8
+                boundsBehavior: Flickable.StopAtBounds
+
+                header: Pane {
                     width: ListView.view.width
-                    height: 120
-                    hoverEnabled: true
+                    padding: 12
+                    bottomInset: 8
+
+                    HoverHandler {
+                        id: headerHover
+                    }
+
                     background: Rectangle {
-                        color: dele.hovered && !details.hovered ? ColorPalette.neutral700 : ColorPalette.neutral800
-                        opacity: 0.8
-                        radius: 8
-                    }
-                    contentItem: Item {
-                        DetailsButton {
-                            id: details
-                            anchors.top: parent.top
-                            anchors.right: parent.right
-                            width: 36
-                            height: 36
-                        }
-                        Rectangle {
-                            id: pic
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            anchors.left: parent.left
-                            width: parent.height
-                        }
-                        Text {
-                            id: label
-                            anchors.top: parent.top
-                            anchors.right: parent.right
-                            anchors.left: pic.right
-                            height: parent.height / 2
-                            topPadding: 8
-                            bottomPadding: 8
-                            leftPadding: 10
-                            rightPadding: 10
-                            font.pixelSize: 16
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.DemiBold
-                            horizontalAlignment: Text.AlignLeft
-                            lineHeight: 1.2
-                            verticalAlignment: Text.AlignTop
-                            color: ColorPalette.neutral100
-                            wrapMode: Text.WordWrap
-
-                            text: "Suspend point " + dele.index
-                        }
-                        Text {
-                            id: date
-                            anchors.top: label.bottom
-                            anchors.right: parent.right
-                            anchors.left: pic.right
-                            anchors.bottom: parent.bottom
-                            topPadding: 8
-                            bottomPadding: 8
-                            leftPadding: 10
-                            rightPadding: 10
-                            font.pixelSize: 15
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.DemiBold
-                            horizontalAlignment: Text.AlignLeft
-                            lineHeight: 1.2
-                            verticalAlignment: Text.AlignBottom
-                            color: ColorPalette.neutral400
-                            wrapMode: Text.WordWrap
-
-                            text: "Last updated 10/4/2024 5:12:25"
+                        color: headerHover.hovered ? ColorPalette.neutral800 : "transparent"
+                        radius: 4
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                                easing.type: Easing.InOutQuad
+                            }
                         }
 
                     }
-                    // contentItem: Rectangle {
-                    //     color: "red"
-                    // }
+
+                    contentItem: Text {
+                        text: "Remember, Suspend Points aren't a reliable way to save your progress - make sure to save in-game frequently!"
+                        font.pixelSize: 14
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.DemiBold
+                        horizontalAlignment: Text.AlignHCenter
+                        lineHeight: 1.2
+                        bottomPadding: 12
+                        verticalAlignment: Text.AlignVCenter
+                        color: headerHover.hovered ? ColorPalette.neutral100 : ColorPalette.neutral400
+                        wrapMode: Text.WordWrap
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+
+                    }
+                }
+                //
+                // footer: Item {
+                //     height: 100
+                //     width: ListView.view.width
+                //     // Button {
+                //     //     height: 120
+                //     //     anchors.top: parent.top
+                //     //     anchors.topMargin: 8
+                //     //     width: parent.width
+                //     //     background: Rectangle {
+                //     //         color: parent.hovered ? ColorPalette.neutral800 : ColorPalette.neutral900
+                //     //         border.color: ColorPalette.neutral700
+                //     //         radius: 8
+                //     //     }
+                //     //     contentItem: Text {
+                //     //         horizontalAlignment: Text.AlignHCenter
+                //     //         verticalAlignment: Text.AlignVCenter
+                //     //         font.pixelSize: 16
+                //     //         font.family: Constants.regularFontFamily
+                //     //         font.weight: Font.DemiBold
+                //     //         color: ColorPalette.neutral400
+                //     //         text: "New Suspend Point"
+                //     //     }
+                //     // }
+                // }
+
+                delegate: Component {
+                    FocusScope {
+                        id: dele
+                        required property var model
+                        required property var index
+                        width: ListView.view.width
+                        height: 120
+                        Button {
+                            id: deleButton
+                            padding: 0
+                            focus: true
+                            width: parent.width - 2
+                            height: parent.height - 2
+                            x: 1
+                            y: 1
+                            hoverEnabled: true
+                            background: Rectangle {
+                                // gradient: Gradient {
+                                //     GradientStop {
+                                //         position: 0.0; color: ColorPalette.neutral700
+                                //     }
+                                //     GradientStop {
+                                //         position: 1.0; color: ColorPalette.neutral900
+                                //     }
+                                // }
+                                color: deleButton.hovered && !details.hovered ? ColorPalette.neutral800 : ColorPalette.neutral900
+                                // border.color: ColorPalette.neutral700
+                                // color: ColorPalette.neutral900
+                                border.color: ColorPalette.neutral700
+                                radius: 6
+                            }
+
+                            RightClickMenu {
+                                id: rightClickMenu
+                                // RightClickMenuItem {
+                                //     text: "Edit"
+                                // }
+                                RightClickMenuItem {
+                                    text: "Lock"
+                                }
+                                // RightClickMenuItem {
+                                //     text: "Duplicate"
+                                // }
+
+                                RightClickMenuSeparator {
+                                    width: parent.width
+                                }
+
+                                RightClickMenuItem {
+                                    text: "Delete"
+                                    dangerous: true
+                                }
+                            }
+
+                            Keys.onMenuPressed: function (event) {
+                                rightClickMenu.popupModal(width - 10, 10)
+                                event.accepted = true
+                            }
+
+                            TapHandler {
+                                acceptedButtons: Qt.RightButton
+                                onTapped: {
+                                    rightClickMenu.popupNormal()
+                                }
+                            }
+                            contentItem: Item {
+                                DetailsButton {
+                                    id: details
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    width: 36
+                                    height: 36
+                                    anchors.topMargin: 8
+                                    anchors.rightMargin: 8
+                                }
+                                // Text {
+                                //     id: thingy
+                                //     anchors.top: parent.top
+                                //     anchors.bottom: parent.bottom
+                                //     anchors.left: parent.left
+                                //     width: 36
+                                //     horizontalAlignment: Text.AlignHCenter
+                                //     verticalAlignment: Text.AlignVCenter
+                                //     text: dele.index
+                                //     font.pixelSize: 16
+                                //     font.family: Constants.regularFontFamily
+                                //     font.weight: Font.DemiBold
+                                //     color: ColorPalette.neutral400
+                                // }
+                                Rectangle {
+                                    id: pic
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    anchors.left: parent.left
+                                    anchors.topMargin: 2
+                                    anchors.bottomMargin: 2
+                                    topLeftRadius: 6
+                                    bottomLeftRadius: 6
+                                    // anchors.leftMargin: dele.leftPadding
+                                    width: parent.height * 16 / 9
+                                    color: ColorPalette.neutral1000
+
+                                    Image {
+                                        height: parent.height
+                                        sourceSize.height: parent.height
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        source: dele.model.source
+                                        fillMode: Image.PreserveAspectCrop
+                                    }
+                                    // color: ColorPalette.neutral600
+                                }
+                                Rectangle {
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    anchors.left: pic.right
+                                    width: 1
+                                    color: ColorPalette.neutral700
+                                }
+                                Text {
+                                    font.family: Constants.symbolFontFamily
+                                    visible: dele.model.locked
+                                    font.pixelSize: 16
+                                    height: 24
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    width: 24
+                                    anchors.topMargin: 4
+                                    anchors.leftMargin: 4
+                                    color: "white"
+                                    anchors.left: pic.right
+                                    anchors.top: parent.top
+                                    text: "\ue897"
+
+                                    HoverHandler {
+                                        id: lockHover
+                                    }
+
+                                    ToolTip {
+                                        text: "This Suspend Point is locked and cannot be overwritten or deleted"
+                                        visible: lockHover.hovered
+                                        delay: 300
+                                    }
+                                }
+                                Text {
+                                    id: label
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.left: pic.right
+                                    anchors.leftMargin: 24
+                                    height: parent.height / 2
+                                    topPadding: 8
+                                    bottomPadding: 0
+                                    leftPadding: 10
+                                    rightPadding: 10
+                                    font.pixelSize: 16
+                                    font.family: Constants.regularFontFamily
+                                    font.weight: Font.DemiBold
+                                    horizontalAlignment: Text.AlignLeft
+                                    lineHeight: 1.2
+                                    verticalAlignment: Text.AlignBottom
+                                    color: ColorPalette.neutral100
+                                    wrapMode: Text.WordWrap
+
+                                    text: "Slot %1".arg(dele.index + 1)
+                                }
+                                Text {
+                                    id: date
+                                    anchors.top: label.bottom
+                                    anchors.right: parent.right
+                                    anchors.left: pic.right
+                                    anchors.bottom: parent.bottom
+                                    anchors.leftMargin: 24
+                                    topPadding: 4
+                                    bottomPadding: 8
+                                    leftPadding: 10
+                                    rightPadding: 10
+                                    font.pixelSize: 15
+                                    font.family: Constants.regularFontFamily
+                                    font.weight: Font.DemiBold
+                                    horizontalAlignment: Text.AlignLeft
+                                    lineHeight: 1.2
+                                    verticalAlignment: Text.AlignTop
+                                    color: ColorPalette.neutral400
+                                    wrapMode: Text.WordWrap
+
+                                    text: "10/4/2024 5:12:25"
+                                }
+
+                            }
+                            // contentItem: Rectangle {
+                            //     color: "red"
+                            // }
+                        }
+                    }
+
                 }
             }
         }

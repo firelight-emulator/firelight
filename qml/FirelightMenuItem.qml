@@ -12,6 +12,7 @@ Button {
     property string labelText
     property string labelIcon
     property bool alignRight: false
+    property bool pseudoChildFocused: false
     padding: 8
 
     contentItem: Text {
@@ -24,14 +25,14 @@ Button {
         font.pixelSize: 16
         font.family: Constants.regularFontFamily
         font.weight: Font.DemiBold
-        color: control.enabled ? "white" : "#aaaaaa"
+        color: control.enabled ? control.activeFocus ? "black" : "white" : "#aaaaaa"
         horizontalAlignment: alignRight ? Text.AlignRight : Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 
     background: Rectangle {
         color: control.enabled ? "white" : "transparent"
-        opacity: control.enabled ? (mouse.containsMouse ? (control.pressed ? 0.1 : 0.2) : (control.checked ? 0.3 : "transparent")) : "transparent"
+        opacity: control.enabled ? control.activeFocus ? 1 : (mouse.containsMouse ? (control.pressed ? 0.1 : 0.2) : (control.pseudoChildFocused ? 0.3 : "transparent")) : "transparent"
         radius: 6
     }
 

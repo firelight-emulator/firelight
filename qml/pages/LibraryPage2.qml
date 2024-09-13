@@ -85,7 +85,7 @@ FocusScope {
         boundsBehavior: Flickable.StopAtBounds
 
         delegate: GameGridItemDelegate {
-            opacity: 0
+            opacity: 1
             cellSpacing: listView.cellSpacing
             cellWidth: listView.cellContentWidth
             cellHeight: listView.cellContentHeight

@@ -20,7 +20,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(VCPKG_TRACE_FIND_PACKAGE ON)
+#set(VCPKG_TRACE_FIND_PACKAGE ON)
 
 #include(FetchContent)
 #FetchContent_Declare(
@@ -308,16 +308,16 @@ set(CPACK_PACKAGE_VERSION "0.5.0")
 
 
 set(deploy_tool_options_arg "")
-if(APPLE)
+if (APPLE)
     set(deploy_tool_options_arg -hardened-runtime)
-elseif(WIN32)
+elseif (WIN32)
     set(deploy_tool_options_arg --no-compiler-runtime)
-endif()
+endif ()
 
 qt6_generate_deploy_qml_app_script(
         TARGET firelight
         OUTPUT_SCRIPT deploy_script
-#        MACOS_BUNDLE_POST_BUILD
+        #        MACOS_BUNDLE_POST_BUILD
         DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
 )
 
@@ -380,7 +380,6 @@ install(
 #    fixup_bundle("/Users/alexcharles/git/firelight/build/debug/firelight-other.app" "" "")
 #    message ("=======DONE VERIFYING=======")
 #]])
-
 
 
 include(CPack)

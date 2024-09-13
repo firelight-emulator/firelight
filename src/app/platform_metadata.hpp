@@ -235,6 +235,7 @@ namespace firelight {
     static constexpr int PLATFORM_ID_N64 = 7;
     static constexpr int PLATFORM_ID_NINTENDO_DS = 10;
     static constexpr int PLATFORM_ID_SEGA_GENESIS = 13;
+    static constexpr int PLATFORM_ID_PLAYSTATION_PORTABLE = 20;
 
     static std::optional<std::string> getDefaultConfigValue(const int platformId,
                                                             const std::string &key) {
@@ -274,6 +275,9 @@ namespace firelight {
       if (extension == "md") {
         return PLATFORM_ID_SEGA_GENESIS;
       }
+      if (extension == "iso") {
+        return PLATFORM_ID_PLAYSTATION_PORTABLE;
+      }
       return PLATFORM_ID_UNKNOWN;
     }
 
@@ -296,6 +300,8 @@ namespace firelight {
           return "./system/_cores/melondsds_libretro.dll";
         case PLATFORM_ID_SEGA_GENESIS:
           return "./system/_cores/genesis_plus_gx_libretro.dll";
+        case PLATFORM_ID_PLAYSTATION_PORTABLE:
+          return "./system/cores/ppsspp_libretro.dll";
         default:
           return "";
       }

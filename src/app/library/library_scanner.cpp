@@ -155,7 +155,7 @@ void LibraryScanner::startScan() {
                        ext.string() == ".v64" || ext.string() == ".z64" ||
                        ext.string() == ".gb" || ext.string() == ".gbc" ||
                        ext.string() == ".gba" || ext.string() == ".sfc" ||
-                       ext.string() == ".nes") {
+                       ext.string() == ".nes" || ext.string() == ".iso") {
               auto platforms = content_database_->getMatchingPlatforms(
                 {.supportedExtensions = {ext.string()}});
 

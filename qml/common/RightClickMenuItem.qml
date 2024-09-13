@@ -5,7 +5,9 @@ MenuItem {
     id: control
     padding: 4
 
+    focus: true
     property bool externalLink: false
+    property bool dangerous: false
 
     Text {
         id: externalIndicator
@@ -38,6 +40,12 @@ MenuItem {
         }
     }
 
+    Keys.onPressed: function (event) {
+        if (event.key === Qt.Key_Back) {
+            control.menu.close()
+        }
+    }
+
     background: Rectangle {
         // x: 1
         // y: 1
@@ -49,17 +57,18 @@ MenuItem {
             acceptedDevices: PointerDevice.Mouse
         }
 
-        implicitWidth: 260
+        implicitWidth: 240
         implicitHeight: 40
         // implicitHeight: Constants.rightClickMenuItem_DefaultHeight
-        color: enabled ? (renameHover.hovered ? "#25282c" : "transparent") : "transparent"
+        color: enabled ? (renameHover.hovered ? (control.dangerous ? ColorPalette.red700 : ColorPalette.neutral900) : "transparent") : "transparent"
     }
 
     contentItem: CarouselText {
         hovered: renameHover.hovered
         text: control.text
-        color: enabled ? hovered ? "white" : "#cacaca" : "grey"
-        font.pointSize: 11
+        color: enabled ? hovered ? "white" : (control.dangerous ? ColorPalette.red500 : "#cacaca") : "grey"
+        font.pixelSize: 14
+        font.weight: Font.DemiBold
         font.family: Constants.regularFontFamily
         // font.weight: Font.DemiBold
         horizontalAlignment: Text.AlignLeft

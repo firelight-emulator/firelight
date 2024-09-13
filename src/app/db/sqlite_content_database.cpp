@@ -324,6 +324,10 @@ namespace firelight::db {
       return {Platform{.id = 5}};
     }
 
+    if (ext == ".iso") {
+      return {Platform{.id = 20}};
+    }
+
     return {};
   }
 
