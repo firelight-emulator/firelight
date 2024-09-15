@@ -28,6 +28,40 @@ ApplicationWindow {
     }
 
     Connections {
+        target: InputMethodManager
+
+        function onInputMethodChanged() {
+            console.log("Input method changed: ", InputMethodManager.usingMouse)
+        }
+    }
+
+    Rectangle {
+        id: activeFocusHighlight
+        color: "transparent"
+        border.color: "lightblue"
+        border.width: 3
+        radius: 2
+        visible: !InputMethodManager.usingMouse && (parent.hasOwnProperty('showGlobalCursor') && parent.showGlobalCursor)
+        parent: window.activeFocusItem ? window.activeFocusItem : window
+        anchors.fill: parent
+        anchors.margins: -3
+
+        Behavior on width {
+            NumberAnimation {
+                duration: 100
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        Behavior on height {
+            NumberAnimation {
+                duration: 100
+                easing.type: Easing.InOutQuad
+            }
+        }
+    }
+
+    Connections {
         target: Router
 
         function onRouteChanged(route) {

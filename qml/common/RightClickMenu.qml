@@ -21,7 +21,8 @@ Menu {
         control.modal = true
         control.popup(x, y)
         // print all keys in first item in content data
-        control.contentData[0].forceActiveFocus()
+        control.itemAt(0).forceActiveFocus()
+        currentIndex = 0
     }
 
     Overlay.modal: Rectangle {

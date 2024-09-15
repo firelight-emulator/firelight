@@ -28,6 +28,7 @@
 #include "gui/controller_list_model.hpp"
 #include "gui/gamepad_profile.hpp"
 #include "gui/game_image_provider.hpp"
+#include "gui/input_method_detection_handler.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
 #include "gui/mod_item_model.hpp"
@@ -220,6 +221,10 @@ int main(int argc, char *argv[]) {
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",
                                            resizeHandler);
+  auto inputMethodDetectionHandler =
+      new firelight::gui::InputMethodDetectionHandler();
+  engine.rootContext()->setContextProperty("InputMethodManager",
+                                           inputMethodDetectionHandler);
 
   QObject::connect(
     &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
@@ -233,6 +238,7 @@ int main(int argc, char *argv[]) {
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
+  window->installEventFilter(inputMethodDetectionHandler);
 
   // QObject::connect(
   //   window, &QQuickWindow::frameSwapped, window,

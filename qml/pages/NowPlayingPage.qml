@@ -405,13 +405,15 @@ FocusScope {
                 highlightMoveDuration: 80
                 highlightMoveVelocity: -1
                 keyNavigationEnabled: true
-                highlightRangeMode: ListView.StrictlyEnforceRange
+                highlightRangeMode: InputMethodManager.usingMouse ? ListView.ApplyRange : ListView.StrictlyEnforceRange
                 preferredHighlightBegin: height / 3
                 preferredHighlightEnd: height * 2 / 3
-                highlight: Rectangle {
-                    border.color: ColorPalette.neutral100
-                    radius: 6
-                    color: "transparent"
+                // highlight: Rectangle {
+                //     border.color: ColorPalette.neutral100
+                //     radius: 6
+                //     color: "transparent"
+                // }
+                highlight: Item {
                 }
                 // model: 8
                 model: ListModel {
@@ -536,6 +538,9 @@ FocusScope {
                         height: 120
                         Button {
                             id: deleButton
+
+                            property bool showGlobalCursor: true
+
                             padding: 0
                             focus: true
                             width: parent.width - 2
@@ -582,7 +587,7 @@ FocusScope {
                             }
 
                             Keys.onMenuPressed: function (event) {
-                                rightClickMenu.popupModal(width - 10, 10)
+                                rightClickMenu.popupModal(width - rightClickMenu.width + 24, 6)
                                 event.accepted = true
                             }
 
@@ -593,127 +598,188 @@ FocusScope {
                                 }
                             }
                             contentItem: Item {
-                                DetailsButton {
-                                    id: details
-                                    anchors.top: parent.top
-                                    anchors.right: parent.right
-                                    width: 36
-                                    height: 36
-                                    anchors.topMargin: 8
-                                    anchors.rightMargin: 8
-                                }
-                                // Text {
-                                //     id: thingy
-                                //     anchors.top: parent.top
-                                //     anchors.bottom: parent.bottom
-                                //     anchors.left: parent.left
-                                //     width: 36
-                                //     horizontalAlignment: Text.AlignHCenter
-                                //     verticalAlignment: Text.AlignVCenter
-                                //     text: dele.index
-                                //     font.pixelSize: 16
-                                //     font.family: Constants.regularFontFamily
-                                //     font.weight: Font.DemiBold
-                                //     color: ColorPalette.neutral400
-                                // }
-                                Rectangle {
-                                    id: pic
-                                    anchors.top: parent.top
-                                    anchors.bottom: parent.bottom
-                                    anchors.left: parent.left
-                                    anchors.topMargin: 2
-                                    anchors.bottomMargin: 2
-                                    topLeftRadius: 6
-                                    bottomLeftRadius: 6
-                                    // anchors.leftMargin: dele.leftPadding
-                                    width: parent.height * 16 / 9
-                                    color: ColorPalette.neutral1000
+                                Item {
+                                    anchors.fill: parent
+                                    visible: !dele.model.hasData
+                                    Rectangle {
+                                        id: pic2
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        anchors.left: parent.left
+                                        anchors.topMargin: 2
+                                        anchors.bottomMargin: 2
+                                        topLeftRadius: 6
+                                        bottomLeftRadius: 6
+                                        // anchors.leftMargin: dele.leftPadding
+                                        width: parent.height * 16 / 9
+                                        color: ColorPalette.neutral1000
+                                        // color: ColorPalette.neutral600
 
-                                    Image {
-                                        height: parent.height
-                                        sourceSize.height: parent.height
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        source: dele.model.source
-                                        fillMode: Image.PreserveAspectCrop
+                                        Text {
+                                            text: "No data"
+                                            anchors.centerIn: parent
+                                            font.pixelSize: 14
+                                            font.family: Constants.regularFontFamily
+                                            font.weight: Font.Medium
+                                            horizontalAlignment: Text.AlignHCenter
+                                            lineHeight: 1.2
+                                            verticalAlignment: Text.AlignVCenter
+                                            color: ColorPalette.neutral400
+                                            wrapMode: Text.WordWrap
+                                        }
                                     }
-                                    // color: ColorPalette.neutral600
-                                }
-                                Rectangle {
-                                    anchors.top: parent.top
-                                    anchors.bottom: parent.bottom
-                                    anchors.left: pic.right
-                                    width: 1
-                                    color: ColorPalette.neutral700
-                                }
-                                Text {
-                                    font.family: Constants.symbolFontFamily
-                                    visible: dele.model.locked
-                                    font.pixelSize: 16
-                                    height: 24
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    width: 24
-                                    anchors.topMargin: 4
-                                    anchors.leftMargin: 4
-                                    color: "white"
-                                    anchors.left: pic.right
-                                    anchors.top: parent.top
-                                    text: "\ue897"
-
-                                    HoverHandler {
-                                        id: lockHover
+                                    Rectangle {
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        anchors.left: pic2.right
+                                        width: 1
+                                        color: ColorPalette.neutral700
                                     }
+                                    Text {
+                                        id: label2
+                                        anchors.top: parent.top
+                                        anchors.right: parent.right
+                                        anchors.left: pic2.right
+                                        anchors.leftMargin: 34
+                                        anchors.bottom: parent.bottom
+                                        font.pixelSize: 16
+                                        font.family: Constants.regularFontFamily
+                                        font.weight: Font.DemiBold
+                                        horizontalAlignment: Text.AlignLeft
+                                        lineHeight: 1.2
+                                        verticalAlignment: Text.AlignVCenter
+                                        color: ColorPalette.neutral400
+                                        wrapMode: Text.WordWrap
 
-                                    ToolTip {
-                                        text: "This Suspend Point is locked and cannot be overwritten or deleted"
-                                        visible: lockHover.hovered
-                                        delay: 300
+                                        text: "Slot %1".arg(dele.index + 1)
                                     }
                                 }
-                                Text {
-                                    id: label
-                                    anchors.top: parent.top
-                                    anchors.right: parent.right
-                                    anchors.left: pic.right
-                                    anchors.leftMargin: 24
-                                    height: parent.height / 2
-                                    topPadding: 8
-                                    bottomPadding: 0
-                                    leftPadding: 10
-                                    rightPadding: 10
-                                    font.pixelSize: 16
-                                    font.family: Constants.regularFontFamily
-                                    font.weight: Font.DemiBold
-                                    horizontalAlignment: Text.AlignLeft
-                                    lineHeight: 1.2
-                                    verticalAlignment: Text.AlignBottom
-                                    color: ColorPalette.neutral100
-                                    wrapMode: Text.WordWrap
+                                Item {
+                                    anchors.fill: parent
+                                    visible: dele.model.hasData
+                                    DetailsButton {
+                                        id: details
+                                        anchors.top: parent.top
+                                        anchors.right: parent.right
+                                        width: 36
+                                        height: 36
+                                        anchors.topMargin: 8
+                                        anchors.rightMargin: 8
+                                    }
+                                    // Text {
+                                    //     id: thingy
+                                    //     anchors.top: parent.top
+                                    //     anchors.bottom: parent.bottom
+                                    //     anchors.left: parent.left
+                                    //     width: 36
+                                    //     horizontalAlignment: Text.AlignHCenter
+                                    //     verticalAlignment: Text.AlignVCenter
+                                    //     text: dele.index
+                                    //     font.pixelSize: 16
+                                    //     font.family: Constants.regularFontFamily
+                                    //     font.weight: Font.DemiBold
+                                    //     color: ColorPalette.neutral400
+                                    // }
+                                    Rectangle {
+                                        id: pic
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        anchors.left: parent.left
+                                        anchors.topMargin: 2
+                                        anchors.bottomMargin: 2
+                                        topLeftRadius: 6
+                                        bottomLeftRadius: 6
+                                        // anchors.leftMargin: dele.leftPadding
+                                        width: parent.height * 16 / 9
+                                        color: ColorPalette.neutral1000
 
-                                    text: "Slot %1".arg(dele.index + 1)
-                                }
-                                Text {
-                                    id: date
-                                    anchors.top: label.bottom
-                                    anchors.right: parent.right
-                                    anchors.left: pic.right
-                                    anchors.bottom: parent.bottom
-                                    anchors.leftMargin: 24
-                                    topPadding: 4
-                                    bottomPadding: 8
-                                    leftPadding: 10
-                                    rightPadding: 10
-                                    font.pixelSize: 15
-                                    font.family: Constants.regularFontFamily
-                                    font.weight: Font.DemiBold
-                                    horizontalAlignment: Text.AlignLeft
-                                    lineHeight: 1.2
-                                    verticalAlignment: Text.AlignTop
-                                    color: ColorPalette.neutral400
-                                    wrapMode: Text.WordWrap
+                                        Image {
+                                            height: parent.height
+                                            sourceSize.height: parent.height
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            source: dele.model.source
+                                            fillMode: Image.PreserveAspectCrop
+                                        }
+                                        // color: ColorPalette.neutral600
+                                    }
+                                    Rectangle {
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        anchors.left: pic.right
+                                        width: 1
+                                        color: ColorPalette.neutral700
+                                    }
+                                    Text {
+                                        font.family: Constants.symbolFontFamily
+                                        visible: dele.model.locked
+                                        font.pixelSize: 16
+                                        height: 24
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        width: 24
+                                        anchors.topMargin: 4
+                                        anchors.leftMargin: 4
+                                        color: "white"
+                                        anchors.left: pic.right
+                                        anchors.top: parent.top
+                                        text: "\ue897"
 
-                                    text: "10/4/2024 5:12:25"
+                                        HoverHandler {
+                                            id: lockHover
+                                        }
+
+                                        ToolTip {
+                                            text: "This Suspend Point is locked and cannot be overwritten or deleted"
+                                            visible: lockHover.hovered
+                                            delay: 300
+                                        }
+                                    }
+                                    Text {
+                                        id: label
+                                        anchors.top: parent.top
+                                        anchors.right: parent.right
+                                        anchors.left: pic.right
+                                        anchors.leftMargin: 24
+                                        height: parent.height / 2
+                                        topPadding: 8
+                                        bottomPadding: 0
+                                        leftPadding: 10
+                                        rightPadding: 10
+                                        font.pixelSize: 16
+                                        font.family: Constants.regularFontFamily
+                                        font.weight: Font.DemiBold
+                                        horizontalAlignment: Text.AlignLeft
+                                        lineHeight: 1.2
+                                        verticalAlignment: Text.AlignBottom
+                                        color: ColorPalette.neutral100
+                                        wrapMode: Text.WordWrap
+
+                                        text: "Slot %1".arg(dele.index + 1)
+                                    }
+                                    Text {
+                                        id: date
+                                        anchors.top: label.bottom
+                                        anchors.right: parent.right
+                                        anchors.left: pic.right
+                                        anchors.bottom: parent.bottom
+                                        anchors.leftMargin: 24
+                                        topPadding: 4
+                                        bottomPadding: 8
+                                        leftPadding: 10
+                                        rightPadding: 10
+                                        font.pixelSize: 15
+                                        font.family: Constants.regularFontFamily
+                                        font.weight: Font.DemiBold
+                                        horizontalAlignment: Text.AlignLeft
+                                        lineHeight: 1.2
+                                        verticalAlignment: Text.AlignTop
+                                        color: ColorPalette.neutral400
+                                        wrapMode: Text.WordWrap
+
+                                        text: "10/4/2024 5:12:25"
+                                    }
                                 }
+
 
                             }
                             // contentItem: Rectangle {

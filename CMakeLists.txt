@@ -125,6 +125,9 @@ add_library(firelight_lib
         src/app/rcheevos/award_achievement_response.hpp
         src/app/rcheevos/offline/rcheevos_offline_client.hpp
         src/app/rcheevos/offline/rcheevos_offline_client.cpp
+        src/gui/input_method_detection_handler.cpp
+        src/gui/input_method_detection_handler.hpp
+        src/gui/input_method_detection_handler.cpp
 )
 
 target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
