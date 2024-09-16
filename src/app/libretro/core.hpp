@@ -10,6 +10,7 @@
 #include <functional>
 #include <qlibrary.h>
 #include <vector>
+#include <filesystem>
 
 using std::array;
 using std::string;
@@ -93,6 +94,8 @@ namespace libretro {
 
   private:
     std::unique_ptr<QLibrary> coreLib;
+
+    Game *game;
 
     firelight::libretro::IRetropadProvider *m_retropadProvider;
     std::shared_ptr<IAudioDataReceiver> audioReceiver;

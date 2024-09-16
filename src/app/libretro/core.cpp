@@ -4,6 +4,7 @@
 #include "virtual_filesystem.hpp"
 #include <cstdarg>
 #include <utility>
+#include <bits/fs_path.h>
 
 #include <spdlog/spdlog.h>
 
@@ -162,14 +163,14 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE");
-        auto ptr = static_cast<retro_disk_control_callback *>(data);
-        ptr->set_eject_state = nullptr;
-        ptr->get_eject_state = nullptr;
-        ptr->get_image_index = nullptr;
-        ptr->set_image_index = nullptr;
-        ptr->get_num_images = nullptr;
-        ptr->replace_image_index = nullptr;
-        ptr->add_image_index = nullptr;
+        // auto ptr = static_cast<retro_disk_control_callback *>(data);
+        // ptr->set_eject_state = nullptr;
+        // ptr->get_eject_state = nullptr;
+        // ptr->get_image_index = nullptr;
+        // ptr->set_image_index = nullptr;
+        // ptr->get_num_images = nullptr;
+        // ptr->replace_image_index = nullptr;
+        // ptr->add_image_index = nullptr;
         return false;
       }
       case RETRO_ENVIRONMENT_SET_HW_RENDER: {
@@ -508,6 +509,7 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_GEOMETRY: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_GEOMETRY");
         retroSystemAVInfo->geometry = *static_cast<retro_game_geometry *>(data);
+        videoReceiver->setSystemAVInfo(retroSystemAVInfo);
         //    video->setGameGeometry(&retroSystemAVInfo->geometry);
         return true;
       }
@@ -795,13 +797,32 @@ namespace libretro {
             break;
           }
         }
-        return false;
+        return true;
         // break;
       }
       case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
-        auto ptr = static_cast<retro_game_info_ext *>(data);
-        return false;
+        auto ptr = static_cast<retro_game_info_ext **>(data);
+
+
+        *ptr = new retro_game_info_ext();
+
+        auto filename = std::filesystem::path(game->getPath());
+
+        (*ptr)->file_in_archive = false;
+        (*ptr)->archive_file = nullptr;
+        (*ptr)->archive_path = nullptr;
+        (*ptr)->meta = "";
+        (*ptr)->persistent_data = false;
+        (*ptr)->dir = R"(C:\Users\alexs\AppData\Roaming\Firelight\roms)";
+        (*ptr)->full_path = R"(C:\Users\alexs\AppData\Roaming\Firelight\roms\Sonic The Hedgehog.md)";
+        (*ptr)->ext = "md";
+        (*ptr)->name = R"(Sonic The Hedgehog)";
+        (*ptr)->data = game->getData();
+        (*ptr)->size = game->getSize();
+
+        printf("Heya\n");
+        return true;
         // break;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2: {
@@ -1284,11 +1305,16 @@ namespace libretro {
   }
 
   bool Core::loadGame(Game *game) {
+    this->game = game;
     retro_game_info info{};
-    info.path = game->getPath().c_str();
+    // info.path = game->getPath().c_str();
+    info.path = R"(C:\Users\alexs\AppData\Roaming\Firelight\roms\Sonic The Hedgehog.md)";
     info.data = game->getData();
     info.size = game->getSize();
     info.meta = "";
+
+    // spdlog::warn("Path before c_str: {}", game->getPath());
+    // spdlog::warn("Path after c_str: {}", string(info.path));
     // TODO: meta?
     auto result = symRetroLoadGame(&info);
 
@@ -1297,6 +1323,7 @@ namespace libretro {
     //  video->setGameGeometry(&retroSystemAVInfo->geometry);
 
     audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
+    this->game = nullptr;
     return result;
   }
 

@@ -12,11 +12,11 @@ public:
 
     bool anyOptionValueHasChanged() override;
 
-    void setDefaultValue(std::string key, std::string value) override;
+    void setDefaultValue(const std::string &key, const std::string &value) override;
 
-    std::optional<OptionValue> getOptionValue(std::string key) override;
+    std::optional<OptionValue> getOptionValue(const std::string &key) override;
 
-    void setOptionVisibility(std::string key, bool visible) override;
+    void setOptionVisibility(const std::string &key, bool visible) override;
 
     void setPlatformValue(const std::string &key, const std::string &value);
 

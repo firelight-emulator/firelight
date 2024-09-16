@@ -19,14 +19,14 @@ bool CoreConfiguration::anyOptionValueHasChanged() {
     return val;
 }
 
-void CoreConfiguration::setDefaultValue(const std::string key, const std::string value) {
+void CoreConfiguration::setDefaultValue(const std::string &key, const std::string &value) {
     const auto opt = m_options.find(key);
     if (opt == m_options.end()) {
         return;
     }
 
     for (auto &possibleValue: opt->second.possibleValues) {
-        if (possibleValue.key == value) {
+        if (possibleValue.key == value || possibleValue.label == value) {
             m_defaultValues[key] = value;
             m_changedSinceLastChecked = true;
             break;
@@ -35,7 +35,7 @@ void CoreConfiguration::setDefaultValue(const std::string key, const std::string
 }
 
 std::optional<firelight::libretro::IConfigurationProvider::OptionValue>
-CoreConfiguration::getOptionValue(const std::string key) {
+CoreConfiguration::getOptionValue(const std::string &key) {
     // if (firstAccess) {
     //     // print all keys and possible values
     //     for (const auto &option: m_options) {
@@ -48,6 +48,9 @@ CoreConfiguration::getOptionValue(const std::string key) {
     //
     //     firstAccess = false;
     // }
+
+    // genesis_plus_gx_overclock
+    // genesis_plus_gx_overclock
 
     printf("Getting value for key %s...", key.c_str());
 
@@ -80,7 +83,7 @@ CoreConfiguration::getOptionValue(const std::string key) {
     return std::nullopt;
 }
 
-void CoreConfiguration::setOptionVisibility(std::string key, bool visible) {
+void CoreConfiguration::setOptionVisibility(const std::string &key, bool visible) {
 }
 
 void CoreConfiguration::setPlatformValue(const std::string &key, const std::string &value) {

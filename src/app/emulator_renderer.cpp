@@ -65,7 +65,8 @@ uintptr_t EmulatorRenderer::getCurrentFramebufferId() {
 }
 
 void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
-  invalidateFramebufferObject();
+  printf("Setting width: %d, height: %d, aspect-ration: %f\n", info->geometry.base_width,
+         info->geometry.base_height, info->geometry.aspect_ratio);
 
   const auto width = info->geometry.base_width;
   const auto height = info->geometry.base_height;
@@ -74,9 +75,12 @@ void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
     m_nativeWidth = width;
     m_nativeHeight = height;
 
+    // TODO: Later need to use the core-reported aspect ratio
     const auto aspectRatio =
         static_cast<float>(width) / static_cast<float>(height);
     m_nativeAspectRatio = aspectRatio;
+
+    invalidateFramebufferObject();
   }
 
   update();
@@ -201,6 +205,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
 QOpenGLFramebufferObject *
 EmulatorRenderer::createFramebufferObject(const QSize &size) {
   if (m_nativeWidth != 0 && m_nativeHeight != 0) {
+    printf("CREATING FRAMEBUFFER: %d, %d\n", m_nativeWidth, m_nativeHeight);
     m_fboIsNew = true;
     m_fbo =
         Renderer::createFramebufferObject(QSize(m_nativeWidth, m_nativeHeight));
@@ -226,7 +231,7 @@ void EmulatorRenderer::render() {
     m_core->setAudioReceiver(m_audioManager);
     m_core->setRetropadProvider(getControllerManager());
 
-//    m_core->setSystemDirectory("/Users/alexcharles/cool");
+    //    m_core->setSystemDirectory("/Users/alexcharles/cool");
     // m_core->setSaveDirectory(".");
     m_core->init();
 
@@ -301,6 +306,7 @@ void EmulatorRenderer::receive(const void *data, unsigned width,
     paint_device.setSize(m_fbo->size());
     QPainter painter(&paint_device);
 
+    // printf("width: %d, height: %d, pitch: %llu\n", width, height, pitch);
     m_fbo->bind();
     const QImage image((uchar *) data, width, height, pitch, m_pixelFormat);
 

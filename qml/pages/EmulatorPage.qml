@@ -114,8 +114,8 @@ Rectangle {
                 when: emulatorView.pictureMode === "original"
                 PropertyChanges {
                     target: emulatorView
-                    width: emulatorView.nativeWidth > 0 ? emulatorView.nativeWidth : 640
-                    height: emulatorView.nativeHeight > 0 ? emulatorView.nativeHeight : 480
+                    width: emulatorView.nativeWidth > 0 ? emulatorView.nativeWidth * 2 : 640
+                    height: emulatorView.nativeHeight > 0 ? emulatorView.nativeHeight * 2 : 480
                 }
             },
             State {

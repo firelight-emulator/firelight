@@ -195,6 +195,7 @@ FocusScope {
             // }
 
             onCurrentIndexChanged: {
+                console.log("Current index changed: " + currentIndex)
                 // scrollSound.play()
                 // if (currentIndex == 0) {
                 //     coverImage.source = "image://gameImages/0"
