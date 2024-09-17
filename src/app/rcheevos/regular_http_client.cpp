@@ -7,7 +7,7 @@ namespace firelight::achievements {
                                                             const std::string &contentType) {
         if (m_online) {
             const auto headers = cpr::Header{
-                {"User-Agent", "FirelightEmulator/1.0"},
+                {"User-Agent", "FirelightEmulator-Alpha/0.6.0"},
                 {"Content-Type", contentType}
             };
 

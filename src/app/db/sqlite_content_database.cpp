@@ -328,6 +328,14 @@ namespace firelight::db {
       return {Platform{.id = 20}};
     }
 
+    if (ext == ".sms") {
+      return {Platform{.id = 12}};
+    }
+
+    if (ext == ".gg") {
+      return {Platform{.id = 14}};
+    }
+
     return {};
   }
 

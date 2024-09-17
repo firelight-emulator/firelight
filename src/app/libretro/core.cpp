@@ -808,16 +808,20 @@ namespace libretro {
         *ptr = new retro_game_info_ext();
 
         auto filename = std::filesystem::path(game->getPath());
+        printf("Filename: %ls\n", filename.filename().c_str());
+        printf("stem: %ls\n", filename.stem().c_str());
+        printf("extension: %s\n", filename.extension().string().substr(1).c_str());
+
 
         (*ptr)->file_in_archive = false;
         (*ptr)->archive_file = nullptr;
         (*ptr)->archive_path = nullptr;
         (*ptr)->meta = "";
         (*ptr)->persistent_data = false;
-        (*ptr)->dir = R"(C:\Users\alexs\AppData\Roaming\Firelight\roms)";
-        (*ptr)->full_path = R"(C:\Users\alexs\AppData\Roaming\Firelight\roms\Sonic The Hedgehog.md)";
-        (*ptr)->ext = "md";
-        (*ptr)->name = R"(Sonic The Hedgehog)";
+        (*ptr)->dir = R"()";
+        (*ptr)->full_path = strdup(filename.filename().string().c_str());
+        (*ptr)->ext = strdup(filename.extension().string().substr(1).c_str());
+        (*ptr)->name = strdup(filename.stem().string().c_str());
         (*ptr)->data = game->getData();
         (*ptr)->size = game->getSize();
 
