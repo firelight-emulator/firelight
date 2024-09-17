@@ -803,15 +803,9 @@ namespace libretro {
       case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_GAME_INFO_EXT");
         auto ptr = static_cast<retro_game_info_ext **>(data);
-
-
         *ptr = new retro_game_info_ext();
 
         auto filename = std::filesystem::path(game->getPath());
-        printf("Filename: %ls\n", filename.filename().c_str());
-        printf("stem: %ls\n", filename.stem().c_str());
-        printf("extension: %s\n", filename.extension().string().substr(1).c_str());
-
 
         (*ptr)->file_in_archive = false;
         (*ptr)->archive_file = nullptr;
@@ -825,9 +819,7 @@ namespace libretro {
         (*ptr)->data = game->getData();
         (*ptr)->size = game->getSize();
 
-        printf("Heya\n");
         return true;
-        // break;
       }
       case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2");

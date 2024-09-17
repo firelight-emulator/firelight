@@ -41,6 +41,24 @@ FocusScope {
         }
     }
 
+    Component {
+        id: genesisSettings
+        GenesisSettings {
+        }
+    }
+
+    Component {
+        id: gamegearSettings
+        GameGearSettings {
+        }
+    }
+
+    Component {
+        id: masterSystemSettings
+        MasterSystemSettings {
+        }
+    }
+
 
     Flickable {
         anchors.fill: parent
@@ -281,6 +299,114 @@ FocusScope {
                     }
                     Text {
                         text: qsTr("Nintendo 64")
+                        height: parent.height
+                        font.pointSize: 14
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                        color: "white"
+                    }
+
+                }
+
+            }
+
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 80
+
+                onClicked: function () {
+                    root.StackView.view.push(masterSystemSettings)
+                }
+                hoverEnabled: true
+                background: Rectangle {
+                    color: parent.hovered ? "#333333" : "transparent"
+                    radius: 8
+                }
+                contentItem: Row {
+                    spacing: 8
+                    Image {
+                        source: "file:system/_img/mastersystem.svg"
+                        width: parent.height
+                        height: parent.height
+                        fillMode: Image.PreserveAspectFit
+                        sourceSize.height: parent.height
+                    }
+                    Text {
+                        text: qsTr("Master System")
+                        height: parent.height
+                        font.pointSize: 14
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                        color: "white"
+                    }
+
+                }
+
+            }
+
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 80
+
+                onClicked: function () {
+                    root.StackView.view.push(n64Settings)
+                }
+                hoverEnabled: true
+                background: Rectangle {
+                    color: parent.hovered ? "#333333" : "transparent"
+                    radius: 8
+                }
+                contentItem: Row {
+                    spacing: 8
+                    Image {
+                        source: "file:system/_img/genesis.svg"
+                        width: parent.height
+                        height: parent.height
+                        fillMode: Image.PreserveAspectFit
+                        sourceSize.height: parent.height
+                    }
+                    Text {
+                        text: qsTr("Genesis/Mega Drive")
+                        height: parent.height
+                        font.pointSize: 14
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                        color: "white"
+                    }
+
+                }
+
+            }
+
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 80
+
+                onClicked: function () {
+                    root.StackView.view.push(n64Settings)
+                }
+                hoverEnabled: true
+                background: Rectangle {
+                    color: parent.hovered ? "#333333" : "transparent"
+                    radius: 8
+                }
+                contentItem: Row {
+                    spacing: 8
+                    Image {
+                        source: "file:system/_img/N64.svg"
+                        width: parent.height
+                        height: parent.height
+                        fillMode: Image.PreserveAspectFit
+                        sourceSize.height: parent.height
+                    }
+                    Text {
+                        text: qsTr("Game Gear")
                         height: parent.height
                         font.pointSize: 14
                         font.family: Constants.regularFontFamily
