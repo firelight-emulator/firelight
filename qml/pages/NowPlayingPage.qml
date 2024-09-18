@@ -16,6 +16,10 @@ FocusScope {
 
     signal rewindPressed()
 
+    signal writeSuspendPoint(index: int)
+
+    signal loadSuspendPoint(index: int)
+
     property Item previouslyFocusedItem
 
     onFocusChanged: function () {
@@ -75,6 +79,10 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    if (rightSide.depth > 0) {
+                        rightSide.pop()
+                        root.previouslyFocusedItem = null
+                    }
                     resumeGamePressed()
                 }
             }
@@ -90,6 +98,10 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    if (rightSide.depth > 0) {
+                        rightSide.pop()
+                        root.previouslyFocusedItem = null
+                    }
                     restartGamePressed()
                 }
             }
@@ -106,6 +118,10 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    if (rightSide.depth > 0) {
+                        rightSide.pop()
+                        root.previouslyFocusedItem = null
+                    }
                     rewindPressed()
                 }
             }
@@ -144,7 +160,7 @@ FocusScope {
                 Keys.onRightPressed: function (event) {
                     if (rightSide.depth === 0) {
                         previouslyFocusedItem = loadSuspendPointButton
-                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                        rightSide.replaceCurrentItem(suspendPoints, {creating: false}, StackView.PushTransition)
                         rightSide.forceActiveFocus()
 
                         event.accepted = true
@@ -160,17 +176,14 @@ FocusScope {
                     }
                 }
 
-                onFocusChanged: function () {
-                    console.log("Focus changed on load button: " + focus)
-                }
-
                 onClicked: function () {
                     if (rightSide.depth === 0) {
                         previouslyFocusedItem = loadSuspendPointButton
-                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                        rightSide.replaceCurrentItem(suspendPoints, {creating: false}, StackView.PushTransition)
                         rightSide.forceActiveFocus()
                     } else if (root.previouslyFocusedItem === createSuspendPointButton) {
                         root.previouslyFocusedItem = loadSuspendPointButton
+                        rightSide.currentItem.creating = false
                         rightSide.forceActiveFocus()
                     }
                 }
@@ -213,7 +226,7 @@ FocusScope {
                 Keys.onRightPressed: function (event) {
                     if (rightSide.depth === 0) {
                         previouslyFocusedItem = createSuspendPointButton
-                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                        rightSide.replaceCurrentItem(suspendPoints, {creating: true}, StackView.PushTransition)
                         rightSide.forceActiveFocus()
 
                         event.accepted = true
@@ -235,10 +248,11 @@ FocusScope {
                 onClicked: function () {
                     if (rightSide.depth === 0) {
                         previouslyFocusedItem = createSuspendPointButton
-                        rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
+                        rightSide.replaceCurrentItem(suspendPoints, {creating: true}, StackView.PushTransition)
                         rightSide.forceActiveFocus()
                     } else if (root.previouslyFocusedItem === loadSuspendPointButton) {
                         root.previouslyFocusedItem = createSuspendPointButton
+                        rightSide.currentItem.creating = true
                         rightSide.forceActiveFocus()
                     }
                 }
@@ -272,6 +286,11 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    if (rightSide.depth > 0) {
+                        console.log("doing it")
+                        rightSide.popCurrentItem(StackView.PopTransition)
+                        root.previouslyFocusedItem = null
+                    }
                     if (navButtonGroup.checkedButton) {
                         navButtonGroup.checkedButton.checked = false
                     }
@@ -297,6 +316,10 @@ FocusScope {
                 enabled: false
 
                 onClicked: function () {
+                    if (rightSide.depth > 0) {
+                        rightSide.pop()
+                        root.previouslyFocusedItem = null
+                    }
                     backToMainMenuPressed()
                 }
             }
@@ -311,6 +334,10 @@ FocusScope {
                 alignRight: true
 
                 onClicked: function () {
+                    if (rightSide.depth > 0) {
+                        rightSide.pop()
+                        root.previouslyFocusedItem = null
+                    }
                     closeGameConfirmationDialog.open()
                 }
             }
@@ -391,8 +418,13 @@ FocusScope {
     Component {
         id: suspendPoints
         FocusScope {
+            property bool creating: false
             ListView {
                 id: suspendPointList
+
+                property bool creating: parent.creating
+                property bool loading: !creating
+
                 width: Math.min(800, parent.width - 128)
                 focus: true
                 // height: parent.height
@@ -570,7 +602,10 @@ FocusScope {
                                 //     text: "Edit"
                                 // }
                                 RightClickMenuItem {
-                                    text: "Lock"
+                                    text: dele.model.locked ? "Unlock" : "Lock"
+                                    onTriggered: function () {
+                                        dele.model.locked = !dele.model.locked
+                                    }
                                 }
                                 // RightClickMenuItem {
                                 //     text: "Duplicate"
@@ -589,6 +624,32 @@ FocusScope {
                             Keys.onMenuPressed: function (event) {
                                 rightClickMenu.popupModal(width - rightClickMenu.width + 24, 6)
                                 event.accepted = true
+                            }
+
+                            onClicked: function () {
+                                if (suspendPointList.loading) {
+                                    if (dele.model.hasData) {
+                                        loadSuspendPointDialog.index = dele.index
+                                        loadSuspendPointDialog.open()
+                                    } else {
+                                        sfx_player.play("nope")
+                                        console.log("Can't load an empty Suspend Point")
+                                    }
+                                }
+                                if (suspendPointList.creating) {
+                                    if (dele.model.locked) {
+                                        sfx_player.play("nope")
+                                        console.log("Can't overwrite locked Suspend Point")
+                                        lockedTooltip.open()
+                                    } else {
+                                        if (dele.model.hasData) {
+                                            overwriteSuspendPointDialog.index = dele.index
+                                            overwriteSuspendPointDialog.open()
+                                        } else {
+                                            writeSuspendPoint(dele.index)
+                                        }
+                                    }
+                                }
                             }
 
                             TapHandler {
@@ -733,6 +794,47 @@ FocusScope {
                                             visible: lockHover.hovered
                                             delay: 300
                                         }
+
+                                        ToolTip {
+                                            id: lockedTooltip
+                                            text: "This Suspend Point is locked and cannot be overwritten or deleted"
+                                            visible: false
+                                            timeout: 3000
+                                            delay: 0
+
+                                            // enter: Transition {
+                                            //     PropertyAnimation {
+                                            //         property: "opacity"
+                                            //         from: 0
+                                            //         to: 1
+                                            //         duration: 200
+                                            //         easing.type: Easing.InOutQuad
+                                            //     }
+                                            //     PropertyAnimation {
+                                            //         property: "y"
+                                            //         from: 24
+                                            //         to: 0
+                                            //         duration: 200
+                                            //         easing.type: Easing.InOutQuad
+                                            //     }
+                                            // }
+                                            // exit: Transition {
+                                            //     PropertyAnimation {
+                                            //         property: "opacity"
+                                            //         from: 1
+                                            //         to: 0
+                                            //         duration: 200
+                                            //         easing.type: Easing.InOutQuad
+                                            //     }
+                                            //     PropertyAnimation {
+                                            //         property: "y"
+                                            //         from: 0
+                                            //         to: 24
+                                            //         duration: 200
+                                            //         easing.type: Easing.InOutQuad
+                                            //     }
+                                            // }
+                                        }
                                     }
                                     Text {
                                         id: label
@@ -790,6 +892,34 @@ FocusScope {
 
                 }
             }
+        }
+
+    }
+
+    FirelightDialog {
+        id: loadSuspendPointDialog
+        text: "Load the Suspend Point in slot " + (index + 1) + "?"
+
+        property int index: -1
+
+        onAccepted: function () {
+            let theIndex = index
+            index = -1
+            console.log("Loading suspend point " + theIndex)
+            root.loadSuspendPoint(theIndex)
+        }
+    }
+
+    FirelightDialog {
+        id: overwriteSuspendPointDialog
+        text: "Overwrite the Suspend Point in slot " + (index + 1) + "?"
+
+        property int index: -1
+
+        onAccepted: function () {
+            let theIndex = index
+            index = -1
+            root.writeSuspendPoint(theIndex)
         }
     }
 

@@ -41,10 +41,21 @@ ApplicationWindow {
         border.color: "lightblue"
         border.width: 3
         radius: 2
-        visible: !InputMethodManager.usingMouse && (parent.hasOwnProperty('showGlobalCursor') && parent.showGlobalCursor)
-        parent: window.activeFocusItem ? window.activeFocusItem : window
+        visible: !InputMethodManager.usingMouse && parent !== null
         anchors.fill: parent
         anchors.margins: -3
+
+        Connections {
+            target: window
+
+            function onActiveFocusItemChanged() {
+                if (window.activeFocusItem && window.activeFocusItem.hasOwnProperty('showGlobalCursor') && window.activeFocusItem.showGlobalCursor) {
+                    activeFocusHighlight.parent = window.activeFocusItem
+                } else {
+                    activeFocusHighlight.parent = null
+                }
+            }
+        }
 
         Behavior on width {
             NumberAnimation {

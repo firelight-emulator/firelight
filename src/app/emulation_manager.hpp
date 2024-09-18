@@ -70,6 +70,9 @@ public:
 
     int m_rewindPointIndex = -1;
 
+    int m_writeSuspendPointIndex = -1;
+    int m_loadSuspendPointIndex = -1;
+
     float m_playSpeed = 1.0;
 
 public slots:
@@ -86,6 +89,10 @@ public slots:
     void createRewindPoints();
 
     void loadRewindPoint(int index);
+
+    void writeSuspendPoint(int index);
+
+    void loadSuspendPoint(int index);
 
 signals:
     void gameLoadSucceeded();

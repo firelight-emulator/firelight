@@ -66,7 +66,6 @@ namespace libretro {
 
   static void videoCallback(const void *data, unsigned width, unsigned height,
                             size_t pitch) {
-    // TODO: Check if video receiver is set
     currentCore->videoReceiver->receive(data, width, height, pitch);
   }
 
@@ -1278,26 +1277,10 @@ namespace libretro {
   }
 
   Core::~Core() {
-    printf("Destroying core\n");
-    // if (destroyContextFunction) {
-    //   printf("Destroying context\n");
-    //   destroyContextFunction();
-    // }
-
     unloadGame();
     deinit();
-
-    // SDL_UnloadObject(dll);
-    //
     coreLib->unload();
-    // delete coreLib;
-    //
     currentCore = nullptr;
-    // // close DL handle
-    // // need to close symbol handles or free their memory?
-    // delete retroSystemInfo;
-    // delete retroSystemAVInfo;
-    //  delete video;
   }
 
   bool Core::loadGame(Game *game) {

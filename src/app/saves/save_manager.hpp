@@ -20,6 +20,10 @@ namespace firelight::saves {
 
         std::optional<Savefile> readSaveDataForEntry(db::LibraryEntry &entry) const;
 
+        QFuture<bool> writeSuspendPointForEntry(db::LibraryEntry &entry, int index, SuspendPoint &suspendPoint) const;
+
+        std::optional<SuspendPoint> readSuspendPointForEntry(db::LibraryEntry &entry, int index) const;
+
     private:
         db::IUserdataDatabase &m_userdataDatabase;
         std::filesystem::path m_saveDir;

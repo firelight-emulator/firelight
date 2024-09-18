@@ -118,4 +118,14 @@ namespace firelight::saves {
 
     return {saveData};
   }
+
+  QFuture<bool> SaveManager::writeSuspendPointForEntry(db::LibraryEntry &entry, int index,
+                                                       SuspendPoint &suspendPoint) const {
+    printf("lol I aint doing jack buddy\n");
+    return {};
+  }
+
+  std::optional<SuspendPoint> SaveManager::readSuspendPointForEntry(db::LibraryEntry &entry, int index) const {
+    return {};
+  }
 } // namespace firelight::saves

@@ -1,0 +1,24 @@
+# Planned supported platforms
+
+- Game Boy
+- Game Boy Color
+- Game Boy Advance
+- NES
+- SNES
+- Nintendo 64
+- Nintendo DS
+- GameCube
+- Wii
+- Genesis
+- Master System
+- Game Gear
+- Sega Saturn
+- Sega Dreamcast
+- Sega CD
+- Sega 32X
+- PS One
+- PS2
+- PSP
+- Virtual Boy
+- NeoGeo
+- 

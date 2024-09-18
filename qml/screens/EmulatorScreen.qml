@@ -176,8 +176,20 @@ FocusScope {
                 emulator.setPlaySpeedMultiplier(1)
             }
 
+            Keys.onDigit6Pressed: function (event) {
+                emulator.writeSuspendPoint(1)
+            }
+
             function loadRewindPoint(index) {
                 emulator.loadRewindPoint(index)
+            }
+
+            function writeSuspendPoint(index) {
+                emulator.writeSuspendPoint(index)
+            }
+
+            function loadSuspendPoint(index) {
+                emulator.loadSuspendPoint(index)
             }
 
             Connections {
@@ -417,6 +429,16 @@ FocusScope {
                 closeGameAnimation.running = true
                 // emulatorStack.popCurrentItem()
                 // closeGameAnimation.start()
+            }
+
+            onWriteSuspendPoint: function (index) {
+                const emu = emulatorStack.get(0)
+                emu.writeSuspendPoint(index)
+            }
+
+            onLoadSuspendPoint: function (index) {
+                const emu = emulatorStack.get(0)
+                emu.loadSuspendPoint(index)
             }
         }
     }

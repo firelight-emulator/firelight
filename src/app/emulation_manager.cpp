@@ -83,7 +83,9 @@ EmulationManager::~EmulationManager() {
 }
 
 QQuickFramebufferObject::Renderer *EmulationManager::createRenderer() const {
-  return new EmulatorRenderer();
+  return new EmulatorRenderer([this] {
+    const_cast<EmulationManager *>(this)->update();
+  });
 }
 
 
@@ -135,6 +137,16 @@ void EmulationManager::createRewindPoints() {
 
 void EmulationManager::loadRewindPoint(int index) {
   m_rewindPointIndex = index;
+  update();
+}
+
+void EmulationManager::writeSuspendPoint(int index) {
+  m_writeSuspendPointIndex = index;
+  update();
+}
+
+void EmulationManager::loadSuspendPoint(int index) {
+  m_loadSuspendPointIndex = index;
   update();
 }
 

@@ -117,7 +117,7 @@ FocusScope {
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("Game Boy")
@@ -152,7 +152,7 @@ FocusScope {
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("Game Boy Color")
@@ -187,7 +187,7 @@ FocusScope {
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("Game Boy Advance")
@@ -222,7 +222,7 @@ FocusScope {
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("NES")
@@ -259,7 +259,7 @@ FocusScope {
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("SNES")
@@ -295,7 +295,7 @@ FocusScope {
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("Nintendo 64")
@@ -331,7 +331,7 @@ FocusScope {
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("Master System")
@@ -353,7 +353,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(n64Settings)
+                    root.StackView.view.push(genesisSettings)
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -367,7 +367,7 @@ FocusScope {
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("Genesis/Mega Drive")
@@ -389,7 +389,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(n64Settings)
+                    root.StackView.view.push(gamegearSettings)
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -399,11 +399,11 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/N64.svg"
+                        source: "file:system/_img/gamegear.svg"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        sourceSize.height: parent.height
+                        sourceSize.height: 128
                     }
                     Text {
                         text: qsTr("Game Gear")

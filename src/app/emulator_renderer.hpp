@@ -16,7 +16,7 @@ class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,
                                public firelight::ManagerAccessor,
                                public firelight::libretro::IVideoDataReceiver {
 public:
-    explicit EmulatorRenderer();
+    explicit EmulatorRenderer(const std::function<void()> &updateFunc);
 
     void receive(const void *data, unsigned width, unsigned height, size_t pitch) override;
 
@@ -85,6 +85,8 @@ private:
 
     bool m_doingFrameByFrame = false;
     bool m_pausedForFrameByFrame = false;
+
+    std::function<void()> m_updateFunc = nullptr;
 
     std::function<void()> m_resetContextFunction = nullptr;
     std::function<void()> m_destroyContextFunction = nullptr;

@@ -13,7 +13,7 @@
 
 static constexpr int AUTOSAVE_INTERVAL_MILLIS = 10000;
 
-EmulatorRenderer::EmulatorRenderer() {
+EmulatorRenderer::EmulatorRenderer(const std::function<void()> &updateFunc) : m_updateFunc(updateFunc) {
   initializeOpenGLFunctions();
   autosaveTimer.setSingleShot(false);
   autosaveTimer.setInterval(AUTOSAVE_INTERVAL_MILLIS);
@@ -65,13 +65,14 @@ uintptr_t EmulatorRenderer::getCurrentFramebufferId() {
 }
 
 void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
-  printf("Setting width: %d, height: %d, aspect-ration: %f\n", info->geometry.base_width,
-         info->geometry.base_height, info->geometry.aspect_ratio);
-
+  printf("Called setSystemAVInfo with width: %d, height: %d\n",
+         info->geometry.base_width, info->geometry.base_height);
   const auto width = info->geometry.base_width;
   const auto height = info->geometry.base_height;
 
   if (width > 0 && height > 0) {
+    printf("Setting width: %d, height: %d, aspect-ration: %f\n", info->geometry.base_width,
+           info->geometry.base_height, info->geometry.aspect_ratio);
     m_nativeWidth = width;
     m_nativeHeight = height;
 
@@ -81,9 +82,8 @@ void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
     m_nativeAspectRatio = aspectRatio;
 
     invalidateFramebufferObject();
+    m_updateFunc();
   }
-
-  update();
 }
 
 void EmulatorRenderer::setPixelFormat(retro_pixel_format *format) {
@@ -147,6 +147,22 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     manager->m_rewindPointIndex = -1;
 
     manager->rewindPointLoaded();
+  }
+
+  if (m_core && manager->m_loadSuspendPointIndex != -1) {
+    auto point = getSaveManager()->readSuspendPointForEntry(m_currentEntry, manager->m_loadSuspendPointIndex);
+    spdlog::info("Loading suspend point {}", manager->m_loadSuspendPointIndex);
+    manager->m_loadSuspendPointIndex = -1;
+  }
+
+  if (m_core && manager->m_writeSuspendPointIndex != -1) {
+    SuspendPoint suspendPoint;
+    suspendPoint.state = m_core->serializeState();
+    suspendPoint.image = m_fbo->toImage();
+    suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
+
+    getSaveManager()->writeSuspendPointForEntry(m_currentEntry, manager->m_writeSuspendPointIndex, suspendPoint);
+    manager->m_writeSuspendPointIndex = -1;
   }
 
   if (m_core && manager->m_shouldGetRewindPoints) {
@@ -307,12 +323,12 @@ void EmulatorRenderer::receive(const void *data, unsigned width,
     QPainter painter(&paint_device);
 
     // printf("width: %d, height: %d, pitch: %llu\n", width, height, pitch);
-    m_fbo->bind();
+    // m_fbo->bind();
     const QImage image((uchar *) data, width, height, pitch, m_pixelFormat);
 
     // TODO: Check native size, etc. make sure we use max size and base size correctly
     painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), image,
                       image.rect());
-    m_fbo->release();
+    // m_fbo->release();
   }
 }

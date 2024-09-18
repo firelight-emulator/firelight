@@ -66,6 +66,14 @@ Rectangle {
         emulatorView.resumeGame()
     }
 
+    function writeSuspendPoint(index) {
+        emulatorView.writeSuspendPoint(index)
+    }
+
+    function loadSuspendPoint(index) {
+        emulatorView.loadSuspendPoint(index)
+    }
+
     EmulatorView {
         id: emulatorView
 
