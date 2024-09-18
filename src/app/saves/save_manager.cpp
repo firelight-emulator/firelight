@@ -10,8 +10,9 @@
 
 namespace firelight::saves {
   SaveManager::SaveManager(std::filesystem::path saveDir,
+                           db::ILibraryDatabase &libraryDatabase,
                            db::IUserdataDatabase &userdataDatabase)
-    : m_userdataDatabase(userdataDatabase), m_saveDir(std::move(saveDir)) {
+    : m_userdataDatabase(userdataDatabase), m_libraryDatabase(libraryDatabase), m_saveDir((std::move(saveDir))) {
     m_ioThreadPool = std::make_unique<QThreadPool>();
     m_ioThreadPool->setMaxThreadCount(1);
   }
@@ -120,12 +121,37 @@ namespace firelight::saves {
   }
 
   QFuture<bool> SaveManager::writeSuspendPointForEntry(db::LibraryEntry &entry, int index,
-                                                       SuspendPoint &suspendPoint) const {
+                                                       const SuspendPoint &suspendPoint) {
     printf("lol I aint doing jack buddy\n");
+    m_suspendPoints[index] = suspendPoint;
     return {};
   }
 
-  std::optional<SuspendPoint> SaveManager::readSuspendPointForEntry(db::LibraryEntry &entry, int index) const {
+  std::optional<SuspendPoint> SaveManager::readSuspendPointForEntry(db::LibraryEntry &entry, const int index) {
+    if (m_suspendPoints.contains(index)) {
+      return m_suspendPoints.at(index);
+    }
+
     return {};
+  }
+
+  QAbstractListModel *SaveManager::getSuspendPointListModel(const int entryId) {
+    if (entryId == m_currentSuspendPointListEntryId && m_suspendPointListModel != nullptr) {
+      return m_suspendPointListModel.get();
+    }
+
+    if (m_suspendPointListModel != nullptr) {
+      m_suspendPointListModel.reset();
+      m_currentSuspendPointListEntryId = -1;
+    }
+
+    m_currentSuspendPointListEntryId = entryId;
+    m_suspendPointListModel = std::make_unique<emulation::SuspendPointListModel>(this);
+    return m_suspendPointListModel.get();
+  }
+
+  void SaveManager::clearSuspendPointListModel() {
+    m_suspendPointListModel.reset();
+    m_currentSuspendPointListEntryId = -1;
   }
 } // namespace firelight::saves

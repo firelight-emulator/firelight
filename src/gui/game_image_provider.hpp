@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/rewind_model.hpp"
+#include "models/suspend_point_list_model.hpp"
 
 
 namespace firelight::gui {

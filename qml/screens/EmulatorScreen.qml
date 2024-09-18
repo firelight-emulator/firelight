@@ -192,6 +192,10 @@ FocusScope {
                 emulator.loadSuspendPoint(index)
             }
 
+            function loadLastSuspendPoint() {
+                emulator.loadLastSuspendPoint()
+            }
+
             Connections {
                 target: emulator
 
@@ -215,13 +219,19 @@ FocusScope {
 
 
             Keys.onEscapePressed: function (event) {
-                emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
+                emulatorStack.pushItem(nowPlayingPage, {
+                    entryId: scope.entryId,
+                    contentHash: ""
+                }, StackView.PushTransition)
                 event.accepted = true
             }
 
             Keys.onPressed: function (event) {
                 if (event.key === Qt.Key_Home) {
-                    emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
+                    emulatorStack.pushItem(nowPlayingPage, {
+                        entryId: scope.entryId,
+                        contentHash: ""
+                    }, StackView.PushTransition)
                     event.accepted = true
                 }
             }
@@ -439,6 +449,11 @@ FocusScope {
             onLoadSuspendPoint: function (index) {
                 const emu = emulatorStack.get(0)
                 emu.loadSuspendPoint(index)
+            }
+
+            onLoadLastSuspendPoint: function () {
+                const emu = emulatorStack.get(0)
+                emu.loadLastSuspendPoint()
             }
         }
     }

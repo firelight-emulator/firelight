@@ -25,7 +25,6 @@ constexpr int SAVE_FREQUENCY_MILLIS = 10000;
 
 EmulationManager::EmulationManager(QQuickItem *parent)
   : QQuickFramebufferObject(parent) {
-  printf("Creating EmulationManager\n");
   setTextureFollowsItemSize(false);
   setMirrorVertically(true);
   setFlag(ItemHasContents);
@@ -106,7 +105,6 @@ float EmulationManager::playSpeed() const {
 
 void EmulationManager::setPlaySpeed(float speed) {
   m_playSpeed = speed;
-  printf("Setting play speed\n");
   update();
 }
 
@@ -147,6 +145,11 @@ void EmulationManager::writeSuspendPoint(int index) {
 
 void EmulationManager::loadSuspendPoint(int index) {
   m_loadSuspendPointIndex = index;
+  update();
+}
+
+void EmulationManager::loadLastSuspendPoint() {
+  m_shouldLoadLastSuspendPoint = true;
   update();
 }
 

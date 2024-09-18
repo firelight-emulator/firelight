@@ -149,9 +149,44 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     manager->rewindPointLoaded();
   }
 
+  if (m_core && manager->m_shouldLoadLastSuspendPoint) {
+    manager->m_shouldLoadLastSuspendPoint = false;
+
+    m_core->deserializeState(m_lastSuspendPoint->state);
+
+    QOpenGLPaintDevice paint_device;
+    paint_device.setSize(m_fbo->size());
+    QPainter painter(&paint_device);
+
+    m_fbo->bind();
+    painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), m_lastSuspendPoint->image,
+                      m_lastSuspendPoint->image.rect());
+    m_fbo->release();
+  }
+
   if (m_core && manager->m_loadSuspendPointIndex != -1) {
-    auto point = getSaveManager()->readSuspendPointForEntry(m_currentEntry, manager->m_loadSuspendPointIndex);
-    spdlog::info("Loading suspend point {}", manager->m_loadSuspendPointIndex);
+    const auto point = getSaveManager()->readSuspendPointForEntry(m_currentEntry, manager->m_loadSuspendPointIndex);
+
+    if (point.has_value()) {
+      m_lastSuspendPoint = std::make_unique<SuspendPoint>(SuspendPoint{
+        .contentHash = m_currentEntry.contentId,
+        .state = m_core->serializeState(),
+        .timestamp = QDateTime::currentMSecsSinceEpoch(),
+        .image = m_fbo->toImage()
+      });
+
+      spdlog::info("Loading suspend point {}", manager->m_loadSuspendPointIndex);
+      m_core->deserializeState(point->state);
+      QOpenGLPaintDevice paint_device;
+      paint_device.setSize(m_fbo->size());
+      QPainter painter(&paint_device);
+
+      m_fbo->bind();
+      painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), point->image,
+                        point->image.rect());
+      m_fbo->release();
+    }
+
     manager->m_loadSuspendPointIndex = -1;
   }
 

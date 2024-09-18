@@ -8,7 +8,7 @@
 #include <QQuickFramebufferObject>
 
 #include "audio_manager.hpp"
-#include "../gui/models/rewind_model.hpp"
+#include "../gui/models/suspend_point_list_model.hpp"
 #include "libretro/core_configuration.hpp"
 
 class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,
@@ -64,6 +64,8 @@ private:
     bool m_gameReady = false;
 
     bool m_running = false;
+
+    std::unique_ptr<SuspendPoint> m_lastSuspendPoint = nullptr;
 
     QList<SuspendPoint> m_suspendPoints;
 

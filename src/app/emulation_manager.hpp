@@ -12,7 +12,7 @@
 #include "libretro/core_configuration.hpp"
 
 namespace firelight::emulation {
-    class RewindModel;
+    class SuspendPointListModel;
 }
 
 class EmulationManager : public QQuickFramebufferObject,
@@ -50,7 +50,7 @@ public:
 
     void setIsRunning(bool running);
 
-    void setRewindModel(firelight::emulation::RewindModel &model);
+    void setRewindModel(firelight::emulation::SuspendPointListModel &model);
 
     QByteArray m_gameData;
     QByteArray m_saveData;
@@ -72,6 +72,7 @@ public:
 
     int m_writeSuspendPointIndex = -1;
     int m_loadSuspendPointIndex = -1;
+    bool m_shouldLoadLastSuspendPoint = false;
 
     float m_playSpeed = 1.0;
 
@@ -93,6 +94,8 @@ public slots:
     void writeSuspendPoint(int index);
 
     void loadSuspendPoint(int index);
+
+    void loadLastSuspendPoint();
 
 signals:
     void gameLoadSucceeded();

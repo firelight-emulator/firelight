@@ -6,6 +6,9 @@ import QtQuick.Layouts
 FocusScope {
     id: root
 
+    required property int entryId
+    required property string contentHash
+
     signal resumeGamePressed()
 
     signal restartGamePressed()
@@ -20,10 +23,12 @@ FocusScope {
 
     signal loadSuspendPoint(index: int)
 
+    signal loadLastSuspendPoint()
+
     property Item previouslyFocusedItem
 
-    onFocusChanged: function () {
-        console.log("Focus changed on root: " + focus)
+    StackView.onDeactivated: function () {
+        SaveManager.clearSuspendPointListModel()
     }
 
 
@@ -294,7 +299,7 @@ FocusScope {
                     if (navButtonGroup.checkedButton) {
                         navButtonGroup.checkedButton.checked = false
                     }
-                    console.log(undo.ButtonGroup.group)
+                    root.loadLastSuspendPoint()
                 }
             }
             Rectangle {
@@ -369,10 +374,6 @@ FocusScope {
                 }
             }
 
-            onFocusChanged: function () {
-                console.log("Focus changed on right side: " + focus)
-            }
-
             pushEnter: Transition {
                 NumberAnimation {
                     property: "opacity"
@@ -421,7 +422,6 @@ FocusScope {
             property bool creating: false
             ListView {
                 id: suspendPointList
-
                 property bool creating: parent.creating
                 property bool loading: !creating
 
@@ -448,48 +448,7 @@ FocusScope {
                 highlight: Item {
                 }
                 // model: 8
-                model: ListModel {
-                    ListElement {
-                        hasData: true
-                        source: "file:system/_img/rr1.png"
-                        locked: true
-                    }
-                    ListElement {
-                        hasData: true
-                        source: "file:system/_img/rr2.png"
-                        locked: false
-                    }
-                    ListElement {
-                        hasData: true
-                        source: "file:system/_img/rr3.png"
-                        locked: false
-                    }
-                    ListElement {
-                        hasData: true
-                        source: "file:system/_img/rr4.png"
-                        locked: false
-                    }
-                    ListElement {
-                        hasData: true
-                        source: "file:system/_img/rr5.png"
-                        locked: false
-                    }
-                    ListElement {
-                        hasData: false
-                        source: "file:system/_img/rr6.png"
-                        locked: false
-                    }
-                    ListElement {
-                        hasData: false
-                        source: "file:system/_img/rr7.png"
-                        locked: false
-                    }
-                    ListElement {
-                        hasData: false
-                        source: "file:system/_img/rr8.png"
-                        locked: false
-                    }
-                }
+                model: SaveManager.getSuspendPointListModel(root.entryId)
                 spacing: 8
                 boundsBehavior: Flickable.StopAtBounds
 
@@ -618,6 +577,11 @@ FocusScope {
                                 RightClickMenuItem {
                                     text: "Delete"
                                     dangerous: true
+
+                                    onTriggered: function () {
+                                        deleteSuspendPointDialog.index = dele.index
+                                        deleteSuspendPointDialog.open()
+                                    }
                                 }
                             }
 
@@ -628,7 +592,7 @@ FocusScope {
 
                             onClicked: function () {
                                 if (suspendPointList.loading) {
-                                    if (dele.model.hasData) {
+                                    if (dele.model.has_data) {
                                         loadSuspendPointDialog.index = dele.index
                                         loadSuspendPointDialog.open()
                                     } else {
@@ -642,7 +606,7 @@ FocusScope {
                                         console.log("Can't overwrite locked Suspend Point")
                                         lockedTooltip.open()
                                     } else {
-                                        if (dele.model.hasData) {
+                                        if (dele.model.has_data) {
                                             overwriteSuspendPointDialog.index = dele.index
                                             overwriteSuspendPointDialog.open()
                                         } else {
@@ -661,7 +625,7 @@ FocusScope {
                             contentItem: Item {
                                 Item {
                                     anchors.fill: parent
-                                    visible: !dele.model.hasData
+                                    visible: !dele.model.has_data
                                     Rectangle {
                                         id: pic2
                                         anchors.top: parent.top
@@ -717,7 +681,7 @@ FocusScope {
                                 }
                                 Item {
                                     anchors.fill: parent
-                                    visible: dele.model.hasData
+                                    visible: dele.model.has_data
                                     DetailsButton {
                                         id: details
                                         anchors.top: parent.top
@@ -758,7 +722,7 @@ FocusScope {
                                             height: parent.height
                                             sourceSize.height: parent.height
                                             anchors.horizontalCenter: parent.horizontalCenter
-                                            source: dele.model.source
+                                            source: dele.model.image_url
                                             fillMode: Image.PreserveAspectCrop
                                         }
                                         // color: ColorPalette.neutral600
@@ -894,6 +858,19 @@ FocusScope {
             }
         }
 
+    }
+
+    FirelightDialog {
+        id: deleteSuspendPointDialog
+        text: "Are you sure you want to delete the Suspend Point in slot " + (index + 1) + "?"
+
+        property int index: -1
+
+        onAccepted: function () {
+            let theIndex = index
+            index = -1
+            SaveManager.deleteSuspendPoint(root.entryId, theIndex)
+        }
     }
 
     FirelightDialog {

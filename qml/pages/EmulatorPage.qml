@@ -74,6 +74,10 @@ Rectangle {
         emulatorView.loadSuspendPoint(index)
     }
 
+    function loadLastSuspendPoint() {
+        emulatorView.loadLastSuspendPoint()
+    }
+
     EmulatorView {
         id: emulatorView
 

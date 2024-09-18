@@ -5,10 +5,19 @@
 #include "../../app/saves/suspend_point.hpp"
 
 namespace firelight::emulation {
-    class RewindModel final : public QAbstractListModel {
+    static constexpr int MAX_NUM_SUSPEND_POINTS = 8;
+
+    class SuspendPointListModel final : public QAbstractListModel {
         Q_OBJECT
 
     public:
+        struct Item {
+            QString datetime;
+            bool locked;
+            QString imageUrl;
+            bool hasData;
+        };
+
         /**
          * @enum Roles
          * @brief The roles that can be used with this model.
@@ -16,8 +25,15 @@ namespace firelight::emulation {
         enum Roles {
             Id = Qt::UserRole + 1,
             Index,
+            Timestamp,
+            Locked,
             ImageUrl,
+            HasData
         };
+
+        explicit SuspendPointListModel(QObject *parent = nullptr);
+
+        bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
         [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
@@ -26,15 +42,11 @@ namespace firelight::emulation {
         [[nodiscard]] QVariant data(const QModelIndex &index,
                                     int role) const override;
 
-        void addSuspendPoint(const SuspendPoint &suspendPoint);
+        [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-        void setCurrentImage(QImage *image);
-
-        QImage getImageAtIndex(int index) const;
+        void deleteData(int index);
 
     private:
-        // db::IContentDatabase &m_contentDatabase;
-        QImage *currentImage = nullptr;
-        QList<SuspendPoint> m_items;
+        QList<Item> m_items;
     };
 } // firelight::emulation

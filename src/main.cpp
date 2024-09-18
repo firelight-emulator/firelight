@@ -133,9 +133,6 @@ int main(int argc, char *argv[]) {
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
-  firelight::saves::SaveManager saveManager(saveDir, userdata_database);
-  firelight::ManagerAccessor::setSaveManager(&saveManager);
-
   auto gameImageProvider = new firelight::gui::GameImageProvider();
   firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
 
@@ -146,6 +143,9 @@ int main(int argc, char *argv[]) {
   firelight::db::SqliteLibraryDatabase libraryDatabase(defaultAppDataPath /
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
+
+  firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database);
+  firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   auto contentDirs = libraryDatabase.getAllLibraryContentDirectories();
   if (contentDirs.empty()) {
@@ -217,6 +217,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("mod_model", &modListModel);
   engine.rootContext()->setContextProperty("platform_model", &platformListModel);
   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
+  engine.rootContext()->setContextProperty("SaveManager", &saveManager);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",

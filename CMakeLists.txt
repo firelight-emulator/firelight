@@ -109,8 +109,8 @@ add_library(firelight_lib
         src/app/platform_metadata.hpp
         src/gui/models/shop/shop_item_model.cpp
         src/gui/models/shop/shop_item_model.hpp
-        src/gui/models/rewind_model.cpp
-        src/gui/models/rewind_model.hpp
+        src/gui/models/suspend_point_list_model.cpp
+        src/gui/models/suspend_point_list_model.hpp
         src/gui/game_image_provider.cpp
         src/gui/game_image_provider.hpp
         src/app/audio/SfxPlayer.cpp
