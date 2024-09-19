@@ -1,8 +1,9 @@
 #pragma once
 #include <QAbstractListModel>
-#include <QQuickImageProvider>
 
 #include "../../app/saves/suspend_point.hpp"
+#include "../../gui/game_image_provider.hpp"
+
 
 namespace firelight::emulation {
     static constexpr int MAX_NUM_SUSPEND_POINTS = 8;
@@ -31,7 +32,7 @@ namespace firelight::emulation {
             HasData
         };
 
-        explicit SuspendPointListModel(QObject *parent = nullptr);
+        explicit SuspendPointListModel(gui::GameImageProvider &imageProvider, QObject *parent = nullptr);
 
         bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
@@ -46,7 +47,15 @@ namespace firelight::emulation {
 
         void deleteData(int index);
 
+        void updateData(int index, const SuspendPoint &suspendPoint);
+
+        std::optional<Item> getItem(int index);
+
+    signals:
+        void suspendPointUpdated(int index);
+
     private:
+        gui::GameImageProvider &m_imageProvider;
         QList<Item> m_items;
     };
 } // firelight::emulation

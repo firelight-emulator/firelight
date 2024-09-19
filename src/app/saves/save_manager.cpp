@@ -11,8 +11,13 @@
 namespace firelight::saves {
   SaveManager::SaveManager(std::filesystem::path saveDir,
                            db::ILibraryDatabase &libraryDatabase,
-                           db::IUserdataDatabase &userdataDatabase)
-    : m_userdataDatabase(userdataDatabase), m_libraryDatabase(libraryDatabase), m_saveDir((std::move(saveDir))) {
+                           db::IUserdataDatabase &userdataDatabase,
+                           gui::GameImageProvider &gameImageProvider)
+    : m_userdataDatabase(userdataDatabase), m_libraryDatabase(libraryDatabase), m_gameImageProvider(gameImageProvider),
+      m_saveDir((std::move
+          (saveDir)
+        )
+      ) {
     m_ioThreadPool = std::make_unique<QThreadPool>();
     m_ioThreadPool->setMaxThreadCount(1);
   }
@@ -120,10 +125,14 @@ namespace firelight::saves {
     return {saveData};
   }
 
-  QFuture<bool> SaveManager::writeSuspendPointForEntry(db::LibraryEntry &entry, int index,
+  QFuture<bool> SaveManager::writeSuspendPointForEntry(const db::LibraryEntry &entry, const int index,
                                                        const SuspendPoint &suspendPoint) {
-    printf("lol I aint doing jack buddy\n");
+    if (entry.id == m_currentSuspendPointListEntryId) {
+      m_suspendPointListModel->updateData(index, suspendPoint);
+    }
+
     m_suspendPoints[index] = suspendPoint;
+    writeSuspendPointToDisk(entry, index, suspendPoint);
     return {};
   }
 
@@ -146,12 +155,127 @@ namespace firelight::saves {
     }
 
     m_currentSuspendPointListEntryId = entryId;
-    m_suspendPointListModel = std::make_unique<emulation::SuspendPointListModel>(this);
+    m_suspendPointListModel = std::make_unique<emulation::SuspendPointListModel>(m_gameImageProvider, this);
+    connect(m_suspendPointListModel.get(), &emulation::SuspendPointListModel::suspendPointUpdated,
+            this, &SaveManager::handleUpdatedSuspendPoint);
+
+    for (int i = 0; i < 8; ++i) {
+      if (m_suspendPoints.contains(i)) {
+        m_suspendPointListModel->updateData(i, m_suspendPoints.at(i));
+      }
+    }
+
     return m_suspendPointListModel.get();
   }
 
   void SaveManager::clearSuspendPointListModel() {
     m_suspendPointListModel.reset();
     m_currentSuspendPointListEntryId = -1;
+  }
+
+  void SaveManager::handleUpdatedSuspendPoint(int index) {
+    if (m_currentSuspendPointListEntryId == -1) {
+      return;
+    }
+
+    auto item = m_suspendPointListModel->getItem(index);
+    if (!item.has_value()) {
+      return;
+    }
+
+    if (!item->hasData) {
+      deleteSuspendPointFromDisk(m_currentSuspendPointListEntryId, index);
+      return;
+    }
+
+    auto entry = m_libraryDatabase.getLibraryEntry(m_currentSuspendPointListEntryId);
+    if (!entry.has_value()) {
+      return;
+    }
+
+    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId, index);
+    if (!metadata.has_value()) {
+      spdlog::warn("Trying to update metadata for non-existent suspend point with id {} and index {}",
+                   entry->id, index);
+      return;
+    }
+
+    metadata->locked = item->locked;
+
+    m_userdataDatabase.updateSuspendPointMetadata(*metadata);
+  }
+
+  void SaveManager::writeSuspendPointToDisk(const db::LibraryEntry &entry, int index,
+                                            const SuspendPoint &suspendPoint) {
+    auto slotNumber = index + 1;
+    if (suspendPoint.locked) {
+      spdlog::warn("Trying to write locked suspend point for entry with id {} and index {}",
+                   entry.id, index);
+      return;
+    }
+
+    const auto directory =
+        m_saveDir / entry.contentId / ("slot" + std::to_string(entry.activeSaveSlot)) / "suspendpoints" / (
+          "slot" + std::to_string(slotNumber));
+
+    if (!exists(directory)) {
+      create_directories(directory);
+    }
+
+    const auto tempSaveFile = directory / "suspendpoint.state.tmp";
+    const auto saveFile = directory / "suspendpoint.state";
+
+    std::ofstream saveFileStream(tempSaveFile, std::ios::binary);
+    saveFileStream.write(reinterpret_cast<const char *>(suspendPoint.state.data()), suspendPoint.state.size());
+    saveFileStream.close();
+
+    std::filesystem::rename(tempSaveFile, saveFile);
+
+    if (!suspendPoint.image.isNull()) {
+      auto imageFilename = directory / "screenshot.png";
+      suspendPoint.image.save(QString::fromStdString(imageFilename.string()), "PNG");
+    }
+
+    // auto timestamp = 0;
+    // metadata.lastModifiedAt = timestamp;
+    //
+    // if (exists) {
+    //   m_userdataDatabase.updateSavefileMetadata(metadata);
+    // } else {
+    //   m_userdataDatabase.createSavefileMetadata(metadata);
+    // }
+  }
+
+  std::optional<SuspendPoint> SaveManager::readSuspendPointFromDisk(int entryId, int index) {
+  }
+
+  void SaveManager::deleteSuspendPointFromDisk(int entryId, int index) {
+    auto slotNumber = index + 1;
+    auto entry = m_libraryDatabase.getLibraryEntry(entryId);
+    if (!entry.has_value()) {
+      return;
+    }
+
+    auto path = m_saveDir / entry->contentId / ("slot" + std::to_string(entry->activeSaveSlot)) / "suspendpoints" / (
+                  "slot" + std::to_string(slotNumber));
+
+    printf("Path: %s\n", path.string().c_str());
+    if (!exists(path)) {
+      return;
+    }
+
+    // TODO: Delete metadata
+    printf("Deleting suspend point from disk\n");
+
+    std::error_code errorCode;
+    std::filesystem::remove(path / "suspendpoint.state", errorCode);
+    if (errorCode.value()) {
+      printf("ERROR CODE VALUE: %d, description: %s\n", errorCode.value(), errorCode.message().c_str());
+    }
+
+    std::filesystem::remove(path / "screenshot.png", errorCode);
+    if (errorCode.value()) {
+      printf("ERROR CODE VALUE: %d, description: %s\n", errorCode.value(), errorCode.message().c_str());
+    }
   }
 } // namespace firelight::saves

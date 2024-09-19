@@ -2,6 +2,7 @@
 
 #include "play_session.hpp"
 #include "savefile_metadata.hpp"
+#include "suspend_point_metadata.hpp"
 
 #include <optional>
 #include <map>
@@ -31,6 +32,18 @@ namespace firelight::db {
 
     virtual std::vector<SavefileMetadata>
     getSavefileMetadataForContent(std::string contentId) = 0;
+
+    virtual bool createSuspendPointMetadata(SuspendPointMetadata &metadata) = 0;
+
+    virtual std::optional<SuspendPointMetadata>
+    getSuspendPointMetadata(std::string contentId, int slotNumber) = 0;
+
+    virtual bool updateSuspendPointMetadata(SuspendPointMetadata metadata) = 0;
+
+    virtual std::vector<SuspendPointMetadata>
+    getSuspendPointMetadataForContent(std::string contentId) = 0;
+
+    virtual bool deleteSuspendPointMetadata(int id) = 0;
 
     virtual bool createControllerProfile(ControllerProfile &profile) = 0;
 

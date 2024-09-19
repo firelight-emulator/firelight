@@ -25,14 +25,14 @@ Button {
         font.pixelSize: 16
         font.family: Constants.regularFontFamily
         font.weight: Font.DemiBold
-        color: control.enabled ? control.activeFocus ? "black" : "white" : "#aaaaaa"
+        color: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? "black" : "white") : "white" : "#aaaaaa"
         horizontalAlignment: alignRight ? Text.AlignRight : Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 
     background: Rectangle {
         color: control.enabled ? "white" : "transparent"
-        opacity: control.enabled ? control.activeFocus ? 1 : (mouse.containsMouse ? (control.pressed ? 0.1 : 0.2) : (control.pseudoChildFocused ? 0.3 : "transparent")) : "transparent"
+        opacity: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? 1 : 0) : (mouse.containsMouse ? (control.pressed ? 0.1 : 0.2) : (control.pseudoChildFocused ? 0.3 : "transparent")) : "transparent"
         radius: 6
     }
 

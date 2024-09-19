@@ -1287,7 +1287,7 @@ namespace libretro {
     this->game = game;
     retro_game_info info{};
     // info.path = game->getPath().c_str();
-    info.path = R"(C:\Users\alexs\AppData\Roaming\Firelight\roms\Sonic The Hedgehog.md)";
+    info.path = R"()";
     info.data = game->getData();
     info.size = game->getSize();
     info.meta = "";

@@ -221,6 +221,7 @@ FocusScope {
             Keys.onEscapePressed: function (event) {
                 emulatorStack.pushItem(nowPlayingPage, {
                     entryId: scope.entryId,
+                    undoEnabled: emulator.loadedSuspendPointAtLeastOnce,
                     contentHash: ""
                 }, StackView.PushTransition)
                 event.accepted = true
@@ -230,6 +231,7 @@ FocusScope {
                 if (event.key === Qt.Key_Home) {
                     emulatorStack.pushItem(nowPlayingPage, {
                         entryId: scope.entryId,
+                        undoEnabled: emulator.loadedSuspendPointAtLeastOnce,
                         contentHash: ""
                     }, StackView.PushTransition)
                     event.accepted = true

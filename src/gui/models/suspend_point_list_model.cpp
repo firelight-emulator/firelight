@@ -1,54 +1,58 @@
 #include "suspend_point_list_model.hpp"
 
+#include "../game_image_provider.hpp"
+
 namespace firelight::emulation {
-    SuspendPointListModel::SuspendPointListModel(QObject *parent) : QAbstractListModel(parent) {
+    SuspendPointListModel::SuspendPointListModel(gui::GameImageProvider &imageProvider,
+                                                 QObject *parent) : QAbstractListModel(parent),
+                                                                    m_imageProvider(imageProvider) {
         m_items.emplace_back(Item{
-            .datetime = "heya",
+            .datetime = "none",
             .locked = false,
-            .hasData = true,
-            .imageUrl = "file:system/_img/rr1.png"
+            .hasData = false,
+            .imageUrl = ""
         });
         m_items.emplace_back(Item{
-            .datetime = "heya",
+            .datetime = "none",
             .locked = false,
-            .hasData = true,
-            .imageUrl = "file:system/_img/rr1.png"
+            .hasData = false,
+            .imageUrl = ""
         });
         m_items.emplace_back(Item{
-            .datetime = "heya",
+            .datetime = "none",
             .locked = false,
-            .hasData = true,
-            .imageUrl = "file:system/_img/rr1.png"
+            .hasData = false,
+            .imageUrl = ""
         });
         m_items.emplace_back(Item{
-            .datetime = "heya",
+            .datetime = "none",
             .locked = false,
-            .hasData = true,
-            .imageUrl = "file:system/_img/rr1.png"
+            .hasData = false,
+            .imageUrl = ""
         });
         m_items.emplace_back(Item{
-            .datetime = "heya",
+            .datetime = "none",
             .locked = false,
-            .hasData = true,
-            .imageUrl = "file:system/_img/rr1.png"
+            .hasData = false,
+            .imageUrl = ""
         });
         m_items.emplace_back(Item{
-            .datetime = "heya",
+            .datetime = "none",
             .locked = false,
-            .hasData = true,
-            .imageUrl = "file:system/_img/rr1.png"
+            .hasData = false,
+            .imageUrl = ""
         });
         m_items.emplace_back(Item{
-            .datetime = "heya",
+            .datetime = "none",
             .locked = false,
-            .hasData = true,
-            .imageUrl = "file:system/_img/rr1.png"
+            .hasData = false,
+            .imageUrl = ""
         });
         m_items.emplace_back(Item{
-            .datetime = "heya",
+            .datetime = "none",
             .locked = false,
-            .hasData = true,
-            .imageUrl = "file:system/_img/rr1.png"
+            .hasData = false,
+            .imageUrl = ""
         });
     }
 
@@ -65,6 +69,7 @@ namespace firelight::emulation {
         }
 
         // Notify the view that data has changed for the given index and role
+        emit suspendPointUpdated(index.row());
         emit dataChanged(index, index, {role});
 
         return true;
@@ -116,5 +121,29 @@ namespace firelight::emulation {
 
         emit endResetModel();
         emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
+    }
+
+    void SuspendPointListModel::updateData(const int index, const SuspendPoint &suspendPoint) {
+        auto &item = m_items[index];
+        if (!item.imageUrl.isEmpty()) {
+            m_imageProvider.removeImageWithUrl(item.imageUrl);
+        }
+
+        const auto url = m_imageProvider.setImage(suspendPoint.image);
+
+        item.locked = suspendPoint.locked;
+        item.hasData = true;
+        item.imageUrl = url;
+        item.datetime = QDateTime::fromMSecsSinceEpoch(suspendPoint.timestamp).toString("yyyy-MM-dd hh:mm:ss");
+
+        emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
+    }
+
+    std::optional<SuspendPointListModel::Item> SuspendPointListModel::getItem(const int index) {
+        if (index > m_items.size()) {
+            return std::nullopt;
+        }
+
+        return {m_items[index]};
     }
 }

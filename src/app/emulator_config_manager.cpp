@@ -20,6 +20,10 @@ std::shared_ptr<CoreConfiguration> EmulatorConfigManager::getCoreConfigFor(const
 
     // m_coreConfigs[key] = std::make_shared<CoreConfiguration>();
 
+    for (const auto &setting: firelight::PlatformMetadata::getDefaultConfigValues(platformId)) {
+        m_coreConfigs[key]->setPlatformValue(setting.first, setting.second);
+    }
+
     const auto allSettings = m_userdataDatabase.getAllPlatformSettings(platformId);
     for (const auto &setting: allSettings) {
         m_coreConfigs[key]->setPlatformValue(setting.first, setting.second);

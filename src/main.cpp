@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
-  firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database);
+  firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database, *gameImageProvider);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   auto contentDirs = libraryDatabase.getAllLibraryContentDirectories();

@@ -31,6 +31,21 @@ namespace firelight::db {
                     createSavefileMetadata.lastError().text().toStdString());
     }
 
+    QSqlQuery createSuspendPointMetadata(m_database);
+    createSuspendPointMetadata.prepare("CREATE TABLE IF NOT EXISTS suspend_point_metadata("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "content_id TEXT NOT NULL,"
+      "slot_number INTEGER NOT NULL,"
+      "locked INTEGER NOT NULL DEFAULT 0,"
+      "last_modified_at INTEGER NOT NULL,"
+      "created_at INTEGER NOT NULL, "
+      "UNIQUE(content_id, slot_number));");
+
+    if (!createSuspendPointMetadata.exec()) {
+      spdlog::error("Table creation failed: {}",
+                    createSuspendPointMetadata.lastError().text().toStdString());
+    }
+
     QSqlQuery createPlaySessions(m_database);
     createPlaySessions.prepare("CREATE TABLE IF NOT EXISTS play_sessions("
       "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -112,6 +127,27 @@ namespace firelight::db {
     }
 
     return metadataList;
+  }
+
+  bool SqliteUserdataDatabase::createSuspendPointMetadata(SuspendPointMetadata &metadata) {
+    return false;
+  }
+
+  std::optional<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadata(std::string contentId,
+    int slotNumber) {
+    return std::nullopt;
+  }
+
+  bool SqliteUserdataDatabase::updateSuspendPointMetadata(SuspendPointMetadata metadata) {
+    return false;
+  }
+
+  std::vector<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadataForContent(std::string contentId) {
+    return {};
+  }
+
+  bool SqliteUserdataDatabase::deleteSuspendPointMetadata(int id) {
+    return true;
   }
 
   bool SqliteUserdataDatabase::tableExists(const std::string tableName) {
@@ -205,6 +241,7 @@ namespace firelight::db {
     query.finish();
     return true;
   }
+
 
   bool SqliteUserdataDatabase::createControllerProfile(ControllerProfile &profile) {
     return false;

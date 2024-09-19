@@ -231,7 +231,7 @@ FocusScope {
                         id: imageThing
                         Rectangle {
                             visible: dele.ListView.isCurrentItem
-                            z: -1
+                            z: -10
                             width: parent.width + 8
                             height: parent.height + 8
                             x: -4

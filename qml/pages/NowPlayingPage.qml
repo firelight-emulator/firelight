@@ -8,6 +8,7 @@ FocusScope {
 
     required property int entryId
     required property string contentHash
+    required property bool undoEnabled
 
     signal resumeGamePressed()
 
@@ -287,7 +288,7 @@ FocusScope {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 checkable: false
-                enabled: true
+                enabled: root.undoEnabled
                 alignRight: true
 
                 onClicked: function () {
@@ -428,7 +429,8 @@ FocusScope {
                 width: Math.min(800, parent.width - 128)
                 focus: true
                 // height: parent.height
-                height: Math.min(parent.height, contentHeight)
+                clip: true
+                height: Math.min(parent.height * .75, contentHeight)
                 // topMargin: contentHeight < parent.height ? 0 : 100
                 // bottomMargin: contentHeight < parent.height ? 0 : 100
                 anchors.verticalCenter: parent.verticalCenter
@@ -437,7 +439,8 @@ FocusScope {
                 highlightMoveDuration: 80
                 highlightMoveVelocity: -1
                 keyNavigationEnabled: true
-                highlightRangeMode: InputMethodManager.usingMouse ? ListView.ApplyRange : ListView.StrictlyEnforceRange
+                // highlightRangeMode: InputMethodManager.usingMouse ? ListView.ApplyRange : ListView.StrictlyEnforceRange
+                highlightRangeMode: ListView.ApplyRange
                 preferredHighlightBegin: height / 3
                 preferredHighlightEnd: height * 2 / 3
                 // highlight: Rectangle {
@@ -579,15 +582,20 @@ FocusScope {
                                     dangerous: true
 
                                     onTriggered: function () {
-                                        deleteSuspendPointDialog.index = dele.index
+                                        deleteSuspendPointDialog.doThing = function () {
+                                            dele.model.has_data = false
+                                        }
+                                        deleteSuspendPointDialog.text = "Are you sure you want to delete the Suspend Point in slot " + (dele.index + 1) + "?"
                                         deleteSuspendPointDialog.open()
                                     }
                                 }
                             }
 
                             Keys.onMenuPressed: function (event) {
-                                rightClickMenu.popupModal(width - rightClickMenu.width + 24, 6)
-                                event.accepted = true
+                                if (dele.model.has_data) {
+                                    rightClickMenu.popupModal(width - rightClickMenu.width + 24, 6)
+                                    event.accepted = true
+                                }
                             }
 
                             onClicked: function () {
@@ -619,7 +627,9 @@ FocusScope {
                             TapHandler {
                                 acceptedButtons: Qt.RightButton
                                 onTapped: {
-                                    rightClickMenu.popupNormal()
+                                    if (dele.model.has_data) {
+                                        rightClickMenu.popupNormal()
+                                    }
                                 }
                             }
                             contentItem: Item {
@@ -842,7 +852,7 @@ FocusScope {
                                         color: ColorPalette.neutral400
                                         wrapMode: Text.WordWrap
 
-                                        text: "10/4/2024 5:12:25"
+                                        text: dele.model.timestamp
                                     }
                                 }
 
@@ -862,14 +872,14 @@ FocusScope {
 
     FirelightDialog {
         id: deleteSuspendPointDialog
-        text: "Are you sure you want to delete the Suspend Point in slot " + (index + 1) + "?"
 
-        property int index: -1
+        property var doThing: function () {
+            console.log("Doing the thing")
+        }
 
         onAccepted: function () {
-            let theIndex = index
-            index = -1
-            SaveManager.deleteSuspendPoint(root.entryId, theIndex)
+            doThing()
+            doThing = null
         }
     }
 
@@ -884,6 +894,7 @@ FocusScope {
             index = -1
             console.log("Loading suspend point " + theIndex)
             root.loadSuspendPoint(theIndex)
+            root.undoEnabled = true
         }
     }
 

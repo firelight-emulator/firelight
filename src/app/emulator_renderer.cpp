@@ -182,6 +182,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
       QPainter painter(&paint_device);
 
       m_fbo->bind();
+      painter.setCompositionMode(QPainter::CompositionMode_Source);
       painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), point->image,
                         point->image.rect());
       m_fbo->release();
@@ -249,6 +250,10 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
 
   manager->setGeometry(m_nativeWidth, m_nativeHeight, m_nativeAspectRatio);
   manager->setIsRunning(m_running);
+
+  if (m_audioManager) {
+    m_audioManager->setMuted(manager->m_paused);
+  }
 
   Renderer::synchronize(fbo);
 }
@@ -339,12 +344,6 @@ void EmulatorRenderer::render() {
     // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     // glClear(GL_COLOR_BUFFER_BIT);
     // m_fbo->release();
-  }
-
-  auto newTime = QDateTime::currentMSecsSinceEpoch();
-  auto elapsed = newTime - currentTime;
-  if (elapsed > 10) {
-    spdlog::info("Frame took {} ms", elapsed);
   }
 
   update();

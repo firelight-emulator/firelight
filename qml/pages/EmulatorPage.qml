@@ -15,6 +15,7 @@ Rectangle {
 
     property alias currentGameName: emulatorView.currentGameName
     property bool paused: false
+    property bool loadedSuspendPointAtLeastOnce: false
 
     onPausedChanged: function () {
         if (paused) {
@@ -71,6 +72,7 @@ Rectangle {
     }
 
     function loadSuspendPoint(index) {
+        loadedSuspendPointAtLeastOnce = true
         emulatorView.loadSuspendPoint(index)
     }
 

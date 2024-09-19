@@ -210,8 +210,8 @@ namespace firelight {
         {"mupen64plus-parallel-rdp-vi-aa", "True"},
         {"mupen64plus-parallel-rdp-vi-bilinear", "True"},
         {"mupen64plus-r-cbutton", "C1"},
-        {"mupen64plus-rdp-plugin", "gliden64"},
-        {"mupen64plus-rsp-plugin", "hle"},
+        {"mupen64plus-rdp-plugin", "angrylion"},
+        {"mupen64plus-rsp-plugin", "parallel"},
         {"mupen64plus-txCacheCompression", "True"},
         {"mupen64plus-txEnhancementMode", "None"},
         {"mupen64plus-txFilterIgnoreBG", "True"},
@@ -238,6 +238,14 @@ namespace firelight {
     static constexpr int PLATFORM_ID_SEGA_GENESIS = 13;
     static constexpr int PLATFORM_ID_SEGA_GAMEGEAR = 14;
     static constexpr int PLATFORM_ID_PLAYSTATION_PORTABLE = 20;
+
+    static std::map<std::string, std::string> getDefaultConfigValues(const int platformId) {
+      if (!defaultPlatformValues.contains(platformId)) {
+        return {};
+      }
+
+      return defaultPlatformValues.at(platformId);
+    }
 
     static std::optional<std::string> getDefaultConfigValue(const int platformId,
                                                             const std::string &key) {
