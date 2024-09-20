@@ -4,6 +4,8 @@
 #include <QSqlQuery>
 #include <spdlog/spdlog.h>
 
+#include "../saves/suspend_point.hpp"
+
 namespace firelight::db {
   constexpr auto DATABASE_PREFIX = "userdata_";
 
@@ -35,6 +37,7 @@ namespace firelight::db {
     createSuspendPointMetadata.prepare("CREATE TABLE IF NOT EXISTS suspend_point_metadata("
       "id INTEGER PRIMARY KEY AUTOINCREMENT,"
       "content_id TEXT NOT NULL,"
+      "save_slot_number INTEGER NOT NULL,"
       "slot_number INTEGER NOT NULL,"
       "locked INTEGER NOT NULL DEFAULT 0,"
       "last_modified_at INTEGER NOT NULL,"
@@ -130,20 +133,106 @@ namespace firelight::db {
   }
 
   bool SqliteUserdataDatabase::createSuspendPointMetadata(SuspendPointMetadata &metadata) {
-    return false;
+    if (!m_database.open()) {
+      spdlog::error("Couldn't open database: {}",
+                    m_database.lastError().text().toStdString());
+      return false;
+    }
+
+    const QString queryString = "INSERT INTO suspend_point_metadata (content_id, save_slot_number, "
+        "slot_number, locked, last_modified_at, "
+        "created_at) VALUES (:contentId, :slotNumber, "
+        ":locked, :lastModifiedAt, :createdAt);";
+
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch())
+        .count();
+
+    QSqlQuery query(m_database);
+    query.prepare(queryString);
+    query.bindValue(":contentId", QString::fromStdString(metadata.contentId));
+    query.bindValue(":saveSlotNumber", metadata.saveSlotNumber);
+    query.bindValue(":slotNumber", metadata.slotNumber);
+    query.bindValue(":locked", metadata.locked);
+    query.bindValue(":lastModifiedAt", timestamp);
+    query.bindValue(":createdAt", timestamp);
+
+    if (!query.exec()) {
+      query.finish();
+      return false;
+    }
+
+    metadata.id = query.lastInsertId().toInt();
+
+    query.finish();
+    return true;
   }
 
-  std::optional<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadata(std::string contentId,
+  std::optional<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadata(
+    std::string contentId, int saveSlotNumber,
     int slotNumber) {
-    return std::nullopt;
+    const QString queryString =
+        "SELECT * FROM suspend_point_metadata WHERE content_id = :contentId AND save_slot_number = :saveSlotNumber AND "
+        "slot_number = :slotNumber LIMIT 1;";
+    QSqlQuery query(m_database);
+    query.prepare(queryString);
+    query.bindValue(":contentId", QString::fromStdString(contentId));
+    query.bindValue(":saveSlotNumber", saveSlotNumber);
+    query.bindValue(":slotNumber", slotNumber);
+
+    if (!query.exec()) {
+      spdlog::error("Failed to get suspend point metadata: {}",
+                    query.lastError().text().toStdString());
+      return std::nullopt;
+    }
+
+    if (!query.next()) {
+      return std::nullopt;
+    }
+
+    SuspendPointMetadata metadata;
+    metadata.id = query.value("id").toUInt();
+    metadata.contentId = query.value("content_id").toString().toStdString();
+    metadata.saveSlotNumber = query.value("save_slot_number").toUInt();
+    metadata.slotNumber = query.value("slot_number").toUInt();
+    metadata.locked = query.value("savefile_md5").toBool();
+    metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
+    metadata.createdAt = query.value("created_at").toLongLong();
+
+    return metadata;
   }
 
   bool SqliteUserdataDatabase::updateSuspendPointMetadata(SuspendPointMetadata metadata) {
     return false;
   }
 
-  std::vector<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadataForContent(std::string contentId) {
-    return {};
+  std::vector<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadataForContent(
+    std::string contentId, int saveSlotNumber) {
+    QSqlQuery query(m_database);
+    query.prepare(
+      "SELECT * FROM suspend_point_metadata WHERE content_id = :contentId AND save_slot_number = :saveSlotNumber;");
+    query.bindValue(":contentId", QString::fromStdString(contentId));
+    query.bindValue(":saveSlotNumber", saveSlotNumber);
+
+    if (!query.exec()) {
+      spdlog::warn("Could not retrieve savefile metadata: {}",
+                   query.lastError().text().toStdString());
+      return {};
+    }
+
+    std::vector<SuspendPointMetadata> metadataList;
+    while (query.next()) {
+      SuspendPointMetadata metadata;
+      metadata.id = query.value("id").toUInt();
+      metadata.contentId = query.value("content_id").toString().toStdString();
+      metadata.saveSlotNumber = query.value("save_slot_number").toUInt();
+      metadata.slotNumber = query.value("slot_number").toUInt();
+      metadata.locked = query.value("savefile_md5").toBool();
+      metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
+      metadata.createdAt = query.value("created_at").toLongLong();
+    }
+
+    return metadataList;
   }
 
   bool SqliteUserdataDatabase::deleteSuspendPointMetadata(int id) {

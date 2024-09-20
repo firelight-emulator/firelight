@@ -31,9 +31,9 @@ namespace firelight::saves {
         QFuture<bool> writeSuspendPointForEntry(const db::LibraryEntry &entry, int index,
                                                 const SuspendPoint &suspendPoint);
 
-        std::optional<SuspendPoint> readSuspendPointForEntry(db::LibraryEntry &entry, int index);
+        std::optional<SuspendPoint> readSuspendPointForEntry(db::LibraryEntry &entry, int saveSlotNumber, int index);
 
-        Q_INVOKABLE QAbstractListModel *getSuspendPointListModel(int entryId);
+        Q_INVOKABLE QAbstractListModel *getSuspendPointListModel(int entryId, int saveSlotNumber = -1);
 
         Q_INVOKABLE void clearSuspendPointListModel();
 
@@ -43,11 +43,12 @@ namespace firelight::saves {
     private:
         void writeSuspendPointToDisk(const db::LibraryEntry &entry, int index, const SuspendPoint &suspendPoint);
 
-        std::optional<SuspendPoint> readSuspendPointFromDisk(int entryId, int index);
+        std::optional<SuspendPoint> readSuspendPointFromDisk(int entryId, int saveSlotNumber, int index);
 
-        void deleteSuspendPointFromDisk(int entryId, int index);
+        void deleteSuspendPointFromDisk(int entryId, int saveSlotNumber, int index);
 
         int m_currentSuspendPointListEntryId = -1;
+        int m_currentSuspendPointListSaveSlotNumber = -1;
         std::unique_ptr<emulation::SuspendPointListModel> m_suspendPointListModel;
 
         db::ILibraryDatabase &m_libraryDatabase;

@@ -165,27 +165,31 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   }
 
   if (m_core && manager->m_loadSuspendPointIndex != -1) {
-    const auto point = getSaveManager()->readSuspendPointForEntry(m_currentEntry, manager->m_loadSuspendPointIndex);
+    const auto point = getSaveManager()->readSuspendPointForEntry(m_currentEntry, m_currentEntry.activeSaveSlot,
+                                                                  manager->m_loadSuspendPointIndex);
 
     if (point.has_value()) {
       m_lastSuspendPoint = std::make_unique<SuspendPoint>(SuspendPoint{
         .contentHash = m_currentEntry.contentId,
         .state = m_core->serializeState(),
         .timestamp = QDateTime::currentMSecsSinceEpoch(),
-        .image = m_fbo->toImage()
+        .image = m_fbo->toImage(),
+        .saveSlotNumber = m_currentEntry.activeSaveSlot
       });
 
       spdlog::info("Loading suspend point {}", manager->m_loadSuspendPointIndex);
       m_core->deserializeState(point->state);
-      QOpenGLPaintDevice paint_device;
-      paint_device.setSize(m_fbo->size());
-      QPainter painter(&paint_device);
 
-      m_fbo->bind();
-      painter.setCompositionMode(QPainter::CompositionMode_Source);
-      painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), point->image,
-                        point->image.rect());
-      m_fbo->release();
+      if (!point->image.isNull()) {
+        QOpenGLPaintDevice paint_device;
+        paint_device.setSize(m_fbo->size());
+        QPainter painter(&paint_device);
+        m_fbo->bind();
+        painter.setCompositionMode(QPainter::CompositionMode_Source);
+        painter.drawImage(QRect(0, 0, m_fbo->width(), m_fbo->height()), point->image,
+                          point->image.rect());
+        m_fbo->release();
+      }
     }
 
     manager->m_loadSuspendPointIndex = -1;
@@ -196,6 +200,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     suspendPoint.state = m_core->serializeState();
     suspendPoint.image = m_fbo->toImage();
     suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
+    suspendPoint.saveSlotNumber = m_currentEntry.activeSaveSlot;
 
     getSaveManager()->writeSuspendPointForEntry(m_currentEntry, manager->m_writeSuspendPointIndex, suspendPoint);
     manager->m_writeSuspendPointIndex = -1;

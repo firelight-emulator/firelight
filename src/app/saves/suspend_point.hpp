@@ -12,4 +12,5 @@ struct SuspendPoint {
   long long timestamp;
   QImage image;
   bool locked = false;
+  unsigned int saveSlotNumber;
 };

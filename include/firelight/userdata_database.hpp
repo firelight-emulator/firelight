@@ -36,12 +36,12 @@ namespace firelight::db {
     virtual bool createSuspendPointMetadata(SuspendPointMetadata &metadata) = 0;
 
     virtual std::optional<SuspendPointMetadata>
-    getSuspendPointMetadata(std::string contentId, int slotNumber) = 0;
+    getSuspendPointMetadata(std::string contentId, int saveSlotNumber, int slotNumber) = 0;
 
     virtual bool updateSuspendPointMetadata(SuspendPointMetadata metadata) = 0;
 
     virtual std::vector<SuspendPointMetadata>
-    getSuspendPointMetadataForContent(std::string contentId) = 0;
+    getSuspendPointMetadataForContent(std::string contentId, int saveSlotNumber) = 0;
 
     virtual bool deleteSuspendPointMetadata(int id) = 0;
 

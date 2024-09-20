@@ -7,6 +7,7 @@ FocusScope {
     id: root
 
     required property int entryId
+    property int saveSlot: 1
     required property string contentHash
     required property bool undoEnabled
 
@@ -451,7 +452,7 @@ FocusScope {
                 highlight: Item {
                 }
                 // model: 8
-                model: SaveManager.getSuspendPointListModel(root.entryId)
+                model: SaveManager.getSuspendPointListModel(root.entryId, root.saveSlot)
                 spacing: 8
                 boundsBehavior: Flickable.StopAtBounds
 
