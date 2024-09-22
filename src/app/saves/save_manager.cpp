@@ -242,6 +242,23 @@ namespace firelight::saves {
       suspendPoint.image.save(QString::fromStdString(imageFilename.string()), "PNG");
     }
 
+    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry.contentId, suspendPoint.saveSlotNumber, index);
+    if (metadata.has_value()) {
+      metadata->lastModifiedAt = QDateTime::currentMSecsSinceEpoch();
+      m_userdataDatabase.updateSuspendPointMetadata(*metadata);
+    } else {
+      auto ms = QDateTime::currentMSecsSinceEpoch();
+      db::SuspendPointMetadata newMetadata{
+        .contentId = entry.contentId,
+        .saveSlotNumber = suspendPoint.saveSlotNumber,
+        .slotNumber = static_cast<unsigned int>(index),
+        .lastModifiedAt = static_cast<uint64_t>(ms),
+        .createdAt = static_cast<uint64_t>(ms)
+      };
+
+      m_userdataDatabase.createSuspendPointMetadata(newMetadata);
+    }
+
     // auto timestamp = 0;
     // metadata.lastModifiedAt = timestamp;
     //
@@ -289,9 +306,17 @@ namespace firelight::saves {
       image.load(QString::fromStdString((path / "screenshot.png").string()));
     }
 
+    long long modifiedAt = 0;
+
+    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId, saveSlotNumber, index);
+    if (metadata.has_value()) {
+      modifiedAt = metadata->lastModifiedAt;
+    }
+
     return SuspendPoint{
       .state = fileContents,
-      .image = image
+      .image = image,
+      .timestamp = modifiedAt
     };
   }
 

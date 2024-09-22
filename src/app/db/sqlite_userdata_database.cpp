@@ -141,7 +141,7 @@ namespace firelight::db {
 
     const QString queryString = "INSERT INTO suspend_point_metadata (content_id, save_slot_number, "
         "slot_number, locked, last_modified_at, "
-        "created_at) VALUES (:contentId, :slotNumber, "
+        "created_at) VALUES (:contentId, :saveSlotNumber, :slotNumber, "
         ":locked, :lastModifiedAt, :createdAt);";
 
     auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -195,7 +195,7 @@ namespace firelight::db {
     metadata.contentId = query.value("content_id").toString().toStdString();
     metadata.saveSlotNumber = query.value("save_slot_number").toUInt();
     metadata.slotNumber = query.value("slot_number").toUInt();
-    metadata.locked = query.value("savefile_md5").toBool();
+    metadata.locked = query.value("locked").toBool();
     metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
     metadata.createdAt = query.value("created_at").toLongLong();
 
