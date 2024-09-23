@@ -65,7 +65,7 @@ namespace firelight::emulation {
         if (role == HasData) {
             item.hasData = value.toBool();
         } else if (role == Locked) {
-            item.locked = !item.locked;
+            item.locked = value.toBool();
         }
 
         // Notify the view that data has changed for the given index and role

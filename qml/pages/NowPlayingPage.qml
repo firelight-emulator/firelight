@@ -29,6 +29,14 @@ FocusScope {
 
     property Item previouslyFocusedItem
 
+    StackView.onActivating: function () {
+        sfx_player.play("quickopen")
+    }
+
+    StackView.onDeactivating: function () {
+        sfx_player.play("quickclose")
+    }
+
     StackView.onDeactivated: function () {
         SaveManager.clearSuspendPointListModel()
     }
@@ -69,9 +77,18 @@ FocusScope {
         }
 
         ColumnLayout {
+            id: col
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 2
+
+            property int index: 0
+
+            onIndexChanged: function () {
+                if (!InputMethodManager.usingMouse) {
+                    sfx_player.play("menumove")
+                }
+            }
 
             FirelightMenuItem {
                 id: resumeGameButton
@@ -84,6 +101,12 @@ FocusScope {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 checkable: false
                 alignRight: true
+
+                onActiveFocusChanged: function () {
+                    if (activeFocus) {
+                        col.index = 0
+                    }
+                }
 
                 onClicked: function () {
                     if (rightSide.depth > 0) {
@@ -103,6 +126,12 @@ FocusScope {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 checkable: false
                 alignRight: true
+
+                onActiveFocusChanged: function () {
+                    if (activeFocus) {
+                        col.index = 1
+                    }
+                }
 
                 onClicked: function () {
                     if (rightSide.depth > 0) {
@@ -124,6 +153,12 @@ FocusScope {
                 checkable: false
                 alignRight: true
 
+
+                onActiveFocusChanged: function () {
+                    if (activeFocus) {
+                        col.index = 2
+                    }
+                }
                 onClicked: function () {
                     if (rightSide.depth > 0) {
                         rightSide.pop()
@@ -163,6 +198,12 @@ FocusScope {
                 //         }
                 //     }
                 // }
+
+                onActiveFocusChanged: function () {
+                    if (activeFocus) {
+                        col.index = 3
+                    }
+                }
 
                 Keys.onRightPressed: function (event) {
                     if (rightSide.depth === 0) {
@@ -220,6 +261,12 @@ FocusScope {
                 pseudoChildFocused: root.previouslyFocusedItem === createSuspendPointButton
 
                 ButtonGroup.group: navButtonGroup
+
+                onActiveFocusChanged: function () {
+                    if (activeFocus) {
+                        col.index = 4
+                    }
+                }
 
                 // onToggled: function () {
                 //     if (checked) {
@@ -303,6 +350,12 @@ FocusScope {
                     }
                     root.loadLastSuspendPoint()
                 }
+
+                onActiveFocusChanged: function () {
+                    if (activeFocus) {
+                        col.index = 5
+                    }
+                }
             }
             Rectangle {
                 Layout.fillWidth: true
@@ -329,6 +382,12 @@ FocusScope {
                     }
                     backToMainMenuPressed()
                 }
+
+                onActiveFocusChanged: function () {
+                    if (activeFocus) {
+                        col.index = 6
+                    }
+                }
             }
             FirelightMenuItem {
                 id: closeGameButton
@@ -346,6 +405,12 @@ FocusScope {
                         root.previouslyFocusedItem = null
                     }
                     closeGameConfirmationDialog.open()
+                }
+
+                onActiveFocusChanged: function () {
+                    if (activeFocus) {
+                        col.index = 7
+                    }
                 }
             }
         }
@@ -583,6 +648,13 @@ FocusScope {
                                     dangerous: true
 
                                     onTriggered: function () {
+                                        if (dele.model.locked) {
+                                            sfx_player.play("nope")
+                                            console.log("Can't delete locked Suspend Point")
+                                            lockedTooltip.open()
+                                            return
+                                        }
+
                                         deleteSuspendPointDialog.doThing = function () {
                                             dele.model.has_data = false
                                         }

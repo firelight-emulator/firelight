@@ -153,9 +153,11 @@ namespace firelight::saves {
     if (m_suspendPointListModel != nullptr) {
       m_suspendPointListModel.reset();
       m_currentSuspendPointListEntryId = -1;
+      m_currentSuspendPointListSaveSlotNumber = -1;
     }
 
     m_currentSuspendPointListEntryId = entryId;
+    m_currentSuspendPointListSaveSlotNumber = saveSlotNumber;
     m_suspendPointListModel = std::make_unique<emulation::SuspendPointListModel>(m_gameImageProvider, this);
     connect(m_suspendPointListModel.get(), &emulation::SuspendPointListModel::suspendPointUpdated,
             this, &SaveManager::handleUpdatedSuspendPoint);
@@ -177,7 +179,8 @@ namespace firelight::saves {
   }
 
   void SaveManager::handleUpdatedSuspendPoint(int index) {
-    if (m_currentSuspendPointListEntryId == -1) {
+    auto slotNumber = index + 1;
+    if (m_currentSuspendPointListEntryId == -1 || m_currentSuspendPointListSaveSlotNumber == -1) {
       return;
     }
 
@@ -187,7 +190,7 @@ namespace firelight::saves {
     }
 
     if (!item->hasData) {
-      deleteSuspendPointFromDisk(m_currentSuspendPointListEntryId, m_currentSuspendPointListSaveSlotNumber, index);
+      deleteSuspendPointFromDisk(m_currentSuspendPointListEntryId, m_currentSuspendPointListSaveSlotNumber, slotNumber);
       return;
     }
 
@@ -197,11 +200,23 @@ namespace firelight::saves {
     }
 
     auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId,
-                                                               m_currentSuspendPointListSaveSlotNumber, index);
-    if (!metadata.has_value()) {
-      spdlog::warn("Trying to update metadata for non-existent suspend point with id {} and index {}",
-                   entry->id, index);
-      return;
+                                                               m_currentSuspendPointListSaveSlotNumber, slotNumber);
+    if (metadata.has_value()) {
+      metadata->lastModifiedAt = QDateTime::currentMSecsSinceEpoch();
+      metadata->locked = item->locked;
+      m_userdataDatabase.updateSuspendPointMetadata(*metadata);
+    } else {
+      auto ms = QDateTime::currentMSecsSinceEpoch();
+      db::SuspendPointMetadata newMetadata{
+        .contentId = entry->contentId,
+        .saveSlotNumber = static_cast<unsigned int>(m_currentSuspendPointListSaveSlotNumber),
+        .locked = item->locked,
+        .slotNumber = static_cast<unsigned int>(slotNumber),
+        .lastModifiedAt = static_cast<uint64_t>(ms),
+        .createdAt = static_cast<uint64_t>(ms)
+      };
+
+      m_userdataDatabase.createSuspendPointMetadata(newMetadata);
     }
 
     metadata->locked = item->locked;
@@ -211,7 +226,7 @@ namespace firelight::saves {
 
   void SaveManager::writeSuspendPointToDisk(const db::LibraryEntry &entry, int index,
                                             const SuspendPoint &suspendPoint) {
-    auto slotNumber = index + 1;
+    unsigned int slotNumber = index + 1;
     if (suspendPoint.locked) {
       spdlog::warn("Trying to write locked suspend point for entry with id {} and index {}",
                    entry.id, index);
@@ -242,16 +257,19 @@ namespace firelight::saves {
       suspendPoint.image.save(QString::fromStdString(imageFilename.string()), "PNG");
     }
 
-    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry.contentId, suspendPoint.saveSlotNumber, index);
+    auto metadata = m_userdataDatabase.
+        getSuspendPointMetadata(entry.contentId, suspendPoint.saveSlotNumber, slotNumber);
     if (metadata.has_value()) {
       metadata->lastModifiedAt = QDateTime::currentMSecsSinceEpoch();
+      metadata->locked = suspendPoint.locked;
       m_userdataDatabase.updateSuspendPointMetadata(*metadata);
     } else {
       auto ms = QDateTime::currentMSecsSinceEpoch();
       db::SuspendPointMetadata newMetadata{
         .contentId = entry.contentId,
         .saveSlotNumber = suspendPoint.saveSlotNumber,
-        .slotNumber = static_cast<unsigned int>(index),
+        .locked = suspendPoint.locked,
+        .slotNumber = slotNumber,
         .lastModifiedAt = static_cast<uint64_t>(ms),
         .createdAt = static_cast<uint64_t>(ms)
       };
@@ -280,7 +298,6 @@ namespace firelight::saves {
 
     auto path = m_saveDir / entry->contentId / ("slot" + std::to_string(saveSlotNumber)) / "suspendpoints" / (
                   "slot" + std::to_string(slotNumber));
-    printf("path: %s\n", path.string().c_str());
     if (!exists(path)) {
       return std::nullopt;
     }
@@ -306,17 +323,20 @@ namespace firelight::saves {
       image.load(QString::fromStdString((path / "screenshot.png").string()));
     }
 
-    long long modifiedAt = 0;
+    long long created = 0;
+    bool locked = false;
 
-    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId, saveSlotNumber, index);
+    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId, saveSlotNumber, slotNumber);
     if (metadata.has_value()) {
-      modifiedAt = metadata->lastModifiedAt;
+      created = metadata->createdAt;
+      locked = metadata->locked;
     }
 
     return SuspendPoint{
       .state = fileContents,
       .image = image,
-      .timestamp = modifiedAt
+      .timestamp = created,
+      .locked = locked,
     };
   }
 
@@ -330,9 +350,13 @@ namespace firelight::saves {
     auto path = m_saveDir / entry->contentId / ("slot" + std::to_string(saveSlotNumber)) / "suspendpoints" / (
                   "slot" + std::to_string(slotNumber));
 
-    printf("Path: %s\n", path.string().c_str());
     if (!exists(path)) {
       return;
+    }
+
+    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId, saveSlotNumber, slotNumber);
+    if (metadata.has_value()) {
+      m_userdataDatabase.deleteSuspendPointMetadata(metadata->id);
     }
 
     // TODO: Delete metadata

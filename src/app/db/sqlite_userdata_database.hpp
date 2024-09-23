@@ -28,7 +28,7 @@ namespace firelight::db {
     std::optional<SuspendPointMetadata> getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
                                                                 int slotNumber) override;
 
-    bool updateSuspendPointMetadata(SuspendPointMetadata metadata) override;
+    bool updateSuspendPointMetadata(const SuspendPointMetadata &metadata) override;
 
     std::vector<SuspendPointMetadata>
     getSuspendPointMetadataForContent(std::string contentId, int saveSlotNumber) override;

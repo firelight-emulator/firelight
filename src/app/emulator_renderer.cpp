@@ -71,8 +71,6 @@ void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
   const auto height = info->geometry.base_height;
 
   if (width > 0 && height > 0) {
-    printf("Setting width: %d, height: %d, aspect-ration: %f\n", info->geometry.base_width,
-           info->geometry.base_height, info->geometry.aspect_ratio);
     m_nativeWidth = width;
     m_nativeHeight = height;
 

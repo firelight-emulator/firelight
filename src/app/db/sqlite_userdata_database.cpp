@@ -202,8 +202,21 @@ namespace firelight::db {
     return metadata;
   }
 
-  bool SqliteUserdataDatabase::updateSuspendPointMetadata(SuspendPointMetadata metadata) {
-    return false;
+  bool SqliteUserdataDatabase::updateSuspendPointMetadata(const SuspendPointMetadata &metadata) {
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE suspend_point_metadata SET locked = :locked, "
+      "last_modified_at = :lastModifiedAt WHERE id = :id;");
+    query.bindValue(":locked", metadata.locked);
+    query.bindValue(":lastModifiedAt", metadata.lastModifiedAt);
+    query.bindValue(":id", metadata.id);
+
+    if (!query.exec()) {
+      spdlog::error("Update Suspend Point metadata failed: {}",
+                    query.lastError().text().toStdString());
+      return false;
+    }
+
+    return query.numRowsAffected() >= 1;
   }
 
   std::vector<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadataForContent(

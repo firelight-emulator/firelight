@@ -218,6 +218,12 @@ add_custom_target(copy_resources ALL
 file(COPY ${CMAKE_SOURCE_DIR}/_cores DESTINATION ${CMAKE_BINARY_DIR}/system)
 file(COPY ${CMAKE_SOURCE_DIR}/_img DESTINATION ${CMAKE_BINARY_DIR}/system)
 file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/click.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/openrewind.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/nope.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/openquick.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/closequick.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/menumove.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
 
 enable_testing()
 include(GoogleTest)

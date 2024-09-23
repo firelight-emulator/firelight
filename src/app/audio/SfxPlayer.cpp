@@ -32,6 +32,18 @@ namespace firelight::audio {
         m_sfxs["rewindopen"] = new QSoundEffect();
         m_sfxs["rewindopen"]->setSource(QUrl::fromLocalFile("system/sfx/openrewind.wav"));
 
+        m_sfxs["nope"] = new QSoundEffect();
+        m_sfxs["nope"]->setSource(QUrl::fromLocalFile("system/sfx/nope.wav"));
+
+        m_sfxs["quickopen"] = new QSoundEffect();
+        m_sfxs["quickopen"]->setSource(QUrl::fromLocalFile("system/sfx/openquick.wav"));
+
+        m_sfxs["quickclose"] = new QSoundEffect();
+        m_sfxs["quickclose"]->setSource(QUrl::fromLocalFile("system/sfx/closequick.wav"));
+
+        m_sfxs["menumove"] = new QSoundEffect();
+        m_sfxs["menumove"]->setSource(QUrl::fromLocalFile("system/sfx/menumove.wav"));
+
         // m_sfxs["rewindscroll"] = std::move(effect1);
         // m_sfxs["rewindopen"] = std::move(effect2);
 
@@ -41,10 +53,10 @@ namespace firelight::audio {
     }
 
     SfxPlayer::~SfxPlayer() {
-        for (const auto &sfx: m_sfxMap) {
-            SDL_CloseAudioDevice(sfx.audioDeviceId);
-            SDL_FreeWAV(sfx.m_wavBuffer);
-        }
+        // for (const auto &sfx: m_sfxMap) {
+        //     SDL_CloseAudioDevice(sfx.audioDeviceId);
+        //     SDL_FreeWAV(sfx.m_wavBuffer);
+        // }
     }
 
     void SfxPlayer::play() {
