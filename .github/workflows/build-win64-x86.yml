@@ -64,10 +64,10 @@ jobs:
         run: cpack -G ZIP
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: firelight-zip-win-x64
-          path: build/firelight-emulator-0.5.0-win64.zip
+          path: build/firelight-emulator-0.5.1-win64.zip
 
         # - name: Prepare artifact
         #   run: |

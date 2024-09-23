@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(firelight
-        VERSION 0.5.0
+        VERSION 0.5.1
         DESCRIPTION "An emulation frontend that just works"
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -310,7 +310,9 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY, "firelight")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-set(CPACK_PACKAGE_VERSION "0.5.0")
+set(CPACK_PACKAGE_VERSION "0.5.1")
+
+
 #set(CPACK_RESOURCE_FILE_LICENSE, "C:/msys64/mingw64/share/cmake/Templates/ALEX.txt")
 #set(CPACK_RESOURCE_FILE_README, "${CMAKE_CURRENT_BINARY_DIR}/README.md")
 #set(CPACK_RESOURCE_FILE_WELCOME, "Firelight")
@@ -371,6 +373,10 @@ install(
         FILES
         ${CMAKE_SOURCE_DIR}/assets/openrewind.wav
         ${CMAKE_SOURCE_DIR}/assets/click.wav
+        ${CMAKE_SOURCE_DIR}/assets/nope.wav
+        ${CMAKE_SOURCE_DIR}/assets/openquick.wav
+        ${CMAKE_SOURCE_DIR}/assets/closequick.wav
+        ${CMAKE_SOURCE_DIR}/assets/menumove.wav
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/sfx/
 )
 

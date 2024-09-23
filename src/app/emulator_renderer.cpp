@@ -131,17 +131,15 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
 
   if (m_core && manager->m_rewindPointIndex != -1) {
     spdlog::info("Loading rewind point {}", manager->m_rewindPointIndex);
-    m_core->deserializeState(m_suspendPoints[manager->m_rewindPointIndex - 1].state);
+    const auto &suspendPoint = m_suspendPoints[manager->m_rewindPointIndex - 1];
+
+    m_core->deserializeState(suspendPoint.state);
+    getAchievementManager()->deserializeState(suspendPoint.retroachievementsState);
 
     for (auto i = manager->m_rewindPointIndex - 1; i >= 0; --i) {
       m_suspendPoints.remove(i);
     }
 
-
-    // m_suspendPoints.removeAt(manager->m_rewindPointIndex);
-    // manager->rewindPointLoaded();
-
-    // const auto image = m_suspendPoints[manager->m_rewindPointIndex - 1].image;
     manager->m_rewindPointIndex = -1;
 
     manager->rewindPointLoaded();
@@ -170,6 +168,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
       m_lastSuspendPoint = std::make_unique<SuspendPoint>(SuspendPoint{
         .contentHash = m_currentEntry.contentId,
         .state = m_core->serializeState(),
+        .retroachievementsState = getAchievementManager()->serializeState(),
         .timestamp = QDateTime::currentMSecsSinceEpoch(),
         .image = m_fbo->toImage(),
         .saveSlotNumber = m_currentEntry.activeSaveSlot
@@ -196,6 +195,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   if (m_core && manager->m_writeSuspendPointIndex != -1) {
     SuspendPoint suspendPoint;
     suspendPoint.state = m_core->serializeState();
+    suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
     suspendPoint.image = m_fbo->toImage();
     suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
     suspendPoint.saveSlotNumber = m_currentEntry.activeSaveSlot;
@@ -332,11 +332,11 @@ void EmulatorRenderer::render() {
 
     if (m_shouldCreateSuspendPoint) {
       if (m_fbo->size() != QSize(0, 0)) {
-        // spdlog::info("Creating suspend point");
         SuspendPoint suspendPoint;
         suspendPoint.state = m_core->serializeState();
         suspendPoint.image = m_fbo->toImage();
         suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
+        suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
         m_suspendPoints.push_front(suspendPoint);
       }
 

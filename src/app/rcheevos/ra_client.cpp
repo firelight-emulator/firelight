@@ -326,6 +326,36 @@ namespace firelight::achievements {
     }
   }
 
+  std::vector<uint8_t> RAClient::serializeState() {
+    if (!m_loggedIn) {
+      return {};
+    }
+
+    const auto size = rc_client_progress_size(m_client);
+
+    std::vector<uint8_t> state(size);
+    auto result = rc_client_serialize_progress_sized(m_client, state.data(), size);
+    if (result != RC_OK) {
+      printf("Failed to serialize state: %d\n", result);
+    }
+
+    return state;
+  }
+
+  void RAClient::deserializeState(const std::vector<uint8_t> &state) {
+    if (!m_loggedIn) {
+      return;
+    }
+
+    const auto size = rc_client_progress_size(m_client);
+    if (state.size() != size) {
+      printf("State size mismatch: %lu != %llu\n", state.size(), size);
+      return;
+    }
+
+    rc_client_deserialize_progress_sized(m_client, state.data(), size);
+  }
+
   void RAClient::setDefaultToHardcore(const bool hardcore) {
     m_defaultToHardcore = hardcore;
     rc_client_set_hardcore_enabled(m_client, hardcore);

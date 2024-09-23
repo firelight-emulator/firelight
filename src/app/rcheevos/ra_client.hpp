@@ -59,6 +59,10 @@ namespace firelight::achievements {
 
     void doFrame(::libretro::Core *core, const db::LibraryEntry &currentEntry);
 
+    std::vector<uint8_t> serializeState();
+
+    void deserializeState(const std::vector<uint8_t> &state);
+
     rc_libretro_memory_regions_t m_memoryRegions{};
     bool m_memorySeemsGood = false;
     int m_consoleId = 0;
