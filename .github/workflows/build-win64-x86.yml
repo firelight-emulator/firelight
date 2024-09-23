@@ -40,6 +40,7 @@ jobs:
             cpr:p
             spdlog:p
             nsis:p
+            nlohmann-json:p
 
       - run: ln -s "${MSYSTEM_PREFIX}/bin/qtpaths-qt6.exe" "${MSYSTEM_PREFIX}/bin/qtpaths.exe"
 
