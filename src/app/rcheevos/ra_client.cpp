@@ -357,6 +357,7 @@ namespace firelight::achievements {
 
     const auto size = rc_client_progress_size(m_client);
     if (state.size() != size) {
+      // TODO: Handle this better. Do we need to reset?
       printf("State size mismatch: %lu != %llu\n", state.size(), size);
       return;
     }

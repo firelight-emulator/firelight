@@ -396,5 +396,10 @@ namespace firelight::saves {
     if (errorCode.value()) {
       printf("ERROR CODE VALUE: %d, description: %s\n", errorCode.value(), errorCode.message().c_str());
     }
+
+    std::filesystem::remove(path / "rcheevos.state", errorCode);
+    if (errorCode.value()) {
+      printf("ERROR CODE VALUE: %d, description: %s\n", errorCode.value(), errorCode.message().c_str());
+    }
   }
 } // namespace firelight::saves
