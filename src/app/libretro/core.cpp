@@ -215,7 +215,7 @@ namespace libretro {
           return false;
         }
 
-        ptr->value = val->key.c_str();
+        ptr->value = strdup(val->key.c_str());
         break;
       }
 
@@ -424,11 +424,11 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY");
-        // auto ptr = static_cast<const char **>(data);
+        auto ptr = static_cast<const char **>(data);
         // *ptr = R"(C:\Users\alexs\git\firelight\build\system)";
-        // *ptr = "./system";
+        *ptr = "./system";
         // *ptr = &saveDirectory[0]; // TODO
-        return false;
+        return true;
       }
       case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
@@ -639,14 +639,14 @@ namespace libretro {
           }
 
           firelight::libretro::IConfigurationProvider::Option option;
-          option.key = opt->key;
-          option.label = opt->desc;
-          option.description = opt->info;
+          option.key = strdup(opt->key);
+          option.label = strdup(opt->desc);
+          option.description = strdup(opt->info);
 
           if (opt->default_value != nullptr) {
-            option.defaultValueKey = opt->default_value;
+            option.defaultValueKey = strdup(opt->default_value);
           } else {
-            option.defaultValueKey = opt->values[0].value;
+            option.defaultValueKey = strdup(opt->values[0].value);
           }
 
           for (int j = 0; j < 100; ++j) {
@@ -656,11 +656,11 @@ namespace libretro {
             }
 
             firelight::libretro::IConfigurationProvider::OptionValue optionValue;
-            optionValue.key = val.value;
+            optionValue.key = strdup(val.value);
             if (val.label != nullptr) {
-              optionValue.label = val.label;
+              optionValue.label = strdup(val.label);
             } else {
-              optionValue.label = val.value;
+              optionValue.label = strdup(val.value);
             }
 
             option.possibleValues.emplace_back(optionValue);
@@ -686,14 +686,14 @@ namespace libretro {
           }
 
           firelight::libretro::IConfigurationProvider::Option option;
-          option.key = opt.key;
-          option.label = opt.desc;
-          option.description = opt.info;
+          option.key = strdup(opt.key);
+          option.label = strdup(opt.desc);
+          option.description = strdup(opt.info);
 
           if (opt.default_value != nullptr) {
-            option.defaultValueKey = opt.default_value;
+            option.defaultValueKey = strdup(opt.default_value);
           } else {
-            option.defaultValueKey = opt.values[0].value;
+            option.defaultValueKey = strdup(opt.values[0].value);
           }
 
           for (int j = 0; j < 100; ++j) {
@@ -703,11 +703,11 @@ namespace libretro {
             }
 
             firelight::libretro::IConfigurationProvider::OptionValue optionValue;
-            optionValue.key = val.value;
+            optionValue.key = strdup(val.value);
             if (val.label != nullptr) {
-              optionValue.label = val.label;
+              optionValue.label = strdup(val.label);
             } else {
-              optionValue.label = val.value;
+              optionValue.label = strdup(val.value);
             }
 
             option.possibleValues.emplace_back(optionValue);
@@ -755,8 +755,8 @@ namespace libretro {
         auto ptr = static_cast<retro_message_ext *>(data);
 
         // TODO
-        printf("Msg: %s\n", ptr->msg);
-        break;
+        // printf("Msg: %s\n", ptr->msg);
+        return false;
       }
       // case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
       //   environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS");
@@ -843,24 +843,26 @@ namespace libretro {
           }
 
           firelight::libretro::IConfigurationProvider::Option option;
-          option.key = opt.key;
+          option.key = strdup(opt.key);
 
           if (opt.default_value != nullptr) {
-            option.defaultValueKey = opt.default_value;
+            option.defaultValueKey = strdup(opt.default_value);
           } else {
-            option.defaultValueKey = opt.values[0].value;
+            option.defaultValueKey = strdup(opt.values[0].value);
           }
 
           if (opt.desc_categorized != nullptr) {
-            option.label = opt.desc_categorized;
+            option.label = strdup(opt.desc_categorized);
           } else {
-            option.label = opt.desc;
+            option.label = strdup(opt.desc);
           }
 
           if (opt.info_categorized != nullptr) {
-            option.description = opt.info_categorized;
+            option.description = strdup(opt.info_categorized);
+          } else if (opt.info != nullptr) {
+            option.description = strdup(opt.info);
           } else {
-            option.description = opt.info;
+            option.description = strdup(opt.desc);
           }
 
           for (int j = 0; j < 100; ++j) {
@@ -870,11 +872,11 @@ namespace libretro {
             }
 
             firelight::libretro::IConfigurationProvider::OptionValue optionValue;
-            optionValue.key = val.value;
+            optionValue.key = strdup(val.value);
             if (val.label != nullptr) {
-              optionValue.label = val.label;
+              optionValue.label = strdup(val.label);
             } else {
-              optionValue.label = val.value;
+              optionValue.label = strdup(val.value);
             }
 
             option.possibleValues.emplace_back(optionValue);
@@ -901,26 +903,26 @@ namespace libretro {
           }
 
           firelight::libretro::IConfigurationProvider::Option option;
-          option.key = opt.key;
+          option.key = strdup(opt.key);
 
           if (opt.default_value != nullptr) {
-            option.defaultValueKey = opt.default_value;
+            option.defaultValueKey = strdup(opt.default_value);
           } else {
-            option.defaultValueKey = opt.values[0].value;
+            option.defaultValueKey = strdup(opt.values[0].value);
           }
 
           if (opt.desc_categorized != nullptr) {
-            option.label = opt.desc_categorized;
+            option.label = strdup(opt.desc_categorized);
           } else if (opt.desc != nullptr) {
-            option.label = opt.desc;
+            option.label = strdup(opt.desc);
           } else {
-            option.label = opt.key;
+            option.label = strdup(opt.key);
           }
 
           if (opt.info_categorized != nullptr) {
-            option.description = opt.info_categorized;
+            option.description = strdup(opt.info_categorized);
           } else if (opt.info != nullptr) {
-            option.description = opt.info;
+            option.description = strdup(opt.info);
           }
 
           for (int j = 0; j < 100; ++j) {
@@ -930,11 +932,11 @@ namespace libretro {
             }
 
             firelight::libretro::IConfigurationProvider::OptionValue optionValue;
-            optionValue.key = val.value;
+            optionValue.key = strdup(val.value);
             if (val.label != nullptr) {
-              optionValue.label = val.label;
+              optionValue.label = strdup(val.label);
             } else {
-              optionValue.label = val.value;
+              optionValue.label = strdup(val.value);
             }
 
             option.possibleValues.emplace_back(optionValue);
@@ -952,7 +954,7 @@ namespace libretro {
           return true; // TODO I think I actually need to store the callback
           // instead lol
         };
-        return true;
+        return false;
       }
       case RETRO_ENVIRONMENT_SET_VARIABLE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_VARIABLE");
@@ -1286,8 +1288,10 @@ namespace libretro {
   bool Core::loadGame(Game *game) {
     this->game = game;
     retro_game_info info{};
+
     // info.path = game->getPath().c_str();
-    info.path = R"()";
+    info.path = strdup(std::filesystem::path(game->getPath()).filename().string().c_str());
+    // info.path = R"()";
     info.data = game->getData();
     info.size = game->getSize();
     info.meta = "";

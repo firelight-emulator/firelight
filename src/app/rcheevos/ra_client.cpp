@@ -37,6 +37,7 @@ namespace firelight::achievements {
         break;
       }
       case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW: {
+        printf("Showing challenge indicator (%s)\n", event->achievement->title);
         char urlBuffer[256];
 
         auto success = rc_client_achievement_get_image_url(
@@ -49,6 +50,7 @@ namespace firelight::achievements {
         break;
       }
       case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE: {
+        printf("Hiding challenge indicator (%s)\n", event->achievement->title);
         emit raClient->hideChallengeIndicator(event->achievement->id);
         break;
       }
@@ -83,9 +85,12 @@ namespace firelight::achievements {
           event->achievement->id, event->achievement->measured_percent);
 
         break;
-      // Intentionally ignored as we dynamically update the same popup and set out own duration.
       case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_HIDE:
+        // Intentionally ignored as we dynamically update the same popup and set out own duration.
+        break;
       case RC_CLIENT_EVENT_GAME_COMPLETED:
+        printf("game completed: %d\n", event->type);
+        break;
       case RC_CLIENT_EVENT_LEADERBOARD_STARTED:
       case RC_CLIENT_EVENT_LEADERBOARD_FAILED:
       case RC_CLIENT_EVENT_LEADERBOARD_SUBMITTED:
@@ -93,16 +98,19 @@ namespace firelight::achievements {
       case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_UPDATE:
       case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_HIDE:
       case RC_CLIENT_EVENT_LEADERBOARD_SCOREBOARD:
+        // printf("leaderboard: %d\n", event->type);
+        break;
       case RC_CLIENT_EVENT_RESET:
+        printf("reset: %d\n", event->type);
+        break;
       case RC_CLIENT_EVENT_SERVER_ERROR:
-        printf("server error\n");
+        printf("server error: %d\n", event->type);
         break;
       case RC_CLIENT_EVENT_DISCONNECTED:
         printf("disconnected\n");
         break;
       case RC_CLIENT_EVENT_RECONNECTED:
         printf("reconnected\n");
-        break;
         break;
       default:
         printf("Unhandled event! (%d)\n", event->type);

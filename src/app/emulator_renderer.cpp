@@ -40,6 +40,8 @@ EmulatorRenderer::~EmulatorRenderer() {
   if (m_destroyContextFunction) {
     m_destroyContextFunction();
   }
+
+  getSaveManager()->clearSuspendPointListModel();
 }
 
 proc_address_t EmulatorRenderer::getProcAddress(const char *sym) {
@@ -149,6 +151,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     manager->m_shouldLoadLastSuspendPoint = false;
 
     m_core->deserializeState(m_lastSuspendPoint->state);
+    getAchievementManager()->deserializeState(m_lastSuspendPoint->retroachievementsState);
 
     QOpenGLPaintDevice paint_device;
     paint_device.setSize(m_fbo->size());
@@ -176,6 +179,7 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
 
       spdlog::info("Loading suspend point {}", manager->m_loadSuspendPointIndex);
       m_core->deserializeState(point->state);
+      getAchievementManager()->deserializeState(point->retroachievementsState);
 
       if (!point->image.isNull()) {
         QOpenGLPaintDevice paint_device;

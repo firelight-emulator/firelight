@@ -221,6 +221,11 @@ namespace firelight {
         {"mupen64plus-u-cbutton", "C4"},
         {"mupen64plus-virefresh", "Auto"}
       }
+    },
+    {
+      10, {
+        {"melonds_homebrew_sdcard", "disabled"}
+      }
     }
   };
 

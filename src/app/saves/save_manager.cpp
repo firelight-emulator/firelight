@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <qcryptographichash.h>
+#include <qfile.h>
 #include <qfuture.h>
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
@@ -190,7 +191,7 @@ namespace firelight::saves {
     }
 
     if (!item->hasData) {
-      deleteSuspendPointFromDisk(m_currentSuspendPointListEntryId, m_currentSuspendPointListSaveSlotNumber, slotNumber);
+      deleteSuspendPointFromDisk(m_currentSuspendPointListEntryId, m_currentSuspendPointListSaveSlotNumber, index);
       return;
     }
 
@@ -250,11 +251,21 @@ namespace firelight::saves {
 
     std::filesystem::rename(tempSaveFile, saveFile);
 
-    // todo: metadata
-
     if (!suspendPoint.image.isNull()) {
       auto imageFilename = directory / "screenshot.png";
       suspendPoint.image.save(QString::fromStdString(imageFilename.string()), "PNG");
+    }
+
+    if (!suspendPoint.retroachievementsState.empty()) {
+      const auto tempRcheevosFile = directory / "rcheevos.state.tmp";
+      const auto rcheevosFile = directory / "rcheevos.state";
+
+      std::ofstream rcheevosStream(tempRcheevosFile, std::ios::binary);
+      rcheevosStream.write(reinterpret_cast<const char *>(suspendPoint.retroachievementsState.data()),
+                           suspendPoint.retroachievementsState.size());
+      rcheevosStream.close();
+
+      std::filesystem::rename(tempRcheevosFile, rcheevosFile);
     }
 
     auto metadata = m_userdataDatabase.
@@ -323,6 +334,18 @@ namespace firelight::saves {
       image.load(QString::fromStdString((path / "screenshot.png").string()));
     }
 
+    std::vector<uint8_t> rcheevosData;
+    if (auto rcheevosFile = path / "rcheevos.state"; exists(rcheevosFile)) {
+      QFile file(QString::fromStdString(rcheevosFile.string()));
+      file.open(QIODeviceBase::ReadOnly);
+      auto bytes = file.readAll();
+      rcheevosData = std::vector<uint8_t>(bytes.begin(), bytes.end());
+      file.close();
+    }
+
+    printf("Size of rcheevosData: %llu\n", rcheevosData.size());
+
+
     long long created = 0;
     bool locked = false;
 
@@ -337,6 +360,7 @@ namespace firelight::saves {
       .image = image,
       .timestamp = created,
       .locked = locked,
+      .retroachievementsState = rcheevosData,
     };
   }
 
