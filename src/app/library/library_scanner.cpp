@@ -87,10 +87,11 @@ void LibraryScanner::startScan() {
 
             // Check against content database
 
-            if (auto ext = entry.path().extension();
-              ext.string() == ".mod" || ext.string() == ".ips" ||
-              ext.string() == ".ups" || ext.string() == ".bps" ||
-              ext.string() == ".ups") {
+            auto ext = QString::fromStdString(entry.path().extension().string()).toLower();
+
+            if (ext == ".mod" || ext == ".ips" ||
+                ext == ".ups" || ext == ".bps" ||
+                ext == ".ups") {
               // std::vector<char> contents(filesize);
               // std::ifstream file(entry.path(), std::ios::binary);
               //
@@ -151,19 +152,19 @@ void LibraryScanner::startScan() {
               // };
 
               // scan_results.new_entries.emplace_back(e);
-            } else if (ext.string() == ".smc" || ext.string() == ".n64" ||
-                       ext.string() == ".v64" || ext.string() == ".z64" ||
-                       ext.string() == ".gb" || ext.string() == ".gbc" ||
-                       ext.string() == ".gba" || ext.string() == ".sfc" ||
-                       ext.string() == ".nes" || ext.string() == ".gg" ||
-                       ext.string() == ".sms" || ext.string() == ".nds" ||
-                       ext.string() == ".iso" || ext.string() == ".md") {
+            } else if (ext == ".smc" || ext == ".n64" ||
+                       ext == ".v64" || ext == ".z64" ||
+                       ext == ".gb" || ext == ".gbc" ||
+                       ext == ".gba" || ext == ".sfc" ||
+                       ext == ".nes" || ext == ".gg" ||
+                       ext == ".sms" || ext == ".nds" ||
+                       ext == ".iso" || ext == ".md") {
               auto platforms = content_database_->getMatchingPlatforms(
-                {.supportedExtensions = {ext.string()}});
+                {.supportedExtensions = {ext.toStdString()}});
 
               if (platforms.empty()) {
                 printf("File extension not recognized: %s\n",
-                       ext.string().c_str());
+                       ext.toStdString().c_str());
                 continue;
               }
 
