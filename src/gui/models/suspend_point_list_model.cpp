@@ -9,50 +9,50 @@ namespace firelight::emulation {
         m_items.emplace_back(Item{
             .datetime = "none",
             .locked = false,
-            .hasData = false,
-            .imageUrl = ""
+            .imageUrl = "",
+            .hasData = false
         });
         m_items.emplace_back(Item{
             .datetime = "none",
             .locked = false,
-            .hasData = false,
-            .imageUrl = ""
+            .imageUrl = "",
+            .hasData = false
         });
         m_items.emplace_back(Item{
             .datetime = "none",
             .locked = false,
-            .hasData = false,
-            .imageUrl = ""
+            .imageUrl = "",
+            .hasData = false
         });
         m_items.emplace_back(Item{
             .datetime = "none",
             .locked = false,
-            .hasData = false,
-            .imageUrl = ""
+            .imageUrl = "",
+            .hasData = false
         });
         m_items.emplace_back(Item{
             .datetime = "none",
             .locked = false,
-            .hasData = false,
-            .imageUrl = ""
+            .imageUrl = "",
+            .hasData = false
         });
         m_items.emplace_back(Item{
             .datetime = "none",
             .locked = false,
-            .hasData = false,
-            .imageUrl = ""
+            .imageUrl = "",
+            .hasData = false
         });
         m_items.emplace_back(Item{
             .datetime = "none",
             .locked = false,
-            .hasData = false,
-            .imageUrl = ""
+            .imageUrl = "",
+            .hasData = false
         });
         m_items.emplace_back(Item{
             .datetime = "none",
             .locked = false,
-            .hasData = false,
-            .imageUrl = ""
+            .imageUrl = "",
+            .hasData = false
         });
     }
 

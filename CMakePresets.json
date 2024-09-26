@@ -20,16 +20,17 @@
       "binaryDir": "build/debug-win",
       "toolchainFile": "C:/Users/alexs/git/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "environment": {
-        "VCPKG_DEFAULT_TRIPLET": "x64-mingw-static",
-        "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-static",
-        "VCPKG_DEFAULT_TARGET_TRIPLET": "x64-mingw-static",
-        "PATH": "C:\\msys64\\mingw64\\bin;$env{HOME}/ninja/bin:$penv{PATH}"
+        "VCPKG_DEFAULT_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_DEFAULT_TARGET_TRIPLET": "x64-mingw-dynamic"
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "VCPKG_LIBRARY_LINKAGE": "static",
-        "VCPKG_TARGET_TRIPLET": "x64-mingw-static",
-        "VCPKG_HOST_TRIPLET": "x64-mingw-static"
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_HOST_TRIPLET": "x64-mingw-dynamic",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
       }
     },
     {

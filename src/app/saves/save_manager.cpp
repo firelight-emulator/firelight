@@ -211,10 +211,10 @@ namespace firelight::saves {
       db::SuspendPointMetadata newMetadata{
         .contentId = entry->contentId,
         .saveSlotNumber = static_cast<unsigned int>(m_currentSuspendPointListSaveSlotNumber),
-        .locked = item->locked,
         .slotNumber = static_cast<unsigned int>(slotNumber),
         .lastModifiedAt = static_cast<uint64_t>(ms),
-        .createdAt = static_cast<uint64_t>(ms)
+        .createdAt = static_cast<uint64_t>(ms),
+        .locked = item->locked
       };
 
       m_userdataDatabase.createSuspendPointMetadata(newMetadata);
@@ -279,10 +279,10 @@ namespace firelight::saves {
       db::SuspendPointMetadata newMetadata{
         .contentId = entry.contentId,
         .saveSlotNumber = suspendPoint.saveSlotNumber,
-        .locked = suspendPoint.locked,
         .slotNumber = slotNumber,
         .lastModifiedAt = static_cast<uint64_t>(ms),
-        .createdAt = static_cast<uint64_t>(ms)
+        .createdAt = static_cast<uint64_t>(ms),
+        .locked = suspendPoint.locked
       };
 
       m_userdataDatabase.createSuspendPointMetadata(newMetadata);
@@ -357,10 +357,10 @@ namespace firelight::saves {
 
     return SuspendPoint{
       .state = fileContents,
-      .image = image,
-      .timestamp = created,
-      .locked = locked,
       .retroachievementsState = rcheevosData,
+      .timestamp = created,
+      .image = image,
+      .locked = locked,
     };
   }
 

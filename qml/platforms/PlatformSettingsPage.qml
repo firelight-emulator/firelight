@@ -48,6 +48,12 @@ FocusScope {
     }
 
     Component {
+        id: nintendoDsSettings
+        NintendoDsSettings {
+        }
+    }
+
+    Component {
         id: gamegearSettings
         GameGearSettings {
         }
@@ -299,6 +305,42 @@ FocusScope {
                     }
                     Text {
                         text: qsTr("Nintendo 64")
+                        height: parent.height
+                        font.pointSize: 14
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Normal
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                        color: "white"
+                    }
+
+                }
+
+            }
+
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 80
+
+                onClicked: function () {
+                    root.StackView.view.push(nintendoDsSettings)
+                }
+                hoverEnabled: true
+                background: Rectangle {
+                    color: parent.hovered ? "#333333" : "transparent"
+                    radius: 8
+                }
+                contentItem: Row {
+                    spacing: 8
+                    Image {
+                        source: "file:system/_img/DS.svg"
+                        width: parent.height
+                        height: parent.height
+                        fillMode: Image.PreserveAspectFit
+                        sourceSize.height: 128
+                    }
+                    Text {
+                        text: qsTr("Nintendo DS")
                         height: parent.height
                         font.pointSize: 14
                         font.family: Constants.regularFontFamily

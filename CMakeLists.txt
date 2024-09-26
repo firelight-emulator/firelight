@@ -40,6 +40,9 @@ find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(FFmpeg REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
 
 qt6_standard_project_setup(REQUIRES 6.7)
 
@@ -130,14 +133,15 @@ add_library(firelight_lib
         src/gui/input_method_detection_handler.cpp
 )
 
-target_include_directories(firelight_lib PRIVATE ${SDL2_INCLUDE_DIRS} include)
+target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
+target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS})
 
 if (WIN32)
     target_link_libraries(firelight_lib PUBLIC mingw32)
 endif ()
 
 target_link_libraries(firelight_lib PUBLIC
-        SDL2::SDL2-static
+        SDL2::SDL2
         z
         nlohmann_json::nlohmann_json
         Qt6::Gui
@@ -149,11 +153,15 @@ target_link_libraries(firelight_lib PUBLIC
         Qt6::Charts
         Qt6::QuickTest
         Qt6::Multimedia
+        #        PkgConfig::FFMPEG
+        ${FFMPEG_LIBRARIES}
         spdlog::spdlog
         cpr::cpr
         library
         patching
         rcheevos)
+
+message("FFMPEG_LIBRARIES: ${FFMPEG_LIBRARIES}")
 
 # main code
 qt6_add_executable(firelight

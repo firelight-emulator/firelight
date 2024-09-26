@@ -224,7 +224,8 @@ namespace firelight {
     },
     {
       10, {
-        {"melonds_homebrew_sdcard", "disabled"}
+        {"melonds_homebrew_sdcard", "disabled"},
+        {"melonds_number_of_screen_layouts", "8"}
       }
     }
   };
