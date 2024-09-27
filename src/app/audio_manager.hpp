@@ -3,11 +3,13 @@
 #include <array>
 #include <QBuffer>
 #include <QAudioSink>
+#include <qelapsedtimer.h>
 #include <queue>
 
 extern "C" {
 #include <libswresample/swresample.h>
 #include <libavutil/samplefmt.h>
+#include <libavutil/opt.h>
 }
 
 
@@ -25,23 +27,23 @@ public:
 
     ~AudioManager() override;
 
-    QBuffer m_buffer{};
-
 private:
+    int m_frameNumber = 0;
     SwrContext *m_swrContext = nullptr;
     QAudioSink *m_audioSink = nullptr;
     QIODevice *m_audioDevice = nullptr;
-    std::array<int16_t, 4096> m_audioBuffer{};
-    int m_audioBufferIndex = 0;
+
+    double m_changeThing = 0.0;
+    float m_deltaFrames = 0;
+
     size_t m_bufferSize = 0;
-    std::queue<int16_t> m_audioBuffer2;
-    SDL_AudioDeviceID audioDevice = 0;
     bool m_isMuted = false;
+    size_t m_numSamples = 0;
+
+    uint64_t m_avgNumFrames = 0;
 
     int m_sampleRate = 0;
 
     void initializeResampler(int64_t in_channel_layout, int in_sample_rate, enum AVSampleFormat in_sample_fmt,
                              int64_t out_channel_layout, int out_sample_rate, enum AVSampleFormat out_sample_fmt);
-
-    int resampleAudio(uint8_t **in_data, int in_nb_samples, uint8_t **out_data, int out_nb_samples, int delta_samples);
 };
