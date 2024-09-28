@@ -12,6 +12,8 @@ namespace firelight::Input {
     Q_OBJECT
 
   public:
+    void setKeyboardRetropad(libretro::IRetroPad *keyboard);
+
     void handleSDLControllerEvent(const SDL_Event &event);
 
     void refreshControllerList();
@@ -37,6 +39,7 @@ namespace firelight::Input {
     void controllerOrderChanged();
 
   private:
+    libretro::IRetroPad *m_keyboard = nullptr;
     int m_numControllers = 0;
     std::array<std::unique_ptr<Controller>, 32> m_controllers{};
 

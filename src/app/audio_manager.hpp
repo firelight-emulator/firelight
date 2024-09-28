@@ -34,7 +34,7 @@ private:
     QIODevice *m_audioDevice = nullptr;
 
     double m_changeThing = 0.0;
-    float m_deltaFrames = 0;
+    uint64_t m_deltaFrames = 0;
 
     size_t m_bufferSize = 0;
     bool m_isMuted = false;

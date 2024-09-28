@@ -3,11 +3,12 @@
 #include "controller_manager.hpp"
 
 #include <qthread.h>
+#include <QWindow>
 
 namespace firelight {
   class SdlEventLoop final : public QThread {
   public:
-    explicit SdlEventLoop(QObject *window, Input::ControllerManager *manager);
+    explicit SdlEventLoop(QWindow *window, Input::ControllerManager *manager);
 
     ~SdlEventLoop() override;
 

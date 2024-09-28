@@ -27,6 +27,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "VCPKG_LIBRARY_LINKAGE": "static",
+        "VCPKG_DISABLE_COMPILER_TRACKING": "ON",
         "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
         "VCPKG_HOST_TRIPLET": "x64-mingw-dynamic",
         "CMAKE_C_COMPILER": "clang",

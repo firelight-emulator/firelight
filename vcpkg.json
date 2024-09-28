@@ -4,6 +4,7 @@
     "cpr",
     "gtest",
     "spdlog",
-    "sdl2"
+    "sdl2",
+    "libarchive"
   ]
 }

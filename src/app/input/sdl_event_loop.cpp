@@ -10,15 +10,19 @@
 #include <SDL.h>
 #include <SDL_hints.h>
 #include <spdlog/spdlog.h>
+#include "keyboard_input_handler.hpp"
 
 namespace firelight {
-  SdlEventLoop::SdlEventLoop(QObject *window, Input::ControllerManager *manager)
+  SdlEventLoop::SdlEventLoop(QWindow *window, Input::ControllerManager *manager)
     : m_window(window), m_controllerManager(manager) {
+    auto *keyboard = new input::KeyboardInputHandler();
+    m_window->installEventFilter(keyboard);
+    manager->setKeyboardRetropad(keyboard);
+
     SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 
-    if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
-                 SDL_INIT_TIMER) < 0) {
+    if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC | SDL_INIT_TIMER) < 0) {
       printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
     }
 
@@ -41,7 +45,7 @@ namespace firelight {
 
   void SdlEventLoop::run() {
     processEvents();
-    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_HAPTIC |
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC |
                       SDL_INIT_TIMER);
     SDL_Quit();
   }
@@ -51,6 +55,10 @@ namespace firelight {
       SDL_Event ev;
       while (SDL_WaitEvent(&ev)) {
         switch (ev.type) {
+          case SDL_KEYDOWN:
+          case SDL_KEYUP:
+            printf("key: %d, state: %d\n", ev.key.keysym.sym, ev.key.state);
+            break;
           case SDL_CONTROLLERDEVICEADDED:
           case SDL_CONTROLLERDEVICEREMOVED:
             m_controllerManager->handleSDLControllerEvent(ev);

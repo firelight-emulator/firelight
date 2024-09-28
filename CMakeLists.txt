@@ -9,6 +9,7 @@ project(firelight
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
 set(CMAKE_OSX_ARCHITECTURES "arm64")
+set(VCPKG_DISABLE_COMPILER_TRACKING ON)
 
 set(CMAKE_BUILD_RPATH ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
 
@@ -41,6 +42,7 @@ find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(FFmpeg REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
+find_package(LibArchive REQUIRED)
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
 
@@ -131,6 +133,7 @@ add_library(firelight_lib
         src/gui/input_method_detection_handler.cpp
         src/gui/input_method_detection_handler.hpp
         src/gui/input_method_detection_handler.cpp
+        src/app/input/keyboard_input_handler.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
@@ -155,6 +158,7 @@ target_link_libraries(firelight_lib PUBLIC
         Qt6::Multimedia
         #        PkgConfig::FFMPEG
         ${FFMPEG_LIBRARIES}
+        LibArchive::LibArchive
         spdlog::spdlog
         cpr::cpr
         library

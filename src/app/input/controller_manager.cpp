@@ -9,6 +9,10 @@
 #include <string>
 
 namespace firelight::Input {
+  void ControllerManager::setKeyboardRetropad(libretro::IRetroPad *keyboard) {
+    m_keyboard = keyboard;
+  }
+
   void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
     switch (event.type) {
       case SDL_CONTROLLERDEVICEADDED: {
@@ -46,7 +50,12 @@ namespace firelight::Input {
 
   std::optional<libretro::IRetroPad *>
   ControllerManager::getRetropadForPlayerIndex(const int t_player) {
-    return getControllerForPlayer(t_player);
+    const auto controller = getControllerForPlayer(t_player);
+    if (!controller && m_keyboard) {
+      return m_keyboard;
+    }
+
+    return std::nullopt;
   }
 
   void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
