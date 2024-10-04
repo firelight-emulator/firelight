@@ -36,6 +36,11 @@
 #include "gui/playlist_item_model.hpp"
 #include "gui/window_resize_handler.hpp"
 #include "gui/models/shop/shop_item_model.hpp"
+#include <archive.h>
+#include <archive_entry.h>
+
+#include "app/library/sqlite_user_library.hpp"
+#include "gui/models/library/entry_list_model.hpp"
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
@@ -54,6 +59,27 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
 
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
+
+  // struct archive *a;
+  // struct archive_entry *entry;
+  // int r;
+  //
+  // a = archive_read_new();
+  // archive_read_support_filter_all(a);
+  // archive_read_support_format_all(a);
+  // r = archive_read_open_filename(a, "Nintendo - Game Boy Advance.zip", 10240); // Note 1
+  // if (r != ARCHIVE_OK)
+  //   exit(1);
+  // while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+  //   printf("%s\n", archive_entry_pathname(entry));
+  //   archive_read_data_skip(a); // Note 2
+  // }
+  // r = archive_read_free(a); // Note 3
+  // if (r != ARCHIVE_OK)
+  //   exit(1);
+  //
+  // return 0;
+
 
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
@@ -77,10 +103,6 @@ int main(int argc, char *argv[]) {
 
   auto defaultAppDataPathString = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
   auto defaultAppDataPath = std::filesystem::path(defaultAppDataPathString.toStdString());
-
-
-  // firelight::library::LibraryScanner2 libScanner2;
-  // libScanner2.scanAllPaths();
 
   // TODO:
   //  Roms
@@ -144,6 +166,17 @@ int main(int argc, char *argv[]) {
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
+  firelight::library::SqliteUserLibrary
+      userLibrary(QString::fromStdString(defaultAppDataPath.string() + "/library.db"));
+  firelight::library::LibraryScanner2 libScanner2(userLibrary);
+
+  QObject::connect(&userLibrary, &firelight::library::SqliteUserLibrary::entryCreated,
+                   [](int id, const QString &contentHash) -> void {
+                     spdlog::info("Entry created: {}", contentHash.toStdString());
+                   });
+
+  firelight::ManagerAccessor::setUserLibrary(&userLibrary);
+
   firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database, *gameImageProvider);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
@@ -168,6 +201,8 @@ int main(int argc, char *argv[]) {
                                             &userdata_database);
   firelight::gui::LibrarySortFilterModel libSortModel;
   libSortModel.setSourceModel(&libModel);
+
+  firelight::library::EntryListModel entryListModel(userLibrary);
 
   firelight::gui::PlatformListModel platformListModel;
   firelight::shop::ShopItemModel shopItemModel(contentDatabase);
@@ -218,6 +253,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("platform_model", &platformListModel);
   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
   engine.rootContext()->setContextProperty("SaveManager", &saveManager);
+  engine.rootContext()->setContextProperty("LibraryEntryModel", &entryListModel);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",

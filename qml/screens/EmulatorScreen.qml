@@ -18,8 +18,8 @@ FocusScope {
 
     signal gameStopped()
 
-    function loadGame(id) {
-        emulatorStack.pushItem(emulatorComponent, {entryId: id}, StackView.Immediate)
+    function loadGame(id, hash) {
+        emulatorStack.pushItem(emulatorComponent, {entryId: id, contentHash: hash}, StackView.Immediate)
         // emulator.loadGame(id)
     }
 
@@ -130,6 +130,7 @@ FocusScope {
         FocusScope {
             id: scope
             required property int entryId
+            required property string contentHash
 
             property real blurAmount: 0
             property real dimmerOpacity: 0
@@ -222,7 +223,7 @@ FocusScope {
                 emulatorStack.pushItem(nowPlayingPage, {
                     entryId: scope.entryId,
                     undoEnabled: emulator.loadedSuspendPointAtLeastOnce,
-                    contentHash: ""
+                    contentHash: scope.contentHash
                 }, StackView.PushTransition)
                 event.accepted = true
             }
@@ -232,7 +233,7 @@ FocusScope {
                     emulatorStack.pushItem(nowPlayingPage, {
                         entryId: scope.entryId,
                         undoEnabled: emulator.loadedSuspendPointAtLeastOnce,
-                        contentHash: ""
+                        contentHash: scope.contentHash
                     }, StackView.PushTransition)
                     event.accepted = true
                 }
@@ -266,9 +267,10 @@ FocusScope {
                 // property bool blurred: emulatorStack.currentItem === nowPlayingPage
 
                 property int entryId: scope.entryId
+                property string contentHash: scope.contentHash
 
                 Component.onCompleted: {
-                    emulator.loadGame(entryId)
+                    emulator.loadGame(entryId, contentHash)
                 }
 
                 onEmulationStarted: function () {

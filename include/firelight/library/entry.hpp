@@ -1,26 +1,24 @@
 #pragma once
 
-#include <string>
+#include <QString>
 
 namespace firelight::library {
-    enum ItemType {
-        ROM,
-        PATCH
-    };
-
     struct Entry {
         int id = -1;
-        std::string displayName;
-        std::string contentId;
-        std::string fileMd5;
-        std::string filePath;
-
-        ItemType itemType;
-        unsigned itemId;
-
+        QString displayName;
+        QString contentHash;
+        unsigned platformId = 0;
         unsigned activeSaveSlot = 1;
         bool hidden = false;
-
-        unsigned createdAt;
+        QString icon1x1SourceUrl;
+        QString boxartFrontSourceUrl;
+        QString boxartBackSourceUrl;
+        QString description;
+        unsigned releaseYear = 0;
+        QString developer;
+        QString publisher;
+        QString genres;
+        QString regionIds;
+        unsigned createdAt = 0;
     };
 } // namespace firelight::library

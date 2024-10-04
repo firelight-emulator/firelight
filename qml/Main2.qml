@@ -23,8 +23,30 @@ ApplicationWindow {
 
     title: qsTr("Firelight")
 
+    // background: Rectangle {
+    //     color: ColorPalette.neutral1000
+    // }
+
     background: Rectangle {
+        height: window.height
+        width: window.width
         color: ColorPalette.neutral1000
+        // AnimatedImage {
+        //     id: mainBackground
+        //     source: "https://cdn.booooooom.com/wp-content/uploads/2022/07/PATTERN_11.gif"
+        //     fillMode: Image.PreserveAspectCrop
+        //     anchors.fill: parent
+        //
+        //     layer.enabled: true
+        //     layer.effect: MultiEffect {
+        //         source: mainBackground
+        //         anchors.fill: mainBackground
+        //         blurEnabled: true
+        //         blurMultiplier: 1.0
+        //         blurMax: 64
+        //         blur: 0.5
+        //     }
+        // }
     }
 
     Connections {
@@ -264,6 +286,7 @@ ApplicationWindow {
         running: false
 
         property int entryId: -1
+        property string contentHash
 
         PropertyAction {
             target: overlay
@@ -289,7 +312,7 @@ ApplicationWindow {
         ScriptAction {
             script: {
                 screenStack.popCurrentItem(StackView.Immediate)
-                screenStack.currentItem.loadGame(gameStartAnimation.entryId)
+                screenStack.currentItem.loadGame(gameStartAnimation.entryId, gameStartAnimation.contentHash)
                 // emulatorScreen
             }
         }
@@ -309,8 +332,9 @@ ApplicationWindow {
         id: homeScreen
 
         HomeScreen {
-            onStartGame: function (entryId) {
+            onStartGame: function (entryId, hash) {
                 gameStartAnimation.entryId = entryId
+                gameStartAnimation.contentHash = hash
                 gameStartAnimation.running = true
             }
         }

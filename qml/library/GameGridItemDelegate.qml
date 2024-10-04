@@ -1,11 +1,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 
 FocusScope {
     id: myDelegate
 
-    signal startGame(entryId: int)
+    signal startGame(entryId: int, hash: string)
 
     signal openDetails(entryId: int)
 
@@ -43,7 +44,7 @@ FocusScope {
                 } else if (button === Qt.LeftButton) {
                     // Router.navigateTo("library/" + myDelegate.model.id + "/details")
                     // myDelegate.openDetails(myDelegate.model.id)
-                    myDelegate.startGame(myDelegate.model.id)
+                    myDelegate.startGame(myDelegate.model.id, myDelegate.model.contentHash)
                 }
             }
         }
@@ -53,9 +54,9 @@ FocusScope {
             objectName: "rightClickMenu"
 
             RightClickMenuItem {
-                text: "Play " + myDelegate.model.display_name
+                text: "Play " + myDelegate.model.displayName
                 onTriggered: {
-                    myDelegate.startGame(myDelegate.model.id)
+                    myDelegate.startGame(myDelegate.model.id, myDelegate.model.contentHash)
                 }
             }
 
@@ -100,13 +101,46 @@ FocusScope {
                 id: image
                 Layout.preferredHeight: parent.width
                 Layout.fillWidth: true
-                Layout.leftMargin: -2
-                Layout.rightMargin: -2
+                radius: 8
 
                 color: "grey"
+
+                Image {
+                    id: img
+                    source: myDelegate.model.icon1x1SourceUrl
+                    fillMode: Image.PreserveAspectFit
+                    anchors.fill: parent
+                    visible: false
+                }
+
+                MultiEffect {
+                    source: img
+                    anchors.fill: img
+                    maskEnabled: true
+                    maskSource: mask
+                }
+
+                Item {
+                    id: mask
+                    width: img.width
+                    height: img.height
+                    layer.enabled: true
+                    smooth: true
+                    visible: false
+
+                    Rectangle {
+                        width: img.width
+                        height: img.height
+                        topLeftRadius: 8
+                        topRightRadius: 8
+                        bottomLeftRadius: 8
+                        bottomRightRadius: 8
+                        color: "black"
+                    }
+                }
             }
             Text {
-                text: myDelegate.model.display_name
+                text: myDelegate.model.displayName
                 font.pointSize: 11
                 font.weight: Font.Bold
                 // font.family: Constants.regularFontFamily
@@ -118,7 +152,7 @@ FocusScope {
             }
 
             Text {
-                text: myDelegate.model.platform_name
+                text: myDelegate.model.platformId
                 font.pointSize: 10
                 font.weight: Font.Medium
                 // font.family: Constants.regularFontFamily

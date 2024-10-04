@@ -11,44 +11,23 @@ FocusScope {
 
     signal openDetails(entryId: int)
 
-    signal startGame(entryId: int)
+    signal startGame(entryId: int, hash: string)
 
-    GridView {
+    ListView {
         id: listView
         objectName: "GridView"
         clip: true
-        width: Math.min(Math.floor(parent.width / cellContentWidth), 7) * cellContentWidth
+        width: parent.width * 0.8
         anchors.horizontalCenter: parent.horizontalCenter
         height: parent.height
+
+        ScrollBar.vertical: ScrollBar {
+            policy: ScrollBar.AlwaysOn
+        }
 
         preferredHighlightBegin: 0.33 * listView.height
         preferredHighlightEnd: 0.66 * listView.height
         highlightRangeMode: GridView.ApplyRange
-
-        populate: Transition {
-            id: popTransition
-            SequentialAnimation {
-                PauseAnimation {
-                    duration: popTransition.ViewTransition.index * 10
-                }
-                ParallelAnimation {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: 100
-                        easing.type: Easing.InOutQuad
-                    }
-                    PropertyAnimation {
-                        property: "y"
-                        from: popTransition.ViewTransition.destination.y + 20
-                        to: popTransition.ViewTransition.destination.y
-                        duration: 100
-                        easing.type: Easing.InOutQuad
-                    }
-                }
-            }
-        }
 
         contentY: 0
 
@@ -76,30 +55,165 @@ FocusScope {
             }
 
         }
-
-        readonly property int cellSpacing: 12
-        readonly property int cellContentWidth: 180 + cellSpacing
-        readonly property int cellContentHeight: 260 + cellSpacing
-
-        cellWidth: cellContentWidth
-        cellHeight: cellContentHeight
         focus: true
 
         currentIndex: 0
         boundsBehavior: Flickable.StopAtBounds
 
-        delegate: GameGridItemDelegate {
-            opacity: 1
-            cellSpacing: listView.cellSpacing
-            cellWidth: listView.cellContentWidth
-            cellHeight: listView.cellContentHeight
+        // delegate: GameGridItemDelegate {
+        //     opacity: 1
+        //     cellSpacing: listView.cellSpacing
+        //     cellWidth: listView.cellContentWidth
+        //     cellHeight: listView.cellContentHeight
+        //
+        //     Component.onCompleted: {
+        //         openDetails.connect(page.openDetails)
+        //         startGame.connect(page.startGame)
+        //     }
+        // }
+        delegate: FocusScope {
+            required property var index
+            required property var model
+            width: ListView.view.width
+            height: 72
+            Button {
+                id: thingg
+                anchors.fill: parent
+                background: Rectangle {
+                    // color: "#25282C"
+                    color: "transparent"
+                }
 
-            Component.onCompleted: {
-                openDetails.connect(page.openDetails)
-                startGame.connect(page.startGame)
+                contentItem: RowLayout {
+                    spacing: 12
+                    Rectangle {
+                        Layout.fillHeight: true
+                        Layout.preferredWidth: 72 - thingg.verticalPadding * 2
+                        color: "grey"
+
+                        Image {
+                            source: model.icon1x1SourceUrl
+                            fillMode: Image.PreserveAspectFit
+                            anchors.fill: parent
+                        }
+                    }
+                    Text {
+                        Layout.fillHeight: true
+                        Layout.preferredWidth: 500
+                        Layout.minimumWidth: 300
+                        text: model.displayName
+                        color: "white"
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                        font.pixelSize: 16
+                        font.weight: Font.DemiBold
+                        font.family: Constants.regularFontFamily
+                    }
+                    Text {
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        // text: model.platformId
+                        text: "Nintendo 64"
+                        color: ColorPalette.neutral400
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 15
+                        font.weight: Font.Medium
+                        font.family: Constants.regularFontFamily
+                    }
+                }
             }
         }
     }
+
+    // GridView {
+    //     id: listView
+    //     objectName: "GridView"
+    //     clip: true
+    //     width: Math.min(Math.floor(parent.width / cellContentWidth), 7) * cellContentWidth
+    //     anchors.horizontalCenter: parent.horizontalCenter
+    //     height: parent.height
+    //
+    //     preferredHighlightBegin: 0.33 * listView.height
+    //     preferredHighlightEnd: 0.66 * listView.height
+    //     highlightRangeMode: GridView.ApplyRange
+    //
+    //     populate: Transition {
+    //         id: popTransition
+    //         SequentialAnimation {
+    //             PauseAnimation {
+    //                 duration: popTransition.ViewTransition.index * 10
+    //             }
+    //             ParallelAnimation {
+    //                 PropertyAnimation {
+    //                     property: "opacity"
+    //                     from: 0
+    //                     to: 1
+    //                     duration: 100
+    //                     easing.type: Easing.InOutQuad
+    //                 }
+    //                 PropertyAnimation {
+    //                     property: "y"
+    //                     from: popTransition.ViewTransition.destination.y + 20
+    //                     to: popTransition.ViewTransition.destination.y
+    //                     duration: 100
+    //                     easing.type: Easing.InOutQuad
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     contentY: 0
+    //
+    //     header: Pane {
+    //         id: header
+    //
+    //         width: parent.width
+    //         height: 120
+    //         background: Rectangle {
+    //             color: "transparent"
+    //             // border.color: "red"
+    //         }
+    //
+    //         horizontalPadding: 8
+    //
+    //         Text {
+    //             anchors.fill: parent
+    //             text: "All Games"
+    //             color: "white"
+    //             font.pointSize: 26
+    //             font.family: Constants.regularFontFamily
+    //             font.weight: Font.DemiBold
+    //             horizontalAlignment: Text.AlignLeft
+    //             verticalAlignment: Text.AlignVCenter
+    //         }
+    //
+    //     }
+    //
+    //     readonly property int cellSpacing: 8
+    //     readonly property int cellContentWidth: 180 + cellSpacing
+    //     readonly property int cellContentHeight: 240 + cellSpacing
+    //
+    //     cellWidth: cellContentWidth
+    //     cellHeight: cellContentHeight
+    //     focus: true
+    //
+    //     currentIndex: 0
+    //     boundsBehavior: Flickable.StopAtBounds
+    //
+    //     delegate: GameGridItemDelegate {
+    //         opacity: 1
+    //         cellSpacing: listView.cellSpacing
+    //         cellWidth: listView.cellContentWidth
+    //         cellHeight: listView.cellContentHeight
+    //
+    //         Component.onCompleted: {
+    //             openDetails.connect(page.openDetails)
+    //             startGame.connect(page.startGame)
+    //         }
+    //     }
+    // }
 
     // Flickable {
     //     width: parent.width

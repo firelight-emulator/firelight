@@ -37,8 +37,8 @@ LibraryScanner::LibraryScanner(
           });
 
   // TODO: Probably don't need to scan everything every time
-  connect(&directory_watcher_, &QFileSystemWatcher::directoryChanged,
-          [&](const QString &) { startScan(); });
+  // connect(&directory_watcher_, &QFileSystemWatcher::directoryChanged,
+  //         [&](const QString &) { startScan(); });
 }
 
 QAbstractListModel *LibraryScanner::scanDirectoryModel() const {

@@ -57,7 +57,7 @@ namespace firelight::achievements {
 
     bool expectToBeLoggedIn() const;
 
-    void doFrame(::libretro::Core *core, const db::LibraryEntry &currentEntry);
+    void doFrame(::libretro::Core *core);
 
     std::vector<uint8_t> serializeState();
 

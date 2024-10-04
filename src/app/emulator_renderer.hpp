@@ -55,7 +55,10 @@ private:
     QByteArray m_gameData;
     QByteArray m_saveData;
     QString m_corePath;
-    firelight::db::LibraryEntry m_currentEntry;
+    QString m_contentHash;
+    QString m_contentPath;
+    int m_saveSlotNumber;
+    int m_platformId;
 
     // Default according to libretro docs
     QImage::Format m_pixelFormat = QImage::Format_RGB16;

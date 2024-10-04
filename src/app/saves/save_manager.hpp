@@ -23,17 +23,18 @@ namespace firelight::saves {
                     db::IUserdataDatabase &userdataDatabase,
                     gui::GameImageProvider &gameImageProvider);
 
-        QFuture<bool> writeSaveDataForEntry(db::LibraryEntry &entry,
-                                            Savefile &saveData) const;
+        QFuture<bool> writeSaveData(const QString &contentHash, int saveSlotNumber,
+                                    const Savefile &saveData);
 
-        std::optional<Savefile> readSaveDataForEntry(db::LibraryEntry &entry) const;
+        std::optional<Savefile> readSaveData(const QString &contentHash, int saveSlotNumber) const;
 
-        QFuture<bool> writeSuspendPointForEntry(const db::LibraryEntry &entry, int index,
-                                                const SuspendPoint &suspendPoint);
 
-        std::optional<SuspendPoint> readSuspendPointForEntry(db::LibraryEntry &entry, int saveSlotNumber, int index);
+        QFuture<bool> writeSuspendPoint(const QString &contentHash, int saveSlotNumber, int index,
+                                        const SuspendPoint &suspendPoint);
 
-        Q_INVOKABLE QAbstractListModel *getSuspendPointListModel(int entryId, int saveSlotNumber = -1);
+        std::optional<SuspendPoint> readSuspendPoint(const QString &contentHash, int saveSlotNumber, int index);
+
+        Q_INVOKABLE QAbstractListModel *getSuspendPointListModel(const QString &contentHash, int saveSlotNumber = -1);
 
         Q_INVOKABLE void clearSuspendPointListModel();
 
@@ -41,13 +42,14 @@ namespace firelight::saves {
         void handleUpdatedSuspendPoint(int index);
 
     private:
-        void writeSuspendPointToDisk(const db::LibraryEntry &entry, int index, const SuspendPoint &suspendPoint);
+        void writeSuspendPointToDisk(const QString &contentHash, int index,
+                                     const SuspendPoint &suspendPoint);
 
-        std::optional<SuspendPoint> readSuspendPointFromDisk(int entryId, int saveSlotNumber, int index);
+        std::optional<SuspendPoint> readSuspendPointFromDisk(const QString &contentHash, int saveSlotNumber, int index);
 
-        void deleteSuspendPointFromDisk(int entryId, int saveSlotNumber, int index);
+        void deleteSuspendPointFromDisk(const QString &contentHash, int saveSlotNumber, int index);
 
-        int m_currentSuspendPointListEntryId = -1;
+        QString m_currentSuspendPointListContentHash;
         int m_currentSuspendPointListSaveSlotNumber = -1;
         std::unique_ptr<emulation::SuspendPointListModel> m_suspendPointListModel;
 

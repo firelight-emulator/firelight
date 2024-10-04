@@ -23,18 +23,16 @@ namespace firelight::saves {
     m_ioThreadPool->setMaxThreadCount(1);
   }
 
-  QFuture<bool> SaveManager::writeSaveDataForEntry(db::LibraryEntry &entry,
-                                                   Savefile &saveData) const {
-    return QtConcurrent::run([this, entry, saveData] {
+  QFuture<bool> SaveManager::writeSaveData(const QString &contentHash, int saveSlotNumber, const Savefile &saveData) {
+    return QtConcurrent::run([this, contentHash, saveSlotNumber, saveData] {
       // TODO: Add some verification that the metadata is correct
       // TODO: Save file could have been deleted, etc
-      auto slot = entry.activeSaveSlot;
 
       auto exists = false;
       db::SavefileMetadata metadata;
 
       auto metadataOpt =
-          m_userdataDatabase.getSavefileMetadata(entry.contentId, slot);
+          m_userdataDatabase.getSavefileMetadata(contentHash.toStdString(), saveSlotNumber);
 
       if (metadataOpt.has_value()) {
         // printf("Metadata exists\n");
@@ -42,8 +40,8 @@ namespace firelight::saves {
         exists = true;
       } else {
         // printf("Metadata DOES NOT exist\n");
-        metadata.contentId = entry.contentId;
-        metadata.slotNumber = slot;
+        metadata.contentId = contentHash.toStdString();
+        metadata.slotNumber = saveSlotNumber;
       }
 
       const auto bytes = saveData.getSaveRamData();
@@ -54,12 +52,12 @@ namespace firelight::saves {
         return true;
       }
 
-      spdlog::info("Writing updated savefile for {} slot {}", entry.contentId,
-                   slot);
+      spdlog::info("Writing updated savefile for {} slot {}", contentHash.toStdString(),
+                   saveSlotNumber);
       metadata.savefileMd5 = savefileMd5;
 
       const auto directory =
-          m_saveDir / metadata.contentId / ("slot" + std::to_string(slot));
+          m_saveDir / metadata.contentId / ("slot" + std::to_string(saveSlotNumber));
       create_directories(directory);
 
       const auto tempSaveFile = directory / "savefile.srm.tmp";
@@ -92,12 +90,9 @@ namespace firelight::saves {
     });
   }
 
-  std::optional<Savefile>
-  SaveManager::readSaveDataForEntry(db::LibraryEntry &entry) const {
-    auto slot = entry.activeSaveSlot;
-
+  std::optional<Savefile> SaveManager::readSaveData(const QString &contentHash, int saveSlotNumber) const {
     const auto directory =
-        m_saveDir / entry.contentId / ("slot" + std::to_string(slot));
+        m_saveDir / contentHash.toStdString() / ("slot" + std::to_string(saveSlotNumber));
     if (!exists(directory)) {
       return std::nullopt;
     }
@@ -126,19 +121,18 @@ namespace firelight::saves {
     return {saveData};
   }
 
-  QFuture<bool> SaveManager::writeSuspendPointForEntry(const db::LibraryEntry &entry, const int index,
-                                                       const SuspendPoint &suspendPoint) {
-    if (entry.id == m_currentSuspendPointListEntryId) {
+  QFuture<bool> SaveManager::writeSuspendPoint(const QString &contentHash, int saveSlotNumber, int index,
+                                               const SuspendPoint &suspendPoint) {
+    if (contentHash == m_currentSuspendPointListContentHash) {
       m_suspendPointListModel->updateData(index, suspendPoint);
     }
 
     // m_suspendPoints[index] = suspendPoint;
-    writeSuspendPointToDisk(entry, index, suspendPoint);
+    writeSuspendPointToDisk(contentHash, index, suspendPoint);
     return {};
   }
 
-  std::optional<SuspendPoint> SaveManager::readSuspendPointForEntry(db::LibraryEntry &entry, int saveSlotNumber,
-                                                                    const int index) {
+  std::optional<SuspendPoint> SaveManager::readSuspendPoint(const QString &contentHash, int saveSlotNumber, int index) {
     if (m_suspendPoints.contains(index)) {
       return m_suspendPoints.at(index);
     }
@@ -146,25 +140,25 @@ namespace firelight::saves {
     return {};
   }
 
-  QAbstractListModel *SaveManager::getSuspendPointListModel(const int entryId, int saveSlotNumber) {
-    if (entryId == m_currentSuspendPointListEntryId && m_suspendPointListModel != nullptr) {
+  QAbstractListModel *SaveManager::getSuspendPointListModel(const QString &contentHash, int saveSlotNumber) {
+    if (contentHash == m_currentSuspendPointListContentHash && m_suspendPointListModel != nullptr) {
       return m_suspendPointListModel.get();
     }
 
     if (m_suspendPointListModel != nullptr) {
       m_suspendPointListModel.reset();
-      m_currentSuspendPointListEntryId = -1;
+      m_currentSuspendPointListContentHash.clear();
       m_currentSuspendPointListSaveSlotNumber = -1;
     }
 
-    m_currentSuspendPointListEntryId = entryId;
+    m_currentSuspendPointListContentHash = contentHash;
     m_currentSuspendPointListSaveSlotNumber = saveSlotNumber;
     m_suspendPointListModel = std::make_unique<emulation::SuspendPointListModel>(m_gameImageProvider, this);
     connect(m_suspendPointListModel.get(), &emulation::SuspendPointListModel::suspendPointUpdated,
             this, &SaveManager::handleUpdatedSuspendPoint);
 
     for (int i = 0; i < 8; ++i) {
-      auto p = readSuspendPointFromDisk(entryId, saveSlotNumber, i);
+      auto p = readSuspendPointFromDisk(contentHash, saveSlotNumber, i);
       if (p.has_value()) {
         m_suspendPoints[i] = p.value();
         m_suspendPointListModel->updateData(i, p.value());
@@ -176,12 +170,12 @@ namespace firelight::saves {
 
   void SaveManager::clearSuspendPointListModel() {
     m_suspendPointListModel.reset();
-    m_currentSuspendPointListEntryId = -1;
+    m_currentSuspendPointListContentHash.clear();
   }
 
   void SaveManager::handleUpdatedSuspendPoint(int index) {
     auto slotNumber = index + 1;
-    if (m_currentSuspendPointListEntryId == -1 || m_currentSuspendPointListSaveSlotNumber == -1) {
+    if (m_currentSuspendPointListContentHash.isEmpty() || m_currentSuspendPointListSaveSlotNumber == -1) {
       return;
     }
 
@@ -191,16 +185,11 @@ namespace firelight::saves {
     }
 
     if (!item->hasData) {
-      deleteSuspendPointFromDisk(m_currentSuspendPointListEntryId, m_currentSuspendPointListSaveSlotNumber, index);
+      deleteSuspendPointFromDisk(m_currentSuspendPointListContentHash, m_currentSuspendPointListSaveSlotNumber, index);
       return;
     }
 
-    auto entry = m_libraryDatabase.getLibraryEntry(m_currentSuspendPointListEntryId);
-    if (!entry.has_value()) {
-      return;
-    }
-
-    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId,
+    auto metadata = m_userdataDatabase.getSuspendPointMetadata(m_currentSuspendPointListContentHash.toStdString(),
                                                                m_currentSuspendPointListSaveSlotNumber, slotNumber);
     if (metadata.has_value()) {
       metadata->lastModifiedAt = QDateTime::currentMSecsSinceEpoch();
@@ -209,8 +198,8 @@ namespace firelight::saves {
     } else {
       auto ms = QDateTime::currentMSecsSinceEpoch();
       db::SuspendPointMetadata newMetadata{
-        .contentId = entry->contentId,
-        .saveSlotNumber = static_cast<unsigned int>(m_currentSuspendPointListSaveSlotNumber),
+        .contentId = m_currentSuspendPointListContentHash.toStdString(),
+        .saveSlotNumber = m_currentSuspendPointListSaveSlotNumber,
         .slotNumber = static_cast<unsigned int>(slotNumber),
         .lastModifiedAt = static_cast<uint64_t>(ms),
         .createdAt = static_cast<uint64_t>(ms),
@@ -225,17 +214,18 @@ namespace firelight::saves {
     m_userdataDatabase.updateSuspendPointMetadata(*metadata);
   }
 
-  void SaveManager::writeSuspendPointToDisk(const db::LibraryEntry &entry, int index,
+  void SaveManager::writeSuspendPointToDisk(const QString &contentHash, int index,
                                             const SuspendPoint &suspendPoint) {
     unsigned int slotNumber = index + 1;
     if (suspendPoint.locked) {
-      spdlog::warn("Trying to write locked suspend point for entry with id {} and index {}",
-                   entry.id, index);
+      spdlog::warn("Trying to write locked suspend point for entry with content hash {} and index {}",
+                   contentHash.toStdString(), index);
       return;
     }
 
     const auto directory =
-        m_saveDir / entry.contentId / ("slot" + std::to_string(suspendPoint.saveSlotNumber)) / "suspendpoints" / (
+        m_saveDir / contentHash.toStdString() / ("slot" + std::to_string(suspendPoint.saveSlotNumber)) / "suspendpoints"
+        / (
           "slot" + std::to_string(slotNumber));
 
     if (!exists(directory)) {
@@ -269,7 +259,7 @@ namespace firelight::saves {
     }
 
     auto metadata = m_userdataDatabase.
-        getSuspendPointMetadata(entry.contentId, suspendPoint.saveSlotNumber, slotNumber);
+        getSuspendPointMetadata(contentHash.toStdString(), suspendPoint.saveSlotNumber, slotNumber);
     if (metadata.has_value()) {
       metadata->lastModifiedAt = QDateTime::currentMSecsSinceEpoch();
       metadata->locked = suspendPoint.locked;
@@ -277,7 +267,7 @@ namespace firelight::saves {
     } else {
       auto ms = QDateTime::currentMSecsSinceEpoch();
       db::SuspendPointMetadata newMetadata{
-        .contentId = entry.contentId,
+        .contentId = contentHash.toStdString(),
         .saveSlotNumber = suspendPoint.saveSlotNumber,
         .slotNumber = slotNumber,
         .lastModifiedAt = static_cast<uint64_t>(ms),
@@ -298,17 +288,15 @@ namespace firelight::saves {
     // }
   }
 
-  std::optional<SuspendPoint> SaveManager::readSuspendPointFromDisk(int entryId, int saveSlotNumber, int index) {
+  std::optional<SuspendPoint> SaveManager::readSuspendPointFromDisk(const QString &contentHash, int saveSlotNumber,
+                                                                    int index) {
     auto slotNumber = index + 1;
-    auto entry = m_libraryDatabase.getLibraryEntry(entryId);
-    if (!entry.has_value()) {
-      return std::nullopt;
-    }
 
     // TODO: metadata
 
-    auto path = m_saveDir / entry->contentId / ("slot" + std::to_string(saveSlotNumber)) / "suspendpoints" / (
+    auto path = m_saveDir / contentHash.toStdString() / ("slot" + std::to_string(saveSlotNumber)) / "suspendpoints" / (
                   "slot" + std::to_string(slotNumber));
+
     if (!exists(path)) {
       return std::nullopt;
     }
@@ -343,13 +331,11 @@ namespace firelight::saves {
       file.close();
     }
 
-    printf("Size of rcheevosData: %llu\n", rcheevosData.size());
-
 
     long long created = 0;
     bool locked = false;
 
-    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId, saveSlotNumber, slotNumber);
+    auto metadata = m_userdataDatabase.getSuspendPointMetadata(contentHash.toStdString(), saveSlotNumber, slotNumber);
     if (metadata.has_value()) {
       created = metadata->createdAt;
       locked = metadata->locked;
@@ -364,21 +350,17 @@ namespace firelight::saves {
     };
   }
 
-  void SaveManager::deleteSuspendPointFromDisk(int entryId, int saveSlotNumber, int index) {
+  void SaveManager::deleteSuspendPointFromDisk(const QString &contentHash, int saveSlotNumber, int index) {
     auto slotNumber = index + 1;
-    auto entry = m_libraryDatabase.getLibraryEntry(entryId);
-    if (!entry.has_value()) {
-      return;
-    }
 
-    auto path = m_saveDir / entry->contentId / ("slot" + std::to_string(saveSlotNumber)) / "suspendpoints" / (
+    auto path = m_saveDir / contentHash.toStdString() / ("slot" + std::to_string(saveSlotNumber)) / "suspendpoints" / (
                   "slot" + std::to_string(slotNumber));
 
     if (!exists(path)) {
       return;
     }
 
-    auto metadata = m_userdataDatabase.getSuspendPointMetadata(entry->contentId, saveSlotNumber, slotNumber);
+    auto metadata = m_userdataDatabase.getSuspendPointMetadata(contentHash.toStdString(), saveSlotNumber, slotNumber);
     if (metadata.has_value()) {
       m_userdataDatabase.deleteSuspendPointMetadata(metadata->id);
     }

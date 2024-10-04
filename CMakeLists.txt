@@ -132,8 +132,8 @@ add_library(firelight_lib
         src/app/rcheevos/offline/rcheevos_offline_client.cpp
         src/gui/input_method_detection_handler.cpp
         src/gui/input_method_detection_handler.hpp
-        src/gui/input_method_detection_handler.cpp
         src/app/input/keyboard_input_handler.cpp
+        src/gui/models/library/entry_list_model.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
@@ -164,8 +164,6 @@ target_link_libraries(firelight_lib PUBLIC
         library
         patching
         rcheevos)
-
-message("FFMPEG_LIBRARIES: ${FFMPEG_LIBRARIES}")
 
 # main code
 qt6_add_executable(firelight

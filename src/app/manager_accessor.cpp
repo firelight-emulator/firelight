@@ -11,6 +11,7 @@ namespace firelight {
   achievements::RAClient *ManagerAccessor::m_achievementManager;
   std::shared_ptr<EmulatorConfigManager> ManagerAccessor::m_emulatorConfigManager;
   gui::GameImageProvider *ManagerAccessor::m_gameImageProvider;
+  library::IUserLibrary *ManagerAccessor::m_userLibrary;
 
   void ManagerAccessor::setControllerManager(
     Input::ControllerManager *t_manager) {
@@ -48,6 +49,10 @@ namespace firelight {
     m_gameImageProvider = t_gameImageProvider;
   }
 
+  void ManagerAccessor::setUserLibrary(library::IUserLibrary *t_userLibrary) {
+    m_userLibrary = t_userLibrary;
+  }
+
   Input::ControllerManager *ManagerAccessor::getControllerManager() {
     // TODO: Check for nullptr and throw exception or something
     return m_controllerManager;
@@ -77,5 +82,9 @@ namespace firelight {
 
   gui::GameImageProvider *ManagerAccessor::getGameImageProvider() {
     return m_gameImageProvider;
+  }
+
+  library::IUserLibrary *ManagerAccessor::getUserLibrary() {
+    return m_userLibrary;
   }
 } // namespace firelight

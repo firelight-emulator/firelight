@@ -3,8 +3,6 @@
 #include "library_entry.hpp"
 #include "playlist.hpp"
 #include "library/entry.hpp"
-#include "library/patch_entry.hpp"
-#include "library/rom_entry.hpp"
 
 #include <optional>
 #include <string>

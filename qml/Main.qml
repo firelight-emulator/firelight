@@ -206,8 +206,8 @@ ApplicationWindow {
             property bool topLevel: true
             property string topLevelName: "library"
 
-            onEntryClicked: function (id) {
-                emulatorScreen.loadGame(id)
+            onEntryClicked: function (id, hash) {
+                emulatorScreen.loadGame(id, hash)
             }
         }
     }

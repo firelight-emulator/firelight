@@ -8,7 +8,7 @@ import Firelight 1.0
 FocusScope {
     id: root
 
-    signal startGame(entryId: int)
+    signal startGame(entryId: int, hash: string)
 
     property bool showNowPlayingButton: false
 
@@ -33,7 +33,8 @@ FocusScope {
             objectName: "Library Page 2"
             property bool topLevel: true
             property string topLevelName: "library"
-            model: library_short_model
+            // model: library_short_model
+            model: LibraryEntryModel
 
             onOpenDetails: function (id) {
                 contentStack.push(gameDetailsPage)
@@ -74,6 +75,7 @@ FocusScope {
         background: Rectangle {
             color: "#101114"
         }
+        visible: false
         padding: 4
         focus: true
 
@@ -261,7 +263,8 @@ FocusScope {
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.left: drawer.right
+        // anchors.left: drawer.right
+        anchors.left: parent.left
         KeyNavigation.left: drawer
 
         //

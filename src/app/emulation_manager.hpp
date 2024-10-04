@@ -55,7 +55,10 @@ public:
     QByteArray m_gameData;
     QByteArray m_saveData;
     QString m_corePath;
-    firelight::db::LibraryEntry m_currentEntry;
+    QString m_contentHash;
+    int m_saveSlotNumber;
+    int m_platformId;
+    QString m_contentPath;
     std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
     bool m_paused = false;
     bool m_shouldReset = false;

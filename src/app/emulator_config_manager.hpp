@@ -13,7 +13,7 @@ public:
 
     ~EmulatorConfigManager() override;
 
-    [[nodiscard]] std::shared_ptr<CoreConfiguration> getCoreConfigFor(int platformId, int entryId);
+    [[nodiscard]] std::shared_ptr<CoreConfiguration> getCoreConfigFor(int platformId, const QString &contentHash);
 
     Q_INVOKABLE void setOptionValueForPlatform(int platformId, const QString &key, const QString &value);
 

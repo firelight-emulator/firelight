@@ -110,7 +110,7 @@ void EmulatorRenderer::save(const bool waitForFinish) {
   // saveData.setImage(m_fbo->toImage());
 
   QFuture<bool> result =
-      getSaveManager()->writeSaveDataForEntry(m_currentEntry, saveData);
+      getSaveManager()->writeSaveData(m_contentHash, m_saveSlotNumber, saveData);
 
   if (waitForFinish) {
     result.waitForFinished();
@@ -164,17 +164,17 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
   }
 
   if (m_core && manager->m_loadSuspendPointIndex != -1) {
-    const auto point = getSaveManager()->readSuspendPointForEntry(m_currentEntry, m_currentEntry.activeSaveSlot,
-                                                                  manager->m_loadSuspendPointIndex);
+    const auto point = getSaveManager()->readSuspendPoint(m_contentHash, m_saveSlotNumber,
+                                                          manager->m_loadSuspendPointIndex);
 
     if (point.has_value()) {
       m_lastSuspendPoint = std::make_unique<SuspendPoint>(SuspendPoint{
-        .contentHash = m_currentEntry.contentId,
+        .contentHash = m_contentHash.toStdString(),
         .state = m_core->serializeState(),
         .retroachievementsState = getAchievementManager()->serializeState(),
         .timestamp = QDateTime::currentMSecsSinceEpoch(),
         .image = m_fbo->toImage(),
-        .saveSlotNumber = m_currentEntry.activeSaveSlot
+        .saveSlotNumber = m_saveSlotNumber
       });
 
       spdlog::info("Loading suspend point {}", manager->m_loadSuspendPointIndex);
@@ -202,9 +202,10 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
     suspendPoint.image = m_fbo->toImage();
     suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
-    suspendPoint.saveSlotNumber = m_currentEntry.activeSaveSlot;
+    suspendPoint.saveSlotNumber = m_saveSlotNumber;
 
-    getSaveManager()->writeSuspendPointForEntry(m_currentEntry, manager->m_writeSuspendPointIndex, suspendPoint);
+    getSaveManager()->writeSuspendPoint(m_contentHash, m_saveSlotNumber, manager->m_writeSuspendPointIndex,
+                                        suspendPoint);
     manager->m_writeSuspendPointIndex = -1;
   }
 
@@ -248,7 +249,10 @@ void EmulatorRenderer::synchronize(QQuickFramebufferObject *fbo) {
     m_gameData = manager->m_gameData;
     m_saveData = manager->m_saveData;
     m_corePath = manager->m_corePath;
-    m_currentEntry = manager->m_currentEntry;
+    m_saveSlotNumber = manager->m_saveSlotNumber;
+    m_platformId = manager->m_platformId;
+    m_contentPath = manager->m_contentPath;
+    m_contentHash = manager->m_contentHash;
   }
 
   if (m_coreConfiguration) {
@@ -286,7 +290,7 @@ EmulatorRenderer::createFramebufferObject(const QSize &size) {
 void EmulatorRenderer::render() {
   auto currentTime = QDateTime::currentMSecsSinceEpoch();
   if (!m_core && m_gameReady) {
-    auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_currentEntry.platformId, m_currentEntry.id);
+    auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_platformId, m_contentHash);
     m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
 
     m_core->setVideoReceiver(this);
@@ -299,7 +303,7 @@ void EmulatorRenderer::render() {
     m_core->init();
 
     libretro::Game game(
-      m_currentEntry.contentPath,
+      m_contentPath.toStdString(),
       vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
     m_core->loadGame(&game);
 
@@ -313,8 +317,8 @@ void EmulatorRenderer::render() {
 
     QMetaObject::invokeMethod(
       getAchievementManager(), "loadGame", Qt::QueuedConnection,
-      Q_ARG(int, m_currentEntry.platformId),
-      Q_ARG(QString, QString::fromStdString(m_currentEntry.contentId)));
+      Q_ARG(int, m_platformId),
+      Q_ARG(QString, m_contentHash));
 
     update();
     return;
@@ -324,11 +328,11 @@ void EmulatorRenderer::render() {
     m_running = true;
     if (static_cast<int>(m_gameSpeed) > 1) {
       m_core->run(0);
-      getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
+      getAchievementManager()->doFrame(m_core.get());
     }
 
     m_core->run(0);
-    getAchievementManager()->doFrame(m_core.get(), m_currentEntry);
+    getAchievementManager()->doFrame(m_core.get());
     if (m_shouldSave) {
       save(false);
       m_shouldSave = false;

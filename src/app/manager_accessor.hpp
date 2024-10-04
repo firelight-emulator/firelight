@@ -1,5 +1,7 @@
 #pragma once
 
+#include <firelight/library/user_library.hpp>
+
 #include "emulator_config_manager.hpp"
 #include "rcheevos/ra_client.hpp"
 #include "firelight/userdata_database.hpp"
@@ -32,6 +34,8 @@ namespace firelight {
 
         static void setGameImageProvider(gui::GameImageProvider *t_gameImageProvider);
 
+        static void setUserLibrary(library::IUserLibrary *t_userLibrary);
+
         static Input::ControllerManager *getControllerManager();
 
         static saves::SaveManager *getSaveManager();
@@ -48,6 +52,8 @@ namespace firelight {
 
         static gui::GameImageProvider *getGameImageProvider();
 
+        static library::IUserLibrary *getUserLibrary();
+
     private:
         static Input::ControllerManager *m_controllerManager;
         static saves::SaveManager *m_saveManager;
@@ -57,5 +63,6 @@ namespace firelight {
         static achievements::RAClient *m_achievementManager;
         static std::shared_ptr<EmulatorConfigManager> m_emulatorConfigManager;
         static gui::GameImageProvider *m_gameImageProvider;
+        static library::IUserLibrary *m_userLibrary;
     };
 } // namespace firelight

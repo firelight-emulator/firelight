@@ -318,8 +318,7 @@ namespace firelight::achievements {
     emit gameUnloaded();
   }
 
-  void RAClient::doFrame(::libretro::Core *core,
-                         const db::LibraryEntry &currentEntry) {
+  void RAClient::doFrame(::libretro::Core *core) {
     if (!m_loggedIn) {
       return;
     }

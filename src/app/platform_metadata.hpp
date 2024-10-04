@@ -291,9 +291,6 @@ namespace firelight {
       if (extension == "md") {
         return PLATFORM_ID_SEGA_GENESIS;
       }
-      if (extension == "iso") {
-        return PLATFORM_ID_PLAYSTATION_PORTABLE;
-      }
       if (extension == "gg") {
         return PLATFORM_ID_SEGA_GAMEGEAR;
       }

@@ -11,8 +11,9 @@ EmulatorConfigManager::EmulatorConfigManager(firelight::db::IUserdataDatabase &u
 
 EmulatorConfigManager::~EmulatorConfigManager() = default;
 
-std::shared_ptr<CoreConfiguration> EmulatorConfigManager::getCoreConfigFor(const int platformId, const int entryId) {
-    const auto key = std::to_string(platformId) + "_" + std::to_string(entryId);
+std::shared_ptr<CoreConfiguration> EmulatorConfigManager::getCoreConfigFor(
+    const int platformId, const QString &contentHash) {
+    const auto key = std::to_string(platformId) + "_" + contentHash.toStdString();
 
     if (!m_coreConfigs.contains(key)) {
         m_coreConfigs[key] = std::make_shared<CoreConfiguration>();

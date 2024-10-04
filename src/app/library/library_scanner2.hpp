@@ -5,13 +5,14 @@
 #include <QObject>
 #include <QQueue>
 #include <QReadWriteLock>
+#include <firelight/library/user_library.hpp>
 
 namespace firelight::library {
     class LibraryScanner2 : public QObject {
         Q_OBJECT
 
     public:
-        LibraryScanner2();
+        explicit LibraryScanner2(IUserLibrary &library);
 
         ~LibraryScanner2();
 
@@ -27,6 +28,7 @@ namespace firelight::library {
         void scanFinished(const QString &path);
 
     private:
+        IUserLibrary &m_library;
         bool m_shuttingDown = false;
         QFileSystemWatcher m_watcher;
         std::map<QString, std::atomic_bool> m_scanQueuedByPath;
