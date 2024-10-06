@@ -8,16 +8,19 @@ TabBar {
     required property int tabWidth
     required property list<string> tabs
 
+    implicitWidth: tabWidth * tabs.length + (spacing * (tabs.length - 1))
+    implicitHeight: 48
+
     currentIndex: 0
 
     background: Rectangle {
         objectName: "background"
         width: control.tabWidth
-        height: 2
-        radius: 1
+        height: 4
+        radius: 2
         color: "white"
         x: control.tabWidth * control.currentIndex
-        y: control.height
+        y: control.height - 4
 
         Behavior on x {
             NumberAnimation {
@@ -28,6 +31,7 @@ TabBar {
     }
 
     Repeater {
+        anchors.fill: parent
         model: control.tabs
         delegate: TabButton {
             required property var modelData
@@ -36,12 +40,15 @@ TabBar {
             objectName: "button" + index
 
             width: control.tabWidth
+            height: control.height
+
             contentItem: Text {
                 objectName: "text"
+                height: control.height
                 text: modelData
-                color: parent.enabled ? "#ffffff" : "#666666"
+                color: parent.enabled ? parent.checked ? "#ffffff" : "#f0f0f0" : "#666666"
                 font.family: Constants.regularFontFamily
-                font.pointSize: 11
+                font.pixelSize: 15
                 font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

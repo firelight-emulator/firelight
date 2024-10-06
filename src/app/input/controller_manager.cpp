@@ -51,7 +51,7 @@ namespace firelight::Input {
   std::optional<libretro::IRetroPad *>
   ControllerManager::getRetropadForPlayerIndex(const int t_player) {
     const auto controller = getControllerForPlayer(t_player);
-    if (!controller && m_keyboard) {
+    if (t_player == 0 && !controller && m_keyboard) {
       return m_keyboard;
     }
 

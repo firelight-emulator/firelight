@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-FocusScope {
+SplitView {
     id: page
 
     property alias model: listView.model
@@ -13,13 +13,125 @@ FocusScope {
 
     signal startGame(entryId: int, hash: string)
 
+    // padding: 24
+    // leftPadding: 48
+    // rightPadding: 48
+
+    // handle: Rectangle {
+    //     id: handleDelegate
+    //     implicitWidth: 4
+    //     implicitHeight: 4
+    //     color: SplitHandle.pressed ? "#81e889"
+    //         : (SplitHandle.hovered ? Qt.lighter("#c2f4c6", 1.1) : "#c2f4c6")
+    //
+    //     containmentMask: Item {
+    //         x: (handleDelegate.width - width) / 2
+    //         width: 64
+    //         height: splitView.height
+    //     }
+    // }
+
+    // Pane {
+    //     id: details
+    //
+    //     anchors.right: parent.right
+    //     anchors.top: parent.top
+    //     anchors.bottom: parent.bottom
+    //     anchors.left: listView.right
+    //
+    //     background: Item {
+    //     }
+    //
+    //     contentItem: FocusScope {
+    //         Pane {
+    //             id: pic
+    //             anchors.left: parent.left
+    //             anchors.top: parent.top
+    //             anchors.right: parent.right
+    //             height: parent.height / 3
+    //
+    //             background: Rectangle {
+    //                 color: "grey"
+    //             }
+    //         }
+    //
+    //         Pane {
+    //             id: info
+    //             anchors.left: parent.left
+    //             anchors.top: pic.bottom
+    //             anchors.right: parent.right
+    //             anchors.bottom: parent.bottom
+    //
+    //             padding: 0
+    //
+    //             background: Item {
+    //             }
+    //
+    //             contentItem: ColumnLayout {
+    //                 FocusScope {
+    //                     Layout.fillWidth: true
+    //                     Layout.preferredHeight: 60
+    //                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+    //
+    //                     NavigationTabBar {
+    //                         id: navBar
+    //
+    //                         tabs: ["Details", "Achievements", "Settings"]
+    //                         tabWidth: 160
+    //                         height: parent.height
+    //                         anchors.horizontalCenter: parent.horizontalCenter
+    //                     }
+    //                 }
+    //
+    //                 Text {
+    //                     Layout.fillWidth: true
+    //                     Layout.preferredHeight: 48
+    //                     text: listView.currentItem.model.displayName
+    //                     font.pixelSize: 24
+    //                     font.weight: Font.DemiBold
+    //                     font.family: Constants.regularFontFamily
+    //                     color: "white"
+    //                     horizontalAlignment: Text.AlignLeft
+    //                     verticalAlignment: Text.AlignVCenter
+    //                 }
+    //
+    //                 Rectangle {
+    //                     Layout.fillWidth: true
+    //                     Layout.fillHeight: true
+    //                     color: "blue"
+    //                 }
+    //
+    //                 Rectangle {
+    //                     Layout.fillWidth: true
+    //                     Layout.fillHeight: true
+    //                     color: "green"
+    //                 }
+    //
+    //                 Rectangle {
+    //                     Layout.fillWidth: true
+    //                     Layout.fillHeight: true
+    //                     color: "yellow"
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
     ListView {
         id: listView
         objectName: "GridView"
         clip: true
-        width: parent.width * 0.8
-        anchors.horizontalCenter: parent.horizontalCenter
-        height: parent.height
+        // width: parent.width * 0.8
+        // anchors.horizontalCenter: parent.horizontalCenter
+        // height: parent.height
+        //
+        // anchors.left: parent.left
+        // anchors.top: parent.top
+        // anchors.bottom: parent.bottom
+        // width: parent.width / 2
+
+        // SplitView.preferredWidth: parent.width / 2
+        SplitView.minimumWidth: 300
 
         ScrollBar.vertical: ScrollBar {
             policy: ScrollBar.AlwaysOn
@@ -27,35 +139,37 @@ FocusScope {
 
         preferredHighlightBegin: 0.33 * listView.height
         preferredHighlightEnd: 0.66 * listView.height
-        highlightRangeMode: GridView.ApplyRange
+        highlightRangeMode: InputMethodManager.usingMouse ? GridView.NoHighlightRange : GridView.ApplyRange
 
         contentY: 0
 
-        header: Pane {
-            id: header
-
-            width: parent.width
-            height: 120
-            background: Rectangle {
-                color: "transparent"
-                // border.color: "red"
-            }
-
-            horizontalPadding: 8
-
-            Text {
-                anchors.fill: parent
-                text: "All Games"
-                color: "white"
-                font.pointSize: 26
-                font.family: Constants.regularFontFamily
-                font.weight: Font.DemiBold
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-            }
-
-        }
+        // header: Pane {
+        //     id: header
+        //
+        //     width: parent.width
+        //     height: 120
+        //     background: Rectangle {
+        //         color: "transparent"
+        //         // border.color: "red"
+        //     }
+        //
+        //     horizontalPadding: 8
+        //
+        //     Text {
+        //         anchors.fill: parent
+        //         text: "All Games"
+        //         color: "white"
+        //         font.pointSize: 26
+        //         font.family: Constants.regularFontFamily
+        //         font.weight: Font.DemiBold
+        //         horizontalAlignment: Text.AlignLeft
+        //         verticalAlignment: Text.AlignVCenter
+        //     }
+        //
+        // }
         focus: true
+        highlightMoveDuration: 10
+        highlightMoveVelocity: -1
 
         currentIndex: 0
         boundsBehavior: Flickable.StopAtBounds
@@ -72,43 +186,139 @@ FocusScope {
         //     }
         // }
         delegate: FocusScope {
+            id: scope
             required property var index
             required property var model
             width: ListView.view.width
-            height: 72
+            height: 50
             Button {
                 id: thingg
                 anchors.fill: parent
+
+                property var textColor: "white"
+                property var platformTextColor: ColorPalette.neutral400
+
+                states: [
+                    State {
+                        name: "hovered"
+                        when: thingg.hovered && !scope.ListView.isCurrentItem
+                        PropertyChanges {
+                            target: thingg.background
+                            color: "white"
+                            opacity: 0.3
+                        }
+                    },
+                    State {
+                        name: "normal"
+                        when: !thingg.hovered && !scope.ListView.isCurrentItem
+                        PropertyChanges {
+                            target: thingg.background
+                            color: "transparent"
+                            opacity: 1
+                        }
+                    },
+                    State {
+                        name: "pressed"
+                        when: scope.ListView.isCurrentItem
+                        PropertyChanges {
+                            target: thingg.background
+                            color: "white"
+                            opacity: 0.9
+                        }
+                        PropertyChanges {
+                            target: thingg
+                            textColor: "black"
+                            platformTextColor: "black"
+                        }
+                    }
+                ]
+
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onTapped: function (event, button) {
+                        if (button === Qt.RightButton) {
+                            rightClickMenu.popup()
+                        } else if (button === Qt.LeftButton) {
+                            // Router.navigateTo("library/" + myDelegate.model.id + "/details")
+                            // myDelegate.openDetails(myDelegate.model.id)
+                            // page.startGame(myDelegate.model.id, myDelegate.model.contentHash)
+                            listView.currentIndex = scope.index
+                        }
+                    }
+                }
+
+                RightClickMenu {
+                    id: rightClickMenu
+                    objectName: "rightClickMenu"
+
+                    RightClickMenuItem {
+                        text: "Play " + scope.model.displayName
+                        onTriggered: {
+                            page.startGame(scope.model.id, scope.model.contentHash)
+                        }
+                    }
+
+                    RightClickMenuItem {
+                        enabled: false
+                        text: "View details"
+                        onTriggered: {
+                            page.openDetails(scope.model.id)
+                        }
+                    }
+
+                    MenuSeparator {
+                        contentItem: Rectangle {
+                            implicitWidth: rightClickMenu.width
+                            implicitHeight: 1
+                            color: "#606060"
+                        }
+                    }
+
+                    RightClickMenuItem {
+                        enabled: false
+                        text: "Manage save data"
+                        onTriggered: {
+                            page.manageSaveData(scope.model.id)
+                        }
+                        // onTriggered: {
+                        //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
+                        //     addPlaylistRightClickMenu.popup()
+                        // }
+                    }
+                }
+
+
                 background: Rectangle {
                     // color: "#25282C"
-                    color: "transparent"
                 }
+
+                hoverEnabled: true
 
                 contentItem: RowLayout {
                     spacing: 12
-                    Rectangle {
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: 72 - thingg.verticalPadding * 2
-                        color: "grey"
-
-                        Image {
-                            source: model.icon1x1SourceUrl
-                            fillMode: Image.PreserveAspectFit
-                            anchors.fill: parent
-                        }
-                    }
+                    // Rectangle {
+                    //     Layout.fillHeight: true
+                    //     Layout.preferredWidth: 72 - thingg.verticalPadding * 2
+                    //     color: "grey"
+                    //
+                    //     Image {
+                    //         source: model.icon1x1SourceUrl
+                    //         fillMode: Image.PreserveAspectFit
+                    //         anchors.fill: parent
+                    //     }
+                    // }
                     Text {
                         Layout.fillHeight: true
                         Layout.preferredWidth: 500
                         Layout.minimumWidth: 300
                         text: model.displayName
-                        color: "white"
+                        color: thingg.textColor
                         elide: Text.ElideRight
                         maximumLineCount: 1
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
                         font.pixelSize: 16
-                        font.weight: Font.DemiBold
+                        font.weight: Font.Normal
                         font.family: Constants.regularFontFamily
                     }
                     Text {
@@ -116,16 +326,114 @@ FocusScope {
                         Layout.fillWidth: true
                         // text: model.platformId
                         text: "Nintendo 64"
-                        color: ColorPalette.neutral400
+                        color: thingg.platformTextColor
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 15
-                        font.weight: Font.Medium
+                        font.weight: Font.Normal
                         font.family: Constants.regularFontFamily
                     }
                 }
             }
         }
     }
+
+    // Flickable {
+    //     // anchors.right: parent.right
+    //     // anchors.top: parent.top
+    //     // anchors.bottom: parent.bottom
+    //     // anchors.left: listView.right
+    //
+    //     // SplitView.preferredWidth: parent.width / 2
+    //
+    //     boundsBehavior: Flickable.StopAtBounds
+    //
+    //     ScrollBar.vertical: ScrollBar {
+    //     }
+    //
+    //     clip: true
+    //
+    //     contentHeight: col.height
+    //
+    //     ColumnLayout {
+    //         id: col
+    //         width: parent.width
+    //         height: 2000
+    //         Rectangle {
+    //             Layout.fillWidth: true
+    //             Layout.preferredHeight: 300
+    //             color: "grey"
+    //
+    //             Text {
+    //                 anchors.top: parent.top
+    //                 anchors.left: parent.left
+    //                 anchors.right: previewImage.left
+    //                 text: listView.currentItem.model.displayName
+    //                 color: "white"
+    //                 font.pointSize: 24
+    //                 font.family: Constants.regularFontFamily
+    //                 font.weight: Font.DemiBold
+    //                 horizontalAlignment: Text.AlignLeft
+    //                 verticalAlignment: Text.AlignVCenter
+    //                 height: parent.height * 2 / 3
+    //             }
+    //
+    //             Rectangle {
+    //                 anchors.bottom: parent.bottom
+    //                 anchors.left: parent.left
+    //                 anchors.right: previewImage.left
+    //                 height: parent.height / 3
+    //                 color: "lightblue"
+    //             }
+    //
+    //             Rectangle {
+    //                 id: previewImage
+    //                 anchors.right: parent.right
+    //                 anchors.top: parent.top
+    //                 anchors.bottom: parent.bottom
+    //                 width: parent.width / 2
+    //             }
+    //         }
+    //
+    //         FocusScope {
+    //             Layout.fillWidth: true
+    //             Layout.preferredHeight: 60
+    //             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+    //
+    //             NavigationTabBar {
+    //                 id: navBar
+    //
+    //                 tabs: ["Details", "Achievements", "Settings"]
+    //                 tabWidth: 160
+    //                 height: parent.height
+    //                 anchors.horizontalCenter: parent.horizontalCenter
+    //             }
+    //         }
+    //
+    //         SwipeView {
+    //             id: swipeView
+    //             Layout.fillWidth: true
+    //             Layout.fillHeight: true
+    //
+    //             clip: true
+    //
+    //             currentIndex: navBar.currentIndex
+    //             onCurrentIndexChanged: navBar.currentIndex = currentIndex
+    //
+    //             Rectangle {
+    //                 color: "blue"
+    //             }
+    //
+    //             Rectangle {
+    //                 color: "green"
+    //             }
+    //
+    //             Rectangle {
+    //                 color: "yellow"
+    //             }
+    //
+    //         }
+    //     }
+    // }
 
     // GridView {
     //     id: listView

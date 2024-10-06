@@ -9,7 +9,7 @@
         <file alias="lexend-light">assets/NunitoSans_10pt-Regular.ttf</file>
         <file alias="font-semibold">assets/Lexend-Medium.ttf</file>
         <file alias="lexend-black">assets/NunitoSans_10pt_SemiCondensed-Black.ttf</file>
-        <file alias="symbols">assets/MaterialSymbols.ttf</file>
+        <file alias="symbols">assets/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf</file>
     </qresource>
     <qresource prefix="/images/platform-icons">
         <file alias="nes.svg">_img/nes.svg</file>

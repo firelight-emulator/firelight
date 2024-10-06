@@ -61,11 +61,11 @@ ApplicationWindow {
         id: activeFocusHighlight
         color: "transparent"
         border.color: "lightblue"
-        border.width: 3
+        border.width: 2
         radius: 2
         visible: !InputMethodManager.usingMouse && parent !== null
         anchors.fill: parent
-        anchors.margins: -3
+        anchors.margins: -4
 
         Connections {
             target: window
@@ -73,6 +73,9 @@ ApplicationWindow {
             function onActiveFocusItemChanged() {
                 if (window.activeFocusItem && window.activeFocusItem.hasOwnProperty('showGlobalCursor') && window.activeFocusItem.showGlobalCursor) {
                     activeFocusHighlight.parent = window.activeFocusItem
+                    if (window.activeFocusItem.hasOwnProperty('background')) {
+                        activeFocusHighlight.radius = window.activeFocusItem.background.radius + 4
+                    }
                 } else {
                     activeFocusHighlight.parent = null
                 }
