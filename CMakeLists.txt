@@ -72,6 +72,7 @@ endforeach ()
 
 set_source_files_properties(qml/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/ColorPalette.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 add_library(firelight_lib
@@ -258,6 +259,7 @@ add_executable(fl_test
 file(GLOB QML_TEST_FILES
         qml/ColorPalette.qml
         qml/Constants.qml
+        qml/AppStyle.qml
         qml/common/DetailsButton.qml
         qml/common/RightClickMenu.qml
         qml/common/RightClickMenuItem.qml

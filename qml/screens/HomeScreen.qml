@@ -23,6 +23,7 @@ FocusScope {
         ShopLandingPage {
             property bool topLevel: true
             property string topLevelName: "shop"
+            property string pageTitle: "Mod shop"
             model: shop_item_model
         }
     }
@@ -33,6 +34,7 @@ FocusScope {
             objectName: "Library Page 2"
             property bool topLevel: true
             property string topLevelName: "library"
+            property string pageTitle: "Library"
             // model: library_short_model
             model: LibraryEntryModel
 
@@ -63,6 +65,7 @@ FocusScope {
         ControllersPage {
             property bool topLevel: true
             property string topLevelName: "controllers"
+            property string pageTitle: "Controllers"
         }
     }
 
@@ -340,38 +343,26 @@ FocusScope {
         height: 72
         padding: 16
 
+        KeyNavigation.down: contentStack
+
         background: Item {
         }
 
         contentItem: RowLayout {
             spacing: 24
 
-            Button {
+            FirelightButton {
                 id: hamburger
+
+                tooltipLabel: "Menu"
+                focus: true
+                flat: true
+
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
                 Layout.leftMargin: 12
 
-                property bool showGlobalCursor: true
-
-                z: 3
-
-                hoverEnabled: true
-
-                background: Rectangle {
-                    color: "white"
-                    opacity: parent.hovered ? 0.1 : 0
-                    radius: width / 2
-                }
-
-                contentItem: Text {
-                    text: "\ue5d2"
-                    font.family: Constants.symbolFontFamily
-                    font.pixelSize: 24
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: "white"
-                }
+                iconCode: "\ue5d2"
 
                 onClicked: {
                     drawer2.open()
@@ -379,8 +370,7 @@ FocusScope {
             }
 
             Text {
-                // topPadding: 2
-                text: "Library"
+                text: contentStack.currentItem.pageTitle
                 color: ColorPalette.neutral100
                 font.pixelSize: 24
                 font.weight: Font.Normal
@@ -396,106 +386,43 @@ FocusScope {
                 Layout.fillWidth: true
             }
 
-            Button {
+            FirelightButton {
                 id: searchButton
+
+                enabled: false
+                tooltipLabel: "Search"
+                flat: true
+
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
-
-                property bool showGlobalCursor: true
                 KeyNavigation.left: hamburger
 
-                z: 3
-
-                hoverEnabled: true
-
-                background: Rectangle {
-                    color: "white"
-                    opacity: parent.activeFocus ? 1 : parent.hovered ? 0.1 : 0
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 50
-                        }
-                    }
-                    radius: width / 2
-                }
-
-                contentItem: Text {
-                    text: "\ue8b6"
-                    font.family: Constants.symbolFontFamily
-                    font.pixelSize: 24
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: parent.activeFocus ? "black" : "white"
-                }
+                iconCode: "\ue8b6"
             }
 
-            Button {
+            FirelightButton {
                 id: notificationButton
+
+                enabled: false
+                tooltipLabel: "Notifications"
+                flat: true
+
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
-
-                property bool showGlobalCursor: true
                 KeyNavigation.left: searchButton
 
-                z: 3
-
-                hoverEnabled: true
-
-                background: Rectangle {
-                    color: "white"
-                    opacity: parent.activeFocus ? 1 : parent.hovered ? 0.1 : 0
-                    radius: width / 2
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 50
-                        }
-                    }
-                }
-
-                contentItem: Text {
-                    text: "\ue7f4"
-                    font.family: Constants.symbolFontFamily
-                    font.pixelSize: 24
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: parent.activeFocus ? "black" : "white"
-                }
-
-                onClicked: {
-                    Router.navigateTo("settings")
-                }
+                iconCode: "\ue7f4"
             }
 
-            Button {
+            FirelightButton {
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
+                tooltipLabel: "Settings"
+                flat: true
 
-                property bool showGlobalCursor: true
                 KeyNavigation.left: notificationButton
 
-                z: 3
-
-                hoverEnabled: true
-
-                background: Rectangle {
-                    color: "white"
-                    opacity: parent.activeFocus ? 1 : parent.hovered ? 0.1 : 0
-                    radius: width / 2
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 50
-                        }
-                    }
-                }
-
-                contentItem: Text {
-                    text: "\ue8b8"
-                    font.family: Constants.symbolFontFamily
-                    font.pixelSize: 24
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: parent.activeFocus ? "black" : "white"
-                }
+                iconCode: "\ue8b8"
 
                 onClicked: {
                     Router.navigateTo("settings")
@@ -551,6 +478,8 @@ FocusScope {
         width: 280
         height: parent.height
         x: -width
+        modal: true
+        focus: true
 
         background: Rectangle {
             color: ColorPalette.neutral900
@@ -562,27 +491,14 @@ FocusScope {
             width: parent.width - 40
             spacing: 4
 
-            Button {
+            FirelightButton {
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
-
                 Layout.alignment: Qt.AlignRight
-                hoverEnabled: true
+                KeyNavigation.down: libraryButton
+                flat: true
 
-                background: Rectangle {
-                    color: "white"
-                    opacity: parent.hovered ? 0.1 : 0
-                    radius: height / 2
-                }
-
-                contentItem: Text {
-                    text: "\ue5cd"
-                    font.family: Constants.symbolFontFamily
-                    font.pixelSize: 28
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: "white"
-                }
+                iconCode: "\ue5cd"
 
                 onClicked: {
                     drawer2.close()
@@ -590,32 +506,63 @@ FocusScope {
             }
 
             FirelightMenuItem {
+                id: libraryButton
+                focus: contentStack.currentItem.topLevelName === "library"
                 labelText: "Library"
                 Layout.fillWidth: true
+                property bool showGlobalCursor: true
+
+                KeyNavigation.down: exploreButton
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 42
                 checkable: false
                 // alignRight: true
+
+                onClicked: {
+                    contentStack.goTo(libraryPage2)
+                    drawer2.close()
+                }
             }
 
             FirelightMenuItem {
+                id: exploreButton
+                focus: contentStack.currentItem.topLevelName === "shop"
                 labelText: "Explore"
                 Layout.fillWidth: true
+                property bool showGlobalCursor: true
+
+                KeyNavigation.down: controllerButton
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 42
                 checkable: false
                 // alignRight: true
+
+                onClicked: {
+                    contentStack.goTo(shopPage)
+                    drawer2.close()
+                }
             }
 
             FirelightMenuItem {
+                id: controllerButton
+                focus: contentStack.currentItem.topLevelName === "controllers"
                 labelText: "Controllers"
                 Layout.fillWidth: true
+                property bool showGlobalCursor: true
+
+                // KeyNavigation.down: quitButton
+
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 42
                 checkable: false
+
+                onClicked: {
+                    contentStack.goTo(controllerPage)
+                    drawer2.close()
+                }
                 // alignRight: true
             }
 
@@ -702,28 +649,28 @@ FocusScope {
                 Layout.fillHeight: true
             }
 
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 42
-
-                background: Rectangle {
-                    color: ColorPalette.neutral700
-                    radius: height / 2
-                }
-
-                contentItem: Text {
-                    text: "Close Firelight"
-                    font.family: Constants.regularFontFamily
-                    font.pixelSize: 14
-                    // opacity: parent.checked ? 1 : 0.5
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: "white"
-                }
-            }
+            // Button {
+            //     id: quitButton
+            //     Layout.fillWidth: true
+            //     Layout.preferredHeight: 42
+            //     property bool showGlobalCursor: true
+            //
+            //     background: Rectangle {
+            //         color: ColorPalette.neutral700
+            //         radius: height / 2
+            //     }
+            //
+            //     contentItem: Text {
+            //         text: "Close Firelight"
+            //         font.family: Constants.regularFontFamily
+            //         font.pixelSize: 14
+            //         // opacity: parent.checked ? 1 : 0.5
+            //         horizontalAlignment: Text.AlignHCenter
+            //         verticalAlignment: Text.AlignVCenter
+            //         color: "white"
+            //     }
+            // }
         }
-
-        modal: true
 
         Overlay.modal: Rectangle {
             color: "black"
@@ -783,7 +730,13 @@ FocusScope {
         anchors.left: parent.left
         anchors.leftMargin: 40
         anchors.rightMargin: 40
-        // KeyNavigation.left: drawer
+        KeyNavigation.left: drawer2
+
+        Keys.onEscapePressed: function (event) {
+            drawer2.open()
+        }
+
+        focus: true
 
         //
         objectName: "Home Content Stack View"
@@ -793,6 +746,7 @@ FocusScope {
 
         function goTo(page) {
             contentStack.replace(null, page)
+            forceActiveFocus()
         }
 
         property string topLevelName: ""

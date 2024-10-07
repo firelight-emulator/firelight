@@ -31,6 +31,43 @@ ApplicationWindow {
         height: window.height
         width: window.width
         color: ColorPalette.neutral1000
+        Image {
+            id: mainBackground
+            source: "https://static.nsidr.com/images/inline_images/inline-4-4205-2.jpg"
+            fillMode: Image.PreserveAspectCrop
+            anchors.fill: parent
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                source: mainBackground
+                anchors.fill: mainBackground
+                blurEnabled: true
+                blurMultiplier: 1.0
+                blurMax: 64
+                blur: 0.5
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: "black"
+            opacity: 0.5
+        }
+
+        Rectangle {
+            anchors.topMargin: -70
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 200
+            gradient: Gradient {
+                GradientStop {
+                    position: 0.0; color: "black"
+                }
+                GradientStop {
+                    position: 1.0; color: "transparent"
+                }
+            }
+        }
         // AnimatedImage {
         //     id: mainBackground
         //     source: "https://cdn.booooooom.com/wp-content/uploads/2022/07/PATTERN_11.gif"
@@ -66,6 +103,35 @@ ApplicationWindow {
         visible: !InputMethodManager.usingMouse && parent !== null
         anchors.fill: parent
         anchors.margins: -4
+
+        // NumberAnimation {
+        //     target: activeFocusHighlight
+        //     property: "opacity"
+        //     duration: 100
+        //     easing.type: Easing.InOutQuad
+        //     loops: Animation.Infinite
+        // }
+
+        SequentialAnimation {
+            running: true
+            loops: Animation.Infinite // Loop the animation infinitely
+            NumberAnimation {
+                target: activeFocusHighlight
+                property: "opacity"
+                from: 0.65
+                to: 1.0
+                duration: 2000
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: activeFocusHighlight
+                property: "opacity"
+                from: 1.0
+                to: 0.65
+                duration: 2000
+                easing.type: Easing.InOutQuad
+            }
+        }
 
         Connections {
             target: window

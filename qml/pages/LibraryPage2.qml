@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-SplitView {
+FocusScope {
     id: page
 
     property alias model: listView.model
@@ -31,311 +31,290 @@ SplitView {
     //     }
     // }
 
-    // Pane {
-    //     id: details
-    //
-    //     anchors.right: parent.right
-    //     anchors.top: parent.top
-    //     anchors.bottom: parent.bottom
-    //     anchors.left: listView.right
-    //
-    //     background: Item {
-    //     }
-    //
-    //     contentItem: FocusScope {
-    //         Pane {
-    //             id: pic
-    //             anchors.left: parent.left
-    //             anchors.top: parent.top
-    //             anchors.right: parent.right
-    //             height: parent.height / 3
-    //
-    //             background: Rectangle {
-    //                 color: "grey"
-    //             }
-    //         }
-    //
-    //         Pane {
-    //             id: info
-    //             anchors.left: parent.left
-    //             anchors.top: pic.bottom
-    //             anchors.right: parent.right
-    //             anchors.bottom: parent.bottom
-    //
-    //             padding: 0
-    //
-    //             background: Item {
-    //             }
-    //
-    //             contentItem: ColumnLayout {
-    //                 FocusScope {
-    //                     Layout.fillWidth: true
-    //                     Layout.preferredHeight: 60
-    //                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-    //
-    //                     NavigationTabBar {
-    //                         id: navBar
-    //
-    //                         tabs: ["Details", "Achievements", "Settings"]
-    //                         tabWidth: 160
-    //                         height: parent.height
-    //                         anchors.horizontalCenter: parent.horizontalCenter
-    //                     }
-    //                 }
-    //
-    //                 Text {
-    //                     Layout.fillWidth: true
-    //                     Layout.preferredHeight: 48
-    //                     text: listView.currentItem.model.displayName
-    //                     font.pixelSize: 24
-    //                     font.weight: Font.DemiBold
-    //                     font.family: Constants.regularFontFamily
-    //                     color: "white"
-    //                     horizontalAlignment: Text.AlignLeft
-    //                     verticalAlignment: Text.AlignVCenter
-    //                 }
-    //
-    //                 Rectangle {
-    //                     Layout.fillWidth: true
-    //                     Layout.fillHeight: true
-    //                     color: "blue"
-    //                 }
-    //
-    //                 Rectangle {
-    //                     Layout.fillWidth: true
-    //                     Layout.fillHeight: true
-    //                     color: "green"
-    //                 }
-    //
-    //                 Rectangle {
-    //                     Layout.fillWidth: true
-    //                     Layout.fillHeight: true
-    //                     color: "yellow"
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    Pane {
+        id: details
 
-    ListView {
-        id: listView
-        objectName: "GridView"
-        clip: true
-        // width: parent.width * 0.8
-        // anchors.horizontalCenter: parent.horizontalCenter
-        // height: parent.height
-        //
-        // anchors.left: parent.left
-        // anchors.top: parent.top
-        // anchors.bottom: parent.bottom
-        // width: parent.width / 2
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.left: listViewContainer.right
 
-        // SplitView.preferredWidth: parent.width / 2
-        SplitView.minimumWidth: 300
-
-        ScrollBar.vertical: ScrollBar {
-            policy: ScrollBar.AlwaysOn
+        background: Item {
         }
 
-        preferredHighlightBegin: 0.33 * listView.height
-        preferredHighlightEnd: 0.66 * listView.height
-        highlightRangeMode: InputMethodManager.usingMouse ? GridView.NoHighlightRange : GridView.ApplyRange
+        contentItem: ColumnLayout {
+            spacing: 12
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+            Text {
+                Layout.fillWidth: true
+                text: listView.currentItem.model.displayName
+                font.pixelSize: 24
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                font.weight: Font.DemiBold
+                font.family: Constants.regularFontFamily
+                color: "white"
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
 
-        contentY: 0
+            FirelightButton {
+                id: hamburger
+                focus: true
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
-        // header: Pane {
-        //     id: header
-        //
-        //     width: parent.width
-        //     height: 120
-        //     background: Rectangle {
-        //         color: "transparent"
-        //         // border.color: "red"
-        //     }
-        //
-        //     horizontalPadding: 8
-        //
-        //     Text {
-        //         anchors.fill: parent
-        //         text: "All Games"
-        //         color: "white"
-        //         font.pointSize: 26
-        //         font.family: Constants.regularFontFamily
-        //         font.weight: Font.DemiBold
-        //         horizontalAlignment: Text.AlignLeft
-        //         verticalAlignment: Text.AlignVCenter
-        //     }
-        //
-        // }
+                Layout.preferredWidth: AppStyle.buttonStandardWidth
+                Layout.preferredHeight: AppStyle.buttonStandardHeight
+
+                label: "Play"
+
+                onClicked: function () {
+                    page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
+                }
+            }
+
+            // Button {
+            //     id: playButton
+            //     focus: true
+            //     Layout.preferredWidth: 200
+            //     Layout.preferredHeight: 42
+            //     property bool showGlobalCursor: true
+            //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            //
+            //     background: Rectangle {
+            //         color: playButton.activeFocus && !InputMethodManager.usingMouse ? ColorPalette.neutral100 : playButton.hovered ? ColorPalette.neutral700 : ColorPalette.neutral800
+            //         radius: height / 2
+            //     }
+            //
+            //     contentItem: Text {
+            //         text: "Play"
+            //         font.family: Constants.regularFontFamily
+            //         font.pixelSize: 16
+            //         font.weight: Font.DemiBold
+            //         // opacity: parent.checked ? 1 : 0.5
+            //         horizontalAlignment: Text.AlignHCenter
+            //         verticalAlignment: Text.AlignVCenter
+            //         color: playButton.activeFocus && !InputMethodManager.usingMouse ? "black" : "white"
+            //     }
+            //
+            //     onClicked: function () {
+            //         page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
+            //     }
+            // }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
+    }
+
+    Pane {
+        id: listViewContainer
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 400
+        clip: true
         focus: true
-        highlightMoveDuration: 10
-        highlightMoveVelocity: -1
+        background: Item {
+        }
+        KeyNavigation.right: details
+        contentItem: ListView {
+            id: listView
+            objectName: "GridView"
+            focus: true
+            // anchors.fill: parent
+            // width: parent.width * 0.8
+            // anchors.horizontalCenter: parent.horizontalCenter
+            // height: parent.height
+            //
 
-        currentIndex: 0
-        boundsBehavior: Flickable.StopAtBounds
+            // SplitView.preferredWidth: parent.width / 2
 
-        // delegate: GameGridItemDelegate {
-        //     opacity: 1
-        //     cellSpacing: listView.cellSpacing
-        //     cellWidth: listView.cellContentWidth
-        //     cellHeight: listView.cellContentHeight
-        //
-        //     Component.onCompleted: {
-        //         openDetails.connect(page.openDetails)
-        //         startGame.connect(page.startGame)
-        //     }
-        // }
-        delegate: FocusScope {
-            id: scope
-            required property var index
-            required property var model
-            width: ListView.view.width
-            height: 50
-            Button {
-                id: thingg
-                anchors.fill: parent
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AlwaysOn
+            }
 
-                property var textColor: "white"
-                property var platformTextColor: ColorPalette.neutral400
+            preferredHighlightBegin: 0.33 * listView.height
+            preferredHighlightEnd: 0.66 * listView.height
+            highlightRangeMode: InputMethodManager.usingMouse ? GridView.NoHighlightRange : GridView.ApplyRange
 
-                states: [
-                    State {
-                        name: "hovered"
-                        when: thingg.hovered && !scope.ListView.isCurrentItem
-                        PropertyChanges {
-                            target: thingg.background
-                            color: "white"
-                            opacity: 0.3
-                        }
-                    },
-                    State {
-                        name: "normal"
-                        when: !thingg.hovered && !scope.ListView.isCurrentItem
-                        PropertyChanges {
-                            target: thingg.background
-                            color: "transparent"
-                            opacity: 1
-                        }
-                    },
-                    State {
-                        name: "pressed"
-                        when: scope.ListView.isCurrentItem
-                        PropertyChanges {
-                            target: thingg.background
-                            color: "white"
-                            opacity: 0.9
-                        }
-                        PropertyChanges {
-                            target: thingg
-                            textColor: "black"
-                            platformTextColor: "black"
-                        }
-                    }
-                ]
+            contentY: 0
 
-                TapHandler {
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    onTapped: function (event, button) {
-                        if (button === Qt.RightButton) {
-                            rightClickMenu.popup()
-                        } else if (button === Qt.LeftButton) {
-                            // Router.navigateTo("library/" + myDelegate.model.id + "/details")
-                            // myDelegate.openDetails(myDelegate.model.id)
-                            // page.startGame(myDelegate.model.id, myDelegate.model.contentHash)
-                            listView.currentIndex = scope.index
-                        }
-                    }
-                }
+            // header: Pane {
+            //     id: header
+            //
+            //     width: parent.width
+            //     height: 120
+            //     background: Rectangle {
+            //         color: "transparent"
+            //         // border.color: "red"
+            //     }
+            //
+            //     horizontalPadding: 8
+            //
+            //     Text {
+            //         anchors.fill: parent
+            //         text: "All Games"
+            //         color: "white"
+            //         font.pointSize: 26
+            //         font.family: Constants.regularFontFamily
+            //         font.weight: Font.DemiBold
+            //         horizontalAlignment: Text.AlignLeft
+            //         verticalAlignment: Text.AlignVCenter
+            //     }
+            //
+            // }
+            highlightMoveDuration: 10
+            highlightMoveVelocity: -1
 
-                RightClickMenu {
-                    id: rightClickMenu
-                    objectName: "rightClickMenu"
+            boundsBehavior: Flickable.StopAtBounds
 
-                    RightClickMenuItem {
-                        text: "Play " + scope.model.displayName
-                        onTriggered: {
-                            page.startGame(scope.model.id, scope.model.contentHash)
-                        }
-                    }
+            // delegate: GameGridItemDelegate {
+            //     opacity: 1
+            //     cellSpacing: listView.cellSpacing
+            //     cellWidth: listView.cellContentWidth
+            //     cellHeight: listView.cellContentHeight
+            //
+            //     Component.onCompleted: {
+            //         openDetails.connect(page.openDetails)
+            //         startGame.connect(page.startGame)
+            //     }
+            // }
+            delegate: FocusScope {
+                id: scope
+                required property var index
+                required property var model
+                width: ListView.view.width
+                height: 50
+                focus: true
+                Button {
+                    id: thingg
+                    anchors.fill: parent
+                    focus: true
 
-                    RightClickMenuItem {
-                        enabled: false
-                        text: "View details"
-                        onTriggered: {
-                            page.openDetails(scope.model.id)
+                    property var platformTextColor: ColorPalette.neutral400
+
+                    property bool showGlobalCursor: true
+
+                    TapHandler {
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onTapped: function (event, button) {
+                            if (button === Qt.RightButton) {
+                                rightClickMenu.popup()
+                                event.accepted = true
+                            } else if (button === Qt.LeftButton) {
+                                // Router.navigateTo("library/" + myDelegate.model.id + "/details")
+                                // myDelegate.openDetails(myDelegate.model.id)
+                                // page.startGame(myDelegate.model.id, myDelegate.model.contentHash)
+                                listView.currentIndex = scope.index
+                            }
                         }
                     }
 
-                    MenuSeparator {
-                        contentItem: Rectangle {
-                            implicitWidth: rightClickMenu.width
-                            implicitHeight: 1
-                            color: "#606060"
+                    onClicked: {
+                        listView.currentIndex = scope.index
+                        if (!InputMethodManager.usingMouse) {
+                            details.forceActiveFocus()
                         }
                     }
 
-                    RightClickMenuItem {
-                        enabled: false
-                        text: "Manage save data"
-                        onTriggered: {
-                            page.manageSaveData(scope.model.id)
+                    RightClickMenu {
+                        id: rightClickMenu
+                        objectName: "rightClickMenu"
+
+                        RightClickMenuItem {
+                            text: "Play " + scope.model.displayName
+                            onTriggered: {
+                                page.startGame(scope.model.id, scope.model.contentHash)
+                            }
                         }
-                        // onTriggered: {
-                        //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
-                        //     addPlaylistRightClickMenu.popup()
+
+                        RightClickMenuItem {
+                            enabled: false
+                            text: "View details"
+                            onTriggered: {
+                                page.openDetails(scope.model.id)
+                            }
+                        }
+
+                        MenuSeparator {
+                            contentItem: Rectangle {
+                                implicitWidth: rightClickMenu.width
+                                implicitHeight: 1
+                                color: "#606060"
+                            }
+                        }
+
+                        RightClickMenuItem {
+                            enabled: false
+                            text: "Manage save data"
+                            onTriggered: {
+                                page.manageSaveData(scope.model.id)
+                            }
+                            // onTriggered: {
+                            //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
+                            //     addPlaylistRightClickMenu.popup()
+                            // }
+                        }
+                    }
+
+                    background: Rectangle {
+                        color: "white"
+                        opacity: parent.pressed ? 0.1 : parent.hovered ? 0.2 : 0
+                    }
+
+                    hoverEnabled: true
+
+                    contentItem: RowLayout {
+                        spacing: 12
+                        // Rectangle {
+                        //     Layout.fillHeight: true
+                        //     Layout.preferredWidth: 72 - thingg.verticalPadding * 2
+                        //     color: "grey"
+                        //
+                        //     Image {
+                        //         source: model.icon1x1SourceUrl
+                        //         fillMode: Image.PreserveAspectFit
+                        //         anchors.fill: parent
+                        //     }
                         // }
-                    }
-                }
-
-
-                background: Rectangle {
-                    // color: "#25282C"
-                }
-
-                hoverEnabled: true
-
-                contentItem: RowLayout {
-                    spacing: 12
-                    // Rectangle {
-                    //     Layout.fillHeight: true
-                    //     Layout.preferredWidth: 72 - thingg.verticalPadding * 2
-                    //     color: "grey"
-                    //
-                    //     Image {
-                    //         source: model.icon1x1SourceUrl
-                    //         fillMode: Image.PreserveAspectFit
-                    //         anchors.fill: parent
-                    //     }
-                    // }
-                    Text {
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: 500
-                        Layout.minimumWidth: 300
-                        text: model.displayName
-                        color: thingg.textColor
-                        elide: Text.ElideRight
-                        maximumLineCount: 1
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        font.pixelSize: 16
-                        font.weight: Font.Normal
-                        font.family: Constants.regularFontFamily
-                    }
-                    Text {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        // text: model.platformId
-                        text: "Nintendo 64"
-                        color: thingg.platformTextColor
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 15
-                        font.weight: Font.Normal
-                        font.family: Constants.regularFontFamily
+                        Text {
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            // Layout.preferredWidth: 500
+                            // Layout.minimumWidth: 300
+                            text: model.displayName
+                            color: "white"
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignLeft
+                            font.pixelSize: 16
+                            font.weight: Font.Normal
+                            font.family: Constants.regularFontFamily
+                        }
+                        // Text {
+                        //     Layout.fillHeight: true
+                        //     Layout.fillWidth: true
+                        //     // text: model.platformId
+                        //     text: "Nintendo 64"
+                        //     color: thingg.platformTextColor
+                        //     verticalAlignment: Text.AlignVCenter
+                        //     font.pixelSize: 15
+                        //     font.weight: Font.Normal
+                        //     font.family: Constants.regularFontFamily
+                        // }
                     }
                 }
             }
         }
     }
+
 
     // Flickable {
     //     // anchors.right: parent.right
