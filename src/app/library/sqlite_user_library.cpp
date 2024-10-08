@@ -36,8 +36,12 @@ namespace firelight::library {
             "active_save_slot INTEGER NOT NULL DEFAULT 1, "
             "hidden INTEGER NOT NULL DEFAULT 0, "
             "icon_1x1_source_url TEXT, "
+            "icon_2x3_source_url TEXT,"
+            "icon_92x43_source_url TEXT, "
             "boxart_front_source_url TEXT, "
             "boxart_back_source_url TEXT, "
+            "clear_logo_source_url TEXT, "
+            "hero_image_source_url TEXT, "
             "description TEXT, "
             "release_year INTEGER, "
             "developer TEXT, "
@@ -255,6 +259,18 @@ namespace firelight::library {
         }
 
         return romFiles;
+    }
+
+    std::vector<WatchedDirectory> SqliteUserLibrary::getWatchedDirectories() {
+        return {
+            WatchedDirectory{
+                .path = R"(C:\Users\alexs\AppData\Roaming\Firelight\roms)"
+            }
+        };
+    }
+
+    bool SqliteUserLibrary::addWatchedDirectory(const WatchedDirectory &directory) {
+        return false;
     }
 
     QSqlDatabase SqliteUserLibrary::getDatabase() const {

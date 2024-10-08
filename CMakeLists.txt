@@ -389,6 +389,7 @@ install(
         ${CMAKE_SOURCE_DIR}/assets/openquick.wav
         ${CMAKE_SOURCE_DIR}/assets/closequick.wav
         ${CMAKE_SOURCE_DIR}/assets/menumove.wav
+        ${CMAKE_SOURCE_DIR}/assets/startgame.wav
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/sfx/
 )
 

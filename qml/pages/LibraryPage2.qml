@@ -155,6 +155,50 @@ FocusScope {
     //     }
     // }
 
+    SequentialAnimation {
+        id: startGameAnimation
+        running: false
+
+        property var gameId
+        property var gameHash
+
+        ParallelAnimation {
+            PropertyAction {
+                target: playClone
+                property: "visible"
+                value: true
+            }
+            NumberAnimation {
+                target: playClone
+                property: "scale"
+                to: 1.4
+                duration: 500
+                easing.type: Easing.OutQuad
+            }
+            ScriptAction {
+                script: {
+                    sfx_player.play("startgame")
+                }
+            }
+        }
+        PropertyAnimation {
+            target: playClone
+            property: "opacity"
+            from: 0.3
+            to: 0
+            duration: 100
+            easing.type: Easing.InQuint
+        }
+        PauseAnimation {
+            duration: 500
+        }
+        ScriptAction {
+            script: {
+                page.startGame(startGameAnimation.gameId, startGameAnimation.gameHash)
+            }
+        }
+    }
+
     Pane {
         id: details
 
@@ -198,7 +242,19 @@ FocusScope {
                 label: "Play"
 
                 onClicked: function () {
-                    page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
+                    // page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
+                    startGameAnimation.gameId = listView.currentItem.model.id
+                    startGameAnimation.gameHash = listView.currentItem.model.contentHash
+                    startGameAnimation.start()
+                }
+
+                FirelightButton {
+                    id: playClone
+                    opacity: 0.3
+                    visible: false
+                    anchors.fill: parent
+
+                    label: "Play"
                 }
             }
 

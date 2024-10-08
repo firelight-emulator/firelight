@@ -166,29 +166,28 @@ int main(int argc, char *argv[]) {
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
+  firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database, *gameImageProvider);
+  firelight::ManagerAccessor::setSaveManager(&saveManager);
+
   firelight::library::SqliteUserLibrary
       userLibrary(QString::fromStdString(defaultAppDataPath.string() + "/library.db"));
-  firelight::library::LibraryScanner2 libScanner2(userLibrary);
 
   QObject::connect(&userLibrary, &firelight::library::SqliteUserLibrary::entryCreated,
                    [](int id, const QString &contentHash) -> void {
                      spdlog::info("Entry created: {}", contentHash.toStdString());
                    });
 
-  firelight::ManagerAccessor::setUserLibrary(&userLibrary);
-
-  firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database, *gameImageProvider);
-  firelight::ManagerAccessor::setSaveManager(&saveManager);
-
-  auto contentDirs = libraryDatabase.getAllLibraryContentDirectories();
-  if (contentDirs.empty()) {
-    firelight::db::LibraryContentDirectory dir{
-      .path =
-      canonical(romsDir).string()
+  if (userLibrary.getWatchedDirectories().empty()) {
+    firelight::library::WatchedDirectory dir{
+      .path = QString::fromStdString(canonical(romsDir).string())
     };
 
-    libraryDatabase.createLibraryContentDirectory(dir);
+    userLibrary.addWatchedDirectory(dir);
   }
+
+  firelight::ManagerAccessor::setUserLibrary(&userLibrary);
+
+  firelight::library::LibraryScanner2 libScanner2(userLibrary);
 
   firelight::achievements::RAClient raClient(contentDatabase);
   firelight::ManagerAccessor::setAchievementManager(&raClient);
@@ -213,15 +212,15 @@ int main(int argc, char *argv[]) {
   auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>(userdata_database);
   firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
 
-  QObject::connect(
-    &libraryDatabase,
-    &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
-    &libraryManager, &LibraryScanner::startScan);
+  // QObject::connect(
+  //   &libraryDatabase,
+  //   &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
+  //   &libraryManager, &LibraryScanner::startScan);
+  //
+  // QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
+  //                  &firelight::gui::LibraryItemModel::refresh);
 
-  QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
-                   &firelight::gui::LibraryItemModel::refresh);
-
-  libraryManager.startScan();
+  // libraryManager.startScan();
 
   // qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 

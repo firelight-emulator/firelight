@@ -14,7 +14,7 @@ namespace firelight::library {
     public:
         explicit LibraryScanner2(IUserLibrary &library);
 
-        ~LibraryScanner2();
+        ~LibraryScanner2() override;
 
         void watchPath(const QString &path);
 
@@ -39,7 +39,5 @@ namespace firelight::library {
         QReadWriteLock m_pathQueueLock;
 
         void queueScan(const QString &path);
-
-        static QByteArray calculateContentId(int platformId, QByteArray &originalMd5, QByteArray &fileData);
     };
 } // namespace firelight::library

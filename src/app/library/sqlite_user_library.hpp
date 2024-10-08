@@ -24,10 +24,16 @@ namespace firelight::library {
 
         std::vector<RomFile> getRomFilesWithContentHash(const QString &contentHash) override;
 
+        std::vector<WatchedDirectory> getWatchedDirectories() override;
+
+        bool addWatchedDirectory(const WatchedDirectory &directory) override;
+
     signals:
         void romFileAdded(int id, const QString &contentHash);
 
         void entryCreated(int id, const QString &contentHash);
+
+        void watchedDirectoryAdded(int id, const QString &path);
 
     private:
         static constexpr auto DATABASE_PREFIX = "userlibrary_";

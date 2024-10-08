@@ -44,6 +44,9 @@ namespace firelight::audio {
         m_sfxs["menumove"] = new QSoundEffect();
         m_sfxs["menumove"]->setSource(QUrl::fromLocalFile("system/sfx/menumove.wav"));
 
+        m_sfxs["startgame"] = new QSoundEffect();
+        m_sfxs["startgame"]->setSource(QUrl::fromLocalFile("system/sfx/startgame.wav"));
+
         // m_sfxs["rewindscroll"] = std::move(effect1);
         // m_sfxs["rewindopen"] = std::move(effect2);
 

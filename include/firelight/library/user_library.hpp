@@ -2,6 +2,7 @@
 
 #include "entry.hpp"
 #include "rom_file.hpp"
+#include "watched_directory.hpp"
 
 namespace firelight::library {
     class IUserLibrary {
@@ -18,5 +19,9 @@ namespace firelight::library {
         virtual std::optional<Entry> getEntry(int entryId) = 0;
 
         virtual std::vector<RomFile> getRomFilesWithContentHash(const QString &contentHash) = 0;
+
+        virtual std::vector<WatchedDirectory> getWatchedDirectories() = 0;
+
+        virtual bool addWatchedDirectory(const WatchedDirectory &directory) = 0;
     };
 }
