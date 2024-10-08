@@ -11,8 +11,8 @@ Item {
 
     readonly property var buttonBackgroundOpacityDisabled: 0
     readonly property var buttonBackgroundOpacityInactive: 0.15
-    readonly property var buttonBackgroundOpacityHovered: 0.2
-    readonly property var buttonBackgroundOpacityPressed: 0.1
+    readonly property var buttonBackgroundOpacityHovered: 0.3
+    readonly property var buttonBackgroundOpacityPressed: 0.2
     readonly property var buttonBackgroundOpacityFocused: 1
 
     readonly property var buttonStandardWidth: 200

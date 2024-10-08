@@ -62,7 +62,8 @@ namespace firelight::library {
                                              }
 
                                              auto extension = fileInfo.suffix().toLower();
-                                             if (extension == "zip" || extension == "7z" || extension == "tar") {
+                                             if (extension == "zip" || extension == "7z" || extension == "tar" ||
+                                                 extension == "rar") {
                                                  archive_entry *entry;
 
                                                  archive *a = archive_read_new();

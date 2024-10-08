@@ -67,31 +67,6 @@ FocusScope {
 
         contentY: 0
 
-        header: Pane {
-            id: header
-
-            width: parent.width
-            height: 120
-            background: Rectangle {
-                color: "transparent"
-                // border.color: "red"
-            }
-
-            horizontalPadding: 8
-
-            Text {
-                anchors.fill: parent
-                text: "All Mods"
-                color: "white"
-                font.pointSize: 26
-                font.family: Constants.regularFontFamily
-                font.weight: Font.DemiBold
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-            }
-
-        }
-
         readonly property int cellSpacing: 12
         readonly property int cellContentWidth: 360 + cellSpacing
         readonly property int cellContentHeight: 240 + cellSpacing

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 
 FocusScope {
     id: page
@@ -12,6 +13,129 @@ FocusScope {
     signal openDetails(entryId: int)
 
     signal startGame(entryId: int, hash: string)
+
+    // property var backgroundImageSource: "https://cdn2.steamgriddb.com/hero_thumb/013471d96b9ba9a61ba640562b3338f9.png"
+    //
+    // Timer {
+    //     id: backgroundTimer
+    //     interval: 500; running: false
+    //     onTriggered: function () {
+    //         backgroundImageStack.replaceCurrentItem(backgroundImage, {source: "https://cdn2.steamgriddb.com/hero_thumb/2b423dc1a327648b419922ee8980e8dd.jpg"}, StackView.PushTransition)
+    //     }
+    // }
+    //
+    // Keys.onDigit6Pressed: function (event) {
+    //     page.backgroundImageSource = "https://cdn2.steamgriddb.com/hero_thumb/2b423dc1a327648b419922ee8980e8dd.jpg"
+    //     backgroundTimer.restart()
+    //
+    //     // backgroundImageStack.replaceCurrentItem(backgroundImage, {source: "https://cdn2.steamgriddb.com/hero_thumb/2b423dc1a327648b419922ee8980e8dd.jpg"}, StackView.PushTransition)
+    //     // mainBackground.source = "https://cdn2.steamgriddb.com/hero_thumb/2b423dc1a327648b419922ee8980e8dd.jpg"
+    // }
+
+    // Item {
+    //     id: background
+    //
+    //     Component.onCompleted: function () {
+    //         page.Window.window.background = background
+    //     }
+    //
+    //     Component {
+    //         id: backgroundImage
+    //         Image {
+    //             id: mainBackground
+    //             source: "https://cdn2.steamgriddb.com/hero_thumb/013471d96b9ba9a61ba640562b3338f9.png"
+    //             fillMode: Image.PreserveAspectCrop
+    //             layer.enabled: true
+    //             layer.effect: MultiEffect {
+    //                 source: mainBackground
+    //                 anchors.fill: mainBackground
+    //                 blurEnabled: true
+    //                 blurMultiplier: 1.0
+    //                 blurMax: 64
+    //                 blur: 0.1
+    //             }
+    //         }
+    //     }
+    //
+    //     StackView {
+    //         id: backgroundImageStack
+    //         anchors.fill: parent
+    //
+    //         initialItem: backgroundImage
+    //
+    //         pushEnter: Transition {
+    //             NumberAnimation {
+    //                 properties: "y"
+    //                 from: -10
+    //                 to: 0
+    //                 duration: 500
+    //                 easing.type: Easing.InOutQuad
+    //             }
+    //             NumberAnimation {
+    //                 properties: "opacity"
+    //                 from: 0
+    //                 to: 1
+    //                 duration: 500
+    //                 easing.type: Easing.InOutQuad
+    //             }
+    //         }
+    //
+    //         pushExit: Transition {
+    //             NumberAnimation {
+    //                 properties: "y"
+    //                 from: 0
+    //                 to: 10
+    //                 duration: 500
+    //                 easing.type: Easing.InOutQuad
+    //             }
+    //             NumberAnimation {
+    //                 properties: "opacity"
+    //                 from: 1
+    //                 to: 0
+    //                 duration: 500
+    //                 easing.type: Easing.InOutQuad
+    //             }
+    //         }
+    //     }
+    //
+    //     Rectangle {
+    //         anchors.fill: parent
+    //         color: "black"
+    //         opacity: 0.5
+    //     }
+    //
+    //     Rectangle {
+    //         anchors.topMargin: -70
+    //         anchors.top: parent.top
+    //         anchors.left: parent.left
+    //         anchors.right: parent.right
+    //         height: 200
+    //         gradient: Gradient {
+    //             GradientStop {
+    //                 position: 0.0; color: "black"
+    //             }
+    //             GradientStop {
+    //                 position: 1.0; color: "transparent"
+    //             }
+    //         }
+    //     }
+    //
+    //     Rectangle {
+    //         anchors.bottomMargin: -70
+    //         anchors.bottom: parent.bottom
+    //         anchors.left: parent.left
+    //         anchors.right: parent.right
+    //         height: 200
+    //         gradient: Gradient {
+    //             GradientStop {
+    //                 position: 1.0; color: "black"
+    //             }
+    //             GradientStop {
+    //                 position: 0.0; color: "transparent"
+    //             }
+    //         }
+    //     }
+    // }
 
     // padding: 24
     // leftPadding: 48
@@ -39,6 +163,8 @@ FocusScope {
         anchors.bottom: parent.bottom
         anchors.left: listViewContainer.right
 
+        padding: 72
+
         background: Item {
         }
 
@@ -52,19 +178,19 @@ FocusScope {
                 Layout.fillWidth: true
                 text: listView.currentItem.model.displayName
                 font.pixelSize: 24
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                 font.weight: Font.DemiBold
                 font.family: Constants.regularFontFamily
                 color: "white"
                 wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
+                horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
             }
 
             FirelightButton {
                 id: hamburger
                 focus: true
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
                 Layout.preferredWidth: AppStyle.buttonStandardWidth
                 Layout.preferredHeight: AppStyle.buttonStandardHeight
@@ -75,6 +201,7 @@ FocusScope {
                     page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
                 }
             }
+
 
             // Button {
             //     id: playButton
@@ -104,11 +231,6 @@ FocusScope {
             //         page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
             //     }
             // }
-
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
         }
     }
 

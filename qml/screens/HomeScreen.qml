@@ -23,7 +23,7 @@ FocusScope {
         ShopLandingPage {
             property bool topLevel: true
             property string topLevelName: "shop"
-            property string pageTitle: "Mod shop"
+            property string pageTitle: "Mod shop (coming soon!)"
             model: shop_item_model
         }
     }
@@ -458,7 +458,24 @@ FocusScope {
             // }
 
             Text {
-                text: "10:00 pm"
+                property bool drawColon: true
+                Timer {
+                    triggeredOnStart: true
+                    interval: 1000
+                    running: true
+                    repeat: true
+                    onTriggered: {
+                        parent.text = new Date().toLocaleTimeString(Qt.locale("en_US"), Locale.ShortFormat)
+                        if (!parent.drawColon) {
+                            parent.text = parent.text.replace(":", " ")
+                            parent.drawColon = true
+                        } else {
+                            parent.drawColon = false
+                        }
+                    }
+                    // console.log("tick")
+                }
+                text: ""
                 color: "white"
                 font.pixelSize: 18
                 Layout.rightMargin: 12
