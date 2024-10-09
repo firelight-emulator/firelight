@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
+import QtMultimedia
 
 FocusScope {
     id: page
@@ -155,6 +156,66 @@ FocusScope {
     //     }
     // }
 
+    // MediaPlayer {
+    //     id: playMusic
+    //     source: "file:system/toadtown.mp3"
+    //     audioOutput: AudioOutput {
+    //         id: audioDevice
+    //
+    //     }
+    //     onPositionChanged: function () {
+    //         if (playMusic.position >= 28000) {
+    //             stopAudioAnimation.start()
+    //         }
+    //     }
+    // }
+    //
+    // SequentialAnimation {
+    //     id: stopAudioAnimation
+    //     running: false
+    //     PropertyAnimation {
+    //         target: audioDevice
+    //         property: "volume"
+    //         to: 0
+    //         duration: 2000
+    //         easing.type: Easing.InOutQuad
+    //     }
+    //     ScriptAction {
+    //         script: {
+    //             playMusic.stop()
+    //             playMusic.position = 0
+    //             startAudioAnimation.start()
+    //         }
+    //     }
+    // }
+    //
+    // SequentialAnimation {
+    //     id: startAudioAnimation
+    //     running: false
+    //     PropertyAction {
+    //         target: audioDevice
+    //         property: "volume"
+    //         value: 0
+    //     }
+    //     ScriptAction {
+    //         script: {
+    //             playMusic.play()
+    //         }
+    //     }
+    //     PropertyAnimation {
+    //         target: audioDevice
+    //         property: "volume"
+    //         to: 1
+    //         duration: 2000
+    //         easing.type: Easing.InOutQuad
+    //     }
+    // }
+    //
+    //
+    // Component.onCompleted: function () {
+    //     playMusic.play()
+    // }
+
     SequentialAnimation {
         id: startGameAnimation
         running: false
@@ -189,9 +250,9 @@ FocusScope {
             duration: 100
             easing.type: Easing.InQuint
         }
-        PauseAnimation {
-            duration: 500
-        }
+        // PauseAnimation {
+        //     duration: 500
+        // }
         ScriptAction {
             script: {
                 page.startGame(startGameAnimation.gameId, startGameAnimation.gameHash)
@@ -222,19 +283,19 @@ FocusScope {
                 Layout.fillWidth: true
                 text: listView.currentItem.model.displayName
                 font.pixelSize: 24
-                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 font.weight: Font.DemiBold
                 font.family: Constants.regularFontFamily
                 color: "white"
                 wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignLeft
+                horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
 
             FirelightButton {
                 id: hamburger
                 focus: true
-                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
                 Layout.preferredWidth: AppStyle.buttonStandardWidth
                 Layout.preferredHeight: AppStyle.buttonStandardHeight
@@ -242,10 +303,10 @@ FocusScope {
                 label: "Play"
 
                 onClicked: function () {
-                    // page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
-                    startGameAnimation.gameId = listView.currentItem.model.id
-                    startGameAnimation.gameHash = listView.currentItem.model.contentHash
-                    startGameAnimation.start()
+                    page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
+                    // startGameAnimation.gameId = listView.currentItem.model.id
+                    // startGameAnimation.gameHash = listView.currentItem.model.contentHash
+                    // startGameAnimation.start()
                 }
 
                 FirelightButton {
@@ -256,6 +317,10 @@ FocusScope {
 
                     label: "Play"
                 }
+            }
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
             }
 
 

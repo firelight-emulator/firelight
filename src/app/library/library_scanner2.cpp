@@ -38,6 +38,7 @@ namespace firelight::library {
         }
 
         return QtConcurrent::run(&m_threadPool, [this] {
+                                     QThread::currentThread()->setPriority(QThread::NormalPriority);
                                      m_scanRunning = true;
                                      m_pathQueueLock.lockForRead();
                                      auto queueEmpty = m_pathQueue.isEmpty();
@@ -55,6 +56,9 @@ namespace firelight::library {
                                          spdlog::info("Scanning directory: {} (last modified: {})",
                                                       dirInfo.filePath().toStdString(),
                                                       dirInfo.lastModified().toString().toStdString());
+
+                                         // get directory info
+                                         // if last modified is the same, skip
 
                                          while (iter.hasNext()) {
                                              if (m_shuttingDown) {
@@ -152,6 +156,8 @@ namespace firelight::library {
                                              // that gets us image
                                          }
 
+                                         // update directory info
+
                                          m_pathQueueLock.lockForRead();
                                          queueEmpty = m_pathQueue.isEmpty();
                                          if (!queueEmpty) {
@@ -174,6 +180,11 @@ namespace firelight::library {
 
     void LibraryScanner2::queueScan(const QString &path) {
         m_pathQueueLock.lockForWrite();
+        if (m_scanQueuedByPath.contains(path) && m_scanQueuedByPath[path]) {
+            m_pathQueueLock.unlock();
+            return;
+        }
+
         m_scanQueuedByPath[path] = true;
         m_pathQueue.enqueue(path);
         m_pathQueueLock.unlock();

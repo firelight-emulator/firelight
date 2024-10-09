@@ -54,6 +54,36 @@ namespace firelight::library {
             spdlog::error("Table creation failed: {}",
                           createEntriesTable.lastError().text().toStdString());
         }
+
+        QSqlQuery createDirectoriesTable(getDatabase());
+        createDirectoriesTable.prepare("CREATE TABLE IF NOT EXISTS watched_directoriesv1("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "path TEXT NOT NULL,"
+            "num_files INTEGER NOT NULL DEFAULT 0,"
+            "num_content_files INTEGER NOT NULL DEFAULT 0,"
+            "last_modified INTEGER DEFAULT 0,"
+            "recursive INTEGER NOT NULL DEFAULT 1,"
+            "created_at INTEGER NOT NULL);");
+
+        if (!createDirectoriesTable.exec()) {
+            spdlog::error("Table creation failed: {}",
+                          createDirectoriesTable.lastError().text().toStdString());
+        }
+
+        QSqlQuery createSubdirectoriesTable(getDatabase());
+        createSubdirectoriesTable.prepare("CREATE TABLE IF NOT EXISTS subdirectories("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "path TEXT NOT NULL,"
+            "num_files INTEGER NOT NULL DEFAULT 0,"
+            "num_content_files INTEGER NOT NULL DEFAULT 0,"
+            "last_modified INTEGER DEFAULT 0,"
+            "recursive INTEGER NOT NULL DEFAULT 1,"
+            "created_at INTEGER NOT NULL);");
+
+        if (!createSubdirectoriesTable.exec()) {
+            spdlog::error("Table creation failed: {}",
+                          createSubdirectoriesTable.lastError().text().toStdString());
+        }
     }
 
     SqliteUserLibrary::~SqliteUserLibrary() {
@@ -255,22 +285,61 @@ namespace firelight::library {
         std::vector<RomFile> romFiles;
 
         while (query.next()) {
-            romFiles.emplace_back(RomFile(query));
+            romFiles.emplace_back(query);
         }
 
         return romFiles;
     }
 
     std::vector<WatchedDirectory> SqliteUserLibrary::getWatchedDirectories() {
-        return {
-            WatchedDirectory{
-                .path = R"(C:\Users\alexs\AppData\Roaming\Firelight\roms)"
-            }
-        };
+        const QString queryString =
+                "SELECT * FROM watched_directoriesv1;";
+        QSqlQuery query(getDatabase());
+        query.prepare(queryString);
+
+        if (!query.exec()) {
+            spdlog::error("Failed to get directories: {}", query.lastError().text().toStdString());
+        }
+
+        std::vector<WatchedDirectory> directories;
+
+        while (query.next()) {
+            directories.emplace_back(WatchedDirectory{
+                .id = query.value("id").toInt(),
+                .path = query.value("path").toString(),
+                .numFiles = query.value("num_files").toInt(),
+                .numContentFiles = query.value("num_content_files").toInt(),
+                .lastModified = QDateTime::fromMSecsSinceEpoch(query.value("last_modified").toUInt()),
+                .recursive = query.value("recursive").toBool(),
+                .createdAt = query.value("created_at").toUInt()
+            });
+        }
+
+        return directories;
     }
 
     bool SqliteUserLibrary::addWatchedDirectory(const WatchedDirectory &directory) {
-        return false;
+        const QString queryString =
+                "INSERT INTO watched_directoriesv1 ("
+                "path, "
+                "created_at) VALUES"
+                "(:path, :createdAt);";
+        QSqlQuery query(getDatabase());
+        query.prepare(queryString);
+        query.bindValue(":path", directory.path);
+        query.bindValue(":createdAt",
+                        std::chrono::duration_cast<std::chrono::milliseconds>(
+                            std::chrono::system_clock::now().time_since_epoch())
+                        .count());
+
+        if (!query.exec()) {
+            spdlog::error("Failed to add directory with path {}: {}", directory.path.toStdString(),
+                          query.lastError().text().toStdString());
+            return false;
+        }
+
+        emit watchedDirectoryAdded(query.lastInsertId().toInt(), directory.path);
+        return true;
     }
 
     QSqlDatabase SqliteUserLibrary::getDatabase() const {

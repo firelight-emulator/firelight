@@ -478,13 +478,13 @@ FocusScope {
                 text: ""
                 color: "white"
                 font.pixelSize: 18
+                horizontalAlignment: Text.AlignRight
+                verticalAlignment: Text.AlignVCenter
                 Layout.rightMargin: 12
                 font.weight: Font.Normal
                 font.family: Constants.regularFontFamily
+                Layout.preferredWidth: 85
                 Layout.fillHeight: true
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-
             }
         }
     }
@@ -747,7 +747,7 @@ FocusScope {
         anchors.left: parent.left
         anchors.leftMargin: 40
         anchors.rightMargin: 40
-        KeyNavigation.left: drawer2
+        KeyNavigation.left: hamburger
 
         Keys.onEscapePressed: function (event) {
             drawer2.open()
