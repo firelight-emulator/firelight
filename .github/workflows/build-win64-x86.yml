@@ -69,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: firelight-zip-win-x64
-          path: build/firelight-emulator-0.5.1-win64.zip
+          path: build/firelight-emulator-0.6.0-win64.zip
 
         # - name: Prepare artifact
         #   run: |
