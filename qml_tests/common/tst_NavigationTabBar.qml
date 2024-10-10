@@ -47,8 +47,8 @@ Item {
 
             compare(control.currentIndex, 0, "currentIndex is correct")
             compare(highlight.width, 100, "highlight width is correct")
-            compare(highlight.height, 2, "highlight height is correct")
-            compare(highlight.radius, 1, "highlight radius is correct")
+            compare(highlight.height, 4, "highlight height is correct")
+            compare(highlight.radius, 2, "highlight radius is correct")
             compare(highlight.color, "#ffffff", "highlight color is correct")
             compare(highlight.y, 100, "highlight y is correct")
             compare(highlight.x, 0, "highlight x is correct")
@@ -81,13 +81,13 @@ Item {
 
             compare(textOne.text, "Hi", "buttonOne text is correct")
             compare(textOne.color, "#ffffff", "text color is correct")
-            compare(textOne.font.pointSize, 11, "text pointSize is correct")
+            compare(textOne.font.pixelSize, 15, "text pointSize is correct")
             compare(textOne.font.weight, Font.Bold, "text weight is correct")
             verify(buttonOne.checked, "buttonOne is checked")
 
             compare(textTwo.text, "There", "buttonTwo text is correct")
             compare(textTwo.color, "#ffffff", "text color is correct")
-            compare(textTwo.font.pointSize, 11, "text pointSize is correct")
+            compare(textTwo.font.pixelSize, 15, "text pointSize is correct")
             compare(textTwo.font.weight, Font.Normal, "text weight is correct")
             verify(!buttonTwo.checked, "buttonTwo is not checked")
 
@@ -95,13 +95,13 @@ Item {
 
             compare(textTwo.text, "There", "buttonTwo text is correct")
             compare(textTwo.color, "#ffffff", "text color is correct")
-            compare(textTwo.font.pointSize, 11, "text pointSize is correct")
+            compare(textTwo.font.pixelSize, 15, "text pointSize is correct")
             compare(textTwo.font.weight, Font.Bold, "text weight is correct")
             verify(buttonTwo.checked, "buttonTwo is checked")
 
             compare(textOne.text, "Hi", "buttonOne text is correct")
             compare(textOne.color, "#ffffff", "text color is correct")
-            compare(textOne.font.pointSize, 11, "text pointSize is correct")
+            compare(textOne.font.pixelSize, 15, "text pointSize is correct")
             compare(textOne.font.weight, Font.Normal, "text weight is correct")
             verify(!buttonOne.checked, "buttonOne is not checked")
 

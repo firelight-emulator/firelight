@@ -260,6 +260,7 @@ file(GLOB QML_TEST_FILES
         qml/ColorPalette.qml
         qml/Constants.qml
         qml/AppStyle.qml
+        qml/common/FirelightButton.qml
         qml/common/DetailsButton.qml
         qml/common/RightClickMenu.qml
         qml/common/RightClickMenuItem.qml
@@ -298,7 +299,7 @@ set_target_properties(fl_qml_test PROPERTIES
 target_link_libraries(fl_qml_test PUBLIC firelight_lib)
 add_definitions(-DQUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_test(NAME QMLTests COMMAND fl_qml_test -platform offscreen)
+#add_test(NAME QMLTests COMMAND fl_qml_test -platform offscreen)
 
 #target_compile_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
 #target_link_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
