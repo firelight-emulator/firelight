@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(firelight
-        VERSION 0.5.1
+        VERSION 0.6.0
         DESCRIPTION "An emulation frontend that just works"
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -324,7 +324,7 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY, "firelight")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-set(CPACK_PACKAGE_VERSION "0.5.1")
+set(CPACK_PACKAGE_VERSION "0.6.0")
 
 
 #set(CPACK_RESOURCE_FILE_LICENSE, "C:/msys64/mingw64/share/cmake/Templates/ALEX.txt")
