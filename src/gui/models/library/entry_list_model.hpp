@@ -41,6 +41,8 @@ namespace firelight::library {
         [[nodiscard]] QVariant data(const QModelIndex &index,
                                     int role) const override;
 
+        void reset();
+
     private:
         IUserLibrary &m_userLibrary;
         QList<Entry> m_items{};

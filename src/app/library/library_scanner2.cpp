@@ -168,6 +168,7 @@ namespace firelight::library {
                                      }
 
                                      m_scanRunning = false;
+                                     emit scanFinished();
                                      return true;
                                  }
 
@@ -175,6 +176,13 @@ namespace firelight::library {
 
         // Check for files that ARE in the database but not in the filesystem
         // Calculate changeset between all directories - for example if removed from one but added to another
+    }
+
+    void LibraryScanner2::scanAll() {
+        for (const auto &dir: m_library.getWatchedDirectories()) {
+            queueScan(dir.path);
+        }
+        startScan();
     }
 
 

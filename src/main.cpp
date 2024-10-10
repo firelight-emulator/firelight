@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setUserLibrary(&userLibrary);
 
   firelight::library::LibraryScanner2 libScanner2(userLibrary);
-  libScanner2.startScan();
+  libScanner2.scanAll();
 
   firelight::achievements::RAClient raClient(contentDatabase);
   firelight::ManagerAccessor::setAchievementManager(&raClient);
@@ -203,6 +203,9 @@ int main(int argc, char *argv[]) {
   libSortModel.setSourceModel(&libModel);
 
   firelight::library::EntryListModel entryListModel(userLibrary);
+
+  QObject::connect(&libScanner2, &firelight::library::LibraryScanner2::scanFinished,
+                   &entryListModel, &firelight::library::EntryListModel::reset);
 
   firelight::gui::PlatformListModel platformListModel;
   firelight::shop::ShopItemModel shopItemModel(contentDatabase);

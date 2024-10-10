@@ -5,7 +5,7 @@
     <qresource prefix="/fonts">
         <!--        <file alias="lexend">assets/Lexend-Regular.ttf</file>-->
         <!--        <file alias="lexend-light">assets/Lexend-Light.ttf</file>-->
-        <file alias="lexend">assets/Inter-VariableFont_opsz,wght.ttf</file>
+        <file alias="lexend">assets/OpenSans-VariableFont_wdth,wght.ttf</file>
         <file alias="lexend-light">assets/NunitoSans_10pt-Regular.ttf</file>
         <file alias="font-semibold">assets/Lexend-Medium.ttf</file>
         <file alias="lexend-black">assets/NunitoSans_10pt_SemiCondensed-Black.ttf</file>

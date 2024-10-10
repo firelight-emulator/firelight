@@ -20,12 +20,14 @@ namespace firelight::library {
 
         QFuture<bool> startScan();
 
+        void scanAll();
+
         QFuture<bool> scanPath(const QString &path);
 
     signals:
         void scanStarted(const QString &path);
 
-        void scanFinished(const QString &path);
+        void scanFinished();
 
     private:
         IUserLibrary &m_library;

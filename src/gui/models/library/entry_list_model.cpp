@@ -197,4 +197,13 @@ namespace firelight::library {
                 return QVariant{};
         }
     }
+
+    void EntryListModel::reset() {
+        emit beginResetModel();
+        m_items.clear();
+        for (const auto &entry: m_userLibrary.getEntries(0, 0)) {
+            m_items.emplace_back(entry);
+        }
+        emit endResetModel();
+    }
 }
