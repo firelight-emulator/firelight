@@ -188,6 +188,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setUserLibrary(&userLibrary);
 
   firelight::library::LibraryScanner2 libScanner2(userLibrary);
+  libScanner2.startScan();
 
   firelight::achievements::RAClient raClient(contentDatabase);
   firelight::ManagerAccessor::setAchievementManager(&raClient);

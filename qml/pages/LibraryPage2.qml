@@ -379,7 +379,6 @@ FocusScope {
             // SplitView.preferredWidth: parent.width / 2
 
             ScrollBar.vertical: ScrollBar {
-                policy: ScrollBar.AlwaysOn
             }
 
             preferredHighlightBegin: 0.33 * listView.height

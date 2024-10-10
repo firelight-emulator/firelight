@@ -306,6 +306,7 @@ add_definitions(-DQUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_dependencies(fl_test copy_resources)
 #
+
 target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
