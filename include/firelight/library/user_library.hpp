@@ -23,5 +23,7 @@ namespace firelight::library {
         virtual std::vector<WatchedDirectory> getWatchedDirectories() = 0;
 
         virtual bool addWatchedDirectory(const WatchedDirectory &directory) = 0;
+
+        virtual bool updateWatchedDirectory(const WatchedDirectory &directory) = 0;
     };
 }

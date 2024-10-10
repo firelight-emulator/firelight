@@ -12,14 +12,15 @@ namespace firelight::library {
     RomFile::RomFile(const QString &path) : m_filePath(path) {
         m_suffix = path.right(path.length() - (path.lastIndexOf('.') + 1)).toLower();
 
+        m_platformId = PlatformMetadata::getIdFromFileExtension(m_suffix.toStdString());
+        if (m_platformId == PlatformMetadata::PLATFORM_ID_UNKNOWN) {
+            return;
+            // TODO: check for other stuff later.
+        }
+
         QFile file(path);
         if (!file.open(QIODevice::ReadOnly)) {
             return;
-        }
-
-        m_platformId = PlatformMetadata::getIdFromFileExtension(m_suffix.toStdString());
-        if (m_platformId == PlatformMetadata::PLATFORM_ID_UNKNOWN) {
-            // TODO: check for other stuff later.
         }
 
         const auto bytes = file.readAll();

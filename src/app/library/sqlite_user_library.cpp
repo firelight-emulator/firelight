@@ -342,6 +342,21 @@ namespace firelight::library {
         return true;
     }
 
+    bool SqliteUserLibrary::updateWatchedDirectory(const WatchedDirectory &directory) {
+        QSqlQuery q(getDatabase());
+        q.prepare("UPDATE watched_directoriesv1 SET path = :path WHERE id = :id");
+        q.bindValue(":path", directory.path);
+        q.bindValue(":id", directory.id);
+
+        if (!q.exec()) {
+            spdlog::error("Failed to update watched directory: {}",
+                          q.lastError().text().toStdString());
+            return false;
+        }
+
+        return true;
+    }
+
     QSqlDatabase SqliteUserLibrary::getDatabase() const {
         const auto name =
                 DATABASE_PREFIX +

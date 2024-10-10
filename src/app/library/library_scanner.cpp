@@ -22,7 +22,7 @@ LibraryScanner::LibraryScanner(
   // directory_watcher_.addPath(
   //   QString::fromStdString(default_rom_path_.string()));
 
-  m_scanDirectoryModel = new firelight::gui::LibraryPathModel(*lib_database);
+  // m_scanDirectoryModel = new firelight::gui::LibraryPathModel(*lib_database);
   refreshDirectories();
 
   connect(m_scanDirectoryModel, &QAbstractListModel::dataChanged,

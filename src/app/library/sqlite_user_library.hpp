@@ -28,6 +28,8 @@ namespace firelight::library {
 
         bool addWatchedDirectory(const WatchedDirectory &directory) override;
 
+        bool updateWatchedDirectory(const WatchedDirectory &directory) override;
+
     signals:
         void romFileAdded(int id, const QString &contentHash);
 

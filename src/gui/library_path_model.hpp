@@ -3,29 +3,30 @@
 #include <QUrl>
 #include <firelight/library_database.hpp>
 #include <qsettings.h>
+#include <firelight/library/user_library.hpp>
 
 namespace firelight::gui {
-class LibraryPathModel : public QAbstractListModel {
-  Q_OBJECT
+    class LibraryPathModel : public QAbstractListModel {
+        Q_OBJECT
 
-  std::vector<db::LibraryContentDirectory> m_items;
-  std::unique_ptr<QSettings> m_settings;
-  db::ILibraryDatabase &m_libraryDatabase;
+        std::vector<library::WatchedDirectory> m_items;
+        std::unique_ptr<QSettings> m_settings;
+        library::IUserLibrary &m_userLibrary;
 
-public:
-  enum Roles { Path = Qt::UserRole + 1, LocalFilename, NumGameFiles };
+    public:
+        enum Roles { Path = Qt::UserRole + 1, LocalFilename, NumGameFiles };
 
-  LibraryPathModel(db::ILibraryDatabase &libraryDatabase);
+        explicit LibraryPathModel(library::IUserLibrary &userLibrary);
 
-  int rowCount(const QModelIndex &parent) const override;
+        int rowCount(const QModelIndex &parent) const override;
 
-  QVariant data(const QModelIndex &index, int role) const override;
+        QVariant data(const QModelIndex &index, int role) const override;
 
-  bool setData(const QModelIndex &index, const QVariant &value,
-               int role) override;
+        bool setData(const QModelIndex &index, const QVariant &value,
+                     int role) override;
 
-  QHash<int, QByteArray> roleNames() const override;
+        QHash<int, QByteArray> roleNames() const override;
 
-  Qt::ItemFlags flags(const QModelIndex &index) const override;
-};
+        Qt::ItemFlags flags(const QModelIndex &index) const override;
+    };
 } // namespace firelight::gui

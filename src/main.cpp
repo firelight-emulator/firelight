@@ -207,6 +207,8 @@ int main(int argc, char *argv[]) {
   QObject::connect(&libScanner2, &firelight::library::LibraryScanner2::scanFinished,
                    &entryListModel, &firelight::library::EntryListModel::reset);
 
+  firelight::gui::LibraryPathModel libraryPathModel(userLibrary);
+
   firelight::gui::PlatformListModel platformListModel;
   firelight::shop::ShopItemModel shopItemModel(contentDatabase);
 
@@ -246,8 +248,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("library_manager", &libraryManager);
   engine.rootContext()->setContextProperty("library_database",
                                            &libraryDatabase);
-  engine.rootContext()->setContextProperty("library_scan_path_model",
-                                           libraryManager.scanDirectoryModel());
+  engine.rootContext()->setContextProperty("library_scan_path_model", &libraryPathModel);
   engine.rootContext()->setContextProperty("controller_model",
                                            &controllerListModel);
   engine.rootContext()->setContextProperty("controller_manager",

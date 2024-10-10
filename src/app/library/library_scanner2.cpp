@@ -76,6 +76,12 @@ namespace firelight::library {
                                                  continue;
                                              }
 
+                                             if (fileInfo.size() > 1024 * 1024 * 1024) {
+                                                 spdlog::info("Skipping file {} because it's too large",
+                                                              fileInfo.filePath().toStdString());
+                                                 continue;
+                                             }
+
                                              auto extension = fileInfo.suffix().toLower();
                                              if (extension == "zip" || extension == "7z" || extension == "tar" ||
                                                  extension == "rar") {
@@ -113,7 +119,9 @@ namespace firelight::library {
                                                          // printf("-- content hash: %s\n",
                                                          //        romFile.getContentHash().toStdString().c_str());
 
-                                                         m_library.addRomFile(romFile);
+                                                         if (romFile.isValid()) {
+                                                             m_library.addRomFile(romFile);
+                                                         }
 
                                                          delete[] buffer;
                                                      }
@@ -143,7 +151,9 @@ namespace firelight::library {
                                              }
 
                                              auto romFile = RomFile(fileInfo.filePath());
-                                             m_library.addRomFile(romFile);
+                                             if (romFile.isValid()) {
+                                                 m_library.addRomFile(romFile);
+                                             }
 
                                              // metadata scan:
                                              // for each entry
