@@ -197,7 +197,17 @@ namespace firelight::library {
     }
 
     std::vector<Entry> SqliteUserLibrary::getEntries(int offset, int limit) {
-        const QString queryString = "SELECT * FROM entriesv1 ORDER BY display_name ASC;";
+        const QString queryString = R"(
+            SELECT e.*,
+                   CASE
+                       WHEN EXISTS (SELECT 1 FROM rom_files rf WHERE rf.content_hash = e.content_hash)
+                       THEN 0
+                       ELSE 1
+                   END AS hidden
+            FROM entriesv1 e
+            ORDER BY e.display_name ASC;
+        )";
+
         QSqlQuery query(getDatabase());
         query.prepare(queryString);
 

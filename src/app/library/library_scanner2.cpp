@@ -42,17 +42,19 @@ namespace firelight::library {
                                      m_scanRunning = true;
                                      m_pathQueueLock.lockForRead();
                                      auto queueEmpty = m_pathQueue.isEmpty();
-                                     QString next;
+                                     QString nextDirectory;
                                      if (!queueEmpty) {
-                                         next = m_pathQueue.dequeue();
-                                         m_scanQueuedByPath[next] = false;
+                                         nextDirectory = m_pathQueue.dequeue();
+                                         m_scanQueuedByPath[nextDirectory] = false;
                                      }
                                      m_pathQueueLock.unlock();
 
+                                     QStack<QString> subdirectories;
                                      while (!queueEmpty) {
-                                         QDirIterator iter(next, QDirIterator::Subdirectories);
+                                         QDirIterator iter(nextDirectory,
+                                                           QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
 
-                                         auto dirInfo = QFileInfo(next);
+                                         auto dirInfo = QFileInfo(nextDirectory);
                                          spdlog::info("Scanning directory: {} (last modified: {})",
                                                       dirInfo.filePath().toStdString(),
                                                       dirInfo.lastModified().toString().toStdString());
@@ -60,24 +62,26 @@ namespace firelight::library {
                                          // get directory info
                                          // if last modified is the same, skip
 
+
                                          while (iter.hasNext()) {
                                              if (m_shuttingDown) {
                                                  return false;
                                              }
 
-                                             if (m_scanQueuedByPath[next]) {
-                                                 printf("Stopping scan of %s\n", next.toStdString().c_str());
+                                             if (m_scanQueuedByPath[nextDirectory]) {
+                                                 printf("Stopping scan of %s\n", nextDirectory.toStdString().c_str());
                                                  break;
                                              }
                                              // TODO: Check if we should stop scanning
 
                                              const auto fileInfo = iter.nextFileInfo();
                                              if (fileInfo.isDir()) {
+                                                 subdirectories.push(fileInfo.filePath());
                                                  continue;
                                              }
 
                                              if (fileInfo.size() > 1024 * 1024 * 1024) {
-                                                 spdlog::info("Skipping file {} because it's too large",
+                                                 spdlog::info("Skipping large file: {}",
                                                               fileInfo.filePath().toStdString());
                                                  continue;
                                              }
@@ -104,7 +108,8 @@ namespace firelight::library {
                                                          if (m_library.getRomFileWithPathAndSize(
                                                              archive_entry_pathname(entry),
                                                              size, true)) {
-                                                             printf("Already got this one; skipping\n");
+                                                             spdlog::info("Skipping known file: {}",
+                                                                          archive_entry_pathname(entry));
                                                              continue;
                                                          }
 
@@ -136,8 +141,8 @@ namespace firelight::library {
 
                                              if (extension == "ips" || extension == "bps" || extension == "ups" ||
                                                  extension == "mod") {
-                                                 printf("Patch file: %s\n",
-                                                        fileInfo.filePath().toStdString().c_str());
+                                                 spdlog::info("Skipping patch file for now: {}",
+                                                              fileInfo.filePath().toStdString());
                                                  continue;
                                                  // Get md5 of the file
                                                  // Do we recognize the md5? If so, we know what the md5 (contentID?) of the target rom file is
@@ -146,7 +151,8 @@ namespace firelight::library {
 
                                              if (m_library.getRomFileWithPathAndSize(fileInfo.filePath(),
                                                  fileInfo.size(), false)) {
-                                                 printf("Already got this one; skipping\n");
+                                                 spdlog::info("Skipping known file: {}",
+                                                              fileInfo.filePath().toStdString());
                                                  continue;
                                              }
 
@@ -166,19 +172,28 @@ namespace firelight::library {
                                              // that gets us image
                                          }
 
+                                         spdlog::info("Finished scanning directory: {}",
+                                                      dirInfo.filePath().toStdString(),
+                                                      dirInfo.lastModified().toString().toStdString());
+
                                          // update directory info
 
-                                         m_pathQueueLock.lockForRead();
-                                         queueEmpty = m_pathQueue.isEmpty();
-                                         if (!queueEmpty) {
-                                             next = m_pathQueue.dequeue();
-                                             m_scanQueuedByPath[next] = false;
+                                         if (subdirectories.isEmpty()) {
+                                             m_pathQueueLock.lockForRead();
+                                             queueEmpty = m_pathQueue.isEmpty();
+                                             if (!queueEmpty) {
+                                                 nextDirectory = m_pathQueue.dequeue();
+                                                 m_scanQueuedByPath[nextDirectory] = false;
+                                             }
+                                             m_pathQueueLock.unlock();
+                                         } else {
+                                             nextDirectory = subdirectories.pop();
                                          }
-                                         m_pathQueueLock.unlock();
                                      }
 
                                      m_scanRunning = false;
                                      emit scanFinished();
+                                     spdlog::info("Scan complete");
                                      return true;
                                  }
 

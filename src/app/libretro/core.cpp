@@ -532,7 +532,7 @@ namespace libretro {
       case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE");
         auto ptr = static_cast<retro_hw_render_interface *>(data);
-        ptr->interface_type = RETRO_HW_RENDER_INTERFACE_DUMMY;
+        ptr->interface_type = RETRO_HW_RENDER_INTERFACE_VULKAN;
         ptr->interface_version = 0;
         return true;
       }
@@ -733,7 +733,7 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
-        *static_cast<unsigned *>(data) = RETRO_HW_CONTEXT_OPENGL;
+        *static_cast<unsigned *>(data) = RETRO_HW_CONTEXT_VULKAN;
         return true;
       // case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
       //   environmentCalls.emplace_back(
@@ -1004,10 +1004,13 @@ namespace libretro {
         *ptr = RETRO_SAVESTATE_CONTEXT_NORMAL;
         return true;
       }
-      case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
+      case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_"
           "NEGOTIATION_INTERFACE_SUPPORT");
-        break;
+        auto ptr = static_cast<retro_hw_render_context_negotiation_interface_type *>(data);
+        *ptr = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN;
+        return true;
+      }
       case RETRO_ENVIRONMENT_GET_JIT_CAPABLE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_JIT_CAPABLE");
         auto ptr = (bool *) data;

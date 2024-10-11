@@ -432,6 +432,7 @@ FocusScope {
                 required property var index
                 required property var model
                 width: ListView.view.width
+                visible: !model.hidden
                 height: 50
                 focus: true
                 Button {
