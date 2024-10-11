@@ -5,7 +5,7 @@
 
 
 namespace firelight::library {
-    class EntryListModel final : public QAbstractListModel {
+    class EntryListModel : public QAbstractListModel {
         Q_OBJECT
 
     public:
@@ -41,6 +41,7 @@ namespace firelight::library {
         [[nodiscard]] QVariant data(const QModelIndex &index,
                                     int role) const override;
 
+    public slots:
         void reset();
 
     private:

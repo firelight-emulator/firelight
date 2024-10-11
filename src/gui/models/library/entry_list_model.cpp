@@ -4,7 +4,9 @@ namespace firelight::library {
     EntryListModel::EntryListModel(IUserLibrary &userLibrary, QObject *parent) : QAbstractListModel(parent),
         m_userLibrary(userLibrary) {
         for (const auto &entry: m_userLibrary.getEntries(0, 0)) {
-            m_items.emplace_back(entry);
+            if (!entry.hidden) {
+                m_items.emplace_back(entry);
+            }
         }
 
         // m_items.emplace_back(Entry{
@@ -202,7 +204,9 @@ namespace firelight::library {
         emit beginResetModel();
         m_items.clear();
         for (const auto &entry: m_userLibrary.getEntries(0, 0)) {
-            m_items.emplace_back(entry);
+            if (!entry.hidden) {
+                m_items.emplace_back(entry);
+            }
         }
         emit endResetModel();
     }

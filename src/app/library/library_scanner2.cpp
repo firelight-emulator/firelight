@@ -49,6 +49,20 @@ namespace firelight::library {
                                      }
                                      m_pathQueueLock.unlock();
 
+                                     QSet<QString> knownFiles;
+                                     for (auto &romFile: m_library.getRomFiles()) {
+                                         if (romFile.inArchive()) {
+                                             knownFiles.insert(
+                                                 romFile.getArchivePathName() + "|" + romFile.getFilePath());
+                                         } else {
+                                             knownFiles.insert(romFile.getFilePath());
+                                         }
+                                     }
+
+                                     spdlog::info("Known files: {}", knownFiles.size());
+
+                                     QSet<QString> scannedFiles;
+
                                      QStack<QString> subdirectories;
                                      while (!queueEmpty) {
                                          QDirIterator iter(nextDirectory,
@@ -80,6 +94,8 @@ namespace firelight::library {
                                                  continue;
                                              }
 
+                                             scannedFiles.insert(fileInfo.filePath());
+
                                              if (fileInfo.size() > 1024 * 1024 * 1024) {
                                                  spdlog::info("Skipping large file: {}",
                                                               fileInfo.filePath().toStdString());
@@ -105,8 +121,10 @@ namespace firelight::library {
                                                  while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
                                                      auto size = archive_entry_size(entry);
                                                      if (size > 0) {
+                                                         auto entryPathName = archive_entry_pathname(entry);
+                                                         scannedFiles.insert(fileInfo.filePath() + "|" + entryPathName);
                                                          if (m_library.getRomFileWithPathAndSize(
-                                                             archive_entry_pathname(entry),
+                                                             entryPathName,
                                                              size, true)) {
                                                              spdlog::info("Skipping known file: {}",
                                                                           archive_entry_pathname(entry));
@@ -116,7 +134,7 @@ namespace firelight::library {
                                                          auto buffer = new char[size];
                                                          archive_read_data(a, buffer, size);
                                                          auto romFile = RomFile(
-                                                             archive_entry_pathname(entry), buffer, size,
+                                                             entryPathName, buffer, size,
                                                              fileInfo.filePath());
 
                                                          // printf("ROM (platform %d) file: %s\n", romFile.getPlatformId(),
@@ -188,6 +206,18 @@ namespace firelight::library {
                                              m_pathQueueLock.unlock();
                                          } else {
                                              nextDirectory = subdirectories.pop();
+                                         }
+                                     }
+
+                                     for (const auto &knownFile: knownFiles) {
+                                         if (!scannedFiles.contains(knownFile)) {
+                                             spdlog::info("Removing file: {}", knownFile.toStdString());
+                                             if (knownFile.contains("|")) {
+                                                 auto parts = knownFile.split("|");
+                                                 m_library.removeRomFile(parts[1], true, parts[0]);
+                                             } else {
+                                                 m_library.removeRomFile(knownFile, false, "");
+                                             }
                                          }
                                      }
 

@@ -169,7 +169,7 @@ namespace firelight::library {
                 return;
             }
 
-            emit entryCreated(query.lastInsertId().toInt(), romFile.getContentHash());
+            emit entryCreated(entryQuery.lastInsertId().toInt(), romFile.getContentHash());
         }
     }
 
@@ -201,9 +201,9 @@ namespace firelight::library {
             SELECT e.*,
                    CASE
                        WHEN EXISTS (SELECT 1 FROM rom_files rf WHERE rf.content_hash = e.content_hash)
-                       THEN 0
-                       ELSE 1
-                   END AS hidden
+                       THEN 1
+                       ELSE 0
+                   END AS has_rom
             FROM entriesv1 e
             ORDER BY e.display_name ASC;
         )";
@@ -225,7 +225,10 @@ namespace firelight::library {
                 .contentHash = query.value("content_hash").toString(),
                 .platformId = query.value("platform_id").toUInt(),
                 .activeSaveSlot = query.value("active_save_slot").toUInt(),
-                .hidden = query.value("hidden").toBool(),
+                // TODO
+
+                // .hidden = query.value("hidden").toBool(),
+                .hidden = !query.value("has_rom").toBool(),
                 .icon1x1SourceUrl = query.value("icon_1x1_source_url").toString(),
                 .boxartFrontSourceUrl = query.value("boxart_front_source_url").toString(),
                 .boxartBackSourceUrl = query.value("boxart_back_source_url").toString(),
@@ -299,6 +302,55 @@ namespace firelight::library {
         }
 
         return romFiles;
+    }
+
+    std::vector<RomFile> SqliteUserLibrary::getRomFiles() {
+        const QString queryString =
+                "SELECT * FROM rom_files;";
+        QSqlQuery query(getDatabase());
+        query.prepare(queryString);
+
+        if (!query.exec()) {
+            spdlog::error("Failed to get rom files: {}", query.lastError().text().toStdString());
+        }
+
+        std::vector<RomFile> directories;
+
+        while (query.next()) {
+            directories.emplace_back(query);
+        }
+
+        return directories;
+    }
+
+    bool SqliteUserLibrary::removeRomFile(const QString &filePath, bool inArchive, const QString &archivePath) {
+        if (inArchive) {
+            QSqlQuery query(getDatabase());
+            query.prepare(
+                "DELETE FROM rom_files WHERE file_path = :filePath AND in_archive = 1 AND archive_file_path = :archivePath;");
+            query.bindValue(":filePath", filePath);
+            query.bindValue(":archivePath", archivePath);
+
+            if (!query.exec()) {
+                spdlog::error("Failed to delete rom file: {}",
+                              query.lastError().text().toStdString());
+                return false;
+            }
+
+            return true;
+        }
+
+        QSqlQuery query(getDatabase());
+        query.prepare("DELETE FROM rom_files WHERE file_path = :filePath AND in_archive = 0;");
+        query.bindValue(":filePath", filePath);
+
+        if (!query.exec()) {
+            spdlog::error("Failed to delete rom file: {}",
+                          query.lastError().text().toStdString());
+            return false;
+        }
+
+        return true;
     }
 
     std::vector<WatchedDirectory> SqliteUserLibrary::getWatchedDirectories() {

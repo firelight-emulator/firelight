@@ -5,7 +5,7 @@
 #include <firelight/library/rom_file.hpp>
 
 namespace firelight::library {
-    class SqliteUserLibrary final : public QObject, public IUserLibrary {
+    class SqliteUserLibrary : public QObject, public IUserLibrary {
         Q_OBJECT
 
     public:
@@ -23,6 +23,10 @@ namespace firelight::library {
         std::optional<Entry> getEntry(int entryId) override;
 
         std::vector<RomFile> getRomFilesWithContentHash(const QString &contentHash) override;
+
+        std::vector<RomFile> getRomFiles() override;
+
+        bool removeRomFile(const QString &filePath, bool inArchive, const QString &archivePath) override;
 
         std::vector<WatchedDirectory> getWatchedDirectories() override;
 

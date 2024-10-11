@@ -172,11 +172,6 @@ int main(int argc, char *argv[]) {
   firelight::library::SqliteUserLibrary
       userLibrary(QString::fromStdString(defaultAppDataPath.string() + "/library.db"));
 
-  QObject::connect(&userLibrary, &firelight::library::SqliteUserLibrary::entryCreated,
-                   [](int id, const QString &contentHash) -> void {
-                     spdlog::info("Entry created: {}", contentHash.toStdString());
-                   });
-
   if (userLibrary.getWatchedDirectories().empty()) {
     firelight::library::WatchedDirectory dir{
       .path = QString::fromStdString(canonical(romsDir).string())
@@ -186,6 +181,16 @@ int main(int argc, char *argv[]) {
   }
 
   firelight::ManagerAccessor::setUserLibrary(&userLibrary);
+
+  QObject::connect(&userLibrary, &firelight::library::SqliteUserLibrary::romFileAdded, &userLibrary,
+                   [&](int id, const QString &contentHash) -> void {
+                     spdlog::info("Rom file added: {}", contentHash.toStdString());
+                   });
+
+  QObject::connect(&userLibrary, &firelight::library::SqliteUserLibrary::entryCreated, &userLibrary,
+                   [&](int id, const QString &contentHash) -> void {
+                     spdlog::info("Entry created: {}", contentHash.toStdString());
+                   });
 
   firelight::library::LibraryScanner2 libScanner2(userLibrary);
   libScanner2.scanAll();
@@ -205,7 +210,7 @@ int main(int argc, char *argv[]) {
   firelight::library::EntryListModel entryListModel(userLibrary);
 
   QObject::connect(&libScanner2, &firelight::library::LibraryScanner2::scanFinished,
-                   &entryListModel, &firelight::library::EntryListModel::reset);
+                   &entryListModel, &firelight::library::EntryListModel::reset, Qt::QueuedConnection);
 
   firelight::gui::LibraryPathModel libraryPathModel(userLibrary);
 
