@@ -9,11 +9,13 @@ import Firelight 1.0
 
 Rectangle {
     id: emulatorContainer
+
     // property bool blurred: false
     // property var blurAmount: 0.0
     color: "black"
 
-    property alias currentGameName: emulatorView.currentGameName
+    // property alias currentGameName: emulatorView.currentGameName
+    property string currentGameName: ""
     property bool paused: false
     property bool loadedSuspendPointAtLeastOnce: false
 
@@ -32,136 +34,151 @@ Rectangle {
     signal rewindPointLoaded()
 
     function setPlaySpeedMultiplier(multiplier) {
-        emulatorView.playSpeedMultiplier = multiplier
+        // emulatorView.playSpeedMultiplier = multiplier
     }
 
     function loadRewindPoint(index) {
-        emulatorView.loadRewindPoint(index)
+        // emulatorView.loadRewindPoint(index)
     }
 
     function createRewindPoints() {
-        emulatorView.createRewindPoints()
+        // emulatorView.createRewindPoints()
     }
 
     function createSuspendPoint() {
-        emulatorView.createSuspendPoint()
+        // emulatorView.createSuspendPoint()
     }
 
     function loadGame(entryId) {
         emulatorView.loadLibraryEntry(entryId)
     }
 
+    function startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
+        emulatorView.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+    }
+
     function setPictureMode(pictureMode) {
-        emulatorView.pictureMode = pictureMode
+        // emulatorView.pictureMode = pictureMode
     }
 
     function resetGame() {
-        emulatorView.resetEmulation()
+        // emulatorView.resetEmulation()
     }
 
     function pauseGame() {
-        emulatorView.pauseGame()
+        // emulatorView.pauseGame()
     }
 
     function resumeGame() {
-        emulatorView.resumeGame()
+        // emulatorView.resumeGame()
     }
 
     function writeSuspendPoint(index) {
-        emulatorView.writeSuspendPoint(index)
+        // emulatorView.writeSuspendPoint(index)
     }
 
     function loadSuspendPoint(index) {
         loadedSuspendPointAtLeastOnce = true
-        emulatorView.loadSuspendPoint(index)
+        // emulatorView.loadSuspendPoint(index)
     }
 
     function loadLastSuspendPoint() {
-        emulatorView.loadLastSuspendPoint()
+        // emulatorView.loadLastSuspendPoint()
     }
 
-    EmulatorView {
+    EmulatorItem {
         id: emulatorView
-
-        property string pictureMode: "aspect-ratio"
-        property bool isFullScreen: false
         anchors.centerIn: parent
+        width: videoWidth * 3
+        height: videoHeight * 3
         smooth: false
-
-        onEmulationStarted: {
-            emulatorContainer.emulationStarted()
+        Component.onCompleted: function () {
+            console.log("WE DID IT")
         }
-
-        onRewindPointsReady: function (points) {
-            emulatorContainer.rewindPointsReady(points)
-        }
-
-        onRewindPointLoaded: function () {
-            emulatorContainer.rewindPointLoaded()
-        }
-
-        // onOrphanPatchDetected: {
-        //     console.log("orphan patch detected")
-        //     everything.pop()
-        // }
-
-        // Component.onCompleted: {
-        //     this.load(currentLibraryEntryId, romData, saveData, corePath)
-        // }
-
-        // onReadyToStart: function () {
-        //     emulatorContainer.readyToStart()
-        // }
-
-        states: [
-            State {
-                name: "FullScreenState"
-                when: emulatorView.pictureMode === "aspect-ratio"
-                PropertyChanges {
-                    target: emulatorView
-                    width: emulatorView.nativeAspectRatio > 0 ? parent.height * emulatorView.nativeAspectRatio : parent.width
-                    height: parent.height
-                }
-            },
-            State {
-                name: "CenterInState"
-                when: emulatorView.pictureMode === "original"
-                PropertyChanges {
-                    target: emulatorView
-                    width: emulatorView.nativeWidth > 0 ? emulatorView.nativeWidth * 2 : 640
-                    height: emulatorView.nativeHeight > 0 ? emulatorView.nativeHeight * 2 : 480
-                }
-            },
-            State {
-                name: "StretchedState"
-                when: emulatorView.pictureMode === "stretched"
-                PropertyChanges {
-                    target: emulatorView
-                    width: parent.width
-                    height: parent.height
-                }
-            }
-        ]
-
-        transitions: [
-            Transition {
-                from: "*"
-                to: "*"
-                ParallelAnimation {
-                    NumberAnimation {
-                        properties: "width"
-                        duration: 100
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        properties: "height"
-                        duration: 100
-                        easing.type: Easing.InOutQuad
-                    }
-                }
-            }
-        ]
     }
+
+    // EmulatorView {
+    //     id: emulatorView
+    //
+    //     property string pictureMode: "aspect-ratio"
+    //     property bool isFullScreen: false
+    //     anchors.centerIn: parent
+    //     smooth: false
+    //
+    //     onEmulationStarted: {
+    //         emulatorContainer.emulationStarted()
+    //     }
+    //
+    //     onRewindPointsReady: function (points) {
+    //         emulatorContainer.rewindPointsReady(points)
+    //     }
+    //
+    //     onRewindPointLoaded: function () {
+    //         emulatorContainer.rewindPointLoaded()
+    //     }
+    //
+    //     // onOrphanPatchDetected: {
+    //     //     console.log("orphan patch detected")
+    //     //     everything.pop()
+    //     // }
+    //
+    //     // Component.onCompleted: {
+    //     //     this.load(currentLibraryEntryId, romData, saveData, corePath)
+    //     // }
+    //
+    //     // onReadyToStart: function () {
+    //     //     emulatorContainer.readyToStart()
+    //     // }
+    //
+    //     states: [
+    //         State {
+    //             name: "FullScreenState"
+    //             when: emulatorView.pictureMode === "aspect-ratio"
+    //             PropertyChanges {
+    //                 target: emulatorView
+    //                 width: emulatorView.nativeAspectRatio > 0 ? parent.height * emulatorView.nativeAspectRatio : parent.width
+    //                 height: parent.height
+    //             }
+    //         },
+    //         State {
+    //             name: "CenterInState"
+    //             when: emulatorView.pictureMode === "original"
+    //             PropertyChanges {
+    //                 target: emulatorView
+    //                 width: emulatorView.nativeWidth > 0 ? emulatorView.nativeWidth * 2 : 640
+    //                 height: emulatorView.nativeHeight > 0 ? emulatorView.nativeHeight * 2 : 480
+    //             }
+    //         },
+    //         State {
+    //             name: "StretchedState"
+    //             when: emulatorView.pictureMode === "stretched"
+    //             PropertyChanges {
+    //                 target: emulatorView
+    //                 width: parent.width
+    //                 height: parent.height
+    //             }
+    //         }
+    //     ]
+    //
+    //     transitions: [
+    //         Transition {
+    //             from: "*"
+    //             to: "*"
+    //             ParallelAnimation {
+    //                 NumberAnimation {
+    //                     properties: "width"
+    //                     duration: 100
+    //                     easing.type: Easing.InOutQuad
+    //                 }
+    //                 NumberAnimation {
+    //                     properties: "height"
+    //                     duration: 100
+    //                     easing.type: Easing.InOutQuad
+    //                 }
+    //             }
+    //         }
+    //     ]
+    // }
 
 
 }

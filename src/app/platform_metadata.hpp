@@ -210,8 +210,8 @@ namespace firelight {
         {"mupen64plus-parallel-rdp-vi-aa", "True"},
         {"mupen64plus-parallel-rdp-vi-bilinear", "True"},
         {"mupen64plus-r-cbutton", "C1"},
-        {"mupen64plus-rdp-plugin", "angrylion"},
-        {"mupen64plus-rsp-plugin", "parallel"},
+        // {"mupen64plus-rdp-plugin", "angrylion"},
+        // {"mupen64plus-rsp-plugin", "parallel"},
         {"mupen64plus-txCacheCompression", "True"},
         {"mupen64plus-txEnhancementMode", "None"},
         {"mupen64plus-txFilterIgnoreBG", "True"},
@@ -225,6 +225,7 @@ namespace firelight {
     {
       10, {
         {"melonds_homebrew_sdcard", "disabled"},
+        // {"melonds_render_mode", "opengl"},
         {"melonds_number_of_screen_layouts", "8"}
       }
     }

@@ -13,7 +13,7 @@ FocusScope {
 
     signal openDetails(entryId: int)
 
-    signal startGame(entryId: int, hash: string)
+    signal readyToStartGame()
 
     // property var backgroundImageSource: "https://cdn2.steamgriddb.com/hero_thumb/013471d96b9ba9a61ba640562b3338f9.png"
     //
@@ -221,7 +221,12 @@ FocusScope {
         running: false
 
         property var gameId
-        property var gameHash
+
+        ScriptAction {
+            script: {
+                GameLoader.loadEntry(startGameAnimation.gameId, true)
+            }
+        }
 
         ParallelAnimation {
             PropertyAction {
@@ -253,9 +258,10 @@ FocusScope {
         // PauseAnimation {
         //     duration: 500
         // }
+
         ScriptAction {
             script: {
-                page.startGame(startGameAnimation.gameId, startGameAnimation.gameHash)
+                page.readyToStartGame()
             }
         }
     }
@@ -303,10 +309,11 @@ FocusScope {
                 label: "Play"
 
                 onClicked: function () {
-                    page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
-                    // startGameAnimation.gameId = listView.currentItem.model.id
+                    // GameLoader.loadEntry(listView.currentItem.model.id)
+                    // page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
+                    startGameAnimation.gameId = listView.currentItem.model.id
                     // startGameAnimation.gameHash = listView.currentItem.model.contentHash
-                    // startGameAnimation.start()
+                    startGameAnimation.start()
                 }
 
                 FirelightButton {
@@ -473,7 +480,11 @@ FocusScope {
                         RightClickMenuItem {
                             text: "Play " + scope.model.displayName
                             onTriggered: {
-                                page.startGame(scope.model.id, scope.model.contentHash)
+                                startGameAnimation.gameId = scope.model.id
+                                // startGameAnimation.gameHash = listView.currentItem.model.contentHash
+                                startGameAnimation.start()
+                                // GameLoader.loadEntry(scope.model.id)
+                                // page.startGame(scope.model.id, scope.model.contentHash)
                             }
                         }
 

@@ -13,6 +13,12 @@
 
 static constexpr int AUTOSAVE_INTERVAL_MILLIS = 10000;
 
+retro_hw_context_type EmulatorRenderer::getPreferredHwRender() {
+}
+
+void EmulatorRenderer::getHwRenderContext(retro_hw_context_type &contextType, unsigned &major, unsigned &minor) {
+}
+
 EmulatorRenderer::EmulatorRenderer(const std::function<void()> &updateFunc) : m_updateFunc(updateFunc) {
   initializeOpenGLFunctions();
   autosaveTimer.setSingleShot(false);
@@ -63,7 +69,8 @@ uintptr_t EmulatorRenderer::getCurrentFramebufferId() {
     return -1;
   }
 
-  return m_fbo->handle();
+  return 0;
+  // return m_fbo->handle();
 }
 
 void EmulatorRenderer::setSystemAVInfo(retro_system_av_info *info) {
@@ -356,7 +363,6 @@ void EmulatorRenderer::render() {
     // glClear(GL_COLOR_BUFFER_BIT);
     // m_fbo->release();
   }
-
   update();
 }
 

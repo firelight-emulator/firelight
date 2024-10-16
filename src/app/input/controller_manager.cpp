@@ -55,7 +55,7 @@ namespace firelight::Input {
       return m_keyboard;
     }
 
-    return std::nullopt;
+    return controller;
   }
 
   void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
@@ -85,7 +85,6 @@ namespace firelight::Input {
         m_controllers[i] =
             std::make_unique<Controller>(controller, t_deviceIndex);
         m_controllers[i]->setControllerProfile(std::make_shared<input::ControllerProfile>());
-        printf("ADDING CONTROLLER\n");
         break;
       }
     }

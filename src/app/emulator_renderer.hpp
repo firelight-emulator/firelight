@@ -16,6 +16,10 @@ class EmulatorRenderer final : public QQuickFramebufferObject::Renderer,
                                public firelight::ManagerAccessor,
                                public firelight::libretro::IVideoDataReceiver {
 public:
+    retro_hw_context_type getPreferredHwRender() override;
+
+    void getHwRenderContext(retro_hw_context_type &contextType, unsigned &major, unsigned &minor) override;
+
     explicit EmulatorRenderer(const std::function<void()> &updateFunc);
 
     void receive(const void *data, unsigned width, unsigned height, size_t pitch) override;

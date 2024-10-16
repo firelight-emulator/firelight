@@ -176,9 +176,9 @@ namespace libretro {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
         auto *renderCallback = static_cast<retro_hw_render_callback *>(data);
 
-        renderCallback->context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
-        renderCallback->version_major = 4;
-        renderCallback->version_minor = 1;
+        videoReceiver->getHwRenderContext(renderCallback->context_type,
+                                          renderCallback->version_major,
+                                          renderCallback->version_minor);
 
         renderCallback->get_proc_address =
             [](const char *sym) -> retro_proc_address_t {
@@ -189,15 +189,10 @@ namespace libretro {
           return currentCore->videoReceiver->getCurrentFramebufferId();
         };
 
-        currentCore->videoReceiver->setResetContextFunc(
-          renderCallback->context_reset);
+        videoReceiver->setResetContextFunc(renderCallback->context_reset);
+        videoReceiver->setDestroyContextFunc(renderCallback->context_destroy);
+        m_destroyContextFunction = renderCallback->context_destroy;
 
-        if (renderCallback->context_destroy) {
-          printf("context destroy is not null!\n");
-          currentCore->videoReceiver->setDestroyContextFunc(
-            renderCallback->context_destroy);
-          currentCore->destroyContextFunction = renderCallback->context_destroy;
-        }
 
         break;
       }
@@ -246,7 +241,7 @@ namespace libretro {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE");
 
         const auto configProvider = currentCore->m_configurationProvider;
-        if (!configProvider) {
+        if (configProvider) {
           *static_cast<bool *>(data) = configProvider->anyOptionValueHasChanged();
         } else {
           *static_cast<bool *>(data) = false;
@@ -556,6 +551,7 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT");
+      // TODO: ?
         return true;
       case RETRO_ENVIRONMENT_GET_VFS_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VFS_INTERFACE");
@@ -733,7 +729,7 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
-        *static_cast<unsigned *>(data) = RETRO_HW_CONTEXT_VULKAN;
+        *static_cast<unsigned *>(data) = currentCore->videoReceiver->getPreferredHwRender();
         return true;
       // case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
       //   environmentCalls.emplace_back(
@@ -779,7 +775,7 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY");
-        // TODO
+        // Not needed as we implement dynamic rate control.
         break;
       }
       // case RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE:
@@ -964,38 +960,7 @@ namespace libretro {
       case RETRO_ENVIRONMENT_GET_THROTTLE_STATE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_THROTTLE_STATE");
         auto ptr = static_cast<retro_throttle_state *>(data);
-        /* During normal operation. Rate will be equal to the core's internal
-         * FPS.
-         */
-#define RETRO_THROTTLE_NONE 0
-
-        /* While paused or stepping single frames. Rate will be 0. */
-#define RETRO_THROTTLE_FRAME_STEPPING 1
-
-        /* During fast forwarding.
-         * Rate will be 0 if not specifically limited to a maximum speed. */
-#define RETRO_THROTTLE_FAST_FORWARD 2
-
-        /* During slow motion. Rate will be less than the core's internal FPS.
-         */
-#define RETRO_THROTTLE_SLOW_MOTION 3
-
-        /* While rewinding recorded save states. Rate can vary depending on the
-         * rewind speed or be 0 if the frontend is not aiming for a specific
-         * rate.
-         */
-#define RETRO_THROTTLE_REWINDING 4
-
-        /* While vsync is active in the video driver and the target refresh
-         * rate is lower than the core's internal FPS. Rate is the target
-         * refresh rate. */
-#define RETRO_THROTTLE_VSYNC 5
-
-        /* When the frontend does not throttle in any way. Rate will be 0.
-         * An example could be if no vsync or audio output is active. */
-#define RETRO_THROTTLE_UNBLOCKED 6
-        ptr->mode = 0;
-        ptr->rate = 0.0;
+        // Not needed as far as I'm aware.
         return false;
       }
       case RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT: {
@@ -1282,6 +1247,9 @@ namespace libretro {
   }
 
   Core::~Core() {
+    if (m_destroyContextFunction) {
+      m_destroyContextFunction();
+    }
     unloadGame();
     deinit();
     coreLib->unload();

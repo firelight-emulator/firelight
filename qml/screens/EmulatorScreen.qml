@@ -23,11 +23,23 @@ FocusScope {
         // emulator.loadGame(id)
     }
 
+    function startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
+        emulatorStack.pushItem(emulatorComponent, {
+            gameData: gameData,
+            saveData: saveData,
+            corePath: corePath,
+            contentHash: contentHash,
+            saveSlotNumber: saveSlotNumber,
+            platformId: platformId,
+            contentPath: contentPath
+        }, StackView.Immediate)
+    }
+
     Rectangle {
         id: background
         color: "black"
         anchors.fill: parent
-        visible: root.emulatorIsRunning
+        visible: true
     }
 
     StackView {
@@ -35,20 +47,13 @@ FocusScope {
         anchors.fill: parent
         focus: true
 
+        background: Rectangle {
+            color: "black"
+            anchors.fill: parent
+        }
+
         property bool suspended: false
         property bool running: false
-
-        // Keys.onEscapePressed: function (event) {
-        //     if (event.isAutoRepeat) {
-        //         return
-        //     }
-        //
-        //     if (emulatorStack.depth === 1) {
-        //         emulatorStack.pushItem(nowPlayingPage, {}, StackView.PushTransition)
-        //     } else if (emulatorStack.depth === 2) {
-        //         emulatorStack.pop()
-        //     }
-        // }
 
         pushEnter: Transition {
             ParallelAnimation {
@@ -127,215 +132,285 @@ FocusScope {
     Component {
         id: emulatorComponent
 
-        FocusScope {
-            id: scope
-            required property int entryId
-            required property string contentHash
+        NewEmulatorPage {
+            id: emuPage
 
-            property real blurAmount: 0
             property real dimmerOpacity: 0
-
-            StackView.visible: true
-
-            StackView.onDeactivating: function () {
-                emulator.paused = true
-            }
-            StackView.onActivated: function () {
-                emulator.paused = false
-            }
-
-            SoundEffect {
-                id: scroll
-                source: "file:system/sfx/click.wav"
-            }
-            SoundEffect {
-                id: open
-                source: "file:system/sfx/openrewind.wav"
-            }
-
-            function createRewindPoints() {
-                emulator.createRewindPoints()
-            }
-
-            Keys.onSpacePressed: function () {
-                emulator.paused = true
-                emulator.createRewindPoints()
-                // openRewindMenuAnimation.start()
-            }
-
-            Keys.onDigit1Pressed: function () {
-                emulator.resumeGame()
-            }
-
-
-            Keys.onDigit9Pressed: function (event) {
-                emulator.setPlaySpeedMultiplier(2)
-            }
-
-
-            Keys.onDigit8Pressed: function (event) {
-                emulator.setPlaySpeedMultiplier(1)
-            }
-
-            Keys.onDigit6Pressed: function (event) {
-                emulator.writeSuspendPoint(1)
-            }
-
-            function loadRewindPoint(index) {
-                emulator.loadRewindPoint(index)
-            }
-
-            function writeSuspendPoint(index) {
-                emulator.writeSuspendPoint(index)
-            }
-
-            function loadSuspendPoint(index) {
-                emulator.loadSuspendPoint(index)
-            }
-
-            function loadLastSuspendPoint() {
-                emulator.loadLastSuspendPoint()
-            }
-
-            Connections {
-                target: emulator
-
-                function onRewindPointsReady(points) {
-                    // console.log("Points ready: " + JSON.stringify(points))
-                    if (scope.StackView.status === StackView.Active) {
-                        emulatorStack.pushItem(rewindPage, {
-                            model: points,
-                            scrollSfx: scroll,
-                            openSfx: open
-                        }, StackView.Immediate)
-                    } else {
-                        emulatorStack.replaceCurrentItem(rewindPage, {
-                            model: points,
-                            scrollSfx: scroll,
-                            openSfx: open
-                        }, StackView.Immediate)
-                    }
-                }
-            }
-
 
             Keys.onEscapePressed: function (event) {
                 emulatorStack.pushItem(nowPlayingPage, {
-                    entryId: scope.entryId,
-                    undoEnabled: emulator.loadedSuspendPointAtLeastOnce,
-                    contentHash: scope.contentHash
+                    entryId: 0,
+                    undoEnabled: false,
+                    contentHash: emuPage.contentHash
                 }, StackView.PushTransition)
+
                 event.accepted = true
             }
 
             Keys.onPressed: function (event) {
                 if (event.key === Qt.Key_Home) {
                     emulatorStack.pushItem(nowPlayingPage, {
-                        entryId: scope.entryId,
-                        undoEnabled: emulator.loadedSuspendPointAtLeastOnce,
-                        contentHash: scope.contentHash
+                        entryId: 0,
+                        undoEnabled: false,
+                        contentHash: emuPage.contentHash
                     }, StackView.PushTransition)
                     event.accepted = true
                 }
             }
 
-            // SequentialAnimation {
-            //     id: openRewindMenuAnimation
-            //     ScriptAction {
-            //         script: {
-            //             emulator.createRewindPoints()
-            //         }
-            //     }
-            //     PauseAnimation {
-            //         duration: 100
-            //     }
-            //     ScriptAction {
-            //         script: {
-            //             emulatorStack.pushItem(rewindPage, {}, StackView.Immediate)
-            //         }
-            //     }
-            // }
+            Rectangle {
+                id: emulatorDimmer
+                width: root.width
+                height: root.height
+                color: "black"
+                opacity: emuPage.dimmerOpacity
+            }
 
-            EmulatorPage {
-                id: emulator
-                width: parent.width
-                height: parent.height
-                anchors.horizontalCenter: parent.horizontalCenter
 
-                property bool loaded: false
-                // property bool blurred: false
-                // property bool blurred: emulatorStack.currentItem === nowPlayingPage
+            Connections {
+                target: window_resize_handler
 
-                property int entryId: scope.entryId
-                property string contentHash: scope.contentHash
-
-                Component.onCompleted: {
-                    emulator.loadGame(entryId, contentHash)
-                }
-
-                onEmulationStarted: function () {
-                    emulator.loaded = true
-                }
-
-                onRewindPointLoaded: function () {
-                    console.log("Rewind point loaded; closing")
-                    const rewind = emulatorStack.get(1)
-                    rewind.close()
-                }
-
-                ChallengeIndicatorList {
-                    id: challengeIndicators
-                    visible: achievement_manager.challengeIndicatorsEnabled
-
-                    anchors.top: parent.top
-                    anchors.right: parent.right
-                    anchors.topMargin: 16
-                    anchors.rightMargin: 16
-                    height: 100
-                    width: 300
-                }
-
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    source: emulator
-                    anchors.fill: emulator
-                    blurEnabled: true
-                    blurMultiplier: 1.0
-                    blurMax: 64
-                    blur: scope.blurAmount
-                }
-
-                Connections {
-                    target: window_resize_handler
-
-                    function onWindowResizeStarted() {
-                        if (emulator.StackView.status === StackView.Active) {
-                            emulator.pauseGame()
-                        }
-                    }
-
-                    function onWindowResizeFinished() {
-                        if (emulator.StackView.status === StackView.Active) {
-                            emulator.resumeGame()
-                        }
+                function onWindowResizeStarted() {
+                    if (emuPage.StackView.status === StackView.Active) {
+                        emuPage.paused = true
                     }
                 }
 
-                Rectangle {
-                    id: emulatorDimmer
-                    anchors.fill: parent
-                    color: "black"
-                    opacity: scope.dimmerOpacity
-
-                    // Behavior on opacity {
-                    //     NumberAnimation {
-                    //         duration: 250
-                    //         easing.type: Easing.InOutQuad
-                    //     }
-                    // }
+                function onWindowResizeFinished() {
+                    if (emuPage.StackView.status === StackView.Active) {
+                        emuPage.paused = false
+                    }
                 }
             }
         }
+
+
+        // FocusScope {
+        //     id: scope
+        //
+        //     required property var gameData
+        //     required property var saveData
+        //     required property var corePath
+        //     required property var contentHash
+        //     required property var saveSlotNumber
+        //     required property var platformId
+        //     required property var contentPath
+        //
+        //     property real blurAmount: 0
+        //     property real dimmerOpacity: 0
+        //
+        //     StackView.visible: true
+        //
+        //     StackView.onDeactivating: function () {
+        //         emulator.paused = true
+        //     }
+        //     StackView.onActivated: function () {
+        //         emulator.paused = false
+        //     }
+        //
+        //     function createRewindPoints() {
+        //         emulator.createRewindPoints()
+        //     }
+        //
+        //     Keys.onSpacePressed: function () {
+        //         emulator.paused = true
+        //         emulator.createRewindPoints()
+        //         // openRewindMenuAnimation.start()
+        //     }
+        //
+        //     Keys.onDigit1Pressed: function () {
+        //         emulator.resumeGame()
+        //     }
+        //
+        //
+        //     Keys.onDigit9Pressed: function (event) {
+        //         emulator.setPlaySpeedMultiplier(2)
+        //     }
+        //
+        //
+        //     Keys.onDigit8Pressed: function (event) {
+        //         emulator.setPlaySpeedMultiplier(1)
+        //     }
+        //
+        //     Keys.onDigit6Pressed: function (event) {
+        //         emulator.writeSuspendPoint(1)
+        //     }
+        //
+        //     function loadRewindPoint(index) {
+        //         emulator.loadRewindPoint(index)
+        //     }
+        //
+        //     function writeSuspendPoint(index) {
+        //         emulator.writeSuspendPoint(index)
+        //     }
+        //
+        //     function loadSuspendPoint(index) {
+        //         emulator.loadSuspendPoint(index)
+        //     }
+        //
+        //     function loadLastSuspendPoint() {
+        //         emulator.loadLastSuspendPoint()
+        //     }
+        //
+        //     Component.onCompleted: {
+        //         emulator.loadGame(entryId, contentHash)
+        //     }
+        //
+        //     Connections {
+        //         target: emulator
+        //
+        //         function onRewindPointsReady(points) {
+        //             // console.log("Points ready: " + JSON.stringify(points))
+        //             if (scope.StackView.status === StackView.Active) {
+        //                 emulatorStack.pushItem(rewindPage, {
+        //                     model: points,
+        //                     scrollSfx: scroll,
+        //                     openSfx: open
+        //                 }, StackView.Immediate)
+        //             } else {
+        //                 emulatorStack.replaceCurrentItem(rewindPage, {
+        //                     model: points,
+        //                     scrollSfx: scroll,
+        //                     openSfx: open
+        //                 }, StackView.Immediate)
+        //             }
+        //         }
+        //     }
+        //
+        //
+        //     Keys.onEscapePressed: function (event) {
+        //         emulatorStack.pushItem(nowPlayingPage, {
+        //             entryId: scope.entryId,
+        //             undoEnabled: emulator.loadedSuspendPointAtLeastOnce,
+        //             contentHash: scope.contentHash
+        //         }, StackView.PushTransition)
+        //         event.accepted = true
+        //     }
+        //
+        //     Keys.onPressed: function (event) {
+        //         if (event.key === Qt.Key_Home) {
+        //             emulatorStack.pushItem(nowPlayingPage, {
+        //                 entryId: scope.entryId,
+        //                 undoEnabled: emulator.loadedSuspendPointAtLeastOnce,
+        //                 contentHash: scope.contentHash
+        //             }, StackView.PushTransition)
+        //             event.accepted = true
+        //         }
+        //     }
+        //
+        //     EmulatorItem {
+        //         id: emulatorView
+        //         anchors.centerIn: parent
+        //         width: videoWidth * 3
+        //         height: videoHeight * 3
+        //         smooth: false
+        //         Component.onCompleted: function () {
+        //             console.log("WE DID IT")
+        //         }
+        //     }
+        //
+        //     // SequentialAnimation {
+        //     //     id: openRewindMenuAnimation
+        //     //     ScriptAction {
+        //     //         script: {
+        //     //             emulator.createRewindPoints()
+        //     //         }
+        //     //     }
+        //     //     PauseAnimation {
+        //     //         duration: 100
+        //     //     }
+        //     //     ScriptAction {
+        //     //         script: {
+        //     //             emulatorStack.pushItem(rewindPage, {}, StackView.Immediate)
+        //     //         }
+        //     //     }
+        //     // }
+        //
+        //     EmulatorPage {
+        //         id: emulator
+        //         width: parent.width
+        //         height: parent.height
+        //         anchors.horizontalCenter: parent.horizontalCenter
+        //
+        //         property bool loaded: false
+        //         // property bool blurred: false
+        //         // property bool blurred: emulatorStack.currentItem === nowPlayingPage
+        //
+        //         property var gameData: scope.gameData
+        //         property var saveData: scope.saveData
+        //         property var corePath: scope.corePath
+        //         property var contentHash: scope.contentHash
+        //         property var saveSlotNumber: scope.saveSlotNumber
+        //         property var platformId: scope.platformId
+        //         property var contentPath: scope.contentPath
+        //
+        //         Component.onCompleted: {
+        //             emulator.loadGame(entryId, contentHash)
+        //         }
+        //
+        //         onEmulationStarted: function () {
+        //             emulator.loaded = true
+        //         }
+        //
+        //         onRewindPointLoaded: function () {
+        //             console.log("Rewind point loaded; closing")
+        //             const rewind = emulatorStack.get(1)
+        //             rewind.close()
+        //         }
+        //
+        //         ChallengeIndicatorList {
+        //             id: challengeIndicators
+        //             visible: achievement_manager.challengeIndicatorsEnabled
+        //
+        //             anchors.top: parent.top
+        //             anchors.right: parent.right
+        //             anchors.topMargin: 16
+        //             anchors.rightMargin: 16
+        //             height: 100
+        //             width: 300
+        //         }
+        //
+        //         layer.enabled: true
+        //         layer.effect: MultiEffect {
+        //             source: emulator
+        //             anchors.fill: emulator
+        //             blurEnabled: true
+        //             blurMultiplier: 1.0
+        //             blurMax: 64
+        //             blur: scope.blurAmount
+        //         }
+        //
+        //         Connections {
+        //             target: window_resize_handler
+        //
+        //             function onWindowResizeStarted() {
+        //                 if (emulator.StackView.status === StackView.Active) {
+        //                     emulator.pauseGame()
+        //                 }
+        //             }
+        //
+        //             function onWindowResizeFinished() {
+        //                 if (emulator.StackView.status === StackView.Active) {
+        //                     emulator.resumeGame()
+        //                 }
+        //             }
+        //         }
+        //
+        //         Rectangle {
+        //             id: emulatorDimmer
+        //             anchors.fill: parent
+        //             color: "black"
+        //             opacity: scope.dimmerOpacity
+        //
+        //             // Behavior on opacity {
+        //             //     NumberAnimation {
+        //             //         duration: 250
+        //             //         easing.type: Easing.InOutQuad
+        //             //     }
+        //             // }
+        //         }
+        //     }
+        // }
     }
 
     SequentialAnimation {

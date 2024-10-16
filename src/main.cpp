@@ -38,7 +38,10 @@
 #include "gui/models/shop/shop_item_model.hpp"
 #include <archive.h>
 #include <archive_entry.h>
+#include <QtConcurrent>
 
+#include "app/emulator_item.hpp"
+#include "app/game_loader.hpp"
 #include "app/library/sqlite_user_library.hpp"
 #include "gui/models/library/entry_list_model.hpp"
 
@@ -193,7 +196,7 @@ int main(int argc, char *argv[]) {
                    });
 
   firelight::library::LibraryScanner2 libScanner2(userLibrary);
-  libScanner2.scanAll();
+  // libScanner2.scanAll();
 
   firelight::achievements::RAClient raClient(contentDatabase);
   firelight::ManagerAccessor::setAchievementManager(&raClient);
@@ -236,6 +239,7 @@ int main(int argc, char *argv[]) {
   // qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
+  qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::gui::GamepadMapping>("Firelight", 1, 0, "GamepadMapping");
   qmlRegisterType<firelight::gui::GamepadProfile>("Firelight", 1, 0, "GamepadProfile");
 
@@ -263,6 +267,8 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
   engine.rootContext()->setContextProperty("SaveManager", &saveManager);
   engine.rootContext()->setContextProperty("LibraryEntryModel", &entryListModel);
+  engine.rootContext()->setContextProperty("LibraryScanner", &libScanner2);
+  engine.rootContext()->setContextProperty("GameLoader", new firelight::GameLoader());
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",
@@ -285,6 +291,7 @@ int main(int argc, char *argv[]) {
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
+
 
   // QObject::connect(
   //   window, &QQuickWindow::frameSwapped, window,

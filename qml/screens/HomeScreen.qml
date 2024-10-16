@@ -8,9 +8,9 @@ import Firelight 1.0
 FocusScope {
     id: root
 
-    signal startGame(entryId: int, hash: string)
-
     property bool showNowPlayingButton: false
+
+    signal readyToStartGame()
 
     Keys.onEscapePressed: function (event) {
         if (root.StackView.status !== StackView.Active && !event.isAutoRepeat) {
@@ -38,12 +38,12 @@ FocusScope {
             // model: library_short_model
             model: LibraryEntryModel
 
-            onOpenDetails: function (id) {
-                contentStack.push(gameDetailsPage)
+            onReadyToStartGame: {
+                root.readyToStartGame()
             }
 
-            Component.onCompleted: {
-                startGame.connect(root.startGame)
+            onOpenDetails: function (id) {
+                contentStack.push(gameDetailsPage)
             }
 
             Component {
@@ -67,6 +67,29 @@ FocusScope {
             property string topLevelName: "controllers"
             property string pageTitle: "Controllers"
         }
+    }
+
+    Popup {
+        id: scannerPopup
+        width: 180
+        height: 60
+        modal: false
+        focus: false
+        visible: LibraryScanner.scanning
+        x: (parent.width - width) / 2
+        y: parent.height - height - 20
+        background: Rectangle {
+            color: ColorPalette.neutral800
+        }
+        contentItem: Text {
+            text: "Updating library..."
+            color: "white"
+            font.pixelSize: 16
+            font.family: Constants.regularFontFamily
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+
     }
 
     // Pane {
@@ -545,7 +568,7 @@ FocusScope {
             FirelightMenuItem {
                 id: exploreButton
                 focus: contentStack.currentItem.topLevelName === "shop"
-                labelText: "Explore"
+                labelText: "Mod shop"
                 Layout.fillWidth: true
                 property bool showGlobalCursor: true
 
@@ -748,6 +771,9 @@ FocusScope {
         anchors.leftMargin: 40
         anchors.rightMargin: 40
         KeyNavigation.left: hamburger
+
+        background: Item {
+        }
 
         Keys.onEscapePressed: function (event) {
             drawer2.open()

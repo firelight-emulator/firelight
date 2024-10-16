@@ -135,6 +135,12 @@ add_library(firelight_lib
         src/gui/input_method_detection_handler.hpp
         src/app/input/keyboard_input_handler.cpp
         src/gui/models/library/entry_list_model.cpp
+        src/app/emulator_item.hpp
+        src/app/emulator_item_renderer.hpp
+        src/app/emulator_item_renderer.cpp
+        src/app/emulator_item.cpp
+        src/app/game_loader.cpp
+        src/app/game_loader.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
@@ -157,6 +163,7 @@ target_link_libraries(firelight_lib PUBLIC
         Qt6::Charts
         Qt6::QuickTest
         Qt6::Multimedia
+        Qt6::GuiPrivate
         #        PkgConfig::FFMPEG
         ${FFMPEG_LIBRARIES}
         LibArchive::LibArchive

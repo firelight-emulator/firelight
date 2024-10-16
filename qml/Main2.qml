@@ -256,6 +256,7 @@ ApplicationWindow {
         anchors.fill: parent
         focus: true
 
+
         Component.onCompleted: {
             screenStack.pushItems([emulatorScreen, homeScreen])
         }
@@ -356,27 +357,12 @@ ApplicationWindow {
         objectName: "Screen Overlay"
         anchors.fill: parent
         color: "black"
-        visible: false
+        opacity: 0
     }
 
     SequentialAnimation {
         id: gameStartAnimation
         running: false
-
-        property int entryId: -1
-        property string contentHash
-
-        PropertyAction {
-            target: overlay
-            property: "opacity"
-            value: 0
-        }
-
-        PropertyAction {
-            target: overlay
-            property: "visible"
-            value: true
-        }
 
         PropertyAnimation {
             target: overlay
@@ -389,20 +375,56 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
+                GameLoader.approve()
+            }
+        }
+    }
+
+    SequentialAnimation {
+        id: gameLoadedAnimation
+        running: false
+
+        property var gameData
+        property var saveData
+        property var corePath
+        property var contentHash
+        property var saveSlotNumber
+        property var platformId
+        property var contentPath
+
+
+        ScriptAction {
+            script: {
                 screenStack.popCurrentItem(StackView.Immediate)
-                screenStack.currentItem.loadGame(gameStartAnimation.entryId, gameStartAnimation.contentHash)
+                screenStack.currentItem.startGame(gameLoadedAnimation.gameData, gameLoadedAnimation.saveData, gameLoadedAnimation.corePath, gameLoadedAnimation.contentHash, gameLoadedAnimation.saveSlotNumber, gameLoadedAnimation.platformId, gameLoadedAnimation.contentPath)
                 // emulatorScreen
             }
         }
 
-        PauseAnimation {
-            duration: 1000
-        }
+        // PauseAnimation {
+        //     duration: 1000
+        // }
 
         PropertyAction {
             target: overlay
-            property: "visible"
-            value: false
+            property: "opacity"
+            value: 0
+        }
+
+    }
+
+    Connections {
+        target: GameLoader
+
+        function onGameLoaded(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
+            gameLoadedAnimation.gameData = gameData
+            gameLoadedAnimation.saveData = saveData
+            gameLoadedAnimation.corePath = corePath
+            gameLoadedAnimation.contentHash = contentHash
+            gameLoadedAnimation.saveSlotNumber = saveSlotNumber
+            gameLoadedAnimation.platformId = platformId
+            gameLoadedAnimation.contentPath = contentPath
+            gameLoadedAnimation.running = true
         }
     }
 
@@ -410,9 +432,7 @@ ApplicationWindow {
         id: homeScreen
 
         HomeScreen {
-            onStartGame: function (entryId, hash) {
-                gameStartAnimation.entryId = entryId
-                gameStartAnimation.contentHash = hash
+            onReadyToStartGame: {
                 gameStartAnimation.running = true
             }
         }

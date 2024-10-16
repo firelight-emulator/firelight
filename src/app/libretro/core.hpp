@@ -92,8 +92,11 @@ namespace libretro {
 
     std::function<void()> destroyContextFunction = nullptr;
 
+    retro_system_av_info *retroSystemAVInfo;
+
   private:
     std::unique_ptr<QLibrary> coreLib;
+    std::function<void()> m_destroyContextFunction = nullptr;
 
     Game *game;
 
@@ -106,7 +109,6 @@ namespace libretro {
     vector<string> environmentCalls;
 
     retro_system_info *retroSystemInfo;
-    retro_system_av_info *retroSystemAVInfo;
 
     // Informational to frontend.
     bool canRunWithNoGame = false;

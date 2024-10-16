@@ -5,11 +5,13 @@
 #include <QObject>
 #include <QQueue>
 #include <QReadWriteLock>
+#include <QTimer>
 #include <firelight/library/user_library.hpp>
 
 namespace firelight::library {
     class LibraryScanner2 : public QObject {
         Q_OBJECT
+        Q_PROPERTY(bool scanning MEMBER m_scanRunning NOTIFY scanningChanged)
 
     public:
         explicit LibraryScanner2(IUserLibrary &library);
@@ -29,11 +31,14 @@ namespace firelight::library {
 
         void scanFinished();
 
+        void scanningChanged();
+
     private:
+        QTimer m_scanTimer;
         IUserLibrary &m_library;
         bool m_shuttingDown = false;
         QFileSystemWatcher m_watcher;
-        std::map<QString, std::atomic_bool> m_scanQueuedByPath;
+        std::map<QString, bool> m_scanQueuedByPath;
         std::atomic_bool m_scanRunning = false;
         QThreadPool m_threadPool;
 
@@ -41,5 +46,11 @@ namespace firelight::library {
         QReadWriteLock m_pathQueueLock;
 
         void queueScan(const QString &path);
+
+        std::optional<QString> getNextDirectory();
+
+        void scanDirectory(const QString &path);
+
+        bool pathIsQueued(const QString &path);
     };
 } // namespace firelight::library
