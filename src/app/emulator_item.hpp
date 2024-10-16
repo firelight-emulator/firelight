@@ -10,9 +10,14 @@
 #include "libretro/core_configuration.hpp"
 
 class EmulatorItem : public QQuickRhiItem, public firelight::ManagerAccessor {
+protected:
+    void mouseMoveEvent(QMouseEvent *event) override;
+
+private:
     Q_OBJECT
     Q_PROPERTY(int videoWidth MEMBER m_coreBaseWidth NOTIFY videoWidthChanged)
     Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
+    Q_PROPERTY(float videoAspectRatio MEMBER m_calculatedAspectRatio NOTIFY videoAspectRatioChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
 
 public:
@@ -59,9 +64,13 @@ signals:
 
     void videoHeightChanged();
 
+    void videoAspectRatioChanged();
+
 protected:
     QQuickRhiItemRenderer *createRenderer() override;
 
 private:
+    EmulatorItemRenderer *m_renderer = nullptr;
+
     void updateGeometry(int width, int height, float aspectRatio);
 };

@@ -4,11 +4,18 @@
 
 #include "game_loader.hpp"
 
+#include <qtconcurrentrun.h>
+
 #include "platform_metadata.hpp"
 
 namespace firelight {
+    GameLoader::GameLoader() {
+        m_threadPool.setMaxThreadCount(1);
+    }
+
     void GameLoader::loadEntry(int entryId, bool waitForApproval) {
-        QThreadPool::globalInstance()->start([this, entryId, waitForApproval] {
+        // TODO: Figure out how to prevent stutter here.
+        m_threadPool.start([this, entryId, waitForApproval] {
                 if (waitForApproval) {
                     m_holding = true;
                 }
@@ -85,7 +92,6 @@ namespace firelight {
                     m_lastLoadSuccessful = true;
                 }
             }
-
         );
     }
 

@@ -9,9 +9,6 @@
 
 EmulatorItemRenderer::EmulatorItemRenderer(const QSGRendererInterface::GraphicsApi api,
                                            libretro::Core *core) : m_graphicsApi(api), m_core(core) {
-    if (api == QSGRendererInterface::OpenGL) {
-        initializeOpenGLFunctions();
-    }
 }
 
 EmulatorItemRenderer::~EmulatorItemRenderer() {
@@ -19,7 +16,7 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
 }
 
 void EmulatorItemRenderer::receive(const void *data, unsigned width, unsigned height, size_t pitch) {
-    if (data && width > 0 && height > 0 && pitch > 0) {
+    if (data && data != RETRO_HW_FRAME_BUFFER_VALID && width > 0 && height > 0 && pitch > 0) {
         if (m_graphicsApi == QSGRendererInterface::OpenGL) {
             QOpenGLPaintDevice paint_device;
             auto size = renderTarget()->pixelSize();
@@ -108,6 +105,11 @@ void EmulatorItemRenderer::setPixelFormat(retro_pixel_format *format) {
 
 void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
     if (m_graphicsApi == QSGRendererInterface::OpenGL) {
+        if (!m_openGlInitialized) {
+            initializeOpenGLFunctions();
+            m_openGlInitialized = true;
+        }
+
         if (m_resetContextFunction) {
             QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
             cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, resourceUpdates, QRhiCommandBuffer::ExternalContent);
@@ -153,16 +155,12 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
     m_currentWaitFrames = m_waitFrames;
 
-    const QColor clearColor = QColor::fromRgbF(0.0f, 0.0f, 0.0f, 1.0f);
-    QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
-    cb->beginPass(renderTarget(), clearColor, {1.0f, 0}, resourceUpdates, QRhiCommandBuffer::ExternalContent);
-    cb->beginExternal();
-
     if (m_core && !m_coreInitialized) {
         // TODO: Can split this over multiple frames if needed...
-        m_core->setVideoReceiver(this);
-        m_core->init();
+        // m_core->setVideoReceiver(this);
 
+        // setSystemAVInfo(m_core->retroSystemAVInfo);
+        //
         libretro::Game game(
             m_contentPath.toStdString(),
             vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
@@ -172,13 +170,19 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
             m_core->writeMemoryData(libretro::SAVE_RAM,
                                     vector(m_saveData.begin(), m_saveData.end()));
         }
+        //
+        // setSystemAVInfo(m_core->retroSystemAVInfo);
 
         m_coreInitialized = true;
     } else if (m_core && m_coreInitialized) {
+        const QColor clearColor = QColor::fromRgbF(0.0f, 0.0f, 0.0f, 1.0f);
+        QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
+        cb->beginPass(renderTarget(), clearColor, {1.0f, 0}, resourceUpdates, QRhiCommandBuffer::ExternalContent);
+        cb->beginExternal();
         m_core->run(0);
         update();
-    }
 
-    cb->endExternal();
-    cb->endPass(resourceUpdates);
+        cb->endExternal();
+        cb->endPass(resourceUpdates);
+    }
 }

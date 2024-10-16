@@ -70,6 +70,7 @@ private:
     std::function<void (int, int, float)> m_geometryChangedCallback = nullptr;
 
     // OpenGL members
+    bool m_openGlInitialized = false;
     GLint m_currentFramebufferId = 0;
     std::function<void()> m_resetContextFunction = nullptr;
     std::function<void()> m_destroyContextFunction = nullptr;

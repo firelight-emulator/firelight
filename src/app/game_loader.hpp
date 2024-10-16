@@ -7,9 +7,10 @@ namespace firelight {
     class GameLoader final : public QObject, public ManagerAccessor {
         Q_OBJECT
 
-    public
+    public:
+        GameLoader();
 
-    slots:
+    public slots:
         void loadEntry(int entryId, bool waitForApproval = false);
 
         void approve();
@@ -21,6 +22,8 @@ namespace firelight {
                         unsigned int saveSlotNumber, unsigned int platformId, QString contentPath);
 
     private:
+        QThreadPool m_threadPool;
+
         QByteArray m_gameData;
         QByteArray m_saveData;
         QString m_corePath;

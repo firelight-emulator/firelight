@@ -6,9 +6,14 @@
 #include "emulator_item_renderer.hpp"
 #include "platform_metadata.hpp"
 
+void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
+    spdlog::info("Moved to x: {}, y: {}", event->position().x(), event->position().y());
+}
+
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     setFlag(ItemHasContents);
 }
+
 
 EmulatorItem::~EmulatorItem() {
     spdlog::info("Destroying EmulatorItem");
@@ -42,30 +47,42 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
         auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_platformId, m_contentHash);
         m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
 
+        // Qt owns the renderer, so it will destoy it.
+        m_renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(), m_core.get());
+
+        m_renderer->onGeometryChanged([this](int width, int height, float aspectRatio) {
+            updateGeometry(width, height, aspectRatio);
+        });
+
+        m_core->setVideoReceiver(m_renderer);
+
         m_audioManager = std::make_shared<AudioManager>();
         m_core->setAudioReceiver(m_audioManager);
         m_core->setRetropadProvider(getControllerManager());
 
-        setFixedColorBufferHeight(1);
-        setFixedColorBufferWidth(1);
+        m_core->init();
 
+        // Setting these causes the item's geometry to be visible, and the renderer is initialized.
+        // If an item is not visible, the renderer is not initialized.
         m_coreBaseWidth = 1;
         m_coreBaseHeight = 1;
+        m_calculatedAspectRatio = 0.000001;
 
         emit videoWidthChanged();
         emit videoHeightChanged();
+        emit videoAspectRatioChanged();
     });
 }
 
 QQuickRhiItemRenderer *EmulatorItem::createRenderer() {
-    const auto renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(),
-                                                   m_core.get());
+    // const auto renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(),
+    //                                                m_core.get());
+    //
+    // renderer->onGeometryChanged([this](int width, int height, float aspectRatio) {
+    //     updateGeometry(width, height, aspectRatio);
+    // });
 
-    renderer->onGeometryChanged([this](int width, int height, float aspectRatio) {
-        updateGeometry(width, height, aspectRatio);
-    });
-
-    return renderer;
+    return m_renderer;
 }
 
 void EmulatorItem::updateGeometry(int width, int height, float aspectRatio) {
@@ -78,4 +95,5 @@ void EmulatorItem::updateGeometry(int width, int height, float aspectRatio) {
     setFixedColorBufferHeight(m_coreBaseHeight);
     emit videoWidthChanged();
     emit videoHeightChanged();
+    emit videoAspectRatioChanged();
 }

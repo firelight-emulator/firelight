@@ -1,6 +1,7 @@
 #include "keyboard_input_handler.hpp"
 
 #include <qevent.h>
+#include <spdlog/spdlog.h>
 
 namespace firelight::input {
   bool KeyboardInputHandler::isButtonPressed(Button t_button) {

@@ -33,28 +33,36 @@ FocusScope {
         emulator.paused = false
     }
 
+    layer.enabled: blurAmount !== 0
+
+
+    layer.effect: MultiEffect {
+        // enabled: root.blurAmount !== 0
+        source: root
+        anchors.fill: root
+        blurEnabled: true
+        blurMultiplier: 0
+        blurMax: 64
+        blur: root.blurAmount
+    }
+
     Rectangle {
         id: background
         color: "black"
         anchors.fill: parent
     }
 
+    // layer.enabled: root.blurAmount !== 0
+    // layer.effect:
+
     EmulatorItem {
         id: emulator
+        // visible: root.blurAmount === 0
+        focus: true
         anchors.centerIn: parent
-        width: videoWidth * 3
-        height: videoHeight * 3
+        width: parent.height * videoAspectRatio
+        height: parent.height
         smooth: false
-
-        layer.enabled: root.blurAmount !== 0
-        layer.effect: MultiEffect {
-            source: emulator
-            anchors.fill: emulator
-            blurEnabled: true
-            blurMultiplier: 0
-            blurMax: 64
-            blur: root.blurAmount
-        }
 
         Component.onCompleted: function () {
             startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)

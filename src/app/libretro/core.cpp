@@ -1,4 +1,5 @@
 #include "core.hpp"
+#include "libretro/libretro_vulkan.h"
 
 #include "SDL2/SDL.h"
 #include "virtual_filesystem.hpp"
@@ -19,6 +20,11 @@ namespace libretro {
     msg[std::remove(msg, msg + strlen(msg), '\n') - msg] = 0;
     msg[std::remove(msg, msg + strlen(msg), '\r') - msg] = 0;
 
+    // mGBA likes to spam the logs... though I could probably check the level.
+    if (strncmp(msg, "GBA DMA", 7) == 0) {
+      return;
+    }
+
     spdlog::info("[Core] {}", msg);
   }
 
@@ -31,6 +37,22 @@ namespace libretro {
       // TODO: Report some error
       return 0;
     }
+
+    // switch (device) {
+    //   case RETRO_DEVICE_POINTER:
+    //     spdlog::info("Asking for pointer input");
+    //     break;
+    //   case RETRO_DEVICE_KEYBOARD:
+    //     spdlog::info("Asking for keyboard input");
+    //     break;
+    //   case RETRO_DEVICE_MOUSE:
+    //     spdlog::info("Asking for mouse input");
+    //     break;
+    //   case RETRO_DEVICE_LIGHTGUN:
+    //     spdlog::info("Asking for lightgun input");
+    //     break;
+    // }
+
 
     const auto controllerOpt =
         currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
@@ -526,9 +548,16 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE");
-        auto ptr = static_cast<retro_hw_render_interface *>(data);
-        ptr->interface_type = RETRO_HW_RENDER_INTERFACE_VULKAN;
-        ptr->interface_version = 0;
+
+        auto ptr = static_cast<retro_hw_render_interface_vulkan **>(data);
+        *ptr = new retro_hw_render_interface_vulkan;
+        (*ptr)->interface_type = RETRO_HW_RENDER_INTERFACE_VULKAN;
+        (*ptr)->interface_version = RETRO_HW_RENDER_INTERFACE_VULKAN_VERSION;
+
+        auto content = *ptr;
+        // ptr->interface_type = RETRO_HW_RENDER_INTERFACE_VULKAN;
+        // ptr->interface_version = 0;
+        auto cool = "yeah";
         return true;
       }
       case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS: {

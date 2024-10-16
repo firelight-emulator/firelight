@@ -312,14 +312,14 @@ int main(int argc, char *argv[]) {
 
   int exitCode = QApplication::exec();
 
+  spdlog::info("Exiting QApplication");
+
   sdlEventLoop.stopProcessing();
 
   sdlEventLoop.quit();
   sdlEventLoop.wait();
 
   engine.removeImageProvider("gameImages");
-
-  printf("We still gucci\n");
   // TODO: Let daemons finish
 
   return exitCode;

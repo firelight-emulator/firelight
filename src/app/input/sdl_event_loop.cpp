@@ -37,10 +37,10 @@ namespace firelight {
   }
 
   void SdlEventLoop::stopProcessing() {
-    m_running = false;
     SDL_Event quitEvent;
     quitEvent.type = SDL_QUIT;
     SDL_PushEvent(&quitEvent);
+    m_running = false;
   }
 
   void SdlEventLoop::run() {
