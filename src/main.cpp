@@ -41,6 +41,7 @@
 #include <QtConcurrent>
 
 #include "app/emulator_item.hpp"
+#include "app/gamepad_status_item.hpp"
 #include "app/game_loader.hpp"
 #include "app/library/sqlite_user_library.hpp"
 #include "gui/models/library/entry_list_model.hpp"
@@ -240,6 +241,7 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
+  qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0, "GamepadStatus");
   qmlRegisterType<firelight::gui::GamepadMapping>("Firelight", 1, 0, "GamepadMapping");
   qmlRegisterType<firelight::gui::GamepadProfile>("Firelight", 1, 0, "GamepadProfile");
 
@@ -286,6 +288,7 @@ int main(int argc, char *argv[]) {
   //   [](QObject *item, const QUrl &url) { printf("Created: %s\n", url.toDisplayString().toStdString().c_str()); },
   //   Qt::QueuedConnection);
   engine.loadFromModule("QMLFirelight", "Main2");
+  // engine.loadFromModule("QMLFirelight", "ControllerTest");
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
@@ -307,6 +310,7 @@ int main(int argc, char *argv[]) {
 
 
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
+  sdlEventLoop.moveToThread(&sdlEventLoop);
   sdlEventLoop.start();
   engine.rootContext()->setContextProperty("sfx_player", new firelight::audio::SfxPlayer());
 

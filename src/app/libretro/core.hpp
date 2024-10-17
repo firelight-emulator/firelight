@@ -11,6 +11,7 @@
 #include <qlibrary.h>
 #include <vector>
 #include <filesystem>
+#include <firelight/libretro/pointer_input_provider.hpp>
 
 using std::array;
 using std::string;
@@ -49,6 +50,10 @@ namespace libretro {
     void setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver);
 
     void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
+
+    void setPointerInputProvider(firelight::libretro::IPointerInputProvider *provider);
+
+    firelight::libretro::IPointerInputProvider *getPointerInputProvider() const;
 
     firelight::libretro::IRetropadProvider *getRetropadProvider() const;
 
@@ -103,6 +108,7 @@ namespace libretro {
     firelight::libretro::IRetropadProvider *m_retropadProvider;
     std::shared_ptr<IAudioDataReceiver> audioReceiver;
     std::shared_ptr<firelight::libretro::IConfigurationProvider> m_configurationProvider;
+    firelight::libretro::IPointerInputProvider *m_pointerInputProvider;
 
     retro_vfs_interface m_vfsInterface;
 

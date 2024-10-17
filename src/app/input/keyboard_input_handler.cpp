@@ -30,8 +30,37 @@ namespace firelight::input {
   void KeyboardInputHandler::setWeakRumble(uint16_t t_strength) {
   }
 
+  QPointF KeyboardInputHandler::getMousePosition() const {
+    return m_mousePosition;
+  }
+
+  bool KeyboardInputHandler::isLeftMouseButtonDown() const {
+    return m_leftMouseButtonDown;
+  }
+
+  bool KeyboardInputHandler::isRightMouseButtonDown() const {
+    return m_rightMouseButtonDown;
+  }
+
   bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
-    if (event->type() == QEvent::KeyPress) {
+    if (event->type() == QEvent::MouseMove) {
+      auto mouseEvent = dynamic_cast<QMouseEvent *>(event);
+      m_mousePosition = mouseEvent->position();
+    } else if (event->type() == QEvent::MouseButtonPress) {
+      auto mouseEvent = dynamic_cast<QMouseEvent *>(event);
+      if (mouseEvent->button() == Qt::LeftButton) {
+        m_leftMouseButtonDown = true;
+      } else if (mouseEvent->button() == Qt::RightButton) {
+        m_rightMouseButtonDown = true;
+      }
+    } else if (event->type() == QEvent::MouseButtonRelease) {
+      auto mouseEvent = dynamic_cast<QMouseEvent *>(event);
+      if (mouseEvent->button() == Qt::LeftButton) {
+        m_leftMouseButtonDown = false;
+      } else if (mouseEvent->button() == Qt::RightButton) {
+        m_rightMouseButtonDown = false;
+      }
+    } else if (event->type() == QEvent::KeyPress) {
       auto keyEvent = dynamic_cast<QKeyEvent *>(event);
       switch (keyEvent->key()) {
         case Qt::Key_W:

@@ -52,6 +52,13 @@ public:
 
     void setPaused(bool paused);
 
+protected:
+    void hoverMoveEvent(QHoverEvent *event) override;
+
+    void mousePressEvent(QMouseEvent *event) override;
+
+    void mouseReleaseEvent(QMouseEvent *event) override;
+
 public slots:
     void startGame(const QByteArray &gameData, const QByteArray &saveData, const QString &corePath,
                    const QString &contentHash,
@@ -71,6 +78,7 @@ protected:
 
 private:
     EmulatorItemRenderer *m_renderer = nullptr;
+    bool m_mousePressed = false;
 
-    void updateGeometry(int width, int height, float aspectRatio);
+    void updateGeometry(unsigned int width, unsigned int height, float aspectRatio);
 };

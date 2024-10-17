@@ -53,6 +53,18 @@ namespace libretro {
     //     break;
     // }
 
+    if (device == RETRO_DEVICE_POINTER) {
+      if (id == RETRO_DEVICE_ID_POINTER_X) {
+        return currentCore->getPointerInputProvider()->getPointerPosition().first;
+      }
+      if (id == RETRO_DEVICE_ID_POINTER_Y) {
+        return currentCore->getPointerInputProvider()->getPointerPosition().second;
+      }
+      if (id == RETRO_DEVICE_ID_POINTER_PRESSED) {
+        return currentCore->getPointerInputProvider()->isPressed();
+      }
+    }
+
 
     const auto controllerOpt =
         currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
@@ -1402,6 +1414,14 @@ namespace libretro {
   void Core::setRetropadProvider(
     firelight::libretro::IRetropadProvider *provider) {
     m_retropadProvider = provider;
+  }
+
+  void Core::setPointerInputProvider(firelight::libretro::IPointerInputProvider *provider) {
+    m_pointerInputProvider = provider;
+  }
+
+  firelight::libretro::IPointerInputProvider *Core::getPointerInputProvider() const {
+    return m_pointerInputProvider;
   }
 
   firelight::libretro::IRetropadProvider *Core::getRetropadProvider() const {

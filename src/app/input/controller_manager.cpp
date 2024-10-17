@@ -9,7 +9,7 @@
 #include <string>
 
 namespace firelight::Input {
-  void ControllerManager::setKeyboardRetropad(libretro::IRetroPad *keyboard) {
+  void ControllerManager::setKeyboardRetropad(input::KeyboardInputHandler *keyboard) {
     m_keyboard = keyboard;
   }
 
@@ -28,11 +28,35 @@ namespace firelight::Input {
               m_controllers[i]->getInstanceId() == joystickInstanceId) {
             m_controllers[i].reset();
             m_numControllers--;
-            emit controllerDisconnected();
+            emit controllerDisconnected(i + 1);
             spdlog::debug("We found it and we're unplugging it");
           }
         }
 
+        break;
+      }
+      case SDL_CONTROLLERBUTTONDOWN: {
+        const auto joystickInstanceId = event.cbutton.which;
+        for (int i = 0; i < m_controllers.max_size(); ++i) {
+          if (m_controllers[i] != nullptr &&
+              m_controllers[i]->getInstanceId() == joystickInstanceId) {
+            const auto button = event.cbutton.button;
+            spdlog::debug("Player {} Button {} pressed", i + 1, button);
+            emit buttonStateChanged(i + 1, button, true);
+          }
+        }
+        break;
+      }
+      case SDL_CONTROLLERBUTTONUP: {
+        const auto joystickInstanceId = event.cbutton.which;
+        for (int i = 0; i < m_controllers.max_size(); ++i) {
+          if (m_controllers[i] != nullptr &&
+              m_controllers[i]->getInstanceId() == joystickInstanceId) {
+            const auto button = event.cbutton.button;
+            spdlog::debug("Player {} Button {} released", i + 1, button);
+            emit buttonStateChanged(i + 1, button, false);
+          }
+        }
         break;
       }
       default:
@@ -50,7 +74,7 @@ namespace firelight::Input {
 
   std::optional<libretro::IRetroPad *>
   ControllerManager::getRetropadForPlayerIndex(const int t_player) {
-    const auto controller = getControllerForPlayer(t_player);
+    const auto controller = getControllerForPlayerIndex(t_player);
     if (t_player == 0 && !controller && m_keyboard) {
       return m_keyboard;
     }
@@ -85,21 +109,30 @@ namespace firelight::Input {
         m_controllers[i] =
             std::make_unique<Controller>(controller, t_deviceIndex);
         m_controllers[i]->setControllerProfile(std::make_shared<input::ControllerProfile>());
+
+        emit controllerConnected(i + 1);
         break;
       }
     }
 
     spdlog::info("Controller device added with device index {}", t_deviceIndex);
-    emit controllerConnected();
   }
 
   std::optional<Controller *>
-  ControllerManager::getControllerForPlayer(const int t_player) const {
+  ControllerManager::getControllerForPlayerIndex(const int t_player) const {
     if (m_controllers.at(t_player) != nullptr) {
       return {m_controllers.at(t_player).get()};
     }
 
     return {};
+  }
+
+  std::pair<int16_t, int16_t> ControllerManager::getPointerPosition() const {
+    return {m_pointerX, m_pointerY};
+  }
+
+  bool ControllerManager::isPressed() const {
+    return m_pointerPressed;
   }
 
   void ControllerManager::updateControllerOrder(const QVariantMap &map) {
@@ -160,5 +193,15 @@ namespace firelight::Input {
     }
 
     return new PlatformInputListModel(this);
+  }
+
+  void ControllerManager::updateMouseState(const double x, const double y, const bool pressed) {
+    m_pointerX = x * 32767;
+    m_pointerY = y * 32767;
+    m_pointerPressed = pressed;
+  }
+
+  void ControllerManager::updateMousePressed(bool pressed) {
+    m_pointerPressed = pressed;
   }
 } // namespace firelight::Input

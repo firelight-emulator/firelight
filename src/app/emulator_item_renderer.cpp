@@ -24,16 +24,7 @@ void EmulatorItemRenderer::receive(const void *data, unsigned width, unsigned he
             QPainter painter(&paint_device);
 
             painter.beginNativePainting();
-
-            // printf("width: %d, height: %d, pitch: %llu\n", width, height, pitch);
-            // m_fbo->bind();
             const QImage image((uchar *) data, width, height, pitch, m_pixelFormat);
-            // painter.setPen(QColor::fromRgb(0, 255, 0));
-            // painter.drawRect(QRect(0, 0, 300, 400));
-
-            // painter.endNativePainting();
-
-            // TODO: Check native size, etc. make sure we use max size and base size correctly
             painter.drawImage(
                 QRect(0, 0, m_coreBaseWidth, m_coreBaseHeight), image,
                 image.rect());
@@ -156,11 +147,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentWaitFrames = m_waitFrames;
 
     if (m_core && !m_coreInitialized) {
-        // TODO: Can split this over multiple frames if needed...
-        // m_core->setVideoReceiver(this);
-
-        // setSystemAVInfo(m_core->retroSystemAVInfo);
-        //
         libretro::Game game(
             m_contentPath.toStdString(),
             vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
@@ -170,8 +156,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
             m_core->writeMemoryData(libretro::SAVE_RAM,
                                     vector(m_saveData.begin(), m_saveData.end()));
         }
-        //
-        // setSystemAVInfo(m_core->retroSystemAVInfo);
 
         m_coreInitialized = true;
     } else if (m_core && m_coreInitialized) {

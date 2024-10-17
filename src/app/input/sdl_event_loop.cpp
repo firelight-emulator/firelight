@@ -66,6 +66,7 @@ namespace firelight {
           case SDL_CONTROLLERAXISMOTION:
             break;
           case SDL_CONTROLLERBUTTONUP: {
+            m_controllerManager->handleSDLControllerEvent(ev);
             Qt::Key key;
 
             auto button = ev.cbutton.button;
@@ -89,11 +90,13 @@ namespace firelight {
               break;
             }
 
+            // TODO: I think it complains about this.
             QApplication::postEvent(
               m_window, new QKeyEvent(QEvent::KeyRelease, key, Qt::KeyboardModifier::NoModifier));
             break;
           }
           case SDL_CONTROLLERBUTTONDOWN: {
+            m_controllerManager->handleSDLControllerEvent(ev);
             Qt::Key key;
 
             auto button = ev.cbutton.button;
@@ -119,6 +122,7 @@ namespace firelight {
 
             QApplication::postEvent(
               m_window, new QKeyEvent(QEvent::KeyPress, key, Qt::KeyboardModifier::NoModifier));
+            m_controllerManager->handleSDLControllerEvent(ev);
             break;
           }
           // printf("button: %d, state: %d\n", ev.cbutton.button, ev.cbutton.state);

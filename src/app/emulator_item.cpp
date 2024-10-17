@@ -7,11 +7,20 @@
 #include "platform_metadata.hpp"
 
 void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
-    spdlog::info("Moved to x: {}, y: {}", event->position().x(), event->position().y());
+    auto pos = event->position();
+    auto bounds = boundingRect();
+
+    auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
+    auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
+
+    getControllerManager()->updateMouseState(x, y, m_mousePressed);
 }
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     setFlag(ItemHasContents);
+    setAcceptHoverEvents(true);
+    setAcceptTouchEvents(true);
+    setAcceptedMouseButtons(Qt::LeftButton);
 }
 
 
@@ -29,6 +38,26 @@ void EmulatorItem::setPaused(const bool paused) {
         emit pausedChanged();
         update();
     }
+}
+
+void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
+    auto pos = event->position();
+    auto bounds = boundingRect();
+
+    auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
+    auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
+
+    getControllerManager()->updateMouseState(x, y, m_mousePressed);
+}
+
+void EmulatorItem::mousePressEvent(QMouseEvent *event) {
+    m_mousePressed = true;
+    getControllerManager()->updateMousePressed(m_mousePressed);
+}
+
+void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
+    m_mousePressed = false;
+    getControllerManager()->updateMousePressed(m_mousePressed);
 }
 
 void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveData, const QString &corePath,
@@ -50,7 +79,7 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
         // Qt owns the renderer, so it will destoy it.
         m_renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(), m_core.get());
 
-        m_renderer->onGeometryChanged([this](int width, int height, float aspectRatio) {
+        m_renderer->onGeometryChanged([this](unsigned int width, unsigned int height, float aspectRatio) {
             updateGeometry(width, height, aspectRatio);
         });
 
@@ -59,6 +88,7 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
         m_audioManager = std::make_shared<AudioManager>();
         m_core->setAudioReceiver(m_audioManager);
         m_core->setRetropadProvider(getControllerManager());
+        m_core->setPointerInputProvider(getControllerManager());
 
         m_core->init();
 
@@ -85,7 +115,7 @@ QQuickRhiItemRenderer *EmulatorItem::createRenderer() {
     return m_renderer;
 }
 
-void EmulatorItem::updateGeometry(int width, int height, float aspectRatio) {
+void EmulatorItem::updateGeometry(unsigned int width, unsigned int height, float aspectRatio) {
     m_coreBaseWidth = width;
     m_coreBaseHeight = height;
     m_coreAspectRatio = aspectRatio;

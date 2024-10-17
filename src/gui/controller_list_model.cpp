@@ -54,7 +54,7 @@ namespace firelight::gui {
     emit beginResetModel();
     m_items.clear();
     for (int i = 0; i < 4; i++) {
-      auto con = m_controllerManager.getControllerForPlayer(i);
+      auto con = m_controllerManager.getControllerForPlayerIndex(i);
       if (con.has_value()) {
         beginInsertRows(QModelIndex{}, i, i);
 
