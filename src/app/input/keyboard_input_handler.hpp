@@ -25,19 +25,10 @@ namespace firelight::input {
 
     void setWeakRumble(uint16_t t_strength) override;
 
-    [[nodiscard]] QPointF getMousePosition() const;
-
-    [[nodiscard]] bool isLeftMouseButtonDown() const;
-
-    [[nodiscard]] bool isRightMouseButtonDown() const;
-
   protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
   private:
     QMap<Button, bool> m_buttonStates;
-    QPointF m_mousePosition;
-    bool m_leftMouseButtonDown = false;
-    bool m_rightMouseButtonDown = false;
   };
 } // namespace firelight::gui

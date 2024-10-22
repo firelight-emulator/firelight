@@ -53,9 +53,9 @@ namespace libretro {
 
     void setPointerInputProvider(firelight::libretro::IPointerInputProvider *provider);
 
-    firelight::libretro::IPointerInputProvider *getPointerInputProvider() const;
+    [[nodiscard]] firelight::libretro::IPointerInputProvider *getPointerInputProvider() const;
 
-    firelight::libretro::IRetropadProvider *getRetropadProvider() const;
+    [[nodiscard]] firelight::libretro::IRetropadProvider *getRetropadProvider() const;
 
     void setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver);
 

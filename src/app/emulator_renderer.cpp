@@ -13,6 +13,13 @@
 
 static constexpr int AUTOSAVE_INTERVAL_MILLIS = 10000;
 
+void EmulatorRenderer::setHwRenderInterface(retro_hw_render_interface **interface) {
+}
+
+void EmulatorRenderer::
+setHwRenderContextNegotiationInterface(retro_hw_render_context_negotiation_interface *iface) {
+}
+
 retro_hw_context_type EmulatorRenderer::getPreferredHwRender() {
 }
 

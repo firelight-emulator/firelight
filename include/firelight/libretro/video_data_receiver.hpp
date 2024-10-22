@@ -33,5 +33,10 @@ namespace firelight::libretro {
         virtual void setSystemAVInfo(retro_system_av_info *info) = 0;
 
         virtual void setPixelFormat(retro_pixel_format *format) = 0;
+
+        virtual void setHwRenderContextNegotiationInterface(retro_hw_render_context_negotiation_interface *interface) =
+        0;
+
+        virtual void setHwRenderInterface(retro_hw_render_interface **interface) = 0;
     };
 } // namespace firelight::libretro

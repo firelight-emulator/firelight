@@ -4,9 +4,11 @@
 #include <QOpenGLFunctions>
 #include <QImage>
 #include <QOpenGLFramebufferObject>
+#include <QQueue>
 #include <QQuickRhiItemRenderer>
 #include <qsgrendererinterface.h>
 #include <firelight/libretro/video_data_receiver.hpp>
+#include <rhi/qrhi.h>
 
 #include "audio_manager.hpp"
 #include "manager_accessor.hpp"
@@ -40,6 +42,10 @@ public:
 
     void setPixelFormat(retro_pixel_format *format) override;
 
+    void setHwRenderContextNegotiationInterface(retro_hw_render_context_negotiation_interface *iface) override;
+
+    void setHwRenderInterface(retro_hw_render_interface **iface) override;
+
     QByteArray m_gameData;
     QByteArray m_saveData;
     QString m_corePath;
@@ -48,6 +54,23 @@ public:
     int m_platformId;
     QString m_contentPath;
     bool m_gameReady;
+
+    enum EmulatorCommandType {
+        ResetGame,
+        EmitRewindPoints,
+        LoadRewindPoint,
+        WriteSuspendPoint,
+        LoadSuspendPoint,
+        UndoLoadSuspendPoint
+    };
+
+    struct EmulatorCommand {
+        EmulatorCommandType type;
+        int suspendPointIndex;
+        int rewindPointIndex;
+    };
+
+    void submitCommand(EmulatorCommand command);
 
 protected:
     ~EmulatorItemRenderer() override;
@@ -61,6 +84,12 @@ protected:
 private:
     const QSGRendererInterface::GraphicsApi m_graphicsApi;
 
+    QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
+
+    QQueue<EmulatorCommand> m_commandQueue;
+
+    int m_frameNumber = 0;
+
     int m_currentWaitFrames = 0;
     int m_waitFrames = 0;
 
@@ -69,11 +98,12 @@ private:
 
     std::function<void (int, int, float)> m_geometryChangedCallback = nullptr;
 
-    // OpenGL members
+    // HW rendering members
     bool m_openGlInitialized = false;
     GLint m_currentFramebufferId = 0;
     std::function<void()> m_resetContextFunction = nullptr;
     std::function<void()> m_destroyContextFunction = nullptr;
+
 
     // Default according to libretro docs
     QImage::Format m_pixelFormat = QImage::Format_RGB16;
