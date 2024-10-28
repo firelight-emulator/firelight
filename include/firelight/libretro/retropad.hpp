@@ -25,9 +25,11 @@ namespace firelight::libretro {
       R3 = RETRO_DEVICE_ID_JOYPAD_R3
     };
 
-    enum Stick {
-      Left,
-      Right
+    enum Axis {
+      LeftStickX,
+      LeftStickY,
+      RightStickX,
+      RightStickY
     };
 
     virtual ~IRetroPad() = default;

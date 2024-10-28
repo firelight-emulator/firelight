@@ -18,6 +18,16 @@ FocusScope {
 
     signal gameStopped()
 
+    Action {
+        id: resetGameAction
+        onTriggered: {
+            if (emulatorStack.depth > 1) {
+                emulatorStack.get(0).resetGame()
+                emulatorStack.popCurrentItem()
+            }
+        }
+    }
+
     function loadGame(id, hash) {
         emulatorStack.pushItem(emulatorComponent, {entryId: id, contentHash: hash}, StackView.Immediate)
         // emulator.loadGame(id)
@@ -500,10 +510,11 @@ FocusScope {
             }
 
             onRestartGamePressed: function () {
-                const emu = emulatorStack.get(0)
-                emu.resetGame()
-                // emulator.resetGame()
-                emulatorStack.pop()
+                resetGameAction.trigger()
+                // const emu = emulatorStack.get(0)
+                // emu.resetGame()
+                // // emulator.resetGame()
+                // emulatorStack.pop()
             }
 
             onRewindPressed: function () {

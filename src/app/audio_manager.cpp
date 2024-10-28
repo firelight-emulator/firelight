@@ -54,25 +54,26 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     //
     // m_changeThing += smoothing_factor * (desired_change - bufferDeviation);
 
+
     int delta = 0;
-    if (bufferDeviation > 0.7) {
-      delta = -5;
-    } else if (bufferDeviation > 0.4) {
+    if (bufferDeviation > 0.8) {
       delta = -4;
+    } else if (bufferDeviation > 0.4) {
+      delta = -3;
     } else if (bufferDeviation > 0.2) {
       delta = -2;
     } else if (bufferDeviation > 0.1) {
-      delta = 1;
+      delta = -1;
     } else if (bufferDeviation > -0.1) {
       delta = 0;
     } else if (bufferDeviation > -0.2) {
       delta = 1;
     } else if (bufferDeviation > -0.4) {
       delta = 2;
-    } else if (bufferDeviation > -0.7) {
-      delta = 4;
+    } else if (bufferDeviation > -0.8) {
+      delta = 3;
     } else {
-      delta = 5;
+      delta = 4;
     }
 
     if (numFrames > 300 || delta > 0) {
@@ -112,7 +113,7 @@ void AudioManager::initialize(const double new_freq) {
 
   m_audioSink = new QAudioSink(format);
 
-  m_audioSink->setBufferSize(8192);
+  m_audioSink->setBufferSize(16384);
   m_audioDevice = m_audioSink->start();
 }
 

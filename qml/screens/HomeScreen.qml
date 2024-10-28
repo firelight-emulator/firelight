@@ -545,6 +545,11 @@ FocusScope {
                 }
             }
 
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
             FirelightMenuItem {
                 id: libraryButton
                 focus: contentStack.currentItem.topLevelName === "library"

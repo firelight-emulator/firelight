@@ -2,33 +2,27 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+Flickable {
+    boundsBehavior: Flickable.StopAtBounds
+    contentHeight: theColumn.height
 
-Item {
+    ScrollBar.vertical: ScrollBar {
+    }
+
     ColumnLayout {
+        id: theColumn
+        width: parent.width
         spacing: 0
-        anchors.fill: parent
-        // SliderOption {
-        //     Layout.fillWidth: true
-        //     Layout.preferredHeight: 60
-        //     label: "Master Volume"
-        // }
-        // ToggleOption {
-        //     Layout.fillWidth: true
-        //     Layout.preferredHeight: 60
-        //     label: "Menu Navigation Sounds"
-        // }
-        // SliderOption {
-        //     Layout.fillWidth: true
-        //     Layout.preferredHeight: 60
-        //     label: "Menu Navigation Sounds Volume"
-        // }
+
         ToggleOption {
             Layout.fillWidth: true
-            Layout.minimumHeight: 42
-            label: "Progress notifications"
-            description: "Show a notification when you make progress on an achievement that has progress tracking."
+            label: "Menu sounds"
+        }
 
-            checked: true
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
         }
     }
 }

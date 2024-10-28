@@ -47,6 +47,15 @@ namespace firelight::audio {
         m_sfxs["startgame"] = new QSoundEffect();
         m_sfxs["startgame"]->setSource(QUrl::fromLocalFile("system/sfx/startgame.wav"));
 
+        m_sfxs["defaultnotification"] = new QSoundEffect();
+        m_sfxs["defaultnotification"]->setSource(QUrl::fromLocalFile("system/sfx/defaultnotification.wav"));
+
+        m_sfxs["switchon"] = new QSoundEffect();
+        m_sfxs["switchon"]->setSource(QUrl::fromLocalFile("system/sfx/switchon.wav"));
+
+        m_sfxs["switchoff"] = new QSoundEffect();
+        m_sfxs["switchoff"]->setSource(QUrl::fromLocalFile("system/sfx/switchoff.wav"));
+
         // m_sfxs["rewindscroll"] = std::move(effect1);
         // m_sfxs["rewindopen"] = std::move(effect2);
 

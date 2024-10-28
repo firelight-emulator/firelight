@@ -1,19 +1,21 @@
 #include "input_mapping.hpp"
 
 namespace firelight::input {
-    bool InputMapping::isButtonPressed(libretro::IRetroPad::Button t_button) {
+    std::optional<InputMapping::InputDescription> InputMapping::getButtonMapping(
+        const libretro::IRetroPad::Button button) {
+        if (!m_buttonMappings.contains(button)) {
+            return std::nullopt;
+        }
+
+        return m_buttonMappings[button];
     }
 
-    int16_t InputMapping::getLeftStickXPosition() {
-    }
+    std::optional<InputMapping::InputDescription> InputMapping::getAxisMapping(const libretro::IRetroPad::Axis axis) {
+        if (!m_axisMappings.contains(axis)) {
+            return std::nullopt;
+        }
 
-    int16_t InputMapping::getLeftStickYPosition() {
-    }
-
-    int16_t InputMapping::getRightStickXPosition() {
-    }
-
-    int16_t InputMapping::getRightStickYPosition() {
+        return m_axisMappings[axis];
     }
 }
 

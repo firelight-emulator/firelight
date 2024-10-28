@@ -14,7 +14,6 @@ Item {
         ToggleOption {
             id: fullscreenOption
             Layout.fillWidth: true
-            Layout.preferredHeight: 60
             label: "Fullscreen"
 
             checked: GeneralSettings.fullscreen

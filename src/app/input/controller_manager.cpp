@@ -8,6 +8,8 @@
 #include <spdlog/spdlog.h>
 #include <string>
 
+#include "controller_icons.hpp"
+
 namespace firelight::Input {
   void ControllerManager::setKeyboardRetropad(input::KeyboardInputHandler *keyboard) {
     m_keyboard = keyboard;
@@ -20,15 +22,16 @@ namespace firelight::Input {
         break;
       }
       case SDL_CONTROLLERDEVICEREMOVED: {
-        spdlog::info("Controller disconnected");
         const auto joystickInstanceId = event.cdevice.which;
 
         for (int i = 0; i < m_controllers.max_size(); ++i) {
           if (m_controllers[i] != nullptr &&
               m_controllers[i]->getInstanceId() == joystickInstanceId) {
+            auto name = m_controllers[i]->getControllerName();
+            const auto type = m_controllers[i]->getGamepadType();
             m_controllers[i].reset();
             m_numControllers--;
-            emit controllerDisconnected(i + 1);
+            emit controllerDisconnected(i + 1, QString::fromStdString(name), ControllerIcons::sourceUrlFromType(type));
             spdlog::debug("We found it and we're unplugging it");
           }
         }
@@ -109,13 +112,13 @@ namespace firelight::Input {
         m_controllers[i] =
             std::make_unique<Controller>(controller, t_deviceIndex);
         m_controllers[i]->setControllerProfile(std::make_shared<input::ControllerProfile>());
+        const auto name = m_controllers[i]->getControllerName();
+        const auto type = m_controllers[i]->getGamepadType();
 
-        emit controllerConnected(i + 1);
+        emit controllerConnected(i + 1, QString::fromStdString(name), ControllerIcons::sourceUrlFromType(type));
         break;
       }
     }
-
-    spdlog::info("Controller device added with device index {}", t_deviceIndex);
   }
 
   std::optional<Controller *>
@@ -187,7 +190,7 @@ namespace firelight::Input {
     emit controllerOrderChanged();
   }
 
-  QAbstractListModel *ControllerManager::getPlatformInputModel(int platformId) {
+  QAbstractListModel *ControllerManager::getPlatformInputModel(const int platformId) {
     if (platformId == 0) {
       return new PlatformInputListModel(this);
     }
@@ -201,7 +204,7 @@ namespace firelight::Input {
     m_pointerPressed = pressed;
   }
 
-  void ControllerManager::updateMousePressed(bool pressed) {
+  void ControllerManager::updateMousePressed(const bool pressed) {
     m_pointerPressed = pressed;
   }
 } // namespace firelight::Input

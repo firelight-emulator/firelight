@@ -57,6 +57,7 @@ public:
 
     enum EmulatorCommandType {
         ResetGame,
+        WriteSaveFile,
         EmitRewindPoints,
         LoadRewindPoint,
         WriteSuspendPoint,
@@ -71,6 +72,8 @@ public:
     };
 
     void submitCommand(EmulatorCommand command);
+
+    void save(bool waitForFinish) const;
 
 protected:
     ~EmulatorItemRenderer() override;
@@ -87,6 +90,8 @@ private:
     QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
 
     QQueue<EmulatorCommand> m_commandQueue;
+
+    QImage m_currentImage;
 
     int m_frameNumber = 0;
 
@@ -116,4 +121,6 @@ private:
     uint m_coreMaxHeight = 0;
     float m_coreAspectRatio = 0.0f;
     float m_calculatedAspectRatio = 0.0f;
+
+    bool m_shouldSave = false;
 };

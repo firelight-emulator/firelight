@@ -211,6 +211,18 @@ namespace firelight::Input {
           default:
             return UNKNOWN;
         }
+      case 0x054C: // Sony
+        switch (productId) {
+          case 0x0268: // PS3
+            return SONY_DUALSHOCK_3;
+          case 0x05C4:
+          case 0x09CC: // PS4
+            return SONY_DUALSHOCK_4;
+          case 0x0CE6: // PS5
+            return SONY_DUALSENSE;
+          default:
+            return UNKNOWN;
+        }
       default:
         return UNKNOWN;
     }

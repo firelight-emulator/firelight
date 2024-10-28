@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <qstandardpaths.h>
 #include <qstringlistmodel.h>
-
+#include <csignal>
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
@@ -101,6 +101,10 @@ int main(int argc, char *argv[]) {
   QSurfaceFormat::setDefaultFormat(format);
 
   QApplication app(argc, argv);
+
+  std::signal(SIGINT, [](int signal) {
+    QApplication::quit();
+  });
 
   auto defaultUserPathString = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
   auto defaultUserPath = std::filesystem::path(defaultUserPathString.toStdString()) / "Firelight";
@@ -312,6 +316,10 @@ int main(int argc, char *argv[]) {
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
   sdlEventLoop.moveToThread(&sdlEventLoop);
   sdlEventLoop.start();
+
+  // QObject::connect(window, &QQuickWindow::afterAnimating, &sdlEventLoop, &firelight::SdlEventLoop::pollEvents);
+  // connect(sdlThread, &QThread::started, &sdlEventLoop, &firelight::SdlEventLoop::run);
+  // sdlThread->start();
   engine.rootContext()->setContextProperty("sfx_player", new firelight::audio::SfxPlayer());
 
   int exitCode = QApplication::exec();
@@ -319,7 +327,7 @@ int main(int argc, char *argv[]) {
   spdlog::info("Exiting QApplication");
 
   sdlEventLoop.stopProcessing();
-
+  //
   sdlEventLoop.quit();
   sdlEventLoop.wait();
 

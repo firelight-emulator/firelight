@@ -331,6 +331,32 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     m_platformId = emulatorItem->m_platformId;
     m_contentPath = emulatorItem->m_contentPath;
     m_gameReady = emulatorItem->m_gameReady;
+
+    while (!m_commandQueue.isEmpty()) {
+        switch (const auto command = m_commandQueue.dequeue(); command.type) {
+            case ResetGame:
+                m_core->reset();
+                break;
+            case WriteSaveFile:
+                m_shouldSave = true;
+                break;
+            case EmitRewindPoints:
+                // Handle emit rewind points
+                break;
+            case LoadRewindPoint:
+                // Handle load rewind point
+                break;
+            case WriteSuspendPoint:
+                // Handle write suspend point
+                break;
+            case LoadSuspendPoint:
+                // Handle load suspend point
+                break;
+            case UndoLoadSuspendPoint:
+                // Handle undo load suspend point
+                break;
+        }
+    }
 }
 
 void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
@@ -353,7 +379,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
         QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
         cb->beginPass(renderTarget(), clearColor, {1.0f, 0}, resourceUpdates, QRhiCommandBuffer::ExternalContent);
         cb->beginExternal();
-        // m_core->init();
+        m_core->init();
 
         libretro::Game game(
             m_contentPath.toStdString(),
@@ -370,7 +396,12 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
         m_coreInitialized = true;
     } else if (m_core && m_coreInitialized) {
-        m_frameNumber++;
+        // m_frameNumber++;
+
+        if (m_shouldSave) {
+            save(false);
+            m_shouldSave = false;
+        }
 
         const QColor clearColor = QColor::fromRgbF(0.0f, 0.0f, 0.0f, 1.0f);
         QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
@@ -383,28 +414,41 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
         cb->endExternal();
 
-        if (m_frameNumber == 1000) {
-            auto *rbResult = new QRhiReadbackResult;
-            rbResult->completed = [this, rbResult] {
-                {
-                    spdlog::info("WRITING IMAGE");
-                    const QImage::Format fmt = QImage::Format_RGBA8888_Premultiplied; // fits QRhiTexture::RGBA8
-                    const auto *p = reinterpret_cast<const uchar *>(rbResult->data.constData());
-                    QImage image(p, rbResult->pixelSize.width(), rbResult->pixelSize.height(), fmt);
+        // if (m_frameNumber == 1000) {
+        auto *rbResult = new QRhiReadbackResult;
+        rbResult->completed = [this, rbResult] {
+            {
+                const QImage::Format fmt = QImage::Format_RGBA8888_Premultiplied; // fits QRhiTexture::RGBA8
+                const auto *p = reinterpret_cast<const uchar *>(rbResult->data.constData());
+                m_currentImage = QImage(p, rbResult->pixelSize.width(), rbResult->pixelSize.height(), fmt);
 
-                    if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-                        image.mirror();
-                    }
-                    image.save("result.png");
+                if (m_graphicsApi == QSGRendererInterface::OpenGL) {
+                    m_currentImage.mirror();
                 }
-                delete rbResult;
-            };
+                // image.save("result.png");
+            }
+            delete rbResult;
+        };
 
-            QRhiReadbackDescription rb(colorTexture());
-            resourceUpdates->readBackTexture(rb, rbResult);
-        }
+        QRhiReadbackDescription rb(colorTexture());
+        resourceUpdates->readBackTexture(rb, rbResult);
+        // }
 
         m_currentUpdateBatch = nullptr;
         cb->endPass(resourceUpdates);
+    }
+}
+
+void EmulatorItemRenderer::save(const bool waitForFinish) const {
+    spdlog::debug("Saving game data\n");
+    firelight::saves::Savefile saveData(
+        m_core->getMemoryData(libretro::SAVE_RAM));
+    saveData.setImage(m_currentImage.copy());
+
+    QFuture<bool> result =
+            getSaveManager()->writeSaveData(m_contentHash, m_saveSlotNumber, saveData);
+
+    if (waitForFinish) {
+        result.waitForFinished();
     }
 }

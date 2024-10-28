@@ -35,6 +35,26 @@
       }
     },
     {
+      "name": "release-win",
+      "displayName": "Release",
+      "generator": "Ninja",
+      "binaryDir": "build/release-win",
+      "toolchainFile": "C:/Users/alexs/git/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "environment": {
+        "VCPKG_DEFAULT_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_DEFAULT_TARGET_TRIPLET": "x64-mingw-dynamic"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "VCPKG_DISABLE_COMPILER_TRACKING": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_HOST_TRIPLET": "x64-mingw-dynamic",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
       "name": "xcode",
       "displayName": "XCode",
       "generator": "Xcode",

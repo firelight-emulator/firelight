@@ -59,6 +59,12 @@ Dialog {
                 Layout.fillHeight: true
             }
 
+            Keys.onPressed: function (event) {
+                if (event.key === Qt.Key_Back) {
+                    control.reject();
+                }
+            }
+
             FirelightButton {
                 id: cancelButton
                 focus: true

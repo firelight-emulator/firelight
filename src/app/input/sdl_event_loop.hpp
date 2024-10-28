@@ -14,6 +14,8 @@ namespace firelight {
 
     void stopProcessing();
 
+    void pollEvents();
+
   protected:
     void run() override;
 

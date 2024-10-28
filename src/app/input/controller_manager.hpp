@@ -43,9 +43,9 @@ namespace firelight::Input {
     void updateControllerOrder(const QVariantMap &map);
 
   signals:
-    void controllerConnected(int playerNumber);
+    void controllerConnected(int playerNumber, QString controllerName, QString iconSourceUrl);
 
-    void controllerDisconnected(int playerNumber);
+    void controllerDisconnected(int playerNumber, QString controllerName, QString iconSourceUrl);
 
     void controllerOrderChanged();
 

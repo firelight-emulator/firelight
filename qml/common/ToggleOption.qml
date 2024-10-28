@@ -2,55 +2,109 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Option {
+Button {
     id: root
 
-    property bool checked: false
+    property string label
+    property string description: ""
+    property bool showGlobalCursor: true
+    checkable: true
+    horizontalPadding: 12
+    verticalPadding: 12
 
-    control: Switch {
-        id: theControl
-        checked: root.checked
-        onCheckedChanged: {
-            root.checked = checked
+    onClicked: {
+        if (root.checked) {
+            sfx_player.play("switchon")
+        } else {
+            sfx_player.play("switchoff")
+        }
+    }
+
+    implicitHeight: 72
+    hoverEnabled: true
+
+    background: Rectangle {
+        color: "white"
+        radius: 2
+        opacity: root.hovered ? 0.1 : 0
+    }
+
+    contentItem: RowLayout {
+        ColumnLayout {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+
+            Text {
+                Layout.fillWidth: true
+                text: root.label
+                color: ColorPalette.neutral100
+                font.pixelSize: 16
+                Layout.alignment: Qt.AlignLeft
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+            }
+            Text {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                visible: root.description !== ""
+                text: root.description
+                font.pixelSize: 14
+                Layout.alignment: Qt.AlignLeft
+                font.family: Constants.regularFontFamily
+                // font.weight: Font.
+                wrapMode: Text.WordWrap
+                color: ColorPalette.neutral300
+            }
         }
 
-        indicator: Rectangle {
-            implicitWidth: 50
-            implicitHeight: 28
-            x: theControl.leftPadding
-            y: parent.height / 2 - height / 2
-            radius: height / 2
-            color: theControl.checked ? "#17a81a" : "#ffffff"
-            border.color: theControl.checked ? "#17a81a" : "#cccccc"
+        Switch {
+            id: theControl
+            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: 200
-                    easing.type: Easing.InOutQuad
-                }
+            checked: root.checked
+
+            onCheckedChanged: {
+                root.checked = theControl.checked
             }
 
-            Rectangle {
-                x: theControl.checked ? parent.width - width : 0
-                y: (parent.height - height) / 2
+            indicator: Rectangle {
+                implicitWidth: 50
+                implicitHeight: 28
+                x: theControl.leftPadding
+                y: parent.height / 2 - height / 2
+                radius: height / 2
+                color: theControl.checked ? "#17a81a" : "#ffffff"
+                border.color: theControl.checked ? "#17a81a" : "#cccccc"
 
-                Behavior on x {
-                    NumberAnimation {
+                Behavior on color {
+                    ColorAnimation {
                         duration: 200
                         easing.type: Easing.InOutQuad
                     }
                 }
 
-                width: 26
-                height: 26
-                radius: height / 2
-                color: theControl.down ? "#cccccc" : "#ffffff"
-                border.color: theControl.checked ? (theControl.down ? "#17a81a" : "#21be2b") : "#999999"
-            }
-        }
+                Rectangle {
+                    x: theControl.checked ? parent.width - width : 0
+                    y: (parent.height - height) / 2
 
-        HoverHandler {
-            cursorShape: Qt.PointingHandCursor
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 200
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+
+                    width: 26
+                    height: 26
+                    radius: height / 2
+                    color: theControl.down ? "#cccccc" : "#ffffff"
+                    border.color: theControl.checked ? (theControl.down ? "#17a81a" : "#21be2b") : "#999999"
+                }
+            }
+
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
         }
     }
 }

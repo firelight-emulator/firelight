@@ -1,52 +1,30 @@
 #pragma once
+#include <map>
+#include <optional>
 #include <SDL_gamecontroller.h>
 #include <firelight/libretro/retropad.hpp>
 
 namespace firelight::input {
     class InputMapping {
-    public:
-        enum Things {
-            NORTH_FACE,
-            SOUTH_FACE,
-            EAST_FACE,
-            WEST_FACE,
-            DPAD_UP,
-            DPAD_DOWN,
-            DPAD_LEFT,
-            DPAD_RIGHT,
-            START,
-            SELECT,
-            GUIDE,
-            MISC1,
-            PADDLE1,
-            PADDLE2,
-            PADDLE3,
-            PADDLE4,
-            TOUCHPAD,
-            R1,
-            R2,
-            R3,
-            L1,
-            L2,
-            L3,
-            LEFT_STICK_UP,
-            LEFT_STICK_DOWN,
-            LEFT_STICK_LEFT,
-            LEFT_STICK_RIGHT,
-            RIGHT_STICK_UP,
-            RIGHT_STICK_DOWN,
-            RIGHT_STICK_LEFT,
-            RIGHT_STICK_RIGHT
+        enum InputType {
+            BUTTON, AXIS
         };
 
-        bool isButtonPressed(firelight::libretro::IRetroPad::Button t_button);
+        class InputDescription {
+            InputType type{};
 
-        int16_t getLeftStickXPosition();
+            SDL_GameControllerButton button{};
+            SDL_GameControllerAxis axis{};
+            bool axisPositive = true;
+        };
 
-        int16_t getLeftStickYPosition();
+    public:
+        std::optional<InputDescription> getButtonMapping(libretro::IRetroPad::Button button);
 
-        int16_t getRightStickXPosition();
+        std::optional<InputDescription> getAxisMapping(libretro::IRetroPad::Axis axis);
 
-        int16_t getRightStickYPosition();
+    private:
+        std::map<libretro::IRetroPad::Button, InputDescription> m_buttonMappings;
+        std::map<libretro::IRetroPad::Axis, InputDescription> m_axisMappings;
     };
 }

@@ -18,6 +18,11 @@ Flickable {
         ColumnLayout {
             Layout.fillWidth: true
 
+            ToggleOption {
+                Layout.fillWidth: true
+                label: "Enable achievements"
+            }
+
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 160
@@ -390,12 +395,6 @@ Flickable {
             //     Layout.leftMargin: 24
             // }
 
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
-            }
-
             ToggleOption {
                 Layout.fillWidth: true
                 Layout.minimumHeight: 42
@@ -409,12 +408,6 @@ Flickable {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
-            }
-
             ToggleOption {
                 Layout.fillWidth: true
                 Layout.minimumHeight: 42
@@ -426,12 +419,6 @@ Flickable {
                 onCheckedChanged: {
                     achievement_manager.challengeIndicatorsEnabled = checked
                 }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#333333"
             }
 
             // ToggleOption {

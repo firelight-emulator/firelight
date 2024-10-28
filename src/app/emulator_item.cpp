@@ -21,11 +21,29 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     setAcceptHoverEvents(true);
     setAcceptTouchEvents(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+
+    m_autosaveTimer.setInterval(10000);
+    m_autosaveTimer.setSingleShot(false);
+    connect(&m_autosaveTimer, &QTimer::timeout,
+            [this] {
+                if (m_renderer) {
+                    m_renderer->submitCommand({
+                        .type = EmulatorItemRenderer::WriteSaveFile
+                    });
+                    update();
+                }
+            });
+
+    m_autosaveTimer.start();
 }
 
 
 EmulatorItem::~EmulatorItem() {
     spdlog::info("Destroying EmulatorItem");
+    m_autosaveTimer.stop();
+    if (m_renderer) {
+        m_renderer->save(true);
+    }
 }
 
 bool EmulatorItem::paused() const {
@@ -38,6 +56,13 @@ void EmulatorItem::setPaused(const bool paused) {
         emit pausedChanged();
         update();
     }
+}
+
+void EmulatorItem::resetGame() {
+    m_renderer->submitCommand({
+        .type = EmulatorItemRenderer::ResetGame
+    });
+    update();
 }
 
 void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
@@ -90,13 +115,14 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
         m_core->setRetropadProvider(getControllerManager());
         m_core->setPointerInputProvider(getControllerManager());
 
-        m_core->init();
+        // m_core->init();
 
         // Setting these causes the item's geometry to be visible, and the renderer is initialized.
         // If an item is not visible, the renderer is not initialized.
         m_coreBaseWidth = 1;
         m_coreBaseHeight = 1;
         m_calculatedAspectRatio = 0.000001;
+        m_coreAspectRatio = 0.000001;
 
         emit videoWidthChanged();
         emit videoHeightChanged();

@@ -20,6 +20,10 @@ FocusScope {
     required property var platformId
     required property var contentPath
 
+    function resetGame() {
+        emulator.resetGame()
+    }
+
     property real blurAmount: 0
 
     property alias paused: emulator.paused
@@ -34,7 +38,6 @@ FocusScope {
     }
 
     layer.enabled: blurAmount !== 0
-
 
     layer.effect: MultiEffect {
         // enabled: root.blurAmount !== 0

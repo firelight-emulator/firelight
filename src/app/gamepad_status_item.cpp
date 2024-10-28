@@ -31,7 +31,6 @@ namespace firelight::input {
         });
         connect(controllerManager, &Input::ControllerManager::buttonStateChanged, this,
                 [this](int playerNumber, int button, bool pressed) {
-                    spdlog::info("Button state changed: {} {} {}", playerNumber, button, pressed);
                     if (playerNumber == m_playerNumber) {
                         if (button == SDL_CONTROLLER_BUTTON_Y) {
                             if (pressed && !m_northFaceDown) {

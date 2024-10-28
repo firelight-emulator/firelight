@@ -17,7 +17,7 @@ private:
     Q_OBJECT
     Q_PROPERTY(int videoWidth MEMBER m_coreBaseWidth NOTIFY videoWidthChanged)
     Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
-    Q_PROPERTY(float videoAspectRatio MEMBER m_calculatedAspectRatio NOTIFY videoAspectRatioChanged)
+    Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY videoAspectRatioChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
 
 public:
@@ -52,6 +52,8 @@ public:
 
     void setPaused(bool paused);
 
+    Q_INVOKABLE void resetGame();
+
 protected:
     void hoverMoveEvent(QHoverEvent *event) override;
 
@@ -77,6 +79,7 @@ protected:
     QQuickRhiItemRenderer *createRenderer() override;
 
 private:
+    QTimer m_autosaveTimer;
     EmulatorItemRenderer *m_renderer = nullptr;
     bool m_mousePressed = false;
 

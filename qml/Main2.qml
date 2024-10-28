@@ -432,6 +432,7 @@ ApplicationWindow {
         id: homeScreen
 
         HomeScreen {
+            layer.enabled: true
             onReadyToStartGame: {
                 gameStartAnimation.running = true
             }
@@ -442,6 +443,286 @@ ApplicationWindow {
         id: settingsScreen
 
         SettingsScreen {
+            layer.enabled: true
+        }
+    }
+
+    Popup {
+        id: controllerConnectedPopup
+
+        property int playerNumber: 0
+        property string controllerName: ""
+        property string iconSourceUrl: ""
+
+
+        width: 400
+        height: 80
+
+        x: window.width - width - 20
+        y: 100
+
+        parent: Overlay.overlay
+        modal: false
+        focus: false
+
+        Timer {
+            id: timer
+            interval: 4000
+            running: false
+            repeat: false
+            onTriggered: controllerConnectedPopup.close()
+        }
+
+        Timer {
+            id: startTimer
+            interval: 500
+            running: false
+            repeat: false
+            onTriggered: controllerConnectedPopup.open()
+        }
+
+        background: Rectangle {
+            color: ColorPalette.neutral800
+            radius: 8
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            Image {
+                source: controllerConnectedPopup.iconSourceUrl
+                Layout.fillHeight: true
+                Layout.preferredWidth: height
+                sourceSize.width: 80
+                sourceSize.height: 80
+                fillMode: Image.PreserveAspectFit
+            }
+            ColumnLayout {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: "white"
+                    font.pixelSize: 16
+                    font.family: Constants.regularFontFamily
+                    verticalAlignment: Text.AlignBottom
+                    horizontalAlignment: Text.AlignLeft
+                    text: "Player " + controllerConnectedPopup.playerNumber + " connected"
+                }
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    font.pixelSize: 13
+                    color: "white"
+                    font.family: Constants.regularFontFamily
+                    verticalAlignment: Text.AlignTop
+                    horizontalAlignment: Text.AlignLeft
+                    text: controllerConnectedPopup.controllerName
+                }
+            }
+        }
+
+        enter: Transition {
+            ScriptAction {
+                script: {
+                    sfx_player.play("defaultnotification")
+                }
+            }
+            NumberAnimation {
+                target: controllerConnectedPopup
+                property: "x"
+                from: window.width - controllerConnectedPopup.width
+                to: window.width - controllerConnectedPopup.width - 20
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: controllerConnectedPopup
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            ScriptAction {
+                script: {
+                    timer.restart()
+                }
+            }
+        }
+
+        exit: Transition {
+            NumberAnimation {
+                target: controllerConnectedPopup
+                property: "x"
+                from: window.width - controllerConnectedPopup.width - 20
+                to: window.width - controllerConnectedPopup.width
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: controllerConnectedPopup
+                property: "opacity"
+                from: 1
+                to: 0
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            ScriptAction {
+                script: {
+                    timer.stop()
+                }
+            }
+        }
+
+        Connections {
+            target: controller_manager
+
+            function onControllerConnected(player, name, iconSourceUrl) {
+                controllerConnectedPopup.playerNumber = player
+                controllerConnectedPopup.controllerName = name
+                controllerConnectedPopup.iconSourceUrl = iconSourceUrl
+                startTimer.start()
+            }
+        }
+    }
+
+    Popup {
+        id: controllerDisonnectedPopup
+
+        width: 400
+        height: 80
+
+        property int playerNumber: 0
+        property string controllerName: ""
+        property string iconSourceUrl: ""
+
+        x: window.width - width - 20
+        y: 100
+
+        parent: Overlay.overlay
+        modal: false
+        focus: false
+
+        Timer {
+            id: timer2
+            interval: 4000
+            running: false
+            repeat: false
+            onTriggered: controllerDisonnectedPopup.close()
+        }
+
+        Timer {
+            id: startTimer2
+            interval: 500
+            running: false
+            repeat: false
+            onTriggered: controllerDisonnectedPopup.open()
+        }
+
+        background: Rectangle {
+            color: ColorPalette.neutral800
+            radius: 8
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            Image {
+                source: controllerDisonnectedPopup.iconSourceUrl
+                Layout.fillHeight: true
+                Layout.preferredWidth: height
+                sourceSize.width: 80
+                sourceSize.height: 80
+                fillMode: Image.PreserveAspectFit
+            }
+            ColumnLayout {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: "white"
+                    font.pixelSize: 16
+                    font.family: Constants.regularFontFamily
+                    verticalAlignment: Text.AlignBottom
+                    horizontalAlignment: Text.AlignLeft
+                    text: "Player " + controllerDisonnectedPopup.playerNumber + " disconnected"
+                }
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    font.pixelSize: 13
+                    color: "white"
+                    font.family: Constants.regularFontFamily
+                    verticalAlignment: Text.AlignTop
+                    horizontalAlignment: Text.AlignLeft
+                    text: controllerDisonnectedPopup.controllerName
+                }
+            }
+        }
+
+        enter: Transition {
+            ScriptAction {
+                script: {
+                    sfx_player.play("defaultnotification")
+                }
+            }
+            NumberAnimation {
+                target: controllerDisonnectedPopup
+                property: "x"
+                from: window.width - controllerDisonnectedPopup.width
+                to: window.width - controllerDisonnectedPopup.width - 20
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: controllerDisonnectedPopup
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            ScriptAction {
+                script: {
+                    timer2.restart()
+                }
+            }
+        }
+
+        exit: Transition {
+            NumberAnimation {
+                target: controllerDisonnectedPopup
+                property: "x"
+                from: window.width - controllerDisonnectedPopup.width - 20
+                to: window.width - controllerDisonnectedPopup.width
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: controllerDisonnectedPopup
+                property: "opacity"
+                from: 1
+                to: 0
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            ScriptAction {
+                script: {
+                    timer2.stop()
+                }
+            }
+        }
+
+        Connections {
+            target: controller_manager
+
+            function onControllerDisconnected(player, name, iconSourceUrl) {
+                controllerDisonnectedPopup.playerNumber = player
+                controllerDisonnectedPopup.controllerName = name
+                controllerDisonnectedPopup.iconSourceUrl = iconSourceUrl
+                startTimer2.start()
+            }
         }
     }
 }

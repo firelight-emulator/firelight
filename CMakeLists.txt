@@ -143,6 +143,9 @@ add_library(firelight_lib
         src/app/game_loader.hpp
         src/app/gamepad_status_item.cpp
         src/app/gamepad_status_item.hpp
+        src/app/input/controller_icons.hpp
+        src/gui/controller_profile_item.cpp
+        src/gui/controller_profile_item.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
