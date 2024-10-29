@@ -44,7 +44,7 @@ public:
     float m_coreAspectRatio = 0.0f;
     float m_calculatedAspectRatio = 0.0f;
 
-    std::shared_ptr<libretro::Core> m_core = nullptr;
+    // std::shared_ptr<libretro::Core> m_core = nullptr;
     std::shared_ptr<AudioManager> m_audioManager = nullptr;
     std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
 
@@ -53,6 +53,10 @@ public:
     void setPaused(bool paused);
 
     Q_INVOKABLE void resetGame();
+
+    Q_INVOKABLE void writeSuspendPoint(int index);
+
+    Q_INVOKABLE void loadSuspendPoint(int index);
 
 protected:
     void hoverMoveEvent(QHoverEvent *event) override;

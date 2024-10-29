@@ -24,6 +24,14 @@ FocusScope {
         emulator.resetGame()
     }
 
+    function loadSuspendPoint(index) {
+        emulator.loadSuspendPoint(index)
+    }
+
+    function writeSuspendPoint(index) {
+        emulator.writeSuspendPoint(index)
+    }
+
     property real blurAmount: 0
 
     property alias paused: emulator.paused
@@ -66,6 +74,11 @@ FocusScope {
         width: parent.height * videoAspectRatio
         height: parent.height
         smooth: false
+
+        Keys.onDigit1Pressed: {
+            console.log("Digit 1 pressed")
+            emulator.loadSuspendPoint(1)
+        }
 
         Component.onCompleted: function () {
             startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)

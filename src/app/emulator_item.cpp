@@ -41,9 +41,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 EmulatorItem::~EmulatorItem() {
     spdlog::info("Destroying EmulatorItem");
     m_autosaveTimer.stop();
-    if (m_renderer) {
-        m_renderer->save(true);
-    }
 }
 
 bool EmulatorItem::paused() const {
@@ -61,6 +58,22 @@ void EmulatorItem::setPaused(const bool paused) {
 void EmulatorItem::resetGame() {
     m_renderer->submitCommand({
         .type = EmulatorItemRenderer::ResetGame
+    });
+    update();
+}
+
+void EmulatorItem::writeSuspendPoint(const int index) {
+    m_renderer->submitCommand({
+        .type = EmulatorItemRenderer::WriteSuspendPoint,
+        .suspendPointIndex = index
+    });
+    update();
+}
+
+void EmulatorItem::loadSuspendPoint(const int index) {
+    m_renderer->submitCommand({
+        .type = EmulatorItemRenderer::LoadSuspendPoint,
+        .suspendPointIndex = index
     });
     update();
 }
@@ -99,21 +112,19 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
 
     QThreadPool::globalInstance()->start([this] {
         auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_platformId, m_contentHash);
-        m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
-
-        // Qt owns the renderer, so it will destoy it.
-        m_renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(), m_core.get());
-
-        m_renderer->onGeometryChanged([this](unsigned int width, unsigned int height, float aspectRatio) {
-            updateGeometry(width, height, aspectRatio);
-        });
-
-        m_core->setVideoReceiver(m_renderer);
+        auto m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
 
         m_audioManager = std::make_shared<AudioManager>();
         m_core->setAudioReceiver(m_audioManager);
         m_core->setRetropadProvider(getControllerManager());
         m_core->setPointerInputProvider(getControllerManager());
+
+        // Qt owns the renderer, so it will destoy it.
+        m_renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(), std::move(m_core));
+
+        m_renderer->onGeometryChanged([this](unsigned int width, unsigned int height, float aspectRatio) {
+            updateGeometry(width, height, aspectRatio);
+        });
 
         // m_core->init();
 

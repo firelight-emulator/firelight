@@ -18,7 +18,7 @@
 class EmulatorItemRenderer : public QQuickRhiItemRenderer, public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver, public firelight::ManagerAccessor {
 public:
-    explicit EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api, libretro::Core *core);
+    explicit EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api, std::unique_ptr<libretro::Core> core);
 
     void onGeometryChanged(const std::function<void(int, int, float)> &callback) {
         m_geometryChangedCallback = callback;
@@ -91,14 +91,17 @@ private:
 
     QQueue<EmulatorCommand> m_commandQueue;
 
+    QImage m_overlayImage;
     QImage m_currentImage;
+
+    bool m_quitting = false;
 
     int m_frameNumber = 0;
 
     int m_currentWaitFrames = 0;
     int m_waitFrames = 0;
 
-    libretro::Core *m_core = nullptr;
+    std::unique_ptr<libretro::Core> m_core = nullptr;
     bool m_coreInitialized = false;
 
     std::function<void (int, int, float)> m_geometryChangedCallback = nullptr;

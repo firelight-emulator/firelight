@@ -15,7 +15,9 @@ static QRhi *globalRhi = nullptr;
 static QRhiCommandBuffer *globalCb = nullptr;
 
 EmulatorItemRenderer::EmulatorItemRenderer(const QSGRendererInterface::GraphicsApi api,
-                                           libretro::Core *core) : m_graphicsApi(api), m_core(core) {
+                                           std::unique_ptr<libretro::Core> core) : m_graphicsApi(api),
+    m_core(std::move(core)) {
+    m_core->setVideoReceiver(this);
     globalRenderer = this;
 }
 
@@ -24,6 +26,9 @@ void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
 }
 
 EmulatorItemRenderer::~EmulatorItemRenderer() {
+    spdlog::info("Destroying EmulatorItemRenderer");
+    m_quitting = true;
+    save(true);
     // Don't need to destroy the context here as it is handled by the Core object.
 }
 
@@ -344,14 +349,32 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
                 // Handle emit rewind points
                 break;
             case LoadRewindPoint:
-                // Handle load rewind point
                 break;
-            case WriteSuspendPoint:
-                // Handle write suspend point
-                break;
-            case LoadSuspendPoint:
-                // Handle load suspend point
-                break;
+            case WriteSuspendPoint: {
+                SuspendPoint suspendPoint;
+                suspendPoint.state = m_core->serializeState();
+                // suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
+                suspendPoint.image = m_currentImage;
+                suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
+                suspendPoint.saveSlotNumber = m_saveSlotNumber;
+
+                getSaveManager()->writeSuspendPoint(m_contentHash, m_saveSlotNumber, command.suspendPointIndex,
+                                                    suspendPoint);
+            }
+            break;
+            case LoadSuspendPoint: {
+                const auto point = getSaveManager()->readSuspendPoint(m_contentHash, m_saveSlotNumber,
+                                                                      command.suspendPointIndex);
+                if (point.has_value()) {
+                    m_core->deserializeState(point->state);
+                    if (m_paused) {
+                        m_overlayImage = point->image;
+                        m_overlayImage.mirror();
+                        m_overlayImage = m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+                    }
+                }
+            }
+            break;
             case UndoLoadSuspendPoint:
                 // Handle undo load suspend point
                 break;
@@ -360,9 +383,22 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 }
 
 void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
+    if (m_quitting) {
+        return;
+    }
+
     globalCb = cb;
     // auto nativeHandles = reinterpret_cast<const QRhiGles2NativeHandles *>(rhi()->nativeHandles());
     if (m_paused) {
+        if (!m_overlayImage.isNull()) {
+            const QColor clearColor = QColor::fromRgbF(0.0f, 0.0f, 0.0f, 1.0f);
+            QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
+            cb->beginPass(renderTarget(), clearColor, {1.0f, 0}, resourceUpdates, QRhiCommandBuffer::ExternalContent);
+
+            resourceUpdates->uploadTexture(colorTexture(), m_overlayImage.copy());
+            cb->endPass(resourceUpdates);
+            m_overlayImage = QImage();
+        }
         return;
     }
 
@@ -440,7 +476,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 }
 
 void EmulatorItemRenderer::save(const bool waitForFinish) const {
-    spdlog::debug("Saving game data\n");
+    spdlog::info("Saving game data\n");
     firelight::saves::Savefile saveData(
         m_core->getMemoryData(libretro::SAVE_RAM));
     saveData.setImage(m_currentImage.copy());
