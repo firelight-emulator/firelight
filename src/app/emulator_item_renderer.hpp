@@ -58,6 +58,7 @@ public:
     enum EmulatorCommandType {
         ResetGame,
         WriteSaveFile,
+        WriteRewindPoint,
         EmitRewindPoints,
         LoadRewindPoint,
         WriteSuspendPoint,
@@ -100,6 +101,8 @@ private:
 
     int m_currentWaitFrames = 0;
     int m_waitFrames = 0;
+
+    QList<SuspendPoint> m_rewindPoints;
 
     std::unique_ptr<libretro::Core> m_core = nullptr;
     bool m_coreInitialized = false;

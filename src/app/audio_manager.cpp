@@ -22,11 +22,19 @@ void AudioManager::initializeResampler(int64_t in_channel_layout, int in_sample_
   }
 }
 
+AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged) : m_onAudioBufferLevelChanged(
+  std::move(onAudioBufferLevelChanged)) {
+}
+
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   if (!m_isMuted && m_audioDevice) {
     m_frameNumber++;
 
     const auto used = m_audioSink->bufferSize() - m_audioSink->bytesFree();
+    m_currentBufferLevel = static_cast<float>(used) / m_audioSink->bufferSize();
+    if (m_onAudioBufferLevelChanged) {
+      m_onAudioBufferLevelChanged();
+    }
     static constexpr int numSamples = 10; // Number of frames to average over
     static int buffer_avg[numSamples] = {}; // Circular buffer for past buffer usages
     static int buffer_index = 0;
@@ -119,6 +127,10 @@ void AudioManager::initialize(const double new_freq) {
 
 void AudioManager::setMuted(bool muted) {
   m_isMuted = muted;
+}
+
+float AudioManager::getBufferLevel() const {
+  return m_currentBufferLevel;
 }
 
 AudioManager::~AudioManager() {

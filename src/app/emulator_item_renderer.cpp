@@ -345,9 +345,47 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
             case WriteSaveFile:
                 m_shouldSave = true;
                 break;
-            case EmitRewindPoints:
+            case WriteRewindPoint: {
+                if (m_paused) {
+                    return;
+                }
+                SuspendPoint suspendPoint;
+                suspendPoint.state = m_core->serializeState();
+                suspendPoint.image = m_currentImage;
+                suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
+                // suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
+                m_rewindPoints.push_front(suspendPoint);
+            }
+            break;
+            case EmitRewindPoints: {
+                QList<QJsonObject> points;
+                int i = 1;
+
+                auto now = QDateTime::currentMSecsSinceEpoch();
+                for (const auto &point: m_rewindPoints) {
+                    auto time = QDateTime::fromMSecsSinceEpoch(point.timestamp).time();
+                    auto diff = time.secsTo(QDateTime::fromMSecsSinceEpoch(now).time());
+
+                    QJsonObject obj;
+                    getGameImageProvider()->setImage(QString::number(i), point.image);
+                    obj["image_url"] = "image://gameimages/" + QString::number(i++);
+                    // obj["time"] = now - point.timestamp;
+                    obj["time"] = time.toString();
+                    obj["ago"] = QString::number(diff) + " seconds ago";
+                    points.append(obj);
+                }
+
+                QJsonObject obj;
+                getGameImageProvider()->setImage("0", m_currentImage);
+                obj["image_url"] = "image://gameimages/0";
+                obj["time"] = QDateTime::fromMSecsSinceEpoch(now).time().toString();
+                obj["ago"] = "Just now";
+                points.prepend(obj);
+
+                emulatorItem->rewindPointsReady(points);
                 // Handle emit rewind points
-                break;
+            }
+            break;
             case LoadRewindPoint:
                 break;
             case WriteSuspendPoint: {
@@ -393,7 +431,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
         if (!m_overlayImage.isNull()) {
             const QColor clearColor = QColor::fromRgbF(0.0f, 0.0f, 0.0f, 1.0f);
             QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
-            cb->beginPass(renderTarget(), clearColor, {1.0f, 0}, resourceUpdates, QRhiCommandBuffer::ExternalContent);
+            cb->beginPass(renderTarget(), clearColor, {1.0f, 0}, resourceUpdates,
+                          QRhiCommandBuffer::ExternalContent);
 
             resourceUpdates->uploadTexture(colorTexture(), m_overlayImage.copy());
             cb->endPass(resourceUpdates);
@@ -431,7 +470,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
         cb->endPass(resourceUpdates);
 
         m_coreInitialized = true;
-    } else if (m_core && m_coreInitialized) {
+    } else if (!m_paused && m_core && m_coreInitialized) {
         // m_frameNumber++;
 
         if (m_shouldSave) {
@@ -476,7 +515,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 }
 
 void EmulatorItemRenderer::save(const bool waitForFinish) const {
-    spdlog::info("Saving game data\n");
+    spdlog::debug("Saving game data");
     firelight::saves::Savefile saveData(
         m_core->getMemoryData(libretro::SAVE_RAM));
     saveData.setImage(m_currentImage.copy());

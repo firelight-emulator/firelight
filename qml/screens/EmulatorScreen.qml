@@ -176,6 +176,19 @@ FocusScope {
                 opacity: emuPage.dimmerOpacity
             }
 
+            onRewindPointsReady: function (points) {
+                // console.log("Points ready: " + JSON.stringify(points))
+                if (emuPage.StackView.status === StackView.Active) {
+                    emulatorStack.pushItem(rewindPage, {
+                        model: points
+                    }, StackView.Immediate)
+                } else {
+                    emulatorStack.replaceCurrentItem(rewindPage, {
+                        model: points
+                    }, StackView.Immediate)
+                }
+            }
+
 
             Connections {
                 target: window_resize_handler

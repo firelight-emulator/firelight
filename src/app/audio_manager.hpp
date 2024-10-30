@@ -19,15 +19,23 @@ extern "C" {
 
 class AudioManager : public IAudioDataReceiver {
 public:
+    explicit AudioManager(std::function<void()> onAudioBufferLevelChanged = nullptr);
+
     size_t receive(const int16_t *data, size_t numFrames) override;
 
     void initialize(double new_freq) override;
 
     void setMuted(bool muted);
 
+    float getBufferLevel() const;
+
     ~AudioManager() override;
 
 private:
+    std::function<void()> m_onAudioBufferLevelChanged;
+
+    float m_currentBufferLevel = 0.0f;
+
     int m_frameNumber = 0;
     SwrContext *m_swrContext = nullptr;
     QAudioSink *m_audioSink = nullptr;

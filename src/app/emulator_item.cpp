@@ -7,11 +7,11 @@
 #include "platform_metadata.hpp"
 
 void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
-    auto pos = event->position();
-    auto bounds = boundingRect();
+    const auto pos = event->position();
+    const auto bounds = boundingRect();
 
-    auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
-    auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
+    const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
+    const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
     getControllerManager()->updateMouseState(x, y, m_mousePressed);
 }
@@ -35,6 +35,19 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
             });
 
     m_autosaveTimer.start();
+
+    m_rewindPointTimer.setInterval(3000);
+    m_rewindPointTimer.setSingleShot(false);
+    connect(&m_rewindPointTimer, &QTimer::timeout,
+            [this] {
+                if (m_renderer) {
+                    m_renderer->submitCommand({
+                        .type = EmulatorItemRenderer::WriteRewindPoint
+                    });
+                    update();
+                }
+            });
+    m_rewindPointTimer.start();
 }
 
 
@@ -53,6 +66,10 @@ void EmulatorItem::setPaused(const bool paused) {
         emit pausedChanged();
         update();
     }
+}
+
+float EmulatorItem::audioBufferLevel() const {
+    return m_audioManager ? m_audioManager->getBufferLevel() : 0.0f;
 }
 
 void EmulatorItem::resetGame() {
@@ -78,12 +95,19 @@ void EmulatorItem::loadSuspendPoint(const int index) {
     update();
 }
 
-void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
-    auto pos = event->position();
-    auto bounds = boundingRect();
+void EmulatorItem::createRewindPoints() {
+    m_renderer->submitCommand({
+        .type = EmulatorItemRenderer::EmitRewindPoints
+    });
+    update();
+}
 
-    auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
-    auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
+void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
+    const auto pos = event->position();
+    const auto bounds = boundingRect();
+
+    const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
+    const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
     getControllerManager()->updateMouseState(x, y, m_mousePressed);
 }
@@ -114,7 +138,7 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
         auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_platformId, m_contentHash);
         auto m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
 
-        m_audioManager = std::make_shared<AudioManager>();
+        m_audioManager = std::make_shared<AudioManager>([this] { emit audioBufferLevelChanged(); });
         m_core->setAudioReceiver(m_audioManager);
         m_core->setRetropadProvider(getControllerManager());
         m_core->setPointerInputProvider(getControllerManager());
@@ -158,6 +182,8 @@ void EmulatorItem::updateGeometry(unsigned int width, unsigned int height, float
     m_coreAspectRatio = aspectRatio;
     m_calculatedAspectRatio = static_cast<float>(m_coreBaseWidth) / static_cast<float>(m_coreBaseHeight);
 
+    spdlog::info("width: {}, height: {}, aspectRatio: {}, calculatedAspectRatio: {}", m_coreBaseWidth, m_coreBaseHeight,
+                 m_coreAspectRatio, m_calculatedAspectRatio);
     setFixedColorBufferWidth(m_coreBaseWidth);
     setFixedColorBufferHeight(m_coreBaseHeight);
     emit videoWidthChanged();

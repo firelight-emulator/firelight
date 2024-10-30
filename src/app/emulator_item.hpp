@@ -19,6 +19,7 @@ private:
     Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
     Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY videoAspectRatioChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
+    Q_PROPERTY(float audioBufferLevel READ audioBufferLevel NOTIFY audioBufferLevelChanged)
 
 public:
     explicit EmulatorItem(QQuickItem *parent = nullptr);
@@ -52,11 +53,15 @@ public:
 
     void setPaused(bool paused);
 
+    [[nodiscard]] float audioBufferLevel() const;
+
     Q_INVOKABLE void resetGame();
 
     Q_INVOKABLE void writeSuspendPoint(int index);
 
     Q_INVOKABLE void loadSuspendPoint(int index);
+
+    Q_INVOKABLE void createRewindPoints();
 
 protected:
     void hoverMoveEvent(QHoverEvent *event) override;
@@ -79,11 +84,16 @@ signals:
 
     void videoAspectRatioChanged();
 
+    void rewindPointsReady(QList<QJsonObject> points);
+
+    void audioBufferLevelChanged();
+
 protected:
     QQuickRhiItemRenderer *createRenderer() override;
 
 private:
     QTimer m_autosaveTimer;
+    QTimer m_rewindPointTimer;
     EmulatorItemRenderer *m_renderer = nullptr;
     bool m_mousePressed = false;
 

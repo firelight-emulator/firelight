@@ -11,8 +11,6 @@ FocusScope {
     id: root
 
     required property var model
-    required property SoundEffect scrollSfx
-    required property SoundEffect openSfx
 
     property var barHeight: 220
 
