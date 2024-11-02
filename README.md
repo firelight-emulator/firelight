@@ -30,16 +30,33 @@ Here are the things you need to build the application:
     - spdlog
     - GTest (currently required even without running tests, but this will be fixed later)
 
-#### Recommended Windows setup
+#### Recommended Windows setup using MinGW
 
-I HIGHLY RECOMMEND YOU FOLLOW THIS GUIDE: https://github.com/HO-COOH/CPPDevOnWindows
-
-I recommend using MSYS2 on Windows and using pacboy to install the libraries. I don't currently have any platforms
-other than that, so unfortunately I can't help you yet :-(
-
+1) Follow this guide to download MSYS2 https://github.com/HO-COOH/CPPDevOnWindows
+2) Open MSYS2 and install the following using pacman:
 ```
-examples soon sry
+pacman -S mingw-w64-x86_64-clang
+pacman -S mingw-w64-x86_64-ninja
+pacman -S mingw-w64-x86_64-gdb
+pacman -S mingw-w64-x86_64-cmake
+pacman -S mingw-w64-x86_64-qt6-base
+pacman -S mingw-w64-x86_64-qt6-tools
+pacman -S mingw-w64-x86_64-qt6-multimedia
+pacman -S mingw-w64-x86_64-qt6-declarative
+pacman -S mingw-w64-x86_64-qt6-quick3d
+pacman -S mingw-w64-x86_64-qt6-charts
+pacman -S mingw-w64-x86_64-spdlog
+pacman -S mingw-w64-x86_64-cpr
+pacman -S mingw-w64-x86_64-gtest
+pacman -S mingw-w64-x86_64-nlohmann-json
 ```
+3) In Windows, edit your PATH environment variable to add your MinGW MSYS2 Path (should be similar to C:\msys64\mingw64\bin)
+4) In your preferred IDE (CLion is what we used), use the debug-full-mingw CMakePreset to run cmake.
+5) Run the build and start firelight.exe
+6) ***IMPORTANT*** - If you get a white screen:
+   - Go to Graphics Settings in Windows
+   - Add Firelight.exe
+   - Instruct it to use your graphics card
 
 [//]: # (### Installing)
 
