@@ -45,6 +45,7 @@ pacman -S mingw-w64-x86_64-qt6-multimedia
 pacman -S mingw-w64-x86_64-qt6-declarative
 pacman -S mingw-w64-x86_64-qt6-quick3d
 pacman -S mingw-w64-x86_64-qt6-charts
+pacman -S mingw-w64-x86_64-qt6-svg
 pacman -S mingw-w64-x86_64-spdlog
 pacman -S mingw-w64-x86_64-cpr
 pacman -S mingw-w64-x86_64-gtest

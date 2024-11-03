@@ -173,6 +173,9 @@ namespace firelight::db {
   }
 
   std::vector<Mod> SqliteContentDatabase::getAllMods() {
+    if (!tableExists("mods")) {
+      return {};
+    }
     QSqlQuery query(getDatabase());
     query.prepare("SELECT * FROM mods");
 
