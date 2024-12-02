@@ -146,6 +146,8 @@ add_library(firelight_lib
         src/app/input/controller_icons.hpp
         src/gui/controller_profile_item.cpp
         src/gui/controller_profile_item.hpp
+        src/app/activity/sqlite_activity_log.cpp
+        src/app/activity/sqlite_activity_log.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)

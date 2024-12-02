@@ -3,9 +3,10 @@
 #include "firelight/userdata_database.hpp"
 #include <QSqlDatabase>
 #include <filesystem>
+#include <firelight/activity_log.hpp>
 
 namespace firelight::db {
-  class SqliteUserdataDatabase final : public IUserdataDatabase {
+  class SqliteUserdataDatabase final : public IUserdataDatabase, public activity::IActivityLog {
   public:
     explicit SqliteUserdataDatabase(const std::filesystem::path &dbFile);
 

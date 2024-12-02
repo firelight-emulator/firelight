@@ -162,6 +162,7 @@ int main(int argc, char *argv[]) {
   firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPath /
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
+  firelight::ManagerAccessor::setActivityLog(&userdata_database);
 
   auto gameImageProvider = new firelight::gui::GameImageProvider();
   firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);

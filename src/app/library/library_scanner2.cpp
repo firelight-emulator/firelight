@@ -26,7 +26,7 @@ namespace firelight::library {
         connect(&m_watcher, &QFileSystemWatcher::directoryChanged,
                 [&](const QString &path) {
                     queueScan(path);
-                    m_scanTimer.start();
+                    m_scanTimer.start(); // TODO This might need to be restart
                 });
     }
 
