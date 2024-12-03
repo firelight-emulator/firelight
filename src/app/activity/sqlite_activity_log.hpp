@@ -8,7 +8,7 @@ namespace firelight::activity {
     public:
         bool createPlaySession(db::PlaySession &session) override;
 
-        std::optional<db::PlaySession> getLatestPlaySession(const std::string &contentHash) override;
+        std::optional<db::PlaySession> getLatestPlaySession(std::string contentHash) override;
     };
 } // activity
 // firelight

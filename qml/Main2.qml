@@ -181,7 +181,7 @@ ApplicationWindow {
                 let id = parts[0]
 
                 if (id === "settings") {
-                    let section = parts.length > 1 ? parts[1] : "library"
+                    let section = parts.length > 1 ? parts[1] : "audiovideo"
                     screenStack.push(settingsScreen, {section: section})
                 }
             }

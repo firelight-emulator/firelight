@@ -6,6 +6,7 @@ FocusScope {
     id: root
 
     required property string section
+    property bool movingDown: true
 
     Component.onCompleted: {
         sectionChanged()
@@ -74,171 +75,300 @@ FocusScope {
             Layout.horizontalStretchFactor: 1
         }
 
-        ColumnLayout {
-            id: menu
-            spacing: 4
+        ListView {
+            id: settingsCategoryList
+            spacing: 0
             Layout.maximumWidth: 300
             Layout.preferredWidth: 300
             Layout.minimumWidth: 200
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignRight
+            focus: true
 
-            // FirelightMenuItem {
-            //     labelText: "Appearance"
-            //     // labelIcon: "\ue40a"
-            //     Layout.fillWidth: true
-            //     Layout.preferredHeight: 40
-            //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            //     enabled: false
-            // }
-            FirelightMenuItem {
-                id: libraryButton
-                labelText: "Library"
+            property int lastIndex: 0
+            currentIndex: 0
+
+            onCurrentIndexChanged: function () {
+                root.movingDown = currentIndex > lastIndex;
+                lastIndex = currentIndex
+                root.section = model.get(currentIndex).section
+            }
+
+            model: ListModel {
+                ListElement {
+                    name: "Library"
+                    section: "library"
+                }
+                ListElement {
+                    name: "Notifications"
+                    section: "notifications"
+                }
+                ListElement {
+                    name: "Sound"
+                    section: "sound"
+                }
+                ListElement {
+                    name: "Achievements"
+                    section: "achievements"
+                }
+                ListElement {
+                    name: "Audio / Video"
+                    section: "audiovideo"
+                }
+                ListElement {
+                    name: "Game Boy"
+                    section: "platforms/gb"
+                }
+                ListElement {
+                    name: "Game Boy Color"
+                    section: "platforms/gbc"
+                }
+                ListElement {
+                    name: "Game Boy Advance"
+                    section: "platforms/gba"
+                }
+                ListElement {
+                    name: "NES"
+                    section: "platforms/nes"
+                }
+                ListElement {
+                    name: "SNES"
+                    section: "platforms/snes"
+                }
+                ListElement {
+                    name: "Nintendo 64"
+                    section: "platforms/n64"
+                }
+                ListElement {
+                    name: "Nintendo DS"
+                    section: "platforms/nds"
+                }
+                ListElement {
+                    name: "Master System"
+                    section: "platforms/mastersystem"
+                }
+                ListElement {
+                    name: "Genesis"
+                    section: "platforms/genesis"
+                }
+                ListElement {
+                    name: "Game Gear"
+                    section: "platforms/gamegear"
+                }
+            }
+
+            delegate: FirelightMenuItem {
+                required property var model
+                required property var index
+
+                labelText: model.name
                 property bool showGlobalCursor: true
-                KeyNavigation.down: notificationButton
-                focus: true
                 // labelIcon: "\ue40a"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 50
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                checked: root.section === "library"
-                onToggled: {
-                    if (checked) {
-                        root.section = "library"
-                    }
-                }
-            }
+                height: 50
+                width: ListView.view.width
+                checked: ListView.isCurrentItem
 
-            FirelightMenuItem {
-                id: notificationButton
-                labelText: "Notifications"
-                property bool showGlobalCursor: true
-                KeyNavigation.down: soundButton
-                // labelIcon: "\ue333"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 50
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                checked: root.section === "notifications"
                 onToggled: {
                     if (checked) {
-                        root.section = "notifications"
+                        ListView.view.currentIndex = index
                     }
                 }
-            }
-
-            FirelightMenuItem {
-                id: soundButton
-                labelText: "Sound"
-                property bool showGlobalCursor: true
-                KeyNavigation.down: achievementsButton
-                // labelIcon: "\ue333"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 50
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                checked: root.section === "sound"
-                onToggled: {
-                    if (checked) {
-                        root.section = "sound"
-                    }
-                }
-            }
-            FirelightMenuItem {
-                id: achievementsButton
-                labelText: "Achievements"
-                property bool showGlobalCursor: true
-                KeyNavigation.down: avButton
-                // labelIcon: "\ue897"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 50
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                checked: root.section === "achievements"
-                onToggled: {
-                    if (checked) {
-                        root.section = "achievements"
-                    }
-                }
-            }
-
-            FirelightMenuItem {
-                id: avButton
-                labelText: "Audio / Video"
-                property bool showGlobalCursor: true
-                KeyNavigation.down: platformsButton
-                // labelIcon: "\ue333"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 50
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                checked: root.section === "audiovideo"
-                onToggled: {
-                    if (checked) {
-                        root.section = "audiovideo"
-                    }
-                }
-            }
-            FirelightMenuItem {
-                id: platformsButton
-                labelText: "Platforms"
-                property bool showGlobalCursor: true
-                // labelIcon: "\ue88e"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 50
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                checked: root.section === "platforms"
-                onToggled: {
-                    if (checked) {
-                        root.section = "platforms"
-                    }
-                }
-            }
-            // FirelightMenuItem {
-            //     labelText: "System"
-            //     // labelIcon: "\uf522"
-            //     Layout.fillWidth: true
-            //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            //     Layout.preferredHeight: 40
-            //     enabled: false
-            // }
-            // Rectangle {
-            //     Layout.fillWidth: true
-            //     Layout.preferredHeight: 1
-            //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            //     opacity: 0.3
-            //     color: "#dadada"
-            // }
-            // FirelightMenuItem {
-            //     labelText: "Privacy"
-            //     // labelIcon: "\ue897"
-            //     Layout.fillWidth: true
-            //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            //     Layout.preferredHeight: 40
-            //     enabled: false
-            // }
-            // FirelightMenuItem {
-            //     labelText: "About"
-            //     // labelIcon: "\ue88e"
-            //     Layout.fillWidth: true
-            //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            //     Layout.preferredHeight: 40
-            //     enabled: false
-            // }
-            // FirelightMenuItem {
-            //     labelText: "Debug"
-            //     // labelIcon: "\ue88e"
-            //     Layout.fillWidth: true
-            //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            //     Layout.preferredHeight: 40
-            //     onToggled: {
-            //         if (checked) {
-            //             rightHalf.replace(debugSettings)
-            //         }
-            //     }
-            // }
-
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
             }
         }
+
+        // ColumnLayout {
+        //     id: menu
+        //     spacing: 4
+        //     Layout.maximumWidth: 300
+        //     Layout.preferredWidth: 300
+        //     Layout.minimumWidth: 200
+        //     Layout.fillHeight: true
+        //     Layout.alignment: Qt.AlignRight
+        //
+        //     // FirelightMenuItem {
+        //     //     labelText: "Appearance"
+        //     //     // labelIcon: "\ue40a"
+        //     //     Layout.fillWidth: true
+        //     //     Layout.preferredHeight: 40
+        //     //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //     //     enabled: false
+        //     // }
+        //     FirelightMenuItem {
+        //         id: libraryButton
+        //         labelText: "Library"
+        //         property bool showGlobalCursor: true
+        //         KeyNavigation.down: notificationButton
+        //         focus: true
+        //         // labelIcon: "\ue40a"
+        //         Layout.fillWidth: true
+        //         Layout.preferredHeight: 50
+        //         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //         checked: root.section === "library"
+        //         onToggled: {
+        //             if (checked) {
+        //                 root.section = "library"
+        //             }
+        //         }
+        //     }
+        //
+        //     FirelightMenuItem {
+        //         id: notificationButton
+        //         labelText: "Notifications"
+        //         property bool showGlobalCursor: true
+        //         KeyNavigation.down: soundButton
+        //         // labelIcon: "\ue333"
+        //         Layout.fillWidth: true
+        //         Layout.preferredHeight: 50
+        //         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //         checked: root.section === "notifications"
+        //         onToggled: {
+        //             if (checked) {
+        //                 root.section = "notifications"
+        //             }
+        //         }
+        //     }
+        //
+        //     FirelightMenuItem {
+        //         id: soundButton
+        //         labelText: "Sound"
+        //         property bool showGlobalCursor: true
+        //         KeyNavigation.down: achievementsButton
+        //         // labelIcon: "\ue333"
+        //         Layout.fillWidth: true
+        //         Layout.preferredHeight: 50
+        //         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //         checked: root.section === "sound"
+        //         onToggled: {
+        //             if (checked) {
+        //                 root.section = "sound"
+        //             }
+        //         }
+        //     }
+        //     FirelightMenuItem {
+        //         id: achievementsButton
+        //         labelText: "Achievements"
+        //         property bool showGlobalCursor: true
+        //         KeyNavigation.down: avButton
+        //         // labelIcon: "\ue897"
+        //         Layout.fillWidth: true
+        //         Layout.preferredHeight: 50
+        //         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //         checked: root.section === "achievements"
+        //         onToggled: {
+        //             if (checked) {
+        //                 root.section = "achievements"
+        //             }
+        //         }
+        //     }
+        //
+        //     FirelightMenuItem {
+        //         id: avButton
+        //         labelText: "Audio / Video"
+        //         property bool showGlobalCursor: true
+        //         KeyNavigation.down: platformsButton
+        //         // labelIcon: "\ue333"
+        //         Layout.fillWidth: true
+        //         Layout.preferredHeight: 50
+        //         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //         checked: root.section === "audiovideo"
+        //         onToggled: {
+        //             if (checked) {
+        //                 root.section = "audiovideo"
+        //             }
+        //         }
+        //     }
+        //     FirelightMenuItem {
+        //         id: platformsButton
+        //         labelText: "Platforms"
+        //         property bool showGlobalCursor: true
+        //         // labelIcon: "\ue88e"
+        //         Layout.fillWidth: true
+        //         Layout.preferredHeight: 50
+        //         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //         checked: root.section === "platforms"
+        //         onToggled: {
+        //             if (checked) {
+        //                 root.section = "platforms"
+        //             }
+        //         }
+        //     }
+        //     // FirelightMenuItem {
+        //     //     labelText: "System"
+        //     //     // labelIcon: "\uf522"
+        //     //     Layout.fillWidth: true
+        //     //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //     //     Layout.preferredHeight: 40
+        //     //     enabled: false
+        //     // }
+        //     // Rectangle {
+        //     //     Layout.fillWidth: true
+        //     //     Layout.preferredHeight: 1
+        //     //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //     //     opacity: 0.3
+        //     //     color: "#dadada"
+        //     // }
+        //     // FirelightMenuItem {
+        //     //     labelText: "Privacy"
+        //     //     // labelIcon: "\ue897"
+        //     //     Layout.fillWidth: true
+        //     //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //     //     Layout.preferredHeight: 40
+        //     //     enabled: false
+        //     // }
+        //     // FirelightMenuItem {
+        //     //     labelText: "About"
+        //     //     // labelIcon: "\ue88e"
+        //     //     Layout.fillWidth: true
+        //     //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //     //     Layout.preferredHeight: 40
+        //     //     enabled: false
+        //     // }
+        //     // FirelightMenuItem {
+        //     //     labelText: "Debug"
+        //     //     // labelIcon: "\ue88e"
+        //     //     Layout.fillWidth: true
+        //     //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        //     //     Layout.preferredHeight: 40
+        //     //     onToggled: {
+        //     //         if (checked) {
+        //     //             rightHalf.replace(debugSettings)
+        //     //         }
+        //     //     }
+        //     // }
+        //
+        //     Item {
+        //         Layout.fillWidth: true
+        //         Layout.fillHeight: true
+        //     }
+        // }
+
+        // SwipeView {
+        //
+        //     Layout.fillHeight: true
+        //     Layout.fillWidth: true
+        //     Layout.maximumWidth: 1000
+        //     Layout.preferredWidth: 1000
+        //     Layout.minimumWidth: 500
+        //     Layout.alignment: Qt.AlignLeft
+        //     Layout.leftMargin: 12
+        //
+        //     orientation: Qt.Vertical
+        //     interactive: false
+        //     currentIndex: settingsCategoryList.currentIndex
+        //
+        //     LibrarySettings {
+        //     }
+        //     NotificationSettings {
+        //     }
+        //     SoundSettings {
+        //     }
+        //     RetroAchievementSettings {
+        //     }
+        //     VideoSettings {
+        //     }
+        //     PlatformSettingsPage {
+        //     }
+        // }
 
         StackView {
             id: rightHalf
@@ -267,12 +397,26 @@ FocusScope {
                         rightHalf.replace(videoSettings)
                     } else if (root.section === "platforms/gbc") {
                         rightHalf.replace(gbcSettings)
+                    } else if (root.section === "platforms/gb") {
+                        rightHalf.replace(gbSettings)
                     } else if (root.section === "platforms/snes") {
                         rightHalf.replace(snesSettings)
                     } else if (root.section === "platforms") {
                         rightHalf.replace(platformSettings)
                     } else if (root.section === "platforms/gba") {
                         rightHalf.replace(gbaSettings)
+                    } else if (root.section === "platforms/n64") {
+                        rightHalf.replace(n64Settings)
+                    } else if (root.section === "platforms/nds") {
+                        rightHalf.replace(ndsSettings)
+                    } else if (root.section === "platforms/nes") {
+                        rightHalf.replace(nesSettings)
+                    } else if (root.section === "platforms/mastersystem") {
+                        rightHalf.replace(masterSystemSettings)
+                    } else if (root.section === "platforms/genesis") {
+                        rightHalf.replace(genesisSettings)
+                    } else if (root.section === "platforms/gamegear") {
+                        rightHalf.replace(gameGearSettings)
                     }
                 }
             }
@@ -292,9 +436,35 @@ FocusScope {
             }
 
             replaceEnter: Transition {
+                NumberAnimation {
+                    property: "opacity";
+                    from: 0.0;
+                    to: 1.0
+                    duration: 200
+                }
+                NumberAnimation {
+                    property: "y";
+                    from: 30 * (root.movingDown ? 1 : -1);
+                    to: 0
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
             }
 
             replaceExit: Transition {
+                NumberAnimation {
+                    property: "opacity";
+                    from: 1.0;
+                    to: 0.0
+                    duration: 20
+                }
+                NumberAnimation {
+                    property: "y";
+                    from: 0;
+                    to: 30 * (root.movingDown ? -1 : 1)
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
             }
         }
 
@@ -352,6 +522,12 @@ FocusScope {
     }
 
     Component {
+        id: gbSettings
+        GameBoySettings {
+        }
+    }
+
+    Component {
         id: gbcSettings
         GameBoyColorSettings {
         }
@@ -368,6 +544,55 @@ FocusScope {
         SnesSettings {
         }
     }
+
+    Component {
+        id: nesSettings
+        NesSettings {
+        }
+    }
+
+    Component {
+        id: n64Settings
+        Nintendo64Settings {
+        }
+    }
+
+    Component {
+        id: ndsSettings
+        NintendoDsSettings {
+        }
+    }
+
+    Component {
+        id: masterSystemSettings
+        MasterSystemSettings {
+        }
+    }
+
+    Component {
+        id: genesisSettings
+        GenesisSettings {
+        }
+    }
+
+    Component {
+        id: gameGearSettings
+        GameGearSettings {
+        }
+    }
+
+    // Component {
+    //     id: saturnSettings
+    //     SaturnSettings {
+    //     }
+    // }
+    //
+    // Component {
+    //     id: dreamcastSettings
+    //     DreamcastSettings {
+    //     }
+    // }
+
 
     Component {
         id: debugSettings
