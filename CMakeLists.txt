@@ -249,6 +249,10 @@ file(COPY ${CMAKE_SOURCE_DIR}/assets/nope.wav DESTINATION ${CMAKE_BINARY_DIR}/sy
 file(COPY ${CMAKE_SOURCE_DIR}/assets/openquick.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
 file(COPY ${CMAKE_SOURCE_DIR}/assets/closequick.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
 file(COPY ${CMAKE_SOURCE_DIR}/assets/menumove.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/startgame.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/defaultnotification.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/switchon.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+file(COPY ${CMAKE_SOURCE_DIR}/assets/switchoff.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
 
 enable_testing()
 include(GoogleTest)
@@ -406,6 +410,9 @@ install(
         ${CMAKE_SOURCE_DIR}/assets/closequick.wav
         ${CMAKE_SOURCE_DIR}/assets/menumove.wav
         ${CMAKE_SOURCE_DIR}/assets/startgame.wav
+        ${CMAKE_SOURCE_DIR}/assets/defaultnotification.wav
+        ${CMAKE_SOURCE_DIR}/assets/switchon.wav
+        ${CMAKE_SOURCE_DIR}/assets/switchoff.wav
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/sfx/
 )
 

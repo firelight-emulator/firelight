@@ -12,6 +12,10 @@ FocusScope {
         sectionChanged()
     }
 
+    Keys.onEscapePressed: {
+        root.StackView.view.pop()
+    }
+
     Pane {
         id: headerBar
         anchors.top: parent.top
@@ -99,14 +103,14 @@ FocusScope {
                     name: "Library"
                     section: "library"
                 }
-                ListElement {
-                    name: "Notifications"
-                    section: "notifications"
-                }
-                ListElement {
-                    name: "Sound"
-                    section: "sound"
-                }
+                // ListElement {
+                //     name: "Notifications"
+                //     section: "notifications"
+                // }
+                // ListElement {
+                //     name: "Sound"
+                //     section: "sound"
+                // }
                 ListElement {
                     name: "Achievements"
                     section: "achievements"
@@ -116,45 +120,49 @@ FocusScope {
                     section: "audiovideo"
                 }
                 ListElement {
-                    name: "Game Boy"
-                    section: "platforms/gb"
+                    name: "Platforms"
+                    section: "platforms"
                 }
-                ListElement {
-                    name: "Game Boy Color"
-                    section: "platforms/gbc"
-                }
-                ListElement {
-                    name: "Game Boy Advance"
-                    section: "platforms/gba"
-                }
-                ListElement {
-                    name: "NES"
-                    section: "platforms/nes"
-                }
-                ListElement {
-                    name: "SNES"
-                    section: "platforms/snes"
-                }
-                ListElement {
-                    name: "Nintendo 64"
-                    section: "platforms/n64"
-                }
-                ListElement {
-                    name: "Nintendo DS"
-                    section: "platforms/nds"
-                }
-                ListElement {
-                    name: "Master System"
-                    section: "platforms/mastersystem"
-                }
-                ListElement {
-                    name: "Genesis"
-                    section: "platforms/genesis"
-                }
-                ListElement {
-                    name: "Game Gear"
-                    section: "platforms/gamegear"
-                }
+                // ListElement {
+                //     name: "Game Boy"
+                //     section: "platforms/gb"
+                // }
+                // ListElement {
+                //     name: "Game Boy Color"
+                //     section: "platforms/gbc"
+                // }
+                // ListElement {
+                //     name: "Game Boy Advance"
+                //     section: "platforms/gba"
+                // }
+                // ListElement {
+                //     name: "NES"
+                //     section: "platforms/nes"
+                // }
+                // ListElement {
+                //     name: "SNES"
+                //     section: "platforms/snes"
+                // }
+                // ListElement {
+                //     name: "Nintendo 64"
+                //     section: "platforms/n64"
+                // }
+                // ListElement {
+                //     name: "Nintendo DS"
+                //     section: "platforms/nds"
+                // }
+                // ListElement {
+                //     name: "Master System"
+                //     section: "platforms/mastersystem"
+                // }
+                // ListElement {
+                //     name: "Genesis"
+                //     section: "platforms/genesis"
+                // }
+                // ListElement {
+                //     name: "Game Gear"
+                //     section: "platforms/gamegear"
+                // }
             }
 
             delegate: FirelightMenuItem {

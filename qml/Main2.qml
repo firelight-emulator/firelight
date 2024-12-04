@@ -84,22 +84,22 @@ ApplicationWindow {
         //         }
         //     }
         // }
-        // AnimatedImage {
-        //     id: mainBackground
-        //     source: "https://cdn.booooooom.com/wp-content/uploads/2022/07/PATTERN_11.gif"
-        //     fillMode: Image.PreserveAspectCrop
-        //     anchors.fill: parent
-        //
-        //     layer.enabled: true
-        //     layer.effect: MultiEffect {
-        //         source: mainBackground
-        //         anchors.fill: mainBackground
-        //         blurEnabled: true
-        //         blurMultiplier: 1.0
-        //         blurMax: 64
-        //         blur: 0.5
-        //     }
-        // }
+        AnimatedImage {
+            id: mainBackground
+            source: "https://cdn.booooooom.com/wp-content/uploads/2022/07/PATTERN_11.gif"
+            fillMode: Image.PreserveAspectCrop
+            anchors.fill: parent
+
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                source: mainBackground
+                anchors.fill: mainBackground
+                blurEnabled: true
+                blurMultiplier: 1.0
+                blurMax: 64
+                blur: 0.5
+            }
+        }
     }
 
     Rectangle {
@@ -181,7 +181,7 @@ ApplicationWindow {
                 let id = parts[0]
 
                 if (id === "settings") {
-                    let section = parts.length > 1 ? parts[1] : "audiovideo"
+                    let section = parts.length > 1 ? parts[1] : "library"
                     screenStack.push(settingsScreen, {section: section})
                 }
             }
