@@ -28,13 +28,13 @@
 #include "gui/controller_list_model.hpp"
 #include "gui/gamepad_profile.hpp"
 #include "gui/game_image_provider.hpp"
-#include "gui/input_method_detection_handler.hpp"
+#include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/library_item_model.hpp"
 #include "gui/library_sort_filter_model.hpp"
 #include "gui/mod_item_model.hpp"
 #include "gui/platform_list_model.hpp"
 #include "gui/playlist_item_model.hpp"
-#include "gui/window_resize_handler.hpp"
+#include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/models/shop/shop_item_model.hpp"
 #include <archive.h>
 #include <archive_entry.h>

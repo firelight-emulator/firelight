@@ -11,6 +11,11 @@ Dialog {
     id: control
     property string text
     property bool showButtons: true
+    property bool centerButtons: true
+
+    property string acceptText: "Yes"
+    property string rejectText: "Cancel"
+
     modal: true
     // parent: Overlay.overlay
     anchors.centerIn: Overlay.overlay
@@ -54,6 +59,8 @@ Dialog {
             visible: control.showButtons
             anchors.fill: parent
 
+            anchors.rightMargin: control.centerButtons ? 0 : 12
+
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -72,20 +79,20 @@ Dialog {
 
                 KeyNavigation.right: acceptButton
 
-                label: "Cancel"
+                label: control.rejectText
                 onClicked: control.reject()
             }
 
             FirelightButton {
                 id: acceptButton
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-                label: "Yes"
+                label: control.acceptText
                 onClicked: control.accept()
             }
 
             Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+                Layout.fillWidth: control.centerButtons
+                Layout.fillHeight: control.centerButtons
             }
         }
     }

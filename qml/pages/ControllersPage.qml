@@ -13,13 +13,17 @@ Flickable {
         Rectangle {
             id: content
             required property var model
+            required property var index
 
-            color: ColorPalette.neutral700
+            color: ColorPalette.neutral800
+            radius: 2
+
+            z: dragArea.active ? 1 : 0
 
             property point dragEnd: Qt.point(0, 0)
 
-            width: ListView.view.width
-            height: 100
+            width: 200
+            height: 200
             Drag.active: dragArea.active
             Drag.source: content
             Drag.hotSpot.x: width / 2
@@ -31,25 +35,76 @@ Flickable {
             //     playerNumber: index + 1
             // }
 
-            Text {
-                text: model.model_name
+            Image {
+                id: controllerIcon
+                source: model.image_url
+                visible: model.model_name !== "Default"
+                fillMode: Image.PreserveAspectFit
+                width: 182
+                sourceSize.width: 182
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
             }
+
+            Text {
+                text: "No controller connected"
+                color: ColorPalette.neutral500
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                font.family: Constants.regularFontFamily
+                visible: model.model_name === "Default"
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            FirelightButton {
+                anchors.top: parent.bottom
+                anchors.topMargin: 16
+                visible: !root.isDragging && model.model_name !== "Default"
+                focus: true
+
+                label: "Edit profile"
+
+                onClicked: function () {
+                    profileDialog.open()
+                }
+            }
+
+            Text {
+                id: playerNum
+                text: (content.index + 1)
+                color: "white"
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                anchors.top: parent.top
+                anchors.topMargin: 8
+                anchors.left: parent.left
+                anchors.leftMargin: 8
+                width: 16
+                height: 16
+            }
+
+            // Text {
+            //     text: model.model_name
+            // }
 
             NumberAnimation {
                 id: moveAnimation
                 target: content
             }
 
-
             DragHandler {
                 id: dragArea
 
                 grabPermissions: PointerHandler.TakeOverForbidden
 
-                yAxis.enabled: true
-                xAxis.enabled: false
+                yAxis.enabled: false
+                xAxis.enabled: true
 
                 onActiveChanged: {
+                    root.isDragging = dragArea.active
                     if (dragArea.active) {
                         content.dragEnd = Qt.point(content.x, content.y)
                     }
@@ -103,9 +158,9 @@ Flickable {
 
 
             DropArea {
-                width: parent.width
-                height: parent.height / 2 - 2
-                anchors.top: parent.top
+                width: parent.width / 2 - 2
+                height: parent.height
+                anchors.left: parent.left
                 // anchors {
                 //     fill: parent
                 //     margins: 30
@@ -123,9 +178,9 @@ Flickable {
             }
 
             DropArea {
-                width: parent.width
-                height: parent.height / 2 - 2
-                anchors.bottom: parent.bottom
+                width: parent.width / 2 - 2
+                height: parent.height
+                anchors.right: parent.right
                 // anchors {
                 //     fill: parent
                 //     margins: 30
@@ -217,13 +272,16 @@ Flickable {
 
             ListView {
                 id: listThing
-                // Layout.preferredWidth: 836
-                Layout.preferredWidth: 500
+
+                focus: true
+                keyNavigationEnabled: true
+                Layout.preferredWidth: 836
+                // Layout.preferredWidth: 500
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillHeight: true
 
                 interactive: false
-                // orientation: ListView.Horizontal
+                orientation: ListView.Horizontal
 
                 moveDisplaced: Transition {
                     NumberAnimation {
@@ -232,331 +290,10 @@ Flickable {
                     }
                 }
 
-                // populate: Transition {
-                //     NumberAnimation {
-                //         properties: "x,y"; duration: 300
-                //     }
-                // }
-
 
                 model: visualModel
-
-                // populate: Transition {
-                //     ParallelAnimation {
-                //         NumberAnimation {
-                //             property: "y"
-                //             duration: 240
-                //             easing.type: Easing.InOutQuad
-                //             from: 20
-                //             to: 0
-                //         }
-                //         NumberAnimation {
-                //             property: "opacity"
-                //             duration: 240
-                //             easing.type: Easing.InOutQuad
-                //             from: 0
-                //             to: 1
-                //         }
-                //     }
-                // }
                 spacing: 12
-                // model: DelegateModel {
-                //     id: theModel
-                //     model: controller_model
-                //     delegate: Image {
-                //         required property var model
-                //         required property int index
-                //
-                //         id: controllerIcon
-                //         anchors.horizontalCenter: parent.horizontalCenter
-                //         anchors.verticalCenter: parent.verticalCenter
-                //         source: model.image_url
-                //         fillMode: Image.PreserveAspectFit
-                //         width: 182
-                //         sourceSize.width: 182
-                //
-                //         property Item dragParent: null
-                //
-                //         DragHandler {
-                //             id: dragHandler
-                //
-                //             grabPermissions: PointerHandler.TakeOverForbidden
-                //
-                //             // onActiveChanged: function () {
-                //             //     if (!dragHandler.active) {
-                //             //         // console.log("\n" + JSON.stringify(listThing.model))
-                //             //         // for each item in theModel.items, print the index
-                //             //         let list = []
-                //             //         for (var i = 0; i < theModel.items.count; i++) {
-                //             //             list.push(theModel.items.get(i).model.index)
-                //             //         }
-                //             //
-                //             //         controller_manager.updateControllerOrder(list)
-                //             //
-                //             //     }
-                //             // }
-                //         }
-                //
-                //         Drag.onActiveChanged: function () {
-                //             root.isDragging = Drag.active
-                //             // if (!Drag.active) {
-                //             //     console.log("Dropped the thing")
-                //             //     if (dragParent !== null) {
-                //             //         parent = dragParent
-                //             //     }
-                //             //
-                //             //     dragParent = null
-                //             // }
-                //         }
-                //
-                //         Drag.active: dragHandler.active
-                //         Drag.source: controllerIcon
-                //         Drag.hotSpot.x: controllerIcon.width / 2
-                //         Drag.hotSpot.y: controllerIcon.height / 2
-                //         Drag.keys: ["controller-reorder"]
-                //
-                //         states: [
-                //             State {
-                //                 name: "NotDragging"
-                //                 when: !dragHandler.active
-                //             },
-                //             State {
-                //                 name: "Dragging"
-                //                 when: dragHandler.active
-                //
-                //                 AnchorChanges {
-                //                     target: controllerIcon
-                //                     anchors {
-                //                         horizontalCenter: undefined
-                //                         verticalCenter: undefined
-                //                     }
-                //                 }
-                //             }
-                //         ]
-                //
-                //         transitions: Transition {
-                //             from: "Dragging"
-                //             to: "NotDragging"
-                //             AnchorAnimation {
-                //                 duration: 600;
-                //                 easing.type: Easing.OutElastic
-                //                 easing.amplitude: 0.5
-                //             }
-                //         }
-                //
-                //
-                //         // background: Rectangle {
-                //         //     color: "#25282C"
-                //         //     radius: 4
-                //         // }
-                //         //
-                //         // onEntered: function (drag) {
-                //         //     if (drag.source === icon) {
-                //         //         return
-                //         //     }
-                //         //
-                //         //     theModel.items.move(drag.source.DelegateModel.itemsIndex, icon.DelegateModel.itemsIndex)
-                //         // }
-                //
-                //         // Item {
-                //         //     id: thingy
-                //         //     visible: model.model_name === "Default"
-                //         //
-                //         //     height: 220
-                //         //     width: 200
-                //         //
-                //         //     Rectangle {
-                //         //         anchors.fill: parent
-                //         //         border.color: "#515151"
-                //         //         color: "transparent"
-                //         //         radius: 6
-                //         //
-                //         //         Text {
-                //         //             anchors.centerIn: parent
-                //         //             text: "No controller connected"
-                //         //             color: "#757575"
-                //         //             font.pointSize: 11
-                //         //             font.family: Constants.regularFontFamily
-                //         //             horizontalAlignment: Text.AlignHCenter
-                //         //             verticalAlignment: Text.AlignVCenter
-                //         //         }
-                //         //     }
-                //         //
-                //         //     anchors {
-                //         //         horizontalCenter: parent.horizontalCenter
-                //         //         verticalCenter: parent.verticalCenter
-                //         //     }
-                //         // }
-                //
-                //         // Item {
-                //         //     id: icon
-                //         //     // visible: model.model_name !== "Default"
-                //         //
-                //         //     height: contentColumn.height + 10
-                //         //     width: 200
-                //         //
-                //         //     property Item dragParent: listThing
-                //         //     property var myIndex: parent.index
-                //         //
-                //         //     HoverHandler {
-                //         //         cursorShape: icon.state === "Dragging" ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-                //         //         onGrabChanged: {
-                //         //             console.log("grabChanged")
-                //         //         }
-                //         //     }
-                //         //
-                //         //     anchors {
-                //         //         horizontalCenter: parent.horizontalCenter
-                //         //         verticalCenter: parent.verticalCenter
-                //         //     }
-                //         //
-                //         //     Rectangle {
-                //         //         anchors.fill: parent
-                //         //         color: "#25282C"
-                //         //         radius: 6
-                //         //     }
-                //         //
-                //         //     // DetailsButton {
-                //         //     //     anchors.right: parent.right
-                //         //     //     anchors.rightMargin: 8
-                //         //     //     anchors.topMargin: 8
-                //         //     //     anchors.top: parent.top
-                //         //     // }
-                //         //
-                //         //     Column {
-                //         //         id: contentColumn
-                //         //         anchors.horizontalCenter: parent.horizontalCenter
-                //         //         spacing: 8
-                //         //         Image {
-                //         //             source: model.image_url
-                //         //             anchors.horizontalCenter: parent.horizontalCenter
-                //         //             fillMode: Image.PreserveAspectFit
-                //         //             width: 182
-                //         //             // mipmap: true
-                //         //             sourceSize.width: 182
-                //         //
-                //         //             DragHandler {
-                //         //                 id: dragHandler
-                //         //
-                //         //                 grabPermissions: PointerHandler.TakeOverForbidden
-                //         //
-                //         //                 onActiveChanged: function () {
-                //         //                     if (!dragHandler.active) {
-                //         //                         // console.log("\n" + JSON.stringify(listThing.model))
-                //         //                         // for each item in theModel.items, print the index
-                //         //                         let list = []
-                //         //                         for (var i = 0; i < theModel.items.count; i++) {
-                //         //                             list.push(theModel.items.get(i).model.index)
-                //         //                         }
-                //         //
-                //         //                         controller_manager.updateControllerOrder(list)
-                //         //
-                //         //                     }
-                //         //                 }
-                //         //             }
-                //         //
-                //         //             Drag.active: dragHandler.active
-                //         //             Drag.source: icon
-                //         //             Drag.hotSpot.x: icon.width / 2
-                //         //             Drag.hotSpot.y: icon.height / 2
-                //         //             Drag.keys: ["good"]
-                //         //
-                //         //             states: [
-                //         //                 State {
-                //         //                     name: "NotDragging"
-                //         //                     when: !dragHandler.active
-                //         //                 },
-                //         //                 State {
-                //         //                     name: "Dragging"
-                //         //                     when: dragHandler.active
-                //         //                     ParentChange {
-                //         //                         target: icon
-                //         //                         parent: icon.dragParent
-                //         //                     }
-                //         //
-                //         //                     AnchorChanges {
-                //         //                         target: icon
-                //         //                         anchors {
-                //         //                             horizontalCenter: undefined
-                //         //                             verticalCenter: undefined
-                //         //                         }
-                //         //                     }
-                //         //                 }
-                //         //             ]
-                //         //         }
-                //         //         // Row {
-                //         //         //     spacing: 4
-                //         //         //     anchors.horizontalCenter: parent.horizontalCenter
-                //         //         //     Repeater {
-                //         //         //         model: myself.model.player_index + 1
-                //         //         //         delegate: Rectangle {
-                //         //         //             width: 8
-                //         //         //             height: 8
-                //         //         //             color: "#6bc80a"
-                //         //         //             radius: 4
-                //         //         //
-                //         //         //         }
-                //         //         //     }
-                //         //         // }
-                //         //         // Item {
-                //         //         //     height: 6
-                //         //         //     width: 1
-                //         //         // }
-                //         //         // MyComboBox {
-                //         //         //     textRole: "text"
-                //         //         //     valueRole: "value"
-                //         //         //     width: parent.width
-                //         //         //
-                //         //         //     // onActivated: library_short_model.sortType = currentValue
-                //         //         //     // Component.onCompleted: currentIndex = indexOfValue(library_short_model.sortType)
-                //         //         //
-                //         //         //     model: [
-                //         //         //         {text: "Default profile", value: "display_name"},
-                //         //         //         {text: "Newest first", value: "created_at"}
-                //         //         //     ]
-                //         //         // }
-                //         //         // Button {
-                //         //         //     width: parent.width
-                //         //         //     padding: 8
-                //         //         //     background: Rectangle {
-                //         //         //         color: "#03438c"
-                //         //         //         radius: 8
-                //         //         //     }
-                //         //         //     contentItem: Text {
-                //         //         //         text: qsTr("Edit current profile")
-                //         //         //         color: "white"
-                //         //         //         font.pointSize: 11
-                //         //         //         font.weight: Font.DemiBold
-                //         //         //         font.family: Constants.regularFontFamily
-                //         //         //         horizontalAlignment: Text.AlignHCenter
-                //         //         //         verticalAlignment: Text.AlignVCenter
-                //         //         //     }
-                //         //         //
-                //         //         //     onClicked: function () {
-                //         //         //         root.StackView.view.push(profileEditor)
-                //         //         //         // profileDialog.open()
-                //         //         //     }
-                //         //         // }
-                //         //     }
-                //         //     // Text {
-                //         //     //     text: model.model_name
-                //         //     //     color: "white"
-                //         //     //     font.pointSize: 12
-                //         //     //     font.family: Constants.regularFontFamily
-                //         //     //     horizontalAlignment: Text.AlignHCenter
-                //         //     //     verticalAlignment: Text.AlignVCenter
-                //         //     // }
-                //         //     // Text {
-                //         //     //     text: model.wired ? "Wired" : "Wireless"
-                //         //     //     color: "white"
-                //         //     //     font.pointSize: 12
-                //         //     //     font.family: Constants.regularFontFamily
-                //         //     //     horizontalAlignment: Text.AlignHCenter
-                //         //     //     verticalAlignment: Text.AlignVCenter
-                //         //     // }
-                //         // }
-                //     }
-                // }
+
             }
         }
 
@@ -580,58 +317,10 @@ Flickable {
         width: parent.width * 5 / 6
         height: parent.height * 5 / 6
         // title: "Creating new controller profile"
+        centerButtons: false
+        acceptText: "Save"
         contentItem: ControllerProfilePage {
             controllerProfileId: 1
-        }
-
-        footer: DialogButtonBox {
-            spacing: 2
-            alignment: Qt.AlignRight
-            onAccepted: {
-                console.log("Accepted")
-                profileDialog.contentItem.saveMapping()
-            }
-            Button {
-                background: Rectangle {
-                    implicitHeight: 44
-                    implicitWidth: 100
-                    color: "#03438c"
-                    radius: 8
-                }
-                contentItem: Text {
-                    text: qsTr("Save")
-                    color: "white"
-                    font.pointSize: 11
-                    font.weight: Font.DemiBold
-                    font.family: Constants.regularFontFamily
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-
-                }
-                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-            }
-            Button {
-                background: Rectangle {
-                    implicitHeight: 44
-                    implicitWidth: 100
-
-                    color: "transparent"
-                    radius: 8
-                }
-                contentItem: Text {
-                    text: qsTr("Cancel")
-                    color: "white"
-                    font.pointSize: 11
-                    font.family: Constants.regularFontFamily
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-
-                }
-                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            }
-            buttonLayout: DialogButtonBox.MacLayout
-            background: Item {
-            }
         }
     }
 

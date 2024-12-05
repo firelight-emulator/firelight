@@ -1,6 +1,15 @@
 #include "input_mapping.hpp"
 
 namespace firelight::input {
+    std::optional<bool>
+    InputMapping::evaluateButtonMapping(SDL_Joystick *joystick, libretro::IRetroPad::Button button) {
+        return std::nullopt;
+    }
+
+    std::optional<float> InputMapping::evaluateAxisMapping(SDL_Joystick *joystick, libretro::IRetroPad::Axis axis) {
+        return std::nullopt;
+    }
+
     std::optional<InputMapping::InputDescription> InputMapping::getButtonMapping(
         const libretro::IRetroPad::Button button) {
         if (!m_buttonMappings.contains(button)) {
