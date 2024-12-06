@@ -9,7 +9,7 @@
 #include <SDL_gamecontroller.h>
 #include <string>
 
-#include "controller_profile.hpp"
+#include "profiles/controller_profile.hpp"
 #include "gamepad_type.hpp"
 
 namespace firelight::Input {

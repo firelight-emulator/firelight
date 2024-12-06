@@ -4,6 +4,6 @@
 namespace firelight::input {
     class ControllerProfile {
     public:
-        InputMapping getControllerMappingForPlatform(int platformId);
+        std::optional<InputMapping> getControllerMappingForPlatform(int platformId);
     };
 }

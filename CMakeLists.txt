@@ -88,7 +88,6 @@ add_library(firelight_lib
         src/app/saves/save_manager.cpp
         src/app/saves/savefile.cpp
         src/app/emulator_renderer.cpp
-        src/app/input/keyboard_controller.cpp
         src/app/db/sqlite_userdata_database.cpp
         src/gui/controller_list_model.cpp
         src/gui/library_item_model.cpp
@@ -98,13 +97,13 @@ add_library(firelight_lib
         src/gui/mod_item_model.cpp
         src/app/mods/mod_manager.cpp
         src/app/rcheevos/ra_client.cpp
-        src/gui/window_resize_handler.cpp
+        src/gui/eventhandlers/window_resize_handler.cpp
         src/gui/library_path_model.cpp
         src/gui/achievement_list_model.cpp
         src/gui/achievement_list_sort_filter_model.cpp
         src/app/router.cpp
-        src/app/input/controller_profile.cpp
-        src/app/input/input_mapping.cpp
+        src/app/input/profiles/controller_profile.cpp
+        src/app/input/profiles/input_mapping.cpp
         src/gui/PlatformInputListModel.cpp
         src/gui/gamepad_profile.cpp
         src/gui/gamepad_mapping.cpp
@@ -131,8 +130,8 @@ add_library(firelight_lib
         src/app/rcheevos/award_achievement_response.hpp
         src/app/rcheevos/offline/rcheevos_offline_client.hpp
         src/app/rcheevos/offline/rcheevos_offline_client.cpp
-        src/gui/input_method_detection_handler.cpp
-        src/gui/input_method_detection_handler.hpp
+        src/gui/eventhandlers/input_method_detection_handler.cpp
+        src/gui/eventhandlers/input_method_detection_handler.hpp
         src/app/input/keyboard_input_handler.cpp
         src/gui/models/library/entry_list_model.cpp
         src/app/emulator_item.hpp
@@ -146,6 +145,8 @@ add_library(firelight_lib
         src/app/input/controller_icons.hpp
         src/gui/controller_profile_item.cpp
         src/gui/controller_profile_item.hpp
+        src/app/activity/sqlite_activity_log.cpp
+        src/app/activity/sqlite_activity_log.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
@@ -409,6 +410,9 @@ install(
         ${CMAKE_SOURCE_DIR}/assets/closequick.wav
         ${CMAKE_SOURCE_DIR}/assets/menumove.wav
         ${CMAKE_SOURCE_DIR}/assets/startgame.wav
+        ${CMAKE_SOURCE_DIR}/assets/defaultnotification.wav
+        ${CMAKE_SOURCE_DIR}/assets/switchon.wav
+        ${CMAKE_SOURCE_DIR}/assets/switchoff.wav
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/sfx/
 )
 

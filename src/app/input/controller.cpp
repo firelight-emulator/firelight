@@ -1,7 +1,3 @@
-//
-// Created by alexs on 1/6/2024.
-//
-
 #include "controller.hpp"
 
 namespace firelight::Input {
@@ -17,18 +13,25 @@ namespace firelight::Input {
     : m_SDLController(t_controller), m_SDLJoystickDeviceIndex(t_joystickIndex) {
     m_SDLJoystick = SDL_GameControllerGetJoystick(t_controller);
     m_SDLJoystickInstanceId = SDL_JoystickInstanceID(m_SDLJoystick);
-    auto vendorId = SDL_JoystickGetVendor(m_SDLJoystick);
-    auto productId = SDL_JoystickGetProduct(m_SDLJoystick);
 
-    printf("vendorId: %d\n", vendorId);
-    printf("productId: %d\n", productId);
-    printf("Power status: %d\n", SDL_JoystickCurrentPowerLevel(m_SDLJoystick));
-    printf("Has rumble: %d\n", SDL_JoystickHasRumble(m_SDLJoystick));
-    printf("Has LED: %d\n", SDL_JoystickHasLED(m_SDLJoystick));
-    printf("Has rumble triggers: %d\n", SDL_JoystickHasRumbleTriggers(m_SDLJoystick));
+    // const auto vendorId = SDL_JoystickGetVendor(m_SDLJoystick);
+    // const auto productId = SDL_JoystickGetProduct(m_SDLJoystick);
+
+    // printf("vendorId: %d\n", vendorId);
+    // printf("productId: %d\n", productId);
+    // printf("Power status: %d\n", SDL_JoystickCurrentPowerLevel(m_SDLJoystick));
+    // printf("Has rumble: %d\n", SDL_JoystickHasRumble(m_SDLJoystick));
+    // printf("Has LED: %d\n", SDL_JoystickHasLED(m_SDLJoystick));
+    // printf("Has rumble triggers: %d\n", SDL_JoystickHasRumbleTriggers(m_SDLJoystick));
   }
 
   bool Controller::isButtonPressed(const Button t_button) {
+    if (auto mapping = m_profile->getControllerMappingForPlatform(0); mapping.has_value()) {
+      if (const auto result = mapping->evaluateButtonMapping(m_SDLJoystick, t_button); result.has_value()) {
+        return result.value();
+      }
+    }
+
     // if (m_profile) {
     //   auto mapping = m_profile->getControllerMappingForPlatform(0);
     //

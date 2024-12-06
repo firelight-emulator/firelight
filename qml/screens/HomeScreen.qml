@@ -545,11 +545,6 @@ FocusScope {
                 }
             }
 
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-
             FirelightMenuItem {
                 id: libraryButton
                 focus: contentStack.currentItem.topLevelName === "library"
@@ -692,6 +687,17 @@ FocusScope {
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: "Firelight is made with ❤️\nby BiscuitCakes"
+                color: ColorPalette.neutral300
+                font.pixelSize: 12
+                font.weight: Font.Normal
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             // Button {

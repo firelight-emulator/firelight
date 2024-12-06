@@ -19,6 +19,10 @@ namespace firelight::input {
         };
 
     public:
+        std::optional<bool> evaluateButtonMapping(SDL_Joystick *joystick, libretro::IRetroPad::Button button);
+
+        std::optional<float> evaluateAxisMapping(SDL_Joystick *joystick, libretro::IRetroPad::Axis axis);
+
         std::optional<InputDescription> getButtonMapping(libretro::IRetroPad::Button button);
 
         std::optional<InputDescription> getAxisMapping(libretro::IRetroPad::Axis axis);

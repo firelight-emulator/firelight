@@ -12,6 +12,7 @@ namespace firelight {
   std::shared_ptr<EmulatorConfigManager> ManagerAccessor::m_emulatorConfigManager;
   gui::GameImageProvider *ManagerAccessor::m_gameImageProvider;
   library::IUserLibrary *ManagerAccessor::m_userLibrary;
+  activity::IActivityLog *ManagerAccessor::m_activityLog;
 
   void ManagerAccessor::setControllerManager(
     Input::ControllerManager *t_manager) {
@@ -53,6 +54,10 @@ namespace firelight {
     m_userLibrary = t_userLibrary;
   }
 
+  void ManagerAccessor::setActivityLog(activity::IActivityLog *t_activityLog) {
+    m_activityLog = t_activityLog;
+  }
+
   Input::ControllerManager *ManagerAccessor::getControllerManager() {
     // TODO: Check for nullptr and throw exception or something
     return m_controllerManager;
@@ -86,5 +91,9 @@ namespace firelight {
 
   library::IUserLibrary *ManagerAccessor::getUserLibrary() {
     return m_userLibrary;
+  }
+
+  activity::IActivityLog *ManagerAccessor::getActivityLog() {
+    return m_activityLog;
   }
 } // namespace firelight
