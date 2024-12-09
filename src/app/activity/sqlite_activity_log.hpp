@@ -1,6 +1,6 @@
 #pragma once
 
-#include "firelight/activity_log.hpp"
+#include "firelight/activity/activity_log.hpp"
 
 
 namespace firelight::activity {

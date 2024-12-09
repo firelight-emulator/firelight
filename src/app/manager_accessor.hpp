@@ -1,7 +1,7 @@
 #pragma once
 
 #include <firelight/library/user_library.hpp>
-#include <firelight/activity_log.hpp>
+#include <firelight/activity/activity_log.hpp>
 
 #include "emulator_config_manager.hpp"
 #include "rcheevos/ra_client.hpp"

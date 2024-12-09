@@ -67,7 +67,8 @@ Flickable {
                 label: "Edit profile"
 
                 onClicked: function () {
-                    profileDialog.open()
+                    // profileDialog.open()
+                    screenStack.pushItem(profileEditor, {}, StackView.PushTransition)
                 }
             }
 

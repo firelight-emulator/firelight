@@ -7,7 +7,7 @@
 
 #include <QOpenGLTexture>
 #include <QQuickFramebufferObject>
-#include <firelight/play_session.hpp>
+#include <firelight/activity/play_session.hpp>
 
 #include "libretro/core_configuration.hpp"
 

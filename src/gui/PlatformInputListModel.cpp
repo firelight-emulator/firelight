@@ -6,10 +6,10 @@
 
 PlatformInputListModel::PlatformInputListModel(QObject *parent) {
     m_items.push_back({
-        firelight::libretro::IRetroPad::Button::SouthFace, "file:system/_img/n64/a-button.svg", "A"
+        firelight::libretro::IRetroPad::Input::SouthFace, "file:system/_img/n64/a-button.svg", "A"
     });
     m_items.push_back(
-        {firelight::libretro::IRetroPad::Button::EastFace, "file:system/_img/n64/b-button.svg", "B"});
+        {firelight::libretro::IRetroPad::Input::EastFace, "file:system/_img/n64/b-button.svg", "B"});
     // m_items.push_back(
     //     {firelight::libretro::IRetroPad::Button::WestFace, "file:system/_img/n64/xbutton.svg", "X"});
     // m_items.push_back({
@@ -17,19 +17,19 @@ PlatformInputListModel::PlatformInputListModel(QObject *parent) {
     // });
 
     m_items.push_back({
-        firelight::libretro::IRetroPad::Button::DpadLeft, "file:system/_img/n64/c-up.svg", "C-Up"
+        firelight::libretro::IRetroPad::Input::DpadLeft, "file:system/_img/n64/c-up.svg", "C-Up"
     });
     m_items.push_back({
-        firelight::libretro::IRetroPad::Button::DpadUp, "file:system/_img/n64/c-down.svg", "C-Down"
+        firelight::libretro::IRetroPad::Input::DpadUp, "file:system/_img/n64/c-down.svg", "C-Down"
     });
     m_items.push_back({
-        firelight::libretro::IRetroPad::Button::DpadDown, "file:system/_img/n64/c-left.svg", "C-Left"
+        firelight::libretro::IRetroPad::Input::DpadDown, "file:system/_img/n64/c-left.svg", "C-Left"
     });
     m_items.push_back({
-        firelight::libretro::IRetroPad::Button::DpadRight, "file:system/_img/n64/c-right.svg", "C-Right"
+        firelight::libretro::IRetroPad::Input::DpadRight, "file:system/_img/n64/c-right.svg", "C-Right"
     });
     m_items.push_back({
-        firelight::libretro::IRetroPad::Button::Start, "file:system/_img/n64/start.svg", "Start"
+        firelight::libretro::IRetroPad::Input::Start, "file:system/_img/n64/start.svg", "Start"
     });
     // m_items.push_back({
     //     firelight::libretro::IRetroPad::Button::Select, "file:system/_img/xboxseries/abutton.svg", "Select"

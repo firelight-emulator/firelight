@@ -100,7 +100,7 @@ private:
     int m_frameNumber = 0;
 
     int m_currentWaitFrames = 0;
-    int m_waitFrames = 0;
+    int m_waitFrames = 1;
 
     QList<SuspendPoint> m_rewindPoints;
 

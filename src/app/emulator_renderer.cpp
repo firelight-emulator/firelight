@@ -48,7 +48,6 @@ EmulatorRenderer::~EmulatorRenderer() {
   getAchievementManager()->unloadGame();
 
   save(true);
-  // TODO: SAVE
 
   if (m_destroyContextFunction) {
     m_destroyContextFunction();
@@ -305,7 +304,7 @@ void EmulatorRenderer::render() {
   auto currentTime = QDateTime::currentMSecsSinceEpoch();
   if (!m_core && m_gameReady) {
     auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_platformId, m_contentHash);
-    m_core = std::make_unique<libretro::Core>(m_corePath.toStdString(), configProvider);
+    m_core = std::make_unique<libretro::Core>(-1, m_corePath.toStdString(), configProvider);
 
     m_core->setVideoReceiver(this);
     m_audioManager = std::make_shared<AudioManager>();

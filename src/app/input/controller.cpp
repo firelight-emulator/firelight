@@ -5,7 +5,6 @@ namespace firelight::Input {
 
   void Controller::setControllerProfile(const std::shared_ptr<input::ControllerProfile> &profile) {
     m_profile = profile;
-    printf("Setting profile to %p\n", m_profile.get());
   }
 
   Controller::Controller(SDL_GameController *t_controller,
@@ -25,32 +24,12 @@ namespace firelight::Input {
     // printf("Has rumble triggers: %d\n", SDL_JoystickHasRumbleTriggers(m_SDLJoystick));
   }
 
-  bool Controller::isButtonPressed(const Button t_button) {
-    if (auto mapping = m_profile->getControllerMappingForPlatform(0); mapping.has_value()) {
+  bool Controller::isButtonPressed(const int platformId, const Input t_button) {
+    if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
       if (const auto result = mapping->evaluateButtonMapping(m_SDLJoystick, t_button); result.has_value()) {
         return result.value();
       }
     }
-
-    // if (m_profile) {
-    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
-    //
-    //
-    //   if (t_button == LeftTrigger || t_button == RightTrigger) {
-    //     return SDL_GameControllerGetAxis(m_SDLController,
-    //                                      t_button == LeftTrigger
-    //                                        ? SDL_CONTROLLER_AXIS_TRIGGERLEFT
-    //                                        : SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 0;
-    //   }
-    //
-    //   const auto mappedButton = mapping.getMappedButton(t_button);
-    //
-    //   if (mappedButton == SDL_CONTROLLER_BUTTON_INVALID) {
-    //     return false;
-    //   }
-    //
-    //   return SDL_GameControllerGetButton(m_SDLController, mappedButton);
-    // }
 
     switch (t_button) {
       case NorthFace:
@@ -106,60 +85,46 @@ namespace firelight::Input {
     }
   }
 
-  int16_t Controller::getLeftStickXPosition() {
-    const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
+  int16_t Controller::getLeftStickXPosition(const int platformId) {
+    if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
+      if (const auto result = mapping->evaluateAxisMapping(m_SDLJoystick, LeftStickX); result.
+        has_value()) {
+        return result.value();
+      }
+    }
 
-    // if (m_profile != nullptr) {
-    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
-    //   const auto deadzone = mapping.getLeftStickXDeadzone();
-    //   if (value < deadzone && value > -deadzone) {
-    //     return 0;
-    //   }
-    // }
-
-    return value;
+    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
   }
 
-  int16_t Controller::getLeftStickYPosition() {
-    const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
+  int16_t Controller::getLeftStickYPosition(const int platformId) {
+    if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
+      if (const auto result = mapping->evaluateAxisMapping(m_SDLJoystick, LeftStickY); result.
+        has_value()) {
+        return result.value();
+      }
+    }
 
-    // if (m_profile != nullptr) {
-    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
-    //   const auto deadzone = mapping.getLeftStickYDeadzone();
-    //   if (value < deadzone && value > -deadzone) {
-    //     return 0;
-    //   }
-    // }
-
-    return value;
+    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
   }
 
-  int16_t Controller::getRightStickXPosition() {
-    const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
-
-    // if (m_profile != nullptr) {
-    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
-    //   const auto deadzone = mapping.getRightStickXDeadzone();
-    //   if (value < deadzone && value > -deadzone) {
-    //     return 0;
-    //   }
-    // }
-
-    return value;
+  int16_t Controller::getRightStickXPosition(const int platformId) {
+    if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
+      if (const auto result = mapping->evaluateAxisMapping(m_SDLJoystick, RightStickX); result.
+        has_value()) {
+        return result.value();
+      }
+    }
+    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
   }
 
-  int16_t Controller::getRightStickYPosition() {
-    const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
-
-    // if (m_profile != nullptr) {
-    //   auto mapping = m_profile->getControllerMappingForPlatform(0);
-    //   const auto deadzone = mapping.getRightStickYDeadzone();
-    //   if (value < deadzone && value > -deadzone) {
-    //     return 0;
-    //   }
-    // }
-
-    return value;
+  int16_t Controller::getRightStickYPosition(const int platformId) {
+    if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
+      if (const auto result = mapping->evaluateAxisMapping(m_SDLJoystick, RightStickY); result.
+        has_value()) {
+        return result.value();
+      }
+    }
+    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
   }
 
   int32_t Controller::getInstanceId() const { return m_SDLJoystickInstanceId; }
@@ -179,11 +144,11 @@ namespace firelight::Input {
 
   // TODO: This isn't quite right, will set the rumble for only one motor at a
   // time
-  void Controller::setStrongRumble(const uint16_t t_strength) {
+  void Controller::setStrongRumble(int platformId, const uint16_t t_strength) {
     SDL_JoystickRumble(m_SDLJoystick, 0, t_strength, 2000);
   }
 
-  void Controller::setWeakRumble(const uint16_t t_strength) {
+  void Controller::setWeakRumble(int platformId, const uint16_t t_strength) {
     SDL_JoystickRumble(m_SDLJoystick, t_strength, 0, 2000);
   }
 

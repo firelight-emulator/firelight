@@ -77,22 +77,22 @@ namespace libretro {
     if (device == RETRO_DEVICE_ANALOG) {
       if (index == RETRO_DEVICE_INDEX_ANALOG_LEFT) {
         if (id == RETRO_DEVICE_ID_ANALOG_X) {
-          return controller->getLeftStickXPosition();
+          return controller->getLeftStickXPosition(currentCore->m_platformId);
         }
         if (id == RETRO_DEVICE_ID_ANALOG_Y) {
-          return controller->getLeftStickYPosition();
+          return controller->getLeftStickYPosition(currentCore->m_platformId);
         }
       } else if (index == RETRO_DEVICE_INDEX_ANALOG_RIGHT) {
         if (id == RETRO_DEVICE_ID_ANALOG_X) {
-          return controller->getRightStickXPosition();
+          return controller->getRightStickXPosition(currentCore->m_platformId);
         }
         if (id == RETRO_DEVICE_ID_ANALOG_Y) {
-          return controller->getRightStickYPosition();
+          return controller->getRightStickYPosition(currentCore->m_platformId);
         }
       }
     } else if (device == RETRO_DEVICE_JOYPAD) {
-      return controller->isButtonPressed(
-        static_cast<firelight::libretro::IRetroPad::Button>(id));
+      return controller->isButtonPressed(currentCore->m_platformId,
+                                         static_cast<firelight::libretro::IRetroPad::Input>(id));
     }
 
     return 0;
@@ -321,9 +321,9 @@ namespace libretro {
 
           auto controller = con.value();
           if (effect == RETRO_RUMBLE_STRONG) {
-            controller->setStrongRumble(strength);
+            controller->setStrongRumble(currentCore->m_platformId, strength);
           } else if (effect == RETRO_RUMBLE_WEAK) {
-            controller->setWeakRumble(strength);
+            controller->setWeakRumble(currentCore->m_platformId, strength);
           }
 
           return true;
@@ -1056,103 +1056,9 @@ namespace libretro {
     return result;
   }
 
-  //    std::basic_string<char> Core::dumpJson() {
-  //        json j;
-  ////        j["rotation"] = rotation;
-  ////        j["overscan"] = useOverscan;
-  ////        j["can_dupe_frames"] = canDupeFrames;
-  //        // set message
-  //        j["should_shutdown"] = shutdown;
-  //        j["performance_level"] = performanceLevel;
-  //        j["system_directory"] = systemDirectory;
-  ////        j["pixel_format"] = *pixelFormat;
-  //        j["supports_no_game"] = canRunWithNoGame;
-  ////        j["libretro_path"] = libretroPath;
-  ////        j["core_assets_directory"] = coreAssetsDirectory;
-  ////        j["save_directory"] = saveDirectory;
-  //
-  //        json opts = json::array();
-  //        for (auto o: options) {
-  //            opts.emplace_back(o.dumpJson());
-  //        }
-  //        j["options"] = opts;
-  //
-  //        json inDesc = json::array();
-  //        for (auto i: inputDescriptors) {
-  //            json in;
-  //            in["id"] = i.id;
-  //            in["index"] = i.index;
-  //            in["device"] = i.device;
-  //            in["description"] = i.description;
-  //            in["port"] = i.port;
-  //            inDesc.emplace_back(in);
-  //        }
-  //
-  //        j["input_descriptors"] = inDesc;
-  //
-  //        json subsys = json::array();
-  //        for (auto sub: subsystemInfo) {
-  //            json ssInfo;
-  //            ssInfo["id"] = sub.id;
-  //            ssInfo["description"] = sub.desc;
-  //            ssInfo["identifier"] = sub.ident;
-  //            ssInfo["num_roms"] = sub.num_roms;
-  //            // TODO: ROMS
-  //
-  //            subsys.emplace_back(ssInfo);
-  //        }
-  //
-  //        j["subsystem_info"] = subsys;
-  //
-  ////        if (hardwareRenderCallback) {
-  ////            json hwRender;
-  ////            hwRender["context_type"] =
-  /// hardwareRenderCallback->context_type; /            hwRender["depth"]
-  /// = hardwareRenderCallback->depth; /            hwRender["stencil"] =
-  /// hardwareRenderCallback->stencil; / hwRender["bottom_left_origin"] =
-  /// hardwareRenderCallback->bottom_left_origin; /
-  /// hwRender["version_major"] = hardwareRenderCallback->version_major; /
-  /// hwRender["version_minor"] = hardwareRenderCallback->version_minor; /
-  /// hwRender["cache_context"] = hardwareRenderCallback->cache_context; /
-  /// hwRender["debug_context"] = hardwareRenderCallback->debug_context;
-  ////
-  ////            j["hw_render_callback"] = hwRender;
-  ////        }
-  //
-  //        json memMaps = json::array();
-  //        for (auto m: memoryMaps) {
-  //            json map;
-  //            map["flags"] = m.flags;
-  //            if (m.ptr != nullptr) {
-  //                map["ptr"] = (uintptr_t) m.ptr;
-  //            }
-  //            map["offset"] = m.offset;
-  //            map["start"] = m.start;
-  //            map["select"] = m.select;
-  //            map["disconnect"] = m.disconnect;
-  //            map["len"] = m.len;
-  //            if (m.addrspace != nullptr) {
-  //                map["addrspace"] = m.addrspace;
-  //            }
-  //
-  //            memMaps.emplace_back(map);
-  //        }
-  //
-  //        j["memory_descriptors"] = memMaps;
-  //
-  //        json envCalls = json::array();
-  //        for (auto e: environmentCalls) {
-  //            envCalls.emplace_back(e);
-  //        }
-  //
-  //        j["environment_calls"] = envCalls;
-  //
-  //        return j.dump();
-  //    }
-
-  Core::Core(const std::string &libPath,
+  Core::Core(int platformId, const std::string &libPath,
              std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider) : m_configurationProvider(
-    std::move(configProvider)) {
+      std::move(configProvider)), m_platformId(platformId) {
     coreLib = std::make_unique<QLibrary>(QString::fromStdString(libPath));
 
     // dll = SDL_LoadObject(libPath.c_str());
@@ -1199,45 +1105,6 @@ namespace libretro {
     symRetroGetMemoryDataSize = reinterpret_cast<size_t (*)(unsigned int)>(
       coreLib->resolve("retro_get_memory_size"));
 
-    // symRetroInit = loadRetroFunc<void (*)()>(dll, "retro_init");
-    // symRetroDeinit = loadRetroFunc<void (*)()>(dll, "retro_deinit");
-
-    // symRetroApiVersion =
-    // loadRetroFunc<unsigned int (*)()>(dll, "retro_api_version");
-    // symRetroGetSystemInfo = loadRetroFunc<void (*)(retro_system_info *)>(
-    // dll, "retro_get_system_info");
-    // symRetroGetSystemAVInfo = loadRetroFunc<void (*)(retro_system_av_info *)>(
-    // dll, "retro_get_system_av_info");
-    // symRetroSetControllerPortDevice =
-    // loadRetroFunc<void (*)(unsigned int, unsigned int)>(
-    // dll, "retro_set_controller_port_device");
-
-    // symRetroReset = loadRetroFunc<void (*)()>(dll, "retro_reset");
-    // symRetroRun = loadRetroFunc<void (*)()>(dll, "retro_run");
-    // symRetroSerializeSize =
-    // loadRetroFunc<size_t (*)()>(dll, "retro_serialize_size");
-    // symRetroSerialize =
-    // loadRetroFunc<bool (*)(void *, size_t)>(dll, "retro_serialize");
-    // symRetroUnserialize =
-    // loadRetroFunc<bool (*)(const void *, size_t)>(dll,
-    // "retro_unserialize");
-    // symRetroCheatReset = loadRetroFunc<void (*)()>(dll, "retro_cheat_reset");
-    // symRetroCheatSet = loadRetroFunc<void (*)(unsigned, bool, const char *)>(
-    // dll, "retro_cheat_set");
-    // symRetroLoadGame =
-    // loadRetroFunc<bool (*)(const retro_game_info *)>(dll,
-    // "retro_load_game");
-    // symRetroLoadGameSpecial =
-    // loadRetroFunc<bool (*)(unsigned int, const retro_game_info *, size_t)>(
-    // dll, "retro_load_game_special");
-    // symRetroUnloadGame = loadRetroFunc<void (*)()>(dll, "retro_unload_game");
-    // symRetroGetRegion =
-    // loadRetroFunc<unsigned int (*)()>(dll, "retro_get_region");
-    // symRetroGetMemoryData =
-    // loadRetroFunc<void *(*)(unsigned int)>(dll, "retro_get_memory_data");
-    // symRetroGetMemoryDataSize =
-    // loadRetroFunc<size_t (*)(unsigned int)>(dll, "retro_get_memory_size");
-
     retroSystemInfo = new retro_system_info;
     retroSystemAVInfo = new retro_system_av_info;
 
@@ -1250,16 +1117,6 @@ namespace libretro {
     reinterpret_cast<RetroSetAudioSample>(coreLib->resolve(
       "retro_set_audio_sample"))([](int16_t left, int16_t right) {
     });
-
-    // The next several methods load the callback symbols from the library and
-    // set them to our methods defined above. Since we never change those
-    // callbacks, we don't need to store the symbols.
-    // loadRetroFunc<RetroSetEnvironment>(dll,
-    // "retro_set_environment")(envCallback);
-    // loadRetroFunc<RetroSetVideoRefresh>(dll,
-    // "retro_set_video_refresh")(videoCallback);
-    // loadRetroFunc<RetroSetAudioSample>(dll, "retro_set_audio_sample")(
-    // [](int16_t left, int16_t right) {});
 
     auto processAudioLambda = [](const int16_t *data, size_t frames) -> size_t {
       auto core = currentCore;
@@ -1278,13 +1135,6 @@ namespace libretro {
       });
     reinterpret_cast<RetroInputState>(coreLib->resolve("retro_set_input_state"))(
       inputStateCallback);
-
-    // loadRetroFunc<RetroSetAudioSampleBatch>(dll,
-    // "retro_set_audio_sample_batch")(
-    // processAudioLambda);
-    // loadRetroFunc<RetroInputPoll>(dll, "retro_set_input_poll")([]() {});
-    // loadRetroFunc<RetroInputState>(dll,
-    // "retro_set_input_state")(inputStateCallback);
   }
 
   Core::~Core() {

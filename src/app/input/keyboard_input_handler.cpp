@@ -4,30 +4,30 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::input {
-  bool KeyboardInputHandler::isButtonPressed(Button t_button) {
+  bool KeyboardInputHandler::isButtonPressed(int platformId, Input t_button) {
     return m_buttonStates[t_button];
   }
 
-  int16_t KeyboardInputHandler::getLeftStickXPosition() {
+  int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId) {
     return 0;
   }
 
-  int16_t KeyboardInputHandler::getLeftStickYPosition() {
+  int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId) {
     return 0;
   }
 
-  int16_t KeyboardInputHandler::getRightStickXPosition() {
+  int16_t KeyboardInputHandler::getRightStickXPosition(int platformId) {
     return 0;
   }
 
-  int16_t KeyboardInputHandler::getRightStickYPosition() {
+  int16_t KeyboardInputHandler::getRightStickYPosition(int platformId) {
     return 0;
   }
 
-  void KeyboardInputHandler::setStrongRumble(uint16_t t_strength) {
+  void KeyboardInputHandler::setStrongRumble(int platformId, uint16_t t_strength) {
   }
 
-  void KeyboardInputHandler::setWeakRumble(uint16_t t_strength) {
+  void KeyboardInputHandler::setWeakRumble(int platformId, uint16_t t_strength) {
   }
 
   bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {

@@ -6,11 +6,12 @@
 
 namespace firelight::input {
     class InputMapping {
+    private:
         enum InputType {
             BUTTON, AXIS
         };
 
-        class InputDescription {
+        struct InputDescription {
             InputType type{};
 
             SDL_GameControllerButton button{};
@@ -19,16 +20,35 @@ namespace firelight::input {
         };
 
     public:
-        std::optional<bool> evaluateButtonMapping(SDL_Joystick *joystick, libretro::IRetroPad::Button button);
+        InputMapping() {
+            m_buttonMappings.emplace(libretro::IRetroPad::Input::SouthFace,
+                                     InputDescription{BUTTON, SDL_CONTROLLER_BUTTON_LEFTSHOULDER});
 
-        std::optional<float> evaluateAxisMapping(SDL_Joystick *joystick, libretro::IRetroPad::Axis axis);
+            m_buttonMappings.emplace(libretro::IRetroPad::Input::EastFace,
+                                     InputDescription{
+                                         AXIS, SDL_CONTROLLER_BUTTON_A, SDL_CONTROLLER_AXIS_RIGHTY, false
+                                     });
 
-        std::optional<InputDescription> getButtonMapping(libretro::IRetroPad::Button button);
+            // when being asked about axis, need to return
+        }
 
-        std::optional<InputDescription> getAxisMapping(libretro::IRetroPad::Axis axis);
+        std::optional<bool> evaluateButtonMapping(SDL_Joystick *joystick, libretro::IRetroPad::Input button);
+
+        std::optional<int16_t> evaluateAxisMapping(SDL_Joystick *joystick, libretro::IRetroPad::Axis axis);
 
     private:
-        std::map<libretro::IRetroPad::Button, InputDescription> m_buttonMappings;
+        std::map<libretro::IRetroPad::Input, InputDescription> m_buttonMappings;
         std::map<libretro::IRetroPad::Axis, InputDescription> m_axisMappings;
+
+        std::map<SDL_GameControllerAxis, bool> m_axisBeingHeld{};
+        std::map<SDL_GameControllerAxis, bool> m_axisReleased{};
+
+        std::optional<int16_t> evaluate(SDL_Joystick *joystick, const InputDescription &description);
+
+        unsigned getId();
+
+        unsigned getControllerProfileId();
+
+        unsigned getPlatformId();
     };
 }

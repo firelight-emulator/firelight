@@ -2,6 +2,7 @@
 
 namespace firelight::input {
     std::optional<InputMapping> ControllerProfile::getControllerMappingForPlatform(int platformId) {
-        return {};
+        static auto mapping = InputMapping();
+        return {mapping};
     }
 }

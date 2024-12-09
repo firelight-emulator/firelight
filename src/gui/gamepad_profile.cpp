@@ -10,10 +10,10 @@ namespace firelight::gui {
 
     void GamepadProfile::setProfileId(const int profileId) {
         m_profileId = profileId;
-        const auto prof = getUserdataManager()->getControllerProfile(profileId);
-        if (prof.has_value()) {
-            m_profile = prof.value();
-        }
+        // const auto prof = getUserdataManager()->getControllerProfile(profileId);
+        // if (prof.has_value()) {
+        //     m_profile = prof.value();
+        // }
 
         emit profileIdChanged();
     }
@@ -28,16 +28,16 @@ namespace firelight::gui {
     }
 
     QVariant GamepadProfile::getCurrentMapping() const {
-        for (const auto mapping: m_profile.inputMappings) {
-            if (mapping.platformId == m_currentPlatformId) {
-                QJsonObject obj;
-                obj["id"] = mapping.id;
-                obj["controller_profile_id"] = mapping.controllerProfileId;
-                obj["platform_id"] = mapping.platformId;
-
-                return QVariant::fromValue(obj);
-            }
-        }
+        // for (const auto mapping: m_profile.inputMappings) {
+        //     if (mapping.platformId == m_currentPlatformId) {
+        //         QJsonObject obj;
+        //         obj["id"] = mapping.id;
+        //         obj["controller_profile_id"] = mapping.controllerProfileId;
+        //         obj["platform_id"] = mapping.platformId;
+        //
+        //         return QVariant::fromValue(obj);
+        //     }
+        // }
         return {};
     }
 } // firelight::gui

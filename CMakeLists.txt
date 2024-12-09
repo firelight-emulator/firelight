@@ -140,13 +140,16 @@ add_library(firelight_lib
         src/app/emulator_item.cpp
         src/app/game_loader.cpp
         src/app/game_loader.hpp
-        src/app/gamepad_status_item.cpp
-        src/app/gamepad_status_item.hpp
+        src/app/input/gamepad_status_item.cpp
+        src/app/input/gamepad_status_item.hpp
         src/app/input/controller_icons.hpp
         src/gui/controller_profile_item.cpp
         src/gui/controller_profile_item.hpp
         src/app/activity/sqlite_activity_log.cpp
         src/app/activity/sqlite_activity_log.hpp
+        src/app/PlatformMetadataItem.cpp
+        src/app/PlatformMetadataItem.hpp
+        src/app/input/sqlite_controller_repository.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
@@ -183,8 +186,6 @@ target_link_libraries(firelight_lib PUBLIC
 qt6_add_executable(firelight
         resources.qrc
         src/main.cpp
-        include/firelight/controller_profile.hpp
-        include/firelight/input_mapping.hpp
 )
 
 if (APPLE)

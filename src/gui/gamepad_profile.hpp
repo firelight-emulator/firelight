@@ -1,7 +1,6 @@
 #pragma once
 #include <QObject>
 
-#include "firelight/controller_profile.hpp"
 #include "gamepad_mapping.hpp"
 #include "../app/manager_accessor.hpp"
 
@@ -34,7 +33,5 @@ namespace firelight::gui {
     private:
         int m_profileId = -1;
         int m_currentPlatformId = -1;
-
-        ControllerProfile m_profile = {};
     };
 } // firelight::gui

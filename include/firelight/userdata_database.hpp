@@ -1,6 +1,6 @@
 #pragma once
 
-#include "play_session.hpp"
+#include "activity/play_session.hpp"
 #include "savefile_metadata.hpp"
 #include "suspend_point_metadata.hpp"
 
@@ -8,8 +8,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
-#include "controller_profile.hpp"
 
 namespace firelight::db {
   class IUserdataDatabase {
@@ -44,12 +42,6 @@ namespace firelight::db {
     getSuspendPointMetadataForContent(std::string contentId, int saveSlotNumber) = 0;
 
     virtual bool deleteSuspendPointMetadata(int id) = 0;
-
-    virtual bool createControllerProfile(ControllerProfile &profile) = 0;
-
-    virtual std::optional<ControllerProfile> getControllerProfile(int id) = 0;
-
-    virtual std::vector<ControllerProfile> getControllerProfiles() = 0;
 
     virtual bool createPlaySession(PlaySession &session) = 0;
 

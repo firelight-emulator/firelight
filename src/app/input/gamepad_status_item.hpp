@@ -1,7 +1,7 @@
 #pragma once
 #include <QQuickItem>
 
-#include "manager_accessor.hpp"
+#include "../manager_accessor.hpp"
 
 namespace firelight::input {
     class GamepadStatusItem : public QQuickItem, public ManagerAccessor {

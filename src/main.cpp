@@ -13,6 +13,7 @@
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
+#include "app/input/sqlite_controller_repository.hpp"
 #include "app/rcheevos/ra_client.hpp"
 #include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
@@ -41,8 +42,9 @@
 #include <QtConcurrent>
 
 #include "app/emulator_item.hpp"
-#include "app/gamepad_status_item.hpp"
+#include "app/input/gamepad_status_item.hpp"
 #include "app/game_loader.hpp"
+#include "app/PlatformMetadataItem.hpp"
 #include "app/library/sqlite_user_library.hpp"
 #include "gui/models/library/entry_list_model.hpp"
 
@@ -152,7 +154,8 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  firelight::Input::ControllerManager controllerManager;
+  firelight::input::SqliteControllerRepository controllerRepository;
+  firelight::Input::ControllerManager controllerManager(controllerRepository);
 
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
 
@@ -247,6 +250,7 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0, "GamepadStatus");
+  qmlRegisterType<firelight::PlatformMetadataItem>("Firelight", 1, 0, "PlatformMetadata");
   qmlRegisterType<firelight::gui::GamepadMapping>("Firelight", 1, 0, "GamepadMapping");
   qmlRegisterType<firelight::gui::GamepadProfile>("Firelight", 1, 0, "GamepadProfile");
 

@@ -16,7 +16,7 @@ public:
 
 private:
     struct Item {
-        firelight::libretro::IRetroPad::Button button;
+        firelight::libretro::IRetroPad::Input button;
         QString iconUrl;
         QString displayName;
     };

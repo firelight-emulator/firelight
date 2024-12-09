@@ -7,6 +7,7 @@
 #include <QObject>
 #include <SDL_events.h>
 
+#include "controller_repository.hpp"
 #include "keyboard_input_handler.hpp"
 
 namespace firelight::Input {
@@ -15,6 +16,8 @@ namespace firelight::Input {
     Q_OBJECT
 
   public:
+    explicit ControllerManager(input::IControllerRepository &controllerRepository);
+
     void setKeyboardRetropad(input::KeyboardInputHandler *keyboard);
 
     void handleSDLControllerEvent(const SDL_Event &event);
@@ -52,6 +55,7 @@ namespace firelight::Input {
     void buttonStateChanged(int playerNumber, int button, bool pressed);
 
   private:
+    input::IControllerRepository &m_controllerRepository;
     input::KeyboardInputHandler *m_keyboard = nullptr;
     int m_numControllers = 0;
     std::array<std::unique_ptr<Controller>, 32> m_controllers{};

@@ -11,24 +11,24 @@ namespace firelight::input {
     Q_OBJECT
 
   public:
-    bool isButtonPressed(Button t_button) override;
+    bool isButtonPressed(int platformId, Input t_button) override;
 
-    int16_t getLeftStickXPosition() override;
+    int16_t getLeftStickXPosition(int platformId) override;
 
-    int16_t getLeftStickYPosition() override;
+    int16_t getLeftStickYPosition(int platformId) override;
 
-    int16_t getRightStickXPosition() override;
+    int16_t getRightStickXPosition(int platformId) override;
 
-    int16_t getRightStickYPosition() override;
+    int16_t getRightStickYPosition(int platformId) override;
 
-    void setStrongRumble(uint16_t t_strength) override;
+    void setStrongRumble(int platformId, uint16_t t_strength) override;
 
-    void setWeakRumble(uint16_t t_strength) override;
+    void setWeakRumble(int platformId, uint16_t t_strength) override;
 
   protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
   private:
-    QMap<Button, bool> m_buttonStates;
+    QMap<Input, bool> m_buttonStates;
   };
 } // namespace firelight::gui

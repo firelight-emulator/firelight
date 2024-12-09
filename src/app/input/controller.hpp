@@ -21,15 +21,15 @@ namespace firelight::Input {
 
     void setControllerProfile(const std::shared_ptr<input::ControllerProfile> &profile);
 
-    bool isButtonPressed(Button t_button) override;
+    bool isButtonPressed(int platformId, Input t_button) override;
 
-    int16_t getLeftStickXPosition() override;
+    int16_t getLeftStickXPosition(int platformId) override;
 
-    int16_t getLeftStickYPosition() override;
+    int16_t getLeftStickYPosition(int platformId) override;
 
-    int16_t getRightStickXPosition() override;
+    int16_t getRightStickXPosition(int platformId) override;
 
-    int16_t getRightStickYPosition() override;
+    int16_t getRightStickYPosition(int platformId) override;
 
     [[nodiscard]] int32_t getInstanceId() const;
 
@@ -41,9 +41,9 @@ namespace firelight::Input {
 
     [[nodiscard]] int getPlayerIndex() const;
 
-    void setStrongRumble(uint16_t t_strength) override;
+    void setStrongRumble(int platformId, uint16_t t_strength) override;
 
-    void setWeakRumble(uint16_t t_strength) override;
+    void setWeakRumble(int platformId, uint16_t t_strength) override;
 
     [[nodiscard]] bool isWired() const;
 

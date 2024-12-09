@@ -11,6 +11,10 @@
 #include "controller_icons.hpp"
 
 namespace firelight::Input {
+  ControllerManager::ControllerManager(input::IControllerRepository &controllerRepository) : m_controllerRepository(
+    controllerRepository) {
+  }
+
   void ControllerManager::setKeyboardRetropad(input::KeyboardInputHandler *keyboard) {
     m_keyboard = keyboard;
   }
@@ -102,6 +106,12 @@ namespace firelight::Input {
       return;
     }
 
+    // TODO: Check the repository for known controller types
+    // Get the default profile for the controller type
+    // If it doesn't exist, create a new one
+
+    auto profile = m_controllerRepository.getControllerProfile(0);
+
     // TODO: Check if any controllers have the same joystick id.
 
     for (int i = 0; i < m_controllers.max_size(); ++i) {
@@ -111,7 +121,7 @@ namespace firelight::Input {
         m_numControllers++;
         m_controllers[i] =
             std::make_unique<Controller>(controller, t_deviceIndex);
-        m_controllers[i]->setControllerProfile(std::make_shared<input::ControllerProfile>());
+        m_controllers[i]->setControllerProfile(profile);
         const auto name = m_controllers[i]->getControllerName();
         const auto type = m_controllers[i]->getGamepadType();
 
@@ -128,14 +138,6 @@ namespace firelight::Input {
     }
 
     return {};
-  }
-
-  std::pair<int16_t, int16_t> ControllerManager::getPointerPosition() const {
-    return {m_pointerX, m_pointerY};
-  }
-
-  bool ControllerManager::isPressed() const {
-    return m_pointerPressed;
   }
 
   void ControllerManager::updateControllerOrder(const QVariantMap &map) {
@@ -206,5 +208,13 @@ namespace firelight::Input {
 
   void ControllerManager::updateMousePressed(const bool pressed) {
     m_pointerPressed = pressed;
+  }
+
+  std::pair<int16_t, int16_t> ControllerManager::getPointerPosition() const {
+    return {m_pointerX, m_pointerY};
+  }
+
+  bool ControllerManager::isPressed() const {
+    return m_pointerPressed;
   }
 } // namespace firelight::Input

@@ -3,7 +3,7 @@
 #include "firelight/userdata_database.hpp"
 #include <QSqlDatabase>
 #include <filesystem>
-#include <firelight/activity_log.hpp>
+#include <firelight/activity/activity_log.hpp>
 
 namespace firelight::db {
   class SqliteUserdataDatabase final : public IUserdataDatabase, public activity::IActivityLog {
@@ -35,12 +35,6 @@ namespace firelight::db {
     getSuspendPointMetadataForContent(std::string contentId, int saveSlotNumber) override;
 
     bool deleteSuspendPointMetadata(int id) override;
-
-    bool createControllerProfile(ControllerProfile &profile) override;
-
-    std::optional<ControllerProfile> getControllerProfile(int id) override;
-
-    std::vector<ControllerProfile> getControllerProfiles() override;
 
     bool createPlaySession(PlaySession &session) override;
 

@@ -345,28 +345,28 @@ namespace firelight::db {
   }
 
 
-  bool SqliteUserdataDatabase::createControllerProfile(ControllerProfile &profile) {
-    return false;
-  }
-
-  std::optional<ControllerProfile> SqliteUserdataDatabase::getControllerProfile(const int id) {
-    printf("Getting controller profile: %d\n", id);
-    return {
-      {
-        id,
-        "Test",
-        {
-          {
-            0, id, 1
-          }
-        }
-      }
-    };
-  }
-
-  std::vector<ControllerProfile> SqliteUserdataDatabase::getControllerProfiles() {
-    return {};
-  }
+  // bool SqliteUserdataDatabase::createControllerProfile(ControllerProfile &profile) {
+  //   return false;
+  // }
+  //
+  // std::optional<ControllerProfile> SqliteUserdataDatabase::getControllerProfile(const int id) {
+  //   printf("Getting controller profile: %d\n", id);
+  //   return {
+  //     {
+  //       id,
+  //       "Test",
+  //       {
+  //         {
+  //           0, id, 1
+  //         }
+  //       }
+  //     }
+  //   };
+  // }
+  //
+  // std::vector<ControllerProfile> SqliteUserdataDatabase::getControllerProfiles() {
+  //   return {};
+  // }
 
   bool SqliteUserdataDatabase::createPlaySession(PlaySession &session) {
     const QString queryString = "INSERT INTO play_sessions ("
