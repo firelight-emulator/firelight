@@ -18,11 +18,6 @@ Flickable {
         ColumnLayout {
             Layout.fillWidth: true
 
-            ToggleOption {
-                Layout.fillWidth: true
-                label: "Enable achievements"
-            }
-
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 160

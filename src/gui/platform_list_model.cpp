@@ -10,6 +10,46 @@ namespace firelight::gui {
             "NES",
             "qrc:images/platform-icons/nes.svg",
             {
+                {
+                    {"display_name", "A"},
+                    {"icon_url", "file:system/_img/nes/a-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                },
+                {
+                    {"display_name", "B"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                },
+                {
+                    {"display_name", "D-Pad Up"},
+                    {"icon_url", "file:system/_img/nes/dpad-up.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadUp}
+                },
+                {
+                    {"display_name", "D-Pad Down"},
+                    {"icon_url", "file:system/_img/nes/dpad-down.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadDown}
+                },
+                {
+                    {"display_name", "D-Pad Left"},
+                    {"icon_url", "file:system/_img/nes/dpad-left.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadLeft}
+                },
+                {
+                    {"display_name", "D-Pad Right"},
+                    {"icon_url", "file:system/_img/nes/dpad-right.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadRight}
+                },
+                {
+                    {"display_name", "Start"},
+                    {"icon_url", "file:system/_img/nes/start.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Start}
+                },
+                {
+                    {"display_name", "Select"},
+                    {"icon_url", "file:system/_img/nes/select.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Select}
+                }
             },
             {}
         });
@@ -18,6 +58,66 @@ namespace firelight::gui {
             "SNES",
             "qrc:images/platform-icons/snes.svg",
             {
+                {
+                    {"display_name", "A"},
+                    {"icon_url", "file:system/_img/nes/a-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::EastFace}
+                },
+                {
+                    {"display_name", "B"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                },
+                {
+                    {"display_name", "X"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::NorthFace}
+                },
+                {
+                    {"display_name", "Y"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                },
+                {
+                    {"display_name", "L"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::LeftBumper}
+                },
+                {
+                    {"display_name", "R"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::RightBumper}
+                },
+                {
+                    {"display_name", "D-Pad Up"},
+                    {"icon_url", "file:system/_img/nes/dpad-up.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadUp}
+                },
+                {
+                    {"display_name", "D-Pad Down"},
+                    {"icon_url", "file:system/_img/nes/dpad-down.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadDown}
+                },
+                {
+                    {"display_name", "D-Pad Left"},
+                    {"icon_url", "file:system/_img/nes/dpad-left.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadLeft}
+                },
+                {
+                    {"display_name", "D-Pad Right"},
+                    {"icon_url", "file:system/_img/nes/dpad-right.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadRight}
+                },
+                {
+                    {"display_name", "Start"},
+                    {"icon_url", "file:system/_img/nes/start.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Start}
+                },
+                {
+                    {"display_name", "Select"},
+                    {"icon_url", "file:system/_img/nes/select.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Select}
+                }
             },
             {}
         });
@@ -26,6 +126,46 @@ namespace firelight::gui {
             "Game Boy",
             "qrc:images/platform-icons/gb.svg",
             {
+                {
+                    {"display_name", "A"},
+                    {"icon_url", "file:system/_img/nes/a-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                },
+                {
+                    {"display_name", "B"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                },
+                {
+                    {"display_name", "D-Pad Up"},
+                    {"icon_url", "file:system/_img/nes/dpad-up.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadUp}
+                },
+                {
+                    {"display_name", "D-Pad Down"},
+                    {"icon_url", "file:system/_img/nes/dpad-down.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadDown}
+                },
+                {
+                    {"display_name", "D-Pad Left"},
+                    {"icon_url", "file:system/_img/nes/dpad-left.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadLeft}
+                },
+                {
+                    {"display_name", "D-Pad Right"},
+                    {"icon_url", "file:system/_img/nes/dpad-right.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadRight}
+                },
+                {
+                    {"display_name", "Start"},
+                    {"icon_url", "file:system/_img/nes/start.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Start}
+                },
+                {
+                    {"display_name", "Select"},
+                    {"icon_url", "file:system/_img/nes/select.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Select}
+                }
             },
             {}
         });
@@ -34,6 +174,46 @@ namespace firelight::gui {
             "Game Boy Color",
             "qrc:images/platform-icons/gbc.svg",
             {
+                {
+                    {"display_name", "A"},
+                    {"icon_url", "file:system/_img/nes/a-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                },
+                {
+                    {"display_name", "B"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                },
+                {
+                    {"display_name", "D-Pad Up"},
+                    {"icon_url", "file:system/_img/nes/dpad-up.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadUp}
+                },
+                {
+                    {"display_name", "D-Pad Down"},
+                    {"icon_url", "file:system/_img/nes/dpad-down.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadDown}
+                },
+                {
+                    {"display_name", "D-Pad Left"},
+                    {"icon_url", "file:system/_img/nes/dpad-left.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadLeft}
+                },
+                {
+                    {"display_name", "D-Pad Right"},
+                    {"icon_url", "file:system/_img/nes/dpad-right.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadRight}
+                },
+                {
+                    {"display_name", "Start"},
+                    {"icon_url", "file:system/_img/nes/start.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Start}
+                },
+                {
+                    {"display_name", "Select"},
+                    {"icon_url", "file:system/_img/nes/select.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Select}
+                }
             },
             {}
         });
@@ -163,7 +343,94 @@ namespace firelight::gui {
         m_items.push_back({
             1,
             "Nintendo DS",
-            "qrc:images/platform-icons/snes.svg",
+            "qrc:images/platform-icons/ds.svg",
+            {
+                {
+                    {"display_name", "A"},
+                    {"icon_url", "file:system/_img/nes/a-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::EastFace}
+                },
+                {
+                    {"display_name", "B"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                },
+                {
+                    {"display_name", "X"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::NorthFace}
+                },
+                {
+                    {"display_name", "Y"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                },
+                {
+                    {"display_name", "L"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::LeftBumper}
+                },
+                {
+                    {"display_name", "R"},
+                    {"icon_url", "file:system/_img/nes/b-button.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::RightBumper}
+                },
+                {
+                    {"display_name", "D-Pad Up"},
+                    {"icon_url", "file:system/_img/nes/dpad-up.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadUp}
+                },
+                {
+                    {"display_name", "D-Pad Down"},
+                    {"icon_url", "file:system/_img/nes/dpad-down.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadDown}
+                },
+                {
+                    {"display_name", "D-Pad Left"},
+                    {"icon_url", "file:system/_img/nes/dpad-left.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadLeft}
+                },
+                {
+                    {"display_name", "D-Pad Right"},
+                    {"icon_url", "file:system/_img/nes/dpad-right.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::DpadRight}
+                },
+                {
+                    {"display_name", "Start"},
+                    {"icon_url", "file:system/_img/nes/start.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Start}
+                },
+                {
+                    {"display_name", "Select"},
+                    {"icon_url", "file:system/_img/nes/select.svg"},
+                    {"retropad_button", libretro::IRetroPad::Input::Select}
+                }
+            },
+            {}
+        });
+
+        m_items.push_back({
+            1,
+            "Master System",
+            "qrc:images/platform-icons/sms.svg",
+            {
+            },
+            {}
+        });
+
+        m_items.push_back({
+            1,
+            "Genesis",
+            "qrc:images/platform-icons/gen.svg",
+            {
+            },
+            {}
+        });
+
+        m_items.push_back({
+            1,
+            "Game Gear",
+            "qrc:images/platform-icons/gg.svg",
             {
             },
             {}

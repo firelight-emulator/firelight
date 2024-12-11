@@ -2,33 +2,42 @@
 
 namespace firelight::input {
     std::optional<bool>
-    InputMapping::evaluateButtonMapping(SDL_Joystick *joystick, libretro::IRetroPad::Input button) {
+    InputMapping::evaluateButtonMapping(SDL_GameController *controller, libretro::IRetroPad::Input button) {
         if (!m_buttonMappings.contains(button)) {
             return std::nullopt;
         }
 
-        return evaluate(joystick, m_buttonMappings[button]) > 0;
+        if (const auto desc = m_buttonMappings[button]; desc.type == BUTTON) {
+            return {
+                // SDL_GameControllerGetButton(SDL_GameControllerFromInstanceID(SDL_JoystickInstanceID(joystick)),
+                // description.button) * 32767 * (description.axisPositive ? 1 : -1)
+                SDL_GameControllerGetButton(controller, desc.button)
+            };
+        }
+
+        return 0;
     }
 
-    std::optional<int16_t> InputMapping::evaluateAxisMapping(SDL_Joystick *joystick, libretro::IRetroPad::Axis axis) {
+    std::optional<int16_t> InputMapping::evaluateAxisMapping(SDL_GameController *controller,
+                                                             libretro::IRetroPad::Axis axis) {
         if (!m_axisMappings.contains(axis)) {
             return std::nullopt;
         }
 
-        return evaluate(joystick, m_axisMappings[axis]);
+        return evaluate(controller, m_axisMappings[axis]);
     }
 
-    std::optional<int16_t> InputMapping::evaluate(SDL_Joystick *joystick, const InputDescription &description) {
+    std::optional<int16_t> InputMapping::evaluate(SDL_GameController *controller, const InputDescription &description) {
         if (description.type == BUTTON) {
             return {
-                SDL_GameControllerGetButton(SDL_GameControllerFromInstanceID(SDL_JoystickInstanceID(joystick)),
-                                            description.button) * 32767 * (description.axisPositive ? 1 : -1)
+                // SDL_GameControllerGetButton(SDL_GameControllerFromInstanceID(SDL_JoystickInstanceID(joystick)),
+                // description.button) * 32767 * (description.axisPositive ? 1 : -1)
+                SDL_GameControllerGetButton(controller, description.button)
             };
         }
 
         if (description.type == AXIS) {
-            auto value = SDL_GameControllerGetAxis(SDL_GameControllerFromInstanceID(SDL_JoystickInstanceID(joystick)),
-                                                   description.axis);
+            auto value = SDL_GameControllerGetAxis(controller, description.axis);
             if (value > 0 && description.axisPositive) {
                 return value;
             }

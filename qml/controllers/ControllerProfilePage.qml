@@ -39,18 +39,63 @@ Item {
     }
 
     FirelightDialog {
+        id: confirmDialog
+
+        property var buttonList: []
+        property var currentIndex: 0
+
+        text: "You're about to walk through assigning each button on your controller to the corresponding Nintendo 64 input.\n\n Continue?"
+        // title: "Assign all buttons"
+        // message: "Are you sure you want to assign all buttons to the default mappings?"
+        showButtons: true
+
+        onAccepted: function () {
+            dialog.buttons = platformList.currentItem.model.buttons
+            dialog.currentIndex = 0
+            dialog.open()
+        }
+    }
+
+    // Turn into component
+    // also use stackview
+    FirelightDialog {
         id: dialog
+
+        property variant buttons: []
+        property var currentIndex: 0
         // title: "Assign all buttons"
         // message: "Are you sure you want to assign all buttons to the default mappings?"
         showButtons: false
 
         onAboutToShow: {
+            currentIndex = 0
             frameAnimation.reset()
         }
 
         onOpened: function () {
             // theBar.widthThing = parent.width
             timer.start()
+        }
+
+        onClosed: function () {
+            dialog.buttons = []
+        }
+
+        TapHandler {
+            onTapped: function (event, button) {
+                console.log(dialog.buttons.length)
+                if (dialog.buttons.length > dialog.currentIndex + 1) {
+                    dialog.currentIndex++
+                    timer.stop()
+                    frameAnimation.reset()
+                    timer.restart()
+
+                } else {
+                    dialog.accept()
+                    // dialog.close()
+                    // saveMapping()
+                }
+            }
         }
 
         contentItem: ColumnLayout {
@@ -60,7 +105,7 @@ Item {
                 Layout.preferredWidth: 300
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
                 source: platformList.currentItem.model.icon_url
-                sourceSize.height: 300
+                sourceSize.height: 512
                 fillMode: Image.PreserveAspectFit
             }
             Text {
@@ -78,7 +123,7 @@ Item {
             }
 
             Text {
-                text: "C-Up"
+                text: dialog.buttons.length > 0 && dialog.currentIndex < dialog.buttons.length ? dialog.buttons[dialog.currentIndex].display_name : "Nothing"
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 color: ColorPalette.neutral200
@@ -110,6 +155,7 @@ Item {
                 id: theBar
                 property var widthThing: parent.width * ((timer.interval - frameAnimation.elapsedTime * 1000) / timer.interval)
                 Layout.preferredWidth: widthThing
+                Layout.topMargin: 8
                 Layout.preferredHeight: 10
                 color: "green"
             }
@@ -215,105 +261,6 @@ Item {
             }
         }
 
-        // StackView {
-        //     id: rightHalf
-        //
-        //     Layout.fillHeight: true
-        //     Layout.fillWidth: true
-        //     Layout.maximumWidth: 1000
-        //     Layout.preferredWidth: 1000
-        //     Layout.minimumWidth: 500
-        //     Layout.alignment: Qt.AlignLeft
-        //     Layout.leftMargin: 12
-        //
-        //     Connections {
-        //         target: root
-        //
-        //         function onSectionChanged() {
-        //             if (root.section === "library") {
-        //                 rightHalf.replace(librarySettings)
-        //             } else if (root.section === "notifications") {
-        //                 rightHalf.replace(notificationSettings)
-        //             } else if (root.section === "achievements") {
-        //                 rightHalf.replace(retroAchievementSettings)
-        //             } else if (root.section === "sound") {
-        //                 rightHalf.replace(soundSettings)
-        //             } else if (root.section === "audiovideo") {
-        //                 rightHalf.replace(videoSettings)
-        //             } else if (root.section === "platforms/gbc") {
-        //                 rightHalf.replace(gbcSettings)
-        //             } else if (root.section === "platforms/gb") {
-        //                 rightHalf.replace(gbSettings)
-        //             } else if (root.section === "platforms/snes") {
-        //                 rightHalf.replace(snesSettings)
-        //             } else if (root.section === "platforms") {
-        //                 rightHalf.replace(platformSettings)
-        //             } else if (root.section === "platforms/gba") {
-        //                 rightHalf.replace(gbaSettings)
-        //             } else if (root.section === "platforms/n64") {
-        //                 rightHalf.replace(n64Settings)
-        //             } else if (root.section === "platforms/nds") {
-        //                 rightHalf.replace(ndsSettings)
-        //             } else if (root.section === "platforms/nes") {
-        //                 rightHalf.replace(nesSettings)
-        //             } else if (root.section === "platforms/mastersystem") {
-        //                 rightHalf.replace(masterSystemSettings)
-        //             } else if (root.section === "platforms/genesis") {
-        //                 rightHalf.replace(genesisSettings)
-        //             } else if (root.section === "platforms/gamegear") {
-        //                 rightHalf.replace(gameGearSettings)
-        //             }
-        //         }
-        //     }
-        //
-        //     // initialItem: librarySettings
-        //
-        //     pushEnter: Transition {
-        //     }
-        //
-        //     pushExit: Transition {
-        //     }
-        //
-        //     popEnter: Transition {
-        //     }
-        //
-        //     popExit: Transition {
-        //     }
-        //
-        //     replaceEnter: Transition {
-        //         NumberAnimation {
-        //             property: "opacity";
-        //             from: 0.0;
-        //             to: 1.0
-        //             duration: 200
-        //         }
-        //         NumberAnimation {
-        //             property: "y";
-        //             from: 30 * (root.movingDown ? 1 : -1);
-        //             to: 0
-        //             duration: 200
-        //             easing.type: Easing.InOutQuad
-        //         }
-        //     }
-        //
-        //     replaceExit: Transition {
-        //         NumberAnimation {
-        //             property: "opacity";
-        //             from: 1.0;
-        //             to: 0.0
-        //             duration: 20
-        //         }
-        //         NumberAnimation {
-        //             property: "y";
-        //             from: 0;
-        //             to: 30 * (root.movingDown ? -1 : 1)
-        //             duration: 200
-        //             easing.type: Easing.InOutQuad
-        //         }
-        //     }
-        // }
-
-
         ColumnLayout {
             id: col
             Layout.fillHeight: true
@@ -364,6 +311,10 @@ Item {
                 Layout.alignment: Qt.AlignRight
                 label: "Assign all"
                 Layout.bottomMargin: 8
+
+                onClicked: function () {
+                    confirmDialog.open()
+                }
             }
 
             RowLayout {
@@ -514,6 +465,12 @@ Item {
                         iconCode: "\ue3c9"
 
                         onClicked: {
+                            dialog.buttons = []
+                            dialog.buttons = [{
+                                display_name: modelData.display_name,
+                                mapping_id: modelData.mapping_id,
+                                currentMappingId: dropdown.currentIndex
+                            }]
                             dialog.open()
                         }
                     }
@@ -524,257 +481,15 @@ Item {
                     }
 
                 }
-                // delegate: Pane {
-                //     required property var modelData
-                //     property alias currentMappingId: dropdown.currentIndex
-                //
-                //     width: buttonList.width
-                //     height: 48
-                //     padding: 0
-                //     // background: Rectangle {
-                //     //     color: "#25282C"
-                //     //     radius: 4
-                //     // }
-                //
-                //     background: Item {
-                //     }
-                //
-                //     contentItem: RowLayout {
-                //         spacing: 16
-                //         // Image {
-                //         //     source: modelData.icon_url
-                //         //     anchors.verticalCenter: parent.verticalCenter
-                //         //     width: 40
-                //         //     height: 40
-                //         //     fillMode: Image.PreserveAspectFit
-                //         //
-                //         //     Rectangle {
-                //         //         color: "transparent"
-                //         //         anchors.fill: parent
-                //         //
-                //         //         radius: 4
-                //         //         border.color: "white"
-                //         //         border.width: 1
-                //         //         z: -1
-                //         //     }
-                //         // }
-                //         Text {
-                //             Layout.leftMargin: 4
-                //             Layout.preferredWidth: 100
-                //             Layout.fillHeight: true
-                //             text: modelData.display_name
-                //             color: "white"
-                //             font.pointSize: 12
-                //             font.family: Constants.regularFontFamily
-                //             font.weight: Font.DemiBold
-                //             horizontalAlignment: Text.AlignRight
-                //             verticalAlignment: Text.AlignVCenter
-                //         }
-                //
-                //         MyComboBox {
-                //             id: dropdown
-                //             Layout.fillWidth: true
-                //             Layout.fillHeight: true
-                //             textRole: "text"
-                //             valueRole: "value"
-                //             currentIndex: modelData.mapping_id
-                //             model: [
-                //                 {text: "Y", value: 0},
-                //                 {text: "A", value: 1},
-                //                 {text: "B", value: 2},
-                //                 {text: "X", value: 3},
-                //                 {text: "DPad Up", value: 4},
-                //                 {text: "DPad Down", value: 5},
-                //                 {text: "DPad Left", value: 6},
-                //                 {text: "DPad Right", value: 7},
-                //                 {text: "Start", value: 8},
-                //                 {text: "Select", value: 9},
-                //                 {text: "Misc 1", value: 10},
-                //                 {text: "Misc 2", value: 11},
-                //                 {text: "Misc 3", value: 12},
-                //                 {text: "Misc 4", value: 13},
-                //                 {text: "Misc 5", value: 14},
-                //                 {text: "Misc 6", value: 15},
-                //                 {text: "Misc 7", value: 16},
-                //                 {text: "R1", value: 17},
-                //                 {text: "R2", value: 18},
-                //                 {text: "R3", value: 19},
-                //                 {text: "L1", value: 20},
-                //                 {text: "L2", value: 21},
-                //                 {text: "L3", value: 22},
-                //                 {text: "Left Stick Up", value: 23},
-                //                 {text: "Left Stick Down", value: 24},
-                //                 {text: "Left Stick Left", value: 25},
-                //                 {text: "Left Stick Right", value: 26},
-                //                 {text: "Right Stick Up", value: 27},
-                //                 {text: "Right Stick Down", value: 28},
-                //                 {text: "Right Stick Left", value: 29},
-                //                 {text: "Right Stick Right", value: 30}
-                //             ]
-                //
-                //             // currentIndex: 0
-                //             // onCurrentIndexChanged: {
-                //             //     controller_manager.setPlatformIndex(currentIndex)
-                //             // }
-                //         }
-                //
-                //     }
-                // }
+
             }
         }
-
 
         Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.horizontalStretchFactor: 1
         }
-
-        // Pane {
-        //     Layout.fillWidth: true
-        //     Layout.fillHeight: true
-        //
-        //     background: Item {
-        //     }
-        //
-        //     contentItem: RowLayout {
-        //         Image {
-        //             id: imagey
-        //             Layout.preferredHeight: parent.height / 2
-        //             source: platformList.currentItem.model.icon_url
-        //             Layout.preferredWidth: parent.height / 2
-        //             sourceSize.width: parent.height / 2
-        //             sourceSize.height: parent.height / 2
-        //             mipmap: true                    // sourceSize.height: 512
-        //             // sourceClipRect: Qt.rect(0, 0, 1024, 1024)
-        //             fillMode: Image.PreserveAspectFit
-        //
-        //             Rectangle {
-        //                 color: "transparent"
-        //                 anchors.fill: parent
-        //
-        //                 radius: 4
-        //                 border.color: "white"
-        //                 border.width: 1
-        //             }
-        //         }
-        //
-        //
-        //         ListView {
-        //             id: buttonList
-        //             Layout.fillHeight: true
-        //             Layout.preferredWidth: 300
-        //             clip: true
-        //
-        //             ScrollBar.vertical: ScrollBar {
-        //             }
-        //
-        //             visible: platformList.currentItem.model.buttons.length > 0
-        //
-        //             spacing: 6
-        //
-        //             model: platformList.currentItem.model.buttons
-        //             delegate: Pane {
-        //                 required property var modelData
-        //                 property alias currentMappingId: dropdown.currentIndex
-        //
-        //                 width: buttonList.width
-        //                 height: 48
-        //                 padding: 0
-        //                 // background: Rectangle {
-        //                 //     color: "#25282C"
-        //                 //     radius: 4
-        //                 // }
-        //
-        //                 background: Item {
-        //                 }
-        //
-        //                 contentItem: RowLayout {
-        //                     spacing: 16
-        //                     // Image {
-        //                     //     source: modelData.icon_url
-        //                     //     anchors.verticalCenter: parent.verticalCenter
-        //                     //     width: 40
-        //                     //     height: 40
-        //                     //     fillMode: Image.PreserveAspectFit
-        //                     //
-        //                     //     Rectangle {
-        //                     //         color: "transparent"
-        //                     //         anchors.fill: parent
-        //                     //
-        //                     //         radius: 4
-        //                     //         border.color: "white"
-        //                     //         border.width: 1
-        //                     //         z: -1
-        //                     //     }
-        //                     // }
-        //                     Text {
-        //                         Layout.leftMargin: 4
-        //                         Layout.preferredWidth: 100
-        //                         Layout.fillHeight: true
-        //                         text: modelData.display_name
-        //                         color: "white"
-        //                         font.pointSize: 12
-        //                         font.family: Constants.regularFontFamily
-        //                         font.weight: Font.DemiBold
-        //                         horizontalAlignment: Text.AlignRight
-        //                         verticalAlignment: Text.AlignVCenter
-        //                     }
-        //
-        //                     MyComboBox {
-        //                         id: dropdown
-        //                         Layout.fillWidth: true
-        //                         Layout.fillHeight: true
-        //                         textRole: "text"
-        //                         valueRole: "value"
-        //                         currentIndex: modelData.mapping_id
-        //                         model: [
-        //                             {text: "Y", value: 0},
-        //                             {text: "A", value: 1},
-        //                             {text: "B", value: 2},
-        //                             {text: "X", value: 3},
-        //                             {text: "DPad Up", value: 4},
-        //                             {text: "DPad Down", value: 5},
-        //                             {text: "DPad Left", value: 6},
-        //                             {text: "DPad Right", value: 7},
-        //                             {text: "Start", value: 8},
-        //                             {text: "Select", value: 9},
-        //                             {text: "Misc 1", value: 10},
-        //                             {text: "Misc 2", value: 11},
-        //                             {text: "Misc 3", value: 12},
-        //                             {text: "Misc 4", value: 13},
-        //                             {text: "Misc 5", value: 14},
-        //                             {text: "Misc 6", value: 15},
-        //                             {text: "Misc 7", value: 16},
-        //                             {text: "R1", value: 17},
-        //                             {text: "R2", value: 18},
-        //                             {text: "R3", value: 19},
-        //                             {text: "L1", value: 20},
-        //                             {text: "L2", value: 21},
-        //                             {text: "L3", value: 22},
-        //                             {text: "Left Stick Up", value: 23},
-        //                             {text: "Left Stick Down", value: 24},
-        //                             {text: "Left Stick Left", value: 25},
-        //                             {text: "Left Stick Right", value: 26},
-        //                             {text: "Right Stick Up", value: 27},
-        //                             {text: "Right Stick Down", value: 28},
-        //                             {text: "Right Stick Left", value: 29},
-        //                             {text: "Right Stick Right", value: 30}
-        //                         ]
-        //
-        //                         // currentIndex: 0
-        //                         // onCurrentIndexChanged: {
-        //                         //     controller_manager.setPlatformIndex(currentIndex)
-        //                         // }
-        //                     }
-        //
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
-
     }
 
 

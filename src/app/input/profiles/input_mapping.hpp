@@ -6,7 +6,6 @@
 
 namespace firelight::input {
     class InputMapping {
-    private:
         enum InputType {
             BUTTON, AXIS
         };
@@ -32,9 +31,9 @@ namespace firelight::input {
             // when being asked about axis, need to return
         }
 
-        std::optional<bool> evaluateButtonMapping(SDL_Joystick *joystick, libretro::IRetroPad::Input button);
+        std::optional<bool> evaluateButtonMapping(SDL_GameController *controller, libretro::IRetroPad::Input button);
 
-        std::optional<int16_t> evaluateAxisMapping(SDL_Joystick *joystick, libretro::IRetroPad::Axis axis);
+        std::optional<int16_t> evaluateAxisMapping(SDL_GameController *controller, libretro::IRetroPad::Axis axis);
 
     private:
         std::map<libretro::IRetroPad::Input, InputDescription> m_buttonMappings;
@@ -43,7 +42,7 @@ namespace firelight::input {
         std::map<SDL_GameControllerAxis, bool> m_axisBeingHeld{};
         std::map<SDL_GameControllerAxis, bool> m_axisReleased{};
 
-        std::optional<int16_t> evaluate(SDL_Joystick *joystick, const InputDescription &description);
+        std::optional<int16_t> evaluate(SDL_GameController *controller, const InputDescription &description);
 
         unsigned getId();
 

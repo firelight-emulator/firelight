@@ -26,7 +26,7 @@ namespace firelight::Input {
 
   bool Controller::isButtonPressed(const int platformId, const Input t_button) {
     if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
-      if (const auto result = mapping->evaluateButtonMapping(m_SDLJoystick, t_button); result.has_value()) {
+      if (const auto result = mapping->evaluateButtonMapping(m_SDLController, t_button); result.has_value()) {
         return result.value();
       }
     }
@@ -87,7 +87,7 @@ namespace firelight::Input {
 
   int16_t Controller::getLeftStickXPosition(const int platformId) {
     if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
-      if (const auto result = mapping->evaluateAxisMapping(m_SDLJoystick, LeftStickX); result.
+      if (const auto result = mapping->evaluateAxisMapping(m_SDLController, LeftStickX); result.
         has_value()) {
         return result.value();
       }
@@ -98,7 +98,7 @@ namespace firelight::Input {
 
   int16_t Controller::getLeftStickYPosition(const int platformId) {
     if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
-      if (const auto result = mapping->evaluateAxisMapping(m_SDLJoystick, LeftStickY); result.
+      if (const auto result = mapping->evaluateAxisMapping(m_SDLController, LeftStickY); result.
         has_value()) {
         return result.value();
       }
@@ -109,7 +109,7 @@ namespace firelight::Input {
 
   int16_t Controller::getRightStickXPosition(const int platformId) {
     if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
-      if (const auto result = mapping->evaluateAxisMapping(m_SDLJoystick, RightStickX); result.
+      if (const auto result = mapping->evaluateAxisMapping(m_SDLController, RightStickX); result.
         has_value()) {
         return result.value();
       }
@@ -119,7 +119,7 @@ namespace firelight::Input {
 
   int16_t Controller::getRightStickYPosition(const int platformId) {
     if (auto mapping = m_profile->getControllerMappingForPlatform(platformId); mapping.has_value()) {
-      if (const auto result = mapping->evaluateAxisMapping(m_SDLJoystick, RightStickY); result.
+      if (const auto result = mapping->evaluateAxisMapping(m_SDLController, RightStickY); result.
         has_value()) {
         return result.value();
       }
