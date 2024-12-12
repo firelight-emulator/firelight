@@ -1,6 +1,7 @@
 #pragma once
 
 enum GamepadType {
+    KEYBOARD,
     MICROSOFT_XBOX_360,
     MICROSOFT_XBOX_ONE,
     SONY_DUALSHOCK_3,

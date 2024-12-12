@@ -1,6 +1,6 @@
 #pragma once
 
-#include "controller.hpp"
+#include "sdl_controller.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
 #include "firelight/libretro/pointer_input_provider.hpp"
 #include <QAbstractListModel>
@@ -12,7 +12,7 @@
 
 namespace firelight::Input {
   class ControllerManager final : public QObject,
-                                  public libretro::IRetropadProvider, public libretro::IPointerInputProvider {
+                                  public libretro::IRetropadProvider {
     Q_OBJECT
 
   public:
@@ -24,23 +24,13 @@ namespace firelight::Input {
 
     void refreshControllerList();
 
-    [[nodiscard]] std::optional<Controller *>
+    [[nodiscard]] std::optional<input::IGamepad *>
     getControllerForPlayerIndex(int t_player) const;
 
     std::optional<libretro::IRetroPad *>
     getRetropadForPlayerIndex(int t_player) override;
 
     Q_INVOKABLE void updateControllerOrder(const QVector<int> &order);
-
-    Q_INVOKABLE QAbstractListModel *getPlatformInputModel(int platformId);
-
-    void updateMouseState(double x, double y, bool pressed);
-
-    void updateMousePressed(bool pressed);
-
-    [[nodiscard]] std::pair<int16_t, int16_t> getPointerPosition() const override;
-
-    [[nodiscard]] bool isPressed() const override;
 
   public slots:
     void updateControllerOrder(const QVariantMap &map);
@@ -58,11 +48,8 @@ namespace firelight::Input {
     input::IControllerRepository &m_controllerRepository;
     input::KeyboardInputHandler *m_keyboard = nullptr;
     int m_numControllers = 0;
-    std::array<std::unique_ptr<Controller>, 32> m_controllers{};
-
-    int16_t m_pointerX = 0;
-    int16_t m_pointerY = 0;
-    bool m_pointerPressed = false;
+    std::array<std::unique_ptr<SdlController>, 32> m_controllers{};
+    int m_keyboardPlayerIndex = 0;
 
     void openControllerWithDeviceIndex(int32_t t_deviceIndex);
   };

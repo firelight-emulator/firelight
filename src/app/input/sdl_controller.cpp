@@ -1,4 +1,4 @@
-#include "controller.hpp"
+#include "sdl_controller.hpp"
 
 namespace firelight::Input {
   SdlController::~SdlController() = default;
@@ -8,7 +8,7 @@ namespace firelight::Input {
   }
 
   SdlController::SdlController(SDL_GameController *t_controller,
-                         const int32_t t_joystickIndex)
+                               const int32_t t_joystickIndex)
     : m_SDLController(t_controller), m_SDLJoystickDeviceIndex(t_joystickIndex) {
     m_SDLJoystick = SDL_GameControllerGetJoystick(t_controller);
     m_SDLJoystickInstanceId = SDL_JoystickInstanceID(m_SDLJoystick);
@@ -130,11 +130,11 @@ namespace firelight::Input {
   int32_t SdlController::getInstanceId() const { return m_SDLJoystickInstanceId; }
   int32_t SdlController::getDeviceIndex() const { return m_SDLJoystickDeviceIndex; }
 
-  std::string SdlController::getControllerName() const {
+  std::string SdlController::getName() const {
     return {SDL_GameControllerName(m_SDLController)};
   }
 
-  void SdlController::setPlayerIndex(const int t_newPlayerIndex) const {
+  void SdlController::setPlayerIndex(const int t_newPlayerIndex) {
     SDL_GameControllerSetPlayerIndex(m_SDLController, t_newPlayerIndex);
   }
 
@@ -156,7 +156,7 @@ namespace firelight::Input {
     return SDL_JoystickCurrentPowerLevel(m_SDLJoystick) == SDL_JOYSTICK_POWER_WIRED;
   }
 
-  GamepadType SdlController::getGamepadType() const {
+  GamepadType SdlController::getType() const {
     auto vendorId = SDL_JoystickGetVendor(m_SDLJoystick);
     auto productId = SDL_JoystickGetProduct(m_SDLJoystick);
 

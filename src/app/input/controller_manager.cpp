@@ -3,7 +3,6 @@
 //
 
 #include "controller_manager.hpp"
-#include "../../gui/PlatformInputListModel.hpp"
 
 #include <spdlog/spdlog.h>
 #include <string>
@@ -31,8 +30,8 @@ namespace firelight::Input {
         for (int i = 0; i < m_controllers.max_size(); ++i) {
           if (m_controllers[i] != nullptr &&
               m_controllers[i]->getInstanceId() == joystickInstanceId) {
-            auto name = m_controllers[i]->getControllerName();
-            const auto type = m_controllers[i]->getGamepadType();
+            auto name = m_controllers[i]->getName();
+            const auto type = m_controllers[i]->getType();
             m_controllers[i].reset();
             m_numControllers--;
             emit controllerDisconnected(i + 1, QString::fromStdString(name), ControllerIcons::sourceUrlFromType(type));
@@ -116,14 +115,21 @@ namespace firelight::Input {
 
     for (int i = 0; i < m_controllers.max_size(); ++i) {
       if (m_controllers[i] == nullptr) {
+        if (m_keyboardPlayerIndex == i) {
+          for (int j = 0; j < m_controllers.max_size(); ++j) {
+            if (m_controllers[j] == nullptr) {
+              m_keyboardPlayerIndex = j;
+            }
+          }
+        }
         SDL_GameControllerSetPlayerIndex(controller, i);
 
         m_numControllers++;
         m_controllers[i] =
-            std::make_unique<Controller>(controller, t_deviceIndex);
+            std::make_unique<SdlController>(controller, t_deviceIndex);
         m_controllers[i]->setControllerProfile(profile);
-        const auto name = m_controllers[i]->getControllerName();
-        const auto type = m_controllers[i]->getGamepadType();
+        const auto name = m_controllers[i]->getName();
+        const auto type = m_controllers[i]->getType();
 
         emit controllerConnected(i + 1, QString::fromStdString(name), ControllerIcons::sourceUrlFromType(type));
         break;
@@ -131,7 +137,7 @@ namespace firelight::Input {
     }
   }
 
-  std::optional<Controller *>
+  std::optional<input::IGamepad *>
   ControllerManager::getControllerForPlayerIndex(const int t_player) const {
     if (m_controllers.at(t_player) != nullptr) {
       return {m_controllers.at(t_player).get()};
@@ -141,7 +147,7 @@ namespace firelight::Input {
   }
 
   void ControllerManager::updateControllerOrder(const QVariantMap &map) {
-    std::unique_ptr<Controller> tempCon[map.size()];
+    std::unique_ptr<SdlController> tempCon[map.size()];
 
     auto emittedSignal = false;
     for (auto it = map.constBegin(); it != map.constEnd(); ++it) {
@@ -171,7 +177,7 @@ namespace firelight::Input {
   }
 
   void ControllerManager::updateControllerOrder(const QVector<int> &order) {
-    std::array<std::unique_ptr<Controller>, 32> tempCon{};
+    std::array<std::unique_ptr<SdlController>, 32> tempCon{};
     for (int i = 0; i < order.size(); i++) {
       if (!m_controllers[order[i]]) {
         continue;
@@ -190,31 +196,5 @@ namespace firelight::Input {
 
     m_controllers = std::move(tempCon);
     emit controllerOrderChanged();
-  }
-
-  QAbstractListModel *ControllerManager::getPlatformInputModel(const int platformId) {
-    if (platformId == 0) {
-      return new PlatformInputListModel(this);
-    }
-
-    return new PlatformInputListModel(this);
-  }
-
-  void ControllerManager::updateMouseState(const double x, const double y, const bool pressed) {
-    m_pointerX = x * 32767;
-    m_pointerY = y * 32767;
-    m_pointerPressed = pressed;
-  }
-
-  void ControllerManager::updateMousePressed(const bool pressed) {
-    m_pointerPressed = pressed;
-  }
-
-  std::pair<int16_t, int16_t> ControllerManager::getPointerPosition() const {
-    return {m_pointerX, m_pointerY};
-  }
-
-  bool ControllerManager::isPressed() const {
-    return m_pointerPressed;
   }
 } // namespace firelight::Input

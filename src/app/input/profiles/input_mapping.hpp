@@ -20,13 +20,13 @@ namespace firelight::input {
 
     public:
         InputMapping() {
-            m_buttonMappings.emplace(libretro::IRetroPad::Input::SouthFace,
-                                     InputDescription{BUTTON, SDL_CONTROLLER_BUTTON_LEFTSHOULDER});
-
-            m_buttonMappings.emplace(libretro::IRetroPad::Input::EastFace,
-                                     InputDescription{
-                                         AXIS, SDL_CONTROLLER_BUTTON_A, SDL_CONTROLLER_AXIS_RIGHTY, false
-                                     });
+            // m_buttonMappings.emplace(libretro::IRetroPad::Input::SouthFace,
+            //                          InputDescription{BUTTON, SDL_CONTROLLER_BUTTON_LEFTSHOULDER});
+            //
+            // m_buttonMappings.emplace(libretro::IRetroPad::Input::EastFace,
+            //                          InputDescription{
+            //                              AXIS, SDL_CONTROLLER_BUTTON_A, SDL_CONTROLLER_AXIS_RIGHTY, false
+            //                          });
 
             // when being asked about axis, need to return
         }

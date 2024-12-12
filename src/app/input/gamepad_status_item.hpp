@@ -37,7 +37,7 @@ namespace firelight::input {
         void northFaceDownChanged();
 
     private:
-        Input::Controller *m_controller = nullptr;
+        IGamepad *m_controller = nullptr;
         QString m_name;
         int m_playerNumber = 0;
         bool m_isConnected = false;

@@ -30,6 +30,25 @@ namespace firelight::input {
   void KeyboardInputHandler::setWeakRumble(int platformId, uint16_t t_strength) {
   }
 
+  std::string KeyboardInputHandler::getName() const {
+    return "Keyboard";
+  }
+
+  int KeyboardInputHandler::getPlayerIndex() const {
+    return 0;
+  }
+
+  void KeyboardInputHandler::setPlayerIndex(int playerIndex) {
+  }
+
+  bool KeyboardInputHandler::isWired() const {
+    return true;
+  }
+
+  GamepadType KeyboardInputHandler::getType() const {
+    return KEYBOARD;
+  }
+
   bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
     if (event->type() == QEvent::KeyPress) {
       auto keyEvent = dynamic_cast<QKeyEvent *>(event);

@@ -7,6 +7,7 @@
 #include "rcheevos/ra_client.hpp"
 #include "firelight/userdata_database.hpp"
 #include "input/controller_manager.hpp"
+#include "input/input_manager.hpp"
 #include "library/library_scanner.hpp"
 #include "saves/save_manager.hpp"
 
@@ -39,6 +40,8 @@ namespace firelight {
 
         static void setActivityLog(activity::IActivityLog *t_activityLog);
 
+        static void setInputManager(input::InputManager *t_inputManager);
+
         static Input::ControllerManager *getControllerManager();
 
         static saves::SaveManager *getSaveManager();
@@ -59,6 +62,8 @@ namespace firelight {
 
         static activity::IActivityLog *getActivityLog();
 
+        static input::InputManager *getInputManager();
+
     private:
         static Input::ControllerManager *m_controllerManager;
         static saves::SaveManager *m_saveManager;
@@ -70,5 +75,6 @@ namespace firelight {
         static gui::GameImageProvider *m_gameImageProvider;
         static library::IUserLibrary *m_userLibrary;
         static activity::IActivityLog *m_activityLog;
+        static input::InputManager *m_inputManager;
     };
 } // namespace firelight

@@ -13,7 +13,7 @@ void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
     const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
     const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
-    getControllerManager()->updateMouseState(x, y, m_mousePressed);
+    getInputManager()->updateMouseState(x, y, m_mousePressed);
 }
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
@@ -109,17 +109,17 @@ void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
     const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
     const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
-    getControllerManager()->updateMouseState(x, y, m_mousePressed);
+    getInputManager()->updateMouseState(x, y, m_mousePressed);
 }
 
 void EmulatorItem::mousePressEvent(QMouseEvent *event) {
     m_mousePressed = true;
-    getControllerManager()->updateMousePressed(m_mousePressed);
+    getInputManager()->updateMousePressed(m_mousePressed);
 }
 
 void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
     m_mousePressed = false;
-    getControllerManager()->updateMousePressed(m_mousePressed);
+    getInputManager()->updateMousePressed(m_mousePressed);
 }
 
 void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveData, const QString &corePath,
@@ -141,7 +141,7 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
         m_audioManager = std::make_shared<AudioManager>([this] { emit audioBufferLevelChanged(); });
         m_core->setAudioReceiver(m_audioManager);
         m_core->setRetropadProvider(getControllerManager());
-        m_core->setPointerInputProvider(getControllerManager());
+        m_core->setPointerInputProvider(getInputManager());
 
         // Qt owns the renderer, so it will destoy it.
         m_renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(), std::move(m_core));

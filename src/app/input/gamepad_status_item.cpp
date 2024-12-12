@@ -10,7 +10,7 @@ namespace firelight::input {
                 m_controller = getControllerManager()->getControllerForPlayerIndex(m_playerNumber - 1).
                         value_or(nullptr);
                 if (m_controller) {
-                    m_name = QString::fromStdString(m_controller->getControllerName());
+                    m_name = QString::fromStdString(m_controller->getName());
                     emit nameChanged();
 
                     m_isConnected = true;

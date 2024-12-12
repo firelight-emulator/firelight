@@ -4,7 +4,7 @@
 
 
 namespace firelight::activity {
-    class SqliteActivityLog : public IActivityLog {
+    class SqliteActivityLog final : public IActivityLog {
     public:
         bool createPlaySession(db::PlaySession &session) override;
 

@@ -78,35 +78,29 @@ set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_
 add_library(firelight_lib
         src/app/libretro/core.cpp
         src/app/libretro/game.cpp
-        src/app/emulation_manager.cpp
         src/app/db/sqlite_content_database.cpp
-        src/app/input/controller.cpp
+        src/app/input/sdl_controller.cpp
         src/app/input/controller_manager.cpp
         src/app/input/sdl_event_loop.cpp
         src/app/manager_accessor.cpp
-        src/app/audio_manager.cpp
+        src/app/audio/audio_manager.cpp
         src/app/saves/save_manager.cpp
         src/app/saves/savefile.cpp
-        src/app/emulator_renderer.cpp
         src/app/db/sqlite_userdata_database.cpp
-        src/gui/controller_list_model.cpp
-        src/gui/library_item_model.cpp
-        src/gui/library_sort_filter_model.cpp
-        src/gui/playlist_item_model.cpp
-        src/gui/savefile_list_model.cpp
-        src/gui/mod_item_model.cpp
+        src/app/input/controller_list_model.cpp
+        src/app/library/library_item_model.cpp
+        src/app/library/library_sort_filter_model.cpp
+        src/app/library/playlist_item_model.cpp
+        src/app/saves/savefile_list_model.cpp
         src/app/mods/mod_manager.cpp
         src/app/rcheevos/ra_client.cpp
         src/gui/eventhandlers/window_resize_handler.cpp
-        src/gui/library_path_model.cpp
-        src/gui/achievement_list_model.cpp
-        src/gui/achievement_list_sort_filter_model.cpp
-        src/app/router.cpp
+        src/app/library/library_path_model.cpp
+        src/app/rcheevos/achievement_list_model.cpp
+        src/app/rcheevos/achievement_list_sort_filter_model.cpp
+        src/gui/router.cpp
         src/app/input/profiles/controller_profile.cpp
         src/app/input/profiles/input_mapping.cpp
-        src/gui/PlatformInputListModel.cpp
-        src/gui/gamepad_profile.cpp
-        src/gui/gamepad_mapping.cpp
         src/gui/platform_list_model.cpp
         src/app/libretro/core_configuration.cpp
         src/app/libretro/core_configuration.hpp
@@ -143,13 +137,18 @@ add_library(firelight_lib
         src/app/input/gamepad_status_item.cpp
         src/app/input/gamepad_status_item.hpp
         src/app/input/controller_icons.hpp
-        src/gui/controller_profile_item.cpp
-        src/gui/controller_profile_item.hpp
+        src/app/input/controller_profile_item.cpp
+        src/app/input/controller_profile_item.hpp
         src/app/activity/sqlite_activity_log.cpp
         src/app/activity/sqlite_activity_log.hpp
         src/app/PlatformMetadataItem.cpp
         src/app/PlatformMetadataItem.hpp
         src/app/input/sqlite_controller_repository.cpp
+        src/app/input/sdl_controller.hpp
+        src/app/input/gamepad.hpp
+        src/app/input/input_manager.hpp
+        src/app/input/input_manager.cpp
+        src/app/input/input_mapping_item.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)

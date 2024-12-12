@@ -1,6 +1,6 @@
 #include "library_item_model.hpp"
 
-#include "../app/db/sqlite_content_database.hpp"
+#include "../db/sqlite_content_database.hpp"
 
 #include <filesystem>
 #include <spdlog/spdlog.h>

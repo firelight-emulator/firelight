@@ -7,7 +7,7 @@ import Firelight 1.0
 Item {
     id: root
 
-    property alias controllerProfileId: gamepadProfile.profileId
+    // property alias controllerProfileId: gamepadProfile.profileId
     property var currentMapping: null
 
     function saveMapping() {
@@ -18,19 +18,23 @@ Item {
         }
     }
 
-    GamepadProfile {
-        id: gamepadProfile
+    // GamepadProfile {
+    //     id: gamepadProfile
+    //
+    //     currentPlatformId: platformList.currentItem.model.platform_id
+    //
+    //     onCurrentPlatformIdChanged: {
+    //         root.currentMapping = gamepadProfile.getCurrentMapping()
+    //         if (root.currentMapping) {
+    //             console.log("currentMapping: " + JSON.stringify(root.currentMapping))
+    //         } else {
+    //             console.log("currentMapping: null")
+    //         }
+    //     }
+    // }
 
-        currentPlatformId: platformList.currentItem.model.platform_id
-
-        onCurrentPlatformIdChanged: {
-            root.currentMapping = gamepadProfile.getCurrentMapping()
-            if (root.currentMapping) {
-                console.log("currentMapping: " + JSON.stringify(root.currentMapping))
-            } else {
-                console.log("currentMapping: null")
-            }
-        }
+    InputMapping {
+        id: inputMapping
     }
 
     PlatformMetadata {
@@ -81,6 +85,30 @@ Item {
             dialog.buttons = []
         }
 
+        Connections {
+            target: controller_manager
+
+            function onButtonStateChanged(player, button, pressed) {
+                if (!dialog.visible) {
+                    return
+                }
+                if (pressed) {
+                    inputMapping.setButtonMapping(dialog.buttons[dialog.currentIndex].retropad_button, button)
+                    if (dialog.buttons.length > dialog.currentIndex + 1) {
+                        dialog.currentIndex++
+                        timer.stop()
+                        frameAnimation.reset()
+                        timer.restart()
+
+                    } else {
+                        dialog.accept()
+                        // dialog.close()
+                        // saveMapping()
+                    }
+                }
+            }
+        }
+
         TapHandler {
             onTapped: function (event, button) {
                 console.log(dialog.buttons.length)
@@ -109,7 +137,7 @@ Item {
                 fillMode: Image.PreserveAspectFit
             }
             Text {
-                text: "Press a button on your Xbox Series controller to assign it to this Nintendo 64 input:"
+                text: "Press a button on your controller to assign it to this Nintendo 64 input:"
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: parent.width * 5 / 6
@@ -405,54 +433,67 @@ Item {
                         font.weight: Font.DemiBold
                         verticalAlignment: Text.AlignVCenter
                     }
-                    MyComboBox {
-                        id: dropdown
+
+                    Text {
                         Layout.preferredWidth: 240
                         Layout.maximumWidth: 240
                         Layout.alignment: Qt.AlignLeft
                         Layout.fillHeight: true
-                        textRole: "text"
-                        valueRole: "value"
-                        currentIndex: modelData.retropad_button
-                        model: [
-                            {text: "Y", value: 0},
-                            {text: "A", value: 1},
-                            {text: "B", value: 2},
-                            {text: "X", value: 3},
-                            {text: "DPad Up", value: 4},
-                            {text: "DPad Down", value: 5},
-                            {text: "DPad Left", value: 6},
-                            {text: "DPad Right", value: 7},
-                            {text: "Start", value: 8},
-                            {text: "Select", value: 9},
-                            {text: "Misc 1", value: 10},
-                            {text: "Misc 2", value: 11},
-                            {text: "Misc 3", value: 12},
-                            {text: "Misc 4", value: 13},
-                            {text: "Misc 5", value: 14},
-                            {text: "Misc 6", value: 15},
-                            {text: "Misc 7", value: 16},
-                            {text: "R1", value: 17},
-                            {text: "R2", value: 18},
-                            {text: "R3", value: 19},
-                            {text: "L1", value: 20},
-                            {text: "L2", value: 21},
-                            {text: "L3", value: 22},
-                            {text: "Left Stick Up", value: 23},
-                            {text: "Left Stick Down", value: 24},
-                            {text: "Left Stick Left", value: 25},
-                            {text: "Left Stick Right", value: 26},
-                            {text: "Right Stick Up", value: 27},
-                            {text: "Right Stick Down", value: 28},
-                            {text: "Right Stick Left", value: 29},
-                            {text: "Right Stick Right", value: 30}
-                        ]
-
-                        // currentIndex: 0
-                        // onCurrentIndexChanged: {
-                        //     controller_manager.setPlatformIndex(currentIndex)
-                        // }
+                        text: inputMapping.inputMappings[modelData.retropad_button]
+                        color: "white"
+                        font.pixelSize: 16
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.DemiBold
+                        verticalAlignment: Text.AlignVCenter
                     }
+                    // MyComboBox {
+                    //     id: dropdown
+                    //     Layout.preferredWidth: 240
+                    //     Layout.maximumWidth: 240
+                    //     Layout.alignment: Qt.AlignLeft
+                    //     Layout.fillHeight: true
+                    //     textRole: "text"
+                    //     valueRole: "value"
+                    //     currentIndex: modelData.retropad_button
+                    //     model: [
+                    //         {text: "Y", value: 0},
+                    //         {text: "A", value: 1},
+                    //         {text: "B", value: 2},
+                    //         {text: "X", value: 3},
+                    //         {text: "DPad Up", value: 4},
+                    //         {text: "DPad Down", value: 5},
+                    //         {text: "DPad Left", value: 6},
+                    //         {text: "DPad Right", value: 7},
+                    //         {text: "Start", value: 8},
+                    //         {text: "Select", value: 9},
+                    //         {text: "Misc 1", value: 10},
+                    //         {text: "Misc 2", value: 11},
+                    //         {text: "Misc 3", value: 12},
+                    //         {text: "Misc 4", value: 13},
+                    //         {text: "Misc 5", value: 14},
+                    //         {text: "Misc 6", value: 15},
+                    //         {text: "Misc 7", value: 16},
+                    //         {text: "R1", value: 17},
+                    //         {text: "R2", value: 18},
+                    //         {text: "R3", value: 19},
+                    //         {text: "L1", value: 20},
+                    //         {text: "L2", value: 21},
+                    //         {text: "L3", value: 22},
+                    //         {text: "Left Stick Up", value: 23},
+                    //         {text: "Left Stick Down", value: 24},
+                    //         {text: "Left Stick Left", value: 25},
+                    //         {text: "Left Stick Right", value: 26},
+                    //         {text: "Right Stick Up", value: 27},
+                    //         {text: "Right Stick Down", value: 28},
+                    //         {text: "Right Stick Left", value: 29},
+                    //         {text: "Right Stick Right", value: 30}
+                    //     ]
+                    //
+                    //     // currentIndex: 0
+                    //     // onCurrentIndexChanged: {
+                    //     //     controller_manager.setPlatformIndex(currentIndex)
+                    //     // }
+                    // }
                     FirelightButton {
                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                         tooltipLabel: "Assign"

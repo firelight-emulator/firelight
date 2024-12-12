@@ -7,11 +7,19 @@ namespace firelight::input {
             return std::nullopt;
         }
 
-        if (const auto desc = m_buttonMappings[button]; desc.type == BUTTON) {
+        const auto desc = m_buttonMappings[button];
+
+        if (desc.type == BUTTON) {
             return {
                 // SDL_GameControllerGetButton(SDL_GameControllerFromInstanceID(SDL_JoystickInstanceID(joystick)),
                 // description.button) * 32767 * (description.axisPositive ? 1 : -1)
                 SDL_GameControllerGetButton(controller, desc.button)
+            };
+        }
+
+        if (desc.type == AXIS) {
+            return {
+                SDL_GameControllerGetAxis(controller, desc.axis)
             };
         }
 

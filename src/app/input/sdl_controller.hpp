@@ -9,11 +9,12 @@
 #include <SDL_gamecontroller.h>
 #include <string>
 
+#include "gamepad.hpp"
 #include "profiles/controller_profile.hpp"
 #include "gamepad_type.hpp"
 
 namespace firelight::Input {
-  class SdlController final : public libretro::IRetroPad {
+  class SdlController final : public input::IGamepad {
   public:
     SdlController(SDL_GameController *t_controller, int32_t t_joystickIndex);
 
@@ -35,23 +36,21 @@ namespace firelight::Input {
 
     [[nodiscard]] int32_t getDeviceIndex() const;
 
-    [[nodiscard]] std::string getControllerName() const;
+    [[nodiscard]] std::string getName() const override;
 
-    void setPlayerIndex(int t_newPlayerIndex) const;
+    void setPlayerIndex(int t_newPlayerIndex) override;
 
-    [[nodiscard]] int getPlayerIndex() const;
+    [[nodiscard]] int getPlayerIndex() const override;
 
     void setStrongRumble(int platformId, uint16_t t_strength) override;
 
     void setWeakRumble(int platformId, uint16_t t_strength) override;
 
-    [[nodiscard]] bool isWired() const;
+    [[nodiscard]] bool isWired() const override;
 
-    GamepadType getGamepadType() const;
+    [[nodiscard]] GamepadType getType() const override;
 
   private:
-    static std::map<int, int> controllerTypeMap;
-
     std::shared_ptr<input::ControllerProfile> m_profile = nullptr;
 
     SDL_GameController *m_SDLController = nullptr;

@@ -4,10 +4,12 @@
 #include <QMap>
 #include <QTimer>
 #include <QPointF>
+
+#include "gamepad.hpp"
 #include "firelight/libretro/retropad.hpp"
 
 namespace firelight::input {
-  class KeyboardInputHandler final : public QObject, public libretro::IRetroPad {
+  class KeyboardInputHandler final : public QObject, public IGamepad {
     Q_OBJECT
 
   public:
@@ -24,6 +26,16 @@ namespace firelight::input {
     void setStrongRumble(int platformId, uint16_t t_strength) override;
 
     void setWeakRumble(int platformId, uint16_t t_strength) override;
+
+    std::string getName() const override;
+
+    int getPlayerIndex() const override;
+
+    void setPlayerIndex(int playerIndex) override;
+
+    bool isWired() const override;
+
+    GamepadType getType() const override;
 
   protected:
     bool eventFilter(QObject *obj, QEvent *event) override;

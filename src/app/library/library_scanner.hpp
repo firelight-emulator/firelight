@@ -7,7 +7,7 @@
 #include <QThreadPool>
 #include <filesystem>
 
-#include "../../gui/library_path_model.hpp"
+#include "library_path_model.hpp"
 
 class LibraryScanner final : public QObject {
   Q_OBJECT

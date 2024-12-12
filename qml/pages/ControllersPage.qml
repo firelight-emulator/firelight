@@ -309,7 +309,6 @@ Flickable {
     Component {
         id: profileEditor
         ControllerProfilePage {
-            controllerProfileId: 1
         }
     }
 
@@ -321,7 +320,6 @@ Flickable {
         centerButtons: false
         acceptText: "Save"
         contentItem: ControllerProfilePage {
-            controllerProfileId: 1
         }
     }
 

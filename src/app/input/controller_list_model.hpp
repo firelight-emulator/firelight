@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../app/input/controller_manager.hpp"
+#include "controller_manager.hpp"
 #include <QAbstractListModel>
 
 namespace firelight::gui {
