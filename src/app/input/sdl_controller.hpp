@@ -1,9 +1,6 @@
 #pragma once
 
-#include <map>
 #include <memory>
-#include <QObject>
-#include <QQuickItem>
 
 #include "firelight/libretro/retropad.hpp"
 #include <SDL_gamecontroller.h>

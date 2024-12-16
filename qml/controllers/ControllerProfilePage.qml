@@ -10,14 +10,6 @@ Item {
     // property alias controllerProfileId: gamepadProfile.profileId
     property var currentMapping: null
 
-    function saveMapping() {
-        // for every item in buttonList, print the modelData mapping ID and print out the value of the combo box
-        for (var i = 0; i < buttonList.count; i++) {
-            // console.log("hi")
-            console.log("Button: " + buttonList.itemAtIndex(i).modelData.display_name + " Mapping ID: " + buttonList.itemAtIndex(i).modelData.mapping_id + " Value: " + buttonList.itemAtIndex(i).currentMappingId)
-        }
-    }
-
     // GamepadProfile {
     //     id: gamepadProfile
     //
@@ -50,7 +42,7 @@ Item {
         property var buttonList: []
         property var currentIndex: 0
 
-        text: "You're about to walk through assigning each button on your controller to the corresponding Nintendo 64 input.\n\n Continue?"
+        text: "You're about to walk through assigning an input on your controller to each " + platformList.currentItem.model.display_name + " input.\n\n Continue?"
         showButtons: true
 
         onAccepted: function () {

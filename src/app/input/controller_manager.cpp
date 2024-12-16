@@ -1,7 +1,3 @@
-//
-// Created by alexs on 1/6/2024.
-//
-
 #include "controller_manager.hpp"
 
 #include <spdlog/spdlog.h>

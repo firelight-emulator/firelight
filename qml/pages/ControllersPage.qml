@@ -312,16 +312,5 @@ Flickable {
         }
     }
 
-    FirelightDialog {
-        id: profileDialog
-        width: parent.width * 5 / 6
-        height: parent.height * 5 / 6
-        // title: "Creating new controller profile"
-        centerButtons: false
-        acceptText: "Save"
-        contentItem: ControllerProfilePage {
-        }
-    }
-
 
 }
