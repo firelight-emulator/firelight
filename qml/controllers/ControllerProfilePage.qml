@@ -9,6 +9,7 @@ Item {
 
     // property alias controllerProfileId: gamepadProfile.profileId
     property var currentMapping: null
+    required property var playerNumber
 
     // GamepadProfile {
     //     id: gamepadProfile
@@ -25,10 +26,19 @@ Item {
     //     }
     // }
 
+    GamepadStatus {
+        id: gamepadStatus
+        playerNumber: root.playerNumber
+    }
+
     InputMapping {
         id: inputMapping
-        profileId: 0
+        profileId: gamepadStatus.profileId
         platformId: platformList.currentItem.model.platform_id
+
+        Component.onCompleted: function () {
+            console.log("profileId: " + gamepadStatus.profileId)
+        }
     }
 
     PlatformMetadata {
@@ -98,7 +108,6 @@ Item {
                 }
                 if (activated && !axisDebounceTimer.running) {
                     axisDebounceTimer.restart()
-                    console.log(JSON.stringify(dialog.buttons[dialog.currentIndex]))
                     inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, input)
                     if (dialog.buttons.length > dialog.currentIndex + 1) {
                         dialog.currentIndex++
@@ -165,26 +174,8 @@ Item {
             // }
         }
 
-        TapHandler {
-            onTapped: function (event, button) {
-                console.log(dialog.buttons.length)
-                if (dialog.buttons.length > dialog.currentIndex + 1) {
-                    dialog.currentIndex++
-                    timer.stop()
-                    frameAnimation.reset()
-                    timer.restart()
-
-                } else {
-                    dialog.accept()
-                    // dialog.close()
-                    // saveMapping()
-                }
-            }
-        }
-
         contentItem: ColumnLayout {
             spacing: 12
-
 
             Keys.onPressed: function (event) {
                 event.accept = false
@@ -545,7 +536,7 @@ Item {
                         Layout.maximumWidth: 240
                         Layout.alignment: Qt.AlignLeft
                         Layout.fillHeight: true
-                        text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? "Nothing assigned" : inputMapping.inputMappings[modelData.retropad_button]
+                        text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
                         color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
                         font.pixelSize: 16
                         font.family: Constants.regularFontFamily
@@ -618,6 +609,28 @@ Item {
                                 retropad_button: modelData.retropad_button
                             }]
                             dialog.open()
+                        }
+                    }
+
+                    FirelightButton {
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        tooltipLabel: "Reset to default"
+                        flat: true
+
+                        Layout.preferredHeight: 42
+                        Layout.preferredWidth: height
+                        Layout.maximumWidth: height
+
+                        iconCode: "\ue5d5"
+
+                        onClicked: {
+                            inputMapping.removeMapping(modelData.retropad_button)
+                            // dialog.buttons = []
+                            // dialog.buttons = [{
+                            //     display_name: modelData.display_name,
+                            //     retropad_button: modelData.retropad_button
+                            // }]
+                            // dialog.open()
                         }
                     }
 

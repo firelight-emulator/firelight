@@ -8,6 +8,8 @@
 namespace firelight::input {
     class IGamepad : public libretro::IRetroPad {
     public:
+        virtual int getProfileId() const = 0;
+
         virtual void setActiveMapping(const std::shared_ptr<InputMapping> &mapping) = 0;
 
         virtual std::string getName() const = 0;

@@ -188,38 +188,38 @@ ApplicationWindow {
         }
     }
 
-    onActiveFocusItemChanged: {
-        if (activeFocusItem === null) {
-            return
-        }
+    // onActiveFocusItemChanged: {
+    //     if (activeFocusItem === null) {
+    //         return
+    //     }
+    //
+    //     activeFocusItem.grabToImage(function (result) {
+    //         debugImage.width = result.width
+    //         debugImage.height = result.height
+    //         debugImage.source = result.url
+    //     })
+    // }
 
-        activeFocusItem.grabToImage(function (result) {
-            debugImage.width = result.width
-            debugImage.height = result.height
-            debugImage.source = result.url
-        })
-    }
-
-    Window {
-        id: debugWindow
-        objectName: "DebugWindow"
-
-        width: 400
-        height: 400
-
-        visible: false
-        title: "Debug"
-
-        color: "black"
-
-        Image {
-            id: debugImage
-            source: ""
-            anchors.centerIn: parent
-            fillMode: Image.PreserveAspectFit
-        }
-
-    }
+    // Window {
+    //     id: debugWindow
+    //     objectName: "DebugWindow"
+    //
+    //     width: 400
+    //     height: 400
+    //
+    //     visible: false
+    //     title: "Debug"
+    //
+    //     color: "black"
+    //
+    //     Image {
+    //         id: debugImage
+    //         source: ""
+    //         anchors.centerIn: parent
+    //         fillMode: Image.PreserveAspectFit
+    //     }
+    //
+    // }
 
     Component {
         id: emulatorScreen

@@ -28,6 +28,8 @@ namespace firelight::input {
 
         Q_INVOKABLE void addMapping(int input, int mappedInput);
 
+        Q_INVOKABLE void removeMapping(int input);
+
     signals:
         void inputMappingsChanged();
 

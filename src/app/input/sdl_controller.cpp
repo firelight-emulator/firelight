@@ -319,4 +319,8 @@ namespace firelight::Input {
     }
     return 0;
   }
+
+  int SdlController::getProfileId() const {
+    return m_profile->getId();
+  }
 } // namespace firelight::Input

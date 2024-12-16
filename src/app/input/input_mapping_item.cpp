@@ -44,6 +44,12 @@ namespace firelight::input {
         emit inputMappingsChanged();
     }
 
+    void InputMappingItem::removeMapping(int input) {
+        m_inputMapping->removeMapping(static_cast<libretro::IRetroPad::Input>(input));
+        m_inputMappings.remove(QString::number(input));
+        emit inputMappingsChanged();
+    }
+
     void InputMappingItem::refreshMapping() {
         printf("Refreshing with profileId: %d, platformId: %d\n", m_profileId, m_platformId);
         m_inputMappings.clear();

@@ -17,6 +17,10 @@ namespace firelight::input {
         return m_mappings;
     }
 
+    void InputMapping::removeMapping(const libretro::IRetroPad::Input input) {
+        m_mappings.erase(input);
+    }
+
     unsigned InputMapping::getId() const {
         return m_id;
     }

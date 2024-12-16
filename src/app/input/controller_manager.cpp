@@ -293,8 +293,24 @@ namespace firelight::Input {
     // TODO: Check the repository for known controller types
     // Get the default profile for the controller type
     // If it doesn't exist, create a new one
+    const auto profile = m_controllerRepository.getControllerProfile(
+      SDL_GameControllerGetVendor(controller),
+      SDL_GameControllerGetProduct(controller),
+      SDL_GameControllerGetProductVersion(controller));
 
-    auto profile = m_controllerRepository.getControllerProfile(0);
+    // std::shared_ptr<input::ControllerProfile> profile;
+    // if (info) {
+    //   profile = m_controllerRepository.getControllerProfile(info->defaultProfileId);
+    // } else {
+    //   auto newInfo = input::ControllerInfo{};
+    //   newInfo.name = SDL_GameControllerName(controller);
+    //   newInfo.vendorId = SDL_GameControllerGetVendor(controller);
+    //   newInfo.productId = SDL_GameControllerGetProduct(controller);
+    //   newInfo.productVersion = SDL_GameControllerGetProductVersion(controller);
+    //
+    //   m_controllerRepository.addControllerInfo(newInfo);
+    //   profile = m_controllerRepository.getControllerProfile(newInfo.defaultProfileId);
+    // }
 
     // TODO: Check if any controllers have the same joystick id.
 

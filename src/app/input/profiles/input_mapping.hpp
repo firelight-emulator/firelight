@@ -24,6 +24,8 @@ namespace firelight::input {
 
         std::map<libretro::IRetroPad::Input, libretro::IRetroPad::Input> &getMappings();
 
+        void removeMapping(libretro::IRetroPad::Input input);
+
     private:
         int m_id = 0;
         int m_controllerProfileId = 0;

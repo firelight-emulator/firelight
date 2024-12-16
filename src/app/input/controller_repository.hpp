@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include "controller_info.hpp"
 #include "profiles/controller_profile.hpp"
 #include "profiles/input_mapping.hpp"
 
@@ -10,14 +9,8 @@ namespace firelight::input {
     public:
         virtual ~IControllerRepository() = default;
 
-        // controller has:
-        // name
-        // type
-        // vendor id
-        // product id
-        // version
-        // serial number?
-        [[nodiscard]] virtual std::vector<ControllerInfo> getKnownControllerTypes() const = 0;
+        virtual std::shared_ptr<ControllerProfile> getControllerProfile(int vendorId, int productId,
+                                                                        int productVersion) = 0;
 
         // profile has:
         // name

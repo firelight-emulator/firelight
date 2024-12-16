@@ -39,6 +39,8 @@ namespace firelight::input {
 
     GamepadType getType() const override;
 
+    int getProfileId() const override;
+
   protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 

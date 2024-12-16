@@ -52,6 +52,10 @@ namespace firelight::Input {
   private:
     [[nodiscard]] int16_t evaluateMapping(Input input) const;
 
+  public:
+    int getProfileId() const override;
+
+  private:
     std::shared_ptr<input::ControllerProfile> m_profile = nullptr;
     std::shared_ptr<input::InputMapping> m_activeMapping = nullptr;
 

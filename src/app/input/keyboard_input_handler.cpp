@@ -52,6 +52,10 @@ namespace firelight::input {
     return KEYBOARD;
   }
 
+  int KeyboardInputHandler::getProfileId() const {
+    return 0;
+  }
+
   bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
     if (event->type() == QEvent::KeyPress) {
       auto keyEvent = dynamic_cast<QKeyEvent *>(event);

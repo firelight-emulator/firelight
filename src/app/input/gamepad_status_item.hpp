@@ -8,8 +8,10 @@ namespace firelight::input {
         Q_OBJECT
         Q_PROPERTY(int playerNumber READ getPlayerNumber WRITE setPlayerNumber NOTIFY playerNumberChanged)
         Q_PROPERTY(QString name READ getName NOTIFY nameChanged)
+        Q_PROPERTY(int profileId READ getProfileId NOTIFY profileIdChanged)
         Q_PROPERTY(bool connected READ isConnected NOTIFY isConnectedChanged)
         Q_PROPERTY(bool northFaceDown READ northFaceDown NOTIFY northFaceDownChanged)
+        Q_PROPERTY(QVariantMap inputLabels READ getInputLabels NOTIFY inputLabelsChanged)
 
     public:
         explicit GamepadStatusItem(QQuickItem *parent = nullptr);
@@ -26,6 +28,9 @@ namespace firelight::input {
 
         [[nodiscard]] QString getName() const;
 
+        QVariantMap getInputLabels() const;
+
+        int getProfileId() const;
 
     signals:
         void playerNumberChanged();
@@ -34,7 +39,11 @@ namespace firelight::input {
 
         void isConnectedChanged();
 
+        void inputLabelsChanged();
+
         void northFaceDownChanged();
+
+        void profileIdChanged();
 
     private:
         IGamepad *m_controller = nullptr;

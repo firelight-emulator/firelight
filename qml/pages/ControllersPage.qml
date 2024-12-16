@@ -68,7 +68,7 @@ Flickable {
 
                 onClicked: function () {
                     // profileDialog.open()
-                    screenStack.pushItem(profileEditor, {}, StackView.PushTransition)
+                    screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
                 }
             }
 
