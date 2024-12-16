@@ -3,22 +3,24 @@
 #include <QJsonObject>
 #include <firelight/libretro/retropad.hpp>
 
+#include "../app/platform_metadata.hpp"
+
 namespace firelight::gui {
     PlatformListModel::PlatformListModel() {
         m_items.push_back({
-            0,
+            PlatformMetadata::PLATFORM_ID_NES,
             "NES",
             "qrc:images/platform-icons/nes.svg",
             {
                 {
                     {"display_name", "A"},
                     {"icon_url", "file:system/_img/nes/a-button.svg"},
-                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                    {"retropad_button", libretro::IRetroPad::Input::EastFace}
                 },
                 {
                     {"display_name", "B"},
                     {"icon_url", "file:system/_img/nes/b-button.svg"},
-                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
                 },
                 {
                     {"display_name", "D-Pad Up"},
@@ -54,7 +56,7 @@ namespace firelight::gui {
             {}
         });
         m_items.push_back({
-            1,
+            PlatformMetadata::PLATFORM_ID_SNES,
             "SNES",
             "qrc:images/platform-icons/snes.svg",
             {
@@ -122,19 +124,19 @@ namespace firelight::gui {
             {}
         });
         m_items.push_back({
-            2,
+            PlatformMetadata::PLATFORM_ID_GAMEBOY,
             "Game Boy",
             "qrc:images/platform-icons/gb.svg",
             {
                 {
                     {"display_name", "A"},
                     {"icon_url", "file:system/_img/nes/a-button.svg"},
-                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                    {"retropad_button", libretro::IRetroPad::Input::EastFace}
                 },
                 {
                     {"display_name", "B"},
                     {"icon_url", "file:system/_img/nes/b-button.svg"},
-                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
                 },
                 {
                     {"display_name", "D-Pad Up"},
@@ -170,19 +172,19 @@ namespace firelight::gui {
             {}
         });
         m_items.push_back({
-            3,
+            PlatformMetadata::PLATFORM_ID_GAMEBOY_COLOR,
             "Game Boy Color",
             "qrc:images/platform-icons/gbc.svg",
             {
                 {
                     {"display_name", "A"},
                     {"icon_url", "file:system/_img/nes/a-button.svg"},
-                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                    {"retropad_button", libretro::IRetroPad::Input::EastFace}
                 },
                 {
                     {"display_name", "B"},
                     {"icon_url", "file:system/_img/nes/b-button.svg"},
-                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
                 },
                 {
                     {"display_name", "D-Pad Up"},
@@ -218,19 +220,19 @@ namespace firelight::gui {
             {}
         });
         m_items.push_back({
-            4,
+            PlatformMetadata::PLATFORM_ID_GAMEBOY_ADVANCE,
             "Game Boy Advance",
             "qrc:images/platform-icons/gba.svg",
             {
                 {
                     {"display_name", "A"},
                     {"icon_url", "file:system/_img/nes/a-button.svg"},
-                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
+                    {"retropad_button", libretro::IRetroPad::Input::EastFace}
                 },
                 {
                     {"display_name", "B"},
                     {"icon_url", "file:system/_img/nes/b-button.svg"},
-                    {"retropad_button", libretro::IRetroPad::Input::WestFace}
+                    {"retropad_button", libretro::IRetroPad::Input::SouthFace}
                 },
                 {
                     {"display_name", "L"},
@@ -276,7 +278,7 @@ namespace firelight::gui {
             {}
         });
         m_items.push_back({
-                5,
+                PlatformMetadata::PLATFORM_ID_N64,
                 "Nintendo 64",
                 "qrc:images/platform-icons/n64.svg",
                 {
@@ -341,7 +343,7 @@ namespace firelight::gui {
         );
 
         m_items.push_back({
-            1,
+            PlatformMetadata::PLATFORM_ID_NINTENDO_DS,
             "Nintendo DS",
             "qrc:images/platform-icons/ds.svg",
             {
@@ -410,7 +412,7 @@ namespace firelight::gui {
         });
 
         m_items.push_back({
-            1,
+            PlatformMetadata::PLATFORM_ID_SEGA_MASTER_SYSTEM,
             "Master System",
             "qrc:images/platform-icons/sms.svg",
             {
@@ -419,7 +421,7 @@ namespace firelight::gui {
         });
 
         m_items.push_back({
-            1,
+            PlatformMetadata::PLATFORM_ID_SEGA_GENESIS,
             "Genesis",
             "qrc:images/platform-icons/gen.svg",
             {
@@ -428,7 +430,7 @@ namespace firelight::gui {
         });
 
         m_items.push_back({
-            1,
+            PlatformMetadata::PLATFORM_ID_SEGA_GAMEGEAR,
             "Game Gear",
             "qrc:images/platform-icons/gg.svg",
             {

@@ -158,6 +158,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setInputManager(&inputManager);
 
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
+  firelight::ManagerAccessor::setControllerRepository(&controllerRepository);
 
   controllerManager.refreshControllerList();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);

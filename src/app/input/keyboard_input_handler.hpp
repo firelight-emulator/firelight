@@ -13,6 +13,8 @@ namespace firelight::input {
     Q_OBJECT
 
   public:
+    void setActiveMapping(const std::shared_ptr<InputMapping> &mapping) override;
+
     bool isButtonPressed(int platformId, Input t_button) override;
 
     int16_t getLeftStickXPosition(int platformId) override;

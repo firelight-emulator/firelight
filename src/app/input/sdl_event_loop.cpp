@@ -64,13 +64,15 @@ namespace firelight {
             break;
           case SDL_CONTROLLERDEVICEADDED:
           case SDL_CONTROLLERDEVICEREMOVED:
-            m_controllerManager->handleSDLControllerEvent(ev);
-            break;
           case SDL_CONTROLLERAXISMOTION:
+            m_controllerManager->handleSDLControllerEvent(ev);
             break;
           case SDL_CONTROLLERBUTTONUP: {
             m_controllerManager->handleSDLControllerEvent(ev);
 
+            if (m_controllerManager->m_blockGamepadInput) {
+              break;
+            }
             if (QGuiApplication::focusWindow()) {
               Qt::Key key;
 
@@ -110,6 +112,10 @@ namespace firelight {
           }
           case SDL_CONTROLLERBUTTONDOWN: {
             m_controllerManager->handleSDLControllerEvent(ev);
+
+            if (m_controllerManager->m_blockGamepadInput) {
+              break;
+            }
 
             if (QGuiApplication::focusWindow()) {
               Qt::Key key;

@@ -67,7 +67,7 @@ namespace libretro {
 
 
     const auto controllerOpt =
-        currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
+        currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port, currentCore->m_platformId);
     if (!controllerOpt.has_value()) {
       return 0;
     }
@@ -314,7 +314,7 @@ namespace libretro {
         ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
                                    uint16_t strength) {
           const auto con =
-              currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
+              currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port, currentCore->m_platformId);
           if (!con.has_value()) {
             return true;
           }

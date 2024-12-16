@@ -14,7 +14,8 @@ namespace firelight::input {
         }
     }
 
-    std::optional<libretro::IRetroPad *> InputManager::getRetropadForPlayerIndex(int playerIndex) {
+    std::optional<libretro::IRetroPad *> InputManager::getRetropadForPlayerIndex(int playerIndex, int platformId) {
+        return {};
     }
 
     std::pair<int16_t, int16_t> InputManager::getPointerPosition() const {

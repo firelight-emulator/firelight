@@ -4,38 +4,45 @@
 #include <QVariantMap>
 #include <firelight/libretro/retropad.hpp>
 
+#include "../manager_accessor.hpp"
+
 namespace firelight::input {
-    class InputMappingItem : public QObject {
+    class InputMappingItem : public QObject, public ManagerAccessor {
         Q_OBJECT
-        Q_PROPERTY(QVariantMap inputMappings READ getInputMappings WRITE setInputMappings NOTIFY inputMappingsChanged)
+        Q_PROPERTY(int profileId READ getProfileId WRITE setProfileId NOTIFY profileIdChanged)
+        Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY platformIdChanged)
+        Q_PROPERTY(QVariantMap inputMappings READ getInputMappings NOTIFY inputMappingsChanged)
 
     public:
-        QVariantMap getInputMappings() const;
+        explicit InputMappingItem(QObject *parent = nullptr);
 
-        void setInputMappings(const QVariantMap &inputMappings);
+        [[nodiscard]] QVariantMap getInputMappings() const;
 
-        Q_INVOKABLE void setButtonMapping(int retropadInput, int sdlButton);
+        int getProfileId() const;
+
+        int getPlatformId() const;
+
+        void setProfileId(int profileId);
+
+        void setPlatformId(int platformId);
+
+        Q_INVOKABLE void addMapping(int input, int mappedInput);
 
     signals:
         void inputMappingsChanged();
 
+        void profileIdChanged();
+
+        void platformIdChanged();
+
     private:
-        QVariantMap m_inputMappings{
-            {QString::number(libretro::IRetroPad::Input::NorthFace), 1},
-            {QString::number(libretro::IRetroPad::Input::EastFace), 2},
-            {QString::number(libretro::IRetroPad::Input::SouthFace), 3},
-            {QString::number(libretro::IRetroPad::Input::WestFace), 0},
-            {QString::number(libretro::IRetroPad::Input::Select), 8},
-            {QString::number(libretro::IRetroPad::Input::Start), 9},
-            {QString::number(libretro::IRetroPad::Input::LeftBumper), 4},
-            {QString::number(libretro::IRetroPad::Input::RightBumper), 5},
-            {QString::number(libretro::IRetroPad::Input::LeftTrigger), 6},
-            {QString::number(libretro::IRetroPad::Input::RightTrigger), 7},
-            {QString::number(libretro::IRetroPad::Input::DpadUp), 12},
-            {QString::number(libretro::IRetroPad::Input::DpadDown), 13},
-            {QString::number(libretro::IRetroPad::Input::DpadLeft), 14},
-            {QString::number(libretro::IRetroPad::Input::DpadRight), 15}
-        };
+        std::shared_ptr<InputMapping> m_inputMapping;
+        int m_profileId = 0;
+        int m_platformId = 0;
+
+        void refreshMapping();
+
+        QVariantMap m_inputMappings{};
     };
 } // input
 // firelight

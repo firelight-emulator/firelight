@@ -35,6 +35,8 @@ Item {
 
     InputMapping {
         id: inputMapping
+        profileId: 0
+        platformId: platformList.currentItem.model.platform_id
     }
 
     PlatformMetadata {
@@ -49,8 +51,6 @@ Item {
         property var currentIndex: 0
 
         text: "You're about to walk through assigning each button on your controller to the corresponding Nintendo 64 input.\n\n Continue?"
-        // title: "Assign all buttons"
-        // message: "Are you sure you want to assign all buttons to the default mappings?"
         showButtons: true
 
         onAccepted: function () {
@@ -67,11 +67,14 @@ Item {
 
         property variant buttons: []
         property var currentIndex: 0
+        property bool canAcceptAxisInput: true
         // title: "Assign all buttons"
         // message: "Are you sure you want to assign all buttons to the default mappings?"
         showButtons: false
+        closePolicy: Popup.NoAutoClose
 
         onAboutToShow: {
+            controller_manager.blockGamepadInput = true
             currentIndex = 0
             frameAnimation.reset()
         }
@@ -82,18 +85,29 @@ Item {
         }
 
         onClosed: function () {
+            timer.stop()
+            controller_manager.blockGamepadInput = false
             dialog.buttons = []
+        }
+
+        Timer {
+            id: axisDebounceTimer
+            interval: 300
+            running: false
+            repeat: false
         }
 
         Connections {
             target: controller_manager
 
-            function onButtonStateChanged(player, button, pressed) {
+            function onRetropadInputStateChanged(player, input, activated) {
                 if (!dialog.visible) {
                     return
                 }
-                if (pressed) {
-                    inputMapping.setButtonMapping(dialog.buttons[dialog.currentIndex].retropad_button, button)
+                if (activated && !axisDebounceTimer.running) {
+                    axisDebounceTimer.restart()
+                    console.log(JSON.stringify(dialog.buttons[dialog.currentIndex]))
+                    inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, input)
                     if (dialog.buttons.length > dialog.currentIndex + 1) {
                         dialog.currentIndex++
                         timer.stop()
@@ -107,6 +121,56 @@ Item {
                     }
                 }
             }
+
+            // function onButtonStateChanged(player, button, pressed) {
+            //     if (!dialog.visible) {
+            //         return
+            //     }
+            //     if (pressed) {
+            //         inputMapping.setButtonMapping(dialog.buttons[dialog.currentIndex].retropad_button, button)
+            //         if (dialog.buttons.length > dialog.currentIndex + 1) {
+            //             dialog.currentIndex++
+            //             timer.stop()
+            //             frameAnimation.reset()
+            //             timer.restart()
+            //
+            //         } else {
+            //             dialog.accept()
+            //             // dialog.close()
+            //             // saveMapping()
+            //         }
+            //     }
+            // }
+
+            //
+            // function onAxisStateChanged(player, axis, value) {
+            //     if (!dialog.visible) {
+            //         return
+            //     }
+            //     if (value < 8192 && value > -8192) {
+            //         dialog.canAcceptAxisInput = true
+            //         return
+            //     }
+            //     if (dialog.canAcceptAxisInput && !axisDebounceTimer.running) {
+            //         dialog.canAcceptAxisInput = false
+            //         axisDebounceTimer.restart()
+            //         inputMapping.setAxisMapping(dialog.buttons[dialog.currentIndex].retropad_button, axis, value > 0)
+            //         if (dialog.buttons.length > dialog.currentIndex + 1) {
+            //             dialog.currentIndex++
+            //             timer.stop()
+            //             frameAnimation.reset()
+            //             timer.restart()
+            //
+            //         } else {
+            //             dialog.accept()
+            //             // dialog.close()
+            //             // saveMapping()
+            //         }
+            //
+            //     }
+            //     // inputMapping.setButtonMapping(dialog.buttons[dialog.currentIndex].retropad_button, axis)
+            //
+            // }
         }
 
         TapHandler {
@@ -128,6 +192,56 @@ Item {
 
         contentItem: ColumnLayout {
             spacing: 12
+
+
+            Keys.onPressed: function (event) {
+                event.accept = false
+            }
+
+            Keys.onReleased: function (event) {
+                event.accept = false
+            }
+
+            // View3D {
+            //     Layout.preferredHeight: 300
+            //     Layout.preferredWidth: 300
+            //     Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+            //
+            //     RuntimeLoader {
+            //         id: importNode
+            //         source: "file:system/nes.obj"
+            //     }
+            //
+            //     environment: SceneEnvironment {
+            //         backgroundMode: SceneEnvironment.Transparent
+            //     }
+            //
+            //     camera: activeCamera
+            //     PerspectiveCamera {
+            //         id: activeCamera
+            //         z: 400
+            //     }
+            //
+            //     DirectionalLight {
+            //         color: "white"
+            //     }
+            //
+            //     // Model {
+            //     //     x: -100
+            //     //     source: "#Cube"
+            //     //     materials: PrincipledMaterial {
+            //     //         baseColor: "red"
+            //     //     }
+            //     // }
+            //     // Model {
+            //     //     x: 100
+            //     //     source: "#Sphere"
+            //     //     materials: PrincipledMaterial {
+            //     //         baseColor: "green"
+            //     //     }
+            //     // }
+            // }
+
             Image {
                 Layout.preferredHeight: 300
                 Layout.preferredWidth: 300
@@ -137,7 +251,7 @@ Item {
                 fillMode: Image.PreserveAspectFit
             }
             Text {
-                text: "Press a button on your controller to assign it to this Nintendo 64 input:"
+                text: "Press a button on your controller to assign it to this " + platformList.currentItem.model.display_name + " input:"
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: parent.width * 5 / 6
@@ -439,8 +553,8 @@ Item {
                         Layout.maximumWidth: 240
                         Layout.alignment: Qt.AlignLeft
                         Layout.fillHeight: true
-                        text: inputMapping.inputMappings[modelData.retropad_button]
-                        color: "white"
+                        text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? "Nothing assigned" : inputMapping.inputMappings[modelData.retropad_button]
+                        color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
                         font.pixelSize: 16
                         font.family: Constants.regularFontFamily
                         font.weight: Font.DemiBold
@@ -509,8 +623,7 @@ Item {
                             dialog.buttons = []
                             dialog.buttons = [{
                                 display_name: modelData.display_name,
-                                mapping_id: modelData.mapping_id,
-                                currentMappingId: dropdown.currentIndex
+                                retropad_button: modelData.retropad_button
                             }]
                             dialog.open()
                         }

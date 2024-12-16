@@ -30,7 +30,8 @@ namespace firelight::libretro {
       RightStickUp = RETRO_DEVICE_ID_JOYPAD_MASK | 4,
       RightStickDown = RETRO_DEVICE_ID_JOYPAD_MASK | 5,
       RightStickLeft = RETRO_DEVICE_ID_JOYPAD_MASK | 6,
-      RightStickRight = RETRO_DEVICE_ID_JOYPAD_MASK | 7
+      RightStickRight = RETRO_DEVICE_ID_JOYPAD_MASK | 7,
+      Unknown = RETRO_DEVICE_ID_JOYPAD_MASK | 8
     };
 
     enum Axis {

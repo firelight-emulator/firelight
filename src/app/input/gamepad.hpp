@@ -3,10 +3,13 @@
 #include <string>
 
 #include "gamepad_type.hpp"
+#include "profiles/input_mapping.hpp"
 
 namespace firelight::input {
     class IGamepad : public libretro::IRetroPad {
     public:
+        virtual void setActiveMapping(const std::shared_ptr<InputMapping> &mapping) = 0;
+
         virtual std::string getName() const = 0;
 
         virtual int getPlayerIndex() const = 0;

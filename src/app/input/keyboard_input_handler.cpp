@@ -4,6 +4,9 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::input {
+  void KeyboardInputHandler::setActiveMapping(const std::shared_ptr<InputMapping> &mapping) {
+  }
+
   bool KeyboardInputHandler::isButtonPressed(int platformId, Input t_button) {
     return m_buttonStates[t_button];
   }

@@ -22,6 +22,8 @@ namespace firelight::Input {
 
     void setControllerProfile(const std::shared_ptr<input::ControllerProfile> &profile);
 
+    void setActiveMapping(const std::shared_ptr<input::InputMapping> &mapping) override;
+
     bool isButtonPressed(int platformId, Input t_button) override;
 
     int16_t getLeftStickXPosition(int platformId) override;
@@ -51,7 +53,10 @@ namespace firelight::Input {
     [[nodiscard]] GamepadType getType() const override;
 
   private:
+    [[nodiscard]] int16_t evaluateMapping(Input input) const;
+
     std::shared_ptr<input::ControllerProfile> m_profile = nullptr;
+    std::shared_ptr<input::InputMapping> m_activeMapping = nullptr;
 
     SDL_GameController *m_SDLController = nullptr;
     SDL_Joystick *m_SDLJoystick = nullptr;

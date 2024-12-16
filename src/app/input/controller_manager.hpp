@@ -14,8 +14,11 @@ namespace firelight::Input {
   class ControllerManager final : public QObject,
                                   public libretro::IRetropadProvider {
     Q_OBJECT
+    Q_PROPERTY(bool blockGamepadInput READ blockGamepadInput WRITE setBlockGamepadInput NOTIFY blockGamepadInputChanged)
 
   public:
+    bool m_blockGamepadInput = false;
+
     explicit ControllerManager(input::IControllerRepository &controllerRepository);
 
     void setKeyboardRetropad(input::KeyboardInputHandler *keyboard);
@@ -28,9 +31,13 @@ namespace firelight::Input {
     getControllerForPlayerIndex(int t_player) const;
 
     std::optional<libretro::IRetroPad *>
-    getRetropadForPlayerIndex(int t_player) override;
+    getRetropadForPlayerIndex(int t_player, int platformId) override;
 
     Q_INVOKABLE void updateControllerOrder(const QVector<int> &order);
+
+    bool blockGamepadInput() const;
+
+    void setBlockGamepadInput(bool blockGamepadInput);
 
   public slots:
     void updateControllerOrder(const QVariantMap &map);
@@ -42,7 +49,13 @@ namespace firelight::Input {
 
     void controllerOrderChanged();
 
+    void retropadInputStateChanged(int playerNumber, int input, bool activated);
+
     void buttonStateChanged(int playerNumber, int button, bool pressed);
+
+    void axisStateChanged(int playerNumber, int axis, int value);
+
+    void blockGamepadInputChanged();
 
   private:
     input::IControllerRepository &m_controllerRepository;

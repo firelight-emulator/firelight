@@ -9,6 +9,7 @@ namespace firelight::input {
     class IControllerRepository {
     public:
         virtual ~IControllerRepository() = default;
+
         // controller has:
         // name
         // type
@@ -32,6 +33,6 @@ namespace firelight::input {
         // list of retropad -> other mappings
         [[nodiscard]] virtual std::shared_ptr<InputMapping> getInputMapping(int mappingId) const = 0;
 
-        [[nodiscard]] virtual std::shared_ptr<InputMapping> getInputMapping(int profileId, int platformId) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<InputMapping> getInputMapping(int profileId, int platformId) = 0;
     };
 }

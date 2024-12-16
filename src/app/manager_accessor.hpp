@@ -42,6 +42,8 @@ namespace firelight {
 
         static void setInputManager(input::InputManager *t_inputManager);
 
+        static void setControllerRepository(input::IControllerRepository *t_controllerRepository);
+
         static Input::ControllerManager *getControllerManager();
 
         static saves::SaveManager *getSaveManager();
@@ -64,6 +66,8 @@ namespace firelight {
 
         static input::InputManager *getInputManager();
 
+        static input::IControllerRepository *getControllerRepository();
+
     private:
         static Input::ControllerManager *m_controllerManager;
         static saves::SaveManager *m_saveManager;
@@ -76,5 +80,6 @@ namespace firelight {
         static library::IUserLibrary *m_userLibrary;
         static activity::IActivityLog *m_activityLog;
         static input::InputManager *m_inputManager;
+        static input::IControllerRepository *m_controllerRepository;
     };
 } // namespace firelight

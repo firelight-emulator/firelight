@@ -16,7 +16,7 @@ namespace firelight::input {
 
         void removeGamepad(const std::shared_ptr<IGamepad> &gamepad);
 
-        std::optional<libretro::IRetroPad *> getRetropadForPlayerIndex(int playerIndex) override;
+        std::optional<libretro::IRetroPad *> getRetropadForPlayerIndex(int playerIndex, int platformId) override;
 
         [[nodiscard]] std::pair<int16_t, int16_t> getPointerPosition() const override;
 

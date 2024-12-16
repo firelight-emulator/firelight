@@ -47,6 +47,48 @@ namespace firelight::Input {
           if (m_controllers[i] != nullptr &&
               m_controllers[i]->getInstanceId() == joystickInstanceId) {
             const auto button = event.cbutton.button;
+            libretro::IRetroPad::Input virtualInput = libretro::IRetroPad::Input::Unknown;
+            switch (button) {
+              case SDL_CONTROLLER_BUTTON_A:
+                virtualInput = libretro::IRetroPad::Input::SouthFace;
+                break;
+              case SDL_CONTROLLER_BUTTON_B:
+                virtualInput = libretro::IRetroPad::Input::EastFace;
+                break;
+              case SDL_CONTROLLER_BUTTON_X:
+                virtualInput = libretro::IRetroPad::Input::WestFace;
+                break;
+              case SDL_CONTROLLER_BUTTON_Y:
+                virtualInput = libretro::IRetroPad::Input::NorthFace;
+                break;
+              case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                virtualInput = libretro::IRetroPad::Input::DpadUp;
+                break;
+              case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                virtualInput = libretro::IRetroPad::Input::DpadDown;
+                break;
+              case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                virtualInput = libretro::IRetroPad::Input::DpadLeft;
+                break;
+              case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                virtualInput = libretro::IRetroPad::Input::DpadRight;
+                break;
+              case SDL_CONTROLLER_BUTTON_START:
+                virtualInput = libretro::IRetroPad::Input::Start;
+                break;
+              case SDL_CONTROLLER_BUTTON_BACK:
+                virtualInput = libretro::IRetroPad::Input::Select;
+                break;
+              case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                virtualInput = libretro::IRetroPad::Input::LeftBumper;
+                break;
+              case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                virtualInput = libretro::IRetroPad::Input::RightBumper;
+                break;
+              default:
+                break;
+            }
+            emit retropadInputStateChanged(i + 1, virtualInput, true);
             spdlog::debug("Player {} Button {} pressed", i + 1, button);
             emit buttonStateChanged(i + 1, button, true);
           }
@@ -59,8 +101,151 @@ namespace firelight::Input {
           if (m_controllers[i] != nullptr &&
               m_controllers[i]->getInstanceId() == joystickInstanceId) {
             const auto button = event.cbutton.button;
+            libretro::IRetroPad::Input virtualInput = libretro::IRetroPad::Input::Unknown;
+            switch (button) {
+              case SDL_CONTROLLER_BUTTON_A:
+                virtualInput = libretro::IRetroPad::Input::SouthFace;
+                break;
+              case SDL_CONTROLLER_BUTTON_B:
+                virtualInput = libretro::IRetroPad::Input::EastFace;
+                break;
+              case SDL_CONTROLLER_BUTTON_X:
+                virtualInput = libretro::IRetroPad::Input::WestFace;
+                break;
+              case SDL_CONTROLLER_BUTTON_Y:
+                virtualInput = libretro::IRetroPad::Input::NorthFace;
+                break;
+              case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                virtualInput = libretro::IRetroPad::Input::DpadUp;
+                break;
+              case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                virtualInput = libretro::IRetroPad::Input::DpadDown;
+                break;
+              case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                virtualInput = libretro::IRetroPad::Input::DpadLeft;
+                break;
+              case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                virtualInput = libretro::IRetroPad::Input::DpadRight;
+                break;
+              case SDL_CONTROLLER_BUTTON_START:
+                virtualInput = libretro::IRetroPad::Input::Start;
+                break;
+              case SDL_CONTROLLER_BUTTON_BACK:
+                virtualInput = libretro::IRetroPad::Input::Select;
+                break;
+              case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                virtualInput = libretro::IRetroPad::Input::LeftBumper;
+                break;
+              case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                virtualInput = libretro::IRetroPad::Input::RightBumper;
+                break;
+              default:
+                break;
+            }
+            emit retropadInputStateChanged(i + 1, virtualInput, false);
             spdlog::debug("Player {} Button {} released", i + 1, button);
             emit buttonStateChanged(i + 1, button, false);
+          }
+        }
+        break;
+      }
+      case SDL_CONTROLLERAXISMOTION: {
+        for (int i = 0; i < m_controllers.max_size(); ++i) {
+          if (m_controllers[i] != nullptr &&
+              m_controllers[i]->getInstanceId() == event.caxis.which) {
+            switch (event.caxis.axis) {
+              case SDL_CONTROLLER_AXIS_LEFTX: {
+                if (event.caxis.value < 8192 && event.caxis.value > -8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftStickLeft, false);
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftStickRight, false);
+                  break;
+                }
+                if (event.caxis.value > 8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftStickRight, true);
+                  break;
+                }
+                if (event.caxis.value < -8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftStickLeft, true);
+                  break;
+                }
+                emit axisStateChanged(i + 1, event.caxis.axis, event.caxis.value);
+                break;
+              }
+              case SDL_CONTROLLER_AXIS_LEFTY: {
+                if (event.caxis.value < 8192 && event.caxis.value > -8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftStickUp, false);
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftStickDown, false);
+                  break;
+                }
+                if (event.caxis.value > 8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftStickDown, true);
+                  break;
+                }
+                if (event.caxis.value < -8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftStickUp, true);
+                  break;
+                }
+                emit axisStateChanged(i + 1, event.caxis.axis, event.caxis.value);
+                break;
+              }
+              case SDL_CONTROLLER_AXIS_RIGHTX: {
+                if (event.caxis.value < 8192 && event.caxis.value > -8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightStickLeft, false);
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightStickRight, false);
+                  break;
+                }
+                if (event.caxis.value > 8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightStickRight, true);
+                  break;
+                }
+                if (event.caxis.value < -8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightStickLeft, true);
+                  break;
+                }
+                emit axisStateChanged(i + 1, event.caxis.axis, event.caxis.value);
+                break;
+              }
+              case SDL_CONTROLLER_AXIS_RIGHTY: {
+                if (event.caxis.value < 8192 && event.caxis.value > -8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightStickUp, false);
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightStickDown, false);
+                  break;
+                }
+                if (event.caxis.value > 8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightStickDown, true);
+                  break;
+                }
+                if (event.caxis.value < -8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightStickUp, true);
+                  break;
+                }
+                emit axisStateChanged(i + 1, event.caxis.axis, event.caxis.value);
+                break;
+              }
+              case SDL_CONTROLLER_AXIS_TRIGGERLEFT: {
+                if (event.caxis.value < 8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftTrigger, false);
+                  break;
+                }
+
+                emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::LeftTrigger, true);
+                emit axisStateChanged(i + 1, event.caxis.axis, event.caxis.value);
+                break;
+              }
+              case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: {
+                if (event.caxis.value < 8192) {
+                  emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightTrigger, false);
+                  break;
+                }
+
+                emit retropadInputStateChanged(i + 1, libretro::IRetroPad::Input::RightTrigger, true);
+                emit axisStateChanged(i + 1, event.caxis.axis, event.caxis.value);
+                break;
+              }
+            }
+
+
+            emit axisStateChanged(i + 1, event.caxis.axis, event.caxis.value);
           }
         }
         break;
@@ -79,10 +264,14 @@ namespace firelight::Input {
   }
 
   std::optional<libretro::IRetroPad *>
-  ControllerManager::getRetropadForPlayerIndex(const int t_player) {
+  ControllerManager::getRetropadForPlayerIndex(const int t_player, const int platformId) {
     const auto controller = getControllerForPlayerIndex(t_player);
     if (t_player == 0 && !controller && m_keyboard) {
       return m_keyboard;
+    }
+
+    if (controller) {
+      (*controller)->setActiveMapping(m_controllerRepository.getInputMapping(0, platformId));
     }
 
     return controller;
@@ -196,5 +385,18 @@ namespace firelight::Input {
 
     m_controllers = std::move(tempCon);
     emit controllerOrderChanged();
+  }
+
+  bool ControllerManager::blockGamepadInput() const {
+    return m_blockGamepadInput;
+  }
+
+  void ControllerManager::setBlockGamepadInput(const bool blockGamepadInput) {
+    if (m_blockGamepadInput == blockGamepadInput) {
+      return;
+    }
+
+    m_blockGamepadInput = blockGamepadInput;
+    emit blockGamepadInputChanged();
   }
 } // namespace firelight::Input

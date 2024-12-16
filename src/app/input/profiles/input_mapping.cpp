@@ -1,93 +1,44 @@
 #include "input_mapping.hpp"
 
 namespace firelight::input {
-    std::optional<bool>
-    InputMapping::evaluateButtonMapping(SDL_GameController *controller, libretro::IRetroPad::Input button) {
-        if (!m_buttonMappings.contains(button)) {
+    void InputMapping::addMapping(libretro::IRetroPad::Input input, libretro::IRetroPad::Input mappedInput) {
+        m_mappings.erase(input);
+        m_mappings.emplace(input, mappedInput);
+    }
+
+    std::optional<libretro::IRetroPad::Input> InputMapping::getMappedInput(const libretro::IRetroPad::Input input) {
+        if (!m_mappings.contains(input)) {
             return std::nullopt;
         }
-
-        const auto desc = m_buttonMappings[button];
-
-        if (desc.type == BUTTON) {
-            return {
-                // SDL_GameControllerGetButton(SDL_GameControllerFromInstanceID(SDL_JoystickInstanceID(joystick)),
-                // description.button) * 32767 * (description.axisPositive ? 1 : -1)
-                SDL_GameControllerGetButton(controller, desc.button)
-            };
-        }
-
-        if (desc.type == AXIS) {
-            return {
-                SDL_GameControllerGetAxis(controller, desc.axis)
-            };
-        }
-
-        return 0;
+        return {m_mappings[input]};
     }
 
-    std::optional<int16_t> InputMapping::evaluateAxisMapping(SDL_GameController *controller,
-                                                             libretro::IRetroPad::Axis axis) {
-        if (!m_axisMappings.contains(axis)) {
-            return std::nullopt;
-        }
-
-        return evaluate(controller, m_axisMappings[axis]);
+    std::map<libretro::IRetroPad::Input, libretro::IRetroPad::Input> &InputMapping::getMappings() {
+        return m_mappings;
     }
 
-    std::optional<int16_t> InputMapping::evaluate(SDL_GameController *controller, const InputDescription &description) {
-        if (description.type == BUTTON) {
-            return {
-                // SDL_GameControllerGetButton(SDL_GameControllerFromInstanceID(SDL_JoystickInstanceID(joystick)),
-                // description.button) * 32767 * (description.axisPositive ? 1 : -1)
-                SDL_GameControllerGetButton(controller, description.button)
-            };
-        }
-
-        if (description.type == AXIS) {
-            auto value = SDL_GameControllerGetAxis(controller, description.axis);
-            if (value > 0 && description.axisPositive) {
-                return value;
-            }
-
-            // // Ensure axis state tracking
-            // if (!m_axisBeingHeld.contains(description.axis)) {
-            //     m_axisBeingHeld[description.axis] = false;
-            // }
-            // if (!m_axisReleased.contains(description.axis)) {
-            //     m_axisReleased[description.axis] = true; // Start in "released" state
-            // }
-            //
-            // if (value > 500) { // Axis is pressed
-            //     if (!m_axisBeingHeld[description.axis]) {
-            //         // First press
-            //         m_axisBeingHeld[description.axis] = true;
-            //         m_axisReleased[description.axis] = false; // Mark as "pressed"
-            //         return {value}; // Initial press
-            //     }
-            //     if (!m_axisReleased[description.axis]) {
-            //         // Send the intermediate "release" signal
-            //         m_axisReleased[description.axis] = true; // Mark as "released"
-            //         return {0}; // Simulated release
-            //     }
-            //     return {value}; // Continue holding
-            // }
-            //
-            // // Axis is released, reset states
-            // m_axisBeingHeld[description.axis] = false;
-            // m_axisReleased[description.axis] = true;
-            return {value};
-        }
-        return {};
-    }
-
-    unsigned InputMapping::getId() {
+    unsigned InputMapping::getId() const {
+        return m_id;
     }
 
     unsigned InputMapping::getControllerProfileId() {
+        return m_controllerProfileId;
     }
 
-    unsigned InputMapping::getPlatformId() {
+    unsigned InputMapping::getPlatformId() const {
+        return m_platformId;
+    }
+
+    void InputMapping::setId(unsigned id) {
+        m_id = id;
+    }
+
+    void InputMapping::setControllerProfileId(unsigned controllerProfileId) {
+        m_controllerProfileId = controllerProfileId;
+    }
+
+    void InputMapping::setPlatformId(unsigned platformId) {
+        m_platformId = platformId;
     }
 }
 

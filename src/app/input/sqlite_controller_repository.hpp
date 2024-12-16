@@ -5,7 +5,7 @@
 #include "controller_repository.hpp"
 
 namespace firelight::input {
-    class SqliteControllerRepository : public IControllerRepository {
+    class SqliteControllerRepository final : public IControllerRepository {
     public:
         SqliteControllerRepository();
 
@@ -17,12 +17,12 @@ namespace firelight::input {
 
         [[nodiscard]] std::shared_ptr<InputMapping> getInputMapping(int mappingId) const override;
 
-        [[nodiscard]] std::shared_ptr<InputMapping> getInputMapping(int profileId, int platformId) const override;
+        [[nodiscard]] std::shared_ptr<InputMapping> getInputMapping(int profileId, int platformId) override;
 
     private:
         std::vector<ControllerInfo> m_controllerTypes{};
         std::map<int, ControllerProfile> m_profiles{};
-        std::map<int, InputMapping> m_inputMappings{};
+        std::vector<std::shared_ptr<InputMapping> > m_inputMappings{};
     };
 } // input
 // firelight
