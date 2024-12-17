@@ -9,7 +9,7 @@ namespace firelight::input {
     public:
         virtual ~IControllerRepository() = default;
 
-        virtual std::shared_ptr<ControllerProfile> getControllerProfile(int vendorId, int productId,
+        virtual std::shared_ptr<ControllerProfile> getControllerProfile(std::string name, int vendorId, int productId,
                                                                         int productVersion) = 0;
 
         // profile has:

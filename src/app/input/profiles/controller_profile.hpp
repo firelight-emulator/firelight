@@ -3,7 +3,7 @@
 namespace firelight::input {
     class ControllerProfile {
     public:
-        ControllerProfile(int vendorId, int productId, int productVersion);
+        ControllerProfile(int id, int vendorId, int productId, int productVersion);
 
         int getId() const;
 

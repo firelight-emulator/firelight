@@ -267,7 +267,8 @@ namespace firelight::Input {
     }
 
     if (controller) {
-      (*controller)->setActiveMapping(m_controllerRepository.getInputMapping(0, platformId));
+      (*controller)->
+          setActiveMapping(m_controllerRepository.getInputMapping((*controller)->getProfileId(), platformId));
     }
 
     return controller;
@@ -294,6 +295,7 @@ namespace firelight::Input {
     // Get the default profile for the controller type
     // If it doesn't exist, create a new one
     const auto profile = m_controllerRepository.getControllerProfile(
+      SDL_GameControllerName(controller),
       SDL_GameControllerGetVendor(controller),
       SDL_GameControllerGetProduct(controller),
       SDL_GameControllerGetProductVersion(controller));

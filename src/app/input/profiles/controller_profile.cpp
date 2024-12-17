@@ -1,12 +1,10 @@
 #include "controller_profile.hpp"
 
 namespace firelight::input {
-    ControllerProfile::ControllerProfile(const int vendorId, const int productId,
-                                         const int productVersion) : m_vendorId(vendorId),
+    ControllerProfile::ControllerProfile(const int id, const int vendorId, const int productId,
+                                         const int productVersion) : m_id(id), m_vendorId(vendorId),
                                                                      m_productId(productId),
                                                                      m_productVersion(productVersion) {
-        static int i = 0;
-        m_id = i++;
     }
 
     int ControllerProfile::getId() const {

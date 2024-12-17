@@ -51,7 +51,6 @@ namespace firelight::input {
     }
 
     void InputMappingItem::refreshMapping() {
-        printf("Refreshing with profileId: %d, platformId: %d\n", m_profileId, m_platformId);
         m_inputMappings.clear();
         m_inputMapping = getControllerRepository()->getInputMapping(m_profileId, m_platformId);
         for (const auto &[input, mappedInput]: m_inputMapping->getMappings()) {

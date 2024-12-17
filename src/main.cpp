@@ -152,7 +152,9 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  firelight::input::SqliteControllerRepository controllerRepository;
+  QDir baseDir(defaultAppDataPathString);
+
+  firelight::input::SqliteControllerRepository controllerRepository(baseDir.filePath("controllers.db"));
   firelight::Input::ControllerManager controllerManager(controllerRepository);
   firelight::input::InputManager inputManager;
   firelight::ManagerAccessor::setInputManager(&inputManager);

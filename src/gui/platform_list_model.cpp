@@ -331,6 +331,26 @@ namespace firelight::gui {
                         {"display_name", "Start"},
                         {"icon_url", "file:system/_img/n64/start.svg"},
                         {"retropad_button", libretro::IRetroPad::Input::Start}
+                    },
+                    {
+                        {"display_name", "Analog Stick Up"},
+                        {"icon_url", "file:system/_img/n64/start.svg"},
+                        {"retropad_button", libretro::IRetroPad::Input::LeftStickUp}
+                    },
+                    {
+                        {"display_name", "Analog Stick Down"},
+                        {"icon_url", "file:system/_img/n64/start.svg"},
+                        {"retropad_button", libretro::IRetroPad::Input::LeftStickDown}
+                    },
+                    {
+                        {"display_name", "Analog Stick Left"},
+                        {"icon_url", "file:system/_img/n64/start.svg"},
+                        {"retropad_button", libretro::IRetroPad::Input::LeftStickLeft}
+                    },
+                    {
+                        {"display_name", "Analog Stick Right"},
+                        {"icon_url", "file:system/_img/n64/start.svg"},
+                        {"retropad_button", libretro::IRetroPad::Input::LeftStickRight}
                     }
                 },
                 {

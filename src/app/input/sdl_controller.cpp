@@ -95,18 +95,29 @@ namespace firelight::Input {
 
   int16_t SdlController::getLeftStickXPosition(const int platformId) {
     if (m_activeMapping != nullptr) {
-      const auto mapped = m_activeMapping->getMappedInput(LeftStickLeft);
-      if (mapped.has_value()) {
-        return evaluateMapping(*mapped);
+      const auto mappedLeft = m_activeMapping->getMappedInput(LeftStickLeft);
+      const auto mappedRight = m_activeMapping->getMappedInput(LeftStickRight);
+
+      if (mappedLeft.has_value() && mappedRight.has_value()) {
+        const auto valUp = evaluateMapping(*mappedLeft);
+        const auto valDown = evaluateMapping(*mappedRight);
+
+        if (valUp != 0 && valDown == 0) {
+          return valUp * -1;
+        }
+        if (valUp == 0 && valDown != 0) {
+          return valDown;
+        }
+        return 0;
       }
-      const auto mapped2 = m_activeMapping->getMappedInput(LeftStickRight);
-      if (mapped2.has_value()) {
-        return evaluateMapping(*mapped2);
+
+      if (mappedLeft.has_value()) {
+        return evaluateMapping(*mappedLeft);
       }
-      // if (const auto result = mapping->evaluateAxisMapping(m_SDLController, LeftStickX); result.
-      //   has_value()) {
-      //   return result.value();
-      // }
+
+      if (mappedRight.has_value()) {
+        return evaluateMapping(*mappedRight);
+      }
     }
 
     return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
@@ -114,13 +125,28 @@ namespace firelight::Input {
 
   int16_t SdlController::getLeftStickYPosition(const int platformId) {
     if (m_activeMapping != nullptr) {
-      const auto mapped = m_activeMapping->getMappedInput(LeftStickUp);
-      if (mapped.has_value()) {
-        return evaluateMapping(*mapped);
+      const auto mappedUp = m_activeMapping->getMappedInput(LeftStickUp);
+      const auto mappedDown = m_activeMapping->getMappedInput(LeftStickDown);
+
+      if (mappedUp.has_value() && mappedDown.has_value()) {
+        const auto valUp = evaluateMapping(*mappedUp);
+        const auto valDown = evaluateMapping(*mappedDown);
+
+        if (valUp != 0 && valDown == 0) {
+          return valUp * -1;
+        }
+        if (valUp == 0 && valDown != 0) {
+          return valDown;
+        }
+        return 0;
       }
-      const auto mapped2 = m_activeMapping->getMappedInput(LeftStickDown);
-      if (mapped2.has_value()) {
-        return evaluateMapping(*mapped2);
+
+      if (mappedUp.has_value()) {
+        return evaluateMapping(*mappedUp);
+      }
+
+      if (mappedDown.has_value()) {
+        return evaluateMapping(*mappedDown);
       }
     }
 
@@ -129,13 +155,28 @@ namespace firelight::Input {
 
   int16_t SdlController::getRightStickXPosition(const int platformId) {
     if (m_activeMapping != nullptr) {
-      const auto mapped = m_activeMapping->getMappedInput(RightStickLeft);
-      if (mapped.has_value()) {
-        return evaluateMapping(*mapped);
+      const auto mappedLeft = m_activeMapping->getMappedInput(RightStickLeft);
+      const auto mappedRight = m_activeMapping->getMappedInput(RightStickRight);
+
+      if (mappedLeft.has_value() && mappedRight.has_value()) {
+        const auto valUp = evaluateMapping(*mappedLeft);
+        const auto valDown = evaluateMapping(*mappedRight);
+
+        if (valUp != 0 && valDown == 0) {
+          return valUp * -1;
+        }
+        if (valUp == 0 && valDown != 0) {
+          return valDown;
+        }
+        return 0;
       }
-      const auto mapped2 = m_activeMapping->getMappedInput(RightStickRight);
-      if (mapped2.has_value()) {
-        return evaluateMapping(*mapped2);
+
+      if (mappedLeft.has_value()) {
+        return evaluateMapping(*mappedLeft);
+      }
+
+      if (mappedRight.has_value()) {
+        return evaluateMapping(*mappedRight);
       }
     }
     return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
@@ -143,13 +184,28 @@ namespace firelight::Input {
 
   int16_t SdlController::getRightStickYPosition(const int platformId) {
     if (m_activeMapping != nullptr) {
-      const auto mapped = m_activeMapping->getMappedInput(RightStickUp);
-      if (mapped.has_value()) {
-        return evaluateMapping(*mapped);
+      const auto mappedUp = m_activeMapping->getMappedInput(RightStickUp);
+      const auto mappedDown = m_activeMapping->getMappedInput(RightStickDown);
+
+      if (mappedUp.has_value() && mappedDown.has_value()) {
+        const auto valUp = evaluateMapping(*mappedUp);
+        const auto valDown = evaluateMapping(*mappedDown);
+
+        if (valUp != 0 && valDown == 0) {
+          return valUp * -1;
+        }
+        if (valUp == 0 && valDown != 0) {
+          return valDown;
+        }
+        return 0;
       }
-      const auto mapped2 = m_activeMapping->getMappedInput(RightStickDown);
-      if (mapped2.has_value()) {
-        return evaluateMapping(*mapped2);
+
+      if (mappedUp.has_value()) {
+        return evaluateMapping(*mappedUp);
+      }
+
+      if (mappedDown.has_value()) {
+        return evaluateMapping(*mappedDown);
       }
     }
     return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
@@ -227,37 +283,37 @@ namespace firelight::Input {
   int16_t SdlController::evaluateMapping(const Input input) const {
     switch (input) {
       case SouthFace:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_A);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_A) * 32767;
       case EastFace:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_B);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_B) * 32767;
       case WestFace:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_X);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_X) * 32767;
       case NorthFace:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_Y);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_Y) * 32767;
       case DpadLeft:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_DPAD_LEFT) * 32767;
       case DpadRight:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) * 32767;
       case DpadUp:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_DPAD_UP);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_DPAD_UP) * 32767;
       case DpadDown:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_DPAD_DOWN) * 32767;
       case Start:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_START);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_START) * 32767;
       case Select:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_BACK);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_BACK) * 32767;
       case LeftBumper:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) * 32767;
       case RightBumper:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) * 32767;
       case LeftTrigger:
-        return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+        return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_TRIGGERLEFT) * 32767;
       case RightTrigger:
-        return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+        return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) * 32767;
       case L3:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_LEFTSTICK);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_LEFTSTICK) * 32767;
       case R3:
-        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_RIGHTSTICK);
+        return SDL_GameControllerGetButton(m_SDLController, SDL_CONTROLLER_BUTTON_RIGHTSTICK) * 32767;
       case LeftStickUp: {
         const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
         if (value < -8192) {
