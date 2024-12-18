@@ -1,5 +1,7 @@
 #include "sdl_controller.hpp"
 
+#include <bits/stl_algo.h>
+
 namespace firelight::Input {
   SdlController::~SdlController() = default;
 
@@ -94,121 +96,171 @@ namespace firelight::Input {
   }
 
   int16_t SdlController::getLeftStickXPosition(const int platformId) {
-    if (m_activeMapping != nullptr) {
-      const auto mappedLeft = m_activeMapping->getMappedInput(LeftStickLeft);
-      const auto mappedRight = m_activeMapping->getMappedInput(LeftStickRight);
-
-      if (mappedLeft.has_value() && mappedRight.has_value()) {
-        const auto valUp = evaluateMapping(*mappedLeft);
-        const auto valDown = evaluateMapping(*mappedRight);
-
-        if (valUp != 0 && valDown == 0) {
-          return valUp * -1;
-        }
-        if (valUp == 0 && valDown != 0) {
-          return valDown;
-        }
-        return 0;
-      }
-
-      if (mappedLeft.has_value()) {
-        return evaluateMapping(*mappedLeft);
-      }
-
-      if (mappedRight.has_value()) {
-        return evaluateMapping(*mappedRight);
-      }
+    auto result = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
+    if (m_activeMapping == nullptr) {
+      return result;
     }
 
-    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
+    const auto mappedLeft = m_activeMapping->getMappedInput(LeftStickLeft);
+    const auto mappedRight = m_activeMapping->getMappedInput(LeftStickRight);
+
+    if (mappedLeft.has_value() && mappedRight.has_value()) {
+      const auto valUp = evaluateMapping(*mappedLeft);
+      const auto valDown = evaluateMapping(*mappedRight);
+
+      if (valUp != 0 && valDown == 0) {
+        return valUp * -1;
+      }
+      if (valUp == 0 && valDown != 0) {
+        return valDown;
+      }
+      return 0;
+    }
+
+    if (mappedLeft.has_value()) {
+      auto eval = evaluateMapping(*mappedLeft);
+      if (eval != 0) {
+        return eval * -1;
+      }
+
+      return std::clamp(static_cast<int>(result), 0, 32767);
+    }
+
+    if (mappedRight.has_value()) {
+      auto eval = evaluateMapping(*mappedRight);
+      if (eval != 0) {
+        return eval;
+      }
+
+      return std::clamp(static_cast<int>(result), -32767, 0);
+    }
+
+    return result;
   }
 
   int16_t SdlController::getLeftStickYPosition(const int platformId) {
-    if (m_activeMapping != nullptr) {
-      const auto mappedUp = m_activeMapping->getMappedInput(LeftStickUp);
-      const auto mappedDown = m_activeMapping->getMappedInput(LeftStickDown);
-
-      if (mappedUp.has_value() && mappedDown.has_value()) {
-        const auto valUp = evaluateMapping(*mappedUp);
-        const auto valDown = evaluateMapping(*mappedDown);
-
-        if (valUp != 0 && valDown == 0) {
-          return valUp * -1;
-        }
-        if (valUp == 0 && valDown != 0) {
-          return valDown;
-        }
-        return 0;
-      }
-
-      if (mappedUp.has_value()) {
-        return evaluateMapping(*mappedUp);
-      }
-
-      if (mappedDown.has_value()) {
-        return evaluateMapping(*mappedDown);
-      }
+    auto result = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
+    if (m_activeMapping == nullptr) {
+      return result;
     }
 
-    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
+    const auto mappedUp = m_activeMapping->getMappedInput(LeftStickUp);
+    const auto mappedDown = m_activeMapping->getMappedInput(LeftStickDown);
+
+    if (mappedUp.has_value() && mappedDown.has_value()) {
+      const auto valUp = evaluateMapping(*mappedUp);
+      const auto valDown = evaluateMapping(*mappedDown);
+
+      if (valUp != 0 && valDown == 0) {
+        return valUp * -1;
+      }
+      if (valUp == 0 && valDown != 0) {
+        return valDown;
+      }
+      return 0;
+    }
+
+    if (mappedUp.has_value()) {
+      auto eval = evaluateMapping(*mappedUp);
+      if (eval != 0) {
+        return eval * -1;
+      }
+      return std::clamp(static_cast<int>(result), 0, 32767);
+    }
+
+    if (mappedDown.has_value()) {
+      auto eval = evaluateMapping(*mappedDown);
+      if (eval != 0) {
+        return eval;
+      }
+      return std::clamp(static_cast<int>(result), -32767, 0);
+    }
+
+    return result;
   }
 
   int16_t SdlController::getRightStickXPosition(const int platformId) {
-    if (m_activeMapping != nullptr) {
-      const auto mappedLeft = m_activeMapping->getMappedInput(RightStickLeft);
-      const auto mappedRight = m_activeMapping->getMappedInput(RightStickRight);
-
-      if (mappedLeft.has_value() && mappedRight.has_value()) {
-        const auto valUp = evaluateMapping(*mappedLeft);
-        const auto valDown = evaluateMapping(*mappedRight);
-
-        if (valUp != 0 && valDown == 0) {
-          return valUp * -1;
-        }
-        if (valUp == 0 && valDown != 0) {
-          return valDown;
-        }
-        return 0;
-      }
-
-      if (mappedLeft.has_value()) {
-        return evaluateMapping(*mappedLeft);
-      }
-
-      if (mappedRight.has_value()) {
-        return evaluateMapping(*mappedRight);
-      }
+    auto result = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
+    if (m_activeMapping == nullptr) {
+      return result;
     }
-    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
+
+    const auto mappedLeft = m_activeMapping->getMappedInput(RightStickLeft);
+    const auto mappedRight = m_activeMapping->getMappedInput(RightStickRight);
+
+    if (mappedLeft.has_value() && mappedRight.has_value()) {
+      const auto valUp = evaluateMapping(*mappedLeft);
+      const auto valDown = evaluateMapping(*mappedRight);
+
+      if (valUp != 0 && valDown == 0) {
+        return valUp * -1;
+      }
+      if (valUp == 0 && valDown != 0) {
+        return valDown;
+      }
+      return 0;
+    }
+
+    if (mappedLeft.has_value()) {
+      auto eval = evaluateMapping(*mappedLeft);
+      if (eval != 0) {
+        return eval * -1;
+      }
+
+      return std::clamp(static_cast<int>(result), 0, 32767);
+    }
+
+    if (mappedRight.has_value()) {
+      auto eval = evaluateMapping(*mappedRight);
+      if (eval != 0) {
+        return eval;
+      }
+
+      return std::clamp(static_cast<int>(result), -32767, 0);
+    }
+
+    return result;
   }
 
   int16_t SdlController::getRightStickYPosition(const int platformId) {
-    if (m_activeMapping != nullptr) {
-      const auto mappedUp = m_activeMapping->getMappedInput(RightStickUp);
-      const auto mappedDown = m_activeMapping->getMappedInput(RightStickDown);
-
-      if (mappedUp.has_value() && mappedDown.has_value()) {
-        const auto valUp = evaluateMapping(*mappedUp);
-        const auto valDown = evaluateMapping(*mappedDown);
-
-        if (valUp != 0 && valDown == 0) {
-          return valUp * -1;
-        }
-        if (valUp == 0 && valDown != 0) {
-          return valDown;
-        }
-        return 0;
-      }
-
-      if (mappedUp.has_value()) {
-        return evaluateMapping(*mappedUp);
-      }
-
-      if (mappedDown.has_value()) {
-        return evaluateMapping(*mappedDown);
-      }
+    auto result = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
+    if (m_activeMapping == nullptr) {
+      return result;
     }
-    return SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
+
+    const auto mappedUp = m_activeMapping->getMappedInput(RightStickUp);
+    const auto mappedDown = m_activeMapping->getMappedInput(RightStickDown);
+
+    if (mappedUp.has_value() && mappedDown.has_value()) {
+      const auto valUp = evaluateMapping(*mappedUp);
+      const auto valDown = evaluateMapping(*mappedDown);
+
+      if (valUp != 0 && valDown == 0) {
+        return valUp * -1;
+      }
+      if (valUp == 0 && valDown != 0) {
+        return valDown;
+      }
+      return 0;
+    }
+
+    if (mappedUp.has_value()) {
+      auto eval = evaluateMapping(*mappedUp);
+      if (eval != 0) {
+        return eval * -1;
+      }
+      return std::clamp(static_cast<int>(result), 0, 32767);
+    }
+
+    if (mappedDown.has_value()) {
+      auto eval = evaluateMapping(*mappedDown);
+      if (eval != 0) {
+        return eval;
+      }
+      return std::clamp(static_cast<int>(result), -32767, 0);
+    }
+
+    return result;
   }
 
   int32_t SdlController::getInstanceId() const { return m_SDLJoystickInstanceId; }
