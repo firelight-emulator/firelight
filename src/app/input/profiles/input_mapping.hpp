@@ -1,11 +1,15 @@
 #pragma once
+#include <functional>
 #include <map>
 #include <optional>
+#include <string>
 #include <firelight/libretro/retropad.hpp>
 
 namespace firelight::input {
     class InputMapping {
     public:
+        explicit InputMapping(std::function<void(InputMapping &)> syncCallback = nullptr);
+
         unsigned getId() const;
 
         unsigned getControllerProfileId();
@@ -26,7 +30,14 @@ namespace firelight::input {
 
         void removeMapping(libretro::IRetroPad::Input input);
 
+        std::string serialize();
+
+        void deserialize(const std::string &data);
+
+        void sync();
+
     private:
+        std::function<void(InputMapping &)> m_syncCallback;
         int m_id = 0;
         int m_controllerProfileId = 0;
         int m_platformId = 0;

@@ -40,12 +40,14 @@ namespace firelight::input {
     void InputMappingItem::addMapping(int input, int mappedInput) {
         m_inputMapping->addMapping(static_cast<libretro::IRetroPad::Input>(input),
                                    static_cast<libretro::IRetroPad::Input>(mappedInput));
+        m_inputMapping->sync();
         m_inputMappings.insert(QString::number(input), mappedInput);
         emit inputMappingsChanged();
     }
 
     void InputMappingItem::removeMapping(int input) {
         m_inputMapping->removeMapping(static_cast<libretro::IRetroPad::Input>(input));
+        m_inputMapping->sync();
         m_inputMappings.remove(QString::number(input));
         emit inputMappingsChanged();
     }

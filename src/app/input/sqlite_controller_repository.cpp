@@ -30,7 +30,7 @@ namespace firelight::input {
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
             "profile_id INTEGER NOT NULL,"
             "platform_id INTEGER NOT NULL,"
-            "mapping_data BLOB NOT NULL,"
+            "mapping_data TEXT,"
             "created_at INTEGER NOT NULL);");
 
         if (!createMappings.exec()) {
@@ -113,9 +113,50 @@ namespace firelight::input {
             }
         }
 
-        auto mapping = std::make_shared<InputMapping>();
+        QSqlQuery query(getDatabase());
+        query.prepare(
+            "SELECT * FROM mappingsv1 WHERE profile_id = :profileId AND platform_id = :platformId");
+        query.bindValue(":profileId", profileId);
+        query.bindValue(":platformId", platformId);
+
+        if (!query.exec() || !query.next()) {
+            QSqlQuery insertQuery(getDatabase());
+            insertQuery.prepare(
+                "INSERT INTO mappingsv1 (profile_id, platform_id, created_at) VALUES (:profileId, :platformId, :createdAt)");
+            insertQuery.bindValue(":profileId", profileId);
+            insertQuery.bindValue(":platformId", platformId);
+            insertQuery.bindValue(":createdAt",
+                                  std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      std::chrono::system_clock::now().time_since_epoch())
+                                  .count());
+
+            if (!insertQuery.exec()) {
+                spdlog::error("Insert failed: {}", insertQuery.lastError().text().toStdString());
+                return {};
+            }
+
+            query.exec();
+            query.next();
+        }
+
+        auto mapping = std::make_shared<InputMapping>([this](InputMapping &m) {
+            QSqlQuery updateQuery(getDatabase());
+            updateQuery.prepare("UPDATE mappingsv1 SET mapping_data = :mappingData WHERE id = :id");
+            updateQuery.bindValue(":mappingData", QString::fromStdString(m.serialize()));
+            updateQuery.bindValue(":id", m.getId());
+
+            if (!updateQuery.exec()) {
+                spdlog::error("Update failed: {}", updateQuery.lastError().text().toStdString());
+            }
+        });
+        mapping->setId(query.value("id").toInt());
         mapping->setControllerProfileId(profileId);
         mapping->setPlatformId(platformId);
+
+        const auto data = query.value("mapping_data");
+        if (!data.isNull()) {
+            mapping->deserialize(data.toString().toStdString());
+        }
 
         m_inputMappings.emplace_back(mapping);
         return mapping;
