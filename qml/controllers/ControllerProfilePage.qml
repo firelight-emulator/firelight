@@ -4,12 +4,13 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
-Item {
+FocusScope {
     id: root
 
     // property alias controllerProfileId: gamepadProfile.profileId
     property var currentMapping: null
     required property var playerNumber
+    focus: true
 
     // GamepadProfile {
     //     id: gamepadProfile
@@ -324,6 +325,7 @@ Item {
             FirelightButton {
                 tooltipLabel: "Close"
                 flat: true
+                focus: true
 
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
@@ -346,6 +348,8 @@ Item {
         anchors.leftMargin: 40
         anchors.rightMargin: 40
 
+        KeyNavigation.right: col
+
         Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -362,6 +366,10 @@ Item {
             Layout.alignment: Qt.AlignRight
             focus: true
 
+            KeyNavigation.right: buttonList
+
+            currentIndex: 0
+
             // onCurrentItemChanged: {
             //     gamepadProfile.currentPlatformId = platformList.currentItem.model.platform_id
             // }
@@ -370,6 +378,7 @@ Item {
             delegate: FirelightMenuItem {
                 required property var model
                 required property var index
+                focus: true
 
                 labelText: model.display_name
                 property bool showGlobalCursor: true
@@ -395,6 +404,10 @@ Item {
             Layout.minimumWidth: 500
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 12
+
+            Keys.onBackPressed: {
+                platformList.forceActiveFocus()
+            }
 
             spacing: 8
 
@@ -433,9 +446,13 @@ Item {
             }
 
             FirelightButton {
+                id: assignAllButton
                 Layout.alignment: Qt.AlignRight
                 label: "Assign all"
                 Layout.bottomMargin: 8
+
+                KeyNavigation.up: headerBar
+                KeyNavigation.left: platformList
 
                 onClicked: function () {
                     confirmDialog.open()
@@ -500,6 +517,11 @@ Item {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
                 clip: true
+                focus: true
+
+                keyNavigationEnabled: true
+
+                KeyNavigation.up: assignAllButton
 
                 ScrollBar.vertical: ScrollBar {
                 }
@@ -514,131 +536,90 @@ Item {
                 }
 
                 model: platformList.currentItem.model.buttons
-                delegate: RowLayout {
+                delegate: FocusScope {
                     height: 48
                     width: ListView.view.width
-                    spacing: 12
-                    Text {
-                        Layout.preferredWidth: 240
-                        Layout.maximumWidth: 240
-                        Layout.alignment: Qt.AlignLeft
-                        Layout.fillHeight: true
-                        text: modelData.display_name
-                        color: "white"
-                        font.pixelSize: 16
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Text {
-                        Layout.preferredWidth: 240
-                        Layout.maximumWidth: 240
-                        Layout.alignment: Qt.AlignLeft
-                        Layout.fillHeight: true
-                        text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
-                        color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-                        font.pixelSize: 16
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    // MyComboBox {
-                    //     id: dropdown
-                    //     Layout.preferredWidth: 240
-                    //     Layout.maximumWidth: 240
-                    //     Layout.alignment: Qt.AlignLeft
-                    //     Layout.fillHeight: true
-                    //     textRole: "text"
-                    //     valueRole: "value"
-                    //     currentIndex: modelData.retropad_button
-                    //     model: [
-                    //         {text: "Y", value: 0},
-                    //         {text: "A", value: 1},
-                    //         {text: "B", value: 2},
-                    //         {text: "X", value: 3},
-                    //         {text: "DPad Up", value: 4},
-                    //         {text: "DPad Down", value: 5},
-                    //         {text: "DPad Left", value: 6},
-                    //         {text: "DPad Right", value: 7},
-                    //         {text: "Start", value: 8},
-                    //         {text: "Select", value: 9},
-                    //         {text: "Misc 1", value: 10},
-                    //         {text: "Misc 2", value: 11},
-                    //         {text: "Misc 3", value: 12},
-                    //         {text: "Misc 4", value: 13},
-                    //         {text: "Misc 5", value: 14},
-                    //         {text: "Misc 6", value: 15},
-                    //         {text: "Misc 7", value: 16},
-                    //         {text: "R1", value: 17},
-                    //         {text: "R2", value: 18},
-                    //         {text: "R3", value: 19},
-                    //         {text: "L1", value: 20},
-                    //         {text: "L2", value: 21},
-                    //         {text: "L3", value: 22},
-                    //         {text: "Left Stick Up", value: 23},
-                    //         {text: "Left Stick Down", value: 24},
-                    //         {text: "Left Stick Left", value: 25},
-                    //         {text: "Left Stick Right", value: 26},
-                    //         {text: "Right Stick Up", value: 27},
-                    //         {text: "Right Stick Down", value: 28},
-                    //         {text: "Right Stick Left", value: 29},
-                    //         {text: "Right Stick Right", value: 30}
-                    //     ]
-                    //
-                    //     // currentIndex: 0
-                    //     // onCurrentIndexChanged: {
-                    //     //     controller_manager.setPlatformIndex(currentIndex)
-                    //     // }
-                    // }
-                    FirelightButton {
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                        tooltipLabel: "Assign"
-                        flat: true
-
-                        Layout.preferredHeight: 42
-                        Layout.preferredWidth: height
-                        Layout.maximumWidth: height
-
-                        iconCode: "\ue3c9"
-
-                        onClicked: {
-                            dialog.buttons = []
-                            dialog.buttons = [{
-                                display_name: modelData.display_name,
-                                retropad_button: modelData.retropad_button
-                            }]
-                            dialog.open()
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 12
+                        Text {
+                            Layout.preferredWidth: 240
+                            Layout.maximumWidth: 240
+                            Layout.alignment: Qt.AlignLeft
+                            Layout.fillHeight: true
+                            text: modelData.display_name
+                            color: "white"
+                            font.pixelSize: 16
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                            verticalAlignment: Text.AlignVCenter
                         }
-                    }
 
-                    FirelightButton {
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                        tooltipLabel: "Reset to default"
-                        flat: true
-
-                        Layout.preferredHeight: 42
-                        Layout.preferredWidth: height
-                        Layout.maximumWidth: height
-
-                        iconCode: "\ue5d5"
-
-                        onClicked: {
-                            inputMapping.removeMapping(modelData.retropad_button)
-                            // dialog.buttons = []
-                            // dialog.buttons = [{
-                            //     display_name: modelData.display_name,
-                            //     retropad_button: modelData.retropad_button
-                            // }]
-                            // dialog.open()
+                        Text {
+                            Layout.preferredWidth: 240
+                            Layout.maximumWidth: 240
+                            Layout.alignment: Qt.AlignLeft
+                            Layout.fillHeight: true
+                            text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
+                            color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
+                            font.pixelSize: 16
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                            verticalAlignment: Text.AlignVCenter
                         }
-                    }
+                        FirelightButton {
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                            focus: true
+                            tooltipLabel: "Assign"
+                            flat: true
 
-                    Item {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                    }
+                            KeyNavigation.right: resetButton
 
+                            Layout.preferredHeight: 42
+                            Layout.preferredWidth: height
+                            Layout.maximumWidth: height
+
+                            iconCode: "\ue3c9"
+
+                            onClicked: {
+                                dialog.buttons = []
+                                dialog.buttons = [{
+                                    display_name: modelData.display_name,
+                                    retropad_button: modelData.retropad_button
+                                }]
+                                dialog.open()
+                            }
+                        }
+
+                        FirelightButton {
+                            id: resetButton
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                            tooltipLabel: "Reset to default"
+                            flat: true
+
+                            Layout.preferredHeight: 42
+                            Layout.preferredWidth: height
+                            Layout.maximumWidth: height
+
+                            iconCode: "\ue5d5"
+
+                            onClicked: {
+                                inputMapping.removeMapping(modelData.retropad_button)
+                                // dialog.buttons = []
+                                // dialog.buttons = [{
+                                //     display_name: modelData.display_name,
+                                //     retropad_button: modelData.retropad_button
+                                // }]
+                                // dialog.open()
+                            }
+                        }
+
+                        Item {
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                        }
+
+                    }
                 }
 
             }
