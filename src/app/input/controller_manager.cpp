@@ -81,6 +81,12 @@ namespace firelight::Input {
               case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
                 virtualInput = libretro::IRetroPad::Input::RightBumper;
                 break;
+              case SDL_CONTROLLER_BUTTON_LEFTSTICK:
+                virtualInput = libretro::IRetroPad::Input::L3;
+                break;
+              case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
+                virtualInput = libretro::IRetroPad::Input::R3;
+                break;
               default:
                 break;
             }
@@ -134,6 +140,12 @@ namespace firelight::Input {
                 break;
               case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
                 virtualInput = libretro::IRetroPad::Input::RightBumper;
+                break;
+              case SDL_CONTROLLER_BUTTON_LEFTSTICK:
+                virtualInput = libretro::IRetroPad::Input::L3;
+                break;
+              case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
+                virtualInput = libretro::IRetroPad::Input::R3;
                 break;
               default:
                 break;
