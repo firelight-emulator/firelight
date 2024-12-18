@@ -26,10 +26,30 @@ namespace firelight::input {
     }
 
     std::string InputMapping::serialize() {
-        return "heya";
+        auto result = std::string();
+        for (const auto &[input, mappedInput]: m_mappings) {
+            result += std::to_string(input) + ":" + std::to_string(mappedInput) + ",";
+        }
+        return result;
     }
 
     void InputMapping::deserialize(const std::string &data) {
+        m_mappings.clear();
+
+        std::string::size_type start = 0;
+        std::string::size_type end = 0;
+        while ((end = data.find(',', start)) != std::string::npos) {
+            auto mapping = data.substr(start, end - start);
+            const auto split = mapping.find(':');
+            if (split == std::string::npos) {
+                continue;
+            }
+            auto input = std::stoi(mapping.substr(0, split));
+            auto mappedInput = std::stoi(mapping.substr(split + 1));
+            m_mappings.emplace(static_cast<libretro::IRetroPad::Input>(input),
+                               static_cast<libretro::IRetroPad::Input>(mappedInput));
+            start = end + 1;
+        }
     }
 
     void InputMapping::sync() {
