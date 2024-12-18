@@ -2,6 +2,7 @@
 
 #include <QOpenGLPaintDevice>
 #include <QPainter>
+#include <QQuickWindow>
 #include <libretro/libretro_vulkan.h>
 #include <spdlog/spdlog.h>
 #include <rhi/qrhi.h>
@@ -325,6 +326,18 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
 
 void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     const auto emulatorItem = dynamic_cast<EmulatorItem *>(item);
+
+    if (emulatorItem == nullptr) {
+        return;
+    }
+
+    if (emulatorItem->window() != nullptr) {
+        if (emulatorItem->window()->screen() != nullptr) {
+            if (emulatorItem->window()->screen()->refreshRate() == 120) {
+                m_waitFrames = 1;
+            }
+        }
+    }
 
     m_paused = emulatorItem->paused();
 
