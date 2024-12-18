@@ -189,11 +189,9 @@ ApplicationWindow {
     }
 
     onActiveFocusItemChanged: {
-        if (activeFocusItem === null) {
+        if (activeFocusItem === null || activeFocusItem.width == 0 || activeFocusItem.height == 0) {
             return
         }
-        debugText.text = activeFocusItem.objectName
-        console.log("Active Focus Item:", activeFocusItem)
 
         activeFocusItem.grabToImage(function (result) {
             debugImage.width = result.width
@@ -219,17 +217,6 @@ ApplicationWindow {
             source: ""
             anchors.centerIn: parent
             fillMode: Image.PreserveAspectFit
-        }
-
-        Text {
-            id: debugText
-            anchors.bottom: debugImage.bottom
-            color: "white"
-            font.pixelSize: 16
-            font.family: Constants.regularFontFamily
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-
         }
 
     }

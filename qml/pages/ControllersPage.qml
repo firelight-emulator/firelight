@@ -115,7 +115,6 @@ Flickable {
                         for (let i = 0; i < visualModel.items.count; i++) {
                             // console.log(visualModel.items.get(i).model.index)
                             list.push(visualModel.items.get(i).model.index)
-                            console.log("i: " + i + " index: " + visualModel.items.get(i).model.index)
                             // visualModel.items.get(i).model.itemsIndex = i
                         }
 

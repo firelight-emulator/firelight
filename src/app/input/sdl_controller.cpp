@@ -317,7 +317,7 @@ namespace firelight::Input {
       case LeftStickUp: {
         const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
         if (value < -8192) {
-          return value;
+          return -value;
         }
         return 0;
       }
@@ -331,7 +331,7 @@ namespace firelight::Input {
       case LeftStickLeft: {
         const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
         if (value < -8192) {
-          return value;
+          return -value;
         }
         return 0;
       }
@@ -345,7 +345,7 @@ namespace firelight::Input {
       case RightStickUp: {
         const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
         if (value < -8192) {
-          return value;
+          return -value;
         }
         return 0;
       }
@@ -359,7 +359,7 @@ namespace firelight::Input {
       case RightStickLeft: {
         const auto value = SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
         if (value < -8192) {
-          return value;
+          return -value;
         }
         return 0;
       }

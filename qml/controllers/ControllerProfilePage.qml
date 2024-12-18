@@ -12,21 +12,6 @@ FocusScope {
     required property var playerNumber
     focus: true
 
-    // GamepadProfile {
-    //     id: gamepadProfile
-    //
-    //     currentPlatformId: platformList.currentItem.model.platform_id
-    //
-    //     onCurrentPlatformIdChanged: {
-    //         root.currentMapping = gamepadProfile.getCurrentMapping()
-    //         if (root.currentMapping) {
-    //             console.log("currentMapping: " + JSON.stringify(root.currentMapping))
-    //         } else {
-    //             console.log("currentMapping: null")
-    //         }
-    //     }
-    // }
-
     GamepadStatus {
         id: gamepadStatus
         playerNumber: root.playerNumber
@@ -36,10 +21,6 @@ FocusScope {
         id: inputMapping
         profileId: gamepadStatus.profileId
         platformId: platformList.currentItem.model.platform_id
-
-        Component.onCompleted: function () {
-            console.log("profileId: " + gamepadStatus.profileId)
-        }
     }
 
     PlatformMetadata {

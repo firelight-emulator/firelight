@@ -93,7 +93,6 @@ FocusScope {
 
         Component.onCompleted: function () {
             startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
-            console.log("WE DID IT")
         }
     }
 

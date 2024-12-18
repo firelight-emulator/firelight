@@ -92,9 +92,6 @@ Rectangle {
         width: videoWidth * 3
         height: videoHeight * 3
         smooth: false
-        Component.onCompleted: function () {
-            console.log("WE DID IT")
-        }
     }
 
     // EmulatorView {

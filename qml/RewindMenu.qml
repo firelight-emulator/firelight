@@ -99,7 +99,6 @@ FocusScope {
         }
         ScriptAction {
             script: {
-                console.log("Popping rewind menu")
                 root.StackView.view.popCurrentItem(StackView.Immediate)
             }
         }
@@ -193,7 +192,6 @@ FocusScope {
             // }
 
             onCurrentIndexChanged: {
-                console.log("Current index changed: " + currentIndex)
                 // scrollSound.play()
                 // if (currentIndex == 0) {
                 //     coverImage.source = "image://gameImages/0"
