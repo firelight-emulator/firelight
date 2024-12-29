@@ -1,6 +1,5 @@
 #include "audio_manager.hpp"
 #include <libswresample/swresample.h>
-#include <spdlog/spdlog.h>
 
 void AudioManager::initializeResampler(int64_t in_channel_layout, int in_sample_rate, enum AVSampleFormat in_sample_fmt,
                                        int64_t out_channel_layout, int out_sample_rate,

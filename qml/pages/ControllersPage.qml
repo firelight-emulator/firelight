@@ -67,7 +67,8 @@ Flickable {
                 label: "Edit profile"
 
                 onClicked: function () {
-                    profileDialog.open()
+                    // profileDialog.open()
+                    screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
                 }
             }
 
@@ -114,7 +115,6 @@ Flickable {
                         for (let i = 0; i < visualModel.items.count; i++) {
                             // console.log(visualModel.items.get(i).model.index)
                             list.push(visualModel.items.get(i).model.index)
-                            console.log("i: " + i + " index: " + visualModel.items.get(i).model.index)
                             // visualModel.items.get(i).model.itemsIndex = i
                         }
 
@@ -308,19 +308,6 @@ Flickable {
     Component {
         id: profileEditor
         ControllerProfilePage {
-            controllerProfileId: 1
-        }
-    }
-
-    FirelightDialog {
-        id: profileDialog
-        width: parent.width * 5 / 6
-        height: parent.height * 5 / 6
-        // title: "Creating new controller profile"
-        centerButtons: false
-        acceptText: "Save"
-        contentItem: ControllerProfilePage {
-            controllerProfileId: 1
         }
     }
 

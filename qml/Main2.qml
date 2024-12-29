@@ -189,7 +189,7 @@ ApplicationWindow {
     }
 
     onActiveFocusItemChanged: {
-        if (activeFocusItem === null) {
+        if (activeFocusItem === null || activeFocusItem.width == 0 || activeFocusItem.height == 0) {
             return
         }
 

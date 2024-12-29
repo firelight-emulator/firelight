@@ -149,7 +149,7 @@ FocusScope {
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
-                enabled: true
+                enabled: false
                 checkable: false
                 alignRight: true
 
@@ -295,10 +295,6 @@ FocusScope {
                     }
                 }
 
-                onFocusChanged: function () {
-                    console.log("Focus changed on create button: " + focus)
-                }
-
                 onClicked: function () {
                     if (rightSide.depth === 0) {
                         previouslyFocusedItem = createSuspendPointButton
@@ -341,7 +337,6 @@ FocusScope {
 
                 onClicked: function () {
                     if (rightSide.depth > 0) {
-                        console.log("doing it")
                         rightSide.popCurrentItem(StackView.PopTransition)
                         root.previouslyFocusedItem = null
                     }

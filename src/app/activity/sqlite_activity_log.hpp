@@ -1,10 +1,10 @@
 #pragma once
 
-#include "firelight/activity_log.hpp"
+#include "firelight/activity/activity_log.hpp"
 
 
 namespace firelight::activity {
-    class SqliteActivityLog : public IActivityLog {
+    class SqliteActivityLog final : public IActivityLog {
     public:
         bool createPlaySession(db::PlaySession &session) override;
 

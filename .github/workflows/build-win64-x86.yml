@@ -36,6 +36,7 @@ jobs:
             qt6:p
             gettext:p
             qt6-tools:p
+            ffmpeg:p
             SDL2:p
             cpr:p
             spdlog:p

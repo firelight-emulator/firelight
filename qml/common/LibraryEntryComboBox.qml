@@ -24,7 +24,6 @@ ComboBox {
             firstTime = false
             return
         }
-        console.log("changed")
         entryId = currentValue
         currentEntry: library_database.getLibraryEntryJson(entryId)
     }

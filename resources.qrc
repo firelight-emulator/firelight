@@ -18,6 +18,10 @@
         <file alias="gbc.svg">_img/gbc.svg</file>
         <file alias="gba.svg">_img/gba.svg</file>
         <file alias="n64.svg">_img/N64.svg</file>
+        <file alias="ds.svg">_img/DS.svg</file>
+        <file alias="sms.svg">_img/mastersystem.svg</file>
+        <file alias="gen.svg">_img/genesis.svg</file>
+        <file alias="gg.svg">_img/gamegear.svg</file>
         <file alias="switch-pro.svg">_img/SwitchPro.svg</file>
     </qresource>
     <qresource prefix="/images/controllers">

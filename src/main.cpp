@@ -13,11 +13,11 @@
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
+#include "app/input/sqlite_controller_repository.hpp"
 #include "app/rcheevos/ra_client.hpp"
 #include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
-#include "app/emulation_manager.hpp"
-#include "app/router.hpp"
+#include "gui/router.hpp"
 #include "app/audio/SfxPlayer.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
@@ -25,15 +25,13 @@
 #include "app/library/library_scanner2.hpp"
 #include "app/library/sqlite_library_database.hpp"
 #include "app/saves/save_manager.hpp"
-#include "gui/controller_list_model.hpp"
-#include "gui/gamepad_profile.hpp"
+#include "app/input/controller_list_model.hpp"
 #include "gui/game_image_provider.hpp"
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
-#include "gui/library_item_model.hpp"
-#include "gui/library_sort_filter_model.hpp"
-#include "gui/mod_item_model.hpp"
+#include "app/library/library_item_model.hpp"
+#include "app/library/library_sort_filter_model.hpp"
 #include "gui/platform_list_model.hpp"
-#include "gui/playlist_item_model.hpp"
+#include "app/library/playlist_item_model.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/models/shop/shop_item_model.hpp"
 #include <archive.h>
@@ -41,8 +39,10 @@
 #include <QtConcurrent>
 
 #include "app/emulator_item.hpp"
-#include "app/gamepad_status_item.hpp"
+#include "app/input/gamepad_status_item.hpp"
 #include "app/game_loader.hpp"
+#include "app/PlatformMetadataItem.hpp"
+#include "app/input/input_mapping_item.hpp"
 #include "app/library/sqlite_user_library.hpp"
 #include "gui/models/library/entry_list_model.hpp"
 
@@ -152,9 +152,15 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  firelight::Input::ControllerManager controllerManager;
+  QDir baseDir(defaultAppDataPathString);
+
+  firelight::input::SqliteControllerRepository controllerRepository(baseDir.filePath("controllers.db"));
+  firelight::Input::ControllerManager controllerManager(controllerRepository);
+  firelight::input::InputManager inputManager;
+  firelight::ManagerAccessor::setInputManager(&inputManager);
 
   firelight::ManagerAccessor::setControllerManager(&controllerManager);
+  firelight::ManagerAccessor::setControllerRepository(&controllerRepository);
 
   controllerManager.refreshControllerList();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
@@ -208,7 +214,6 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setAchievementManager(&raClient);
 
   // Set up the models for QML ***********************************************
-  firelight::gui::ModItemModel modListModel(contentDatabase);
   firelight::gui::ControllerListModel controllerListModel(controllerManager);
   firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
   firelight::gui::LibraryItemModel libModel(&libraryDatabase, &contentDatabase,
@@ -244,11 +249,10 @@ int main(int argc, char *argv[]) {
 
   // qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
-  qmlRegisterType<EmulationManager>("Firelight", 1, 0, "EmulatorView");
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0, "GamepadStatus");
-  qmlRegisterType<firelight::gui::GamepadMapping>("Firelight", 1, 0, "GamepadMapping");
-  qmlRegisterType<firelight::gui::GamepadProfile>("Firelight", 1, 0, "GamepadProfile");
+  qmlRegisterType<firelight::input::InputMappingItem>("Firelight", 1, 0, "InputMapping");
+  qmlRegisterType<firelight::PlatformMetadataItem>("Firelight", 1, 0, "PlatformMetadata");
 
   firelight::gui::Router router;
 
@@ -269,7 +273,6 @@ int main(int argc, char *argv[]) {
                                            &controllerListModel);
   engine.rootContext()->setContextProperty("controller_manager",
                                            &controllerManager);
-  engine.rootContext()->setContextProperty("mod_model", &modListModel);
   engine.rootContext()->setContextProperty("platform_model", &platformListModel);
   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
   engine.rootContext()->setContextProperty("SaveManager", &saveManager);

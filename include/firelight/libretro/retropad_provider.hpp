@@ -8,6 +8,6 @@ namespace firelight::libretro {
   public:
     virtual ~IRetropadProvider() = default;
 
-    virtual std::optional<IRetroPad *> getRetropadForPlayerIndex(int t_player) = 0;
+    virtual std::optional<IRetroPad *> getRetropadForPlayerIndex(int t_player, int platformId) = 0;
   };
 } // namespace firelight::libretro

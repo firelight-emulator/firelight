@@ -89,6 +89,8 @@ FocusScope {
             Layout.alignment: Qt.AlignRight
             focus: true
 
+            interactive: false
+
             property int lastIndex: 0
             currentIndex: 0
 

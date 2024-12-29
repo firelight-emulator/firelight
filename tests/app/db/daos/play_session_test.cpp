@@ -1,4 +1,4 @@
-#include "firelight/play_session.hpp"
+#include "firelight/activity/play_session.hpp"
 #include <gtest/gtest.h>
 
 namespace firelight::db {

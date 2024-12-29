@@ -1,10 +1,6 @@
 #pragma once
 
-#include <QQuickItem>
-#include <QQuickRhiItem>
-#include <firelight/libretro/video_data_receiver.hpp>
-
-#include "audio_manager.hpp"
+#include "audio/audio_manager.hpp"
 #include "emulator_item_renderer.hpp"
 #include "manager_accessor.hpp"
 #include "libretro/core_configuration.hpp"

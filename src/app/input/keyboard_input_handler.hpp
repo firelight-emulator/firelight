@@ -4,31 +4,47 @@
 #include <QMap>
 #include <QTimer>
 #include <QPointF>
+
+#include "gamepad.hpp"
 #include "firelight/libretro/retropad.hpp"
 
 namespace firelight::input {
-  class KeyboardInputHandler final : public QObject, public libretro::IRetroPad {
+  class KeyboardInputHandler final : public QObject, public IGamepad {
     Q_OBJECT
 
   public:
-    bool isButtonPressed(Button t_button) override;
+    void setActiveMapping(const std::shared_ptr<InputMapping> &mapping) override;
 
-    int16_t getLeftStickXPosition() override;
+    bool isButtonPressed(int platformId, Input t_button) override;
 
-    int16_t getLeftStickYPosition() override;
+    int16_t getLeftStickXPosition(int platformId) override;
 
-    int16_t getRightStickXPosition() override;
+    int16_t getLeftStickYPosition(int platformId) override;
 
-    int16_t getRightStickYPosition() override;
+    int16_t getRightStickXPosition(int platformId) override;
 
-    void setStrongRumble(uint16_t t_strength) override;
+    int16_t getRightStickYPosition(int platformId) override;
 
-    void setWeakRumble(uint16_t t_strength) override;
+    void setStrongRumble(int platformId, uint16_t t_strength) override;
+
+    void setWeakRumble(int platformId, uint16_t t_strength) override;
+
+    std::string getName() const override;
+
+    int getPlayerIndex() const override;
+
+    void setPlayerIndex(int playerIndex) override;
+
+    bool isWired() const override;
+
+    GamepadType getType() const override;
+
+    int getProfileId() const override;
 
   protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
   private:
-    QMap<Button, bool> m_buttonStates;
+    QMap<Input, bool> m_buttonStates;
   };
 } // namespace firelight::gui

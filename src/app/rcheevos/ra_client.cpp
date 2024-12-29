@@ -14,8 +14,8 @@
 #include "regular_http_client.hpp"
 #include "firelight/achievement.hpp"
 
-#include "../../gui/achievement_list_model.hpp"
-#include "../../gui/achievement_list_sort_filter_model.hpp"
+#include "achievement_list_model.hpp"
+#include "achievement_list_sort_filter_model.hpp"
 
 namespace firelight::achievements {
   static ::libretro::Core *theCore;

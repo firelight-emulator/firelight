@@ -10,7 +10,7 @@
 #include <firelight/libretro/video_data_receiver.hpp>
 #include <rhi/qrhi.h>
 
-#include "audio_manager.hpp"
+#include "audio/audio_manager.hpp"
 #include "manager_accessor.hpp"
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"

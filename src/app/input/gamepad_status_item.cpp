@@ -10,8 +10,9 @@ namespace firelight::input {
                 m_controller = getControllerManager()->getControllerForPlayerIndex(m_playerNumber - 1).
                         value_or(nullptr);
                 if (m_controller) {
-                    m_name = QString::fromStdString(m_controller->getControllerName());
+                    m_name = QString::fromStdString(m_controller->getName());
                     emit nameChanged();
+                    emit profileIdChanged();
 
                     m_isConnected = true;
                     emit isConnectedChanged();
@@ -27,6 +28,7 @@ namespace firelight::input {
                 m_name.clear();
                 m_isConnected = false;
                 emit isConnectedChanged();
+                emit profileIdChanged();
             }
         });
         connect(controllerManager, &Input::ControllerManager::buttonStateChanged, this,
@@ -51,12 +53,13 @@ namespace firelight::input {
         }
 
         m_playerNumber = playerNumber;
-        m_controller = getControllerManager()->getControllerForPlayerIndex(m_playerNumber).value_or(nullptr);
+        m_controller = getControllerManager()->getControllerForPlayerIndex(m_playerNumber - 1).value_or(nullptr);
         if (m_controller != nullptr && !m_isConnected) {
             m_isConnected = true;
             emit isConnectedChanged();
         }
 
+        emit profileIdChanged();
         emit playerNumberChanged();
     }
 
@@ -74,6 +77,44 @@ namespace firelight::input {
 
     QString GamepadStatusItem::getName() const {
         return m_name;
+    }
+
+    QVariantMap GamepadStatusItem::getInputLabels() const {
+        return {
+            {QString::number(libretro::IRetroPad::Input::NorthFace), "North Face"},
+            {QString::number(libretro::IRetroPad::Input::SouthFace), "South Face"},
+            {QString::number(libretro::IRetroPad::Input::EastFace), "East Face"},
+            {QString::number(libretro::IRetroPad::Input::WestFace), "West Face"},
+            {QString::number(libretro::IRetroPad::Input::Start), "Start"},
+            {QString::number(libretro::IRetroPad::Input::Select), "Select"},
+            {QString::number(libretro::IRetroPad::Input::LeftBumper), "L1"},
+            {QString::number(libretro::IRetroPad::Input::RightBumper), "R1"},
+            {QString::number(libretro::IRetroPad::Input::LeftTrigger), "L2"},
+            {QString::number(libretro::IRetroPad::Input::RightTrigger), "R2"},
+            {QString::number(libretro::IRetroPad::Input::L3), "L3"},
+            {QString::number(libretro::IRetroPad::Input::R3), "R3"},
+            {QString::number(libretro::IRetroPad::Input::DpadDown), "D-Pad Down"},
+            {QString::number(libretro::IRetroPad::Input::DpadLeft), "D-Pad Left"},
+            {QString::number(libretro::IRetroPad::Input::DpadRight), "D-Pad Right"},
+            {QString::number(libretro::IRetroPad::Input::DpadUp), "D-Pad Up"},
+            {QString::number(libretro::IRetroPad::Input::LeftStickLeft), "Left Stick Left"},
+            {QString::number(libretro::IRetroPad::Input::LeftStickRight), "Left Stick Right"},
+            {QString::number(libretro::IRetroPad::Input::LeftStickUp), "Left Stick Up"},
+            {QString::number(libretro::IRetroPad::Input::LeftStickDown), "Left Stick Down"},
+            {QString::number(libretro::IRetroPad::Input::RightStickLeft), "Right Stick Left"},
+            {QString::number(libretro::IRetroPad::Input::RightStickRight), "Right Stick Right"},
+            {QString::number(libretro::IRetroPad::Input::RightStickUp), "Right Stick Up"},
+            {QString::number(libretro::IRetroPad::Input::RightStickDown), "Right Stick Down"},
+        };
+    }
+
+    int GamepadStatusItem::getProfileId() const {
+        if (m_isConnected) {
+            return m_controller->getProfileId();
+        }
+
+        return 0;
+        return m_controller->getProfileId();
     }
 } // input
 // firelight

@@ -1,34 +1,46 @@
 #pragma once
+#include <functional>
 #include <map>
 #include <optional>
-#include <SDL_gamecontroller.h>
+#include <string>
 #include <firelight/libretro/retropad.hpp>
 
 namespace firelight::input {
     class InputMapping {
-        enum InputType {
-            BUTTON, AXIS
-        };
-
-        class InputDescription {
-            InputType type{};
-
-            SDL_GameControllerButton button{};
-            SDL_GameControllerAxis axis{};
-            bool axisPositive = true;
-        };
-
     public:
-        std::optional<bool> evaluateButtonMapping(SDL_Joystick *joystick, libretro::IRetroPad::Button button);
+        explicit InputMapping(std::function<void(InputMapping &)> syncCallback = nullptr);
 
-        std::optional<float> evaluateAxisMapping(SDL_Joystick *joystick, libretro::IRetroPad::Axis axis);
+        unsigned getId() const;
 
-        std::optional<InputDescription> getButtonMapping(libretro::IRetroPad::Button button);
+        unsigned getControllerProfileId();
 
-        std::optional<InputDescription> getAxisMapping(libretro::IRetroPad::Axis axis);
+        unsigned getPlatformId() const;
+
+        void setId(unsigned id);
+
+        void setControllerProfileId(unsigned controllerProfileId);
+
+        void setPlatformId(unsigned platformId);
+
+        void addMapping(libretro::IRetroPad::Input input, libretro::IRetroPad::Input mappedInput);
+
+        std::optional<libretro::IRetroPad::Input> getMappedInput(libretro::IRetroPad::Input input);
+
+        std::map<libretro::IRetroPad::Input, libretro::IRetroPad::Input> &getMappings();
+
+        void removeMapping(libretro::IRetroPad::Input input);
+
+        std::string serialize();
+
+        void deserialize(const std::string &data);
+
+        void sync();
 
     private:
-        std::map<libretro::IRetroPad::Button, InputDescription> m_buttonMappings;
-        std::map<libretro::IRetroPad::Axis, InputDescription> m_axisMappings;
+        std::function<void(InputMapping &)> m_syncCallback;
+        int m_id = 0;
+        int m_controllerProfileId = 0;
+        int m_platformId = 0;
+        std::map<libretro::IRetroPad::Input, libretro::IRetroPad::Input> m_mappings{};
     };
 }

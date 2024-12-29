@@ -6,7 +6,7 @@
 namespace firelight::libretro {
   class IRetroPad {
   public:
-    enum Button {
+    enum Input {
       SouthFace = RETRO_DEVICE_ID_JOYPAD_B,
       EastFace = RETRO_DEVICE_ID_JOYPAD_A,
       WestFace = RETRO_DEVICE_ID_JOYPAD_Y,
@@ -22,30 +22,39 @@ namespace firelight::libretro {
       LeftTrigger = RETRO_DEVICE_ID_JOYPAD_L2,
       RightTrigger = RETRO_DEVICE_ID_JOYPAD_R2,
       L3 = RETRO_DEVICE_ID_JOYPAD_L3,
-      R3 = RETRO_DEVICE_ID_JOYPAD_R3
+      R3 = RETRO_DEVICE_ID_JOYPAD_R3,
+      LeftStickUp = RETRO_DEVICE_ID_JOYPAD_MASK | 0,
+      LeftStickDown = RETRO_DEVICE_ID_JOYPAD_MASK | 1,
+      LeftStickLeft = RETRO_DEVICE_ID_JOYPAD_MASK | 2,
+      LeftStickRight = RETRO_DEVICE_ID_JOYPAD_MASK | 3,
+      RightStickUp = RETRO_DEVICE_ID_JOYPAD_MASK | 4,
+      RightStickDown = RETRO_DEVICE_ID_JOYPAD_MASK | 5,
+      RightStickLeft = RETRO_DEVICE_ID_JOYPAD_MASK | 6,
+      RightStickRight = RETRO_DEVICE_ID_JOYPAD_MASK | 7,
+      Unknown = RETRO_DEVICE_ID_JOYPAD_MASK | 8
     };
 
     enum Axis {
-      LeftStickX,
-      LeftStickY,
-      RightStickX,
-      RightStickY
+      LeftStickX = RETRO_DEVICE_ID_JOYPAD_MASK | 0,
+      LeftStickY = RETRO_DEVICE_ID_JOYPAD_MASK | 1,
+      RightStickX = RETRO_DEVICE_ID_JOYPAD_MASK | 2,
+      RightStickY = RETRO_DEVICE_ID_JOYPAD_MASK | 3
     };
 
     virtual ~IRetroPad() = default;
 
-    virtual bool isButtonPressed(Button t_button) = 0;
+    virtual bool isButtonPressed(int platformId, Input t_button) = 0;
 
-    virtual int16_t getLeftStickXPosition() = 0;
+    virtual int16_t getLeftStickXPosition(int platformId) = 0;
 
-    virtual int16_t getLeftStickYPosition() = 0;
+    virtual int16_t getLeftStickYPosition(int platformId) = 0;
 
-    virtual int16_t getRightStickXPosition() = 0;
+    virtual int16_t getRightStickXPosition(int platformId) = 0;
 
-    virtual int16_t getRightStickYPosition() = 0;
+    virtual int16_t getRightStickYPosition(int platformId) = 0;
 
-    virtual void setStrongRumble(uint16_t t_strength) = 0;
+    virtual void setStrongRumble(int platformId, uint16_t t_strength) = 0;
 
-    virtual void setWeakRumble(uint16_t t_strength) = 0;
+    virtual void setWeakRumble(int platformId, uint16_t t_strength) = 0;
   };
 } // namespace firelight::libretro

@@ -43,7 +43,8 @@ namespace libretro {
   public:
     std::basic_string<char> dumpJson();
 
-    Core(const std::string &libPath, std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider);
+    Core(int platformId, const std::string &libPath,
+         std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider);
 
     virtual ~Core();
 
@@ -98,6 +99,7 @@ namespace libretro {
     std::function<void()> destroyContextFunction = nullptr;
 
     retro_system_av_info *retroSystemAVInfo;
+    int m_platformId = -1;
 
   private:
     std::unique_ptr<QLibrary> coreLib;

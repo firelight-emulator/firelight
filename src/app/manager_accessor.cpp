@@ -13,6 +13,8 @@ namespace firelight {
   gui::GameImageProvider *ManagerAccessor::m_gameImageProvider;
   library::IUserLibrary *ManagerAccessor::m_userLibrary;
   activity::IActivityLog *ManagerAccessor::m_activityLog;
+  input::InputManager *ManagerAccessor::m_inputManager;
+  input::IControllerRepository *ManagerAccessor::m_controllerRepository;
 
   void ManagerAccessor::setControllerManager(
     Input::ControllerManager *t_manager) {
@@ -58,6 +60,14 @@ namespace firelight {
     m_activityLog = t_activityLog;
   }
 
+  void ManagerAccessor::setInputManager(input::InputManager *t_inputManager) {
+    m_inputManager = t_inputManager;
+  }
+
+  void ManagerAccessor::setControllerRepository(input::IControllerRepository *t_controllerRepository) {
+    m_controllerRepository = t_controllerRepository;
+  }
+
   Input::ControllerManager *ManagerAccessor::getControllerManager() {
     // TODO: Check for nullptr and throw exception or something
     return m_controllerManager;
@@ -95,5 +105,13 @@ namespace firelight {
 
   activity::IActivityLog *ManagerAccessor::getActivityLog() {
     return m_activityLog;
+  }
+
+  input::InputManager *ManagerAccessor::getInputManager() {
+    return m_inputManager;
+  }
+
+  input::IControllerRepository *ManagerAccessor::getControllerRepository() {
+    return m_controllerRepository;
   }
 } // namespace firelight

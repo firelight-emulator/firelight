@@ -22,7 +22,7 @@ Dialog {
     padding: 24
 
     width: 520
-    height: 240
+    height: Math.max(240, contentItem.implicitHeight + footer.height + spacing + verticalPadding * 2)
 
     background: Rectangle {
         color: ColorPalette.neutral900

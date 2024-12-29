@@ -59,7 +59,7 @@ namespace firelight::gui {
         beginInsertRows(QModelIndex{}, i, i);
 
         QString imageUrl;
-        switch (con.value()->getGamepadType()) {
+        switch (con.value()->getType()) {
           case MICROSOFT_XBOX_360:
           case MICROSOFT_XBOX_ONE:
             imageUrl = "file:system/_img/Xbox.svg";
@@ -79,7 +79,7 @@ namespace firelight::gui {
 
         m_items.push_back(
           {
-            i, QString::fromStdString(con.value()->getControllerName()),
+            i, QString::fromStdString(con.value()->getName()),
             "None", con.value()->isWired(), imageUrl
           });
         endInsertRows();

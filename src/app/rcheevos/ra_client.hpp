@@ -17,7 +17,7 @@
 #include <utility>
 
 #include "regular_http_client.hpp"
-#include "../../gui/achievement_list_sort_filter_model.hpp"
+#include "achievement_list_sort_filter_model.hpp"
 
 namespace libretro {
   class Core;
