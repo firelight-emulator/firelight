@@ -156,20 +156,6 @@ ApplicationWindow {
                 }
             }
         }
-
-        Behavior on width {
-            NumberAnimation {
-                duration: 100
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        Behavior on height {
-            NumberAnimation {
-                duration: 100
-                easing.type: Easing.InOutQuad
-            }
-        }
     }
 
     Connections {
@@ -189,7 +175,7 @@ ApplicationWindow {
     }
 
     onActiveFocusItemChanged: {
-        if (activeFocusItem === null || activeFocusItem.width == 0 || activeFocusItem.height == 0) {
+        if (activeFocusItem === null || activeFocusItem.width === 0 || activeFocusItem.height === 0) {
             return
         }
 
@@ -218,12 +204,13 @@ ApplicationWindow {
             anchors.centerIn: parent
             fillMode: Image.PreserveAspectFit
         }
-
     }
 
     Component {
         id: emulatorScreen
         EmulatorScreen {
+
+            focus: true
 
             // Component.onCompleted: {
             //     console.log("Graphics Info:")
@@ -234,34 +221,48 @@ ApplicationWindow {
             // }
 
             onGameAboutToStop: function () {
-                screenStack.pushItem(homeScreen, {}, StackView.PushTransition)
+                screenStack.popCurrentItem()
             }
 
+            onGameStopped: function () {
+                emulatorLoader.active = false
+            }
         }
     }
 
-    // Rectangle {
-    //     id: cursor
-    //     parent: window.activeFocusItem
-    //     anchors.fill: parent
-    //     anchors.margins: -2
-    //     color: "transparent"
-    //     border.color: "lightblue"
-    //     border.width: 3
-    //     radius: 4
-    // }
+    Loader {
+        id: emulatorLoader
+        property var gameData
+        property var saveData
+        property var corePath
+        property var contentHash
+        property var saveSlotNumber
+        property var platformId
+        property var contentPath
+
+        active: false
+        sourceComponent: emulatorScreen
+
+        StackView.onActivating: {
+            active = true
+        }
+
+        onLoaded: function () {
+            emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+        }
+    }
 
     StackView {
         id: screenStack
         anchors.fill: parent
         focus: true
-
-
-        Component.onCompleted: {
-            screenStack.pushItems([emulatorScreen, homeScreen])
-        }
+        initialItem: homeScreen
 
         Keys.onPressed: function (event) {
+            if (event.key === Qt.Key_F1) {
+                quickMenuBar.visible = !quickMenuBar.visible
+            }
+
             if (event.key === Qt.Key_F12) {
                 debugWindow.visible = !debugWindow.visible
             }
@@ -351,6 +352,125 @@ ApplicationWindow {
         }
     }
 
+    Popup {
+        id: quickMenuBar
+        parent: Overlay.overlay
+        modal: true
+        focus: true
+
+        padding: 16
+
+        height: 72
+        y: parent.height - height
+        width: parent.width
+
+        onAboutToShow: function () {
+            sfx_player.play("quickopen")
+        }
+
+        onAboutToHide: function () {
+            sfx_player.play("quickclose")
+        }
+
+        Overlay.modal: Rectangle {
+            color: "black"
+            anchors.fill: parent
+            opacity: 0.6
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 200
+                }
+            }
+        }
+
+        enter: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    target: contentThing
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    target: contentThing
+                    property: "y"
+                    from: 20
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
+        exit: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    target: contentThing
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    target: contentThing
+                    property: "y"
+                    from: 0
+                    to: 20
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
+        background: Item {
+        }
+        contentItem: FocusScope {
+            focus: true
+            id: contentThing
+            ListView {
+                width: (48 * 4) + 5 * 42
+                focus: true
+                height: parent.height
+                anchors.horizontalCenter: parent.horizontalCenter
+                orientation: ListView.Horizontal
+                currentIndex: 0
+                model: ListModel {
+                    ListElement {
+                        icon: "\ue88a"; label: "Home"
+                    }
+                    ListElement {
+                        icon: "\uf53e"; label: "Library"
+                    }
+                    ListElement {
+                        icon: "\uf135"; label: "Controllers"
+                    }
+                    ListElement {
+                        icon: "\ue8b8"; label: "Settings"
+                    }
+                    ListElement {
+                        icon: "\ue8ac"; label: "Power"
+                    }
+                }
+                spacing: 48
+                delegate: FirelightButton {
+                    focus: true
+                    required property var model
+                    required property var index
+                    tooltipLabel: model.label
+                    tooltipOnTop: true
+                    circle: true
+                    flat: true
+                    iconCode: model.icon
+                }
+            }
+
+        }
+    }
+
 
     Rectangle {
         id: overlay
@@ -395,8 +515,18 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
-                screenStack.popCurrentItem(StackView.Immediate)
-                screenStack.currentItem.startGame(gameLoadedAnimation.gameData, gameLoadedAnimation.saveData, gameLoadedAnimation.corePath, gameLoadedAnimation.contentHash, gameLoadedAnimation.saveSlotNumber, gameLoadedAnimation.platformId, gameLoadedAnimation.contentPath)
+                // screenStack.popCurrentItem(StackView.Immediate)
+                // screenStack.currentItem.startGame(gameLoadedAnimation.gameData, gameLoadedAnimation.saveData, gameLoadedAnimation.corePath, gameLoadedAnimation.contentHash, gameLoadedAnimation.saveSlotNumber, gameLoadedAnimation.platformId, gameLoadedAnimation.contentPath)
+                screenStack.pushItem(emulatorLoader, {
+                    gameData: gameLoadedAnimation.gameData,
+                    saveData: gameLoadedAnimation.saveData,
+                    corePath: gameLoadedAnimation.corePath,
+                    contentHash: gameLoadedAnimation.contentHash,
+                    saveSlotNumber: gameLoadedAnimation.saveSlotNumber,
+                    platformId: gameLoadedAnimation.platformId,
+                    contentPath: gameLoadedAnimation.contentPath
+                }, StackView.Immediate)
+                // emulatorLoader.startGame(gameLoadedAnimation.gameData, gameLoadedAnimation.saveData, gameLoadedAnimation.corePath, gameLoadedAnimation.contentHash, gameLoadedAnimation.saveSlotNumber, gameLoadedAnimation.platformId, gameLoadedAnimation.contentPath)
                 // emulatorScreen
             }
         }
@@ -432,7 +562,7 @@ ApplicationWindow {
         id: homeScreen
 
         HomeScreen {
-            layer.enabled: true
+            focus: true
             onReadyToStartGame: {
                 gameStartAnimation.running = true
             }

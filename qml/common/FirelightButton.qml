@@ -11,6 +11,7 @@ Button {
     property bool rounded: true
     property real radius: 0
     property bool circle: false
+    property bool tooltipOnTop: false
 
     implicitHeight: AppStyle.buttonStandardHeight
     implicitWidth: control.circle ? AppStyle.buttonStandardHeight : AppStyle.buttonStandardWidth
@@ -84,8 +85,10 @@ Button {
         font.weight: Font.Light
         color: "white"
         anchors {
-            top: parent.bottom
-            topMargin: 4
+            top: control.tooltipOnTop ? undefined : parent.bottom
+            topMargin: control.tooltipOnTop ? 0 : 4
+            bottom: control.tooltipOnTop ? parent.top : undefined
+            bottomMargin: control.tooltipOnTop ? 8 : 0
             horizontalCenter: parent.horizontalCenter
         }
     }
