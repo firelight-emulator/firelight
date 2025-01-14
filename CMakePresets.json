@@ -2,6 +2,26 @@
   "version": 6,
   "configurePresets": [
     {
+      "name": "debug-full-mingw",
+      "displayName": "Debug-Full-MinGW",
+      "binaryDir": "build/debug",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "VCPKG_LIBRARY_LINKAGE": "static",
+        "VCPKG_DISABLE_COMPILER_TRACKING": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_HOST_TRIPLET": "x64-mingw-dynamic"
+      },
+      "environment": {
+        "VCPKG_DEFAULT_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_DEFAULT_TARGET_TRIPLET": "x64-mingw-dynamic"
+      }
+    },
+    {
       "name": "debug",
       "displayName": "Debug",
       "generator": "Ninja",
