@@ -13,7 +13,7 @@ set(VCPKG_DISABLE_COMPILER_TRACKING ON)
 
 set(CMAKE_BUILD_RPATH ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
 
-list(APPEND CMAKE_PREFIX_PATH "/Users/alexcharles/Qt/6.7.2/macos" "/opt/homebrew")
+list(APPEND CMAKE_PREFIX_PATH "/Users/alexcharles/Qt/6.7.2/macos" "/opt/homebrew" "C:/Qt/6.8.1/mingw_64")
 
 list(APPEND CMAKE_INCLUDE_PATH "/opt/homebrew/include")
 
@@ -37,7 +37,7 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(Qt6 6.7 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql Charts QuickTest Multimedia REQUIRED)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql Charts QuickTest Multimedia REQUIRED)
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -59,6 +59,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(/opt/homebrew/include)
 add_subdirectory(src/app)
+add_subdirectory(libs/discord)
 
 file(GLOB QML_FILES
         qml/*.qml
@@ -74,6 +75,7 @@ set_source_files_properties(qml/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE T
 set_source_files_properties(qml/ColorPalette.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/NewRouter.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 add_library(firelight_lib
         src/app/libretro/core.cpp
@@ -181,11 +183,15 @@ target_link_libraries(firelight_lib PUBLIC
         patching
         rcheevos)
 
+set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/app_resources.rc")
+
 # main code
 qt6_add_executable(firelight
         resources.qrc
+        app_resources.rc
         src/main.cpp
 )
+
 
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)

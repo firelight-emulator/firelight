@@ -333,9 +333,11 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
     if (emulatorItem->window() != nullptr) {
         if (emulatorItem->window()->screen() != nullptr) {
-            if (emulatorItem->window()->screen()->refreshRate() == 120) {
+          printf("Refresh rate: %f\n", emulatorItem->window()->screen()->refreshRate());
+          auto refreshRate = emulatorItem->window()->screen()->refreshRate();
+          if (floor(refreshRate) == 120 || ceil(refreshRate) == 120) {
                 m_waitFrames = 1;
-            }
+          }
         }
     }
 

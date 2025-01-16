@@ -52,6 +52,8 @@ private:
 
     int m_sampleRate = 0;
 
+    AVChannelLayout *m_channelLayout = new AVChannelLayout;
+
     void initializeResampler(int64_t in_channel_layout, int in_sample_rate, enum AVSampleFormat in_sample_fmt,
                              int64_t out_channel_layout, int out_sample_rate, enum AVSampleFormat out_sample_fmt);
 };

@@ -12,12 +12,6 @@ FocusScope {
 
     signal readyToStartGame()
 
-    Keys.onEscapePressed: function (event) {
-        if (root.StackView.status !== StackView.Active && !event.isAutoRepeat) {
-            closeAppConfirmationDialog.open()
-        }
-    }
-
     Component {
         id: shopPage
         ShopLandingPage {
@@ -56,16 +50,6 @@ FocusScope {
             // onEntryClicked: function (id) {
             //     emulatorScreen.loadGame(id)
             // }
-        }
-    }
-
-
-    Component {
-        id: controllerPage
-        ControllersPage {
-            property bool topLevel: true
-            property string topLevelName: "controllers"
-            property string pageTitle: "Controllers"
         }
     }
 
@@ -585,26 +569,26 @@ FocusScope {
                 }
             }
 
-            FirelightMenuItem {
-                id: controllerButton
-                focus: contentStack.currentItem.topLevelName === "controllers"
-                labelText: "Controllers"
-                Layout.fillWidth: true
-                property bool showGlobalCursor: true
-
-                // KeyNavigation.down: quitButton
-
-                // Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 42
-                checkable: false
-
-                onClicked: {
-                    contentStack.goTo(controllerPage)
-                    drawer2.close()
-                }
-                // alignRight: true
-            }
+            // FirelightMenuItem {
+            //     id: controllerButton
+            //     focus: contentStack.currentItem.topLevelName === "controllers"
+            //     labelText: "Controllers"
+            //     Layout.fillWidth: true
+            //     property bool showGlobalCursor: true
+            //
+            //     // KeyNavigation.down: quitButton
+            //
+            //     // Layout.preferredWidth: parent.width / 2
+            //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            //     Layout.preferredHeight: 42
+            //     checkable: false
+            //
+            //     onClicked: {
+            //         contentStack.goTo(controllerPage)
+            //         drawer2.close()
+            //     }
+            //     // alignRight: true
+            // }
 
             // Button {
             //     Layout.fillWidth: true
@@ -786,9 +770,9 @@ FocusScope {
         background: Item {
         }
 
-        Keys.onEscapePressed: function (event) {
-            drawer2.open()
-        }
+        // Keys.onEscapePressed: function (event) {
+        //     drawer2.open()
+        // }
 
         focus: true
 
@@ -885,14 +869,4 @@ FocusScope {
     //
     //     KeyNavigation.left: drawer
     // }
-
-
-    FirelightDialog {
-        id: closeAppConfirmationDialog
-        text: "Are you sure you want to close Firelight?"
-
-        onAccepted: {
-            Qt.callLater(Qt.quit)
-        }
-    }
 }

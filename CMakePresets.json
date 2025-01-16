@@ -18,7 +18,6 @@
       "displayName": "Debug",
       "generator": "Ninja",
       "binaryDir": "build/debug-win",
-      "toolchainFile": "C:/Users/alexs/git/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "environment": {
         "VCPKG_DEFAULT_TRIPLET": "x64-mingw-dynamic",
         "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-dynamic",
@@ -39,7 +38,6 @@
       "displayName": "Release",
       "generator": "Ninja",
       "binaryDir": "build/release-win",
-      "toolchainFile": "C:/Users/alexs/git/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "environment": {
         "VCPKG_DEFAULT_TRIPLET": "x64-mingw-dynamic",
         "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-dynamic",

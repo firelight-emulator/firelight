@@ -38,13 +38,15 @@
 #include <archive_entry.h>
 #include <QtConcurrent>
 
-#include "app/emulator_item.hpp"
-#include "app/input/gamepad_status_item.hpp"
-#include "app/game_loader.hpp"
 #include "app/PlatformMetadataItem.hpp"
+#include "app/emulator_item.hpp"
+#include "app/game_loader.hpp"
+#include "app/input/gamepad_status_item.hpp"
 #include "app/input/input_mapping_item.hpp"
 #include "app/library/sqlite_user_library.hpp"
 #include "gui/models/library/entry_list_model.hpp"
+
+#include <iostream>
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
@@ -61,8 +63,14 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   return true;
 }
 
+namespace {
+volatile bool interrupted{ false };
+}
+
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
+
+  // discord::Core* core = discord::Core::Create(0, 0, core);
 
   // struct archive *a;
   // struct archive_entry *entry;

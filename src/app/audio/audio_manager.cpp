@@ -1,22 +1,38 @@
 #include "audio_manager.hpp"
+
+extern "C" {
 #include <libswresample/swresample.h>
+}
 
 void AudioManager::initializeResampler(int64_t in_channel_layout, int in_sample_rate, enum AVSampleFormat in_sample_fmt,
                                        int64_t out_channel_layout, int out_sample_rate,
                                        AVSampleFormat out_sample_fmt) {
   m_swrContext = swr_alloc();
 
+
+  av_channel_layout_default(m_channelLayout, 2);
+  char thing[256];
+
+  av_channel_layout_describe(m_channelLayout, thing, sizeof(thing));
+
+  printf("VERSION: %s\n", av_version_info());
+
+  printf("Initializing resampler for %s\n", thing);
+
+
   // Set options for input and output
-  av_opt_set_int(m_swrContext, "in_channel_layout", in_channel_layout, 0);
+  // av_opt_set_int(m_swrContext, "in_channel_layout", in_channel_layout, 0);
+  av_opt_set_chlayout(m_swrContext, "ichl", m_channelLayout, 0);
   av_opt_set_int(m_swrContext, "in_sample_rate", in_sample_rate, 0);
   av_opt_set_sample_fmt(m_swrContext, "in_sample_fmt", in_sample_fmt, 0);
 
-  av_opt_set_int(m_swrContext, "out_channel_layout", out_channel_layout, 0);
+  av_opt_set_chlayout(m_swrContext, "ochl", m_channelLayout, 0);
   av_opt_set_int(m_swrContext, "out_sample_rate", out_sample_rate, 0);
   av_opt_set_sample_fmt(m_swrContext, "out_sample_fmt", out_sample_fmt, 0);
 
-  if (swr_init(m_swrContext) < 0) {
+  if (int returnCode = swr_init(m_swrContext) < 0) {
     fprintf(stderr, "Failed to initialize the resampling context\n");
+    printf("failure: %s\n", av_err2str(returnCode));
     swr_free(&m_swrContext);
   }
 }

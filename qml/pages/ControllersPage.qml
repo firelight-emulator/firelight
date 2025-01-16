@@ -1,29 +1,142 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Shapes 1.8
 import QtQuick.Layouts
 
-Flickable {
+FocusScope {
     id: root
 
+    property bool keyboardDragging: false
     property bool isDragging: false
 
     Component {
         id: dragDelegate
 
-        Rectangle {
+        FocusScope {
             id: content
             required property var model
             required property var index
+            width: 200
+            height: 200
 
-            color: ColorPalette.neutral800
-            radius: 2
+            Button {
+                id: myButton
+                anchors.fill: parent
+                KeyNavigation.down: root.keyboardDragging ? myButton : editProfileButton.visible ? editProfileButton : null
 
-            z: dragArea.active ? 1 : 0
+
+                z: -1
+                focus: true
+                property bool showGlobalCursor: true
+
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Select) {
+                        if (root.isDragging) {
+                            return
+                        }
+
+                        if (root.keyboardDragging) {
+                            root.keyboardDragging = false
+                            let list = []
+                            for (let i = 0; i < visualModel.items.count; i++) {
+                                // console.log(visualModel.items.get(i).model.index)
+                                list.push(visualModel.items.get(i).model.index)
+                                // visualModel.items.get(i).model.itemsIndex = i
+                            }
+
+                            // theAnimation.thingy = list
+                            // theAnimation.start()
+
+                            controller_manager.updateControllerOrder(list)
+                            // visualModel.items.sort()
+                        } else if (!root.keyboardDragging) {
+                            root.keyboardDragging = true
+                        }
+                        event.accept = true
+                    }
+                    if (event.key === Qt.Key_Right) {
+                        if (root.keyboardDragging && listThing.currentIndex < 3) {
+                            visualModel.items.move(listThing.currentIndex, listThing.currentIndex + 1, 1)
+                            event.accept = true
+                        }
+                    }
+                    if (event.key === Qt.Key_Left) {
+                        if (root.keyboardDragging && listThing.currentIndex > 0) {
+                            visualModel.items.move(listThing.currentIndex, listThing.currentIndex - 1, 1)
+                            event.accept = true
+                        }
+                    }
+                }
+
+                background: Rectangle {
+
+                    color: ColorPalette.neutral800
+                    radius: 2
+                }
+            }
+
+            Shape {
+                id: leftArrow
+                visible: root.keyboardDragging && listThing.currentIndex > 0 && content.ListView.isCurrentItem
+                width: 20
+                height: 40
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.left
+                anchors.rightMargin: 18
+
+                ShapePath {
+                    startX: leftArrow.width
+                    startY: 0
+                    fillColor: "white"
+                    joinStyle: ShapePath.RoundJoin
+                    capStyle: ShapePath.RoundCap
+                    strokeWidth: 2
+                    PathLine {
+                        x: 0; y: leftArrow.height / 2
+                    }
+                    PathLine {
+                        x: leftArrow.width; y: leftArrow.height
+                    }
+                    PathLine {
+                        x: leftArrow.width; y: 0
+                    }
+                }
+            }
+
+
+
+            Shape {
+                id: rightArrow
+                visible: root.keyboardDragging && listThing.currentIndex < 3 && content.ListView.isCurrentItem
+                width: 20
+                height: 40
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.right
+                anchors.leftMargin: 18
+
+                ShapePath {
+                    startX: 0
+                    startY: 0
+                    fillColor: "white"
+                    joinStyle: ShapePath.RoundJoin
+                    capStyle: ShapePath.RoundCap
+                    strokeWidth: 2
+                    PathLine {
+                        x: 0; y: rightArrow.height
+                    }
+                    PathLine {
+                        x: rightArrow.width; y: rightArrow.height / 2
+                    }
+                    PathLine {
+                        x: 0; y: 0
+                    }
+                }
+            }
+
+            z: root.keyboardDragging && content.ListView.isCurrentItem || dragArea.active ? 1 : 0
 
             property point dragEnd: Qt.point(0, 0)
 
-            width: 200
-            height: 200
             Drag.active: dragArea.active
             Drag.source: content
             Drag.hotSpot.x: width / 2
@@ -59,16 +172,19 @@ Flickable {
             }
 
             FirelightButton {
+                id: editProfileButton
                 anchors.top: parent.bottom
                 anchors.topMargin: 16
-                visible: !root.isDragging && model.model_name !== "Default"
+                visible: !root.keyboardDragging && !root.isDragging && model.model_name !== "Default"
+                enabled: visible
                 focus: true
 
                 label: "Edit profile"
 
                 onClicked: function () {
                     // profileDialog.open()
-                    screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
+                    Router.doSomethingWith(editProfileButton, {playerNumber: content.index + 1})
+                    // screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
                 }
             }
 
@@ -103,11 +219,14 @@ Flickable {
 
                 yAxis.enabled: false
                 xAxis.enabled: true
+                xAxis.maximum: 660
+                xAxis.minimum: -30
 
                 onActiveChanged: {
                     root.isDragging = dragArea.active
                     if (dragArea.active) {
                         content.dragEnd = Qt.point(content.x, content.y)
+                        root.keyboardDragging = false
                     }
 
                     if (!dragArea.active) {
@@ -290,6 +409,13 @@ Flickable {
                     }
                 }
 
+                move: Transition {
+                    enabled: root.keyboardDragging
+                    NumberAnimation {
+                        properties: "x,y"; duration: 100;
+                        easing.type: Easing.InOutQuad
+                    }
+                }
 
                 model: visualModel
                 spacing: 12
@@ -302,12 +428,6 @@ Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
-        }
-    }
-
-    Component {
-        id: profileEditor
-        ControllerProfilePage {
         }
     }
 

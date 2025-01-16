@@ -1239,10 +1239,11 @@ namespace libretro {
     const auto size = symRetroGetMemoryDataSize(static_cast<unsigned>(memType));
     const auto ptr = symRetroGetMemoryData(static_cast<unsigned>(memType));
 
-    //  if (data.size() != size) {
-    //    printf("um sizes don't match. data: %zu, size: %zu\n", data.size(),
-    //    size);
-    //  }
+    if (data.size() != size) {
+      printf("um sizes don't match. data: %zu, size: %zu\n", data.size(),
+      size);
+      return;
+    }
 
     memcpy(ptr, data.data(), size);
   }

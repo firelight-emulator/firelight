@@ -82,7 +82,7 @@ Button {
         visible: control.enabled && ((control.hovered && InputMethodManager.usingMouse) || (control.activeFocus && !InputMethodManager.usingMouse)) && control.text
         font.pixelSize: 15
         font.family: Constants.regularFontFamily
-        font.weight: Font.Light
+        font.weight: Font.Normal
         color: "white"
         anchors {
             top: control.tooltipOnTop ? undefined : parent.bottom

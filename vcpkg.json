@@ -5,6 +5,8 @@
     "gtest",
     "spdlog",
     "sdl2",
-    "libarchive"
-  ]
+    "libarchive",
+    "qt"
+  ],
+  "builtin-baseline": "d7112d1a4fb50410d3639f5f586972591d848beb"
 }

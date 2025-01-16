@@ -102,6 +102,16 @@ ApplicationWindow {
         // }
     }
 
+
+    FirelightDialog {
+        id: closeAppConfirmationDialog
+        text: "Are you sure you want to close Firelight?"
+
+        onAccepted: {
+            Qt.callLater(Qt.quit)
+        }
+    }
+
     Rectangle {
         id: activeFocusHighlight
         color: "transparent"
@@ -172,6 +182,13 @@ ApplicationWindow {
                 }
             }
         }
+
+        function onDidSomethingWith(thing, params) {
+            console.log(thing, params)
+            // screenStack.forceActiveFocus()
+            // quickMenuBar.close()
+            screenStack.pushItem(profileEditor, params, StackView.PushTransition)
+        }
     }
 
     onActiveFocusItemChanged: {
@@ -184,6 +201,14 @@ ApplicationWindow {
             debugImage.height = result.height
             debugImage.source = result.url
         })
+    }
+
+
+
+    Component {
+        id: profileEditor
+        ControllerProfilePage {
+        }
     }
 
     Window {
@@ -258,9 +283,19 @@ ApplicationWindow {
         focus: true
         initialItem: homeScreen
 
+        onCurrentItemChanged: function() {
+            quickMenuBar.close()
+        }
+
+        Keys.onEnterPressed: function(event) {
+            console.log("showing")
+            quickMenuBar.visible = true
+            console.log("showed")
+        }
+
         Keys.onPressed: function (event) {
             if (event.key === Qt.Key_F1) {
-                quickMenuBar.visible = !quickMenuBar.visible
+                quickMenuBar.open()
             }
 
             if (event.key === Qt.Key_F12) {
@@ -269,12 +304,18 @@ ApplicationWindow {
 
             if (event.key === Qt.Key_F11) {
                 console.log("Going offline")
+                quickMenuBar.visible = true
                 achievement_manager.setOnlineForTesting(false)
             }
 
             if (event.key === Qt.Key_F10) {
                 console.log("Going online")
                 achievement_manager.setOnlineForTesting(true)
+            }
+            if (event.key === Qt.Key_Escape) {
+                console.log("showing")
+                quickMenuBar.visible = true
+                console.log("showed")
             }
         }
 
@@ -302,14 +343,14 @@ ApplicationWindow {
                     property: "opacity"
                     from: 1
                     to: 0
-                    duration: 250
+                    duration: 150
                     easing.type: Easing.InOutQuad
                 }
                 PropertyAnimation {
                     property: "scale"
                     from: 1
                     to: 0.95
-                    duration: 250
+                    duration: 150
                     easing.type: Easing.OutQuad
                 }
             }
@@ -352,6 +393,15 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: controllerPage
+        ControllersPage {
+            property bool topLevel: true
+            property string topLevelName: "controllers"
+            property string pageTitle: "Controllers"
+        }
+    }
+
     Popup {
         id: quickMenuBar
         parent: Overlay.overlay
@@ -360,23 +410,26 @@ ApplicationWindow {
 
         padding: 16
 
-        height: 72
-        y: parent.height - height
         width: parent.width
+        height: parent.height
+        // height: 72
+        // y: parent.height - height
+        // width: parent.width
 
         onAboutToShow: function () {
             sfx_player.play("quickopen")
+            menuBar.forceActiveFocus()
+            // quickMenuStack.clear()
         }
 
-        onAboutToHide: function () {
-            sfx_player.play("quickclose")
+        onClosed: function() {
+            quickMenuStack.clear()
         }
 
         Overlay.modal: Rectangle {
             color: "black"
             anchors.fill: parent
             opacity: 0.6
-
             Behavior on opacity {
                 NumberAnimation {
                     duration: 200
@@ -431,14 +484,100 @@ ApplicationWindow {
         contentItem: FocusScope {
             focus: true
             id: contentThing
+
+            Keys.onEscapePressed: function(event) {
+                sfx_player.play("quickclose")
+                quickMenuBar.close()
+            }
+
+            Keys.onBackPressed: function(event) {
+                sfx_player.play("quickclose")
+                quickMenuBar.close()
+            }
+
+            StackView {
+                id: quickMenuStack
+                enabled: depth > 0
+                height: 400
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: menuBar.top
+
+                onActiveFocusChanged: function() {
+                    if (!quickMenuStack.activeFocus) {
+                        quickMenuStack.clear(StackView.PopTransition)
+                        menuBar.forceActiveFocus()
+                    }
+                }
+
+                Keys.onBackPressed: function(event) {
+                    quickMenuStack.clear(StackView.PopTransition)
+                    menuBar.forceActiveFocus()
+                }
+
+                // Keys.onPressed: function(event) {
+                //     if (event.key === Qt.Key_Back || event.key === Qt.Key_Escape) {
+                //         menuBar.forceActiveFocus()
+                //         quickMenuStack.clear()
+                //         event.accept = true
+                //     }
+                // }
+
+                pushEnter: Transition {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                    PropertyAnimation {
+                        property: "y"
+                        from: 20
+                        to: 0
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                popExit: Transition {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                    PropertyAnimation {
+                        property: "y"
+                        from: 0
+                        to: 20
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+
             ListView {
-                width: (48 * 4) + 5 * 42
+                id: menuBar
+                KeyNavigation.up: quickMenuStack
+                width: (48 * 5) + 6 * 42
                 focus: true
-                height: parent.height
+                height: 60
+                anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 orientation: ListView.Horizontal
                 currentIndex: 0
+
+                onCurrentIndexChanged: function() {
+                    if (!InputMethodManager.usingMouse) {
+                        sfx_player.play("rewindscroll")
+                    }
+                }
                 model: ListModel {
+                    ListElement {
+                        icon: "\uea0b"; label: "Now Playing"
+                    }
                     ListElement {
                         icon: "\ue88a"; label: "Home"
                     }
@@ -465,6 +604,41 @@ ApplicationWindow {
                     circle: true
                     flat: true
                     iconCode: model.icon
+
+                    Keys.onUpPressed: function(event) {
+                        if (model.label === "Controllers") {
+                            if (quickMenuStack.depth === 1) {
+                                quickMenuStack.popCurrentItem(StackView.PopTransition)
+                            } else {
+                                quickMenuStack.pushItem(controllerPage, {}, StackView.PushTransition)
+                                quickMenuStack.forceActiveFocus()
+                            }
+                        }
+
+                        if (model.label === "Power") {
+                            closeAppConfirmationDialog.open()
+                        }
+                    }
+
+                    onClicked: function() {
+                        if (model.label === "Settings") {
+                            Router.navigateTo("settings")
+                            quickMenuBar.close()
+                        }
+
+                        if (model.label === "Controllers") {
+                            if (quickMenuStack.depth === 1) {
+                                quickMenuStack.popCurrentItem(StackView.PopTransition)
+                            } else {
+                                quickMenuStack.pushItem(controllerPage, {}, StackView.PushTransition)
+                                quickMenuStack.forceActiveFocus()
+                            }
+                        }
+
+                        if (model.label === "Power") {
+                            closeAppConfirmationDialog.open()
+                        }
+                    }
                 }
             }
 
