@@ -12,13 +12,26 @@ FocusScope {
 
     clip: true
 
-    required property var gameData
-    required property var saveData
-    required property var corePath
-    required property var contentHash
-    required property var saveSlotNumber
-    required property var platformId
-    required property var contentPath
+    property var gameData
+    property var saveData
+    property var corePath
+    property var contentHash
+    property var saveSlotNumber
+    property var platformId
+    property var contentPath
+
+    function startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
+        emulator.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+        // emulatorStack.pushItem(emulatorComponent, {
+        //     gameData: gameData,
+        //     saveData: saveData,
+        //     corePath: corePath,
+        //     contentHash: contentHash,
+        //     saveSlotNumber: saveSlotNumber,
+        //     platformId: platformId,
+        //     contentPath: contentPath
+        // }, StackView.Immediate)
+    }
 
 
     signal rewindPointsReady(var points)
@@ -89,10 +102,6 @@ FocusScope {
         Keys.onDigit1Pressed: {
             console.log("Digit 1 pressed")
             emulator.loadSuspendPoint(1)
-        }
-
-        Component.onCompleted: function () {
-            startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
         }
     }
 

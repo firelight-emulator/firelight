@@ -232,6 +232,14 @@ ApplicationWindow {
     }
 
     Component {
+        id: nowPlayingPage
+        NowPlayingPage {
+            property bool topLevel: true
+            property string topLevelName: "nowPlaying"
+        }
+    }
+
+    Component {
         id: emulatorScreen
         EmulatorScreen {
 
@@ -255,6 +263,12 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: emuPage
+        NewEmulatorPage {
+        }
+    }
+
     Loader {
         id: emulatorLoader
         property var gameData
@@ -266,14 +280,24 @@ ApplicationWindow {
         property var contentPath
 
         active: false
-        sourceComponent: emulatorScreen
+        sourceComponent: emuPage
 
         StackView.onActivating: {
+            // setSource(emuPage, {
+            //     gameData: emulatorLoader.gameData,
+            //     saveData: emulatorLoader.saveData,
+            //     corePath: emulatorLoader.corePath,
+            //     contentHash: emulatorLoader.contentHash,
+            //     saveSlotNumber: emulatorLoader.saveSlotNumber,
+            //     platformId: emulatorLoader.platformId,
+            //     contentPath: emulatorLoader.contentPath
+            // })
             active = true
         }
 
         onLoaded: function () {
             emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+            // emulatorLoader.item.paused = false
         }
     }
 
@@ -288,9 +312,7 @@ ApplicationWindow {
         }
 
         Keys.onEnterPressed: function(event) {
-            console.log("showing")
             quickMenuBar.visible = true
-            console.log("showed")
         }
 
         Keys.onPressed: function (event) {
@@ -313,9 +335,7 @@ ApplicationWindow {
                 achievement_manager.setOnlineForTesting(true)
             }
             if (event.key === Qt.Key_Escape) {
-                console.log("showing")
                 quickMenuBar.visible = true
-                console.log("showed")
             }
         }
 
@@ -498,7 +518,7 @@ ApplicationWindow {
             StackView {
                 id: quickMenuStack
                 enabled: depth > 0
-                height: 400
+                anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: menuBar.top
@@ -621,6 +641,10 @@ ApplicationWindow {
                     }
 
                     onClicked: function() {
+                        if (model.label === "Now Playing") {
+                            quickMenuStack.pushItem(nowPlayingPage, {entryId: 1, contentHash: "699cac8ca145d1d1ce56f90a52d66d24", undoEnabled: false}, StackView.PushTransition)
+                            quickMenuStack.forceActiveFocus()
+                        }
                         if (model.label === "Settings") {
                             Router.navigateTo("settings")
                             quickMenuBar.close()
