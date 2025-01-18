@@ -22,6 +22,7 @@ FocusScope {
 
     function startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
         emulator.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+        root.gameReady()
         // emulatorStack.pushItem(emulatorComponent, {
         //     gameData: gameData,
         //     saveData: saveData,
@@ -35,6 +36,8 @@ FocusScope {
 
 
     signal rewindPointsReady(var points)
+
+    signal gameReady()
 
     function resetGame() {
         emulator.resetGame()

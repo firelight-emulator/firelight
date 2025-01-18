@@ -282,6 +282,14 @@ ApplicationWindow {
         active: false
         sourceComponent: emuPage
 
+        property bool paused: !emulatorLoader.activeFocus
+
+        onPausedChanged: function() {
+            if (emulatorLoader.item != null) {
+                emulatorLoader.item.paused = emulatorLoader.paused
+            }
+        }
+
         StackView.onActivating: {
             // setSource(emuPage, {
             //     gameData: emulatorLoader.gameData,
@@ -297,7 +305,6 @@ ApplicationWindow {
 
         onLoaded: function () {
             emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
-            // emulatorLoader.item.paused = false
         }
     }
 
@@ -307,12 +314,30 @@ ApplicationWindow {
         focus: true
         initialItem: homeScreen
 
-        onCurrentItemChanged: function() {
-            quickMenuBar.close()
+        property bool blur: false
+
+        property real blurAmount: blur ? 0.5 : 0
+
+        Behavior on blurAmount {
+            NumberAnimation {
+                easing.type: Easing.InOutQuad
+                duration: 250
+            }
         }
 
-        Keys.onEnterPressed: function(event) {
-            quickMenuBar.visible = true
+        layer.enabled: blurAmount !== 0
+        layer.effect: MultiEffect {
+            // enabled: root.blurAmount !== 0
+            source: screenStack
+            anchors.fill: screenStack
+            blurEnabled: true
+            blurMultiplier: 0
+            blurMax: 64
+            blur: screenStack.blurAmount
+        }
+
+        onCurrentItemChanged: function() {
+            // quickMenuBar.close()
         }
 
         Keys.onPressed: function (event) {
@@ -411,6 +436,25 @@ ApplicationWindow {
                 }
             }
         }
+
+        replaceEnter: Transition {
+            PropertyAnimation {
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: 350
+                easing.type: Easing.InOutQuad
+            }
+        }
+        replaceExit: Transition {
+            PropertyAnimation {
+                property: "opacity"
+                from: 1
+                to: 0
+                duration: 350
+                easing.type: Easing.InOutQuad
+            }
+        }
     }
 
     Component {
@@ -439,7 +483,12 @@ ApplicationWindow {
         onAboutToShow: function () {
             sfx_player.play("quickopen")
             menuBar.forceActiveFocus()
+            screenStack.blur = true
             // quickMenuStack.clear()
+        }
+
+        onAboutToHide: function() {
+            screenStack.blur = false
         }
 
         onClosed: function() {
@@ -642,8 +691,13 @@ ApplicationWindow {
 
                     onClicked: function() {
                         if (model.label === "Now Playing") {
+                            if (screenStack.currentItem !== emulatorLoader) {
+                                screenStack.pushItem(emulatorLoader, {}, StackView.ReplaceTransition)
+                            }
                             quickMenuStack.pushItem(nowPlayingPage, {entryId: 1, contentHash: "699cac8ca145d1d1ce56f90a52d66d24", undoEnabled: false}, StackView.PushTransition)
                             quickMenuStack.forceActiveFocus()
+                        } else if (screenStack.currentItem === emulatorLoader) {
+                                screenStack.popCurrentItem(StackView.ReplaceTransition)
                         }
                         if (model.label === "Settings") {
                             Router.navigateTo("settings")
@@ -651,7 +705,8 @@ ApplicationWindow {
                         }
 
                         if (model.label === "Controllers") {
-                            if (quickMenuStack.depth === 1) {
+                            console.log(quickMenuStack.depth)
+                            if (quickMenuStack.currentItem === controllerPage) {
                                 quickMenuStack.popCurrentItem(StackView.PopTransition)
                             } else {
                                 quickMenuStack.pushItem(controllerPage, {}, StackView.PushTransition)

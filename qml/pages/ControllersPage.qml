@@ -69,9 +69,9 @@ FocusScope {
                 }
 
                 background: Rectangle {
-
-                    color: ColorPalette.neutral800
-                    radius: 2
+                    opacity: 0.6
+                    color: ColorPalette.neutral700
+                    radius: 4
                 }
             }
 
