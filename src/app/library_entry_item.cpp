@@ -1,9 +1,4 @@
-#pragma once
-
-#include <QQuickItem>
-
 #include "library_entry_item.hpp"
-
 
 namespace firelight {
     LibraryEntryItem::LibraryEntryItem(QQuickItem *parent) {

@@ -185,13 +185,6 @@ ApplicationWindow {
                 }
             }
         }
-
-        function onDidSomethingWith(thing, params) {
-            console.log(thing, params)
-            // screenStack.forceActiveFocus()
-            // quickMenuBar.close()
-            screenStack.pushItem(profileEditor, params, StackView.PushTransition)
-        }
     }
 
     onActiveFocusItemChanged: {
@@ -210,6 +203,14 @@ ApplicationWindow {
     Component {
         id: profileEditor
         ControllerProfilePage {
+
+        }
+    }
+
+    Component {
+        id: keyboardProfileEditor
+        KeyboardProfilePage {
+
         }
     }
 
@@ -341,7 +342,7 @@ ApplicationWindow {
         }
 
         onCurrentItemChanged: function () {
-            // quickMenuBar.close()
+            quickMenuBar.close()
         }
 
         Keys.onPressed: function (event) {
@@ -467,6 +468,14 @@ ApplicationWindow {
             property bool topLevel: true
             property string topLevelName: "controllers"
             property string pageTitle: "Controllers"
+
+            onEditProfileButtonClicked: function(name, playerNumber) {
+                if (name === "Keyboard") {
+                    screenStack.pushItem(keyboardProfileEditor, {playerNumber: playerNumber}, StackView.PushTransition)
+                } else {
+                    screenStack.pushItem(profileEditor, {playerNumber: playerNumber}, StackView.PushTransition)
+                }
+            }
         }
     }
 

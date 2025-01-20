@@ -2,7 +2,7 @@
 
 #include <bits/stl_algo.h>
 
-namespace firelight::Input {
+namespace firelight::input {
   SdlController::~SdlController() = default;
 
   void SdlController::setControllerProfile(const std::shared_ptr<input::ControllerProfile> &profile) {
@@ -431,4 +431,4 @@ namespace firelight::Input {
   int SdlController::getProfileId() const {
     return m_profile->getId();
   }
-} // namespace firelight::Input
+} // namespace firelight::input

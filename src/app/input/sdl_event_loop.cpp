@@ -1,7 +1,3 @@
-//
-// Created by alexs on 1/6/2024.
-//
-
 #include "sdl_event_loop.hpp"
 
 #define SDL_MAIN_HANDLED
@@ -13,7 +9,7 @@
 #include "keyboard_input_handler.hpp"
 
 namespace firelight {
-  SdlEventLoop::SdlEventLoop(QWindow *window, Input::ControllerManager *manager)
+  SdlEventLoop::SdlEventLoop(QWindow *window, input::ControllerManager *manager)
     : m_window(window), m_controllerManager(manager) {
     auto *keyboard = new input::KeyboardInputHandler();
     m_window->installEventFilter(keyboard);

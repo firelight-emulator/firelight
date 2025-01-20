@@ -4,7 +4,8 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::input {
-  void KeyboardInputHandler::setActiveMapping(const std::shared_ptr<InputMapping> &mapping) {
+KeyboardInputHandler::KeyboardInputHandler() = default;
+void KeyboardInputHandler::setActiveMapping(const std::shared_ptr<InputMapping> &mapping) {
   }
 
   bool KeyboardInputHandler::isButtonPressed(int platformId, Input t_button) {
@@ -38,10 +39,11 @@ namespace firelight::input {
   }
 
   int KeyboardInputHandler::getPlayerIndex() const {
-    return 0;
+    return m_playerIndex;
   }
 
   void KeyboardInputHandler::setPlayerIndex(int playerIndex) {
+    m_playerIndex = playerIndex;
   }
 
   bool KeyboardInputHandler::isWired() const {

@@ -8,7 +8,7 @@
 namespace firelight {
   class SdlEventLoop final : public QThread {
   public:
-    explicit SdlEventLoop(QWindow *window, Input::ControllerManager *manager);
+    explicit SdlEventLoop(QWindow *window, input::ControllerManager *manager);
 
     ~SdlEventLoop() override;
 
@@ -24,6 +24,6 @@ namespace firelight {
 
     QObject *m_window;
     bool m_running = true;
-    Input::ControllerManager *m_controllerManager;
+    input::ControllerManager *m_controllerManager;
   };
 } // namespace firelight

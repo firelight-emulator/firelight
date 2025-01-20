@@ -5,14 +5,17 @@
 #include <QTimer>
 #include <QPointF>
 
-#include "gamepad.hpp"
 #include "firelight/libretro/retropad.hpp"
+#include "gamepad.hpp"
+#include "sdl_controller.hpp"
 
 namespace firelight::input {
-  class KeyboardInputHandler final : public QObject, public IGamepad {
+  class KeyboardInputHandler final : public QObject, public input::SdlController {
     Q_OBJECT
 
   public:
+    KeyboardInputHandler();
+
     void setActiveMapping(const std::shared_ptr<InputMapping> &mapping) override;
 
     bool isButtonPressed(int platformId, Input t_button) override;
@@ -46,5 +49,6 @@ namespace firelight::input {
 
   private:
     QMap<Input, bool> m_buttonStates;
+    int m_playerIndex;
   };
 } // namespace firelight::gui

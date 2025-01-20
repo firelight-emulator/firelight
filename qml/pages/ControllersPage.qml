@@ -9,6 +9,8 @@ FocusScope {
     property bool keyboardDragging: false
     property bool isDragging: false
 
+    signal editProfileButtonClicked(var name, var playerNumber)
+
     Component {
         id: dragDelegate
 
@@ -69,8 +71,8 @@ FocusScope {
                 }
 
                 background: Rectangle {
-                    opacity: 0.6
-                    color: ColorPalette.neutral700
+                    opacity: 0.9
+                    color: ColorPalette.neutral900
                     radius: 4
                 }
             }
@@ -183,7 +185,8 @@ FocusScope {
 
                 onClicked: function () {
                     // profileDialog.open()
-                    Router.doSomethingWith(editProfileButton, {playerNumber: content.index + 1})
+                    editProfileButtonClicked(model.model_name, content.index + 1)
+                    // Router.doSomethingWith(editProfileButton, {playerNumber: content.index + 1})
                     // screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
                 }
             }

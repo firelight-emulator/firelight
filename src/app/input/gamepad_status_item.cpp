@@ -5,7 +5,7 @@ namespace firelight::input {
     GamepadStatusItem::GamepadStatusItem(QQuickItem *parent) : QQuickItem(parent) {
         auto controllerManager = getControllerManager();
 
-        connect(controllerManager, &Input::ControllerManager::controllerConnected, this, [this](int playerNumber) {
+        connect(controllerManager, &input::ControllerManager::controllerConnected, this, [this](int playerNumber) {
             if (playerNumber == m_playerNumber) {
                 m_controller = getControllerManager()->getControllerForPlayerIndex(m_playerNumber - 1).
                         value_or(nullptr);
@@ -22,7 +22,7 @@ namespace firelight::input {
                 }
             }
         });
-        connect(controllerManager, &Input::ControllerManager::controllerDisconnected, this, [this](int playerNumber) {
+        connect(controllerManager, &input::ControllerManager::controllerDisconnected, this, [this](int playerNumber) {
             if (playerNumber == m_playerNumber) {
                 m_controller = nullptr;
                 m_name.clear();
@@ -31,7 +31,7 @@ namespace firelight::input {
                 emit profileIdChanged();
             }
         });
-        connect(controllerManager, &Input::ControllerManager::buttonStateChanged, this,
+        connect(controllerManager, &input::ControllerManager::buttonStateChanged, this,
                 [this](int playerNumber, int button, bool pressed) {
                     if (playerNumber == m_playerNumber) {
                         if (button == SDL_CONTROLLER_BUTTON_Y) {
@@ -54,10 +54,15 @@ namespace firelight::input {
 
         m_playerNumber = playerNumber;
         m_controller = getControllerManager()->getControllerForPlayerIndex(m_playerNumber - 1).value_or(nullptr);
-        if (m_controller != nullptr && !m_isConnected) {
+        if (m_controller != nullptr) {
+          if (!m_isConnected) {
             m_isConnected = true;
             emit isConnectedChanged();
+          }
         }
+
+        m_name = QString::fromStdString(m_controller->getName());
+        emit nameChanged();
 
         emit profileIdChanged();
         emit playerNumberChanged();

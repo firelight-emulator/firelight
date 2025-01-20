@@ -29,7 +29,9 @@ public:
             case NINTENDO_NSO_SNES:
                 return "file:system/_img/SNES.svg";
             case NINTENDO_NSO_GENESIS:
-                return "file:system/_img/genesis.svg";
+              return "file:system/_img/genesis.svg";
+            case KEYBOARD:
+              return "file:system/_img/keyboard.svg";
             default:
                 return "file:system/_img/Xbox.svg"; // Default icon
         }

@@ -5,13 +5,15 @@
 
 #include "controller_icons.hpp"
 
-namespace firelight::Input {
+namespace firelight::input {
   ControllerManager::ControllerManager(input::IControllerRepository &controllerRepository) : m_controllerRepository(
     controllerRepository) {
   }
 
   void ControllerManager::setKeyboardRetropad(input::KeyboardInputHandler *keyboard) {
-    m_keyboard = keyboard;
+    m_controllers[0] = std::unique_ptr<SdlController>(keyboard);
+    m_numControllers++;
+    emit controllerConnected(1, "Keyboard", ControllerIcons::sourceUrlFromType(KEYBOARD));
   }
 
   void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
@@ -274,9 +276,9 @@ namespace firelight::Input {
   std::optional<libretro::IRetroPad *>
   ControllerManager::getRetropadForPlayerIndex(const int t_player, const int platformId) {
     const auto controller = getControllerForPlayerIndex(t_player);
-    if (t_player == 0 && !controller && m_keyboard) {
-      return m_keyboard;
-    }
+    // if (t_player == 0 && !controller && m_keyboard) {
+    //   return m_keyboard;
+    // }
 
     if (controller) {
       (*controller)->
@@ -329,16 +331,20 @@ namespace firelight::Input {
     // TODO: Check if any controllers have the same joystick id.
 
     for (int i = 0; i < m_controllers.max_size(); ++i) {
-      if (m_controllers[i] == nullptr) {
-        if (m_keyboardPlayerIndex == i) {
-          for (int j = 0; j < m_controllers.max_size(); ++j) {
-            if (m_controllers[j] == nullptr) {
-              m_keyboardPlayerIndex = j;
-            }
+      if (m_controllers[i] != nullptr && m_controllers[i]->getType() == KEYBOARD) {
+        for (int j = i; j < m_controllers.max_size(); ++j) {
+          if (m_controllers[j] == nullptr) {
+            m_controllers[j] = std::move(m_controllers[i]);
+            m_controllers[j]->setPlayerIndex(j);
+            m_controllers[i].reset();
+            emit controllerOrderChanged();
+            break;
           }
         }
-        SDL_GameControllerSetPlayerIndex(controller, i);
+      }
 
+      if (m_controllers[i] == nullptr) {
+        SDL_GameControllerSetPlayerIndex(controller, i);
         m_numControllers++;
         m_controllers[i] =
             std::make_unique<SdlController>(controller, t_deviceIndex);
@@ -349,6 +355,35 @@ namespace firelight::Input {
         emit controllerConnected(i + 1, QString::fromStdString(name), ControllerIcons::sourceUrlFromType(type));
         break;
       }
+
+      // if (m_controllers[i]->getType() == KEYBOARD) {
+      //   for (int j = i; j < m_controllers.max_size(); ++j) {
+      //     if (m_controllers[j] == nullptr) {
+      //       m_controllers[j] = std::move(m_controllers[i]);
+      //       m_controllers[j]->setPlayerIndex(j);
+      //     }
+      //   }
+      // }
+      // if (m_controllers[i] == nullptr) {
+      //   if (m_keyboardPlayerIndex == i) {
+      //     for (int j = 0; j < m_controllers.max_size(); ++j) {
+      //       if (m_controllers[j] == nullptr) {
+      //         m_keyboardPlayerIndex = j;
+      //       }
+      //     }
+      //   }
+      //   SDL_GameControllerSetPlayerIndex(controller, i);
+      //
+      //   m_numControllers++;
+      //   m_controllers[i] =
+      //       std::make_unique<SdlController>(controller, t_deviceIndex);
+      //   m_controllers[i]->setControllerProfile(profile);
+      //   const auto name = m_controllers[i]->getName();
+      //   const auto type = m_controllers[i]->getType();
+      //
+      //   emit controllerConnected(i + 1, QString::fromStdString(name), ControllerIcons::sourceUrlFromType(type));
+      //   break;
+      // }
     }
   }
 
@@ -425,4 +460,4 @@ namespace firelight::Input {
     m_blockGamepadInput = blockGamepadInput;
     emit blockGamepadInputChanged();
   }
-} // namespace firelight::Input
+} // namespace firelight::input

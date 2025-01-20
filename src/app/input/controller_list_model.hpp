@@ -8,7 +8,7 @@ namespace firelight::gui {
     Q_OBJECT
 
   public:
-    explicit ControllerListModel(Input::ControllerManager &controllerManager);
+    explicit ControllerListModel(input::ControllerManager &controllerManager);
 
     [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
 
@@ -28,7 +28,7 @@ namespace firelight::gui {
 
     enum Roles { PlayerIndex = Qt::UserRole + 1, ModelName, ManufacturerName, Wired, ImageUrl };
 
-    Input::ControllerManager &m_controllerManager;
+    input::ControllerManager &m_controllerManager;
     std::vector<Item> m_items;
 
     void refreshControllerList();

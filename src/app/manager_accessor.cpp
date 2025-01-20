@@ -3,7 +3,7 @@
 #include <utility>
 
 namespace firelight {
-  Input::ControllerManager *ManagerAccessor::m_controllerManager;
+  input::ControllerManager *ManagerAccessor::m_controllerManager;
   saves::SaveManager *ManagerAccessor::m_saveManager;
   LibraryScanner *ManagerAccessor::m_libraryManager;
   db::IUserdataDatabase *ManagerAccessor::m_userdataDatabase;
@@ -17,7 +17,7 @@ namespace firelight {
   input::IControllerRepository *ManagerAccessor::m_controllerRepository;
 
   void ManagerAccessor::setControllerManager(
-    Input::ControllerManager *t_manager) {
+    input::ControllerManager *t_manager) {
     m_controllerManager = t_manager;
   }
 
@@ -68,7 +68,7 @@ namespace firelight {
     m_controllerRepository = t_controllerRepository;
   }
 
-  Input::ControllerManager *ManagerAccessor::getControllerManager() {
+  input::ControllerManager *ManagerAccessor::getControllerManager() {
     // TODO: Check for nullptr and throw exception or something
     return m_controllerManager;
   }

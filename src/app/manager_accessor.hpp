@@ -18,7 +18,7 @@ namespace firelight {
 
     class ManagerAccessor {
     public:
-        static void setControllerManager(Input::ControllerManager *t_manager);
+        static void setControllerManager(input::ControllerManager *t_manager);
 
         static void setSaveManager(saves::SaveManager *t_manager);
 
@@ -44,7 +44,7 @@ namespace firelight {
 
         static void setControllerRepository(input::IControllerRepository *t_controllerRepository);
 
-        static Input::ControllerManager *getControllerManager();
+        static input::ControllerManager *getControllerManager();
 
         static saves::SaveManager *getSaveManager();
 
@@ -69,7 +69,7 @@ namespace firelight {
         static input::IControllerRepository *getControllerRepository();
 
     private:
-        static Input::ControllerManager *m_controllerManager;
+        static input::ControllerManager *m_controllerManager;
         static saves::SaveManager *m_saveManager;
         static LibraryScanner *m_libraryManager;
         static db::IUserdataDatabase *m_userdataDatabase;

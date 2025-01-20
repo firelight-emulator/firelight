@@ -10,7 +10,7 @@
 #include "controller_repository.hpp"
 #include "keyboard_input_handler.hpp"
 
-namespace firelight::Input {
+namespace firelight::input {
   class ControllerManager final : public QObject,
                                   public libretro::IRetropadProvider {
     Q_OBJECT
@@ -19,15 +19,15 @@ namespace firelight::Input {
   public:
     bool m_blockGamepadInput = false;
 
-    explicit ControllerManager(input::IControllerRepository &controllerRepository);
+    explicit ControllerManager(IControllerRepository &controllerRepository);
 
-    void setKeyboardRetropad(input::KeyboardInputHandler *keyboard);
+    void setKeyboardRetropad(KeyboardInputHandler *keyboard);
 
     void handleSDLControllerEvent(const SDL_Event &event);
 
     void refreshControllerList();
 
-    [[nodiscard]] std::optional<input::IGamepad *>
+    [[nodiscard]] std::optional<IGamepad *>
     getControllerForPlayerIndex(int t_player) const;
 
     std::optional<libretro::IRetroPad *>
@@ -58,12 +58,10 @@ namespace firelight::Input {
     void blockGamepadInputChanged();
 
   private:
-    input::IControllerRepository &m_controllerRepository;
-    input::KeyboardInputHandler *m_keyboard = nullptr;
+    IControllerRepository &m_controllerRepository;
     int m_numControllers = 0;
     std::array<std::unique_ptr<SdlController>, 32> m_controllers{};
-    int m_keyboardPlayerIndex = 0;
 
     void openControllerWithDeviceIndex(int32_t t_deviceIndex);
   };
-} // namespace firelight::Input
+} // namespace firelight::input

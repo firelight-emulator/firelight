@@ -10,16 +10,18 @@
 #include "profiles/controller_profile.hpp"
 #include "gamepad_type.hpp"
 
-namespace firelight::Input {
-  class SdlController final : public input::IGamepad {
+namespace firelight::input {
+  class SdlController : public IGamepad {
   public:
+    SdlController() = default;
+
     SdlController(SDL_GameController *t_controller, int32_t t_joystickIndex);
 
     ~SdlController() override;
 
-    void setControllerProfile(const std::shared_ptr<input::ControllerProfile> &profile);
+    void setControllerProfile(const std::shared_ptr<ControllerProfile> &profile);
 
-    void setActiveMapping(const std::shared_ptr<input::InputMapping> &mapping) override;
+    void setActiveMapping(const std::shared_ptr<InputMapping> &mapping) override;
 
     bool isButtonPressed(int platformId, Input t_button) override;
 
@@ -49,19 +51,16 @@ namespace firelight::Input {
 
     [[nodiscard]] GamepadType getType() const override;
 
-  private:
-    [[nodiscard]] int16_t evaluateMapping(Input input) const;
-
-  public:
     int getProfileId() const override;
 
   private:
-    std::shared_ptr<input::ControllerProfile> m_profile = nullptr;
-    std::shared_ptr<input::InputMapping> m_activeMapping = nullptr;
+    [[nodiscard]] int16_t evaluateMapping(Input input) const;
+    std::shared_ptr<ControllerProfile> m_profile = nullptr;
+    std::shared_ptr<InputMapping> m_activeMapping = nullptr;
 
     SDL_GameController *m_SDLController = nullptr;
     SDL_Joystick *m_SDLJoystick = nullptr;
     int32_t m_SDLJoystickDeviceIndex = -1;
     int32_t m_SDLJoystickInstanceId = -1;
   };
-} // namespace firelight::Input
+} // namespace firelight::input

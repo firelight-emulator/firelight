@@ -1,18 +1,20 @@
 #include "controller_list_model.hpp"
 
+#include "controller_icons.hpp"
+
 namespace firelight::gui {
   ControllerListModel::ControllerListModel(
-    Input::ControllerManager &controllerManager)
+    input::ControllerManager &controllerManager)
     : m_controllerManager(controllerManager) {
     refreshControllerList();
 
-    connect(&m_controllerManager, &Input::ControllerManager::controllerConnected,
+    connect(&m_controllerManager, &input::ControllerManager::controllerConnected,
             this, &ControllerListModel::refreshControllerList);
     connect(&m_controllerManager,
-            &Input::ControllerManager::controllerDisconnected, this,
+            &input::ControllerManager::controllerDisconnected, this,
             &ControllerListModel::refreshControllerList);
     connect(&m_controllerManager,
-            &Input::ControllerManager::controllerOrderChanged, this,
+            &input::ControllerManager::controllerOrderChanged, this,
             &ControllerListModel::refreshControllerList);
   }
 
@@ -57,30 +59,10 @@ namespace firelight::gui {
       auto con = m_controllerManager.getControllerForPlayerIndex(i);
       if (con.has_value()) {
         beginInsertRows(QModelIndex{}, i, i);
-
-        QString imageUrl;
-        switch (con.value()->getType()) {
-          case MICROSOFT_XBOX_360:
-          case MICROSOFT_XBOX_ONE:
-            imageUrl = "file:system/_img/Xbox.svg";
-            break;
-          case NINTENDO_SWITCH_PRO:
-            imageUrl = "qrc:/images/platform-icons/switch-pro.svg";
-            break;
-          case NINTENDO_NSO_N64:
-            imageUrl = "file:system/_img/N64.svg";
-            break;
-          case NINTENDO_NSO_SNES:
-            imageUrl = "file:system/_img/SNES.svg";
-            break;
-          default:
-            imageUrl = "file:system/_img/Xbox.svg";
-        }
-
         m_items.push_back(
           {
             i, QString::fromStdString(con.value()->getName()),
-            "None", con.value()->isWired(), imageUrl
+            "None", con.value()->isWired(), ControllerIcons::sourceUrlFromType(con.value()->getType())
           });
         endInsertRows();
       } else {
