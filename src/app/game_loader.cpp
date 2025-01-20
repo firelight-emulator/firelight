@@ -72,6 +72,7 @@ namespace firelight {
 
                 if (!m_holding) {
                     emit gameLoaded(
+                        entryId,
                         romFile->getContentBytes(),
                         saveDataBytes,
                         QString::fromStdString(corePath),
@@ -81,6 +82,7 @@ namespace firelight {
                         romFile->getFilePath()
                     );
                 } else {
+                    m_entryId = entryId;
                     m_gameData = romFile->getContentBytes();
                     m_saveData = saveDataBytes;
                     m_corePath = QString::fromStdString(corePath);
@@ -99,6 +101,7 @@ namespace firelight {
         m_holding = false;
         if (m_lastLoadSuccessful) {
             emit gameLoaded(
+                m_entryId,
                 m_gameData,
                 m_saveData,
                 m_corePath,

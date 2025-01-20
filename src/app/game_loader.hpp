@@ -10,7 +10,8 @@ namespace firelight {
     public:
         GameLoader();
 
-    public slots:
+    public
+    slots:
         void loadEntry(int entryId, bool waitForApproval = false);
 
         void approve();
@@ -18,12 +19,14 @@ namespace firelight {
         void emitResult();
 
     signals:
-        void gameLoaded(const QByteArray &gameData, const QByteArray &saveData, QString corePath, QString contentHash,
+        void gameLoaded(int entryId, const QByteArray &gameData, const QByteArray &saveData, QString corePath,
+                        QString contentHash,
                         unsigned int saveSlotNumber, unsigned int platformId, QString contentPath);
 
     private:
         QThreadPool m_threadPool;
 
+        int m_entryId;
         QByteArray m_gameData;
         QByteArray m_saveData;
         QString m_corePath;

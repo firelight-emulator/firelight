@@ -12,6 +12,8 @@ FocusScope {
 
     signal readyToStartGame()
 
+    signal menuButtonClicked()
+
     Component {
         id: shopPage
         ShopLandingPage {
@@ -372,12 +374,25 @@ FocusScope {
                 iconCode: "\ue5d2"
 
                 onClicked: {
-                    drawer2.open()
+                    root.menuButtonClicked()
+                    // drawer2.open()
                 }
             }
 
             Text {
-                text: contentStack.currentItem.pageTitle
+                text: "Home"
+                color: ColorPalette.neutral100
+                opacity: 0.5
+                font.pixelSize: 24
+                font.weight: Font.Normal
+                font.family: Constants.regularFontFamily
+                Layout.fillHeight: true
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
+                text: "Library"
                 color: ColorPalette.neutral100
                 font.pixelSize: 24
                 font.weight: Font.Normal
@@ -385,6 +400,20 @@ FocusScope {
                 Layout.fillHeight: true
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
+                Layout.leftMargin: 8
+            }
+
+            Text {
+                text: "Mod Shop"
+                color: ColorPalette.neutral100
+                opacity: 0.5
+                font.pixelSize: 24
+                font.weight: Font.Normal
+                font.family: Constants.regularFontFamily
+                Layout.fillHeight: true
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                Layout.leftMargin: 8
             }
 
 

@@ -151,6 +151,7 @@ add_library(firelight_lib
         src/app/input/input_manager.hpp
         src/app/input/input_manager.cpp
         src/app/input/input_mapping_item.cpp
+        src/app/library_entry_item.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)

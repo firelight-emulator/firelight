@@ -23,6 +23,9 @@ ApplicationWindow {
 
     title: qsTr("Firelight")
 
+    property alias gameRunning: emulatorLoader.active
+    property alias currentGameName: emulatorLoader.contentPath
+
     // background: Rectangle {
     //     color: ColorPalette.neutral1000
     // }
@@ -204,7 +207,6 @@ ApplicationWindow {
     }
 
 
-
     Component {
         id: profileEditor
         ControllerProfilePage {
@@ -271,6 +273,7 @@ ApplicationWindow {
 
     Loader {
         id: emulatorLoader
+        property var entryId
         property var gameData
         property var saveData
         property var corePath
@@ -284,7 +287,7 @@ ApplicationWindow {
 
         property bool paused: !emulatorLoader.activeFocus
 
-        onPausedChanged: function() {
+        onPausedChanged: function () {
             if (emulatorLoader.item != null) {
                 emulatorLoader.item.paused = emulatorLoader.paused
             }
@@ -305,6 +308,7 @@ ApplicationWindow {
 
         onLoaded: function () {
             emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+            emulatorLoader.item.paused = emulatorLoader.paused
         }
     }
 
@@ -336,7 +340,7 @@ ApplicationWindow {
             blur: screenStack.blurAmount
         }
 
-        onCurrentItemChanged: function() {
+        onCurrentItemChanged: function () {
             // quickMenuBar.close()
         }
 
@@ -442,7 +446,7 @@ ApplicationWindow {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: 350
+                duration: 200
                 easing.type: Easing.InOutQuad
             }
         }
@@ -451,7 +455,7 @@ ApplicationWindow {
                 property: "opacity"
                 from: 1
                 to: 0
-                duration: 350
+                duration: 200
                 easing.type: Easing.InOutQuad
             }
         }
@@ -487,11 +491,11 @@ ApplicationWindow {
             // quickMenuStack.clear()
         }
 
-        onAboutToHide: function() {
+        onAboutToHide: function () {
             screenStack.blur = false
         }
 
-        onClosed: function() {
+        onClosed: function () {
             quickMenuStack.clear()
         }
 
@@ -554,12 +558,12 @@ ApplicationWindow {
             focus: true
             id: contentThing
 
-            Keys.onEscapePressed: function(event) {
+            Keys.onEscapePressed: function (event) {
                 sfx_player.play("quickclose")
                 quickMenuBar.close()
             }
 
-            Keys.onBackPressed: function(event) {
+            Keys.onBackPressed: function (event) {
                 sfx_player.play("quickclose")
                 quickMenuBar.close()
             }
@@ -572,14 +576,14 @@ ApplicationWindow {
                 anchors.right: parent.right
                 anchors.bottom: menuBar.top
 
-                onActiveFocusChanged: function() {
+                onActiveFocusChanged: function () {
                     if (!quickMenuStack.activeFocus) {
                         quickMenuStack.clear(StackView.PopTransition)
                         menuBar.forceActiveFocus()
                     }
                 }
 
-                Keys.onBackPressed: function(event) {
+                Keys.onBackPressed: function (event) {
                     quickMenuStack.clear(StackView.PopTransition)
                     menuBar.forceActiveFocus()
                 }
@@ -591,6 +595,41 @@ ApplicationWindow {
                 //         event.accept = true
                 //     }
                 // }
+
+                replaceEnter: Transition {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                    PropertyAnimation {
+                        property: "y"
+                        from: 20
+                        to: 0
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+
+                replaceExit: Transition {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                    PropertyAnimation {
+                        property: "y"
+                        from: 0
+                        to: 20
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                }
 
                 pushEnter: Transition {
                     PropertyAnimation {
@@ -627,18 +666,31 @@ ApplicationWindow {
                 }
             }
 
+
+            Text {
+                id: notPlayingAnythingText
+                visible: false
+                text: "You're not currently playing anything"
+                color: "white"
+                font.family: Constants.regularFontFamily
+                font.pixelSize: 18
+                font.weight: Font.Normal
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
             ListView {
                 id: menuBar
                 KeyNavigation.up: quickMenuStack
-                width: (48 * 5) + 6 * 42
+                width: (48 * 4) + 5 * 42
                 focus: true
-                height: 60
+                height: 32
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 orientation: ListView.Horizontal
                 currentIndex: 0
 
-                onCurrentIndexChanged: function() {
+                onCurrentIndexChanged: function () {
                     if (!InputMethodManager.usingMouse) {
                         sfx_player.play("rewindscroll")
                     }
@@ -649,9 +701,6 @@ ApplicationWindow {
                     }
                     ListElement {
                         icon: "\ue88a"; label: "Home"
-                    }
-                    ListElement {
-                        icon: "\uf53e"; label: "Library"
                     }
                     ListElement {
                         icon: "\uf135"; label: "Controllers"
@@ -674,12 +723,12 @@ ApplicationWindow {
                     flat: true
                     iconCode: model.icon
 
-                    Keys.onUpPressed: function(event) {
+                    Keys.onUpPressed: function (event) {
                         if (model.label === "Controllers") {
                             if (quickMenuStack.depth === 1) {
                                 quickMenuStack.popCurrentItem(StackView.PopTransition)
                             } else {
-                                quickMenuStack.pushItem(controllerPage, {}, StackView.PushTransition)
+                                quickMenuStack.replaceCurrentItem(controllerPage, {}, StackView.ReplaceTransition)
                                 quickMenuStack.forceActiveFocus()
                             }
                         }
@@ -689,15 +738,43 @@ ApplicationWindow {
                         }
                     }
 
-                    onClicked: function() {
+                    onClicked: function () {
                         if (model.label === "Now Playing") {
-                            if (screenStack.currentItem !== emulatorLoader) {
-                                screenStack.pushItem(emulatorLoader, {}, StackView.ReplaceTransition)
+                            if (!window.gameRunning) {
+                                quickMenuStack.pushItem(notPlayingAnythingText, {}, StackView.PushTransition)
+                                return
                             }
-                            quickMenuStack.pushItem(nowPlayingPage, {entryId: 1, contentHash: "699cac8ca145d1d1ce56f90a52d66d24", undoEnabled: false}, StackView.PushTransition)
+
+                            if (screenStack.currentItem !== emulatorLoader) {
+                                if (screenStack.find(function (item, index) {
+                                    return item === emulatorLoader
+                                }) == null) {
+                                    screenStack.popToIndex(1, StackView.Immediate)
+                                    screenStack.pushItem(emulatorLoader, {}, StackView.PushTransition)
+                                } else {
+                                    screenStack.popToItem(emulatorLoader, StackView.PopTransition)
+                                }
+                            }
+
+                            quickMenuStack.pushItem(nowPlayingPage, {
+                                entryId: 1,
+                                contentHash: "699cac8ca145d1d1ce56f90a52d66d24",
+                                undoEnabled: false
+                            }, StackView.PushTransition)
                             quickMenuStack.forceActiveFocus()
-                        } else if (screenStack.currentItem === emulatorLoader) {
-                                screenStack.popCurrentItem(StackView.ReplaceTransition)
+
+                            // } else if (screenStack.currentItem === emulatorLoader) {
+                            //         screenStack.popCurrentItem(StackView.ReplaceTransition)
+                        }
+                        // if (model.label === "Home") {
+                        //     if (screenStack.currentItem === emulatorLoader) {
+                        //         screenStack.popToItem(homeScreen, StackView.PopTransition)
+                        //         // screenStack.replaceCurrentItem(homeScreen, {}, StackView.ReplaceTransition)
+                        //     }
+                        // }
+                        if (model.label === "Home") {
+                            screenStack.popToIndex(0, StackView.PopTransition)
+                            quickMenuBar.close()
                         }
                         if (model.label === "Settings") {
                             Router.navigateTo("settings")
@@ -709,7 +786,7 @@ ApplicationWindow {
                             if (quickMenuStack.currentItem === controllerPage) {
                                 quickMenuStack.popCurrentItem(StackView.PopTransition)
                             } else {
-                                quickMenuStack.pushItem(controllerPage, {}, StackView.PushTransition)
+                                quickMenuStack.replaceCurrentItem(controllerPage, {}, StackView.ReplaceTransition)
                                 quickMenuStack.forceActiveFocus()
                             }
                         }
@@ -757,6 +834,7 @@ ApplicationWindow {
         id: gameLoadedAnimation
         running: false
 
+        property var entryId
         property var gameData
         property var saveData
         property var corePath
@@ -771,6 +849,7 @@ ApplicationWindow {
                 // screenStack.popCurrentItem(StackView.Immediate)
                 // screenStack.currentItem.startGame(gameLoadedAnimation.gameData, gameLoadedAnimation.saveData, gameLoadedAnimation.corePath, gameLoadedAnimation.contentHash, gameLoadedAnimation.saveSlotNumber, gameLoadedAnimation.platformId, gameLoadedAnimation.contentPath)
                 screenStack.pushItem(emulatorLoader, {
+                    entryId: gameLoadedAnimation.entryId,
                     gameData: gameLoadedAnimation.gameData,
                     saveData: gameLoadedAnimation.saveData,
                     corePath: gameLoadedAnimation.corePath,
@@ -799,7 +878,8 @@ ApplicationWindow {
     Connections {
         target: GameLoader
 
-        function onGameLoaded(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
+        function onGameLoaded(entryId, gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
+            gameLoadedAnimation.entryId = entryId
             gameLoadedAnimation.gameData = gameData
             gameLoadedAnimation.saveData = saveData
             gameLoadedAnimation.corePath = corePath
@@ -818,6 +898,9 @@ ApplicationWindow {
             focus: true
             onReadyToStartGame: {
                 gameStartAnimation.running = true
+            }
+            onMenuButtonClicked: {
+                quickMenuBar.open()
             }
         }
     }
