@@ -311,6 +311,7 @@ int main(int argc, char *argv[]) {
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
 
+  window->setIcon(QIcon("system/_img/logo.png"));
 
   // QObject::connect(
   //   window, &QQuickWindow::frameSwapped, window,

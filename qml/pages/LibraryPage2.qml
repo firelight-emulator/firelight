@@ -24,6 +24,11 @@ FocusScope {
                 GameLoader.loadEntry(startGameAnimation.gameId, true)
             }
         }
+        PropertyAction {
+            target: playClone
+            property: "opacity"
+            value: 0.3
+        }
 
         ParallelAnimation {
             PropertyAction {
@@ -34,6 +39,7 @@ FocusScope {
             NumberAnimation {
                 target: playClone
                 property: "scale"
+                from: 1.0
                 to: 1.4
                 duration: 500
                 easing.type: Easing.OutQuad
@@ -51,6 +57,11 @@ FocusScope {
             to: 0
             duration: 100
             easing.type: Easing.InQuint
+        }
+        PropertyAction {
+            target: playClone
+            property: "visible"
+            value: false
         }
         // PauseAnimation {
         //     duration: 500
@@ -106,11 +117,13 @@ FocusScope {
                 label: "Play"
 
                 onClicked: function () {
+                    console.log("On clicked")
+                    console.log(startGameAnimation)
                     // GameLoader.loadEntry(listView.currentItem.model.id)
                     // page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
                     startGameAnimation.gameId = listView.currentItem.model.id
                     // startGameAnimation.gameHash = listView.currentItem.model.contentHash
-                    startGameAnimation.start()
+                    startGameAnimation.restart()
                 }
 
                 FirelightButton {

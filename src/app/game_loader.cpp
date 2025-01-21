@@ -14,6 +14,7 @@ namespace firelight {
     }
 
     void GameLoader::loadEntry(int entryId, bool waitForApproval) {
+      printf("Calling load entry\n");
         // TODO: Figure out how to prevent stutter here.
         m_threadPool.start([this, entryId, waitForApproval] {
                 if (waitForApproval) {

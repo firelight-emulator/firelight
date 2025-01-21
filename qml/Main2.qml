@@ -14,10 +14,6 @@ ApplicationWindow {
     width: 1280
     height: 720
 
-    // font.family: "Segoe UI"
-
-    // flags: Qt.FramelessWindowHint
-
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
 
@@ -25,6 +21,7 @@ ApplicationWindow {
 
     property alias gameRunning: emulatorLoader.active
     property alias currentGameName: emulatorLoader.contentPath
+    property alias currentEntryId: emulatorLoader.entryId
 
     // background: Rectangle {
     //     color: ColorPalette.neutral1000
@@ -239,29 +236,18 @@ ApplicationWindow {
         NowPlayingPage {
             property bool topLevel: true
             property string topLevelName: "nowPlaying"
-        }
-    }
 
-    Component {
-        id: emulatorScreen
-        EmulatorScreen {
-
-            focus: true
-
-            // Component.onCompleted: {
-            //     console.log("Graphics Info:")
-            //     console.log("  API:", emulatorScreen.GraphicsInfo.api)
-            //     console.log("  Major Version:", emulatorScreen.GraphicsInfo.majorVersion)
-            //     console.log("  Minor Version:", emulatorScreen.GraphicsInfo.minorVersion)
-            //     console.log("  Profile:", emulatorScreen.GraphicsInfo.profile)
-            // }
-
-            onGameAboutToStop: function () {
-                screenStack.popCurrentItem()
+            onResumeGamePressed: function() {
+                quickMenuBar.close()
             }
 
-            onGameStopped: function () {
-                emulatorLoader.active = false
+            onRestartGamePressed: function() {
+                emulatorLoader.item.resetGame()
+                quickMenuBar.close()
+            }
+
+            onCloseGamePressed: function() {
+                emulatorLoader.stopGame()
             }
         }
     }
@@ -283,14 +269,36 @@ ApplicationWindow {
         property var platformId
         property var contentPath
 
+        property bool shouldDeactivate: false
+
         active: false
         sourceComponent: emuPage
 
         property bool paused: !emulatorLoader.activeFocus
 
+        function stopGame() {
+            shouldDeactivate = true
+            if (emulatorLoader.StackView.status === StackView.Active) {
+                emulatorLoader.StackView.view.popCurrentItem()
+            }
+        }
+
         onPausedChanged: function () {
             if (emulatorLoader.item != null) {
                 emulatorLoader.item.paused = emulatorLoader.paused
+            }
+        }
+
+        // onActiveChanged: {
+        //     if (!active && emulatorLoader.StackView.status === StackView.Active) {
+        //         emulatorLoader.StackView.view.popCurrentItem()
+        //     }
+        // }
+
+        StackView.onDeactivated: {
+            if (shouldDeactivate) {
+                active = false
+                shouldDeactivate = false
             }
         }
 
@@ -342,7 +350,9 @@ ApplicationWindow {
         }
 
         onCurrentItemChanged: function () {
-            quickMenuBar.close()
+            if (screenStack.currentItem !== emulatorLoader) {
+                quickMenuBar.close()
+            }
         }
 
         Keys.onPressed: function (event) {
@@ -486,6 +496,7 @@ ApplicationWindow {
         focus: true
 
         padding: 16
+        closePolicy: Popup.NoAutoClose
 
         width: parent.width
         height: parent.height
@@ -495,9 +506,17 @@ ApplicationWindow {
 
         onAboutToShow: function () {
             sfx_player.play("quickopen")
-            menuBar.forceActiveFocus()
             screenStack.blur = true
-            // quickMenuStack.clear()
+            if (window.gameRunning && screenStack.currentItem === emulatorLoader) {
+                quickMenuStack.pushItem(nowPlayingPage, {
+                    entryId: 1,
+                    contentHash: "699cac8ca145d1d1ce56f90a52d66d24",
+                    undoEnabled: false
+                }, StackView.PushTransition)
+                quickMenuStack.forceActiveFocus()
+            } else {
+                menuBar.forceActiveFocus()
+            }
         }
 
         onAboutToHide: function () {
@@ -586,7 +605,7 @@ ApplicationWindow {
                 anchors.bottom: menuBar.top
 
                 onActiveFocusChanged: function () {
-                    if (!quickMenuStack.activeFocus) {
+                    if (!InputMethodManager.usingMouse && !quickMenuStack.activeFocus) {
                         quickMenuStack.clear(StackView.PopTransition)
                         menuBar.forceActiveFocus()
                     }
@@ -723,6 +742,7 @@ ApplicationWindow {
                 }
                 spacing: 48
                 delegate: FirelightButton {
+                    id: theButton
                     focus: true
                     required property var model
                     required property var index
@@ -731,6 +751,19 @@ ApplicationWindow {
                     circle: true
                     flat: true
                     iconCode: model.icon
+
+                    Text {
+                        id: nowPlayingCurrentGameText
+                        color: "white"
+                        font.family: Constants.regularFontFamily
+                        text: "Now playing: " + window.currentGameName
+                        font.pixelSize: 13
+                        visible: window.gameRunning && model.label === "Now Playing"
+                        anchors.top: theButton.bottom
+                        anchors.horizontalCenter: theButton.horizontalCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
 
                     Keys.onUpPressed: function (event) {
                         if (model.label === "Controllers") {
@@ -747,29 +780,35 @@ ApplicationWindow {
                         }
                     }
 
-                    onClicked: function () {
+                    onClicked: function (event) {
+                        console.log("Calling on click")
                         if (model.label === "Now Playing") {
                             if (!window.gameRunning) {
                                 quickMenuStack.pushItem(notPlayingAnythingText, {}, StackView.PushTransition)
                                 return
                             }
 
+
                             if (screenStack.currentItem !== emulatorLoader) {
                                 if (screenStack.find(function (item, index) {
                                     return item === emulatorLoader
                                 }) == null) {
-                                    screenStack.popToIndex(1, StackView.Immediate)
                                     screenStack.pushItem(emulatorLoader, {}, StackView.PushTransition)
                                 } else {
                                     screenStack.popToItem(emulatorLoader, StackView.PopTransition)
                                 }
                             }
 
-                            quickMenuStack.pushItem(nowPlayingPage, {
-                                entryId: 1,
-                                contentHash: "699cac8ca145d1d1ce56f90a52d66d24",
-                                undoEnabled: false
-                            }, StackView.PushTransition)
+                            console.log(quickMenuStack.currentItem)
+
+                            if (quickMenuStack.currentItem !== nowPlayingPage) {
+                                quickMenuStack.pushItem(nowPlayingPage, {
+                                    entryId: 1,
+                                    contentHash: "699cac8ca145d1d1ce56f90a52d66d24",
+                                    undoEnabled: false
+                                }, StackView.PushTransition)
+                            }
+
                             quickMenuStack.forceActiveFocus()
 
                             // } else if (screenStack.currentItem === emulatorLoader) {
@@ -791,8 +830,7 @@ ApplicationWindow {
                         }
 
                         if (model.label === "Controllers") {
-                            console.log(quickMenuStack.depth)
-                            if (quickMenuStack.currentItem === controllerPage) {
+                            if (quickMenuStack.currentItem == controllerPage) {
                                 quickMenuStack.popCurrentItem(StackView.PopTransition)
                             } else {
                                 quickMenuStack.replaceCurrentItem(controllerPage, {}, StackView.ReplaceTransition)

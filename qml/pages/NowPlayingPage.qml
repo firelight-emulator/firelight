@@ -15,8 +15,6 @@ FocusScope {
 
     signal restartGamePressed()
 
-    signal backToMainMenuPressed()
-
     signal closeGamePressed()
 
     signal rewindPressed()
@@ -29,14 +27,6 @@ FocusScope {
 
     property Item previouslyFocusedItem
 
-    StackView.onActivating: function () {
-        sfx_player.play("quickopen")
-    }
-
-    StackView.onDeactivating: function () {
-        sfx_player.play("quickclose")
-    }
-
     StackView.onDeactivated: function () {
         SaveManager.clearSuspendPointListModel()
     }
@@ -48,14 +38,6 @@ FocusScope {
         anchors.right: parent.right
         height: 40
     }
-    // NavigationTabBar {
-    //     id: navBar
-    //     anchors.horizontalCenter: parent.horizontalCenter
-    //
-    //     tabs: ["Stuff", "Controller", "Achievements", "Settings"]
-    //     tabWidth: 150
-    //     height: 40
-    // }
 
     RowLayout {
         id: contentRow
@@ -190,14 +172,6 @@ FocusScope {
 
                 ButtonGroup.group: navButtonGroup
 
-                // onToggled: function () {
-                //     if (checked) {
-                //         console.log("toggled load")
-                //         if (rightSide.depth === 0) {
-                //             rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
-                //         }
-                //     }
-                // }
 
                 onActiveFocusChanged: function () {
                     if (activeFocus) {
@@ -235,17 +209,6 @@ FocusScope {
                         rightSide.forceActiveFocus()
                     }
                 }
-
-                // onActiveFocusChanged: function () {
-                //     if (activeFocus && rightSide.depth === 0) {
-                //         rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
-                //         rightSide.forceActiveFocus()
-                //     }
-                //
-                //     if (!(activeFocus || rightSide.activeFocus) && !createSuspendPointButton.activeFocus) {
-                //         rightSide.clear(StackView.PopTransition)
-                //     }
-                // }
             }
             FirelightMenuItem {
                 id: createSuspendPointButton
@@ -267,15 +230,6 @@ FocusScope {
                         col.index = 4
                     }
                 }
-
-                // onToggled: function () {
-                //     if (checked) {
-                //         console.log("toggled create")
-                //         if (rightSide.depth === 0) {
-                //             rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
-                //         }
-                //     }
-                // }
 
                 Keys.onRightPressed: function (event) {
                     if (rightSide.depth === 0) {
@@ -306,22 +260,6 @@ FocusScope {
                         rightSide.forceActiveFocus()
                     }
                 }
-
-                // onToggled: function () {
-                //     if (checked) {
-                //         console.log("This is when I would go to the right")
-                //     }
-                // }
-
-                // onActiveFocusChanged: function () {
-                //     if (activeFocus && rightSide.depth === 0) {
-                //         rightSide.replaceCurrentItem(suspendPoints, {}, StackView.PushTransition)
-                //     }
-                //
-                //     if (!(activeFocus || rightSide.activeFocus) && !loadSuspendPointButton.activeFocus) {
-                //         rightSide.clear(StackView.PopTransition)
-                //     }
-                // }
             }
             FirelightMenuItem {
                 id: undo
@@ -359,30 +297,6 @@ FocusScope {
                 Layout.preferredHeight: 1
                 opacity: 0.3
                 color: "#dadada"
-            }
-            FirelightMenuItem {
-                labelText: "Back to Main Menu"
-                Layout.fillWidth: true
-                // Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 40
-                checkable: false
-                alignRight: true
-                enabled: false
-
-                onClicked: function () {
-                    if (rightSide.depth > 0) {
-                        rightSide.pop()
-                        root.previouslyFocusedItem = null
-                    }
-                    backToMainMenuPressed()
-                }
-
-                onActiveFocusChanged: function () {
-                    if (activeFocus) {
-                        col.index = 6
-                    }
-                }
             }
             FirelightMenuItem {
                 id: closeGameButton
@@ -558,31 +472,6 @@ FocusScope {
 
                     }
                 }
-                //
-                // footer: Item {
-                //     height: 100
-                //     width: ListView.view.width
-                //     // Button {
-                //     //     height: 120
-                //     //     anchors.top: parent.top
-                //     //     anchors.topMargin: 8
-                //     //     width: parent.width
-                //     //     background: Rectangle {
-                //     //         color: parent.hovered ? ColorPalette.neutral800 : ColorPalette.neutral900
-                //     //         border.color: ColorPalette.neutral700
-                //     //         radius: 8
-                //     //     }
-                //     //     contentItem: Text {
-                //     //         horizontalAlignment: Text.AlignHCenter
-                //     //         verticalAlignment: Text.AlignVCenter
-                //     //         font.pixelSize: 16
-                //     //         font.family: Constants.regularFontFamily
-                //     //         font.weight: Font.DemiBold
-                //     //         color: ColorPalette.neutral400
-                //     //         text: "New Suspend Point"
-                //     //     }
-                //     // }
-                // }
 
                 delegate: Component {
                     FocusScope {
@@ -769,20 +658,6 @@ FocusScope {
                                         anchors.topMargin: 8
                                         anchors.rightMargin: 8
                                     }
-                                    // Text {
-                                    //     id: thingy
-                                    //     anchors.top: parent.top
-                                    //     anchors.bottom: parent.bottom
-                                    //     anchors.left: parent.left
-                                    //     width: 36
-                                    //     horizontalAlignment: Text.AlignHCenter
-                                    //     verticalAlignment: Text.AlignVCenter
-                                    //     text: dele.index
-                                    //     font.pixelSize: 16
-                                    //     font.family: Constants.regularFontFamily
-                                    //     font.weight: Font.DemiBold
-                                    //     color: ColorPalette.neutral400
-                                    // }
                                     Rectangle {
                                         id: pic
                                         anchors.top: parent.top
@@ -843,39 +718,6 @@ FocusScope {
                                             visible: false
                                             timeout: 3000
                                             delay: 0
-
-                                            // enter: Transition {
-                                            //     PropertyAnimation {
-                                            //         property: "opacity"
-                                            //         from: 0
-                                            //         to: 1
-                                            //         duration: 200
-                                            //         easing.type: Easing.InOutQuad
-                                            //     }
-                                            //     PropertyAnimation {
-                                            //         property: "y"
-                                            //         from: 24
-                                            //         to: 0
-                                            //         duration: 200
-                                            //         easing.type: Easing.InOutQuad
-                                            //     }
-                                            // }
-                                            // exit: Transition {
-                                            //     PropertyAnimation {
-                                            //         property: "opacity"
-                                            //         from: 1
-                                            //         to: 0
-                                            //         duration: 200
-                                            //         easing.type: Easing.InOutQuad
-                                            //     }
-                                            //     PropertyAnimation {
-                                            //         property: "y"
-                                            //         from: 0
-                                            //         to: 24
-                                            //         duration: 200
-                                            //         easing.type: Easing.InOutQuad
-                                            //     }
-                                            // }
                                         }
                                     }
                                     Text {
@@ -984,140 +826,10 @@ FocusScope {
         text: "Are you sure you want to close the game?"
 
         onAccepted: {
-            closeGamePressed()
+            root.closeGamePressed()
         }
     }
 
-    // Pane {
-    //     id: header
-    //     anchors.top: parent.top
-    //     anchors.left: parent.left
-    //     anchors.right: parent.right
-    //     background: Item {
-    //     }
-    //
-    //     Column {
-    //         anchors.fill: parent
-    //         spacing: 8
-    //
-    //         Text {
-    //             text: "Now Playing"
-    //             color: "#dadada"
-    //             font.pointSize: 24
-    //             font.family: Constants.semiboldFontFamily
-    //             horizontalAlignment: Text.AlignLeft
-    //             verticalAlignment: Text.AlignVCenter
-    //         }
-    //
-    //         Rectangle {
-    //             width: parent.width
-    //             height: 1
-    //             opacity: 0.3
-    //             color: "#dadada"
-    //         }
-    //     }
-    // }
-    //
-    // Item {
-    //     id: leftHalf
-    //     anchors.left: parent.left
-    //     anchors.top: header.bottom
-    //     anchors.bottom: parent.bottom
-    //     width: parent.width / 4
-    //
-    //     ColumnLayout {
-    //         id: menu
-    //         anchors.fill: parent
-    //         spacing: 4
-    //
-    //         FirelightMenuItem {
-    //             labelText: "Resume Game"
-    //             Layout.preferredWidth: parent.width
-    //             Layout.preferredHeight: 40
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             checkable: false
-    //         }
-    //         FirelightMenuItem {
-    //             labelText: "Restart Game"
-    //             Layout.preferredWidth: parent.width
-    //             Layout.preferredHeight: 40
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             checkable: false
-    //         }
-    //         FirelightMenuItem {
-    //             labelText: "Rewind"
-    //             Layout.preferredWidth: parent.width
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             Layout.preferredHeight: 40
-    //             enabled: false
-    //         }
-    //         Rectangle {
-    //             Layout.preferredWidth: parent.width
-    //             Layout.preferredHeight: 1
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             opacity: 0.3
-    //             color: "#dadada"
-    //         }
-    //         FirelightMenuItem {
-    //             labelText: "Create Suspend Point"
-    //             Layout.preferredWidth: parent.width
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             Layout.preferredHeight: 40
-    //             enabled: false
-    //         }
-    //         FirelightMenuItem {
-    //             labelText: "Load Suspend Point"
-    //             Layout.preferredWidth: parent.width
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             Layout.preferredHeight: 40
-    //             enabled: false
-    //         }
-    //         FirelightMenuItem {
-    //             labelText: "Undo Last Load"
-    //             Layout.preferredWidth: parent.width
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             Layout.preferredHeight: 40
-    //             enabled: false
-    //         }
-    //         Rectangle {
-    //             Layout.preferredWidth: parent.width
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             Layout.preferredHeight: 1
-    //             opacity: 0.3
-    //             color: "#dadada"
-    //         }
-    //         FirelightMenuItem {
-    //             labelText: "Quit Game"
-    //             Layout.preferredWidth: parent.width
-    //             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-    //             Layout.preferredHeight: 40
-    //             checkable: false
-    //         }
-    //
-    //         Item {
-    //             Layout.fillWidth: true
-    //             Layout.fillHeight: true
-    //         }
-    //     }
-    // }
-
-    // Item {
-    //     id: rightHalf
-    //     anchors.right: parent.right
-    //     anchors.top: header.bottom
-    //     anchors.bottom: parent.bottom
-    //     anchors.left: leftHalf.right
-    //
-    //
-    //     Image {
-    //         id: preview
-    //         anchors.centerIn: parent
-    //         smooth: false
-    //
-    //         source: "file:pmscreenshot.jpg"
-    //         // fillMode: Image.PreserveAspectFit
-    //     }
-    // }
 
 
 }
