@@ -9,9 +9,16 @@ FocusScope {
 
     property alias model: listView.model
 
+    signal playButtonClicked(entryId: int)
+
     signal openDetails(entryId: int)
 
     signal readyToStartGame()
+
+    function startLoadingGame(entryId) {
+        startGameAnimation.gameId = entryId
+        startGameAnimation.restart()
+    }
 
     SequentialAnimation {
         id: startGameAnimation
@@ -117,13 +124,13 @@ FocusScope {
                 label: "Play"
 
                 onClicked: function () {
-                    console.log("On clicked")
+                    playButtonClicked(listView.currentItem.model.id)
                     console.log(startGameAnimation)
                     // GameLoader.loadEntry(listView.currentItem.model.id)
                     // page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
-                    startGameAnimation.gameId = listView.currentItem.model.id
-                    // startGameAnimation.gameHash = listView.currentItem.model.contentHash
-                    startGameAnimation.restart()
+                    // startGameAnimation.gameId = listView.currentItem.model.id
+                    // // startGameAnimation.gameHash = listView.currentItem.model.contentHash
+                    // startGameAnimation.restart()
                 }
 
                 FirelightButton {

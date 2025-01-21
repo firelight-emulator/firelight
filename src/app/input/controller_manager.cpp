@@ -8,6 +8,9 @@
 namespace firelight::input {
   ControllerManager::ControllerManager(input::IControllerRepository &controllerRepository) : m_controllerRepository(
     controllerRepository) {
+    m_settings = std::make_unique<QSettings>();
+
+    m_prioritizeControllerOverKeyboard = m_settings->value("controllers/prioritizeControllerOverKeyboard", true).toBool();
   }
 
   void ControllerManager::setKeyboardRetropad(input::KeyboardInputHandler *keyboard) {
@@ -331,7 +334,7 @@ namespace firelight::input {
     // TODO: Check if any controllers have the same joystick id.
 
     for (int i = 0; i < m_controllers.max_size(); ++i) {
-      if (m_controllers[i] != nullptr && m_controllers[i]->getType() == KEYBOARD) {
+      if (m_prioritizeControllerOverKeyboard && m_controllers[i] != nullptr && m_controllers[i]->getType() == KEYBOARD) {
         for (int j = i; j < m_controllers.max_size(); ++j) {
           if (m_controllers[j] == nullptr) {
             m_controllers[j] = std::move(m_controllers[i]);
@@ -394,6 +397,10 @@ namespace firelight::input {
     }
 
     return {};
+  }
+
+  bool ControllerManager::prioritizeControllerOverKeyboard() const {
+    return m_prioritizeControllerOverKeyboard;
   }
 
   void ControllerManager::updateControllerOrder(const QVariantMap &map) {
@@ -460,4 +467,14 @@ namespace firelight::input {
     m_blockGamepadInput = blockGamepadInput;
     emit blockGamepadInputChanged();
   }
-} // namespace firelight::input
+  void ControllerManager::setPrioritizeControllerOverKeyboard(
+      const bool prioritizeControllerOverKeyboard) {
+    if (m_prioritizeControllerOverKeyboard == prioritizeControllerOverKeyboard) {
+      return;
+    }
+
+    m_settings->setValue("controllers/prioritizeControllerOverKeyboard", prioritizeControllerOverKeyboard);
+    m_prioritizeControllerOverKeyboard = prioritizeControllerOverKeyboard;
+    emit prioritizeControllerOverKeyboardChanged();
+  }
+  } // namespace firelight::input

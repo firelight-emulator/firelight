@@ -363,7 +363,10 @@ FocusScope {
     }
 
     RowLayout {
-        anchors.fill: parent
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 400
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true

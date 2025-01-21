@@ -784,7 +784,7 @@ ApplicationWindow {
                         console.log("Calling on click")
                         if (model.label === "Now Playing") {
                             if (!window.gameRunning) {
-                                quickMenuStack.pushItem(notPlayingAnythingText, {}, StackView.PushTransition)
+                                quickMenuStack.replaceCurrentItem(notPlayingAnythingText, {}, StackView.ReplaceTransition)
                                 return
                             }
 
@@ -802,11 +802,11 @@ ApplicationWindow {
                             console.log(quickMenuStack.currentItem)
 
                             if (quickMenuStack.currentItem !== nowPlayingPage) {
-                                quickMenuStack.pushItem(nowPlayingPage, {
+                                quickMenuStack.replaceCurrentItem(nowPlayingPage, {
                                     entryId: 1,
                                     contentHash: "699cac8ca145d1d1ce56f90a52d66d24",
                                     undoEnabled: false
-                                }, StackView.PushTransition)
+                                }, StackView.ReplaceTransition)
                             }
 
                             quickMenuStack.forceActiveFocus()
@@ -938,14 +938,75 @@ ApplicationWindow {
         }
     }
 
+    FirelightDialog {
+        id: closeGameDialog
+        text: "You're currently playing:\n\n" + window.currentGameName + "\n\nDo you want to close it?"
+    }
+
+    Component {
+        id: shopPage
+        ShopLandingPage {
+            property bool topLevel: true
+            property string topLevelName: "shop"
+            property string pageTitle: "Mod shop (coming soon!)"
+            model: shop_item_model
+        }
+    }
+
+    Component {
+        id: libraryPage2
+        LibraryPage2 {
+            id: libPage
+            objectName: "Library Page 2"
+            property bool topLevel: true
+            property string topLevelName: "library"
+            property string pageTitle: "Library"
+            // model: library_short_model
+            model: LibraryEntryModel
+
+            onPlayButtonClicked: function(entryId) {
+                console.log("Gonna start: " + entryId)
+                if (window.gameRunning) {
+                    // closeGameDialog.entryId = entryId
+                    closeGameDialog.openAndDoOnAccepted(function() {
+                        emulatorLoader.active = false
+                        libPage.startLoadingGame(entryId)
+                    })
+                } else {
+                    libPage.startLoadingGame(entryId)
+                }
+            }
+
+            onReadyToStartGame: {
+                gameStartAnimation.running = true
+            }
+
+            onOpenDetails: function (id) {
+                // contentStack.push(gameDetailsPage)
+            }
+
+            Component {
+                id: gameDetailsPage
+                GameDetailsPage {
+                    entryId: 115
+                }
+            }
+
+            // onEntryClicked: function (id) {
+            //     emulatorScreen.loadGame(id)
+            // }
+        }
+    }
+
     Component {
         id: homeScreen
 
         HomeScreen {
+            libraryPage: libraryPage2
+            modShopPage: shopPage
+
             focus: true
-            onReadyToStartGame: {
-                gameStartAnimation.running = true
-            }
+
             onMenuButtonClicked: {
                 quickMenuBar.open()
             }

@@ -10,11 +10,14 @@
 #include "controller_repository.hpp"
 #include "keyboard_input_handler.hpp"
 
+#include <qsettings.h>
+
 namespace firelight::input {
   class ControllerManager final : public QObject,
                                   public libretro::IRetropadProvider {
     Q_OBJECT
     Q_PROPERTY(bool blockGamepadInput READ blockGamepadInput WRITE setBlockGamepadInput NOTIFY blockGamepadInputChanged)
+    Q_PROPERTY(bool prioritizeControllerOverKeyboard READ prioritizeControllerOverKeyboard WRITE setPrioritizeControllerOverKeyboard NOTIFY prioritizeControllerOverKeyboardChanged)
 
   public:
     bool m_blockGamepadInput = false;
@@ -39,6 +42,10 @@ namespace firelight::input {
 
     void setBlockGamepadInput(bool blockGamepadInput);
 
+    void setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);
+
+    bool prioritizeControllerOverKeyboard() const;
+
   public slots:
     void updateControllerOrder(const QVariantMap &map);
 
@@ -49,6 +56,8 @@ namespace firelight::input {
 
     void controllerOrderChanged();
 
+    void prioritizeControllerOverKeyboardChanged();
+
     void retropadInputStateChanged(int playerNumber, int input, bool activated);
 
     void buttonStateChanged(int playerNumber, int button, bool pressed);
@@ -58,9 +67,11 @@ namespace firelight::input {
     void blockGamepadInputChanged();
 
   private:
+    std::unique_ptr<QSettings> m_settings;
     IControllerRepository &m_controllerRepository;
     int m_numControllers = 0;
     std::array<std::unique_ptr<SdlController>, 32> m_controllers{};
+    bool m_prioritizeControllerOverKeyboard;
 
     void openControllerWithDeviceIndex(int32_t t_deviceIndex);
   };

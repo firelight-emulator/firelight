@@ -114,6 +114,10 @@ FocusScope {
                 //     section: "sound"
                 // }
                 ListElement {
+                    name: "Controllers"
+                    section: "controllers"
+                }
+                ListElement {
                     name: "Achievements"
                     section: "achievements"
                 }
@@ -405,6 +409,8 @@ FocusScope {
                         rightHalf.replace(soundSettings)
                     } else if (root.section === "audiovideo") {
                         rightHalf.replace(videoSettings)
+                    } else if (root.section === "controllers") {
+                        rightHalf.replace(controllerSettings)
                     } else if (root.section === "platforms/gbc") {
                         rightHalf.replace(gbcSettings)
                     } else if (root.section === "platforms/gb") {
@@ -503,6 +509,12 @@ FocusScope {
     Component {
         id: soundSettings
         SoundSettings {
+        }
+    }
+
+    Component {
+        id: controllerSettings
+        ControllerSettings {
         }
     }
 

@@ -21,6 +21,13 @@ Dialog {
     anchors.centerIn: Overlay.overlay
     padding: 24
 
+    property var doOnAccepted
+
+    function openAndDoOnAccepted(doOnAccepted) {
+        control.doOnAccepted = doOnAccepted
+        control.open()
+    }
+
     width: 520
     height: Math.max(240, contentItem.implicitHeight + footer.height + spacing + verticalPadding * 2)
 
@@ -44,7 +51,7 @@ Dialog {
         color: "white"
         font.family: Constants.regularFontFamily
         text: control.text
-        font.weight: Font.Light
+        // font.weight: Font.Light
         wrapMode: Text.WordWrap
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -87,7 +94,13 @@ Dialog {
                 id: acceptButton
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
                 label: control.acceptText
-                onClicked: control.accept()
+                onClicked: function() {
+                    if (control.doOnAccepted) {
+                        control.doOnAccepted()
+                        control.doOnAccepted = null
+                    }
+                    control.accept()
+                }
             }
 
             Item {

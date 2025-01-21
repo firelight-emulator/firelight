@@ -9,51 +9,10 @@ FocusScope {
     id: root
 
     property bool showNowPlayingButton: false
-
-    signal readyToStartGame()
+    required property Component libraryPage
+    required property Component modShopPage
 
     signal menuButtonClicked()
-
-    Component {
-        id: shopPage
-        ShopLandingPage {
-            property bool topLevel: true
-            property string topLevelName: "shop"
-            property string pageTitle: "Mod shop (coming soon!)"
-            model: shop_item_model
-        }
-    }
-
-    Component {
-        id: libraryPage2
-        LibraryPage2 {
-            objectName: "Library Page 2"
-            property bool topLevel: true
-            property string topLevelName: "library"
-            property string pageTitle: "Library"
-            // model: library_short_model
-            model: LibraryEntryModel
-
-            onReadyToStartGame: {
-                root.readyToStartGame()
-            }
-
-            onOpenDetails: function (id) {
-                contentStack.push(gameDetailsPage)
-            }
-
-            Component {
-                id: gameDetailsPage
-                GameDetailsPage {
-                    entryId: 115
-                }
-            }
-
-            // onEntryClicked: function (id) {
-            //     emulatorScreen.loadGame(id)
-            // }
-        }
-    }
 
     Popup {
         id: scannerPopup
@@ -144,33 +103,33 @@ FocusScope {
                 Layout.fillWidth: true
             }
 
-            FirelightButton {
-                id: searchButton
-
-                enabled: false
-                tooltipLabel: "Search"
-                flat: true
-
-                Layout.fillHeight: true
-                Layout.preferredWidth: height
-                KeyNavigation.left: hamburger
-
-                iconCode: "\ue8b6"
-            }
-
-            FirelightButton {
-                id: notificationButton
-
-                enabled: false
-                tooltipLabel: "Notifications"
-                flat: true
-
-                Layout.fillHeight: true
-                Layout.preferredWidth: height
-                KeyNavigation.left: searchButton
-
-                iconCode: "\ue7f4"
-            }
+            // FirelightButton {
+            //     id: searchButton
+            //
+            //     enabled: false
+            //     tooltipLabel: "Search"
+            //     flat: true
+            //
+            //     Layout.fillHeight: true
+            //     Layout.preferredWidth: height
+            //     KeyNavigation.left: hamburger
+            //
+            //     iconCode: "\ue8b6"
+            // }
+            //
+            // FirelightButton {
+            //     id: notificationButton
+            //
+            //     enabled: false
+            //     tooltipLabel: "Notifications"
+            //     flat: true
+            //
+            //     Layout.fillHeight: true
+            //     Layout.preferredWidth: height
+            //     KeyNavigation.left: searchButton
+            //
+            //     iconCode: "\ue7f4"
+            // }
 
             FirelightButton {
                 Layout.fillHeight: true
@@ -220,121 +179,6 @@ FocusScope {
         }
     }
 
-
-    Popup {
-        id: drawer2
-        width: 280
-        height: parent.height
-        x: -width
-        modal: true
-        focus: true
-
-        background: Rectangle {
-            color: ColorPalette.neutral900
-        }
-
-        leftPadding: 40 + rightPadding
-
-        contentItem: ColumnLayout {
-            width: parent.width - 40
-            spacing: 4
-
-            FirelightButton {
-                Layout.preferredWidth: 40
-                Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignRight
-                KeyNavigation.down: libraryButton
-                flat: true
-
-                iconCode: "\ue5cd"
-
-                onClicked: {
-                    drawer2.close()
-                }
-            }
-
-            FirelightMenuItem {
-                id: libraryButton
-                focus: contentStack.currentItem.topLevelName === "library"
-                labelText: "Library"
-                Layout.fillWidth: true
-                property bool showGlobalCursor: true
-
-                KeyNavigation.down: exploreButton
-                // Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 42
-                checkable: false
-                // alignRight: true
-
-                onClicked: {
-                    contentStack.goTo(libraryPage2)
-                    drawer2.close()
-                }
-            }
-
-            FirelightMenuItem {
-                id: exploreButton
-                focus: contentStack.currentItem.topLevelName === "shop"
-                labelText: "Mod shop"
-                Layout.fillWidth: true
-                property bool showGlobalCursor: true
-
-                KeyNavigation.down: controllerButton
-                // Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.preferredHeight: 42
-                checkable: false
-                // alignRight: true
-
-                onClicked: {
-                    contentStack.goTo(shopPage)
-                    drawer2.close()
-                }
-            }
-
-
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-
-        }
-
-        Overlay.modal: Rectangle {
-            color: "black"
-            anchors.fill: parent
-            opacity: 0.6
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 200
-                }
-            }
-        }
-
-        enter: Transition {
-            NumberAnimation {
-                property: "x";
-                to: -40
-                easing.type: Easing.OutBack
-                easing.overshoot: 0.6
-                duration: 400
-            }
-        }
-        exit: Transition {
-            NumberAnimation {
-                property: "x";
-                to: -width
-                easing.type: Easing.InBack
-                easing.overshoot: 0.6
-                duration: 400
-            }
-        }
-
-    }
-
-
     StackView {
         id: contentStack
         anchors.top: headerBar.bottom
@@ -374,7 +218,7 @@ FocusScope {
             }
         }
 
-        initialItem: libraryPage2
+        initialItem: root.libraryPage
 
         pushEnter: Transition {
         }

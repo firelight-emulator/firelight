@@ -20,7 +20,7 @@ Button {
         }
     }
 
-    implicitHeight: 72
+    // implicitHeight: Math.max(72, theColumn.)
     hoverEnabled: true
 
     background: Rectangle {
@@ -31,10 +31,12 @@ Button {
 
     contentItem: RowLayout {
         ColumnLayout {
+            id: theColumn
             Layout.fillHeight: true
             Layout.fillWidth: true
 
             Text {
+                id: labelText
                 Layout.fillWidth: true
                 text: root.label
                 color: ColorPalette.neutral100
@@ -44,6 +46,7 @@ Button {
                 font.weight: Font.DemiBold
             }
             Text {
+                id: descriptionText
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 visible: root.description !== ""
