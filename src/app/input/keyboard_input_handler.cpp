@@ -5,18 +5,18 @@
 
 namespace firelight::input {
   KeyboardInputHandler::KeyboardInputHandler() = default;
+void KeyboardInputHandler::setActiveMapping(
+    const std::shared_ptr<InputMapping> &mapping) {
+  m_keyboardMapping = std::static_pointer_cast<KeyboardMapping>(mapping);
+  SdlController::setActiveMapping(mapping);
+}
 
-  bool KeyboardInputHandler::isButtonPressed(int platformId, Input t_button) {
-    if (m_activeMapping) {
-      printf("Getting active mapping\n");
-
-      // const auto mapping = m_activeMapping.get();
-      // const auto actualMapping = dynamic_cast<KeyboardMapping *>(mapping);
-      //
-      // const auto mappedKey = actualMapping->getMappedKeyboardInput(t_button);
-      // if (mappedKey.has_value()) {
-      //   return m_keyStates[static_cast<Qt::Key>(mappedKey.value())];
-      // }
+bool KeyboardInputHandler::isButtonPressed(int platformId, Input t_button) {
+    if (m_keyboardMapping) {
+      const auto mappedKey = m_keyboardMapping->getMappedKeyboardInput(t_button);
+      if (mappedKey.has_value()) {
+        return m_keyStates[static_cast<Qt::Key>(mappedKey.value())];
+      }
     }
 
     switch (t_button) {

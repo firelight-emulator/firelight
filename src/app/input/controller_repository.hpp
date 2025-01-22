@@ -1,8 +1,9 @@
 #pragma once
 
-#include <vector>
 #include "profiles/controller_profile.hpp"
 #include "profiles/input_mapping.hpp"
+#include "profiles/keyboard_mapping.hpp"
+#include <vector>
 
 namespace firelight::input {
     class IControllerRepository {
@@ -27,5 +28,7 @@ namespace firelight::input {
         [[nodiscard]] virtual std::shared_ptr<InputMapping> getInputMapping(int mappingId) const = 0;
 
         [[nodiscard]] virtual std::shared_ptr<InputMapping> getInputMapping(int profileId, int platformId) = 0;
+
+        virtual std::shared_ptr<KeyboardMapping> getKeyboardMapping(int profileId, int platformId) = 0;
     };
 }

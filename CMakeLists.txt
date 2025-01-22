@@ -105,53 +105,29 @@ add_library(firelight_lib
         src/app/input/profiles/input_mapping.cpp
         src/gui/platform_list_model.cpp
         src/app/libretro/core_configuration.cpp
-        src/app/libretro/core_configuration.hpp
         src/app/emulator_config_manager.cpp
-        src/app/platform_metadata.hpp
         src/gui/models/shop/shop_item_model.cpp
-        src/gui/models/shop/shop_item_model.hpp
         src/gui/models/suspend_point_list_model.cpp
-        src/gui/models/suspend_point_list_model.hpp
         src/gui/game_image_provider.cpp
-        src/gui/game_image_provider.hpp
         src/app/audio/SfxPlayer.cpp
-        src/app/audio/SfxPlayer.hpp
         src/app/rcheevos/regular_http_client.cpp
-        src/app/rcheevos/regular_http_client.hpp
-        src/app/rcheevos/offline/earned_achievement.hpp
         src/app/rcheevos/offline/ra_cache.cpp
-        src/app/rcheevos/login2_response.hpp
-        src/app/rcheevos/patch_response.hpp
-        src/app/rcheevos/startsession_response.hpp
-        src/app/rcheevos/award_achievement_response.hpp
-        src/app/rcheevos/offline/rcheevos_offline_client.hpp
         src/app/rcheevos/offline/rcheevos_offline_client.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
-        src/gui/eventhandlers/input_method_detection_handler.hpp
         src/app/input/keyboard_input_handler.cpp
         src/gui/models/library/entry_list_model.cpp
-        src/app/emulator_item.hpp
-        src/app/emulator_item_renderer.hpp
         src/app/emulator_item_renderer.cpp
         src/app/emulator_item.cpp
         src/app/game_loader.cpp
-        src/app/game_loader.hpp
         src/app/input/gamepad_status_item.cpp
-        src/app/input/gamepad_status_item.hpp
-        src/app/input/controller_icons.hpp
         src/app/activity/sqlite_activity_log.cpp
-        src/app/activity/sqlite_activity_log.hpp
         src/app/PlatformMetadataItem.cpp
-        src/app/PlatformMetadataItem.hpp
         src/app/input/sqlite_controller_repository.cpp
-        src/app/input/sdl_controller.hpp
-        src/app/input/gamepad.hpp
-        src/app/input/input_manager.hpp
         src/app/input/input_manager.cpp
         src/app/input/input_mapping_item.cpp
         src/app/library_entry_item.cpp
-        src/app/input/profiles/keyboard_mapping.hpp
         src/app/input/profiles/keyboard_mapping.cpp
+        src/app/input/keyboard_mapping_item.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)

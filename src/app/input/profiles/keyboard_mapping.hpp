@@ -4,6 +4,9 @@
 namespace firelight::input {
 class KeyboardMapping final : public InputMapping {
 public:
+  explicit KeyboardMapping(
+      const std::function<void(InputMapping &)> &syncCallback = nullptr);
+
   void addKeyboardMapping(libretro::IRetroPad::Input input, int mappedKeyCode);
 
   std::optional<int> getMappedKeyboardInput(libretro::IRetroPad::Input input);

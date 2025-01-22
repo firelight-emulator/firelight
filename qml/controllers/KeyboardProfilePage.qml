@@ -17,7 +17,7 @@ FocusScope {
         playerNumber: root.playerNumber
     }
 
-    InputMapping {
+    KeyboardMapping {
         id: inputMapping
         profileId: gamepadStatus.profileId
         platformId: platformList.currentItem.model.platform_id
@@ -43,7 +43,7 @@ FocusScope {
             spacing: 24
 
             Text {
-                text: "Editing controller profile (" + gamepadStatus.name + ")"
+                text: "Editing keyboard profile"
                 color: ColorPalette.neutral100
                 font.pixelSize: 24
                 font.weight: Font.Normal
@@ -220,7 +220,7 @@ FocusScope {
                     Layout.alignment: Qt.AlignLeft
                     Layout.fillHeight: true
                     Layout.leftMargin: 12
-                    text: "Your controls"
+                    text: "Key"
                     color: ColorPalette.neutral200
                     font.pixelSize: 16
                     font.family: Constants.regularFontFamily
@@ -298,10 +298,10 @@ FocusScope {
                             Layout.maximumWidth: 240
                             Layout.alignment: Qt.AlignLeft
                             Layout.fillHeight: true
-                            // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
-                            // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-                            text: "heya"
-                            color: "white"
+                            text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (inputMapping.getDefaultKeyLabel(modelData.retropad_button) + " (default)") : inputMapping.getKeyLabel(inputMapping.inputMappings[modelData.retropad_button])
+                            color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
+                            // text: "heya"
+                            // color: "white"
                             font.pixelSize: 16
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
@@ -460,7 +460,7 @@ FocusScope {
             focus: true
 
             Keys.onPressed: function (event) {
-                // inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, input)
+                inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, event.key)
                 if (dialog.buttons.length > dialog.currentIndex + 1) {
                     dialog.currentIndex++
                     timer.stop()

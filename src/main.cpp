@@ -43,6 +43,7 @@
 #include "app/game_loader.hpp"
 #include "app/input/gamepad_status_item.hpp"
 #include "app/input/input_mapping_item.hpp"
+#include "app/input/keyboard_mapping_item.hpp"
 #include "app/library/sqlite_user_library.hpp"
 #include "gui/models/library/entry_list_model.hpp"
 
@@ -259,6 +260,7 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0, "GamepadStatus");
+  qmlRegisterType<firelight::input::KeyboardMappingItem>("Firelight", 1, 0, "KeyboardMapping");
   qmlRegisterType<firelight::input::InputMappingItem>("Firelight", 1, 0, "InputMapping");
   qmlRegisterType<firelight::PlatformMetadataItem>("Firelight", 1, 0, "PlatformMetadata");
 

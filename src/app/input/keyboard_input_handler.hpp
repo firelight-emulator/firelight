@@ -17,6 +17,8 @@ namespace firelight::input {
 public:
     KeyboardInputHandler();
 
+    void setActiveMapping(const std::shared_ptr<InputMapping> &mapping) override;
+
     bool isButtonPressed(int platformId, Input t_button) override;
 
     int16_t getLeftStickXPosition(int platformId) override;
@@ -47,6 +49,8 @@ public:
   private:
     QMap<Input, bool> m_buttonStates;
     QMap<Qt::Key, bool> m_keyStates;
+
+    std::shared_ptr<KeyboardMapping> m_keyboardMapping;
 
     int m_playerIndex;
   };
