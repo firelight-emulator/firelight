@@ -90,6 +90,7 @@ namespace firelight::input {
             query.value("product_id").toInt(),
             query.value("product_version_id").toInt()
         );
+
         m_profiles.emplace_back(profile);
         return profile;
     }

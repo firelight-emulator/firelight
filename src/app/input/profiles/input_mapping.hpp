@@ -10,6 +10,8 @@ namespace firelight::input {
     public:
         explicit InputMapping(std::function<void(InputMapping &)> syncCallback = nullptr);
 
+        virtual ~InputMapping() = default;
+
         unsigned getId() const;
 
         unsigned getControllerProfileId();
@@ -28,11 +30,11 @@ namespace firelight::input {
 
         std::map<libretro::IRetroPad::Input, libretro::IRetroPad::Input> &getMappings();
 
-        void removeMapping(libretro::IRetroPad::Input input);
+        virtual void removeMapping(libretro::IRetroPad::Input input);
 
-        std::string serialize();
+        virtual std::string serialize();
 
-        void deserialize(const std::string &data);
+        virtual void deserialize(const std::string &data);
 
         void sync();
 

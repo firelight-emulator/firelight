@@ -131,22 +131,6 @@ FocusScope {
             //     iconCode: "\ue7f4"
             // }
 
-            FirelightButton {
-                Layout.fillHeight: true
-                Layout.preferredWidth: height
-                tooltipLabel: "Settings"
-                flat: true
-
-                KeyNavigation.left: notificationButton
-
-                iconCode: "\ue8b8"
-
-                onClicked: {
-                    Router.navigateTo("settings")
-                }
-            }
-
-
             Text {
                 property bool drawColon: true
                 Timer {

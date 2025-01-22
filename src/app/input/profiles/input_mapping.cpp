@@ -27,6 +27,8 @@ namespace firelight::input {
 
     std::string InputMapping::serialize() {
         auto result = std::string();
+
+        // Serialization format is from:to,from:to,from:to etc
         for (const auto &[input, mappedInput]: m_mappings) {
             result += std::to_string(input) + ":" + std::to_string(mappedInput) + ",";
         }

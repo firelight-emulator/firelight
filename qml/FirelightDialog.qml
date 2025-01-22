@@ -60,10 +60,10 @@ Dialog {
 
     footer: FocusScope {
         height: 66
-        focus: true
+        visible: control.showButtons
+        focus: control.showButtons
         RowLayout {
             spacing: 12
-            visible: control.showButtons
             anchors.fill: parent
 
             anchors.rightMargin: control.centerButtons ? 0 : 12

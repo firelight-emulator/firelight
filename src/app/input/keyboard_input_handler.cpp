@@ -4,12 +4,36 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::input {
-KeyboardInputHandler::KeyboardInputHandler() = default;
-void KeyboardInputHandler::setActiveMapping(const std::shared_ptr<InputMapping> &mapping) {
-  }
+  KeyboardInputHandler::KeyboardInputHandler() = default;
 
   bool KeyboardInputHandler::isButtonPressed(int platformId, Input t_button) {
-    return m_buttonStates[t_button];
+    if (m_activeMapping) {
+      printf("Getting active mapping\n");
+
+      // const auto mapping = m_activeMapping.get();
+      // const auto actualMapping = dynamic_cast<KeyboardMapping *>(mapping);
+      //
+      // const auto mappedKey = actualMapping->getMappedKeyboardInput(t_button);
+      // if (mappedKey.has_value()) {
+      //   return m_keyStates[static_cast<Qt::Key>(mappedKey.value())];
+      // }
+    }
+
+    switch (t_button) {
+      case RightBumper: return m_keyStates[Qt::Key_W];
+      case LeftBumper: return m_keyStates[Qt::Key_Q];
+      case NorthFace: return m_keyStates[Qt::Key_S];
+      case EastFace: return m_keyStates[Qt::Key_X];
+      case WestFace: return m_keyStates[Qt::Key_A];
+      case SouthFace: return m_keyStates[Qt::Key_Z];
+      case DpadUp: return m_keyStates[Qt::Key_Up];
+      case DpadDown: return m_keyStates[Qt::Key_Down];
+      case DpadLeft: return m_keyStates[Qt::Key_Left];
+      case DpadRight: return m_keyStates[Qt::Key_Right];
+      case Start: return m_keyStates[Qt::Key_Return];
+      case Select: return m_keyStates[Qt::Key_Shift];
+      default: return false;
+    }
   }
 
   int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId) {
@@ -29,9 +53,11 @@ void KeyboardInputHandler::setActiveMapping(const std::shared_ptr<InputMapping> 
   }
 
   void KeyboardInputHandler::setStrongRumble(int platformId, uint16_t t_strength) {
+    // Intentionally do nothing.
   }
 
   void KeyboardInputHandler::setWeakRumble(int platformId, uint16_t t_strength) {
+    // Intentionally do nothing.
   }
 
   std::string KeyboardInputHandler::getName() const {
@@ -54,93 +80,13 @@ void KeyboardInputHandler::setActiveMapping(const std::shared_ptr<InputMapping> 
     return KEYBOARD;
   }
 
-  int KeyboardInputHandler::getProfileId() const {
-    return 0;
-  }
-
   bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
     if (event->type() == QEvent::KeyPress) {
-      auto keyEvent = dynamic_cast<QKeyEvent *>(event);
-      switch (keyEvent->key()) {
-        case Qt::Key_W:
-          m_buttonStates[RightBumper] = true;
-          break;
-        case Qt::Key_Q:
-          m_buttonStates[LeftBumper] = true;
-          break;
-        case Qt::Key_S:
-          m_buttonStates[NorthFace] = true;
-          break;
-        case Qt::Key_A:
-          m_buttonStates[WestFace] = true;
-          break;
-        case Qt::Key_X:
-          m_buttonStates[EastFace] = true;
-          break;
-        case Qt::Key_Z:
-          m_buttonStates[SouthFace] = true;
-          break;
-        case Qt::Key_Up:
-          m_buttonStates[DpadUp] = true;
-          break;
-        case Qt::Key_Down:
-          m_buttonStates[DpadDown] = true;
-          break;
-        case Qt::Key_Left:
-          m_buttonStates[DpadLeft] = true;
-          break;
-        case Qt::Key_Right:
-          m_buttonStates[DpadRight] = true;
-          break;
-        case Qt::Key_Return:
-        case Qt::Key_Enter:
-          m_buttonStates[Start] = true;
-          break;
-        case Qt::Key_Shift:
-          m_buttonStates[Select] = true;
-          break;
-      }
+      const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
+      m_keyStates[static_cast<Qt::Key>(keyEvent->key())] = true;
     } else if (event->type() == QEvent::KeyRelease) {
-      auto keyEvent = dynamic_cast<QKeyEvent *>(event);
-      switch (keyEvent->key()) {
-        case Qt::Key_W:
-          m_buttonStates[RightBumper] = false;
-          break;
-        case Qt::Key_Q:
-          m_buttonStates[LeftBumper] = false;
-          break;
-        case Qt::Key_S:
-          m_buttonStates[NorthFace] = false;
-          break;
-        case Qt::Key_A:
-          m_buttonStates[WestFace] = false;
-          break;
-        case Qt::Key_X:
-          m_buttonStates[EastFace] = false;
-          break;
-        case Qt::Key_Z:
-          m_buttonStates[SouthFace] = false;
-          break;
-        case Qt::Key_Up:
-          m_buttonStates[DpadUp] = false;
-          break;
-        case Qt::Key_Down:
-          m_buttonStates[DpadDown] = false;
-          break;
-        case Qt::Key_Left:
-          m_buttonStates[DpadLeft] = false;
-          break;
-        case Qt::Key_Right:
-          m_buttonStates[DpadRight] = false;
-          break;
-        case Qt::Key_Return:
-        case Qt::Key_Enter:
-          m_buttonStates[Start] = false;
-          break;
-        case Qt::Key_Shift:
-          m_buttonStates[Select] = false;
-          break;
-      }
+      const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
+      m_keyStates[static_cast<Qt::Key>(keyEvent->key())] = false;
     }
 
     return QObject::eventFilter(obj, event);

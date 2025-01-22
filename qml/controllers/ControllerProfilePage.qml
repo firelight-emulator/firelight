@@ -104,56 +104,6 @@ FocusScope {
                     }
                 }
             }
-
-            // function onButtonStateChanged(player, button, pressed) {
-            //     if (!dialog.visible) {
-            //         return
-            //     }
-            //     if (pressed) {
-            //         inputMapping.setButtonMapping(dialog.buttons[dialog.currentIndex].retropad_button, button)
-            //         if (dialog.buttons.length > dialog.currentIndex + 1) {
-            //             dialog.currentIndex++
-            //             timer.stop()
-            //             frameAnimation.reset()
-            //             timer.restart()
-            //
-            //         } else {
-            //             dialog.accept()
-            //             // dialog.close()
-            //             // saveMapping()
-            //         }
-            //     }
-            // }
-
-            //
-            // function onAxisStateChanged(player, axis, value) {
-            //     if (!dialog.visible) {
-            //         return
-            //     }
-            //     if (value < 8192 && value > -8192) {
-            //         dialog.canAcceptAxisInput = true
-            //         return
-            //     }
-            //     if (dialog.canAcceptAxisInput && !axisDebounceTimer.running) {
-            //         dialog.canAcceptAxisInput = false
-            //         axisDebounceTimer.restart()
-            //         inputMapping.setAxisMapping(dialog.buttons[dialog.currentIndex].retropad_button, axis, value > 0)
-            //         if (dialog.buttons.length > dialog.currentIndex + 1) {
-            //             dialog.currentIndex++
-            //             timer.stop()
-            //             frameAnimation.reset()
-            //             timer.restart()
-            //
-            //         } else {
-            //             dialog.accept()
-            //             // dialog.close()
-            //             // saveMapping()
-            //         }
-            //
-            //     }
-            //     // inputMapping.setButtonMapping(dialog.buttons[dialog.currentIndex].retropad_button, axis)
-            //
-            // }
         }
 
         contentItem: ColumnLayout {
@@ -166,46 +116,6 @@ FocusScope {
             Keys.onReleased: function (event) {
                 event.accept = false
             }
-
-            // View3D {
-            //     Layout.preferredHeight: 300
-            //     Layout.preferredWidth: 300
-            //     Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-            //
-            //     RuntimeLoader {
-            //         id: importNode
-            //         source: "file:system/nes.obj"
-            //     }
-            //
-            //     environment: SceneEnvironment {
-            //         backgroundMode: SceneEnvironment.Transparent
-            //     }
-            //
-            //     camera: activeCamera
-            //     PerspectiveCamera {
-            //         id: activeCamera
-            //         z: 400
-            //     }
-            //
-            //     DirectionalLight {
-            //         color: "white"
-            //     }
-            //
-            //     // Model {
-            //     //     x: -100
-            //     //     source: "#Cube"
-            //     //     materials: PrincipledMaterial {
-            //     //         baseColor: "red"
-            //     //     }
-            //     // }
-            //     // Model {
-            //     //     x: 100
-            //     //     source: "#Sphere"
-            //     //     materials: PrincipledMaterial {
-            //     //         baseColor: "green"
-            //     //     }
-            //     // }
-            // }
 
             Image {
                 Layout.preferredHeight: 300

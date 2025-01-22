@@ -53,10 +53,12 @@ namespace firelight::input {
 
     int getProfileId() const override;
 
+  protected:
+    std::shared_ptr<InputMapping> m_activeMapping = nullptr;
+
   private:
     [[nodiscard]] int16_t evaluateMapping(Input input) const;
     std::shared_ptr<ControllerProfile> m_profile = nullptr;
-    std::shared_ptr<InputMapping> m_activeMapping = nullptr;
 
     SDL_GameController *m_SDLController = nullptr;
     SDL_Joystick *m_SDLJoystick = nullptr;

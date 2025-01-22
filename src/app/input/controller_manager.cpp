@@ -15,6 +15,7 @@ namespace firelight::input {
 
   void ControllerManager::setKeyboardRetropad(input::KeyboardInputHandler *keyboard) {
     m_controllers[0] = std::unique_ptr<SdlController>(keyboard);
+    m_controllers[0]->setControllerProfile(m_controllerRepository.getControllerProfile("Keyboard", 0, 0, 0));
     m_numControllers++;
     emit controllerConnected(1, "Keyboard", ControllerIcons::sourceUrlFromType(KEYBOARD));
   }

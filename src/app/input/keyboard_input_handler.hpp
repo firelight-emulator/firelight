@@ -7,16 +7,15 @@
 
 #include "firelight/libretro/retropad.hpp"
 #include "gamepad.hpp"
+#include "profiles/keyboard_mapping.hpp"
 #include "sdl_controller.hpp"
 
 namespace firelight::input {
   class KeyboardInputHandler final : public QObject, public input::SdlController {
-    Q_OBJECT
+  Q_OBJECT
 
-  public:
+public:
     KeyboardInputHandler();
-
-    void setActiveMapping(const std::shared_ptr<InputMapping> &mapping) override;
 
     bool isButtonPressed(int platformId, Input t_button) override;
 
@@ -32,23 +31,23 @@ namespace firelight::input {
 
     void setWeakRumble(int platformId, uint16_t t_strength) override;
 
-    std::string getName() const override;
+    [[nodiscard]] std::string getName() const override;
 
-    int getPlayerIndex() const override;
+    [[nodiscard]] int getPlayerIndex() const override;
 
     void setPlayerIndex(int playerIndex) override;
 
-    bool isWired() const override;
+    [[nodiscard]] bool isWired() const override;
 
-    GamepadType getType() const override;
-
-    int getProfileId() const override;
+    [[nodiscard]] GamepadType getType() const override;
 
   protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
   private:
     QMap<Input, bool> m_buttonStates;
+    QMap<Qt::Key, bool> m_keyStates;
+
     int m_playerIndex;
   };
 } // namespace firelight::gui

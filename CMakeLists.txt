@@ -139,8 +139,6 @@ add_library(firelight_lib
         src/app/input/gamepad_status_item.cpp
         src/app/input/gamepad_status_item.hpp
         src/app/input/controller_icons.hpp
-        src/app/input/controller_profile_item.cpp
-        src/app/input/controller_profile_item.hpp
         src/app/activity/sqlite_activity_log.cpp
         src/app/activity/sqlite_activity_log.hpp
         src/app/PlatformMetadataItem.cpp
@@ -152,6 +150,8 @@ add_library(firelight_lib
         src/app/input/input_manager.cpp
         src/app/input/input_mapping_item.cpp
         src/app/library_entry_item.cpp
+        src/app/input/profiles/keyboard_mapping.hpp
+        src/app/input/profiles/keyboard_mapping.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)

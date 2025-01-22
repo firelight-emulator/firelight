@@ -27,6 +27,8 @@ namespace firelight::input {
 
         [[nodiscard]] QSqlDatabase getDatabase() const;
 
+        int m_keyboardProfileId;
+
         std::vector<std::shared_ptr<ControllerProfile> > m_profiles{};
         std::vector<std::shared_ptr<InputMapping> > m_inputMappings{};
     };
