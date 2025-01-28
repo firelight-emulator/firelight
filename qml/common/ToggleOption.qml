@@ -34,6 +34,7 @@ Button {
             id: theColumn
             Layout.fillHeight: true
             Layout.fillWidth: true
+            spacing: 8
 
             Text {
                 id: labelText
@@ -51,7 +52,8 @@ Button {
                 Layout.fillWidth: true
                 visible: root.description !== ""
                 text: root.description
-                font.pixelSize: 14
+                font.pixelSize: 15
+                lineHeight: 1.2
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 // font.weight: Font.

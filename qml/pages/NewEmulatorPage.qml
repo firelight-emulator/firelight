@@ -5,6 +5,7 @@ import QtQuick.Dialogs
 import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Effects
+import QtMultimedia
 import Firelight 1.0
 
 FocusScope {
@@ -33,6 +34,8 @@ FocusScope {
         //     contentPath: contentPath
         // }, StackView.Immediate)
     }
+
+
 
 
     signal rewindPointsReady(var points)
@@ -66,6 +69,7 @@ FocusScope {
     }
     StackView.onActivated: function () {
         emulator.paused = false
+        debugWindow2.visible = true
     }
 
     layer.enabled: blurAmount !== 0

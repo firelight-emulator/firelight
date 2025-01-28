@@ -2,6 +2,9 @@
 
 #include <QOpenGLPaintDevice>
 #include <QPainter>
+#include <QVideoFrame>
+#include <QAudioInput>
+#include <QMediaFormat>
 #include <QQuickWindow>
 #include <libretro/libretro_vulkan.h>
 #include <spdlog/spdlog.h>
@@ -20,6 +23,7 @@ EmulatorItemRenderer::EmulatorItemRenderer(const QSGRendererInterface::GraphicsA
     m_core(std::move(core)) {
     m_core->setVideoReceiver(this);
     globalRenderer = this;
+
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
@@ -481,6 +485,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
                                     vector(m_saveData.begin(), m_saveData.end()));
         }
 
+        // m_encoder = new firelight::av::VideoEncoder(640, 480, 60);
+        // m_decoder = new firelight::av::VideoDecoder();
+        // m_recorder.record();
         cb->endExternal();
         cb->endPass(resourceUpdates);
 
@@ -500,6 +507,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
         cb->beginExternal();
         m_core->run(0);
+        m_core->run(0);
+        m_core->run(0);
         update();
 
         cb->endExternal();
@@ -507,7 +516,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
         // if (m_frameNumber == 1000) {
         auto *rbResult = new QRhiReadbackResult;
         rbResult->completed = [this, rbResult] {
-            {
+            // {
                 const QImage::Format fmt = QImage::Format_RGBA8888_Premultiplied; // fits QRhiTexture::RGBA8
                 const auto *p = reinterpret_cast<const uchar *>(rbResult->data.constData());
                 m_currentImage = QImage(p, rbResult->pixelSize.width(), rbResult->pixelSize.height(), fmt);
@@ -515,8 +524,43 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
                 if (m_graphicsApi == QSGRendererInterface::OpenGL) {
                     m_currentImage.mirror();
                 }
+
+              // m_currentImage.convertToFormat(QImage::Format)
+              //
+              // frame.pixelFormat();
+              //
+              // if (frame.isValid()) {
+              //   frame.map(QVideoFrame::ReadOnly);
+              //   printf("plane count: %d\n", frame.planeCount());
+              //   printf("num bytes in plane 0: %d\n", frame.mappedBytes(0));
+              //   printf("num bytes in plane 1: %d\n", frame.mappedBytes(1));
+              //   printf("num bytes in plane 2: %d\n", frame.mappedBytes(2));
+              //   printf("num bytes in plane 3: %d\n", frame.mappedBytes(3));
+              //   printf("num bytes in plane 4: %d\n", frame.mappedBytes(4));
+              //   printf("num bytes in plane 5: %d\n", frame.mappedBytes(5));
+              //   printf("num bytes in plane 6: %d\n", frame.mappedBytes(6));
+              //   printf("num bytes in plane 7: %d\n", frame.mappedBytes(7));
+              //   printf("num bytes in plane 8: %d\n", frame.mappedBytes(8));
+              //   printf("num bytes in plane 9: %d\n", frame.mappedBytes(9));
+              //   printf("num bytes in plane 10: %d\n", frame.mappedBytes(10));
+              //
+              //
+              //   const auto result = m_encoder->encode(frame.bits(0));
+              //   printf("Encoded frame size: %llu bytes\n", result.size());
+              //
+              //   std::vector<uint8_t> decodedFrame;
+              //   if (m_decoder->decode(result.data(), result.size(), decodedFrame)) {
+              //     printf("Decoded frame size: %llu bytes\n", decodedFrame.size());
+              //
+              //     // Use decoded frame (YUV420P format)
+              //     // For example, render it or save it
+              //   } else {
+              //     printf("No frame decoded yet\n");
+              //   }
+              // }
+
+
                 // image.save("result.png");
-            }
             delete rbResult;
         };
 

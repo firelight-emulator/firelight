@@ -321,11 +321,20 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: newUserFlow
+        NewUserScreen {
+            onDoneButtonPressed: function() {
+                screenStack.replaceCurrentItem(homeScreen, {}, StackView.PushTransition)
+            }
+        }
+    }
+
     StackView {
         id: screenStack
         anchors.fill: parent
         focus: true
-        initialItem: homeScreen
+        initialItem: newUserFlow
 
         property bool blur: false
 

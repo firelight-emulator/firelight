@@ -191,6 +191,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
   firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database, *gameImageProvider);
+  // saveManager.setSaveDirectory(QString::fromStdString(saveDir.string()));
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   firelight::library::SqliteUserLibrary

@@ -132,12 +132,26 @@ namespace firelight::saves {
     return {};
   }
 
-  std::optional<SuspendPoint> SaveManager::readSuspendPoint(const QString &contentHash, int saveSlotNumber, int index) {
+  std::optional<SuspendPoint>
+  SaveManager::readSuspendPoint(const QString &contentHash, int saveSlotNumber,
+                                int index) {
     if (m_suspendPoints.contains(index)) {
       return m_suspendPoints.at(index);
     }
 
     return {};
+  }
+  QString SaveManager::getSaveDirectory() const { return QUrl(m_saveDirectory.absolutePath()).toLocalFile(); }
+  void SaveManager::setSaveDirectory(const QString &saveDirectory) {
+    const auto dir = QDir(QUrl::fromLocalFile(saveDirectory).toString());
+    if (m_saveDirectory == dir) {
+      return;
+    }
+
+    m_saveDirectory = dir;
+    emit saveDirectoryChanged(dir);
+
+    m_saveDir = dir.absolutePath().toStdString();
   }
 
   QAbstractListModel *SaveManager::getSuspendPointListModel(const QString &contentHash, int saveSlotNumber) {

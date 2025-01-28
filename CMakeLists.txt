@@ -128,6 +128,10 @@ add_library(firelight_lib
         src/app/library_entry_item.cpp
         src/app/input/profiles/keyboard_mapping.cpp
         src/app/input/keyboard_mapping_item.cpp
+        src/app/video_encoder.cpp
+        src/app/video_encoder.h
+        src/app/video_decoder.cpp
+        src/app/video_decoder.h
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
