@@ -101,9 +101,10 @@ FocusScope {
             }
 
             model: ListModel {
+
                 ListElement {
-                    name: "Library"
-                    section: "library"
+                    name: "Directories"
+                    section: "directories"
                 }
                 // ListElement {
                 //     name: "Notifications"
@@ -399,8 +400,8 @@ FocusScope {
                 target: root
 
                 function onSectionChanged() {
-                    if (root.section === "library") {
-                        rightHalf.replace(librarySettings)
+                    if (root.section === "directories") {
+                        rightHalf.replace(directorySettings)
                     } else if (root.section === "notifications") {
                         rightHalf.replace(notificationSettings)
                     } else if (root.section === "achievements") {
@@ -503,6 +504,12 @@ FocusScope {
     Component {
         id: platformSettings
         PlatformSettingsPage {
+        }
+    }
+
+    Component {
+        id: directorySettings
+        DirectorySettings {
         }
     }
 

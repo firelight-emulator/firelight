@@ -14,6 +14,17 @@ Button {
     horizontalPadding: 12
     verticalPadding: 12
 
+    onValueChanged: function () {
+        let folder = root.value
+        if (folder.startsWith("file:///")) {
+            folderDialog.currentFolder = folder
+            return
+        }
+
+        folder = "file:///" + folder
+        folderDialog.currentFolder = folder
+    }
+
     // onClicked: {
     //     if (root.checked) {
     //         sfx_player.play("switchon")
@@ -24,7 +35,6 @@ Button {
 
     FolderDialog {
         id: folderDialog
-        currentFolder: root.value
         onAccepted: {
             console.log(folder)
             root.value = folder
@@ -32,7 +42,7 @@ Button {
         }
     }
 
-    onClicked: function() {
+    onClicked: function () {
         folderDialog.open()
     }
 

@@ -56,12 +56,13 @@ namespace firelight::saves {
                    saveSlotNumber);
       metadata.savefileMd5 = savefileMd5;
 
-      const auto directory =
-          m_saveDir / metadata.contentId / ("slot" + std::to_string(saveSlotNumber));
-      create_directories(directory);
+      auto dir = m_saveDirectory + "/" + contentHash + "/slot" + QString::number(saveSlotNumber);
+      if (!QDir(m_saveDirectory + "/" + contentHash).mkpath("slot" + QString::number(saveSlotNumber))) {
+        return false;
+      }
 
-      const auto tempSaveFile = directory / "savefile.srm.tmp";
-      const auto saveFile = directory / "savefile.srm";
+      const auto tempSaveFile = std::filesystem::path((dir + "/savefile.srm.tmp").toStdString());
+      const auto saveFile = std::filesystem::path((dir + "/savefile.srm").toStdString());
 
       std::ofstream saveFileStream(tempSaveFile, std::ios::binary);
       saveFileStream.write(bytes.data(), bytes.size());
@@ -91,13 +92,12 @@ namespace firelight::saves {
   }
 
   std::optional<Savefile> SaveManager::readSaveData(const QString &contentHash, int saveSlotNumber) const {
-    const auto directory =
-        m_saveDir / contentHash.toStdString() / ("slot" + std::to_string(saveSlotNumber));
-    if (!exists(directory)) {
-      return std::nullopt;
+    auto dir = m_saveDirectory + "/" + contentHash + "/slot" + QString::number(saveSlotNumber);
+    if (!QDir(dir).exists()) {
+      return {};
     }
 
-    const auto saveFile = directory / "savefile.srm";
+    const auto saveFile = std::filesystem::path((dir + "/savefile.srm").toStdString());
 
     spdlog::info("Reading from save file: {}", saveFile.string());
 
@@ -141,17 +141,20 @@ namespace firelight::saves {
 
     return {};
   }
-  QUrl SaveManager::getSaveDirectory() const { return m_saveDirectory; }
-  void SaveManager::setSaveDirectory(const QUrl &saveDirectory) {
+
+  QString SaveManager::getSaveDirectory() const { return m_saveDirectory; }
+
+  void SaveManager::setSaveDirectory(const QString &saveDirectory) {
     m_saveDirectory = saveDirectory;
 
-    auto thing = saveDirectory.adjusted(QUrl::RemoveScheme).toString();
-    if (thing.startsWith("/")) {
-      thing = thing.remove(0, 1);
+    if (m_saveDirectory.startsWith("file://")) {
+      m_saveDirectory = m_saveDirectory.remove(0, 7);
+    }
+    if (m_saveDirectory.startsWith("/")) {
+      m_saveDirectory = m_saveDirectory.remove(0, 1);
     }
 
-
-    m_saveDir = thing.toStdString();
+    m_saveDir = m_saveDirectory.toStdString();
     // const auto dir = QDir(QUrl::fromLocalFile(saveDirectory).toString());
     // if (m_saveDirectory == dir) {
     //   return;

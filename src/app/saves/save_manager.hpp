@@ -18,7 +18,7 @@
 namespace firelight::saves {
     class SaveManager : public QObject {
         Q_OBJECT
-        Q_PROPERTY(QUrl saveDirectory READ getSaveDirectory WRITE setSaveDirectory NOTIFY saveDirectoryChanged)
+        Q_PROPERTY(QString saveDirectory READ getSaveDirectory WRITE setSaveDirectory NOTIFY saveDirectoryChanged)
 
     public:
         SaveManager(std::filesystem::path saveDir,
@@ -37,9 +37,9 @@ namespace firelight::saves {
 
         std::optional<SuspendPoint> readSuspendPoint(const QString &contentHash, int saveSlotNumber, int index);
 
-        QUrl getSaveDirectory() const;
+        QString getSaveDirectory() const;
 
-        void setSaveDirectory(const QUrl &saveDirectory);
+        void setSaveDirectory(const QString &saveDirectory);
 
         Q_INVOKABLE QAbstractListModel *getSuspendPointListModel(const QString &contentHash, int saveSlotNumber = -1);
 
@@ -49,7 +49,7 @@ namespace firelight::saves {
         void handleUpdatedSuspendPoint(int index);
 
     signals:
-        void saveDirectoryChanged(const QUrl &saveDirectory);
+        void saveDirectoryChanged(const QString &saveDirectory);
 
     private:
         void writeSuspendPointToDisk(const QString &contentHash, int index,
@@ -66,7 +66,7 @@ namespace firelight::saves {
         db::ILibraryDatabase &m_libraryDatabase;
         db::IUserdataDatabase &m_userdataDatabase;
         gui::GameImageProvider &m_gameImageProvider;
-        QUrl m_saveDirectory;
+        QString m_saveDirectory;
         std::filesystem::path m_saveDir;
         std::unique_ptr<QThreadPool> m_ioThreadPool = nullptr;
         std::map<int, SuspendPoint> m_suspendPoints;
