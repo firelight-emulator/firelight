@@ -7,11 +7,18 @@
 namespace firelight::library {
     class SqliteUserLibrary : public QObject, public IUserLibrary {
         Q_OBJECT
+        Q_PROPERTY(
+            QString mainGameDirectory READ getMainGameDirectory WRITE setMainGameDirectory NOTIFY
+            mainGameDirectoryChanged)
 
     public:
         explicit SqliteUserLibrary(QString path);
 
         ~SqliteUserLibrary() override;
+
+        void setMainGameDirectory(const QString &directory);
+
+        QString getMainGameDirectory();
 
         void addRomFile(RomFile &romFile) override;
 
@@ -35,6 +42,8 @@ namespace firelight::library {
         bool updateWatchedDirectory(const WatchedDirectory &directory) override;
 
     signals:
+        void mainGameDirectoryChanged(const QString &newDirectory);
+
         void romFileAdded(int id, const QString &contentHash);
 
         void entryCreated(int id, const QString &contentHash);
@@ -43,6 +52,8 @@ namespace firelight::library {
 
     private:
         static constexpr auto DATABASE_PREFIX = "userlibrary_";
+
+        QString m_mainGameDirectory;
 
         [[nodiscard]] QSqlDatabase getDatabase() const;
 

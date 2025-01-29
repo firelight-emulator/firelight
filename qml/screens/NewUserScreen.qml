@@ -14,7 +14,7 @@ FocusScope {
 
     signal doneButtonPressed()
 
-    onCurrentIndexChanged: function() {
+    onCurrentIndexChanged: function () {
         movingRight = currentIndex > lastIndex
         lastIndex = currentIndex
         if (currentIndex === 0) {
@@ -51,10 +51,11 @@ FocusScope {
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
-                onClicked: function() {
+                onClicked: function () {
                     root.currentIndex = 0
                 }
-                background: Item {}
+                background: Item {
+                }
                 contentItem:
                     Text {
                         text: "Welcome"
@@ -72,12 +73,13 @@ FocusScope {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.horizontalStretchFactor: 1
-                background: Item {}
+                background: Item {
+                }
 
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
-                onClicked: function() {
+                onClicked: function () {
                     root.currentIndex = 1
                 }
                 contentItem:
@@ -97,11 +99,12 @@ FocusScope {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.horizontalStretchFactor: 1
-                background: Item {}
+                background: Item {
+                }
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
-                onClicked: function() {
+                onClicked: function () {
                     root.currentIndex = 2
                 }
                 contentItem:
@@ -121,11 +124,12 @@ FocusScope {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 Layout.horizontalStretchFactor: 1
-                background: Item {}
+                background: Item {
+                }
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
-                onClicked: function() {
+                onClicked: function () {
                     root.currentIndex = 3
                 }
                 contentItem:
@@ -146,7 +150,8 @@ FocusScope {
     Component {
         id: welcomePage
         Pane {
-            background: Item {}
+            background: Item {
+            }
             contentItem: ColumnLayout {
                 width: Math.max(parent.width / 3, 700)
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -166,7 +171,7 @@ FocusScope {
                     font.pixelSize: 18
                     font.weight: Font.Normal
 
-                     font.family: Constants.regularFontFamily
+                    font.family: Constants.regularFontFamily
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -188,7 +193,7 @@ FocusScope {
                     label: "Let's go!"
                     Layout.alignment: Qt.AlignCenter
 
-                    onClicked: function() {
+                    onClicked: function () {
                         root.currentIndex = 1
                     }
                 }
@@ -203,14 +208,19 @@ FocusScope {
     Component {
         id: directoriesPage
         Pane {
-            background: Item {}
+            background: Item {
+            }
             contentItem: ColumnLayout {
                 DirectoryOption {
                     id: gameDirectoryOption
                     Layout.fillWidth: true
                     label: "Game directory"
                     description: "This is where you’ll put your game files. Firelight will automatically detect files in this directory and add them to your library."
-                    value: "file:///C:/Users/alexs/OneDrive/Documents/Audacity"
+                    value: UserLibrary.mainGameDirectory
+
+                    onValueChanged: function () {
+                        UserLibrary.mainGameDirectory = value
+                    }
 
                     // Component.onCompleted: {
                     //     // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
@@ -234,7 +244,7 @@ FocusScope {
                     description: "This is where Firelight will save your save files and Suspend Point data."
                     value: SaveManager.saveDirectory
 
-                    onValueChanged: function() {
+                    onValueChanged: function () {
                         SaveManager.saveDirectory = value
                     }
 
@@ -266,7 +276,7 @@ FocusScope {
                     FirelightButton {
                         id: dirNextButton
                         label: "Next"
-                        onClicked: function() {
+                        onClicked: function () {
                             root.currentIndex = 2
                         }
                     }
@@ -278,7 +288,8 @@ FocusScope {
     Component {
         id: achievementsPage
         Pane {
-            background: Item {}
+            background: Item {
+            }
             contentItem: ColumnLayout {
                 spacing: 8
                 Image {
@@ -424,7 +435,7 @@ FocusScope {
                     }
                     FirelightButton {
                         label: "Next"
-                        onClicked: function() {
+                        onClicked: function () {
                             root.currentIndex = 3
                         }
                     }
@@ -436,7 +447,8 @@ FocusScope {
     Component {
         id: readyPage
         Pane {
-            background: Item {}
+            background: Item {
+            }
             contentItem: ColumnLayout {
 
                 Item {
@@ -470,7 +482,7 @@ FocusScope {
                     Layout.topMargin: 48
                     label: "Go to Home menu"
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    onClicked: function() {
+                    onClicked: function () {
                         root.doneButtonPressed()
                         // contentStack.pushItem(achievementsPage, {}, StackView.PushTransition)
                     }

@@ -155,16 +155,6 @@ namespace firelight::saves {
     }
 
     m_saveDir = m_saveDirectory.toStdString();
-    // const auto dir = QDir(QUrl::fromLocalFile(saveDirectory).toString());
-    // if (m_saveDirectory == dir) {
-    //   return;
-    // }
-    //
-    // m_saveDirectory = dir;
-    // emit saveDirectoryChanged(dir);
-    //
-    // m_saveDir = dir.absolutePath().toStdString();
-    printf(m_saveDir.string().c_str());
   }
 
   QAbstractListModel *SaveManager::getSuspendPointListModel(const QString &contentHash, int saveSlotNumber) {

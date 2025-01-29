@@ -94,6 +94,21 @@ namespace firelight::library {
         }
     }
 
+    void SqliteUserLibrary::setMainGameDirectory(const QString &directory) {
+        m_mainGameDirectory = directory;
+
+        if (m_mainGameDirectory.startsWith("file://")) {
+            m_mainGameDirectory = m_mainGameDirectory.remove(0, 7);
+        }
+        if (m_mainGameDirectory.startsWith("/")) {
+            m_mainGameDirectory = m_mainGameDirectory.remove(0, 1);
+        }
+    }
+
+    QString SqliteUserLibrary::getMainGameDirectory() {
+        return m_mainGameDirectory;
+    }
+
     void SqliteUserLibrary::addRomFile(RomFile &romFile) {
         const QString queryString =
                 "INSERT INTO rom_files ("

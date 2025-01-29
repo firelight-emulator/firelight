@@ -65,7 +65,7 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
 }
 
 namespace {
-volatile bool interrupted{ false };
+  volatile bool interrupted{false};
 }
 
 int main(int argc, char *argv[]) {
@@ -288,6 +288,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("platform_model", &platformListModel);
   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
   engine.rootContext()->setContextProperty("SaveManager", &saveManager);
+  engine.rootContext()->setContextProperty("UserLibrary", &userLibrary);
   engine.rootContext()->setContextProperty("LibraryEntryModel", &entryListModel);
   engine.rootContext()->setContextProperty("LibraryScanner", &libScanner2);
   engine.rootContext()->setContextProperty("GameLoader", new firelight::GameLoader());

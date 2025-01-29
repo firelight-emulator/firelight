@@ -36,7 +36,6 @@ Button {
     FolderDialog {
         id: folderDialog
         onAccepted: {
-            console.log(folder)
             root.value = folder
             // console.log("found it")
         }
