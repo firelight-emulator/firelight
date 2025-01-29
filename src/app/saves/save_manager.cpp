@@ -77,7 +77,6 @@ namespace firelight::saves {
       } else {
         m_userdataDatabase.createSavefileMetadata(metadata);
       }
-
       // if (image != nullptr) {
       // }
       // const auto screenshotFile = directory / "screenshot.png";
@@ -86,6 +85,7 @@ namespace firelight::saves {
       // }
 
       // spdlog::info("writing save data for entry {}", md5);
+      // also Crystal is cool
       return true;
     });
   }
@@ -141,17 +141,27 @@ namespace firelight::saves {
 
     return {};
   }
-  QString SaveManager::getSaveDirectory() const { return QUrl(m_saveDirectory.absolutePath()).toLocalFile(); }
-  void SaveManager::setSaveDirectory(const QString &saveDirectory) {
-    const auto dir = QDir(QUrl::fromLocalFile(saveDirectory).toString());
-    if (m_saveDirectory == dir) {
-      return;
+  QUrl SaveManager::getSaveDirectory() const { return m_saveDirectory; }
+  void SaveManager::setSaveDirectory(const QUrl &saveDirectory) {
+    m_saveDirectory = saveDirectory;
+
+    auto thing = saveDirectory.adjusted(QUrl::RemoveScheme).toString();
+    if (thing.startsWith("/")) {
+      thing = thing.remove(0, 1);
     }
 
-    m_saveDirectory = dir;
-    emit saveDirectoryChanged(dir);
 
-    m_saveDir = dir.absolutePath().toStdString();
+    m_saveDir = thing.toStdString();
+    // const auto dir = QDir(QUrl::fromLocalFile(saveDirectory).toString());
+    // if (m_saveDirectory == dir) {
+    //   return;
+    // }
+    //
+    // m_saveDirectory = dir;
+    // emit saveDirectoryChanged(dir);
+    //
+    // m_saveDir = dir.absolutePath().toStdString();
+    printf(m_saveDir.string().c_str());
   }
 
   QAbstractListModel *SaveManager::getSuspendPointListModel(const QString &contentHash, int saveSlotNumber) {

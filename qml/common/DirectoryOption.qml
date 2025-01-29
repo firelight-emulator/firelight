@@ -88,7 +88,7 @@ Button {
         }
 
         Text {
-            text: root.value
+            text: root.value.startsWith("file:///") ? root.value.replace("file:///", "") : root.value
             font.pixelSize: 16
             Layout.alignment: Qt.AlignRight
             font.family: Constants.regularFontFamily
