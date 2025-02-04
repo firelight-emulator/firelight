@@ -22,6 +22,7 @@ ApplicationWindow {
     property alias gameRunning: emulatorLoader.active
     property alias currentGameName: emulatorLoader.contentPath
     property alias currentEntryId: emulatorLoader.entryId
+    property alias currentContentHash: emulatorLoader.contentHash
 
     // background: Rectangle {
     //     color: ColorPalette.neutral1000
@@ -177,7 +178,7 @@ ApplicationWindow {
                 let id = parts[0]
 
                 if (id === "settings") {
-                    let section = parts.length > 1 ? parts[1] : "library"
+                    let section = parts.length > 1 ? parts[1] : "directories"
                     screenStack.push(settingsScreen, {section: section})
                 }
             }
@@ -237,16 +238,16 @@ ApplicationWindow {
             property bool topLevel: true
             property string topLevelName: "nowPlaying"
 
-            onResumeGamePressed: function() {
+            onResumeGamePressed: function () {
                 quickMenuBar.close()
             }
 
-            onRestartGamePressed: function() {
+            onRestartGamePressed: function () {
                 emulatorLoader.item.resetGame()
                 quickMenuBar.close()
             }
 
-            onCloseGamePressed: function() {
+            onCloseGamePressed: function () {
                 emulatorLoader.stopGame()
             }
         }
@@ -324,7 +325,7 @@ ApplicationWindow {
     Component {
         id: newUserFlow
         NewUserScreen {
-            onDoneButtonPressed: function() {
+            onDoneButtonPressed: function () {
                 screenStack.replaceCurrentItem(homeScreen, {}, StackView.PushTransition)
             }
         }
@@ -488,7 +489,7 @@ ApplicationWindow {
             property string topLevelName: "controllers"
             property string pageTitle: "Controllers"
 
-            onEditProfileButtonClicked: function(name, playerNumber) {
+            onEditProfileButtonClicked: function (name, playerNumber) {
                 if (name === "Keyboard") {
                     screenStack.pushItem(keyboardProfileEditor, {playerNumber: playerNumber}, StackView.PushTransition)
                 } else {
@@ -518,8 +519,8 @@ ApplicationWindow {
             screenStack.blur = true
             if (window.gameRunning && screenStack.currentItem === emulatorLoader) {
                 quickMenuStack.pushItem(nowPlayingPage, {
-                    entryId: 1,
-                    contentHash: "699cac8ca145d1d1ce56f90a52d66d24",
+                    entryId: currentEntryId,
+                    contentHash: currentContentHash,
                     undoEnabled: false
                 }, StackView.PushTransition)
                 quickMenuStack.forceActiveFocus()
@@ -613,12 +614,12 @@ ApplicationWindow {
                 anchors.right: parent.right
                 anchors.bottom: menuBar.top
 
-                onActiveFocusChanged: function () {
-                    if (!InputMethodManager.usingMouse && !quickMenuStack.activeFocus) {
-                        quickMenuStack.clear(StackView.PopTransition)
-                        menuBar.forceActiveFocus()
-                    }
-                }
+                // onActiveFocusChanged: function () {
+                //     if (!InputMethodManager.usingMouse && !quickMenuStack.activeFocus) {
+                //         quickMenuStack.clear(StackView.PopTransition)
+                //         menuBar.forceActiveFocus()
+                //     }
+                // }
 
                 Keys.onBackPressed: function (event) {
                     quickMenuStack.clear(StackView.PopTransition)
@@ -812,8 +813,8 @@ ApplicationWindow {
 
                             if (quickMenuStack.currentItem !== nowPlayingPage) {
                                 quickMenuStack.replaceCurrentItem(nowPlayingPage, {
-                                    entryId: 1,
-                                    contentHash: "699cac8ca145d1d1ce56f90a52d66d24",
+                                    entryId: currentEntryId,
+                                    contentHash: currentContentHash,
                                     undoEnabled: false
                                 }, StackView.ReplaceTransition)
                             }
@@ -973,11 +974,11 @@ ApplicationWindow {
             // model: library_short_model
             model: LibraryEntryModel
 
-            onPlayButtonClicked: function(entryId) {
+            onPlayButtonClicked: function (entryId) {
                 console.log("Gonna start: " + entryId)
                 if (window.gameRunning) {
                     // closeGameDialog.entryId = entryId
-                    closeGameDialog.openAndDoOnAccepted(function() {
+                    closeGameDialog.openAndDoOnAccepted(function () {
                         emulatorLoader.active = false
                         libPage.startLoadingGame(entryId)
                     })

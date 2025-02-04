@@ -57,7 +57,6 @@ FocusScope {
                 id: hamburger
 
                 tooltipLabel: "Menu"
-                focus: true
                 flat: true
 
                 Layout.fillHeight: true
@@ -72,31 +71,69 @@ FocusScope {
                 }
             }
 
-            Text {
-                text: "Library"
-                color: ColorPalette.neutral100
-                font.pixelSize: 24
-                font.weight: Font.Normal
-                font.family: Constants.regularFontFamily
-                Layout.fillHeight: true
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            Button {
+                id: libraryButton
+                KeyNavigation.right: modShopButton
+                KeyNavigation.left: hamburger
                 Layout.leftMargin: 8
+                property bool showGlobalCursor: true
+                Layout.fillHeight: true
+                focus: true
+                checkable: true
+                autoExclusive: true
+                checked: true
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
+                background: Rectangle {
+                    color: "transparent"
+                    radius: 2
+                }
+                contentItem: Text {
+                    text: "Library"
+                    color: ColorPalette.neutral100
+                    opacity: libraryButton.checked ? 1 : 0.5
+                    font.pixelSize: 24
+                    font.weight: Font.Normal
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onToggled: function () {
+                    contentStack.replaceCurrentItem(root.libraryPage, {}, StackView.ReplaceTransition)
+                    console.log("clicked library")
+                }
             }
 
-            Text {
-                text: "Mod Shop"
-                color: ColorPalette.neutral100
-                opacity: 0.5
-                font.pixelSize: 24
-                font.weight: Font.Normal
-                font.family: Constants.regularFontFamily
-                Layout.fillHeight: true
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            Button {
+                id: modShopButton
                 Layout.leftMargin: 8
+                Layout.fillHeight: true
+                property bool showGlobalCursor: true
+                checkable: true
+                autoExclusive: true
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
+                background: Rectangle {
+                    color: "transparent"
+                    radius: 2
+                }
+                contentItem: Text {
+                    text: "Mod Shop"
+                    color: ColorPalette.neutral100
+                    opacity: modShopButton.checked ? 1 : 0.5
+                    font.pixelSize: 24
+                    font.weight: Font.Normal
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onToggled: function () {
+                    contentStack.replaceCurrentItem(root.modShopPage, {}, StackView.ReplaceTransition)
+                    console.log("clicked mod shop")
+                }
             }
-
 
             Item {
                 Layout.fillHeight: true
@@ -213,8 +250,36 @@ FocusScope {
         popExit: Transition {
         }
         replaceEnter: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 0.0
+                to: 1.0
+                duration: 250
+                easing.type: Easing.InOutQuad
+            }
+            // NumberAnimation {
+            //     property: "x"
+            //     from: 30 * (root.movingRight ? 1 : -1)
+            //     to: 0
+            //     duration: 200
+            //     easing.type: Easing.InOutQuad
+            // }
         }
         replaceExit: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 1.0
+                to: 0.0
+                duration: 100
+                easing.type: Easing.InOutQuad
+            }
+            // NumberAnimation {
+            //     property: "x"
+            //     from: 0;
+            //     to: 30 * (root.movingRight ? -1 : 1)
+            //     duration: 200
+            //     easing.type: Easing.InOutQuad
+            // }
         }
     }
 

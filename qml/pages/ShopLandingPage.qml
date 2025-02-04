@@ -28,6 +28,20 @@ FocusScope {
         id: gridView
         objectName: "GridView"
         clip: true
+        header: Text {
+            id: introText
+            text: "The Mod Shop is where you'll be able to easily find and download mods for your games.\n\nIt's not ready yet, but here are some of the awesome mods you can look forward to!"
+            color: ColorPalette.neutral100
+            font.pixelSize: 16
+            font.weight: Font.Normal
+            width: gridView.width
+            font.family: Constants.regularFontFamily
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            topPadding: 24
+            bottomPadding: 24
+        }
         width: Math.min(Math.floor(parent.width / cellContentWidth), 7) * cellContentWidth
         anchors.horizontalCenter: parent.horizontalCenter
         height: parent.height

@@ -88,6 +88,9 @@ FocusScope {
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignRight
             focus: true
+            keyNavigationEnabled: true
+
+            KeyNavigation.right: rightHalf
 
             interactive: false
 
@@ -182,6 +185,10 @@ FocusScope {
                 height: 50
                 width: ListView.view.width
                 checked: ListView.isCurrentItem
+
+                onClicked: function () {
+                    rightHalf.forceActiveFocus()
+                }
 
                 onToggled: {
                     if (checked) {
@@ -395,6 +402,13 @@ FocusScope {
             Layout.minimumWidth: 500
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 12
+
+            Keys.onPressed: function (event) {
+                if (event.key === Qt.Key_Back || event.key === Qt.Key_Escape) {
+                    settingsCategoryList.forceActiveFocus()
+                    event.accept = true
+                }
+            }
 
             Connections {
                 target: root

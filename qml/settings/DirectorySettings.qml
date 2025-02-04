@@ -3,12 +3,13 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.platform
 
-Item {
+FocusScope {
     ColumnLayout {
         spacing: 8
         anchors.fill: parent
 
         DirectoryOption {
+            focus: true
             id: gameDirectoryOption
             Layout.fillWidth: true
             label: "Game directory"
@@ -31,7 +32,6 @@ Item {
         DirectoryOption {
             id: saveDirectoryOption
             KeyNavigation.up: gameDirectoryOption
-            KeyNavigation.down: dirNextButton
             Layout.fillWidth: true
             label: "Saves directory"
             description: "This is where Firelight will save your save files and Suspend Point data."

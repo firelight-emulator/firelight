@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Item {
+FocusScope {
     ColumnLayout {
-        spacing: 0
+        spacing: 8
         anchors.fill: parent
         // ComboBoxOption {
         //     Layout.fillWidth: true
@@ -15,6 +15,7 @@ Item {
             id: fullscreenOption
             Layout.fillWidth: true
             label: "Fullscreen"
+            focus: true
 
             checked: GeneralSettings.fullscreen
 

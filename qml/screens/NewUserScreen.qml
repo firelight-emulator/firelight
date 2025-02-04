@@ -302,111 +302,10 @@ FocusScope {
                 }
 
                 Text {
-                    text: "Login"
-                    Layout.topMargin: 24
+                    text: "You're logged in"
+                    Layout.topMargin: 80
                     Layout.alignment: Qt.AlignHCenter
-                    color: ColorPalette.neutral100
-                    font.pixelSize: 18
-                    font.weight: Font.Normal
-                    font.family: Constants.regularFontFamily
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                Pane {
-                    Layout.topMargin: 8
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: 280
-                    Layout.preferredHeight: 48
-                    background: Rectangle {
-                        color: ColorPalette.neutral800
-                        radius: 4
-                    }
-
-                    HoverHandler {
-                        acceptedDevices: PointerDevice.Mouse
-                        cursorShape: Qt.IBeamCursor
-                    }
-
-                    contentItem: Item {
-                        Text {
-                            anchors.fill: parent
-                            font.pointSize: 12
-                            font.family: Constants.regularFontFamily
-                            color: ColorPalette.neutral500
-                            text: "Username"
-                            verticalAlignment: Text.AlignVCenter
-                            visible: usernameTextInput.length === 0
-                        }
-                        TextInput {
-                            id: usernameTextInput
-                            anchors.fill: parent
-                            font.family: Constants.regularFontFamily
-                            font.pointSize: 12
-                            color: "white"
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                }
-
-                Pane {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: 280
-                    Layout.preferredHeight: 48
-                    background: Rectangle {
-                        color: ColorPalette.neutral800
-                        radius: 4
-                    }
-
-                    HoverHandler {
-                        acceptedDevices: PointerDevice.Mouse
-                        cursorShape: Qt.IBeamCursor
-                    }
-
-                    contentItem: Item {
-                        Text {
-                            anchors.fill: parent
-                            font.pointSize: 12
-                            font.family: Constants.regularFontFamily
-                            color: ColorPalette.neutral500
-                            text: "Password"
-                            verticalAlignment: Text.AlignVCenter
-                            visible: passwordTextInput.length === 0
-                        }
-                        TextInput {
-                            id: passwordTextInput
-                            anchors.fill: parent
-                            echoMode: TextInput.Password
-                            font.family: Constants.regularFontFamily
-                            font.pointSize: 12
-                            color: "white"
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                }
-
-                FirelightButton {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.topMargin: 12
-                    label: "Submit"
-                }
-
-                Text {
-                    text: "Don't have an account?"
-                    Layout.topMargin: 48
-                    Layout.alignment: Qt.AlignHCenter
-                    color: ColorPalette.neutral100
-                    font.pixelSize: 18
-                    font.weight: Font.Normal
-                    font.family: Constants.regularFontFamily
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                Text {
-                    text: "This button will take you to the RetroAchievements website to create one"
-                    Layout.alignment: Qt.AlignHCenter
-                    color: ColorPalette.neutral300
+                    color: ColorPalette.neutral200
                     font.pixelSize: 16
                     font.weight: Font.Normal
                     font.family: Constants.regularFontFamily
@@ -414,10 +313,200 @@ FocusScope {
                     verticalAlignment: Text.AlignVCenter
                 }
 
-                FirelightButton {
+                Pane {
+                    id: raAccountPane
+                    visible: achievement_manager.loggedIn
+                    Layout.topMargin: 16
+                    Layout.maximumWidth: 400
+                    Layout.preferredWidth: 400
+                    Layout.minimumWidth: 200
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    background: Rectangle {
+                        radius: 4
+                        color: ColorPalette.neutral900
+                    }
+
+                    contentItem: RowLayout {
+                        spacing: 16
+                        Image {
+                            source: achievement_manager.avatarUrl
+                            fillMode: Image.PreserveAspectFit
+                            Layout.preferredWidth: 100
+                            Layout.preferredHeight: 100
+                        }
+                        ColumnLayout {
+                            spacing: 8
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignTop
+                            Text {
+                                text: achievement_manager.displayName
+                                color: ColorPalette.neutral200
+                                font.pixelSize: 22
+                                font.weight: Font.DemiBold
+
+                                font.family: Constants.regularFontFamily
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            Text {
+                                text: achievement_manager.points
+                                color: ColorPalette.neutral300
+                                font.pixelSize: 16
+                                font.weight: Font.Normal
+
+                                font.family: Constants.regularFontFamily
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
+                            Text {
+                                text: "Member since January 1, 2025"
+                                color: ColorPalette.neutral300
+                                font.pixelSize: 16
+                                font.weight: Font.Normal
+
+                                font.family: Constants.regularFontFamily
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
-                    Layout.topMargin: 12
-                    label: "Go to website"
+                    visible: !achievement_manager.loggedIn
+
+                    Text {
+                        text: "Login"
+                        Layout.topMargin: 24
+                        Layout.alignment: Qt.AlignHCenter
+                        color: ColorPalette.neutral100
+                        font.pixelSize: 18
+                        font.weight: Font.Normal
+                        font.family: Constants.regularFontFamily
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Pane {
+                        Layout.topMargin: 8
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.preferredWidth: 280
+                        Layout.preferredHeight: 48
+                        background: Rectangle {
+                            color: ColorPalette.neutral800
+                            radius: 4
+                        }
+
+                        HoverHandler {
+                            acceptedDevices: PointerDevice.Mouse
+                            cursorShape: Qt.IBeamCursor
+                        }
+
+                        contentItem: Item {
+                            Text {
+                                anchors.fill: parent
+                                font.pointSize: 12
+                                font.family: Constants.regularFontFamily
+                                color: ColorPalette.neutral500
+                                text: "Username"
+                                verticalAlignment: Text.AlignVCenter
+                                visible: usernameTextInput.length === 0
+                            }
+                            TextInput {
+                                id: usernameTextInput
+                                anchors.fill: parent
+                                font.family: Constants.regularFontFamily
+                                font.pointSize: 12
+                                color: "white"
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                    }
+
+                    Pane {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.preferredWidth: 280
+                        Layout.preferredHeight: 48
+                        background: Rectangle {
+                            color: ColorPalette.neutral800
+                            radius: 4
+                        }
+
+                        HoverHandler {
+                            acceptedDevices: PointerDevice.Mouse
+                            cursorShape: Qt.IBeamCursor
+                        }
+
+                        contentItem: Item {
+                            Text {
+                                anchors.fill: parent
+                                font.pointSize: 12
+                                font.family: Constants.regularFontFamily
+                                color: ColorPalette.neutral500
+                                text: "Password"
+                                verticalAlignment: Text.AlignVCenter
+                                visible: passwordTextInput.length === 0
+                            }
+                            TextInput {
+                                id: passwordTextInput
+                                anchors.fill: parent
+                                echoMode: TextInput.Password
+                                font.family: Constants.regularFontFamily
+                                font.pointSize: 12
+                                color: "white"
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                    }
+
+                    FirelightButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.topMargin: 12
+                        label: "Submit"
+                    }
+
+                    Text {
+                        text: "Don't have an account?"
+                        Layout.topMargin: 48
+                        Layout.alignment: Qt.AlignHCenter
+                        color: ColorPalette.neutral100
+                        font.pixelSize: 18
+                        font.weight: Font.Normal
+                        font.family: Constants.regularFontFamily
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        text: "This button will take you to the RetroAchievements website to create one"
+                        Layout.alignment: Qt.AlignHCenter
+                        color: ColorPalette.neutral300
+                        font.pixelSize: 16
+                        font.weight: Font.Normal
+                        font.family: Constants.regularFontFamily
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    FirelightButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.topMargin: 12
+                        label: "Go to website"
+                    }
                 }
 
                 Item {

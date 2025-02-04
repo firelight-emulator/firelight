@@ -2,17 +2,11 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Flickable {
-    boundsBehavior: Flickable.StopAtBounds
-    contentHeight: theColumn.height
-
-    ScrollBar.vertical: ScrollBar {
-    }
-
+FocusScope {
     ColumnLayout {
         id: theColumn
-        spacing: 0
-        width: parent.width - 20
+        spacing: 8
+        anchors.fill: parent
         // anchors.fill: parent
 
         ColumnLayout {
@@ -31,6 +25,7 @@ Flickable {
 
             ToggleOption {
                 Layout.fillWidth: true
+                focus: true
                 label: "Prioritize controllers over keyboard"
                 description: "When you connect a controller, replace the keyboard in the first available player number. \n\nFor example, connecting a controller while a keyboard is player one will push the keyboard to player two and the controller will be player one."
 
