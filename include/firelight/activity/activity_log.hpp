@@ -10,8 +10,8 @@ namespace firelight::activity {
         virtual ~IActivityLog() = default;
 
     public:
-        virtual bool createPlaySession(db::PlaySession &session) = 0;
+        virtual bool createPlaySession(PlaySession &session) = 0;
 
-        virtual std::optional<db::PlaySession> getLatestPlaySession(std::string contentHash) = 0;
+        virtual std::optional<PlaySession> getLatestPlaySession(std::string contentHash) = 0;
     };
 }

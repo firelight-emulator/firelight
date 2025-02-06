@@ -102,6 +102,9 @@ private:
     QImage m_overlayImage;
     QImage m_currentImage;
 
+    QElapsedTimer m_playSessionTimer;
+    firelight::activity::PlaySession m_playSession{};
+
     bool m_quitting = false;
 
     int m_frameNumber = 0;

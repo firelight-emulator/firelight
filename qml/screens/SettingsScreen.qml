@@ -49,6 +49,7 @@ FocusScope {
             }
 
             FirelightButton {
+                id: closeButton
                 tooltipLabel: "Close"
                 flat: true
 
@@ -91,6 +92,7 @@ FocusScope {
             keyNavigationEnabled: true
 
             KeyNavigation.right: rightHalf
+            KeyNavigation.up: closeButton
 
             interactive: false
 
@@ -402,6 +404,8 @@ FocusScope {
             Layout.minimumWidth: 500
             Layout.alignment: Qt.AlignLeft
             Layout.leftMargin: 12
+
+            KeyNavigation.up: closeButton
 
             Keys.onPressed: function (event) {
                 if (event.key === Qt.Key_Back || event.key === Qt.Key_Escape) {

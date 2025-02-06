@@ -23,7 +23,6 @@ EmulatorItemRenderer::EmulatorItemRenderer(const QSGRendererInterface::GraphicsA
     m_core(std::move(core)) {
     m_core->setVideoReceiver(this);
     globalRenderer = this;
-
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
@@ -33,6 +32,14 @@ void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
 EmulatorItemRenderer::~EmulatorItemRenderer() {
     spdlog::info("Destroying EmulatorItemRenderer");
     m_quitting = true;
+
+    if (!m_paused) {
+      m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
+    }
+
+    m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
+    getActivityLog()->createPlaySession(m_playSession);
+
     save(true);
     // Don't need to destroy the context here as it is handled by the Core object.
 }
@@ -345,6 +352,14 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         }
     }
 
+    if (m_paused && !emulatorItem->paused()) {
+      m_playSessionTimer.restart();
+      // Going from paused to unpaused
+    } else if (!m_paused && emulatorItem->paused()) {
+      m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
+      // Going from unpaused to paused
+    }
+
     m_paused = emulatorItem->paused();
 
     m_gameData = emulatorItem->m_gameData;
@@ -492,6 +507,13 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
         cb->endPass(resourceUpdates);
 
         m_coreInitialized = true;
+        m_playSession.contentHash = m_contentHash.toStdString();
+        m_playSession.startTime = QDateTime::currentMSecsSinceEpoch();
+        m_playSession.slotNumber = m_saveSlotNumber;
+
+        if (!m_paused) {
+          m_playSessionTimer.start();
+        }
     } else if (!m_paused && m_core && m_coreInitialized) {
         // m_frameNumber++;
 

@@ -368,7 +368,7 @@ namespace firelight::db {
   //   return {};
   // }
 
-  bool SqliteUserdataDatabase::createPlaySession(PlaySession &session) {
+  bool SqliteUserdataDatabase::createPlaySession(activity::PlaySession &session) {
     const QString queryString = "INSERT INTO play_sessions ("
         "content_id, "
         "savefile_slot_number, "
@@ -398,7 +398,7 @@ namespace firelight::db {
     return true;
   }
 
-  std::optional<PlaySession>
+  std::optional<activity::PlaySession>
   SqliteUserdataDatabase::getLatestPlaySession(const std::string contentId) {
     return std::nullopt;
     // const QString queryString = "SELECT * FROM play_sessions WHERE content_id

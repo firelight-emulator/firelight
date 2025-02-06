@@ -2,13 +2,20 @@
 
 #include "firelight/activity/activity_log.hpp"
 
+#include <QSqlDatabase>
 
 namespace firelight::activity {
     class SqliteActivityLog final : public IActivityLog {
     public:
-        bool createPlaySession(db::PlaySession &session) override;
+      explicit SqliteActivityLog(QString dbPath);
 
-        std::optional<db::PlaySession> getLatestPlaySession(std::string contentHash) override;
+        bool createPlaySession(PlaySession &session) override;
+
+        std::optional<PlaySession> getLatestPlaySession(std::string contentHash) override;
+
+        [[nodiscard]] QSqlDatabase getDatabase() const;
+    private:
+        QString databasePath;
     };
 } // activity
 // firelight

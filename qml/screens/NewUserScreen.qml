@@ -303,6 +303,7 @@ FocusScope {
 
                 Text {
                     text: "You're logged in"
+                    visible: achievement_manager.loggedIn
                     Layout.topMargin: 80
                     Layout.alignment: Qt.AlignHCenter
                     color: ColorPalette.neutral200

@@ -36,9 +36,9 @@ namespace firelight::db {
 
     bool deleteSuspendPointMetadata(int id) override;
 
-    bool createPlaySession(PlaySession &session) override;
+    bool createPlaySession(activity::PlaySession &session) override;
 
-    std::optional<PlaySession>
+    std::optional<activity::PlaySession>
     getLatestPlaySession(std::string contentId) override;
 
     std::optional<std::string>

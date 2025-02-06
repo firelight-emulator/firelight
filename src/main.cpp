@@ -39,6 +39,7 @@
 #include <QtConcurrent>
 
 #include "app/PlatformMetadataItem.hpp"
+#include "app/activity/sqlite_activity_log.hpp"
 #include "app/emulator_item.hpp"
 #include "app/game_loader.hpp"
 #include "app/input/gamepad_status_item.hpp"
@@ -178,7 +179,9 @@ int main(int argc, char *argv[]) {
   firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPath /
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
-  firelight::ManagerAccessor::setActivityLog(&userdata_database);
+
+  firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString.append("/activity.db"));
+  firelight::ManagerAccessor::setActivityLog(&activityLog);
 
   auto gameImageProvider = new firelight::gui::GameImageProvider();
   firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
