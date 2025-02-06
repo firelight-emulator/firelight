@@ -2,207 +2,43 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Flickable {
-    boundsBehavior: Flickable.StopAtBounds
-    contentHeight: theColumn.height
-
-    ScrollBar.vertical: ScrollBar {
-    }
+FocusScope {
+    // boundsBehavior: Flickable.StopAtBounds
+    // contentHeight: theColumn.height
+    //
+    // ScrollBar.vertical: ScrollBar {
+    // }
 
     ColumnLayout {
         id: theColumn
         spacing: 0
-        width: parent.width - 20
+        anchors.fill: parent
         // anchors.fill: parent
+
+        RetroAchievementsAccountPane {
+            id: raAccountPage
+            Layout.alignment: Qt.AlignHCenter
+            focus: true
+        }
+
+        // Text {
+        //     Layout.fillWidth: true
+        //     Layout.minimumHeight: 42
+        //     Layout.bottomMargin: 12
+        //     text: qsTr("Customize the notifications you receive when unlocking or making progress on achievements")
+        //     font.pointSize: 11
+        //     wrapMode: Text.WordWrap
+        //     font.family: Constants.regularFontFamily
+        //     color: "#c1c1c1"
+        // }
 
         ColumnLayout {
             Layout.fillWidth: true
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 160
-                color: "#333333"
-                radius: 8
-
-                Pane {
-                    visible: achievement_manager.loggedIn
-                    anchors.fill: parent
-                    background: Item {
-                    }
-
-                    contentItem: RowLayout {
-                        Image {
-                            Layout.preferredHeight: 120
-                            Layout.alignment: Qt.AlignTop | Qt.AlignLeft
-                            source: achievement_manager.avatarUrl
-                            fillMode: Image.PreserveAspectFit
-                        }
-                        ColumnLayout {
-                            Text {
-                                text: achievement_manager.displayName
-                                font.pointSize: 12
-                                font.family: Constants.regularFontFamily
-                                font.weight: Font.DemiBold
-                                color: "white"
-                            }
-                            Text {
-                                text: "Points: " + achievement_manager.points
-                                font.pointSize: 11
-                                font.family: Constants.regularFontFamily
-                                color: "white"
-                            }
-                            Item {
-                                Layout.fillHeight: true
-                            }
-                        }
-                        Item {
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    // Text {
-                    //     id: loggedInAs
-                    //     anchors.top: parent.top
-                    //     anchors.left: parent.left
-                    //     text: qsTr("Logged in as %1").arg(achievement_manager.displayName)
-                    //     font.pointSize: 12
-                    //     font.family: Constants.regularFontFamily
-                    //     color: "white"
-                    // }
-                    //
-                    // Rectangle {
-                    //     anchors.left: parent.left
-                    // }
-                }
-
-                Pane {
-                    background: Item {
-                    }
-                    padding: 8
-                    anchors.fill: parent
-                    visible: !achievement_manager.loggedIn
-                    contentItem: ColumnLayout {
-                        spacing: 8
-                        Text {
-                            Layout.preferredWidth: parent.width * 0.75
-                            text: qsTr("You're not logged in to RetroAchievements.\nLog in to start earning achievements!")
-                            font.pointSize: 11
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.Medium
-                            wrapMode: Text.WordWrap
-                            color: "#bebfbe"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                            // Layout.topMargin: 12
-                        }
-                        Item {
-                            Layout.fillHeight: true
-                        }
-                        Button {
-                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-
-                            implicitWidth: 140
-                            implicitHeight: 40
-
-                            contentItem: Text {
-                                text: qsTr("Log in")
-                                color: "#272727"
-                                font.family: Constants.regularFontFamily
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                                font.pointSize: 11
-                            }
-
-                            onClicked: {
-                                control.open()
-                            }
-
-                            background: Rectangle {
-                                color: "white"
-                                radius: 4
-                            }
-
-                            // background: Rectangle {
-                            //     color: "#f16205"
-                            //     width: 130
-                            //     height: 50
-                            //     radius: 8
-                            // }
-                            // onClicked: {
-                            //     achievement_manager.showLoginDialog()
-                            // }
-                        }
-                        Button {
-                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                            Layout.bottomMargin: 4
-
-                            implicitWidth: 140
-                            implicitHeight: 40
-
-                            contentItem: Text {
-                                text: qsTr("Create an account")
-                                color: "white"
-                                font.family: Constants.regularFontFamily
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                                font.pointSize: 11
-                            }
-
-                            onClicked: {
-                                Qt.openUrlExternally("https://retroachievements.org/createaccount.php")
-                            }
-
-                            hoverEnabled: true
-
-                            background: Rectangle {
-                                color: parent.hovered ? "#474747" : "transparent"
-                                radius: 4
-                            }
-
-                            // background: Rectangle {
-                            //     color: "#f16205"
-                            //     width: 130
-                            //     height: 50
-                            //     radius: 8
-                            // }
-                            // onClicked: {
-                            //     achievement_manager.showLoginDialog()
-                            // }
-                        }
-                        // Text {
-                        //     // text: qsTr("<a href='https://retroachievements.org/createaccount.php'>Don't have an account?</a>")
-                        //     text: "Don't have an account?"
-                        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        //     font.pointSize: 10
-                        //     // textFormat: Text.StyledText
-                        //     font.family: Constants.regularFontFamily
-                        //     font.weight: Font.Medium
-                        //     wrapMode: Text.WordWrap
-                        //     color: "#4673e4"
-                        //     Layout.topMargin: 2
-                        //     Layout.bottomMargin: 12
-                        // }
-                    }
-                }
-
-
-            }
-
-            // Text {
-            //     Layout.fillWidth: true
-            //     Layout.minimumHeight: 42
-            //     Layout.bottomMargin: 12
-            //     text: qsTr("Customize the notifications you receive when unlocking or making progress on achievements")
-            //     font.pointSize: 11
-            //     wrapMode: Text.WordWrap
-            //     font.family: Constants.regularFontFamily
-            //     color: "#c1c1c1"
-            // }
+            // visible: achievement_manager.loggedIn
+            spacing: 0
 
             Text {
                 Layout.topMargin: 30
-                Layout.fillWidth: true
                 text: "Default mode"
                 color: "white"
                 font.pointSize: 12
@@ -213,7 +49,6 @@ Flickable {
 
             Text {
                 Layout.fillHeight: true
-                Layout.fillWidth: true
                 Layout.bottomMargin: 12
                 text: "Only Hardcore mode is available at the moment."
                 font.pixelSize: 14
@@ -485,6 +320,8 @@ Flickable {
                 }
             }
         }
+
+
 
         Item {
             Layout.fillWidth: true

@@ -1,0 +1,279 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts 1.0
+import Firelight 1.0
+
+FocusScope {
+    id: root
+
+    signal nextClicked()
+
+    implicitHeight: contentPane.height
+    implicitWidth: contentPane.width
+
+    onActiveFocusChanged: function() {
+        if (activeFocus) {
+            usernameTextInput.forceActiveFocus()
+
+        }
+    }
+
+    Pane {
+        id: contentPane
+        anchors.fill: parent
+        focus: true
+        background: Item {
+        }
+        contentItem: ColumnLayout {
+            spacing: 8
+            Image {
+                Layout.maximumHeight: 60
+                Layout.minimumHeight: 60
+                sourceSize.height: 60
+                Layout.alignment: Qt.AlignHCenter
+                source: "file:system/_img/raFullLogo.png"
+                fillMode: Image.PreserveAspectFit
+            }
+
+            Text {
+                text: "You're logged in"
+                visible: achievement_manager.loggedIn
+                Layout.topMargin: 80
+                Layout.alignment: Qt.AlignHCenter
+                color: ColorPalette.neutral200
+                font.pixelSize: 16
+                font.weight: Font.Normal
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Pane {
+                id: raAccountPane
+                visible: achievement_manager.loggedIn
+                Layout.topMargin: 16
+                // Layout.maximumWidth: 400
+                // Layout.preferredWidth: 400
+                // Layout.minimumWidth: 200
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                background: Rectangle {
+                    radius: 4
+                    color: ColorPalette.neutral900
+                }
+
+                contentItem: RowLayout {
+                    spacing: 16
+                    Image {
+                        source: achievement_manager.avatarUrl
+                        fillMode: Image.PreserveAspectFit
+                        Layout.preferredWidth: 100
+                        Layout.preferredHeight: 100
+                    }
+                    ColumnLayout {
+                        spacing: 8
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.alignment: Qt.AlignTop
+                        Text {
+                            text: achievement_manager.displayName
+                            color: ColorPalette.neutral200
+                            font.pixelSize: 22
+                            font.weight: Font.DemiBold
+
+                            font.family: Constants.regularFontFamily
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            text: achievement_manager.points
+                            color: ColorPalette.neutral300
+                            font.pixelSize: 16
+                            font.weight: Font.Normal
+
+                            font.family: Constants.regularFontFamily
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                        }
+                        Text {
+                            text: "Member since January 1, 2025"
+                            color: ColorPalette.neutral300
+                            font.pixelSize: 16
+                            font.weight: Font.Normal
+
+                            font.family: Constants.regularFontFamily
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.alignment: Qt.AlignHCenter
+                visible: !achievement_manager.loggedIn
+
+                Text {
+                    text: "Login"
+                    Layout.topMargin: 24
+                    Layout.alignment: Qt.AlignHCenter
+                    color: ColorPalette.neutral100
+                    font.pixelSize: 18
+                    font.weight: Font.Normal
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Pane {
+                    id: thePane
+                    Layout.topMargin: 8
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: 280
+                    Layout.preferredHeight: 48
+                    background: Rectangle {
+                        color: ColorPalette.neutral800
+                        radius: 4
+                    }
+
+                    HoverHandler {
+                        acceptedDevices: PointerDevice.Mouse
+                        cursorShape: Qt.IBeamCursor
+                    }
+
+                    contentItem: Item {
+                        Text {
+                            anchors.fill: parent
+                            font.pointSize: 12
+                            font.family: Constants.regularFontFamily
+                            color: ColorPalette.neutral500
+                            text: "Username"
+                            verticalAlignment: Text.AlignVCenter
+                            visible: usernameTextInput.length === 0
+                        }
+                        TextInput {
+                            id: usernameTextInput
+                            anchors.fill: parent
+                            KeyNavigation.down: passwordTextInput
+                            property bool showGlobalCursor: true
+                            property var globalCursorProxy: thePane
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 12
+                            color: "white"
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                }
+
+                Pane {
+                    id: theOtherPane
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: 280
+                    Layout.preferredHeight: 48
+                    background: Rectangle {
+                        color: ColorPalette.neutral800
+                        radius: 4
+                    }
+
+                    HoverHandler {
+                        acceptedDevices: PointerDevice.Mouse
+                        cursorShape: Qt.IBeamCursor
+                    }
+
+                    contentItem: Item {
+                        Text {
+                            anchors.fill: parent
+                            font.pointSize: 12
+                            font.family: Constants.regularFontFamily
+                            color: ColorPalette.neutral500
+                            text: "Password"
+                            verticalAlignment: Text.AlignVCenter
+                            visible: passwordTextInput.length === 0
+                        }
+                        TextInput {
+                            id: passwordTextInput
+                            anchors.fill: parent
+                            echoMode: TextInput.Password
+                            KeyNavigation.down: submitButton
+                            property bool showGlobalCursor: true
+                            property var globalCursorProxy: theOtherPane
+                            font.family: Constants.regularFontFamily
+                            font.pointSize: 12
+                            color: "white"
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                }
+
+                FirelightButton {
+                    id: submitButton
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: 12
+                    KeyNavigation.down: goToWebsiteButton
+                    label: "Submit"
+                }
+
+                Text {
+                    text: "Don't have an account?"
+                    Layout.topMargin: 48
+                    Layout.alignment: Qt.AlignHCenter
+                    color: ColorPalette.neutral100
+                    font.pixelSize: 18
+                    font.weight: Font.Normal
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Text {
+                    text: "This button will take you to the RetroAchievements website to create one"
+                    Layout.alignment: Qt.AlignHCenter
+                    color: ColorPalette.neutral300
+                    font.pixelSize: 16
+                    font.weight: Font.Normal
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                FirelightButton {
+                    id: goToWebsiteButton
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: 12
+                    label: "Go to website"
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            // RowLayout {
+            //     spacing: 12
+            //     Layout.fillHeight: false
+            //     Layout.fillWidth: true
+            //     Item {
+            //         Layout.fillWidth: true
+            //         Layout.fillHeight: true
+            //     }
+            //     FirelightButton {
+            //         label: "Next"
+            //         onClicked: function () {
+            //             nextClicked()
+            //         }
+            //     }
+            // }
+        }
+    }
+}

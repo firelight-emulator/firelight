@@ -94,6 +94,10 @@ FocusScope {
             KeyNavigation.right: rightHalf
             KeyNavigation.up: closeButton
 
+            Keys.onBackPressed: {
+                root.StackView.view.pop()
+            }
+
             interactive: false
 
             property int lastIndex: 0
