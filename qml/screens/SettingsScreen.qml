@@ -67,12 +67,14 @@ FocusScope {
     }
 
     RowLayout {
+        id: contentRow
         anchors.top: headerBar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.leftMargin: 40
         anchors.rightMargin: 40
+        KeyNavigation.up: closeButton
 
         Item {
             Layout.fillHeight: true
@@ -92,7 +94,6 @@ FocusScope {
             keyNavigationEnabled: true
 
             KeyNavigation.right: rightHalf
-            KeyNavigation.up: closeButton
 
             Keys.onBackPressed: {
                 root.StackView.view.pop()

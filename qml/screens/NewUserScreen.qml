@@ -42,19 +42,24 @@ FocusScope {
         }
 
         contentItem: RowLayout {
-            spacing: 24
+            spacing: 48
 
             Button {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
+                property bool showGlobalCursor: true
                 Layout.horizontalStretchFactor: 1
+                KeyNavigation.right: directoriesButton
+                focus: true
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
                 onClicked: function () {
                     root.currentIndex = 0
                 }
-                background: Item {
+                background: Rectangle {
+                    color: "transparent"
+                    radius: 4
                 }
                 contentItem:
                     Text {
@@ -70,10 +75,15 @@ FocusScope {
             }
 
             Button {
+                id: directoriesButton
                 Layout.fillHeight: true
                 Layout.fillWidth: true
+                property bool showGlobalCursor: true
                 Layout.horizontalStretchFactor: 1
-                background: Item {
+                KeyNavigation.right: achievementsButton
+                background: Rectangle {
+                    color: "transparent"
+                    radius: 4
                 }
 
                 HoverHandler {
@@ -96,10 +106,15 @@ FocusScope {
             }
 
             Button {
+                id: achievementsButton
                 Layout.fillHeight: true
                 Layout.fillWidth: true
+                property bool showGlobalCursor: true
                 Layout.horizontalStretchFactor: 1
-                background: Item {
+                KeyNavigation.right: readyButton
+                background: Rectangle {
+                    color: "transparent"
+                    radius: 4
                 }
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
@@ -121,10 +136,14 @@ FocusScope {
             }
 
             Button {
+                id: readyButton
                 Layout.fillHeight: true
                 Layout.fillWidth: true
+                property bool showGlobalCursor: true
                 Layout.horizontalStretchFactor: 1
-                background: Item {
+                background: Rectangle {
+                    color: "transparent"
+                    radius: 4
                 }
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
@@ -215,6 +234,7 @@ FocusScope {
                     id: gameDirectoryOption
                     Layout.fillWidth: true
                     label: "Game directory"
+                    focus: true
                     description: "This is where you’ll put your game files. Firelight will automatically detect files in this directory and add them to your library."
                     value: UserLibrary.mainGameDirectory
 
@@ -287,11 +307,36 @@ FocusScope {
 
     Component {
         id: achievementsPage
-        RetroAchievementsAccountPane {
-            onNextClicked: {
-                root.currentIndex = 5
+        Pane {
+            background: Item {
+            }
+            contentItem: ColumnLayout {
+                spacing: 0
+                RetroAchievementsAccountPane {
+                    focus: true
+                    Layout.fillWidth: true
+                    Layout.fillHeight: false
+                    KeyNavigation.down: dirNextButton
+                }
+                RowLayout {
+                    spacing: 12
+                    Layout.fillHeight: false
+                    Layout.fillWidth: true
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                    FirelightButton {
+                        id: dirNextButton
+                        label: "Next"
+                        onClicked: function () {
+                            root.currentIndex = 3
+                        }
+                    }
+                }
             }
         }
+
     }
 
     Component {
@@ -300,7 +345,6 @@ FocusScope {
             background: Item {
             }
             contentItem: ColumnLayout {
-
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -331,6 +375,7 @@ FocusScope {
                 FirelightButton {
                     Layout.topMargin: 48
                     label: "Go to Home menu"
+                    focus: true
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                     onClicked: function () {
                         root.doneButtonPressed()

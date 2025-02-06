@@ -209,7 +209,6 @@ FocusScope {
         anchors.left: parent.left
         anchors.leftMargin: 40
         anchors.rightMargin: 40
-        KeyNavigation.left: hamburger
 
         background: Item {
         }
