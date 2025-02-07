@@ -311,12 +311,15 @@ FocusScope {
             background: Item {
             }
             contentItem: ColumnLayout {
-                spacing: 0
                 RetroAchievementsAccountPane {
                     focus: true
                     Layout.fillWidth: true
                     Layout.fillHeight: false
                     KeyNavigation.down: dirNextButton
+                }
+                Item {
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
                 }
                 RowLayout {
                     spacing: 12
@@ -402,7 +405,7 @@ FocusScope {
         // width: Math.max(1200, width)
         // anchors.horizontalCenter: parent.horizontalCenter
         // width: 1200
-        anchors.topMargin: 24
+        anchors.topMargin: 12
         anchors.leftMargin: Math.max(Math.max(parent.width - 1200, 0) / 2, 60)
         anchors.rightMargin: Math.max(Math.max(parent.width - 1200, 0) / 2, 60)
         anchors.bottomMargin: 48

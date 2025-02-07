@@ -113,6 +113,11 @@ FocusScope {
             model: ListModel {
 
                 ListElement {
+                    name: "Appearance"
+                    section: "appearance"
+                }
+
+                ListElement {
                     name: "Directories"
                     section: "directories"
                 }

@@ -123,6 +123,30 @@ FocusScope {
                 Layout.alignment: Qt.AlignHCenter
                 visible: !achievement_manager.loggedIn
 
+                Connections {
+                    target: achievement_manager
+
+                    function onLoginSucceeded() {
+                        // control.accept()
+                    }
+
+                    function onLoginFailedWithInvalidCredentials() {
+                        console.log("Invalid credentials")
+                    }
+
+                    function onLoginFailedWithExpiredToken() {
+                        console.log("Expired token")
+                    }
+
+                    function onLoginFailedWithAccessDenied() {
+                        console.log("Access denied")
+                    }
+
+                    function onLoginFailedWithInternalError() {
+                        console.log("Internal error")
+                    }
+                }
+
                 Text {
                     text: "Login"
                     Layout.topMargin: 24
@@ -221,6 +245,11 @@ FocusScope {
                     Layout.topMargin: 12
                     KeyNavigation.down: goToWebsiteButton
                     label: "Submit"
+                    enabled: usernameTextInput.text !== "" && passwordTextInput.text !== ""
+
+                    onClicked: function () {
+                        achievement_manager.logInUserWithPassword(usernameTextInput.text, passwordTextInput.text)
+                    }
                 }
 
                 Text {
@@ -251,6 +280,9 @@ FocusScope {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: 12
                     label: "Go to website"
+                    onClicked: {
+                        Qt.openUrlExternally("https://retroachievements.org/createaccount.php")
+                    }
                 }
             }
 

@@ -4,6 +4,7 @@ import QtQuick.Dialogs
 import QtQuick.Window
 import QtQml.Models
 import QtQuick.Layouts 1.0
+import QtMultimedia
 import QtQuick.Effects
 import Firelight 1.0
 
@@ -47,44 +48,58 @@ ApplicationWindow {
         //     //     blur: 0.1
         //     // }
         // }
-        //
-        // Rectangle {
-        //     anchors.fill: parent
-        //     color: "black"
-        //     opacity: 0.5
-        // }
-        //
-        // Rectangle {
-        //     anchors.topMargin: -70
-        //     anchors.top: parent.top
-        //     anchors.left: parent.left
-        //     anchors.right: parent.right
-        //     height: 200
-        //     gradient: Gradient {
-        //         GradientStop {
-        //             position: 0.0; color: "black"
-        //         }
-        //         GradientStop {
-        //             position: 1.0; color: "transparent"
-        //         }
-        //     }
-        // }
-        //
-        // Rectangle {
-        //     anchors.bottomMargin: -70
-        //     anchors.bottom: parent.bottom
-        //     anchors.left: parent.left
-        //     anchors.right: parent.right
-        //     height: 200
-        //     gradient: Gradient {
-        //         GradientStop {
-        //             position: 1.0; color: "black"
-        //         }
-        //         GradientStop {
-        //             position: 0.0; color: "transparent"
-        //         }
-        //     }
-        // }
+
+        Video {
+            id: video
+            anchors.fill: parent
+            source: "https://www.desktophut.com/files/1683988157-1683988157-sleepy-kirby.mp4"
+            loops: MediaPlayer.Infinite
+            autoPlay: true
+            fillMode: VideoOutput.PreserveAspectCrop
+
+            // focus: true
+            // Keys.onSpacePressed: video.playbackState == MediaPlayer.PlayingState ? video.pause() : video.play()
+            // Keys.onLeftPressed: video.position = video.position - 5000
+            // Keys.onRightPressed: video.position = video.position + 5000
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: "black"
+            opacity: 0.8
+        }
+
+        Rectangle {
+            anchors.topMargin: -70
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 200
+            gradient: Gradient {
+                GradientStop {
+                    position: 0.0; color: "black"
+                }
+                GradientStop {
+                    position: 1.0; color: "transparent"
+                }
+            }
+        }
+
+        Rectangle {
+            anchors.bottomMargin: -70
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 200
+            gradient: Gradient {
+                GradientStop {
+                    position: 1.0; color: "black"
+                }
+                GradientStop {
+                    position: 0.0; color: "transparent"
+                }
+            }
+        }
         // AnimatedImage {
         //     id: mainBackground
         //     source: "https://cdn.booooooom.com/wp-content/uploads/2022/07/PATTERN_11.gif"
@@ -272,7 +287,7 @@ ApplicationWindow {
                 let id = parts[0]
 
                 if (id === "settings") {
-                    let section = parts.length > 1 ? parts[1] : "directories"
+                    let section = parts.length > 1 ? parts[1] : "appearance"
                     screenStack.push(settingsScreen, {section: section})
                 }
             }

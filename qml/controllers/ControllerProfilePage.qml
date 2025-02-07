@@ -10,7 +10,6 @@ FocusScope {
     // property alias controllerProfileId: gamepadProfile.profileId
     property var currentMapping: null
     required property var playerNumber
-    focus: true
 
     GamepadStatus {
         id: gamepadStatus
@@ -239,7 +238,7 @@ FocusScope {
         anchors.leftMargin: 40
         anchors.rightMargin: 40
 
-        KeyNavigation.right: col
+        KeyNavigation.up: headerBar
 
         Item {
             Layout.fillHeight: true
@@ -258,6 +257,14 @@ FocusScope {
             focus: true
 
             KeyNavigation.right: buttonList
+
+            Keys.onBackPressed: {
+                root.StackView.view.popCurrentItem(StackView.PopTransition)
+            }
+
+            Keys.onEscapePressed: {
+                root.StackView.view.popCurrentItem(StackView.PopTransition)
+            }
 
             currentIndex: 0
 
@@ -281,6 +288,7 @@ FocusScope {
                 onToggled: {
                     if (checked) {
                         ListView.view.currentIndex = index
+                        col.forceActiveFocus()
                     }
                 }
             }
