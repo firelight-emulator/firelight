@@ -174,7 +174,7 @@ TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataWhenNotExist) {
 TEST_F(SqliteUserdataDatabaseTest, CreatePlaySessionTest) {
   SqliteUserdataDatabase db(temp_file_path.string());
 
-  PlaySession session;
+  activity::PlaySession session;
   session.id = -1;
   session.contentId = "1234567890";
   session.slotNumber = 1;

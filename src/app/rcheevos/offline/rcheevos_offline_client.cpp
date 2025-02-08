@@ -289,13 +289,15 @@ namespace firelight::achievements {
         for (const auto &a: startSessionResponse.HardcoreUnlocks) {
             m_cache->markAchievementUnlocked(username, a.ID, true, a.When);
         }
+
+      // TODO: Go through all the user's unlocks and if it's synced but NOT in the list above, mark it as NOT unlocked
     }
 
     void RetroAchievementsOfflineClient::processAwardAchievementResponse(
         const std::string &username, const bool hardcore,
         const std::string &response) const {
         const auto duration = std::chrono::system_clock::now().time_since_epoch();
-        const auto epochMillis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+        const auto epochSeconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
         auto json = nlohmann::json::parse(response);
 
         if (json.contains("Score") && json["Score"].is_number()) {
@@ -307,7 +309,7 @@ namespace firelight::achievements {
         }
 
         if (json.contains("AchievementID") && json["AchievementID"].is_number()) {
-            m_cache->markAchievementUnlocked(username, json["AchievementID"], hardcore, epochMillis);
+            m_cache->markAchievementUnlocked(username, json["AchievementID"], hardcore, epochSeconds);
         }
     }
 }

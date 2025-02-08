@@ -44,6 +44,8 @@ namespace firelight::achievements {
                 earned_hardcore BOOLEAN NOT NULL,
                 "when" TIMESTAMP,
                 when_hardcore TIMESTAMP,
+                synced BOOLEAN DEFAULT 0 NOT NULL,
+                synced_hardcore BOOLEAN DEFAULT 0 NOT NULL,
                 PRIMARY KEY (username, achievement_id),
                 FOREIGN KEY (achievement_id) REFERENCES achievements(id)
             );
@@ -256,17 +258,17 @@ namespace firelight::achievements {
 
     bool RetroAchievementsCache::markAchievementUnlocked(const std::string &username, const int achievementId,
                                                          const bool hardcore,
-                                                         const long long epochMillis) const {
+                                                         const long long epochSeconds) const {
         QSqlQuery query(getDatabase());
         if (hardcore) {
             query.prepare(
-                "UPDATE user_unlocks SET earned_hardcore = 1, when_hardcore = :timestamp WHERE username == :username AND achievement_id == :achievementId");
+                "UPDATE user_unlocks SET earned_hardcore = 1, when_hardcore = :timestamp, synced_hardcore = 1 WHERE username == :username AND achievement_id == :achievementId");
         } else {
             query.prepare(
-                "UPDATE user_unlocks SET earned = 1, when = :timestamp WHERE username == :username AND achievement_id == :achievementId");
+                "UPDATE user_unlocks SET earned = 1, \"when\" = :timestamp, synced = 1 WHERE username == :username AND achievement_id == :achievementId");
         }
 
-        query.bindValue(":timestamp", epochMillis);
+        query.bindValue(":timestamp", epochSeconds);
         query.bindValue(":username", QString::fromStdString(username));
         query.bindValue(":achievementId", achievementId);
 

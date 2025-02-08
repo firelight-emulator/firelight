@@ -112,6 +112,33 @@ FocusScope {
         }
     }
 
+    AchievementUnlockIndicator {
+        id: achievementUnlockIndicator
+
+        Connections {
+            target: achievement_manager
+
+            function onAchievementUnlocked(imageUrl, name, description) {
+                if (achievement_manager.unlockNotificationsEnabled) {
+                    achievementUnlockIndicator.openWith(imageUrl, name, description)
+                }
+            }
+        }
+    }
+
+    GameLaunchPopup {
+        objectName: "Game Launch Popup"
+        id: gameLaunchPopup
+
+        Connections {
+            target: achievement_manager
+
+            function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
+                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore)
+            }
+        }
+    }
+
     // FrameAnimation {
     //     id: frameAnimation
     //     running: true

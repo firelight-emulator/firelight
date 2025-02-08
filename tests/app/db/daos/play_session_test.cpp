@@ -10,7 +10,7 @@ protected:
 };
 
 TEST_F(PlaySessionTest, DefaultValuesTest) {
-  PlaySession session;
+  activity::PlaySession session;
 
   ASSERT_EQ(session.id, -1);
   // ASSERT_EQ(session.displayName, "");

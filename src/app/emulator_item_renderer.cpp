@@ -41,7 +41,8 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
     getActivityLog()->createPlaySession(m_playSession);
 
     save(true);
-    // Don't need to destroy the context here as it is handled by the Core object.
+    getAchievementManager()->unloadGame();
+  // Don't need to destroy the context here as it is handled by the Core object.
 }
 
 void EmulatorItemRenderer::receive(const void *data, unsigned width, unsigned height, size_t pitch) {
@@ -500,6 +501,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
                                     vector(m_saveData.begin(), m_saveData.end()));
         }
 
+        getAchievementManager()->loadGame(m_platformId, m_contentHash);
+
         // m_encoder = new firelight::av::VideoEncoder(640, 480, 60);
         // m_decoder = new firelight::av::VideoDecoder();
         // m_recorder.record();
@@ -529,8 +532,11 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
         cb->beginExternal();
         m_core->run(0);
+        getAchievementManager()->doFrame(m_core.get());
         m_core->run(0);
+        getAchievementManager()->doFrame(m_core.get());
         m_core->run(0);
+        getAchievementManager()->doFrame(m_core.get());
         update();
 
         cb->endExternal();
