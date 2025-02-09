@@ -121,6 +121,9 @@ namespace firelight::achievements {
       }
     }
     void RetroAchievementsOfflineClient::syncOfflineAchievements() {
+
+      // For each user... get all unsynced achievements. If they have any, try logging in and syncing them
+      // If we can't log in we need to prompt the user to re-login.
       auto unsynced = m_cache.getUnsyncedAchievements("BiscuitCakes");
 
       const auto headers =
