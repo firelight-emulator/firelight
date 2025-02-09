@@ -56,6 +56,9 @@ namespace firelight::audio {
         m_sfxs["switchoff"] = new QSoundEffect();
         m_sfxs["switchoff"]->setSource(QUrl::fromLocalFile("system/sfx/switchoff.wav"));
 
+        m_sfxs["uibump"] = new QSoundEffect();
+        m_sfxs["uibump"]->setSource(QUrl::fromLocalFile("system/sfx/uibump.wav"));
+
         // m_sfxs["rewindscroll"] = std::move(effect1);
         // m_sfxs["rewindopen"] = std::move(effect2);
 

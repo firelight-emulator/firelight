@@ -17,6 +17,8 @@ namespace firelight::achievements {
 
         void processResponse(const std::string &request, const std::string &response) const;
 
+        void syncOfflineAchievements();
+
     private:
         rc_api_server_response_t handleGameIdRequest(const std::string &hash) const;
 
@@ -42,7 +44,7 @@ namespace firelight::achievements {
 
         void processPatchResponse(const std::string &username, int gameId, const std::string &response) const;
 
-        void processStartSessionResponse(const std::string &username, const std::string &response) const;
+        void processStartSessionResponse(const std::string &username, int gameId, const std::string &response) const;
 
         void processAwardAchievementResponse(const std::string &username, bool hardcore,
                                              const std::string &response) const;

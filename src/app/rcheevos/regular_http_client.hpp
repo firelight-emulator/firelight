@@ -9,9 +9,7 @@
 namespace firelight::achievements {
     class RegularHttpClient final : public IRetroAchievementsHttpClient {
     public:
-        explicit RegularHttpClient(const std::shared_ptr<RetroAchievementsOfflineClient> &offlineClient,
-                                   const std::shared_ptr<RetroAchievementsCache> &cache) : m_cache(cache),
-            m_offlineClient(offlineClient) {
+        explicit RegularHttpClient(const std::shared_ptr<RetroAchievementsOfflineClient> &offlineClient) : m_offlineClient(offlineClient) {
         }
 
         rc_api_server_response_t sendRequest(const std::string &url, const std::string &postBody,
@@ -21,7 +19,6 @@ namespace firelight::achievements {
 
     private:
         bool m_online = true;
-        std::shared_ptr<RetroAchievementsCache> m_cache = nullptr;
         std::shared_ptr<RetroAchievementsOfflineClient> m_offlineClient = nullptr;
 
         // std::vector<EarnedAchievement> m_earnedAchievements;

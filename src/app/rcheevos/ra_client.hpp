@@ -65,6 +65,7 @@ namespace firelight::achievements {
 
     rc_libretro_memory_regions_t m_memoryRegions{};
     bool m_memorySeemsGood = false;
+    bool m_canStartReadingMemory = false;
     int m_consoleId = 0;
     bool m_connected = false;
 

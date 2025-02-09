@@ -1,13 +1,15 @@
 #include "rcheevos_offline_client.hpp"
 
-#include <unordered_map>
-#include "cached_achievement.hpp"
-#include <sstream>
 #include "../award_achievement_response.hpp"
-#include "../login2_response.hpp"
 #include "../gameid_response.hpp"
+#include "../login2_response.hpp"
 #include "../patch_response.hpp"
 #include "../startsession_response.hpp"
+#include "cached_achievement.hpp"
+#include <sstream>
+#include <unordered_map>
+
+#include <spdlog/spdlog.h>
 
 namespace firelight::achievements {
     static const std::string GAMEID = "gameid";
@@ -94,20 +96,31 @@ namespace firelight::achievements {
         return GENERIC_SERVER_ERROR;
     }
 
-    void RetroAchievementsOfflineClient::processResponse(const std::string &request,
-                                                         const std::string &response) const {
-        auto params = parseQueryParams(request);
-        if (params["r"] == "login2") {
-            processLogin2Response(params["u"], response);
-        } else if (params["r"] == "gameid") {
-            processGameIdResponse(params["m"], response);
-        } else if (params["r"] == "patch") {
-            processPatchResponse(params["u"], stoi(params["g"]), response);
-        } else if (params["r"] == "startsession") {
-            processStartSessionResponse(params["u"], response);
-        } else if (params["r"] == "awardachievement") {
-            processAwardAchievementResponse(params["u"], params["h"] == "1", response);
-        }
+    void RetroAchievementsOfflineClient::processResponse(
+        const std::string &request, const std::string &response) const {
+      auto params = parseQueryParams(request);
+      if (params["r"] == "login2") {
+        processLogin2Response(params["u"], response);
+      } else if (params["r"] == "gameid") {
+        processGameIdResponse(params["m"], response);
+      } else if (params["r"] == "patch") {
+        processPatchResponse(params["u"], stoi(params["g"]), response);
+      } else if (params["r"] == "startsession") {
+        processStartSessionResponse(params["u"], stoi(params["g"]), response);
+      } else if (params["r"] == "awardachievement") {
+        processAwardAchievementResponse(params["u"], params["h"] == "1",
+                                        response);
+      }
+    }
+    void RetroAchievementsOfflineClient::syncOfflineAchievements() {
+      // Get all achievements that are not synced
+      // For each one, build the HTTP request and send it to RA
+      // If we get a good response, mark the achievement as synced
+      // If we get a bad response, TODO????
+      // If we get a network error, TODO????
+      // If we get a server error, TODO????
+      // TODO: How to handle if token is not correct? Maybe try logging in again first
+      // TODO: Have to coordinate with being logged in
     }
 
     rc_api_server_response_t RetroAchievementsOfflineClient::handleGameIdRequest(const std::string &hash) const {
@@ -147,6 +160,9 @@ namespace firelight::achievements {
 
     rc_api_server_response_t RetroAchievementsOfflineClient::handleStartSessionRequest(
         const std::string &username, const int gameId, bool hardcore) const {
+
+        // Simulate some latency
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
         const auto duration = std::chrono::system_clock::now().time_since_epoch();
         const auto epochMillis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
@@ -268,7 +284,7 @@ namespace firelight::achievements {
         m_cache->setPatchResponse(username, gameId, patchResponse);
     }
 
-    void RetroAchievementsOfflineClient::processStartSessionResponse(const std::string &username,
+    void RetroAchievementsOfflineClient::processStartSessionResponse(const std::string &username, const int gameId,
                                                                      const std::string &response) const {
         auto json = nlohmann::json::parse(response);
         // nlohmann lib doesn't support optional/nullable fields...
@@ -282,13 +298,45 @@ namespace firelight::achievements {
 
         auto startSessionResponse = json.get<StartSessionResponse>();
 
+        // Non-hardcore unlocks
         for (const auto &a: startSessionResponse.Unlocks) {
-            m_cache->markAchievementUnlocked(username, a.ID, false, a.When);
+            if (!m_cache->markAchievementUnlocked(username, a.ID, false, a.When)) {
+              spdlog::error("Failed to mark achievement unlocked: {}", a.ID);
+            }
         }
 
-        for (const auto &a: startSessionResponse.HardcoreUnlocks) {
-            m_cache->markAchievementUnlocked(username, a.ID, true, a.When);
+        // Non-hardcore re-locks, in case user cleared in the RA site
+        for (const auto &a : m_cache->getUserAchievements(username, gameId)) {
+          // If the achievement is not in the startSessionResponse, mark it as NOT unlocked
+            if (std::ranges::find_if(startSessionResponse.Unlocks, [&a](const Unlock &u) {
+                return u.ID == a.ID;
+            }) == startSessionResponse.Unlocks.end()) {
+                if (!m_cache->markAchievementLocked(username, a.ID, false)) {
+                  spdlog::error("Failed to mark achievement locked: {}", a.ID);
+                }
+            }
         }
+
+        // Hardcore unlocks
+        for (const auto &a: startSessionResponse.HardcoreUnlocks) {
+            if (!m_cache->markAchievementUnlocked(username, a.ID, true, a.When)) {
+              spdlog::error("Failed to mark achievement unlocked: {}", a.ID);
+            }
+        }
+
+        // Hardcore re-locks, in case user cleared in the RA site
+        for (const auto &a : m_cache->getUserAchievements(username, gameId)) {
+            // If the achievement is not in the startSessionResponse, mark it as NOT unlocked
+            if (std::ranges::find_if(startSessionResponse.HardcoreUnlocks, [&a](const Unlock &u) {
+                return u.ID == a.ID;
+            }) == startSessionResponse.HardcoreUnlocks.end()) {
+                if (!m_cache->markAchievementLocked(username, a.ID, true)) {
+                  spdlog::error("Failed to mark achievement locked: {}", a.ID);
+                }
+            }
+        }
+
+
 
       // TODO: Go through all the user's unlocks and if it's synced but NOT in the list above, mark it as NOT unlocked
     }

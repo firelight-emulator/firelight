@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QNetworkInformation>
 #include <QQuickWindow>
 #include <QWindow>
 #include <filesystem>
@@ -104,6 +105,8 @@ int main(int argc, char *argv[]) {
   QApplication::setOrganizationDomain("firelight-emulator.com");
   QApplication::setApplicationName("Firelight");
 
+  QSettings::setDefaultFormat(QSettings::Format::IniFormat);
+
   QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
   QSurfaceFormat format;
   format.setProfile(QSurfaceFormat::OpenGLContextProfile::CompatibilityProfile);
@@ -122,6 +125,8 @@ int main(int argc, char *argv[]) {
 
   auto defaultAppDataPathString = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
   auto defaultAppDataPath = std::filesystem::path(defaultAppDataPathString.toStdString());
+
+  QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope, defaultAppDataPathString);
 
   // TODO:
   //  Roms
@@ -270,6 +275,12 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::PlatformMetadataItem>("Firelight", 1, 0, "PlatformMetadata");
 
   firelight::gui::Router router;
+
+  QNetworkInformation::loadDefaultBackend();
+  spdlog::info("Reachability: {}", (int)QNetworkInformation::instance()->reachability());
+  QObject::connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged, [](QNetworkInformation::Reachability reachability) {
+    spdlog::info("Reachability changed: {}", (int)reachability);
+  });
 
   QQmlApplicationEngine engine;
   engine.addImageProvider("gameImages", gameImageProvider);

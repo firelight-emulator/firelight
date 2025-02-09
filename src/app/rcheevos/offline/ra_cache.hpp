@@ -27,9 +27,13 @@ namespace firelight::achievements {
                               bool hardcore) const;
 
         bool markAchievementUnlocked(const std::string &username, int achievementId, bool hardcore,
-                                     long long epochSeconds) const;
+        long long epochSeconds) const;
+
+        bool markAchievementLocked(const std::string &username, int achievementId, bool hardcore) const;
 
         std::vector<CachedAchievement> getUserAchievements(const std::string &username, int gameId) const;
+
+        std::vector<CachedAchievement> getUnsyncedAchievements(const std::string &username) const;
 
         int getUserScore(const std::string &username, bool hardcore) const;
 

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Window
+import QtNetwork
 import QtQuick.Layouts 1.0
 import Firelight 1.0
 
@@ -167,6 +168,36 @@ FocusScope {
             //
             //     iconCode: "\ue7f4"
             // }
+
+            Text {
+                text: "\ue63e"
+                visible: NetworkInformation.reachability === NetworkInformation.Reachability.Online
+                Layout.fillHeight: true
+                topPadding: 1
+                font.pixelSize: AppStyle.buttonTextFontSize + 6
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                font.family: Constants.regularFontFamily
+                font.weight: AppStyle.buttonTextFontWeight
+                color: AppStyle.buttonTextColorInactive
+
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
+                text: "\ue648"
+                visible: NetworkInformation.reachability === NetworkInformation.Reachability.Disconnected || NetworkInformation.reachability === NetworkInformation.Reachability.Unknown
+                Layout.fillHeight: true
+                topPadding: 1
+                font.pixelSize: AppStyle.buttonTextFontSize + 6
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                font.family: Constants.regularFontFamily
+                font.weight: AppStyle.buttonTextFontWeight
+                color: AppStyle.buttonTextColorInactive
+
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
 
             Text {
                 property bool drawColon: true

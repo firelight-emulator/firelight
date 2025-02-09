@@ -9,5 +9,7 @@ namespace firelight::achievements {
         int Points{};
         bool Earned{};
         bool EarnedHardcore{};
+        bool Synced{};
+        bool SyncedHardcore{};
     };
 }

@@ -14,6 +14,7 @@
 #include "regular_http_client.hpp"
 #include "firelight/achievement.hpp"
 
+#include "../../../libs/rcheevos/include/rc_api_runtime.h"
 #include "achievement_list_model.hpp"
 #include "achievement_list_sort_filter_model.hpp"
 
@@ -122,6 +123,7 @@ namespace firelight::achievements {
     const auto raClient = static_cast<RAClient *>(rc_client_get_userdata(client));
     if (raClient && theCore) {
       if (!raClient->m_memorySeemsGood) {
+        spdlog::info("Initializing memory regions");
         const auto valid = rc_libretro_memory_init(
           &raClient->m_memoryRegions, theCore->getMemoryMap(),
           [](unsigned id, rc_libretro_core_memory_info_t *info) {
@@ -132,7 +134,10 @@ namespace firelight::achievements {
           raClient->m_consoleId);
 
         if (valid) {
+          spdlog::info("Memory regions initialized");
           raClient->m_memorySeemsGood = true;
+        } else {
+          spdlog::info("Memory regions NOT initialized; will retry");
         }
       }
 
@@ -158,6 +163,7 @@ namespace firelight::achievements {
         const auto raClient =
             static_cast<RAClient *>(rc_client_get_userdata(client));
 
+        spdlog::info("Post data: {}", postData);
         const auto response = raClient->m_httpClient->sendRequest(url, postData, contentType);
 
         if (callback) {
@@ -178,33 +184,38 @@ namespace firelight::achievements {
     rc_client_set_userdata(m_client, this);
 
     m_cache = std::make_shared<RetroAchievementsCache>("./system/rcheevos.db");
-    m_httpClient = std::make_unique<RegularHttpClient>(std::make_shared<RetroAchievementsOfflineClient>(m_cache),
-                                                       m_cache);
+    auto offlineClient = std::make_shared<RetroAchievementsOfflineClient>(m_cache);
+    m_httpClient = std::make_unique<RegularHttpClient>(offlineClient);
+
+    for (auto a : m_cache->getUnsyncedAchievements("BiscuitCakes")) {
+      spdlog::info("Unsynced achievement: {}", a.ID);
+    }
 
     m_idleTimer.setInterval(2000);
     connect(&m_idleTimer, &QTimer::timeout, this,
             [this] { rc_client_idle(m_client); });
 
     m_settings = std::make_unique<QSettings>();
+    m_settings->beginGroup("RetroAchievements");
 
     m_progressNotificationsEnabled =
-        m_settings->value("retroachievements/progressNotificationsEnabled", true)
+        m_settings->value("ProgressNotificationsEnabled", true)
         .toBool();
     m_unlockNotificationsEnabled =
-        m_settings->value("retroachievements/unlockNotificationsEnabled", true)
+        m_settings->value("UnlockNotificationsEnabled", true)
         .toBool();
     m_challengeIndicatorsEnabled =
-        m_settings->value("retroachievements/challengeIndicatorsEnabled", true)
+        m_settings->value("ChallengeIndicatorsEnabled", true)
         .toBool();
 
     m_defaultToHardcore =
-        m_settings->value("retroachievements/defaultToHardcore", true).toBool();
+        m_settings->value("DefaultToHardcore", true).toBool();
     rc_client_set_hardcore_enabled(m_client, m_defaultToHardcore);
 
     const auto user =
-        m_settings->value("retroachievements/username", "").toString();
+        m_settings->value("Username", "").toString();
     const auto token =
-        m_settings->value("retroachievements/token", "").toString();
+        m_settings->value("ConnectToken", "").toString();
 
     if (!user.isEmpty() && !token.isEmpty()) {
       logInUserWithToken(user, token);
@@ -367,23 +378,23 @@ namespace firelight::achievements {
   void RAClient::setDefaultToHardcore(const bool hardcore) {
     m_defaultToHardcore = hardcore;
     rc_client_set_hardcore_enabled(m_client, hardcore);
-    m_settings->setValue("retroachievements/defaultToHardcore", hardcore);
+    m_settings->setValue("DefaultToHardcore", hardcore);
   }
 
   void RAClient::setUnlockNotificationsEnabled(const bool enabled) {
     m_unlockNotificationsEnabled = enabled;
-    m_settings->setValue("retroachievements/unlockNotificationsEnabled", enabled);
+    m_settings->setValue("UnlockNotificationsEnabled", enabled);
   }
 
   void RAClient::setProgressNotificationsEnabled(bool enabled) {
     m_progressNotificationsEnabled = enabled;
-    m_settings->setValue("retroachievements/progressNotificationsEnabled",
+    m_settings->setValue("ProgressNotificationsEnabled",
                          enabled);
   }
 
   void RAClient::setChallengeIndicatorsEnabled(bool enabled) {
     m_challengeIndicatorsEnabled = enabled;
-    m_settings->setValue("retroachievements/challengeIndicatorsEnabled", enabled);
+    m_settings->setValue("ChallengeIndicatorsEnabled", enabled);
   }
 
   QAbstractItemModel *RAClient::getAchievementsModelForGameId(int gameId) {
@@ -558,9 +569,9 @@ namespace firelight::achievements {
             emit raClient->loginStatusChanged();
             emit raClient->pointsChanged();
 
-            raClient->m_settings->setValue("retroachievements/username",
+            raClient->m_settings->setValue("Username",
                                            QString(userInfo->username));
-            raClient->m_settings->setValue("retroachievements/token",
+            raClient->m_settings->setValue("ConnectToken",
                                            QString(userInfo->token));
             break;
           case RC_INVALID_CREDENTIALS:
@@ -587,8 +598,8 @@ namespace firelight::achievements {
     m_expectToBeLoggedIn = false;
     rc_client_logout(m_client);
     m_loggedIn = false;
-    m_settings->remove("retroachievements/username");
-    m_settings->remove("retroachievements/token");
+    m_settings->remove("Username");
+    m_settings->remove("ConnectToken");
 
     emit loginStatusChanged();
   }
