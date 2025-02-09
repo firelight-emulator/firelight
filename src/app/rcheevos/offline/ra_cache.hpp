@@ -13,7 +13,7 @@
 namespace firelight::achievements {
     class RetroAchievementsCache {
     public:
-        explicit RetroAchievementsCache(std::filesystem::path dbFile);
+        explicit RetroAchievementsCache(QString dbFile);
 
         ~RetroAchievementsCache();
 
@@ -34,6 +34,8 @@ namespace firelight::achievements {
         std::vector<CachedAchievement> getUserAchievements(const std::string &username, int gameId) const;
 
         std::vector<CachedAchievement> getUnsyncedAchievements(const std::string &username) const;
+
+        std::optional<std::string> getHashFromGameId(int gameId) const;
 
         int getUserScore(const std::string &username, bool hardcore) const;
 
@@ -57,7 +59,7 @@ namespace firelight::achievements {
         int m_lastKnownScore = 0;
         int m_lastKnownSoftcoreScore = 0;
 
-        std::filesystem::path databaseFile;
+        QString databaseFile;
 
         [[nodiscard]] QSqlDatabase getDatabase() const;
     };

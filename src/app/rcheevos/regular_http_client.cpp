@@ -1,4 +1,5 @@
 #include "regular_http_client.hpp"
+#include "ra_constants.h"
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 
@@ -7,7 +8,7 @@ namespace firelight::achievements {
                                                             const std::string &contentType) {
         if (m_online) {
             const auto headers = cpr::Header{
-                {"User-Agent", "FirelightEmulator/0.5.0"},
+                {"User-Agent", USER_AGENT},
                 {"Content-Type", contentType}
             };
 
@@ -20,7 +21,7 @@ namespace firelight::achievements {
                 // printf("Woah theah boah I said woah theah\n");
                 // m_online = false;
                 //  TODO: I don't love this buttttttt it might be fine.
-                return m_offlineClient->handleRequest(url, postBody, contentType);
+                return m_offlineClient.handleRequest(url, postBody, contentType);
             }
 
             m_online = true;
@@ -28,12 +29,12 @@ namespace firelight::achievements {
             rcResponse.body = strdup(response.text.c_str());
             rcResponse.body_length = response.text.size();
 
-            m_offlineClient->processResponse(postBody, response.text);
+            m_offlineClient.processResponse(postBody, response.text);
 
             return rcResponse;
         }
 
-        return m_offlineClient->handleRequest(url, postBody, contentType);
+        return m_offlineClient.handleRequest(url, postBody, contentType);
     }
 
     void RegularHttpClient::setOnlineForTesting(const bool online) {

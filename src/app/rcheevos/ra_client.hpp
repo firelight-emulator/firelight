@@ -47,7 +47,7 @@ namespace firelight::achievements {
     // Q_PROPERTY(bool gameLoaded READ gameLoaded NOTIFY gameLoadSucceeded)
 
   public:
-    explicit RAClient(db::IContentDatabase &contentDb);
+    explicit RAClient(db::IContentDatabase &contentDb, RetroAchievementsOfflineClient& offlineClient, RetroAchievementsCache &cache);
 
     ~RAClient() override;
 
@@ -156,7 +156,8 @@ namespace firelight::achievements {
 
     QHash<int, std::shared_ptr<gui::AchievementListSortFilterModel> > m_achievementModels;
 
-    std::shared_ptr<RetroAchievementsCache> m_cache = nullptr;
+    RetroAchievementsOfflineClient &m_offlineClient;
+    RetroAchievementsCache &m_cache;
 
     rc_client_t *m_client;
 

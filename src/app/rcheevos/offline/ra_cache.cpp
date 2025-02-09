@@ -5,9 +5,9 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::achievements {
-    constexpr auto DATABASE_PREFIX = "rcheevos_cache_";
+    constexpr auto RCHEEVOS_DATABASE_PREFIX = "rcheevos_cache_";
 
-    RetroAchievementsCache::RetroAchievementsCache(std::filesystem::path dbFile)
+    RetroAchievementsCache::RetroAchievementsCache(QString dbFile)
         : databaseFile(std::move(dbFile)) {
         std::string setupQueryString = R"(
             CREATE TABLE IF NOT EXISTS hashes (
@@ -81,7 +81,7 @@ namespace firelight::achievements {
 
     RetroAchievementsCache::~RetroAchievementsCache() {
         for (const auto &name: QSqlDatabase::connectionNames()) {
-            if (name.startsWith(DATABASE_PREFIX)) {
+            if (name.startsWith(RCHEEVOS_DATABASE_PREFIX)) {
                 QSqlDatabase::removeDatabase(name);
             }
         }
@@ -212,10 +212,10 @@ namespace firelight::achievements {
         QSqlQuery query(getDatabase());
         if (hardcore) {
             query.prepare(
-                "UPDATE user_unlocks SET earned_hardcore = 1, when_hardcore = :timestamp WHERE username == :username AND achievement_id == :achievementId");
+                "UPDATE user_unlocks SET earned_hardcore = 1, when_hardcore = :timestamp, synced_hardcore = 0 WHERE username == :username AND achievement_id == :achievementId");
         } else {
             query.prepare(
-                "UPDATE user_unlocks SET earned = 1, when = :timestamp WHERE username == :username AND achievement_id == :achievementId");
+                "UPDATE user_unlocks SET earned = 1, when = :timestamp, synced = 0 WHERE username == :username AND achievement_id == :achievementId");
         }
 
         query.bindValue(":timestamp", epochSeconds);
@@ -352,7 +352,8 @@ namespace firelight::achievements {
           "0),coalesce(u.when_hardcore, 0),a.points, u.earned, "
           "u.earned_hardcore, u.synced, u.synced_hardcore FROM user_unlocks u "
           "JOIN achievements a ON u.achievement_id = a.id "
-          "WHERE u.username == :username AND ((u.earned == 1 AND u.synced == 0) OR (u.earned_hardcore == 1 AND u.synced_hardcore == 0))");
+          "WHERE u.username == :username AND ((u.earned == 1 AND u.synced == "
+          "0) OR (u.earned_hardcore == 1 AND u.synced_hardcore == 0))");
 
       query.bindValue(":username", QString::fromStdString(username));
 
@@ -367,8 +368,8 @@ namespace firelight::achievements {
         achievements.emplace_back(
             CachedAchievement{.ID = query.value(0).toInt(),
                               .GameID = query.value(1).toInt(),
-                              .When = query.value(2).toInt(),
-                              .WhenHardcore = query.value(3).toInt(),
+                              .When = query.value(2).toLongLong(),
+                              .WhenHardcore = query.value(3).toLongLong(),
                               .Points = query.value(4).toInt(),
                               .Earned = query.value(5).toBool(),
                               .EarnedHardcore = query.value(6).toBool(),
@@ -377,6 +378,25 @@ namespace firelight::achievements {
       }
 
       return achievements;
+    }
+    std::optional<std::string> RetroAchievementsCache::getHashFromGameId(int gameId) const {
+      QSqlQuery query(getDatabase());
+      query.prepare(
+          "SELECT hash FROM hashes WHERE achievement_set_id == :achievementSetId");
+
+      query.bindValue(":achievementSetId", gameId);
+
+      if (!query.exec()) {
+        spdlog::error("Failed to get hash ID: {}",
+                      query.lastError().text().toStdString());
+        return std::nullopt;
+      }
+
+      if (!query.next()) {
+        return std::nullopt;
+      }
+
+      return {query.value(0).toString().toStdString()};
     }
 
     int RetroAchievementsCache::getUserScore(const std::string &username, const bool hardcore) const {
@@ -571,7 +591,7 @@ namespace firelight::achievements {
 
     QSqlDatabase RetroAchievementsCache::getDatabase() const {
         const auto name =
-                DATABASE_PREFIX +
+                RCHEEVOS_DATABASE_PREFIX +
                 QString::number(reinterpret_cast<quint64>(QThread::currentThread()), 16);
         if (QSqlDatabase::contains(name)) {
             return QSqlDatabase::database(name);
@@ -580,7 +600,7 @@ namespace firelight::achievements {
         spdlog::debug("Database connection with name {} does not exist; creating",
                       name.toStdString());
         auto db = QSqlDatabase::addDatabase("QSQLITE", name);
-        db.setDatabaseName(QString::fromStdString(databaseFile.string()));
+        db.setDatabaseName(databaseFile);
         db.open();
         return db;
     }

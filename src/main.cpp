@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
                                                           "userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
-  firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString.append("/activity.db"));
+  firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString + "/activity.db");
   firelight::ManagerAccessor::setActivityLog(&activityLog);
 
   auto gameImageProvider = new firelight::gui::GameImageProvider();
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
   firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database, *gameImageProvider);
-  saveManager.setSaveDirectory(docsPath.append("/saves"));
+  saveManager.setSaveDirectory(docsPath + "/saves");
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   firelight::library::SqliteUserLibrary
@@ -229,7 +229,9 @@ int main(int argc, char *argv[]) {
   firelight::library::LibraryScanner2 libScanner2(userLibrary);
   // libScanner2.scanAll();
 
-  firelight::achievements::RAClient raClient(contentDatabase);
+  firelight::achievements::RetroAchievementsCache raCache(defaultAppDataPathString + "/rcheevos.db");
+  firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(raCache);
+  firelight::achievements::RAClient raClient(contentDatabase, offlineRaClient, raCache);
   firelight::ManagerAccessor::setAchievementManager(&raClient);
 
   // Set up the models for QML ***********************************************
@@ -278,8 +280,19 @@ int main(int argc, char *argv[]) {
 
   QNetworkInformation::loadDefaultBackend();
   spdlog::info("Reachability: {}", (int)QNetworkInformation::instance()->reachability());
-  QObject::connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged, [](QNetworkInformation::Reachability reachability) {
+  if (QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Online) {
+    raClient.m_connected = true;
+    offlineRaClient.syncOfflineAchievements();
+  }
+
+  QObject::connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged, [&raClient, &offlineRaClient](QNetworkInformation::Reachability reachability) {
     spdlog::info("Reachability changed: {}", (int)reachability);
+    if (reachability == QNetworkInformation::Reachability::Online) {
+      raClient.m_connected = true;
+      offlineRaClient.syncOfflineAchievements();
+    } else {
+      raClient.m_connected = false;
+    }
   });
 
   QQmlApplicationEngine engine;

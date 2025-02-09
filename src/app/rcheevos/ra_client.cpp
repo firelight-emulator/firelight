@@ -163,6 +163,8 @@ namespace firelight::achievements {
         const auto raClient =
             static_cast<RAClient *>(rc_client_get_userdata(client));
 
+        spdlog::info("url: {}", url);
+        spdlog::info("content type: {}", contentType);
         spdlog::info("Post data: {}", postData);
         const auto response = raClient->m_httpClient->sendRequest(url, postData, contentType);
 
@@ -177,17 +179,18 @@ namespace firelight::achievements {
     spdlog::info("[RetroAchievements] {}", message);
   }
 
-  RAClient::RAClient(db::IContentDatabase &contentDb) : m_contentDb(contentDb) {
+  RAClient::RAClient(db::IContentDatabase &contentDb, RetroAchievementsOfflineClient& offlineClient,
+                     RetroAchievementsCache &cache) : m_contentDb(contentDb), m_offlineClient(offlineClient), m_cache(cache) {
     m_client = rc_client_create(readMemoryCallback, httpCallback);
     rc_client_enable_logging(m_client, RC_CLIENT_LOG_LEVEL_VERBOSE, logCallback);
     rc_client_set_event_handler(m_client, eventHandler);
     rc_client_set_userdata(m_client, this);
 
-    m_cache = std::make_shared<RetroAchievementsCache>("./system/rcheevos.db");
-    auto offlineClient = std::make_shared<RetroAchievementsOfflineClient>(m_cache);
-    m_httpClient = std::make_unique<RegularHttpClient>(offlineClient);
+    // m_cache = std::make_shared<RetroAchievementsCache>("./system/rcheevos.db");
+    // auto offlineClient = std::make_shared<RetroAchievementsOfflineClient>(m_cache);
+    m_httpClient = std::make_unique<RegularHttpClient>(m_offlineClient);
 
-    for (auto a : m_cache->getUnsyncedAchievements("BiscuitCakes")) {
+    for (auto a : m_cache.getUnsyncedAchievements("BiscuitCakes")) {
       spdlog::info("Unsynced achievement: {}", a.ID);
     }
 
@@ -311,6 +314,11 @@ namespace firelight::achievements {
           rc_client_game_get_image_url(gameInfo, buffer, 256);
           emit theThing->gameLoadSucceeded(buffer, QString(gameInfo->title),
                                            numEarned, numTotal);
+
+          if (theThing->m_connected && rc_client_get_hardcore_enabled(client)) {
+            spdlog::info("Achievements earned in this session will be hardcore baby");
+            theThing->m_offlineClient.startOnlineHardcoreSession();
+          }
         } else {
           theThing->m_gameLoaded = false;
           emit theThing->gameLoadFailed();
@@ -320,6 +328,7 @@ namespace firelight::achievements {
   }
 
   void RAClient::unloadGame() {
+    m_offlineClient.clearSessionAchievements();
     rc_client_unload_game(m_client);
     m_gameLoaded = false;
     m_frameNumber = 0;

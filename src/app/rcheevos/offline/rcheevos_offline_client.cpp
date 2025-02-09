@@ -1,11 +1,19 @@
 #include "rcheevos_offline_client.hpp"
+#include "rcheevos_offline_client.hpp"
 
 #include "../award_achievement_response.hpp"
 #include "../gameid_response.hpp"
 #include "../login2_response.hpp"
 #include "../patch_response.hpp"
+#include "../ra_constants.h"
 #include "../startsession_response.hpp"
 #include "cached_achievement.hpp"
+
+#include <QDateTime>
+#include <cpr/api.h>
+#include <cpr/body.h>
+#include <cpr/cprtypes.h>
+#include <qcryptographichash.h>
 #include <sstream>
 #include <unordered_map>
 
@@ -113,18 +121,99 @@ namespace firelight::achievements {
       }
     }
     void RetroAchievementsOfflineClient::syncOfflineAchievements() {
-      // Get all achievements that are not synced
-      // For each one, build the HTTP request and send it to RA
-      // If we get a good response, mark the achievement as synced
-      // If we get a bad response, TODO????
-      // If we get a network error, TODO????
-      // If we get a server error, TODO????
-      // TODO: How to handle if token is not correct? Maybe try logging in again first
+      auto unsynced = m_cache.getUnsyncedAchievements("BiscuitCakes");
+
+      const auto headers =
+          cpr::Header{{"User-Agent", OFFLINE_USER_AGENT},
+                      {"Content-Type", "application/x-www-form-urlencoded"}};
+
+      for (auto &achieve : unsynced) {
+
+        auto timestamp = achieve.When;
+        auto hardcore = false;
+
+        if (achieve.EarnedHardcore) {
+          if (std::ranges::find_if(
+                  m_currentSessionAchievements, [&achieve](const CachedAchievement &current) {
+              return current.ID == achieve.ID;
+            }) == m_currentSessionAchievements.end()) {
+              spdlog::info("Achievement earned offline in hardcore mode is not in current session; demoting to casual");
+              achieve.EarnedHardcore = false;
+              achieve.Earned = true;
+              achieve.When = achieve.WhenHardcore;
+              achieve.WhenHardcore = 0;
+
+              timestamp = achieve.When;
+            } else {
+              hardcore = true;
+              timestamp = achieve.WhenHardcore;
+            }
+        }
+
+        spdlog::info("Syncing achievement with ID {} for user {}", achieve.ID,
+                     "BiscuitCakes");
+
+        auto secondsSinceUnlock =
+            QDateTime::currentSecsSinceEpoch() - timestamp;
+
+        auto hashContent = std::to_string(achieve.ID) + "BiscuitCakes" +
+                           std::to_string(hardcore ? 1 : 0) +
+                           std::to_string(achieve.ID) +
+                           std::to_string(secondsSinceUnlock);
+        hashContent =
+            QCryptographicHash::hash(hashContent, QCryptographicHash::Md5)
+                .toHex()
+                .toStdString();
+        auto gameHash = m_cache.getHashFromGameId(achieve.GameID);
+
+        if (!gameHash.has_value()) {
+          spdlog::warn("No game hash found for game ID: {}", achieve.GameID);
+          break;
+        }
+
+        auto postBody =
+            "r=awardachievement&u=BiscuitCakes&t=Vfz0ZqplDSovVGY7&a=" +
+            std::to_string(achieve.ID) + "&h=" + std::to_string(hardcore ? 1 : 0) + "&m=" + gameHash.value() +
+            "&o=" + std::to_string(secondsSinceUnlock) + "&v=" + hashContent;
+        spdlog::info("post body: {}", postBody);
+
+        const auto response =
+            Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{postBody});
+
+        rc_api_server_response_t rcResponse;
+        rcResponse.http_status_code = response.status_code;
+
+        spdlog::info("response status code: {}", response.status_code);
+        spdlog::info("response: {}", response.text);
+
+        // Check "Success" field, if it's false then check error message
+        // If error message contains "already has" then proceed as normal
+        // Otherwise, log error message? retry later? idk
+
+        // If it's true then we just proceed
+        if (response.error) {
+          // If we get a bad response, TODO????
+          // If we get a network error, TODO????
+          // If we get a server error, TODO????
+        }
+      }
+
+      // TODO: Make sure the points and everything are correct
+
+      // TODO: How to handle if token is not correct? Maybe try logging in again
       // TODO: Have to coordinate with being logged in
+    }
+    void RetroAchievementsOfflineClient::clearSessionAchievements() {
+      m_inHardcoreSession = false;
+      m_currentSessionAchievements.clear();
+    }
+
+    void RetroAchievementsOfflineClient::startOnlineHardcoreSession() {
+      m_inHardcoreSession = true;
     }
 
     rc_api_server_response_t RetroAchievementsOfflineClient::handleGameIdRequest(const std::string &hash) const {
-        const auto cached = m_cache->getGameIdFromHash(hash);
+        const auto cached = m_cache.getGameIdFromHash(hash);
         if (!cached.has_value()) {
             return GENERIC_SERVER_ERROR;
         }
@@ -144,7 +233,7 @@ namespace firelight::achievements {
     }
 
     rc_api_server_response_t RetroAchievementsOfflineClient::handlePatchRequest(const int gameId) const {
-        auto cached = m_cache->getPatchResponse(gameId);
+        auto cached = m_cache.getPatchResponse(gameId);
         if (!cached.has_value()) {
             return GENERIC_SERVER_ERROR;
         }
@@ -173,7 +262,7 @@ namespace firelight::achievements {
             .ServerNow = epochMillis
         };
 
-        for (const auto &achieve: m_cache->getUserAchievements(username, gameId)) {
+        for (const auto &achieve: m_cache.getUserAchievements(username, gameId)) {
             if (achieve.Earned) {
                 startSessionResponse.Unlocks.emplace_back(Unlock{
                     .ID = achieve.ID,
@@ -199,22 +288,35 @@ namespace firelight::achievements {
     }
 
     rc_api_server_response_t RetroAchievementsOfflineClient::handleAwardAchievementRequest(const std::string &username,
-        const std::string &token, const int achievementId, const bool hardcore) const {
-        m_cache->awardAchievement(username, token, achievementId, hardcore);
+        const std::string &token, const int achievementId, const bool hardcore) {
+        if (!m_cache.awardAchievement(username, token, achievementId, hardcore)) {
+          spdlog::warn("Failed to award achievement: {}", achievementId);
+        }
 
         auto gameId = 0;
-
-        const auto cachedGameId = m_cache->getGameIdFromAchievementId(achievementId);
+        const auto cachedGameId = m_cache.getGameIdFromAchievementId(achievementId);
         if (cachedGameId.has_value()) {
             gameId = cachedGameId.value();
         }
 
+        if (m_inHardcoreSession) {
+          m_currentSessionAchievements.emplace_back(CachedAchievement{
+            .ID = achievementId,
+            .GameID = gameId,
+            .When = hardcore ? 0 : QDateTime::currentSecsSinceEpoch(),
+            .WhenHardcore = hardcore ? QDateTime::currentSecsSinceEpoch() : 0,
+            .Points = 0,
+            .Earned = !hardcore,
+            .EarnedHardcore = hardcore
+          });
+        }
+
         AwardAchievementResponse resp{
             .Success = true,
-            .Score = m_cache->getUserScore(username, true),
-            .SoftcoreScore = m_cache->getUserScore(username, false),
+            .Score = m_cache.getUserScore(username, true),
+            .SoftcoreScore = m_cache.getUserScore(username, false),
             .AchievementID = achievementId,
-            .AchievementsRemaining = m_cache->getNumRemainingAchievements(username, gameId, hardcore)
+            .AchievementsRemaining = m_cache.getNumRemainingAchievements(username, gameId, hardcore)
         };
 
         const auto json = nlohmann::json(resp).dump();
@@ -234,8 +336,8 @@ namespace firelight::achievements {
             .AccountType = "1",
             .Messages = 0,
             .Permissions = 0,
-            .Score = m_cache->getUserScore(username, true),
-            .SoftcoreScore = m_cache->getUserScore(username, false),
+            .Score = m_cache.getUserScore(username, true),
+            .SoftcoreScore = m_cache.getUserScore(username, false),
             .Success = true,
             .Token = token, // TODO: uhh
             .User = username
@@ -260,13 +362,14 @@ namespace firelight::achievements {
 
     void RetroAchievementsOfflineClient::processLogin2Response(const std::string &username,
                                                                const std::string &response) const {
+        // TODO: Save most recent token
         auto json = nlohmann::json::parse(response);
         if (json.contains("Score") && json["Score"].is_number()) {
-            m_cache->setUserScore(username, json["Score"], true);
+            m_cache.setUserScore(username, json["Score"], true);
         }
 
         if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
-            m_cache->setUserScore(username, json["SoftcoreScore"], false);
+            m_cache.setUserScore(username, json["SoftcoreScore"], false);
         }
     }
 
@@ -274,14 +377,14 @@ namespace firelight::achievements {
                                                                const std::string &response) const {
         const auto json = nlohmann::json::parse(response);
         const auto gameidResponse = json.get<GameIdResponse>();
-        m_cache->setGameId(hash, gameidResponse.GameID);
+        m_cache.setGameId(hash, gameidResponse.GameID);
     }
 
     void RetroAchievementsOfflineClient::processPatchResponse(const std::string &username, const int gameId,
                                                               const std::string &response) const {
         const auto json = nlohmann::json::parse(response);
         const auto patchResponse = json.get<PatchResponse>();
-        m_cache->setPatchResponse(username, gameId, patchResponse);
+        m_cache.setPatchResponse(username, gameId, patchResponse);
     }
 
     void RetroAchievementsOfflineClient::processStartSessionResponse(const std::string &username, const int gameId,
@@ -300,18 +403,18 @@ namespace firelight::achievements {
 
         // Non-hardcore unlocks
         for (const auto &a: startSessionResponse.Unlocks) {
-            if (!m_cache->markAchievementUnlocked(username, a.ID, false, a.When)) {
+            if (!m_cache.markAchievementUnlocked(username, a.ID, false, a.When)) {
               spdlog::error("Failed to mark achievement unlocked: {}", a.ID);
             }
         }
 
         // Non-hardcore re-locks, in case user cleared in the RA site
-        for (const auto &a : m_cache->getUserAchievements(username, gameId)) {
+        for (const auto &a : m_cache.getUserAchievements(username, gameId)) {
           // If the achievement is not in the startSessionResponse, mark it as NOT unlocked
             if (std::ranges::find_if(startSessionResponse.Unlocks, [&a](const Unlock &u) {
                 return u.ID == a.ID;
             }) == startSessionResponse.Unlocks.end()) {
-                if (!m_cache->markAchievementLocked(username, a.ID, false)) {
+                if (!m_cache.markAchievementLocked(username, a.ID, false)) {
                   spdlog::error("Failed to mark achievement locked: {}", a.ID);
                 }
             }
@@ -319,18 +422,18 @@ namespace firelight::achievements {
 
         // Hardcore unlocks
         for (const auto &a: startSessionResponse.HardcoreUnlocks) {
-            if (!m_cache->markAchievementUnlocked(username, a.ID, true, a.When)) {
+            if (!m_cache.markAchievementUnlocked(username, a.ID, true, a.When)) {
               spdlog::error("Failed to mark achievement unlocked: {}", a.ID);
             }
         }
 
         // Hardcore re-locks, in case user cleared in the RA site
-        for (const auto &a : m_cache->getUserAchievements(username, gameId)) {
+        for (const auto &a : m_cache.getUserAchievements(username, gameId)) {
             // If the achievement is not in the startSessionResponse, mark it as NOT unlocked
             if (std::ranges::find_if(startSessionResponse.HardcoreUnlocks, [&a](const Unlock &u) {
                 return u.ID == a.ID;
             }) == startSessionResponse.HardcoreUnlocks.end()) {
-                if (!m_cache->markAchievementLocked(username, a.ID, true)) {
+                if (!m_cache.markAchievementLocked(username, a.ID, true)) {
                   spdlog::error("Failed to mark achievement locked: {}", a.ID);
                 }
             }
@@ -349,15 +452,15 @@ namespace firelight::achievements {
         auto json = nlohmann::json::parse(response);
 
         if (json.contains("Score") && json["Score"].is_number()) {
-            m_cache->setUserScore(username, json["Score"], true);
+            m_cache.setUserScore(username, json["Score"], true);
         }
 
         if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
-            m_cache->setUserScore(username, json["SoftcoreScore"], false);
+            m_cache.setUserScore(username, json["SoftcoreScore"], false);
         }
 
         if (json.contains("AchievementID") && json["AchievementID"].is_number()) {
-            m_cache->markAchievementUnlocked(username, json["AchievementID"], hardcore, epochSeconds);
+            m_cache.markAchievementUnlocked(username, json["AchievementID"], hardcore, epochSeconds);
         }
     }
 }
