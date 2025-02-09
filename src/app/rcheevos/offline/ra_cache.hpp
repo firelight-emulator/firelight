@@ -37,6 +37,8 @@ namespace firelight::achievements {
 
         std::optional<std::string> getHashFromGameId(int gameId) const;
 
+        bool addUser(const std::string &username, const std::string &token) const;
+
         int getUserScore(const std::string &username, bool hardcore) const;
 
         std::optional<PatchResponse> getPatchResponse(int gameId) const;

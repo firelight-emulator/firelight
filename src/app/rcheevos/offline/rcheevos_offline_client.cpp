@@ -108,7 +108,7 @@ namespace firelight::achievements {
         const std::string &request, const std::string &response) const {
       auto params = parseQueryParams(request);
       if (params["r"] == "login2") {
-        processLogin2Response(params["u"], response);
+        processLogin2Response(params["u"], params["t"], response);
       } else if (params["r"] == "gameid") {
         processGameIdResponse(params["m"], response);
       } else if (params["r"] == "patch") {
@@ -360,17 +360,28 @@ namespace firelight::achievements {
         return GENERIC_SUCCESS;
     }
 
-    void RetroAchievementsOfflineClient::processLogin2Response(const std::string &username,
+    void RetroAchievementsOfflineClient::processLogin2Response(const std::string &username, const std::string &token,
                                                                const std::string &response) const {
-        // TODO: Save most recent token
-        auto json = nlohmann::json::parse(response);
-        if (json.contains("Score") && json["Score"].is_number()) {
-            m_cache.setUserScore(username, json["Score"], true);
-        }
 
-        if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
-            m_cache.setUserScore(username, json["SoftcoreScore"], false);
+      auto json = nlohmann::json::parse(response);
+      if (json.contains("Success") && json["Success"].is_boolean() && json["Success"].get<bool>()) {
+        if (!m_cache.addUser(username, token)) {
+          spdlog::error("Failed to create user: {}", username);
         }
+      } else {
+        spdlog::error("Login response was not success");
+        return;
+      }
+
+
+
+      if (json.contains("Score") && json["Score"].is_number()) {
+          m_cache.setUserScore(username, json["Score"], true);
+      }
+
+      if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
+          m_cache.setUserScore(username, json["SoftcoreScore"], false);
+      }
     }
 
     void RetroAchievementsOfflineClient::processGameIdResponse(const std::string &hash,

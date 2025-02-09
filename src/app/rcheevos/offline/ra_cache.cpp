@@ -24,6 +24,7 @@ namespace firelight::achievements {
 
             CREATE TABLE IF NOT EXISTS users (
                 username TEXT PRIMARY KEY NOT NULL,
+                token TEXT NOT NULL,
                 points INTEGER NOT NULL,
                 hardcore_points INTEGER NOT NULL
             );
@@ -397,6 +398,37 @@ namespace firelight::achievements {
       }
 
       return {query.value(0).toString().toStdString()};
+    }
+
+    bool RetroAchievementsCache::addUser(const std::string &username, const std::string &token) const {
+      QSqlQuery query(getDatabase());
+        query.prepare(
+            "INSERT OR IGNORE INTO users (username, token, hardcore_points, points) VALUES (:username, :token, 0, 0)");
+
+      query.bindValue(":token", QString::fromStdString(token));
+      query.bindValue(":username", QString::fromStdString(username));
+
+      if (!query.exec()) {
+        spdlog::error("Failed to create user: {}",
+                      query.lastError().text().toStdString());
+        return false;
+      }
+
+      if (query.numRowsAffected() == 0) {
+        QSqlQuery updateQuery(getDatabase());
+        updateQuery.prepare("UPDATE users SET token = :token WHERE username = :username");
+
+        updateQuery.bindValue(":token", QString::fromStdString(token));
+        updateQuery.bindValue(":username", QString::fromStdString(username));
+
+        if (!updateQuery.exec()) {
+          spdlog::error("Failed to update user token: {}",
+                        updateQuery.lastError().text().toStdString());
+          return false;
+        }
+      }
+
+      return true;
     }
 
     int RetroAchievementsCache::getUserScore(const std::string &username, const bool hardcore) const {

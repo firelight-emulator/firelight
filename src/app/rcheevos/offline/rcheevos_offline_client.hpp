@@ -39,7 +39,7 @@ namespace firelight::achievements {
 
         rc_api_server_response_t handleSubmitLbEntryRequest();
 
-        void processLogin2Response(const std::string &username, const std::string &response) const;
+        void processLogin2Response(const std::string &username, const std::string &token, const std::string &response) const;
 
         void processGameIdResponse(const std::string &hash, const std::string &response) const;
 
