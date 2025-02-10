@@ -13,10 +13,14 @@ FocusScope {
 
     signal openDetails(entryId: int)
 
-    signal readyToStartGame()
+    signal launchAnimationFinished()
 
     function startLoadingGame(entryId) {
         startGameAnimation.gameId = entryId
+        startGameAnimation.restart()
+    }
+
+    function playLaunchAnimation() {
         startGameAnimation.restart()
     }
 
@@ -24,13 +28,6 @@ FocusScope {
         id: startGameAnimation
         running: false
 
-        property var gameId
-
-        ScriptAction {
-            script: {
-                GameLoader.loadEntry(startGameAnimation.gameId, true)
-            }
-        }
         PropertyAction {
             target: playClone
             property: "opacity"
@@ -76,7 +73,7 @@ FocusScope {
 
         ScriptAction {
             script: {
-                page.readyToStartGame()
+                page.launchAnimationFinished()
             }
         }
     }

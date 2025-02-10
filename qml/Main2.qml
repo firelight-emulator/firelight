@@ -21,9 +21,9 @@ ApplicationWindow {
     title: qsTr("Firelight")
 
     property alias gameRunning: emulatorLoader.active
-    property alias currentGameName: emulatorLoader.contentPath
-    property alias currentEntryId: emulatorLoader.entryId
-    property alias currentContentHash: emulatorLoader.contentHash
+    property var currentGameName: ""
+    property var currentEntryId: 0
+    property var currentContentHash: ""
 
     // background: Rectangle {
     //     color: ColorPalette.neutral1000
@@ -381,13 +381,6 @@ ApplicationWindow {
     Loader {
         id: emulatorLoader
         property var entryId
-        property var gameData
-        property var saveData
-        property var corePath
-        property var contentHash
-        property var saveSlotNumber
-        property var platformId
-        property var contentPath
 
         property bool shouldDeactivate: false
 
@@ -432,12 +425,15 @@ ApplicationWindow {
             //     platformId: emulatorLoader.platformId,
             //     contentPath: emulatorLoader.contentPath
             // })
-            active = true
+            emulatorLoader.item.startGame()
+            emulatorLoader.item.paused = emulatorLoader.paused
+            // active = true
         }
 
         onLoaded: function () {
-            emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
-            emulatorLoader.item.paused = emulatorLoader.paused
+            emulatorLoader.item.loadGame(emulatorLoader.entryId)
+            // emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+            // emulatorLoader.item.paused = emulatorLoader.paused
         }
     }
 
@@ -1009,7 +1005,8 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
-                GameLoader.approve()
+                screenStack.pushItem(emulatorLoader, {}, StackView.Immediate)
+                overlay.opacity = 0
             }
         }
     }
@@ -1050,29 +1047,6 @@ ApplicationWindow {
         // PauseAnimation {
         //     duration: 1000
         // }
-
-        PropertyAction {
-            target: overlay
-            property: "opacity"
-            value: 0
-        }
-
-    }
-
-    Connections {
-        target: GameLoader
-
-        function onGameLoaded(entryId, gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
-            gameLoadedAnimation.entryId = entryId
-            gameLoadedAnimation.gameData = gameData
-            gameLoadedAnimation.saveData = saveData
-            gameLoadedAnimation.corePath = corePath
-            gameLoadedAnimation.contentHash = contentHash
-            gameLoadedAnimation.saveSlotNumber = saveSlotNumber
-            gameLoadedAnimation.platformId = platformId
-            gameLoadedAnimation.contentPath = contentPath
-            gameLoadedAnimation.running = true
-        }
     }
 
     FirelightDialog {
@@ -1107,14 +1081,19 @@ ApplicationWindow {
                     // closeGameDialog.entryId = entryId
                     closeGameDialog.openAndDoOnAccepted(function () {
                         emulatorLoader.active = false
-                        libPage.startLoadingGame(entryId)
+
+                        emulatorLoader.entryId = entryId
+                        emulatorLoader.active = true
+                        libPage.playLaunchAnimation()
                     })
                 } else {
-                    libPage.startLoadingGame(entryId)
+                    emulatorLoader.entryId = entryId
+                    emulatorLoader.active = true
+                    libPage.playLaunchAnimation()
                 }
             }
 
-            onReadyToStartGame: {
+            onLaunchAnimationFinished: {
                 gameStartAnimation.running = true
             }
 

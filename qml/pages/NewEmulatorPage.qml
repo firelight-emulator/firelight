@@ -13,30 +13,15 @@ FocusScope {
 
     clip: true
 
-    property var gameData
-    property var saveData
-    property var corePath
-    property var contentHash
-    property var saveSlotNumber
-    property var platformId
-    property var contentPath
-
-    function startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath) {
-        emulator.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
-        root.gameReady()
-        // emulatorStack.pushItem(emulatorComponent, {
-        //     gameData: gameData,
-        //     saveData: saveData,
-        //     corePath: corePath,
-        //     contentHash: contentHash,
-        //     saveSlotNumber: saveSlotNumber,
-        //     platformId: platformId,
-        //     contentPath: contentPath
-        // }, StackView.Immediate)
+    function loadGame(entryId) {
+        emulator.loadGame(entryId)
     }
 
-
-
+    function startGame() {
+        if (!emulator.started) {
+            emulator.startGame()
+        }
+    }
 
     signal rewindPointsReady(var points)
 
@@ -58,8 +43,6 @@ FocusScope {
         emulator.writeSuspendPoint(index)
     }
 
-    property real blurAmount: 0
-
     property alias paused: emulator.paused
 
     StackView.visible: true
@@ -72,42 +55,29 @@ FocusScope {
         debugWindow2.visible = true
     }
 
-    layer.enabled: blurAmount !== 0
-
-    layer.effect: MultiEffect {
-        // enabled: root.blurAmount !== 0
-        source: root
-        anchors.fill: root
-        blurEnabled: true
-        blurMultiplier: 0
-        blurMax: 64
-        blur: root.blurAmount
-    }
-
     Rectangle {
         id: background
         color: "black"
         anchors.fill: parent
     }
 
-    // layer.enabled: root.blurAmount !== 0
-    // layer.effect:
-
     EmulatorItem {
         id: emulator
-        // visible: root.blurAmount === 0
         focus: true
         anchors.centerIn: parent
         width: parent.height * videoAspectRatio
         height: parent.height
         smooth: false
 
+        // onGameStarted: {
+        //     emulator.paused = false
+        // }
+
         onRewindPointsReady: function (points) {
             root.rewindPointsReady(points)
         }
 
         Keys.onDigit1Pressed: {
-            console.log("Digit 1 pressed")
             emulator.loadSuspendPoint(1)
         }
     }

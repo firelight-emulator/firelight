@@ -22,6 +22,8 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     setAcceptTouchEvents(true);
     setAcceptedMouseButtons(Qt::LeftButton);
 
+    m_threadPool.setMaxThreadCount(1);
+
     m_autosaveTimer.setInterval(10000);
     m_autosaveTimer.setSingleShot(false);
     connect(&m_autosaveTimer, &QTimer::timeout,
@@ -118,8 +120,118 @@ void EmulatorItem::mousePressEvent(QMouseEvent *event) {
 }
 
 void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
-    m_mousePressed = false;
-    getInputManager()->updateMousePressed(m_mousePressed);
+  m_mousePressed = false;
+  getInputManager()->updateMousePressed(m_mousePressed);
+}
+void EmulatorItem::loadGame(int entryId) {
+  m_threadPool.start([this, entryId] {
+    spdlog::info("Loading entry with id {}", entryId);
+
+    auto entry = getUserLibrary()->getEntry(entryId);
+
+    // auto entry = getLibraryDatabase()->getLibraryEntry(entryId);
+    //
+    if (!entry.has_value()) {
+      spdlog::warn("Entry with id {} does not exist...", entryId);
+    }
+    //
+    // m_currentEntry = *entry;
+
+    auto roms =
+        getUserLibrary()->getRomFilesWithContentHash(entry->contentHash);
+    if (roms.empty()) {
+      spdlog::warn("No ROM file found for entry with id {}", entryId);
+    }
+
+    auto romFile = std::unique_ptr<firelight::library::RomFile>();
+    for (auto &rom : roms) {
+      if (!rom.inArchive()) {
+        romFile = std::make_unique<firelight::library::RomFile>(rom);
+      }
+    }
+
+    // If we didn't find one that isn't in an archive, just use the first one
+    if (!romFile) {
+      romFile = std::make_unique<firelight::library::RomFile>(roms[0]);
+    }
+
+    if (romFile->inArchive() &&
+        !std::filesystem::exists(romFile->getArchivePathName().toStdString())) {
+      printf("content path doesn't exist\n");
+      return;
+    }
+
+    if (!romFile->inArchive() &&
+        !std::filesystem::exists(romFile->getFilePath().toStdString())) {
+      printf("content path doesn't exist\n");
+      return;
+    }
+
+    romFile->load();
+
+    std::string corePath =
+        firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
+    //
+    QByteArray saveDataBytes;
+    const auto saveData = getSaveManager()->readSaveData(
+        romFile->getContentHash(), entry->activeSaveSlot);
+    if (saveData.has_value()) {
+      saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
+                                 saveData->getSaveRamData().size());
+    }
+
+    m_entryId = entryId;
+    m_gameData = romFile->getContentBytes();
+    m_saveData = saveDataBytes;
+    m_corePath = QString::fromStdString(corePath);
+    m_contentHash = romFile->getContentHash();
+    m_saveSlotNumber = entry->activeSaveSlot;
+    m_platformId = entry->platformId;
+    m_contentPath = romFile->getFilePath();
+
+    m_loaded = true;
+    if (m_startAfterLoading) {
+      startGame();
+    }
+  });
+}
+void EmulatorItem::startGame() {
+  if (!m_loaded) {
+    m_startAfterLoading = true;
+  }
+
+  QThreadPool::globalInstance()->start([this] {
+        auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_platformId, m_contentHash);
+        auto m_core = std::make_unique<libretro::Core>(m_platformId, m_corePath.toStdString(), configProvider);
+
+        m_audioManager = std::make_shared<AudioManager>([this] { emit audioBufferLevelChanged(); });
+        m_core->setAudioReceiver(m_audioManager);
+        m_core->setRetropadProvider(getControllerManager());
+        m_core->setPointerInputProvider(getInputManager());
+
+        // Qt owns the renderer, so it will destoy it.
+        m_renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(), std::move(m_core));
+
+        m_renderer->onGeometryChanged([this](unsigned int width, unsigned int height, float aspectRatio) {
+            updateGeometry(width, height, aspectRatio);
+        });
+
+        // m_core->init();
+
+        // Setting these causes the item's geometry to be visible, and the renderer is initialized.
+        // If an item is not visible, the renderer is not initialized.
+        m_coreBaseWidth = 1;
+        m_coreBaseHeight = 1;
+        m_calculatedAspectRatio = 0.000001;
+        m_coreAspectRatio = 0.000001;
+
+        emit videoWidthChanged();
+        emit videoHeightChanged();
+        emit videoAspectRatioChanged();
+
+        m_started = true;
+        emit gameStarted();
+    });
 }
 
 void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveData, const QString &corePath,
@@ -162,6 +274,8 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
         emit videoWidthChanged();
         emit videoHeightChanged();
         emit videoAspectRatioChanged();
+
+        m_started = true;
     });
 }
 

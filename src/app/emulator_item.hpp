@@ -11,6 +11,7 @@ protected:
 
 private:
     Q_OBJECT
+    Q_PROPERTY(bool started MEMBER m_started NOTIFY startedChanged)
     Q_PROPERTY(int videoWidth MEMBER m_coreBaseWidth NOTIFY videoWidthChanged)
     Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
     Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY videoAspectRatioChanged)
@@ -22,6 +23,11 @@ public:
 
     ~EmulatorItem() override;
 
+    bool m_startAfterLoading = false;
+    bool m_loaded = false;
+    bool m_started = false;
+
+    int m_entryId;
     QByteArray m_gameData;
     QByteArray m_saveData;
     QString m_corePath;
@@ -67,11 +73,17 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 
 public slots:
+    void loadGame(int entryId);
+    void startGame();
     void startGame(const QByteArray &gameData, const QByteArray &saveData, const QString &corePath,
                    const QString &contentHash,
                    unsigned int saveSlotNumber, unsigned int platformId, const QString &contentPath);
 
 signals:
+    void startedChanged();
+
+    void gameStarted();
+
     void pausedChanged();
 
     void videoWidthChanged();
@@ -88,6 +100,7 @@ protected:
     QQuickRhiItemRenderer *createRenderer() override;
 
 private:
+    QThreadPool m_threadPool;
     QTimer m_autosaveTimer;
     QTimer m_rewindPointTimer;
     EmulatorItemRenderer *m_renderer = nullptr;
