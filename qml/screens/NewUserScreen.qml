@@ -312,10 +312,11 @@ FocusScope {
             }
             contentItem: ColumnLayout {
                 RetroAchievementsAccountPane {
-                    focus: true
+                    id: accountPane
+                    focus: !achievement_manager.loggedIn
+                    KeyNavigation.down: !achievement_manager.loggedIn ? dirNextButton : null
                     Layout.fillWidth: true
                     Layout.fillHeight: false
-                    KeyNavigation.down: dirNextButton
                 }
                 Item {
                     Layout.fillHeight: true
@@ -332,6 +333,8 @@ FocusScope {
                     FirelightButton {
                         id: dirNextButton
                         label: "Next"
+                        KeyNavigation.up: !achievement_manager.loggedIn ? accountPane : null
+                        focus: achievement_manager.loggedIn
                         onClicked: function () {
                             root.currentIndex = 3
                         }

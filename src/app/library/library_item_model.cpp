@@ -174,13 +174,13 @@ namespace firelight::gui {
 
       unsigned int lastSessionTime = 0;
 
-      auto lastSession =
-          m_userdataDatabase->getLatestPlaySession(entry.contentId);
-      if (lastSession.has_value()) {
-        lastSessionTime = lastSession->endTime;
-      } else {
-        lastSessionTime = entry.createdAt;
-      }
+      // auto lastSession =
+      //     m_userdataDatabase->getLatestPlaySession(entry.contentId);
+      // if (lastSession.has_value()) {
+      //   lastSessionTime = lastSession->endTime;
+      // } else {
+      //   lastSessionTime = entry.createdAt;
+      // }
 
       m_items.emplace_back(
         Item({

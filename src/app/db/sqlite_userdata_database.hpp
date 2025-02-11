@@ -6,7 +6,7 @@
 #include <firelight/activity/activity_log.hpp>
 
 namespace firelight::db {
-  class SqliteUserdataDatabase final : public IUserdataDatabase, public activity::IActivityLog {
+  class SqliteUserdataDatabase final : public IUserdataDatabase {
   public:
     explicit SqliteUserdataDatabase(const std::filesystem::path &dbFile);
 
@@ -35,11 +35,6 @@ namespace firelight::db {
     getSuspendPointMetadataForContent(std::string contentId, int saveSlotNumber) override;
 
     bool deleteSuspendPointMetadata(int id) override;
-
-    bool createPlaySession(activity::PlaySession &session) override;
-
-    std::optional<activity::PlaySession>
-    getLatestPlaySession(std::string contentId) override;
 
     std::optional<std::string>
     getPlatformSettingValue(int platformId, std::string key) override;

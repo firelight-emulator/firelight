@@ -1,6 +1,5 @@
 #define SDL_MAIN_HANDLED
 
-// #include <QGuiApplication>
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -9,7 +8,6 @@
 #include <QWindow>
 #include <filesystem>
 #include <qstandardpaths.h>
-#include <qstringlistmodel.h>
 #include <csignal>
 #include <spdlog/spdlog.h>
 #include <cstdlib>
@@ -42,14 +40,12 @@
 #include "app/PlatformMetadataItem.hpp"
 #include "app/activity/sqlite_activity_log.hpp"
 #include "app/emulator_item.hpp"
-#include "app/game_loader.hpp"
+#include "app/image_cache_url_interceptor.h"
 #include "app/input/gamepad_status_item.hpp"
 #include "app/input/input_mapping_item.hpp"
 #include "app/input/keyboard_mapping_item.hpp"
 #include "app/library/sqlite_user_library.hpp"
 #include "gui/models/library/entry_list_model.hpp"
-
-#include <iostream>
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
@@ -66,35 +62,10 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   return true;
 }
 
-namespace {
-  volatile bool interrupted{false};
-}
-
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
   // discord::Core* core = discord::Core::Create(0, 0, core);
-
-  // struct archive *a;
-  // struct archive_entry *entry;
-  // int r;
-  //
-  // a = archive_read_new();
-  // archive_read_support_filter_all(a);
-  // archive_read_support_format_all(a);
-  // r = archive_read_open_filename(a, "Nintendo - Game Boy Advance.zip", 10240); // Note 1
-  // if (r != ARCHIVE_OK)
-  //   exit(1);
-  // while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-  //   printf("%s\n", archive_entry_pathname(entry));
-  //   archive_read_data_skip(a); // Note 2
-  // }
-  // r = archive_read_free(a); // Note 3
-  // if (r != ARCHIVE_OK)
-  //   exit(1);
-  //
-  // return 0;
-
 
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
@@ -138,22 +109,6 @@ int main(int argc, char *argv[]) {
   // auto cachePath =
   //     QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
   // "C:/Users/<USER>/AppData/Local/Firelight/cache/"
-
-  // saves files
-  // userdata db
-  // controller profiles
-  // library db
-
-  // auto docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-  //
-  // printf("Documents Path: %s\n", docPath.toStdString().c_str());
-
-  // auto appDataPath =
-  //     QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-  // C:/Users/<USER>/AppData/Roaming/Firelight/library.db
-  // C:/Users/<USER>/AppData/Roaming/Firelight/patches/
-  // C:/Users/<USER>/AppData/Roaming/Firelight/saves/<content_id>/slot<n>/
-  // C:/Users/<USER>/AppData/Roaming/Firelight/userdata.db
 
   auto saveDir = defaultUserPath / "saves";
   auto romsDir = defaultUserPath / "roms";
@@ -295,8 +250,12 @@ int main(int argc, char *argv[]) {
     }
   });
 
+  firelight::ImageCacheUrlInterceptor imageCacheUrlInterceptor("");
+
   QQmlApplicationEngine engine;
+  // engine.addUrlInterceptor(&imageCacheUrlInterceptor);
   engine.addImageProvider("gameImages", gameImageProvider);
+
   engine.rootContext()->setContextProperty("Router", &router);
   engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
@@ -318,7 +277,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("UserLibrary", &userLibrary);
   engine.rootContext()->setContextProperty("LibraryEntryModel", &entryListModel);
   engine.rootContext()->setContextProperty("LibraryScanner", &libScanner2);
-  engine.rootContext()->setContextProperty("GameLoader", new firelight::GameLoader());
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
   engine.rootContext()->setContextProperty("window_resize_handler",
@@ -331,12 +289,7 @@ int main(int argc, char *argv[]) {
   QObject::connect(
     &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
     []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-  // QObject::connect(
-  //   &engine, &QQmlApplicationEngine::objectCreated, &app,
-  //   [](QObject *item, const QUrl &url) { printf("Created: %s\n", url.toDisplayString().toStdString().c_str()); },
-  //   Qt::QueuedConnection);
   engine.loadFromModule("QMLFirelight", "Main2");
-  // engine.loadFromModule("QMLFirelight", "ControllerTest");
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
@@ -345,26 +298,10 @@ int main(int argc, char *argv[]) {
 
   window->setIcon(QIcon("system/_img/logo.png"));
 
-  // QObject::connect(
-  //   window, &QQuickWindow::frameSwapped, window,
-  //   []() {
-  //     static qint64 last = 0;
-  //     auto now = QDateTime::currentMSecsSinceEpoch();
-  //     auto elapsed = now - last;
-  //     if (elapsed >= 20) {
-  //       spdlog::info("Time since last frame: {}ms", elapsed);
-  //     }
-  //     last = now;
-  //   }, Qt::QueuedConnection);
-
-
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
   sdlEventLoop.moveToThread(&sdlEventLoop);
   sdlEventLoop.start();
 
-  // QObject::connect(window, &QQuickWindow::afterAnimating, &sdlEventLoop, &firelight::SdlEventLoop::pollEvents);
-  // connect(sdlThread, &QThread::started, &sdlEventLoop, &firelight::SdlEventLoop::run);
-  // sdlThread->start();
   engine.rootContext()->setContextProperty("sfx_player", new firelight::audio::SfxPlayer());
 
   int exitCode = QApplication::exec();

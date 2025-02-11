@@ -130,7 +130,6 @@ FocusScope {
                 // Layout.preferredWidth: parent.width / 2
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
-                enabled: false
                 checkable: false
                 alignRight: true
 

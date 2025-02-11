@@ -49,20 +49,6 @@ namespace firelight::db {
                     createSuspendPointMetadata.lastError().text().toStdString());
     }
 
-    QSqlQuery createPlaySessions(m_database);
-    createPlaySessions.prepare("CREATE TABLE IF NOT EXISTS play_sessions("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-      "content_id TEXT NOT NULL,"
-      "savefile_slot_number INTEGER NOT NULL,"
-      "start_time INTEGER NOT NULL,"
-      "end_time INTEGER NOT NULL,"
-      "unpaused_duration_seconds INTEGER NOT NULL);");
-
-    if (!createPlaySessions.exec()) {
-      spdlog::error("Table creation failed: {}",
-                    createPlaySessions.lastError().text().toStdString());
-    }
-
     QSqlQuery createControllerProfiles(m_database);
     createControllerProfiles.prepare("CREATE TABLE IF NOT EXISTS controller_profiles("
       "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -367,69 +353,6 @@ namespace firelight::db {
   // std::vector<ControllerProfile> SqliteUserdataDatabase::getControllerProfiles() {
   //   return {};
   // }
-
-  bool SqliteUserdataDatabase::createPlaySession(activity::PlaySession &session) {
-    const QString queryString = "INSERT INTO play_sessions ("
-        "content_id, "
-        "savefile_slot_number, "
-        "start_time, "
-        "end_time, "
-        "unpaused_duration_seconds) "
-        "VALUES (:contentId, :slotNumber, :startTime,"
-        ":endTime, :unpausedDurationSeconds);";
-    auto query = QSqlQuery(m_database);
-    query.prepare(queryString);
-
-    query.bindValue(":contentId", QString::fromStdString(session.contentId));
-    query.bindValue(":slotNumber", session.slotNumber);
-    query.bindValue(":startTime", session.startTime);
-    query.bindValue(":endTime", session.endTime);
-    query.bindValue(":unpausedDurationSeconds",
-                    static_cast<uint16_t>(session.unpausedDurationMillis / 1000));
-
-    if (!query.exec()) {
-      spdlog::warn("Insert into play_sessions failed: {}",
-                   query.lastError().text().toStdString());
-      return false;
-    }
-
-    session.id = query.lastInsertId().toInt();
-
-    return true;
-  }
-
-  std::optional<activity::PlaySession>
-  SqliteUserdataDatabase::getLatestPlaySession(const std::string contentId) {
-    return std::nullopt;
-    // const QString queryString = "SELECT * FROM play_sessions WHERE content_id
-    // = "
-    //                             ":contentId ORDER BY end_time DESC LIMIT 1;";
-    // auto query = QSqlQuery(m_database);
-    // query.prepare(queryString);
-    //
-    // query.bindValue(":contentId", QString::fromStdString(contentId));
-    //
-    // if (!query.exec()) {
-    //   spdlog::warn("Retrieving last play_session failed: {}",
-    //                query.lastError().text().toStdString());
-    //   return std::nullopt;
-    // }
-    //
-    // if (query.next()) {
-    //   PlaySession session;
-    //   session.id = query.value("id").toInt();
-    //   session.contentId = query.value("content_id").toString().toStdString();
-    //   session.slotNumber = query.value("savefile_slot_number").toUInt();
-    //   session.startTime = query.value("start_time").toLongLong();
-    //   session.endTime = query.value("end_time").toLongLong();
-    //   session.unpausedDurationSeconds =
-    //       query.value("unpaused_duration_seconds").toUInt();
-    //
-    //   return {session};
-    // }
-    //
-    // return std::nullopt;
-  }
 
   std::optional<std::string> SqliteUserdataDatabase::getPlatformSettingValue(
     const int platformId, const std::string key) {

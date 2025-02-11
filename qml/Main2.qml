@@ -369,12 +369,26 @@ ApplicationWindow {
             onCloseGamePressed: function () {
                 emulatorLoader.stopGame()
             }
+
+            onRewindPressed: function() {
+                emulatorLoader.item.createRewindPoints()
+            }
+        }
+    }
+
+    Component {
+        id: rewindMenu
+        RewindMenu {
+
         }
     }
 
     Component {
         id: emuPage
         NewEmulatorPage {
+            onRewindPointsReady: function(points) {
+                screenStack.pushItem(rewindMenu, {model: points}, StackView.Immediate)
+            }
         }
     }
 
@@ -850,6 +864,7 @@ ApplicationWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 orientation: ListView.Horizontal
                 currentIndex: 0
+                interactive: false
 
                 onCurrentIndexChanged: function () {
                     if (!InputMethodManager.usingMouse) {
@@ -1009,44 +1024,6 @@ ApplicationWindow {
                 overlay.opacity = 0
             }
         }
-    }
-
-    SequentialAnimation {
-        id: gameLoadedAnimation
-        running: false
-
-        property var entryId
-        property var gameData
-        property var saveData
-        property var corePath
-        property var contentHash
-        property var saveSlotNumber
-        property var platformId
-        property var contentPath
-
-
-        ScriptAction {
-            script: {
-                // screenStack.popCurrentItem(StackView.Immediate)
-                // screenStack.currentItem.startGame(gameLoadedAnimation.gameData, gameLoadedAnimation.saveData, gameLoadedAnimation.corePath, gameLoadedAnimation.contentHash, gameLoadedAnimation.saveSlotNumber, gameLoadedAnimation.platformId, gameLoadedAnimation.contentPath)
-                screenStack.pushItem(emulatorLoader, {
-                    entryId: gameLoadedAnimation.entryId,
-                    gameData: gameLoadedAnimation.gameData,
-                    saveData: gameLoadedAnimation.saveData,
-                    corePath: gameLoadedAnimation.corePath,
-                    contentHash: gameLoadedAnimation.contentHash,
-                    saveSlotNumber: gameLoadedAnimation.saveSlotNumber,
-                    platformId: gameLoadedAnimation.platformId,
-                    contentPath: gameLoadedAnimation.contentPath
-                }, StackView.Immediate)
-                // emulatorLoader.startGame(gameLoadedAnimation.gameData, gameLoadedAnimation.saveData, gameLoadedAnimation.corePath, gameLoadedAnimation.contentHash, gameLoadedAnimation.saveSlotNumber, gameLoadedAnimation.platformId, gameLoadedAnimation.contentPath)
-                // emulatorScreen
-            }
-        }
-
-        // PauseAnimation {
-        //     duration: 1000
-        // }
     }
 
     FirelightDialog {

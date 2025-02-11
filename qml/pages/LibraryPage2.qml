@@ -123,7 +123,6 @@ FocusScope {
                 onClicked: function () {
                     playButtonClicked(listView.currentItem.model.id)
                     console.log(startGameAnimation)
-                    // GameLoader.loadEntry(listView.currentItem.model.id)
                     // page.startGame(listView.currentItem.model.id, listView.currentItem.model.contentHash)
                     // startGameAnimation.gameId = listView.currentItem.model.id
                     // // startGameAnimation.gameHash = listView.currentItem.model.contentHash
@@ -233,7 +232,6 @@ FocusScope {
                                 startGameAnimation.gameId = scope.model.id
                                 // startGameAnimation.gameHash = listView.currentItem.model.contentHash
                                 startGameAnimation.start()
-                                // GameLoader.loadEntry(scope.model.id)
                                 // page.startGame(scope.model.id, scope.model.contentHash)
                             }
                         }

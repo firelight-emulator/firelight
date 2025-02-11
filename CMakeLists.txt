@@ -118,7 +118,6 @@ add_library(firelight_lib
         src/gui/models/library/entry_list_model.cpp
         src/app/emulator_item_renderer.cpp
         src/app/emulator_item.cpp
-        src/app/game_loader.cpp
         src/app/input/gamepad_status_item.cpp
         src/app/activity/sqlite_activity_log.cpp
         src/app/PlatformMetadataItem.cpp
@@ -132,6 +131,8 @@ add_library(firelight_lib
         src/app/video_encoder.h
         src/app/video_decoder.cpp
         src/app/video_decoder.h
+        src/app/image_cache_url_interceptor.cpp
+        src/app/image_cache_url_interceptor.h
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
@@ -172,6 +173,8 @@ qt6_add_executable(firelight
         resources.qrc
         app_resources.rc
         src/main.cpp
+        src/image_cache.cpp
+        src/image_cache.h
 )
 
 

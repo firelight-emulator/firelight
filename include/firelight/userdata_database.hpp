@@ -43,11 +43,6 @@ namespace firelight::db {
 
     virtual bool deleteSuspendPointMetadata(int id) = 0;
 
-    virtual bool createPlaySession(activity::PlaySession &session) = 0;
-
-    virtual std::optional<activity::PlaySession>
-    getLatestPlaySession(std::string contentId) = 0;
-
     virtual std::optional<std::string> getPlatformSettingValue(int platformId, std::string key) = 0;
 
     virtual std::map<std::string, std::string> getAllPlatformSettings(int platformId) = 0;
