@@ -21,6 +21,14 @@ FocusScope {
         background: Item {}
         contentItem:  ColumnLayout {
             spacing: 8
+            Image {
+                Layout.maximumHeight: 60
+                Layout.minimumHeight: 60
+                sourceSize.height: 60
+                Layout.alignment: Qt.AlignHCenter
+                source: "file:system/_img/raFullLogo.png"
+                fillMode: Image.PreserveAspectFit
+            }
             Text {
                 text: "You're logged in"
                 visible: achievement_manager.loggedIn
