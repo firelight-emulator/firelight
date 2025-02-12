@@ -92,6 +92,7 @@ int main(int argc, char *argv[]) {
 
   auto defaultUserPathString = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
   auto docsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation).append("/Firelight");
+  auto savesPath = docsPath.append("/saves");
   auto defaultUserPath = std::filesystem::path(defaultUserPathString.toStdString()) / "Firelight";
 
   auto defaultAppDataPathString = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -154,8 +155,7 @@ int main(int argc, char *argv[]) {
                                                        "library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
-  firelight::saves::SaveManager saveManager(saveDir, libraryDatabase, userdata_database, *gameImageProvider);
-  saveManager.setSaveDirectory(docsPath + "/saves");
+  firelight::saves::SaveManager saveManager(savesPath, libraryDatabase, userdata_database, *gameImageProvider);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   firelight::library::SqliteUserLibrary

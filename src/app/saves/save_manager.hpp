@@ -14,14 +14,15 @@
 #include "suspend_point.hpp"
 
 #include <qdir.h>
+#include <qsettings.h>
 
 namespace firelight::saves {
-    class SaveManager : public QObject {
+    class SaveManager final : public QObject {
         Q_OBJECT
         Q_PROPERTY(QString saveDirectory READ getSaveDirectory WRITE setSaveDirectory NOTIFY saveDirectoryChanged)
 
     public:
-        SaveManager(std::filesystem::path saveDir,
+        SaveManager(const QString &defaultSaveDir,
                     db::ILibraryDatabase &libraryDatabase,
                     db::IUserdataDatabase &userdataDatabase,
                     gui::GameImageProvider &gameImageProvider);
@@ -29,7 +30,7 @@ namespace firelight::saves {
         QFuture<bool> writeSaveData(const QString &contentHash, int saveSlotNumber,
                                     const Savefile &saveData);
 
-        std::optional<Savefile> readSaveData(const QString &contentHash, int saveSlotNumber) const;
+        [[nodiscard]] std::optional<Savefile> readSaveData(const QString &contentHash, int saveSlotNumber) const;
 
 
         QFuture<bool> writeSuspendPoint(const QString &contentHash, int saveSlotNumber, int index,
@@ -37,7 +38,7 @@ namespace firelight::saves {
 
         std::optional<SuspendPoint> readSuspendPoint(const QString &contentHash, int saveSlotNumber, int index);
 
-        QString getSaveDirectory() const;
+        [[nodiscard]] QString getSaveDirectory() const;
 
         void setSaveDirectory(const QString &saveDirectory);
 
@@ -63,11 +64,12 @@ namespace firelight::saves {
         int m_currentSuspendPointListSaveSlotNumber = -1;
         std::unique_ptr<emulation::SuspendPointListModel> m_suspendPointListModel;
 
+        QSettings m_settings;
+
         db::ILibraryDatabase &m_libraryDatabase;
         db::IUserdataDatabase &m_userdataDatabase;
         gui::GameImageProvider &m_gameImageProvider;
         QString m_saveDirectory;
-        std::filesystem::path m_saveDir;
         std::unique_ptr<QThreadPool> m_ioThreadPool = nullptr;
         std::map<int, SuspendPoint> m_suspendPoints;
     };

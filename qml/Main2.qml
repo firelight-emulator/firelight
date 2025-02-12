@@ -866,6 +866,7 @@ ApplicationWindow {
                 currentIndex: 0
                 interactive: false
 
+                keyNavigationEnabled: true
                 onCurrentIndexChanged: function () {
                     if (!InputMethodManager.usingMouse) {
                         sfx_player.play("rewindscroll")
@@ -929,7 +930,6 @@ ApplicationWindow {
                     }
 
                     onClicked: function (event) {
-                        console.log("Calling on click")
                         if (model.label === "Now Playing") {
                             if (!window.gameRunning) {
                                 quickMenuStack.replaceCurrentItem(notPlayingAnythingText, {}, StackView.ReplaceTransition)

@@ -6,21 +6,21 @@
 #include <qcryptographichash.h>
 #include <qfile.h>
 #include <qfuture.h>
+#include <qsavefile.h>
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
 
 namespace firelight::saves {
-  SaveManager::SaveManager(std::filesystem::path saveDir,
+  SaveManager::SaveManager(const QString& defaultSaveDir,
                            db::ILibraryDatabase &libraryDatabase,
                            db::IUserdataDatabase &userdataDatabase,
                            gui::GameImageProvider &gameImageProvider)
-    : m_userdataDatabase(userdataDatabase), m_libraryDatabase(libraryDatabase), m_gameImageProvider(gameImageProvider),
-      m_saveDir((std::move
-          (saveDir)
-        )
-      ) {
+    : m_libraryDatabase(libraryDatabase), m_userdataDatabase(userdataDatabase), m_gameImageProvider(gameImageProvider) {
     m_ioThreadPool = std::make_unique<QThreadPool>();
     m_ioThreadPool->setMaxThreadCount(1);
+
+    m_settings.beginGroup("Saves");
+    m_saveDirectory = m_settings.value("SaveDirectory", defaultSaveDir).toString();
   }
 
   QFuture<bool> SaveManager::writeSaveData(const QString &contentHash, int saveSlotNumber, const Savefile &saveData) {
@@ -145,7 +145,12 @@ namespace firelight::saves {
   QString SaveManager::getSaveDirectory() const { return m_saveDirectory; }
 
   void SaveManager::setSaveDirectory(const QString &saveDirectory) {
+    if (saveDirectory == m_saveDirectory) {
+      return;
+    }
+
     m_saveDirectory = saveDirectory;
+    emit saveDirectoryChanged(m_saveDirectory);
 
     if (m_saveDirectory.startsWith("file://")) {
       m_saveDirectory = m_saveDirectory.remove(0, 7);
@@ -154,7 +159,7 @@ namespace firelight::saves {
       m_saveDirectory = m_saveDirectory.remove(0, 1);
     }
 
-    m_saveDir = m_saveDirectory.toStdString();
+    m_settings.setValue("SaveDirectory", m_saveDirectory);
   }
 
   QAbstractListModel *SaveManager::getSuspendPointListModel(const QString &contentHash, int saveSlotNumber) {
@@ -240,39 +245,43 @@ namespace firelight::saves {
       return;
     }
 
-    const auto directory =
-        m_saveDir / contentHash.toStdString() / ("slot" + std::to_string(suspendPoint.saveSlotNumber)) / "suspendpoints"
-        / (
-          "slot" + std::to_string(slotNumber));
+    auto dir = QString("%1/%2/slot%3/suspendpoints/slot%4")
+               .arg(m_saveDirectory, contentHash)
+               .arg(suspendPoint.saveSlotNumber)
+               .arg(slotNumber);
 
-    if (!exists(directory)) {
-      create_directories(directory);
+    if (!QDir(dir).exists() && !QDir().mkpath(dir)) {
+      return;
     }
 
-    const auto tempSaveFile = directory / "suspendpoint.state.tmp";
-    const auto saveFile = directory / "suspendpoint.state";
+    QSaveFile saveFile(dir + "/suspendpoint.state");
+    saveFile.open(QIODeviceBase::WriteOnly);
 
-    std::ofstream saveFileStream(tempSaveFile, std::ios::binary);
-    saveFileStream.write(reinterpret_cast<const char *>(suspendPoint.state.data()), suspendPoint.state.size());
-    saveFileStream.close();
-
-    std::filesystem::rename(tempSaveFile, saveFile);
+    saveFile.write(QByteArray::fromRawData(
+        reinterpret_cast<const char *>(suspendPoint.state.data()), suspendPoint.state.size()));
+    if (!saveFile.commit()) {
+      spdlog::error("Could not write suspend point to disk");
+      return;
+    }
 
     if (!suspendPoint.image.isNull()) {
-      auto imageFilename = directory / "screenshot.png";
-      suspendPoint.image.save(QString::fromStdString(imageFilename.string()), "PNG");
+      auto imageFilename = dir + "/screenshot.png";
+      if (!suspendPoint.image.save(imageFilename, "PNG")) {
+        spdlog::warn("Could not save suspend point image");
+      }
     }
 
     if (!suspendPoint.retroachievementsState.empty()) {
-      const auto tempRcheevosFile = directory / "rcheevos.state.tmp";
-      const auto rcheevosFile = directory / "rcheevos.state";
+      QSaveFile rcheevosFile(dir + "/rcheevos.state");
+      rcheevosFile.open(QIODeviceBase::WriteOnly);
+      rcheevosFile.write(QByteArray::fromRawData(
+          reinterpret_cast<const char *>(suspendPoint.retroachievementsState.data()),
+          suspendPoint.retroachievementsState.size()));
 
-      std::ofstream rcheevosStream(tempRcheevosFile, std::ios::binary);
-      rcheevosStream.write(reinterpret_cast<const char *>(suspendPoint.retroachievementsState.data()),
-                           suspendPoint.retroachievementsState.size());
-      rcheevosStream.close();
-
-      std::filesystem::rename(tempRcheevosFile, rcheevosFile);
+      if (!rcheevosFile.commit()) {
+        spdlog::error("Could not write rcheevos state to disk");
+        return;
+      }
     }
 
     auto metadata = m_userdataDatabase.
@@ -311,37 +320,32 @@ namespace firelight::saves {
 
     // TODO: metadata
 
-    auto path = m_saveDir / contentHash.toStdString() / ("slot" + std::to_string(saveSlotNumber)) / "suspendpoints" / (
-                  "slot" + std::to_string(slotNumber));
+    auto dir = QString("%1/%2/slot%3/suspendpoints/slot%4")
+               .arg(m_saveDirectory, contentHash)
+               .arg(saveSlotNumber)
+               .arg(slotNumber);
 
-    if (!exists(path)) {
+    if (!QDir(dir).exists() && !QDir().mkpath(dir)) {
+      return {};
+    }
+
+    QFile stateFile(dir + "/suspendpoint.state");
+    if (!stateFile.open(QIODeviceBase::ReadOnly)) {
       return std::nullopt;
     }
 
-    auto stateFile = path / "suspendpoint.state";
-    if (!exists(stateFile)) {
-      return std::nullopt;
-    }
-
-    std::ifstream saveFileStream(stateFile, std::ios::binary);
-
-    auto size = file_size(stateFile);
-
-    std::vector<uint8_t> data(size);
-
-    saveFileStream.read(reinterpret_cast<char *>(data.data()), size);
-    saveFileStream.close();
-
-    auto fileContents = std::vector(data.data(), data.data() + size);
+    std::vector<uint8_t> data(stateFile.size());
+    stateFile.read(reinterpret_cast<char *>(data.data()), stateFile.size());
+    stateFile.close();
 
     QImage image;
-    if (exists(path / "screenshot.png")) {
-      image.load(QString::fromStdString((path / "screenshot.png").string()));
+    if (QDir(dir + "/screenshot.png").exists()) {
+      image.load(dir + "/screenshot.png");
     }
 
     std::vector<uint8_t> rcheevosData;
-    if (auto rcheevosFile = path / "rcheevos.state"; exists(rcheevosFile)) {
-      QFile file(QString::fromStdString(rcheevosFile.string()));
+    if (auto rcheevosFile = dir + "/rcheevos.state"; QDir(rcheevosFile).exists()) {
+      QFile file(rcheevosFile);
       file.open(QIODeviceBase::ReadOnly);
       auto bytes = file.readAll();
       rcheevosData = std::vector<uint8_t>(bytes.begin(), bytes.end());
@@ -359,7 +363,7 @@ namespace firelight::saves {
     }
 
     return SuspendPoint{
-      .state = fileContents,
+      .state = data,
       .retroachievementsState = rcheevosData,
       .timestamp = created,
       .image = image,
@@ -370,10 +374,12 @@ namespace firelight::saves {
   void SaveManager::deleteSuspendPointFromDisk(const QString &contentHash, int saveSlotNumber, int index) {
     auto slotNumber = index + 1;
 
-    auto path = m_saveDir / contentHash.toStdString() / ("slot" + std::to_string(saveSlotNumber)) / "suspendpoints" / (
-                  "slot" + std::to_string(slotNumber));
+    auto dir = QString("%1/%2/slot%3/suspendpoints/slot%4")
+               .arg(m_saveDirectory, contentHash)
+               .arg(saveSlotNumber)
+               .arg(slotNumber);
 
-    if (!exists(path)) {
+    if (!QDir(dir).exists()) {
       return;
     }
 
@@ -385,20 +391,19 @@ namespace firelight::saves {
     // TODO: Delete metadata
     printf("Deleting suspend point from disk\n");
 
-    std::error_code errorCode;
-    std::filesystem::remove(path / "suspendpoint.state", errorCode);
-    if (errorCode.value()) {
-      printf("ERROR CODE VALUE: %d, description: %s\n", errorCode.value(), errorCode.message().c_str());
+    QFile stateFile(dir + "/suspendpoint.state");
+    if (stateFile.exists()) {
+      stateFile.remove();
     }
 
-    std::filesystem::remove(path / "screenshot.png", errorCode);
-    if (errorCode.value()) {
-      printf("ERROR CODE VALUE: %d, description: %s\n", errorCode.value(), errorCode.message().c_str());
+    QFile imageFile(dir + "/screenshot.png");
+    if (imageFile.exists()) {
+      imageFile.remove();
     }
 
-    std::filesystem::remove(path / "rcheevos.state", errorCode);
-    if (errorCode.value()) {
-      printf("ERROR CODE VALUE: %d, description: %s\n", errorCode.value(), errorCode.message().c_str());
+    QFile rcheevosFile(dir + "/rcheevos.state");
+    if (rcheevosFile.exists()) {
+      rcheevosFile.remove();
     }
   }
 } // namespace firelight::saves
