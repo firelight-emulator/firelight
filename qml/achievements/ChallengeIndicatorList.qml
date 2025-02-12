@@ -13,11 +13,14 @@ ListView {
     layoutDirection: Qt.RightToLeft
     orientation: ListView.Horizontal
 
+    implicitWidth: root.model.count * 32 + (root.model.count - 1) * root.spacing
+    implicitHeight: 32
+
     Connections {
         target: achievement_manager
 
         function onShowChallengeIndicator(id, imageUrl, name, description) {
-            challengeIndicators.model.append({
+            root.model.append({
                 "achievementId": id,
                 "imageUrl": imageUrl,
                 "title": name,
@@ -26,9 +29,9 @@ ListView {
         }
 
         function onHideChallengeIndicator(id) {
-            for (let i = 0; i < challengeIndicators.model.count; i++) {
-                if (challengeIndicators.model.get(i).achievementId === id) {
-                    challengeIndicators.model.remove(i)
+            for (let i = 0; i < root.model.count; i++) {
+                if (root.model.get(i).achievementId === id) {
+                    root.model.remove(i)
                     break
                 }
             }

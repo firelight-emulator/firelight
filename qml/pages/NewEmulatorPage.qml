@@ -109,6 +109,28 @@ FocusScope {
         }
     }
 
+    AchievementProgressIndicator {
+        id: achievementProgressIndicator
+
+        Connections {
+            target: achievement_manager
+
+            function onAchievementProgressUpdated(imageUrl, id, name, description, current, desired) {
+                if (achievement_manager.progressNotificationsEnabled) {
+                    achievementProgressIndicator.openWith(imageUrl, name, description, current, desired)
+                }
+            }
+        }
+    }
+
+    ChallengeIndicatorList {
+        id: challengeIndicators
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 12
+        anchors.rightMargin: 12
+    }
+
     // FrameAnimation {
     //     id: frameAnimation
     //     running: true
