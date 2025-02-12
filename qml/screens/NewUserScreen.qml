@@ -241,19 +241,6 @@ FocusScope {
                     onValueChanged: function () {
                         UserLibrary.mainGameDirectory = value
                     }
-
-                    // Component.onCompleted: {
-                    //     // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
-                    //     emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed")
-                    // }
-                    //
-                    // onCheckedChanged: function () {
-                    //     if (checked) {
-                    //         emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "enabled")
-                    //     } else {
-                    //         emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "disabled")
-                    //     }
-                    // }
                 }
                 DirectoryOption {
                     id: saveDirectoryOption
@@ -267,19 +254,6 @@ FocusScope {
                     onValueChanged: function () {
                         SaveManager.saveDirectory = value
                     }
-
-                    // Component.onCompleted: {
-                    //     // checked = emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed") === "enabled"
-                    //     emulator_config_manager.getOptionValueForPlatform(1, "snes9x_up_down_allowed")
-                    // }
-                    //
-                    // onCheckedChanged: function () {
-                    //     if (checked) {
-                    //         emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "enabled")
-                    //     } else {
-                    //         emulator_config_manager.setOptionValueForPlatform(1, "snes9x_up_down_allowed", "disabled")
-                    //     }
-                    // }
                 }
                 Item {
                     Layout.fillWidth: true

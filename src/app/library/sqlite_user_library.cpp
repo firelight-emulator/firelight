@@ -7,7 +7,10 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::library {
-    SqliteUserLibrary::SqliteUserLibrary(QString path) : m_databasePath(std::move(path)) {
+    SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory) : m_mainGameDirectory(std::move(mainGameDirectory)), m_databasePath(std::move(path)) {
+        m_settings.beginGroup("Library");
+        m_mainGameDirectory = m_settings.value("MainGameDirectory", m_mainGameDirectory).toString();
+
         QSqlQuery createRomFilesTable(getDatabase());
         createRomFilesTable.prepare("CREATE TABLE IF NOT EXISTS rom_files("
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -87,6 +90,7 @@ namespace firelight::library {
     }
 
     SqliteUserLibrary::~SqliteUserLibrary() {
+        m_settings.setValue("MainGameDirectory", m_mainGameDirectory);
         for (const auto &name: QSqlDatabase::connectionNames()) {
             if (name.startsWith(DATABASE_PREFIX)) {
                 QSqlDatabase::removeDatabase(name);
@@ -95,14 +99,22 @@ namespace firelight::library {
     }
 
     void SqliteUserLibrary::setMainGameDirectory(const QString &directory) {
-        m_mainGameDirectory = directory;
+        auto temp = directory;
 
-        if (m_mainGameDirectory.startsWith("file://")) {
-            m_mainGameDirectory = m_mainGameDirectory.remove(0, 7);
+        if (temp.startsWith("file://")) {
+            temp = temp.remove(0, 7);
         }
-        if (m_mainGameDirectory.startsWith("/")) {
-            m_mainGameDirectory = m_mainGameDirectory.remove(0, 1);
+        if (temp.startsWith("/")) {
+            temp = temp.remove(0, 1);
         }
+
+        if (temp == m_mainGameDirectory) {
+            return;
+        }
+
+        m_mainGameDirectory = temp;
+        m_settings.setValue("MainGameDirectory", m_mainGameDirectory);
+        emit mainGameDirectoryChanged(m_mainGameDirectory);
     }
 
     QString SqliteUserLibrary::getMainGameDirectory() {
@@ -379,6 +391,9 @@ namespace firelight::library {
         }
 
         std::vector<WatchedDirectory> directories;
+        directories.emplace_back(WatchedDirectory {
+          .path = m_mainGameDirectory
+        });
 
         while (query.next()) {
             directories.emplace_back(WatchedDirectory{

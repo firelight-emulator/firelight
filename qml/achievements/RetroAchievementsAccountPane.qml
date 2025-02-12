@@ -194,7 +194,9 @@ FocusScope {
                                 verticalAlignment: Text.AlignVCenter
 
                                 onAccepted: {
-                                    submitButton.clicked()
+                                    if (submitButton.enabled) {
+                                        submitButton.clicked()
+                                    }
                                 }
                             }
                         }
@@ -239,7 +241,9 @@ FocusScope {
                                 verticalAlignment: Text.AlignVCenter
 
                                 onAccepted: {
-                                    submitButton.clicked()
+                                    if (submitButton.enabled) {
+                                        submitButton.clicked()
+                                    }
                                 }
                             }
                         }
@@ -257,6 +261,31 @@ FocusScope {
                             achievement_manager.logInUserWithPassword(usernameTextInput.text, passwordTextInput.text)
                             submitButton.focus = false
                             root.focus = false
+                        }
+                    }
+
+                    FirelightDialog {
+                        id: loginErrorDialog
+                        text: "Hey there buddy"
+                        showCancel: false
+
+                        Connections {
+                            target: achievement_manager
+
+                            function onLoginFailedWithInvalidCredentials() {
+                                loginErrorDialog.text = "Invalid credentials"
+                                loginErrorDialog.open()
+                            }
+
+                            function onLoginFailedWithAccessDenied() {
+                                loginErrorDialog.text = "There's an issue with your RetroAchievements account"
+                                loginErrorDialog.open()
+                            }
+
+                            function onLoginFailedWithInternalError() {
+                                loginErrorDialog.text = "There was an issue connecting to RetroAchievements; please try again in a few minutes"
+                                loginErrorDialog.open()
+                            }
                         }
                     }
 

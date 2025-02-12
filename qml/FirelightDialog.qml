@@ -12,6 +12,7 @@ Dialog {
     property string text
     property bool showButtons: true
     property bool centerButtons: true
+    property bool showCancel: true
 
     property string acceptText: "Yes"
     property string rejectText: "Cancel"
@@ -81,7 +82,8 @@ Dialog {
 
             FirelightButton {
                 id: cancelButton
-                focus: true
+                visible: control.showCancel
+                focus: control.showCancel
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 
                 KeyNavigation.right: acceptButton
@@ -93,6 +95,7 @@ Dialog {
             FirelightButton {
                 id: acceptButton
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                focus: !control.showCancel
                 label: control.acceptText
                 onClicked: function() {
                     if (control.doOnAccepted) {

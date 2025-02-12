@@ -455,6 +455,7 @@ ApplicationWindow {
         id: newUserFlow
         NewUserScreen {
             onDoneButtonPressed: function () {
+                GeneralSettings.showNewUserFlow = false
                 screenStack.replaceCurrentItem(homeScreen, {}, StackView.PushTransition)
             }
         }
@@ -464,7 +465,7 @@ ApplicationWindow {
         id: screenStack
         anchors.fill: parent
         focus: true
-        initialItem: newUserFlow
+        initialItem: GeneralSettings.showNewUserFlow ? newUserFlow : homeScreen
 
         Keys.onRightPressed: function(event) {
             highlightBounceAnimationRight.running = true

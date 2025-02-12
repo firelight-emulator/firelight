@@ -1,18 +1,19 @@
 #pragma once
 #include <QSqlDatabase>
 #include <QString>
-#include <firelight/library/user_library.hpp>
 #include <firelight/library/rom_file.hpp>
+#include <firelight/library/user_library.hpp>
+#include <qsettings.h>
 
 namespace firelight::library {
-    class SqliteUserLibrary : public QObject, public IUserLibrary {
+    class SqliteUserLibrary final : public QObject, public IUserLibrary {
         Q_OBJECT
         Q_PROPERTY(
             QString mainGameDirectory READ getMainGameDirectory WRITE setMainGameDirectory NOTIFY
             mainGameDirectoryChanged)
 
     public:
-        explicit SqliteUserLibrary(QString path);
+        explicit SqliteUserLibrary(QString path, QString mainGameDirectory);
 
         ~SqliteUserLibrary() override;
 
@@ -54,6 +55,8 @@ namespace firelight::library {
         static constexpr auto DATABASE_PREFIX = "userlibrary_";
 
         QString m_mainGameDirectory;
+
+        QSettings m_settings;
 
         [[nodiscard]] QSqlDatabase getDatabase() const;
 

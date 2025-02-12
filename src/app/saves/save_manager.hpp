@@ -27,6 +27,8 @@ namespace firelight::saves {
                     db::IUserdataDatabase &userdataDatabase,
                     gui::GameImageProvider &gameImageProvider);
 
+        ~SaveManager() override;
+
         QFuture<bool> writeSaveData(const QString &contentHash, int saveSlotNumber,
                                     const Savefile &saveData);
 

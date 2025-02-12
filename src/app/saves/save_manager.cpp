@@ -11,19 +11,24 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::saves {
-  SaveManager::SaveManager(const QString& defaultSaveDir,
-                           db::ILibraryDatabase &libraryDatabase,
-                           db::IUserdataDatabase &userdataDatabase,
-                           gui::GameImageProvider &gameImageProvider)
-    : m_libraryDatabase(libraryDatabase), m_userdataDatabase(userdataDatabase), m_gameImageProvider(gameImageProvider) {
-    m_ioThreadPool = std::make_unique<QThreadPool>();
-    m_ioThreadPool->setMaxThreadCount(1);
+  SaveManager::SaveManager(const QString &defaultSaveDir,
+                         db::ILibraryDatabase &libraryDatabase,
+                         db::IUserdataDatabase &userdataDatabase,
+                         gui::GameImageProvider &gameImageProvider)
+    : m_libraryDatabase(libraryDatabase), m_userdataDatabase(userdataDatabase),
+      m_gameImageProvider(gameImageProvider) {
+  m_ioThreadPool = std::make_unique<QThreadPool>();
+  m_ioThreadPool->setMaxThreadCount(1);
 
-    m_settings.beginGroup("Saves");
-    m_saveDirectory = m_settings.value("SaveDirectory", defaultSaveDir).toString();
-  }
+  m_settings.beginGroup("Saves");
+  m_saveDirectory =
+      m_settings.value("SaveDirectory", defaultSaveDir).toString();
+}
+SaveManager::~SaveManager() {
+  m_settings.setValue("SaveDirectory", m_saveDirectory);
+}
 
-  QFuture<bool> SaveManager::writeSaveData(const QString &contentHash, int saveSlotNumber, const Savefile &saveData) {
+QFuture<bool> SaveManager::writeSaveData(const QString &contentHash, int saveSlotNumber, const Savefile &saveData) {
     return QtConcurrent::run([this, contentHash, saveSlotNumber, saveData] {
       // TODO: Add some verification that the metadata is correct
       // TODO: Save file could have been deleted, etc
@@ -145,21 +150,22 @@ namespace firelight::saves {
   QString SaveManager::getSaveDirectory() const { return m_saveDirectory; }
 
   void SaveManager::setSaveDirectory(const QString &saveDirectory) {
+    auto temp = saveDirectory;
+
+    if (temp.startsWith("file://")) {
+      temp = temp.remove(0, 7);
+    }
+    if (temp.startsWith("/")) {
+      temp = temp.remove(0, 1);
+    }
+
     if (saveDirectory == m_saveDirectory) {
       return;
     }
 
-    m_saveDirectory = saveDirectory;
-    emit saveDirectoryChanged(m_saveDirectory);
-
-    if (m_saveDirectory.startsWith("file://")) {
-      m_saveDirectory = m_saveDirectory.remove(0, 7);
-    }
-    if (m_saveDirectory.startsWith("/")) {
-      m_saveDirectory = m_saveDirectory.remove(0, 1);
-    }
-
+    m_saveDirectory = temp;
     m_settings.setValue("SaveDirectory", m_saveDirectory);
+    emit saveDirectoryChanged(m_saveDirectory);
   }
 
   QAbstractListModel *SaveManager::getSuspendPointListModel(const QString &contentHash, int saveSlotNumber) {

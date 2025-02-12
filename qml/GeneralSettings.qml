@@ -4,7 +4,8 @@ import QtQuick
 pragma Singleton
 
 Settings {
-    category: "general"
+    category: "Application"
 
     property bool fullscreen: false
+    property bool showNewUserFlow: true
 }

@@ -91,8 +91,9 @@ int main(int argc, char *argv[]) {
   });
 
   auto defaultUserPathString = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-  auto docsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation).append("/Firelight");
-  auto savesPath = docsPath.append("/saves");
+  auto docsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/Firelight";
+  auto savesPath = docsPath + "/saves";
+  auto romsPath = docsPath + "/roms";
   auto defaultUserPath = std::filesystem::path(defaultUserPathString.toStdString()) / "Firelight";
 
   auto defaultAppDataPathString = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -158,8 +159,7 @@ int main(int argc, char *argv[]) {
   firelight::saves::SaveManager saveManager(savesPath, libraryDatabase, userdata_database, *gameImageProvider);
   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
-  firelight::library::SqliteUserLibrary
-      userLibrary(QString::fromStdString(defaultAppDataPath.string() + "/library.db"));
+  firelight::library::SqliteUserLibrary userLibrary(defaultAppDataPathString + "/library.db", romsPath);
 
   if (userLibrary.getWatchedDirectories().empty()) {
     firelight::library::WatchedDirectory dir{
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
                    });
 
   firelight::library::LibraryScanner2 libScanner2(userLibrary);
-  // libScanner2.scanAll();
+  libScanner2.scanAll();
 
   firelight::achievements::RetroAchievementsCache raCache(defaultAppDataPathString + "/rcheevos.db");
   firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(raCache);
