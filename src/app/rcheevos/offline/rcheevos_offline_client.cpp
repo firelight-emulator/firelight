@@ -124,88 +124,142 @@ namespace firelight::achievements {
 
       // For each user... get all unsynced achievements. If they have any, try logging in and syncing them
       // If we can't log in we need to prompt the user to re-login.
-      auto unsynced = m_cache.getUnsyncedAchievements("BiscuitCakes");
 
       const auto headers =
           cpr::Header{{"User-Agent", OFFLINE_USER_AGENT},
                       {"Content-Type", "application/x-www-form-urlencoded"}};
 
-      for (auto &achieve : unsynced) {
-
-        auto timestamp = achieve.When;
-        auto hardcore = false;
-
-        if (achieve.EarnedHardcore) {
-          if (std::ranges::find_if(
-                  m_currentSessionAchievements, [&achieve](const CachedAchievement &current) {
-              return current.ID == achieve.ID;
-            }) == m_currentSessionAchievements.end()) {
-              spdlog::info("Achievement earned offline in hardcore mode is not in current session; demoting to casual");
-              achieve.EarnedHardcore = false;
-              achieve.Earned = true;
-              achieve.When = achieve.WhenHardcore;
-              achieve.WhenHardcore = 0;
-
-              timestamp = achieve.When;
-            } else {
-              hardcore = true;
-              timestamp = achieve.WhenHardcore;
-            }
+      for (const auto &user : m_cache.getUsers()) {
+        auto unsynced = m_cache.getUnsyncedAchievements(user.username);
+        if (unsynced.empty()) {
+          continue;
         }
 
-        spdlog::info("Syncing achievement with ID {} for user {}", achieve.ID,
-                     "BiscuitCakes");
-
-        auto secondsSinceUnlock =
-            QDateTime::currentSecsSinceEpoch() - timestamp;
-
-        auto hashContent = std::to_string(achieve.ID) + "BiscuitCakes" +
-                           std::to_string(hardcore ? 1 : 0) +
-                           std::to_string(achieve.ID) +
-                           std::to_string(secondsSinceUnlock);
-        hashContent =
-            QCryptographicHash::hash(hashContent, QCryptographicHash::Md5)
-                .toHex()
-                .toStdString();
-        auto gameHash = m_cache.getHashFromGameId(achieve.GameID);
-
-        if (!gameHash.has_value()) {
-          spdlog::warn("No game hash found for game ID: {}", achieve.GameID);
-          break;
-        }
-
-        auto postBody =
-            "r=awardachievement&u=BiscuitCakes&t=Vfz0ZqplDSovVGY7&a=" +
-            std::to_string(achieve.ID) + "&h=" + std::to_string(hardcore ? 1 : 0) + "&m=" + gameHash.value() +
-            "&o=" + std::to_string(secondsSinceUnlock) + "&v=" + hashContent;
-        spdlog::info("post body: {}", postBody);
+        // Try logging in for current user
+        auto postBody = "r=login2&u=" + user.username + "&t=" + user.token;
 
         const auto response =
             Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{postBody});
 
-        rc_api_server_response_t rcResponse;
-        rcResponse.http_status_code = response.status_code;
-
-        spdlog::info("response status code: {}", response.status_code);
-        spdlog::info("response: {}", response.text);
-
-        // Check "Success" field, if it's false then check error message
-        // If error message contains "already has" then proceed as normal
-        // Otherwise, log error message? retry later? idk
-
-        // If it's true then we just proceed
         if (response.error) {
-          // If we get a bad response, TODO????
-          // If we get a network error, TODO????
-          // If we get a server error, TODO????
+          spdlog::warn("Failed to log in user: {} ({})", user.username, response.error.message);
+          continue;
         }
+
+        auto json = nlohmann::json::parse(response.text);
+        if (json.contains("Success") && json["Success"].is_boolean() && json["Success"].get<bool>()) {
+          spdlog::info("Logged in for user {}", user.username);
+        } else {
+          spdlog::error("Login was not successful for user {}", user.username);
+          continue;
+        }
+
+        // Logged in successfully
+
+        int lastScore = m_cache.getUserScore(user.username, false);
+        int lastHardcoreScore = m_cache.getUserScore(user.username, true);
+
+        for (auto &achieve : unsynced) {
+          auto timestamp = achieve.When;
+          auto hardcore = false;
+
+          auto unmarkHardcoreUnlock = false;
+
+          // Stop those dang cheaters that manually modified the database
+          if (achieve.EarnedHardcore) {
+            if (std::ranges::find_if(
+                    m_currentSessionAchievements, [&achieve](const CachedAchievement &current) {
+                return current.ID == achieve.ID;
+              }) == m_currentSessionAchievements.end()) {
+                spdlog::info("Achievement earned offline in hardcore mode is not in current session; demoting to casual");
+                achieve.EarnedHardcore = false;
+                achieve.Earned = true;
+                achieve.When = achieve.WhenHardcore;
+                achieve.WhenHardcore = 0;
+
+                timestamp = achieve.When;
+                unmarkHardcoreUnlock = true;
+              } else {
+                hardcore = true;
+                timestamp = achieve.WhenHardcore;
+              }
+          }
+
+          spdlog::info("Syncing achievement with ID {} for user {}", achieve.ID,
+                       user.username);
+
+          auto secondsSinceUnlock =
+              QDateTime::currentSecsSinceEpoch() - timestamp;
+
+          auto hashContent = std::to_string(achieve.ID) + user.username +
+                             std::to_string(hardcore ? 1 : 0) +
+                             std::to_string(achieve.ID) +
+                             std::to_string(secondsSinceUnlock);
+          hashContent =
+              QCryptographicHash::hash(hashContent, QCryptographicHash::Md5)
+                  .toHex()
+                  .toStdString();
+          auto gameHash = m_cache.getHashFromGameId(achieve.GameID);
+
+          if (!gameHash.has_value()) {
+            spdlog::warn("No game hash found for game ID: {}", achieve.GameID);
+            break;
+          }
+
+          auto postBody =
+              "r=awardachievement&u=" + user.username + "&t=" + user.token + "&a=" +
+              std::to_string(achieve.ID) + "&h=" + std::to_string(hardcore ? 1 : 0) + "&m=" + gameHash.value() +
+              "&o=" + std::to_string(secondsSinceUnlock) + "&v=" + hashContent;
+
+          const auto response =
+              Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{postBody});
+
+          if (response.error) {
+            spdlog::warn("Failed to award achievement; will try later: {}", response.error.message);
+            continue;
+          }
+
+          auto json = nlohmann::json::parse(response.text);
+
+          if (!json.contains("Success") || !json["Success"].is_boolean() || !json["Success"].get<bool>()) {
+            if (json.contains("Error") && json["Error"].is_string()) {
+              auto errorString = json["Error"].get<std::string>();
+              if (errorString.find("already has") == std::string::npos) {
+                spdlog::warn("Got error: {}", errorString);
+                continue;
+              } else {
+                spdlog::info("Server already knows user {} has achievement {}", user.username, achieve.ID);
+              }
+            } else {
+              spdlog::error("Unsuccessful response did not contain Error flag...");
+              continue;
+            }
+          }
+
+          if (json.contains("Score") && json["Score"].is_number()) {
+            lastHardcoreScore = json["Score"];
+          }
+
+          if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
+            lastScore = json["SoftcoreScore"];
+          }
+
+          if (unmarkHardcoreUnlock) {
+            if (!m_cache.markAchievementLocked(user.username, achieve.ID, true)) {
+              spdlog::warn("Failed to unmark hardcore unlock for achievement: {}", achieve.ID);
+            }
+          }
+
+          if (!m_cache.markAchievementUnlocked(user.username, achieve.ID, hardcore, timestamp)) {
+            spdlog::warn("Failed to mark achievement synced: {}", achieve.ID);
+          }
+        }
+
+        m_cache.setUserScore(user.username, lastScore, false);
+        m_cache.setUserScore(user.username, lastHardcoreScore, true);
       }
-
-      // TODO: Make sure the points and everything are correct
-
-      // TODO: How to handle if token is not correct? Maybe try logging in again
-      // TODO: Have to coordinate with being logged in
     }
+
     void RetroAchievementsOfflineClient::clearSessionAchievements() {
       m_inHardcoreSession = false;
       m_currentSessionAchievements.clear();
@@ -253,7 +307,7 @@ namespace firelight::achievements {
     rc_api_server_response_t RetroAchievementsOfflineClient::handleStartSessionRequest(
         const std::string &username, const int gameId, bool hardcore) const {
 
-        // Simulate some latency
+        // Simulate some latency...
         std::this_thread::sleep_for(std::chrono::milliseconds(300));
         const auto duration = std::chrono::system_clock::now().time_since_epoch();
         const auto epochMillis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
@@ -376,8 +430,6 @@ namespace firelight::achievements {
         return;
       }
 
-
-
       if (json.contains("Score") && json["Score"].is_number()) {
           m_cache.setUserScore(username, json["Score"], true);
       }
@@ -474,7 +526,11 @@ namespace firelight::achievements {
         }
 
         if (json.contains("AchievementID") && json["AchievementID"].is_number()) {
-            m_cache.markAchievementUnlocked(username, json["AchievementID"], hardcore, epochSeconds);
+          if (auto id = json["AchievementID"]; id != UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID) {
+              if (!m_cache.markAchievementUnlocked(username, id, hardcore, epochSeconds)) {
+                spdlog::warn("Failed to mark achievement unlocked: {}", static_cast<int>(id));
+              }
+            }
         }
     }
 }

@@ -17,6 +17,7 @@
 #include "../../../libs/rcheevos/include/rc_api_runtime.h"
 #include "achievement_list_model.hpp"
 #include "achievement_list_sort_filter_model.hpp"
+#include "ra_constants.h"
 
 namespace firelight::achievements {
   static ::libretro::Core *theCore;
@@ -26,6 +27,12 @@ namespace firelight::achievements {
 
     switch (event->type) {
       case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED: {
+        if (event->achievement->id == UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID) {
+          spdlog::warn("Got warning about unsupported emulator");
+          // TODO: Show user a message or something.
+          break;
+        }
+
         char urlBuffer[256];
 
         auto success = rc_client_achievement_get_image_url(

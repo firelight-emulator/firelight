@@ -8,6 +8,7 @@
 #include "../login2_response.hpp"
 #include "../patch_response.hpp"
 #include "../startsession_response.hpp"
+#include "../user.h"
 #include "earned_achievement.hpp"
 
 namespace firelight::achievements {
@@ -31,11 +32,15 @@ namespace firelight::achievements {
 
         bool markAchievementLocked(const std::string &username, int achievementId, bool hardcore) const;
 
+        bool markAchievementSynced(const std::string &username, int achievementId, bool hardcore);
+
         std::vector<CachedAchievement> getUserAchievements(const std::string &username, int gameId) const;
 
         std::vector<CachedAchievement> getUnsyncedAchievements(const std::string &username) const;
 
         std::optional<std::string> getHashFromGameId(int gameId) const;
+
+        std::vector<User> getUsers() const;
 
         bool addUser(const std::string &username, const std::string &token) const;
 

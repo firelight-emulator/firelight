@@ -426,7 +426,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
             case WriteSuspendPoint: {
                 SuspendPoint suspendPoint;
                 suspendPoint.state = m_core->serializeState();
-                // suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
+                suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
                 suspendPoint.image = m_currentImage;
                 suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
                 suspendPoint.saveSlotNumber = m_saveSlotNumber;
@@ -440,6 +440,9 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
                                                                       command.suspendPointIndex);
                 if (point.has_value()) {
                     m_core->deserializeState(point->state);
+                    if (!point->retroachievementsState.empty()) {
+                      getAchievementManager()->deserializeState(point->retroachievementsState);
+                    }
                     if (m_paused) {
                         m_overlayImage = point->image;
                         m_overlayImage.mirror();

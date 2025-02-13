@@ -284,14 +284,16 @@ namespace firelight::achievements {
 
       return true;
     }
-    bool RetroAchievementsCache::markAchievementLocked(
-        const std::string &username, const int achievementId, const bool hardcore) const {
+    bool
+    RetroAchievementsCache::markAchievementLocked(const std::string &username,
+                                                  const int achievementId,
+                                                  const bool hardcore) const {
       QSqlQuery query(getDatabase());
       if (hardcore) {
-        query.prepare(
-            "UPDATE user_unlocks SET earned_hardcore = 0, when_hardcore = NULL, "
-            "synced_hardcore = 1 WHERE username == :username AND "
-            "achievement_id == :achievementId");
+        query.prepare("UPDATE user_unlocks SET earned_hardcore = 0, "
+                      "when_hardcore = NULL, "
+                      "synced_hardcore = 1 WHERE username == :username AND "
+                      "achievement_id == :achievementId");
       } else {
         query.prepare("UPDATE user_unlocks SET earned = 0, \"when\" = NULL, "
                       "synced = 1 WHERE username == :username AND "
@@ -303,6 +305,27 @@ namespace firelight::achievements {
 
       if (!query.exec()) {
         spdlog::error("Failed to mark achievement locked: {}",
+                      query.lastError().text().toStdString());
+        return false;
+      }
+
+      return true;
+    }
+    bool
+    RetroAchievementsCache::markAchievementSynced(const std::string &username,
+                                                  const int achievementId, bool hardcore) {
+      QSqlQuery query(getDatabase());
+      if (hardcore) {
+        query.prepare("UPDATE user_unlocks SET synced_hardcore = 1 WHERE username == :username AND achievement_id == :achievementId");
+      } else {
+        query.prepare("UPDATE user_unlocks SET synced = 1 WHERE username == :username AND achievement_id == :achievementId");
+      }
+
+      query.bindValue(":username", QString::fromStdString(username));
+      query.bindValue(":achievementId", achievementId);
+
+      if (!query.exec()) {
+        spdlog::error("Failed to mark achievement synced: {}",
                       query.lastError().text().toStdString());
         return false;
       }
@@ -380,10 +403,11 @@ namespace firelight::achievements {
 
       return achievements;
     }
-    std::optional<std::string> RetroAchievementsCache::getHashFromGameId(int gameId) const {
+    std::optional<std::string>
+    RetroAchievementsCache::getHashFromGameId(int gameId) const {
       QSqlQuery query(getDatabase());
-      query.prepare(
-          "SELECT hash FROM hashes WHERE achievement_set_id == :achievementSetId");
+      query.prepare("SELECT hash FROM hashes WHERE achievement_set_id == "
+                    ":achievementSetId");
 
       query.bindValue(":achievementSetId", gameId);
 
@@ -398,6 +422,28 @@ namespace firelight::achievements {
       }
 
       return {query.value(0).toString().toStdString()};
+    }
+    std::vector<User> RetroAchievementsCache::getUsers() const {
+      QSqlQuery query(getDatabase());
+      query.prepare("SELECT * FROM users");
+
+      if (!query.exec()) {
+        spdlog::error("Failed to get users: {}",
+                      query.lastError().text().toStdString());
+        return {};
+      }
+
+      std::vector<User> users;
+        while (query.next()) {
+          users.emplace_back(User{
+                .username = query.value(0).toString().toStdString(),
+                .token = query.value(1).toString().toStdString(),
+                .points = query.value(2).toInt(),
+                .hardcore_points = query.value(3).toInt(),
+          });
+        }
+
+      return users;
     }
 
     bool RetroAchievementsCache::addUser(const std::string &username, const std::string &token) const {

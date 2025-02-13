@@ -164,7 +164,8 @@ target_link_libraries(firelight_lib PUBLIC
         cpr::cpr
         library
         patching
-        rcheevos)
+        rcheevos
+        discord)
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/app_resources.rc")
 

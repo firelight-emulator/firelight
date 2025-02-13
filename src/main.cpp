@@ -12,6 +12,7 @@
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
+#include <discord/discord.h>
 #include "app/input/sqlite_controller_repository.hpp"
 #include "app/rcheevos/ra_client.hpp"
 #include "app/db/sqlite_content_database.hpp"
@@ -65,7 +66,8 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
-  // discord::Core* core = discord::Core::Create(0, 0, core);
+  discord::Core* core{};
+  discord::Core::Create(1208162396921929739, DiscordCreateFlags_Default, &core);
 
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
@@ -295,6 +297,20 @@ int main(int argc, char *argv[]) {
   auto window = qobject_cast<QQuickWindow *>(rootObject);
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
+
+  QObject::connect(window, &QQuickWindow::afterRendering, [&]() {
+    if (core != nullptr) {
+      core->RunCallbacks();
+    }
+  });
+
+  discord::Activity activity{};
+
+  core->ActivityManager().UpdateActivity(activity, [](discord::Result result) {
+    if (result != discord::Result::Ok) {
+      spdlog::error("Failed to update activity: {}", (int)result);
+    }
+  });
 
   window->setIcon(QIcon("system/_img/logo.png"));
 
