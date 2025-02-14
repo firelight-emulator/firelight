@@ -75,6 +75,7 @@ set_source_files_properties(qml/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE T
 set_source_files_properties(qml/ColorPalette.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/NewRouter.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 add_library(firelight_lib

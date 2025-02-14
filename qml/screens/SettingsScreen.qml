@@ -111,7 +111,6 @@ FocusScope {
             }
 
             model: ListModel {
-
                 ListElement {
                     name: "Appearance"
                     section: "appearance"
@@ -430,6 +429,8 @@ FocusScope {
                 function onSectionChanged() {
                     if (root.section === "directories") {
                         rightHalf.replace(directorySettings)
+                    } else if (root.section === "appearance") {
+                        rightHalf.replace(appearanceSettings)
                     } else if (root.section === "notifications") {
                         rightHalf.replace(notificationSettings)
                     } else if (root.section === "achievements") {
@@ -528,6 +529,12 @@ FocusScope {
     //
     //
     // }
+
+    Component {
+        id: appearanceSettings
+        AppearanceSettingsPage {
+        }
+    }
 
     Component {
         id: platformSettings

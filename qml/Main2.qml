@@ -33,6 +33,56 @@ ApplicationWindow {
         height: window.height
         width: window.width
         color: ColorPalette.neutral1000
+        Item {
+            anchors.fill: parent
+            visible: AppearanceSettings.usingCustomBackground && AppearanceSettings.backgroundFile !== ""
+            AnimatedImage {
+                id: customBackground
+                source: AppearanceSettings.backgroundFile
+                fillMode: Image.PreserveAspectCrop
+                anchors.fill: parent
+                playing: true
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                color: "black"
+                opacity: 0.8
+            }
+
+            Rectangle {
+                anchors.topMargin: -70
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 200
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0; color: "black"
+                    }
+                    GradientStop {
+                        position: 1.0; color: "transparent"
+                    }
+                }
+            }
+
+            Rectangle {
+                anchors.bottomMargin: -70
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 200
+                gradient: Gradient {
+                    GradientStop {
+                        position: 1.0; color: "black"
+                    }
+                    GradientStop {
+                        position: 0.0; color: "transparent"
+                    }
+                }
+            }
+
+        }
         // Image {
         //     id: mainBackground
         //     source: "https://cdn2.steamgriddb.com/hero_thumb/2968213e79a3a2d48490ffd189255384.png"
