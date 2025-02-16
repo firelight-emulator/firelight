@@ -22,7 +22,7 @@ FocusScope {
 
             ColumnLayout {
                 Layout.fillWidth: true
-                // visible: achievement_manager.loggedIn
+                visible: achievement_manager.loggedIn
                 spacing: 0
 
                 ToggleOption {
