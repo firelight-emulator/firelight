@@ -17,7 +17,7 @@ protected:
 };
 
 TEST_F(SqliteLibraryDatabaseTest, ConstructorTest) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
 
   ASSERT_TRUE(db.tableExists("library_entries"));
   ASSERT_TRUE(db.tableExists("playlists"));
@@ -25,7 +25,7 @@ TEST_F(SqliteLibraryDatabaseTest, ConstructorTest) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, CreatePlaylistSetsId) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
 
   ASSERT_TRUE(db.createPlaylist(playlist));
@@ -38,7 +38,7 @@ TEST_F(SqliteLibraryDatabaseTest, CreatePlaylistSetsId) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, CreatePlaylistFailsOnDuplicate) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
 
   ASSERT_TRUE(db.createPlaylist(playlist));
@@ -48,7 +48,7 @@ TEST_F(SqliteLibraryDatabaseTest, CreatePlaylistFailsOnDuplicate) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, DeletePlaylist) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
 
   ASSERT_TRUE(db.createPlaylist(playlist));
@@ -58,7 +58,7 @@ TEST_F(SqliteLibraryDatabaseTest, DeletePlaylist) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, RenamePlaylist) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
 
   ASSERT_TRUE(db.createPlaylist(playlist));
@@ -73,14 +73,14 @@ TEST_F(SqliteLibraryDatabaseTest, RenamePlaylist) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, RenamePlaylistWhenDoesntExist) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
 
   ASSERT_TRUE(db.getAllPlaylists().empty());
   ASSERT_FALSE(db.renamePlaylist(1, "New Name"));
 }
 
 TEST_F(SqliteLibraryDatabaseTest, CreateLibraryEntrySetsId) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
                      .contentId = "1234567890",
@@ -97,7 +97,7 @@ TEST_F(SqliteLibraryDatabaseTest, CreateLibraryEntrySetsId) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, CreateLibraryEntryFailsOnDuplicate) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
                      .contentId = "1234567890",
@@ -115,7 +115,7 @@ TEST_F(SqliteLibraryDatabaseTest, CreateLibraryEntryFailsOnDuplicate) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntry) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
                      .contentId = "1234567890",
@@ -145,14 +145,14 @@ TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntry) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, GetLibraryEntryWhenDoesntExist) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
 
   ASSERT_TRUE(db.getAllLibraryEntries().empty());
   ASSERT_FALSE(db.getLibraryEntry(1).has_value());
 }
 
 TEST_F(SqliteLibraryDatabaseTest, AddEntryToPlaylist) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
@@ -170,7 +170,7 @@ TEST_F(SqliteLibraryDatabaseTest, AddEntryToPlaylist) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, AddEntryToPlaylistFailsOnDuplicate) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
@@ -189,7 +189,7 @@ TEST_F(SqliteLibraryDatabaseTest, AddEntryToPlaylistFailsOnDuplicate) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, GetPlaylistsForEntry) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   Playlist playlist{.id = -1, .displayName = "Test Playlist"};
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
@@ -212,14 +212,14 @@ TEST_F(SqliteLibraryDatabaseTest, GetPlaylistsForEntry) {
 }
 
 TEST_F(SqliteLibraryDatabaseTest, GetPlaylistsForEntryWhenDoesntExist) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
 
   ASSERT_TRUE(db.getAllPlaylists().empty());
   ASSERT_TRUE(db.getPlaylistsForEntry(1).empty());
 }
 
 TEST_F(SqliteLibraryDatabaseTest, DeleteLibraryEntry) {
-  SqliteLibraryDatabase db(temp_file_path.string());
+  SqliteLibraryDatabase db(QString::fromStdString(temp_file_path.string()));
   LibraryEntry entry{.id = -1,
                      .displayName = "Test Playlist",
                      .contentId = "1234567890",

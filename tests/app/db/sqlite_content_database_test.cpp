@@ -9,7 +9,7 @@ protected:
 };
 
 TEST_F(SqliteContentDatabaseTest, ConstructorTest) {
-  SqliteContentDatabase db(db_path.string());
+  SqliteContentDatabase db(QString::fromStdString(db_path.string()));
 
   ASSERT_FALSE(db.tableExists("ouipahedslifuhasdf"));
 
