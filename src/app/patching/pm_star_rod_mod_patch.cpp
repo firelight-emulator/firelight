@@ -1,7 +1,3 @@
-//
-// Created by alexs on 11/25/2023.
-//
-
 #include "pm_star_rod_mod_patch.hpp"
 #include <cstring>
 #include <filesystem>

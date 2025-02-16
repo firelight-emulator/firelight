@@ -202,12 +202,13 @@ void EmulatorItem::startGame() {
 
   QThreadPool::globalInstance()->start([this] {
         auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_platformId, m_contentHash);
-        auto m_core = std::make_unique<libretro::Core>(m_platformId, m_corePath.toStdString(), configProvider);
+        auto m_core = std::make_unique<libretro::Core>(m_platformId, m_corePath.toStdString(), configProvider, getCoreSystemDirectory());
 
         m_audioManager = std::make_shared<AudioManager>([this] { emit audioBufferLevelChanged(); });
         m_core->setAudioReceiver(m_audioManager);
         m_core->setRetropadProvider(getControllerManager());
         m_core->setPointerInputProvider(getInputManager());
+        m_core->setSystemDirectory(getCoreSystemDirectory());
 
         // Qt owns the renderer, so it will destoy it.
         m_renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(), std::move(m_core));
@@ -248,7 +249,7 @@ void EmulatorItem::startGame(const QByteArray &gameData, const QByteArray &saveD
 
     QThreadPool::globalInstance()->start([this] {
         auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(m_platformId, m_contentHash);
-        auto m_core = std::make_unique<libretro::Core>(m_platformId, m_corePath.toStdString(), configProvider);
+        auto m_core = std::make_unique<libretro::Core>(m_platformId, m_corePath.toStdString(), configProvider, getCoreSystemDirectory());
 
         m_audioManager = std::make_shared<AudioManager>([this] { emit audioBufferLevelChanged(); });
         m_core->setAudioReceiver(m_audioManager);

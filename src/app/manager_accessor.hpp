@@ -44,6 +44,8 @@ namespace firelight {
 
         static void setControllerRepository(input::IControllerRepository *t_controllerRepository);
 
+        static void setCoreSystemDirectory(const std::string &t_coreSystemDirectory);
+
         static input::ControllerManager *getControllerManager();
 
         static saves::SaveManager *getSaveManager();
@@ -68,6 +70,8 @@ namespace firelight {
 
         static input::IControllerRepository *getControllerRepository();
 
+        static std::string getCoreSystemDirectory();
+
     private:
         static input::ControllerManager *m_controllerManager;
         static saves::SaveManager *m_saveManager;
@@ -81,5 +85,6 @@ namespace firelight {
         static activity::IActivityLog *m_activityLog;
         static input::InputManager *m_inputManager;
         static input::IControllerRepository *m_controllerRepository;
+        static std::string m_coreSystemDirectory;
     };
 } // namespace firelight

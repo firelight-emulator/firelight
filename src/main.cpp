@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
   discord::Core* core{};
-  discord::Core::Create(1208162396921929739, DiscordCreateFlags_Default, &core);
+  // discord::Core::Create(1208162396921929739, DiscordCreateFlags_Default, &core);
 
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
@@ -128,6 +128,11 @@ int main(int argc, char *argv[]) {
   }
 
   QDir baseDir(defaultAppDataPathString);
+  if (!baseDir.mkpath("core-system")) {
+    spdlog::warn("Unable to create core-system directory");
+  }
+
+  firelight::ManagerAccessor::setCoreSystemDirectory((defaultAppDataPathString + "/core-system").toStdString());
 
   firelight::input::SqliteControllerRepository controllerRepository(baseDir.filePath("controllers.db"));
   firelight::input::ControllerManager controllerManager(controllerRepository);
@@ -304,13 +309,14 @@ int main(int argc, char *argv[]) {
     }
   });
 
+  if (core) {
   discord::Activity activity{};
-
-  core->ActivityManager().UpdateActivity(activity, [](discord::Result result) {
-    if (result != discord::Result::Ok) {
-      spdlog::error("Failed to update activity: {}", (int)result);
-    }
-  });
+    core->ActivityManager().UpdateActivity(activity, [](discord::Result result) {
+      if (result != discord::Result::Ok) {
+        spdlog::error("Failed to update activity: {}", (int)result);
+      }
+    });
+  }
 
   window->setIcon(QIcon("qrc:/images/firelight-logo"));
 

@@ -15,6 +15,7 @@ namespace firelight {
   activity::IActivityLog *ManagerAccessor::m_activityLog;
   input::InputManager *ManagerAccessor::m_inputManager;
   input::IControllerRepository *ManagerAccessor::m_controllerRepository;
+  std::string ManagerAccessor::m_coreSystemDirectory;
 
   void ManagerAccessor::setControllerManager(
     input::ControllerManager *t_manager) {
@@ -64,8 +65,13 @@ namespace firelight {
     m_inputManager = t_inputManager;
   }
 
-  void ManagerAccessor::setControllerRepository(input::IControllerRepository *t_controllerRepository) {
+  void ManagerAccessor::setControllerRepository(
+      input::IControllerRepository *t_controllerRepository) {
     m_controllerRepository = t_controllerRepository;
+  }
+  void ManagerAccessor::setCoreSystemDirectory(
+      const std::string &t_coreSystemDirectory) {
+    m_coreSystemDirectory = t_coreSystemDirectory;
   }
 
   input::ControllerManager *ManagerAccessor::getControllerManager() {
@@ -114,4 +120,7 @@ namespace firelight {
   input::IControllerRepository *ManagerAccessor::getControllerRepository() {
     return m_controllerRepository;
   }
-} // namespace firelight
+  std::string ManagerAccessor::getCoreSystemDirectory() {
+    return m_coreSystemDirectory;
+  }
+  } // namespace firelight

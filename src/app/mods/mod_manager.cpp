@@ -1,10 +1,4 @@
-//
-// Created by alexs on 4/7/2024.
-//
-
 #include "mod_manager.hpp"
-
-#include <algorithm>
 
 namespace firelight::mods {
 void ModManager::installLatest(const int modId, const int romId) const {

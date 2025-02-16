@@ -151,13 +151,12 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY");
-        // if (systemDirectory.empty()) {
-        // return false;
-        // }
+        if (systemDirectory.empty()) {
+          return false;
+        }
 
         auto ptr = static_cast<const char **>(data);
-        *ptr = R"(C:\Users\alexs\git\firelight\build\system)";
-        // *ptr = &systemDirectory[0];
+        *ptr = strdup(systemDirectory.c_str());
         return true;
       }
       case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
@@ -446,17 +445,23 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY: {
         environmentCalls.emplace_back(
-          "RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY");
+        "RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY");
+        if (systemDirectory.empty()) {
+          return false;
+        }
+
         auto ptr = static_cast<const char **>(data);
-        *ptr = &coreAssetsDirectory[0];
+        *ptr = strdup(systemDirectory.c_str());
         return true;
       }
       case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY");
+        if (systemDirectory.empty()) {
+          return false;
+        }
+
         auto ptr = static_cast<const char **>(data);
-        // *ptr = R"(C:\Users\alexs\git\firelight\build\system)";
-        *ptr = "./system";
-        // *ptr = &saveDirectory[0]; // TODO
+        *ptr = strdup(systemDirectory.c_str());
         return true;
       }
       case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
@@ -1057,8 +1062,8 @@ namespace libretro {
   }
 
   Core::Core(int platformId, const std::string &libPath,
-             std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider) : m_configurationProvider(
-      std::move(configProvider)), m_platformId(platformId) {
+             std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider, const std::string &systemDirectory) : m_configurationProvider(
+      std::move(configProvider)), m_platformId(platformId), systemDirectory(systemDirectory) {
     coreLib = std::make_unique<QLibrary>(QString::fromStdString(libPath));
 
     // dll = SDL_LoadObject(libPath.c_str());

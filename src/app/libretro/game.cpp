@@ -1,7 +1,3 @@
-//
-// Created by alexs on 10/17/2023.
-//
-
 #include "game.hpp"
 #include <filesystem>
 #include <fstream>
@@ -14,9 +10,6 @@ using std::string;
 namespace libretro {
   Game::Game(const string &filePath, const std::vector<unsigned char> &data) {
     this->path = filePath;
-    // this->path =
-    // R"(/c/Users/alexs/git/firelight/build/roms/6149 - Pokemon - Black Version 2
-    // (U) (frieNDS).nds)";
     this->data = data; // todo
   }
 

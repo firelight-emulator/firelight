@@ -44,7 +44,7 @@ namespace libretro {
     std::basic_string<char> dumpJson();
 
     Core(int platformId, const std::string &libPath,
-         std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider);
+         std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider, const std::string &systemDirectory);
 
     virtual ~Core();
 

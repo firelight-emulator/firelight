@@ -1,7 +1,3 @@
-//
-// Created by alexs on 1/7/2024.
-//
-
 #include "savefile.hpp"
 
 #include <utility>
