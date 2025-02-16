@@ -66,10 +66,6 @@ jobs:
         working-directory: build
         run: cpack -G ZIP
 
-      - name: Build zip
-        working-directory: build
-        run: cpack -G ZIP
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
