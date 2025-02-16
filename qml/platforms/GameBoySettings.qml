@@ -313,7 +313,7 @@ FocusScope {
                         Image {
                             id: colorPreviewImg
                             anchors.fill: parent
-                            source: "file:system/_img/gb-dmg.png"
+                            source: "qrc:images/gbc-previews/gb-dmg"
                             fillMode: Image.PreserveAspectFit
 
                             Connections {
@@ -325,7 +325,7 @@ FocusScope {
                                         / /g,
                                         ""
                                     );
-                                    colorPreviewImg.source = "file:system/_img/" + removedSpacesText + ".png"
+                                    colorPreviewImg.source = "qrc:images/gbc-previews/" + removedSpacesText
                                 }
                             }
                         }

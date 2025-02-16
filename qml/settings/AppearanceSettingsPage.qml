@@ -4,7 +4,10 @@ import QtQuick.Layouts
 import Qt.labs.platform
 
 FocusScope {
+    implicitWidth: col.width
+    implicitHeight: col.height
     ColumnLayout {
+        id: col
         spacing: 8
         anchors.fill: parent
 

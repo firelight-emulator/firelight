@@ -176,7 +176,7 @@ FocusScope {
                 anchors.horizontalCenter: parent.horizontalCenter
                 Image {
                     Layout.topMargin: 24
-                    source: "file:system/_img/logo.png"
+                    source: "qrc:/images/firelight-logo"
                     Layout.preferredWidth: 300
                     Layout.preferredHeight: 300
                     sourceSize.width: 512
@@ -287,10 +287,37 @@ FocusScope {
             contentItem: ColumnLayout {
                 RetroAchievementsAccountPane {
                     id: accountPane
-                    focus: !achievement_manager.loggedIn
-                    KeyNavigation.down: !achievement_manager.loggedIn ? dirNextButton : null
+                    focus: true
+                    KeyNavigation.down: achievement_manager.loggedIn ? hardcoreToggle : dirNextButton
                     Layout.fillWidth: true
                     Layout.fillHeight: false
+                }
+
+                ToggleOption {
+                    id: hardcoreToggle
+                    Layout.fillWidth: true
+                    visible: achievement_manager.loggedIn
+                    KeyNavigation.down: learnMoreButton
+                    label: "Enable hardcore mode"
+                    description: "Playing in hardcore mode disables Suspend Points, Rewind, and other similar features.\n\nLater you'll be able to change this on a per-game basis."
+
+                    checked: achievement_manager.defaultToHardcore
+
+                    onCheckedChanged: {
+                        achievement_manager.defaultToHardcore = checked
+                    }
+                }
+
+                FirelightButton {
+                    id: learnMoreButton
+                    label: "Learn more"
+                    visible: achievement_manager.loggedIn
+                    KeyNavigation.down: dirNextButton
+                    Layout.topMargin: 8
+                    Layout.alignment: Qt.AlignHCenter
+                    onClicked: {
+                        Qt.openUrlExternally("https://docs.retroachievements.org/general/faq.html#what-is-hardcore-mode")
+                    }
                 }
                 Item {
                     Layout.fillHeight: true
@@ -308,7 +335,6 @@ FocusScope {
                         id: dirNextButton
                         label: "Next"
                         KeyNavigation.up: !achievement_manager.loggedIn ? accountPane : null
-                        focus: achievement_manager.loggedIn
                         onClicked: function () {
                             root.currentIndex = 3
                         }

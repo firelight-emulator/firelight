@@ -8,16 +8,14 @@ FocusScope {
 
     signal nextClicked()
 
-    focus: !achievement_manager.loggedIn
-
-    implicitHeight: contentPane.height
-    implicitWidth: contentPane.width
+    implicitHeight: achievement_manager.loggedIn ? loggedInPane.height : contentPane.height
+    implicitWidth: achievement_manager.loggedIn ? loggedInPane.width : contentPane.width
 
     Pane {
         id: loggedInPane
         visible: achievement_manager.loggedIn
         anchors.fill: parent
-        focus: false
+        focus: achievement_manager.loggedIn
         background: Item {}
         contentItem:  ColumnLayout {
             spacing: 8
@@ -26,29 +24,18 @@ FocusScope {
                 Layout.minimumHeight: 60
                 sourceSize.height: 60
                 Layout.alignment: Qt.AlignHCenter
-                source: "file:system/_img/raFullLogo.png"
+                source: "qrc:images/retroachievements-banner"
                 fillMode: Image.PreserveAspectFit
-            }
-            Text {
-                text: "You're logged in"
-                visible: achievement_manager.loggedIn
-                Layout.topMargin: 80
-                Layout.alignment: Qt.AlignHCenter
-                color: ColorPalette.neutral200
-                font.pixelSize: 16
-                font.weight: Font.Normal
-                font.family: Constants.regularFontFamily
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
             }
 
             Pane {
                 id: raAccountPane
                 Layout.topMargin: 16
                 // Layout.maximumWidth: 400
-                // Layout.preferredWidth: 400
+                // Layout.preferredWidth: 600
                 // Layout.minimumWidth: 200
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                focus: true
                 background: Rectangle {
                     radius: 4
                     color: ColorPalette.neutral900
@@ -59,8 +46,8 @@ FocusScope {
                     Image {
                         source: achievement_manager.avatarUrl
                         fillMode: Image.PreserveAspectFit
-                        Layout.preferredWidth: 100
-                        Layout.preferredHeight: 100
+                        Layout.preferredWidth: 140
+                        Layout.preferredHeight: 140
                     }
                     ColumnLayout {
                         spacing: 8
@@ -93,25 +80,26 @@ FocusScope {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                         }
-                        Text {
-                            text: "Member since January 1, 2025"
-                            color: ColorPalette.neutral300
-                            font.pixelSize: 16
-                            font.weight: Font.Normal
-
-                            font.family: Constants.regularFontFamily
-                            horizontalAlignment: Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                        }
                     }
 
                     Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }
+
+                    FirelightButton {
+                        Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+                        focus: true
+                        circle: true
+                        tooltipLabel: "Log out"
+                        tooltipOnTop: true
+                        iconCode: "\ue9ba"
+                        onClicked: {
+                            logoutDialog.open()
+                        }
+                    }
                 }
             }
-
 
             Item {
                 Layout.fillWidth: true
@@ -120,14 +108,22 @@ FocusScope {
         }
     }
 
+    FirelightDialog {
+        id: logoutDialog
+        text: "Are you sure you want to log out of RetroAchievements?\n\nYou'll need to log in again to earn achievements."
+
+        onAccepted: {
+            achievement_manager.logout()
+        }
+    }
+
     Pane {
         id: contentPane
         visible: !achievement_manager.loggedIn
+        focus: !achievement_manager.loggedIn
         anchors.fill: parent
         background: Item {
         }
-
-        focus: true
 
         contentItem: ColumnLayout {
                 id: meColumn
@@ -137,7 +133,7 @@ FocusScope {
                     Layout.minimumHeight: 60
                     sourceSize.height: 60
                     Layout.alignment: Qt.AlignHCenter
-                    source: "file:system/_img/raFullLogo.png"
+                    source: "qrc:images/retroachievements-banner"
                     fillMode: Image.PreserveAspectFit
                 }
                 Text {

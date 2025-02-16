@@ -25,10 +25,6 @@ ApplicationWindow {
     property var currentEntryId: 0
     property var currentContentHash: ""
 
-    // background: Rectangle {
-    //     color: ColorPalette.neutral1000
-    // }
-
     background: Rectangle {
         height: window.height
         width: window.width
@@ -42,6 +38,10 @@ ApplicationWindow {
                 fillMode: Image.PreserveAspectCrop
                 anchors.fill: parent
                 playing: true
+
+                onSourceChanged: {
+                    playing = true
+                }
             }
 
             Rectangle {
@@ -83,89 +83,6 @@ ApplicationWindow {
             }
 
         }
-        // Image {
-        //     id: mainBackground
-        //     source: "https://cdn2.steamgriddb.com/hero_thumb/2968213e79a3a2d48490ffd189255384.png"
-        //     fillMode: Image.PreserveAspectCrop
-        //     anchors.fill: parent
-        //     // layer.enabled: true
-        //     // layer.effect: MultiEffect {
-        //     //     source: mainBackground
-        //     //     anchors.fill: mainBackground
-        //     //     blurEnabled: true
-        //     //     blurMultiplier: 1.0
-        //     //     blurMax: 64
-        //     //     blur: 0.1
-        //     // }
-        // }
-
-        // Video {
-        //     id: video
-        //     anchors.fill: parent
-        //     source: "https://www.desktophut.com/files/1683988157-1683988157-sleepy-kirby.mp4"
-        //     loops: MediaPlayer.Infinite
-        //     autoPlay: true
-        //     fillMode: VideoOutput.PreserveAspectCrop
-        //
-        //     // focus: true
-        //     // Keys.onSpacePressed: video.playbackState == MediaPlayer.PlayingState ? video.pause() : video.play()
-        //     // Keys.onLeftPressed: video.position = video.position - 5000
-        //     // Keys.onRightPressed: video.position = video.position + 5000
-        // }
-        //
-        // Rectangle {
-        //     anchors.fill: parent
-        //     color: "black"
-        //     opacity: 0.8
-        // }
-
-        // Rectangle {
-        //     anchors.topMargin: -70
-        //     anchors.top: parent.top
-        //     anchors.left: parent.left
-        //     anchors.right: parent.right
-        //     height: 200
-        //     gradient: Gradient {
-        //         GradientStop {
-        //             position: 0.0; color: "black"
-        //         }
-        //         GradientStop {
-        //             position: 1.0; color: "transparent"
-        //         }
-        //     }
-        // }
-        //
-        // Rectangle {
-        //     anchors.bottomMargin: -70
-        //     anchors.bottom: parent.bottom
-        //     anchors.left: parent.left
-        //     anchors.right: parent.right
-        //     height: 200
-        //     gradient: Gradient {
-        //         GradientStop {
-        //             position: 1.0; color: "black"
-        //         }
-        //         GradientStop {
-        //             position: 0.0; color: "transparent"
-        //         }
-        //     }
-        // }
-        // AnimatedImage {
-        //     id: mainBackground
-        //     source: "https://cdn.booooooom.com/wp-content/uploads/2022/07/PATTERN_11.gif"
-        //     fillMode: Image.PreserveAspectCrop
-        //     anchors.fill: parent
-        //
-        //     layer.enabled: true
-        //     layer.effect: MultiEffect {
-        //         source: mainBackground
-        //         anchors.fill: mainBackground
-        //         blurEnabled: true
-        //         blurMultiplier: 1.0
-        //         blurMax: 64
-        //         blur: 0.5
-        //     }
-        // }
     }
 
 
@@ -796,6 +713,7 @@ ApplicationWindow {
 
             StackView {
                 id: quickMenuStack
+                KeyNavigation.up: closeButton
                 enabled: depth > 0
                 anchors.top: parent.top
                 anchors.left: parent.left
@@ -892,6 +810,25 @@ ApplicationWindow {
                 }
             }
 
+            FirelightButton {
+                id: closeButton
+                tooltipLabel: "Close"
+                flat: true
+                circle: true
+                KeyNavigation.down: quickMenuStack.enabled ? quickMenuStack : closeButton
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.topMargin: 20
+                anchors.rightMargin: 24
+
+                iconCode: "\ue5cd"
+
+                onClicked: {
+                    sfx_player.play("quickclose")
+                    quickMenuBar.close()
+                }
+            }
+
 
             Text {
                 id: notPlayingAnythingText
@@ -907,7 +844,7 @@ ApplicationWindow {
 
             ListView {
                 id: menuBar
-                KeyNavigation.up: quickMenuStack
+                KeyNavigation.up: quickMenuStack.enabled ? quickMenuStack : closeButton
                 width: (48 * 4) + 5 * 42
                 focus: true
                 height: 32

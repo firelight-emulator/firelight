@@ -27,37 +27,37 @@ namespace firelight::audio {
         // sfx2.wavSpec = wavSpec2;
 
         m_sfxs["rewindscroll"] = new QSoundEffect();
-        m_sfxs["rewindscroll"]->setSource(QUrl::fromLocalFile("system/sfx/click.wav"));
+        m_sfxs["rewindscroll"]->setSource(QUrl("qrc:sfx/click"));
 
         m_sfxs["rewindopen"] = new QSoundEffect();
-        m_sfxs["rewindopen"]->setSource(QUrl::fromLocalFile("system/sfx/openrewind.wav"));
+        m_sfxs["rewindopen"]->setSource(QUrl("qrc:sfx/open-rewind"));
 
         m_sfxs["nope"] = new QSoundEffect();
-        m_sfxs["nope"]->setSource(QUrl::fromLocalFile("system/sfx/nope.wav"));
+        m_sfxs["nope"]->setSource(QUrl("qrc:sfx/nope"));
 
         m_sfxs["quickopen"] = new QSoundEffect();
-        m_sfxs["quickopen"]->setSource(QUrl::fromLocalFile("system/sfx/openquick.wav"));
+        m_sfxs["quickopen"]->setSource(QUrl("qrc:sfx/open-quick"));
 
         m_sfxs["quickclose"] = new QSoundEffect();
-        m_sfxs["quickclose"]->setSource(QUrl::fromLocalFile("system/sfx/closequick.wav"));
+        m_sfxs["quickclose"]->setSource(QUrl("qrc:sfx/close-quick"));
 
         m_sfxs["menumove"] = new QSoundEffect();
-        m_sfxs["menumove"]->setSource(QUrl::fromLocalFile("system/sfx/menumove.wav"));
+        m_sfxs["menumove"]->setSource(QUrl("qrc:sfx/menu-move"));
 
         m_sfxs["startgame"] = new QSoundEffect();
-        m_sfxs["startgame"]->setSource(QUrl::fromLocalFile("system/sfx/startgame.wav"));
+        m_sfxs["startgame"]->setSource(QUrl("qrc:sfx/start-game"));
 
         m_sfxs["defaultnotification"] = new QSoundEffect();
-        m_sfxs["defaultnotification"]->setSource(QUrl::fromLocalFile("system/sfx/defaultnotification.wav"));
+        m_sfxs["defaultnotification"]->setSource(QUrl("qrc:sfx/default-notification"));
 
         m_sfxs["switchon"] = new QSoundEffect();
-        m_sfxs["switchon"]->setSource(QUrl::fromLocalFile("system/sfx/switchon.wav"));
+        m_sfxs["switchon"]->setSource(QUrl("qrc:sfx/switch-on"));
 
         m_sfxs["switchoff"] = new QSoundEffect();
-        m_sfxs["switchoff"]->setSource(QUrl::fromLocalFile("system/sfx/switchoff.wav"));
+        m_sfxs["switchoff"]->setSource(QUrl("qrc:sfx/switch-off"));
 
         m_sfxs["uibump"] = new QSoundEffect();
-        m_sfxs["uibump"]->setSource(QUrl::fromLocalFile("system/sfx/uibump.wav"));
+        m_sfxs["uibump"]->setSource(QUrl("qrc:sfx/ui-bump"));
 
         // m_sfxs["rewindscroll"] = std::move(effect1);
         // m_sfxs["rewindopen"] = std::move(effect2);

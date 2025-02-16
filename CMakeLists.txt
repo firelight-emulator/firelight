@@ -233,18 +233,11 @@ add_custom_target(copy_resources ALL
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/_cores DESTINATION ${CMAKE_BINARY_DIR}/system)
-file(COPY ${CMAKE_SOURCE_DIR}/_img DESTINATION ${CMAKE_BINARY_DIR}/system)
 file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/click.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/openrewind.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/nope.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/openquick.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/closequick.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/menumove.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/startgame.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/defaultnotification.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/switchon.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
-file(COPY ${CMAKE_SOURCE_DIR}/assets/switchoff.wav DESTINATION ${CMAKE_BINARY_DIR}/system/sfx)
+
+if (WIN32)
+    file(COPY ${CMAKE_SOURCE_DIR}/lib/x86_64/discord_game_sdk.dll DESTINATION ${CMAKE_BINARY_DIR})
+endif ()
 
 enable_testing()
 include(GoogleTest)
@@ -315,7 +308,6 @@ add_definitions(-DQUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 #target_link_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
 
 add_dependencies(fl_test copy_resources)
-#
 
 target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
@@ -335,12 +327,6 @@ set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "0.6.0")
-
-
-#set(CPACK_RESOURCE_FILE_LICENSE, "C:/msys64/mingw64/share/cmake/Templates/ALEX.txt")
-#set(CPACK_RESOURCE_FILE_README, "${CMAKE_CURRENT_BINARY_DIR}/README.md")
-#set(CPACK_RESOURCE_FILE_WELCOME, "Firelight")
-
 
 set(deploy_tool_options_arg "")
 if (APPLE)
@@ -367,6 +353,11 @@ if (WIN32)
             ${SHARED_LIB_DIR}/libsqlite3-0.dll
             TYPE BIN
     )
+    install(
+            PROGRAMS
+            ${CMAKE_SOURCE_DIR}/lib/x86_64/discord_game_sdk.dll
+            TYPE BIN
+    )
 endif ()
 
 install(
@@ -383,46 +374,9 @@ install(
 
 install(
         DIRECTORY
-        ${CMAKE_SOURCE_DIR}/_img
-        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
-)
-
-install(
-        DIRECTORY
         ${CMAKE_SOURCE_DIR}/_mods
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
-
-install(
-        FILES
-        ${CMAKE_SOURCE_DIR}/assets/openrewind.wav
-        ${CMAKE_SOURCE_DIR}/assets/click.wav
-        ${CMAKE_SOURCE_DIR}/assets/nope.wav
-        ${CMAKE_SOURCE_DIR}/assets/openquick.wav
-        ${CMAKE_SOURCE_DIR}/assets/closequick.wav
-        ${CMAKE_SOURCE_DIR}/assets/menumove.wav
-        ${CMAKE_SOURCE_DIR}/assets/startgame.wav
-        ${CMAKE_SOURCE_DIR}/assets/defaultnotification.wav
-        ${CMAKE_SOURCE_DIR}/assets/switchon.wav
-        ${CMAKE_SOURCE_DIR}/assets/switchoff.wav
-        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/sfx/
-)
-
-
-#install(CODE [[
-#  file(GET_RUNTIME_DEPENDENCIES
-#    RESOLVED_DEPENDENCIES_VAR RESOLVED
-#    EXECUTABLES firelight.app/Contents/MacOS/firelight
-#    )
-#  message(${RESOLVED})
-#  ]])
-
-#install(CODE [[
-#    include(BundleUtilities)
-#    message ("=======VERIFYING=======")
-#    fixup_bundle("/Users/alexcharles/git/firelight/build/debug/firelight-other.app" "" "")
-#    message ("=======DONE VERIFYING=======")
-#]])
 
 
 include(CPack)

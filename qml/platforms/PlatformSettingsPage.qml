@@ -119,7 +119,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/gb.svg"
+                        source: "qrc:images/platform-icons/gb"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -154,7 +154,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/gbc.svg"
+                        source: "qrc:images/platform-icons/gbc"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -189,7 +189,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/gba.svg"
+                        source: "qrc:images/platform-icons/gba"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -224,7 +224,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/nes.svg"
+                        source: "qrc:images/platform-icons/nes"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -261,7 +261,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/SNES.svg"
+                        source: "qrc:images/platform-icons/snes"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -297,7 +297,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/N64.svg"
+                        source: "qrc:images/platform-icons/n64"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -333,7 +333,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/DS.svg"
+                        source: "qrc:images/platform-icons/ds"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -369,7 +369,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/mastersystem.svg"
+                        source: "qrc:images/platform-icons/master-system"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -405,7 +405,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/genesis.svg"
+                        source: "qrc:images/platform-icons/genesis"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit
@@ -441,7 +441,7 @@ FocusScope {
                 contentItem: Row {
                     spacing: 8
                     Image {
-                        source: "file:system/_img/gamegear.svg"
+                        source: "qrc:images/platform-icons/gamegear"
                         width: parent.height
                         height: parent.height
                         fillMode: Image.PreserveAspectFit

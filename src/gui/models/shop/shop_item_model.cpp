@@ -13,7 +13,7 @@ namespace firelight::shop {
             .platformName = "Nintendo 64",
             .targetGameId = 1,
             .targetGameName = "Mario Kart 64",
-            .capsuleImageUrl = "file:system/_img/mk64ampedup.jpg",
+            .capsuleImageUrl = "qrc:images/mods/mk64ampedup",
             .userHasRequiredGame = true
         });
         m_items.emplace_back(Item{
@@ -27,7 +27,7 @@ namespace firelight::shop {
             .platformName = "GBA",
             .targetGameId = 1,
             .targetGameName = "Pokémon FireRed Version",
-            .capsuleImageUrl = "file:system/_img/radicalred.jpg",
+            .capsuleImageUrl = "qrc:images/mods/radicalred",
             .userHasRequiredGame = true
         });
         m_items.emplace_back(Item{
@@ -42,7 +42,7 @@ namespace firelight::shop {
             .platformName = "SNES",
             .targetGameId = 1,
             .targetGameName = "Super Mario World",
-            .capsuleImageUrl = "file:system/_img/tajna.png",
+            .capsuleImageUrl = "qrc:images/mods/tajna",
             .userHasRequiredGame = true
         });
         m_items.emplace_back(Item{
@@ -57,7 +57,7 @@ namespace firelight::shop {
             .platformName = "Nintendo 64",
             .targetGameId = 1,
             .targetGameName = "Paper Mario",
-            .capsuleImageUrl = "file:system/_img/ultimategoomboss.png",
+            .capsuleImageUrl = "qrc:images/mods/ultimategoomboss",
             .userHasRequiredGame = true
         });
         m_items.emplace_back(Item{
@@ -74,7 +74,7 @@ namespace firelight::shop {
             .targetGameId = 1,
             .targetGameName = "Super Mario 64",
             .clearLogoImageUrl = "file:system/_img/cursedmirrorclear.png",
-            .capsuleImageUrl = "file:system/_img/cursedmirror.jpg",
+            .capsuleImageUrl = "qrc:images/mods/cursedmirror",
             .userHasRequiredGame = true,
             .screenshotUrls = {
                 "file:system/_img/cursedmirror1.png",

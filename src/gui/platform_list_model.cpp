@@ -10,7 +10,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_NES,
             "NES",
-            "qrc:images/platform-icons/nes.svg",
+            "qrc:images/platform-icons/nes",
             {
                 {
                     {"display_name", "A"},
@@ -58,7 +58,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_SNES,
             "SNES",
-            "qrc:images/platform-icons/snes.svg",
+            "qrc:images/platform-icons/snes",
             {
                 {
                     {"display_name", "A"},
@@ -126,7 +126,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_GAMEBOY,
             "Game Boy",
-            "qrc:images/platform-icons/gb.svg",
+            "qrc:images/platform-icons/gb",
             {
                 {
                     {"display_name", "A"},
@@ -174,7 +174,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_GAMEBOY_COLOR,
             "Game Boy Color",
-            "qrc:images/platform-icons/gbc.svg",
+            "qrc:images/platform-icons/gbc",
             {
                 {
                     {"display_name", "A"},
@@ -222,7 +222,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_GAMEBOY_ADVANCE,
             "Game Boy Advance",
-            "qrc:images/platform-icons/gba.svg",
+            "qrc:images/platform-icons/gba",
             {
                 {
                     {"display_name", "A"},
@@ -280,7 +280,7 @@ namespace firelight::gui {
         m_items.push_back({
                 PlatformMetadata::PLATFORM_ID_N64,
                 "Nintendo 64",
-                "qrc:images/platform-icons/n64.svg",
+                "qrc:images/platform-icons/n64",
                 {
                     {
                         {"display_name", "A"},
@@ -365,7 +365,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_NINTENDO_DS,
             "Nintendo DS",
-            "qrc:images/platform-icons/ds.svg",
+            "qrc:images/platform-icons/ds",
             {
                 {
                     {"display_name", "A"},
@@ -434,7 +434,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_SEGA_MASTER_SYSTEM,
             "Master System",
-            "qrc:images/platform-icons/sms.svg",
+            "qrc:images/platform-icons/master-system",
             {
             },
             {}
@@ -443,7 +443,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_SEGA_GENESIS,
             "Genesis",
-            "qrc:images/platform-icons/gen.svg",
+            "qrc:images/platform-icons/genesis",
             {
             },
             {}
@@ -452,7 +452,7 @@ namespace firelight::gui {
         m_items.push_back({
             PlatformMetadata::PLATFORM_ID_SEGA_GAMEGEAR,
             "Game Gear",
-            "qrc:images/platform-icons/gg.svg",
+            "qrc:images/platform-icons/gamegear",
             {
             },
             {}

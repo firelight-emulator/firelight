@@ -15,25 +15,25 @@ public:
             case MICROSOFT_XBOX_360:
                 return "";
             case MICROSOFT_XBOX_ONE:
-                return "file:system/_img/Xbox.svg";
+                return "qrc:/images/controllers/xbox";
             case SONY_DUALSHOCK_3:
                 return "";
             case SONY_DUALSHOCK_4:
-                return "file:system/_img/Dualshock4.svg";
+                return "qrc:/images/controllers/dualshock4";
             case SONY_DUALSENSE:
-                return "file:system/_img/DualSense.svg";
+                return "qrc:/images/controllers/dualsense";
             case NINTENDO_SWITCH_PRO:
-                return "file:system/_img/SwitchPro.svg";
+                return "qrc:/images/controllers/switch-pro";
             case NINTENDO_NSO_N64:
-                return "file:system/_img/N64.svg";
+                return "qrc:/images/controllers/n64";
             case NINTENDO_NSO_SNES:
-                return "file:system/_img/SNES.svg";
+                return "qrc:/images/controllers/snes";
             case NINTENDO_NSO_GENESIS:
-              return "file:system/_img/genesis.svg";
+              return "qrc:/images/controllers/genesis";
             case KEYBOARD:
-              return "file:system/_img/keyboard.svg";
+              return "qrc:/images/controllers/keyboard";
             default:
-                return "file:system/_img/Xbox.svg"; // Default icon
+                return "qrc:/images/controllers/xbox"; // Default icon
         }
     }
 };
