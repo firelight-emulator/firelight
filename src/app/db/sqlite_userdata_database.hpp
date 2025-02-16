@@ -8,7 +8,7 @@
 namespace firelight::db {
   class SqliteUserdataDatabase final : public IUserdataDatabase {
   public:
-    explicit SqliteUserdataDatabase(const std::filesystem::path &dbFile);
+    explicit SqliteUserdataDatabase(const QString &dbFile);
 
     ~SqliteUserdataDatabase() override;
 
@@ -44,7 +44,7 @@ namespace firelight::db {
     void setPlatformSettingValue(int platformId, std::string key, std::string value) override;
 
   private:
-    std::filesystem::path m_database_path;
+    QString m_database_path;
     QSqlDatabase m_database;
   };
 } // namespace firelight::db

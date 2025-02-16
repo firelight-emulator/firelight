@@ -10,10 +10,10 @@ namespace firelight::db {
   constexpr auto DATABASE_PREFIX = "userdata_";
 
   SqliteUserdataDatabase::SqliteUserdataDatabase(
-    const std::filesystem::path &dbFile)
+    const QString &dbFile)
     : m_database_path(dbFile) {
     m_database = QSqlDatabase::addDatabase("QSQLITE", "userdata");
-    m_database.setDatabaseName(QString::fromStdString(dbFile.string()));
+    m_database.setDatabaseName(dbFile);
     if (!m_database.open()) {
       throw std::runtime_error("Couldn't open Userdata database");
     }

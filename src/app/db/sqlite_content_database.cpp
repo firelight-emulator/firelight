@@ -10,7 +10,7 @@
 namespace firelight::db {
   constexpr auto DATABASE_PREFIX = "content_";
 
-  SqliteContentDatabase::SqliteContentDatabase(std::filesystem::path dbFile)
+  SqliteContentDatabase::SqliteContentDatabase(const QString &dbFile)
     : databaseFile(std::move(dbFile)) {
     // TODO Test DB connection or w/e
   }
@@ -374,7 +374,7 @@ namespace firelight::db {
     spdlog::debug("Database connection with name {} does not exist; creating",
                   name.toStdString());
     auto db = QSqlDatabase::addDatabase("QSQLITE", name);
-    db.setDatabaseName(QString::fromStdString(databaseFile.string()));
+    db.setDatabaseName(databaseFile);
     db.open();
     return db;
   }

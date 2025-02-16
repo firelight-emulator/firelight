@@ -13,7 +13,7 @@ namespace firelight::db {
     Q_OBJECT
 
   public:
-    explicit SqliteContentDatabase(std::filesystem::path dbFile);
+    explicit SqliteContentDatabase(const QString &dbFile);
 
     ~SqliteContentDatabase() override;
 
@@ -42,7 +42,7 @@ namespace firelight::db {
     std::optional<Region> getRegion(int id) override;
 
   private:
-    std::filesystem::path databaseFile;
+    QString databaseFile;
 
     [[nodiscard]] QSqlDatabase getDatabase() const;
 

@@ -137,8 +137,7 @@ int main(int argc, char *argv[]) {
   controllerManager.refreshControllerList();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-  firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPath /
-                                                          "userdata.db");
+  firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPathString +  "/userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
   firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString + "/activity.db");
@@ -148,11 +147,9 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
 
   // **** Load Content Database ****
-  firelight::db::SqliteContentDatabase contentDatabase(defaultAppDataPath /
-                                                       "content.db");
+  firelight::db::SqliteContentDatabase contentDatabase(defaultAppDataPathString + "/content.db");
 
-  firelight::db::SqliteLibraryDatabase libraryDatabase(defaultAppDataPath /
-                                                       "library.db");
+  firelight::db::SqliteLibraryDatabase libraryDatabase(defaultAppDataPathString + "/library.db");
   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
 
   firelight::saves::SaveManager saveManager(savesPath, libraryDatabase, userdata_database, *gameImageProvider);

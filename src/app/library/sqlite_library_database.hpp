@@ -12,7 +12,7 @@ class SqliteLibraryDatabase final : public QObject, public ILibraryDatabase {
   Q_OBJECT
 
 public:
-  explicit SqliteLibraryDatabase(std::filesystem::path db_file_path);
+  explicit SqliteLibraryDatabase(QString db_file_path);
 
   ~SqliteLibraryDatabase() override;
 
@@ -64,7 +64,7 @@ signals:
   void contentDirectoriesUpdated();
 
 private:
-  std::filesystem::path m_dbFilePath;
+  QString m_dbFilePath;
 
   static LibraryEntry createLibraryEntryFromQuery(const QSqlQuery &query);
 
