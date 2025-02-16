@@ -92,40 +92,32 @@ int main(int argc, char *argv[]) {
     QApplication::quit();
   });
 
+  // TODO: Check for portable mode marker file
+
   auto defaultUserPathString = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
   auto docsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/Firelight";
   auto savesPath = docsPath + "/saves";
   auto romsPath = docsPath + "/roms";
-  auto defaultUserPath = std::filesystem::path(defaultUserPathString.toStdString()) / "Firelight";
 
   auto defaultAppDataPathString = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-  auto defaultAppDataPath = std::filesystem::path(defaultAppDataPathString.toStdString());
 
   QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope, defaultAppDataPathString);
 
   // TODO:
   //  Roms
 
-  // QSettings:
-  // credentials?
 
   // images
   // auto cachePath =
   //     QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
   // "C:/Users/<USER>/AppData/Local/Firelight/cache/"
 
-  auto saveDir = defaultUserPath / "saves";
-  auto romsDir = defaultUserPath / "roms";
   // auto patchesDir = appDataDir / "patches";
 
   // If missing system directory, throw an error
   // TODO
 
   // **** Make sure all directories are good ****
-
-  if (!create_dirs({defaultUserPath, defaultAppDataPath, romsDir, saveDir})) {
-    return 1;
-  }
 
   QDir baseDir(defaultAppDataPathString);
   if (!baseDir.mkpath("core-system")) {
@@ -168,13 +160,13 @@ int main(int argc, char *argv[]) {
 
   firelight::library::SqliteUserLibrary userLibrary(defaultAppDataPathString + "/library.db", romsPath);
 
-  if (userLibrary.getWatchedDirectories().empty()) {
-    firelight::library::WatchedDirectory dir{
-      .path = QString::fromStdString(canonical(romsDir).string())
-    };
-
-    userLibrary.addWatchedDirectory(dir);
-  }
+  // if (userLibrary.getWatchedDirectories().empty()) {
+  //   firelight::library::WatchedDirectory dir{
+  //     .path = QString::fromStdString(canonical(romsDir).string())
+  //   };
+  //
+  //   userLibrary.addWatchedDirectory(dir);
+  // }
 
   firelight::ManagerAccessor::setUserLibrary(&userLibrary);
 

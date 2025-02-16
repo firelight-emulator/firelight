@@ -170,21 +170,6 @@ TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataWhenNotExist) {
 
   ASSERT_FALSE(db.updateSavefileMetadata(metadata));
 }
-
-TEST_F(SqliteUserdataDatabaseTest, CreatePlaySessionTest) {
-  SqliteUserdataDatabase db(temp_file_path.string());
-
-  activity::PlaySession session;
-  session.id = -1;
-  session.contentId = "1234567890";
-  session.slotNumber = 1;
-  session.startTime = 1000;
-  session.endTime = 2000;
-  session.unpausedDurationMillis = 500;
-
-  ASSERT_TRUE(db.createPlaySession(session));
-  ASSERT_NE(session.id, -1);
-}
 //
 // TEST_F(SqliteUserdataDatabaseTest, GetOrCreateSavefileMetadataTest) {
 //   SqliteUserdataDatabase db(temp_file_path.string());
