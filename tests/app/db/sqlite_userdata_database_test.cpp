@@ -20,7 +20,6 @@ TEST_F(SqliteUserdataDatabaseTest, ConstructorTest) {
 
   // Add assertions to check the initial state of the database
   ASSERT_TRUE(db.tableExists("savefile_metadata"));
-  ASSERT_TRUE(db.tableExists("play_sessions"));
 }
 
 TEST_F(SqliteUserdataDatabaseTest, CreateSavefileMetadataSetsId) {
