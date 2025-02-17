@@ -16,7 +16,7 @@ protected:
 };
 
 TEST_F(SqliteUserdataDatabaseTest, ConstructorTest) {
-  SqliteUserdataDatabase db(temp_file_path.string());
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
 
   // Add assertions to check the initial state of the database
   ASSERT_TRUE(db.tableExists("savefile_metadata"));
@@ -24,7 +24,7 @@ TEST_F(SqliteUserdataDatabaseTest, ConstructorTest) {
 }
 
 TEST_F(SqliteUserdataDatabaseTest, CreateSavefileMetadataSetsId) {
-  SqliteUserdataDatabase db(temp_file_path.string());
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
   SavefileMetadata metadata;
   metadata.id = -1;
   metadata.contentId = "1234567890";
@@ -46,7 +46,7 @@ TEST_F(SqliteUserdataDatabaseTest, CreateSavefileMetadataSetsId) {
 }
 
 TEST_F(SqliteUserdataDatabaseTest, GetSavefileMetadataTest) {
-  SqliteUserdataDatabase db(temp_file_path.string());
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
 
   const auto result = db.getSavefileMetadata("1234567890", 1);
   ASSERT_FALSE(result.has_value());
@@ -74,7 +74,7 @@ TEST_F(SqliteUserdataDatabaseTest, GetSavefileMetadataTest) {
 
 TEST_F(SqliteUserdataDatabaseTest,
        CreateSavefileMetadataSupportsMultipleSlots) {
-  SqliteUserdataDatabase db(temp_file_path.string());
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
 
   const auto result = db.getSavefileMetadataForContent("1234567890");
   ASSERT_TRUE(result.empty());
@@ -100,7 +100,7 @@ TEST_F(SqliteUserdataDatabaseTest,
 
 TEST_F(SqliteUserdataDatabaseTest,
        EnsureIDidntAccidentallyMakeItUniqueOnSlotNumber) {
-  SqliteUserdataDatabase db(temp_file_path.string());
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
 
   const auto result = db.getSavefileMetadataForContent("1234567890");
   ASSERT_TRUE(result.empty());
@@ -125,7 +125,7 @@ TEST_F(SqliteUserdataDatabaseTest,
 }
 
 TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataTest) {
-  SqliteUserdataDatabase db(temp_file_path.string());
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
 
   const auto result = db.getSavefileMetadataForContent("1234567890");
   ASSERT_TRUE(result.empty());
@@ -155,7 +155,7 @@ TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataTest) {
 }
 
 TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataWhenNotExist) {
-  SqliteUserdataDatabase db(temp_file_path.string());
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
 
   const auto result = db.getSavefileMetadataForContent("1234567890");
   ASSERT_TRUE(result.empty());
