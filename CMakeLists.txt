@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(firelight
-        VERSION 0.6.0
-        DESCRIPTION "An emulation frontend that just works"
+        VERSION 0.8.0
+        DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
 )
@@ -320,13 +320,22 @@ gtest_discover_tests(fl_test)
 #file(COPY LICENSE.md README.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 #install(FILES LICENSE.md README.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-set(CPACK_PACKAGE_NAME "firelight-emulator")
+set(CPACK_PACKAGE_NAME "Firelight")
 set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY, "firelight")
-set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-set(CPACK_PACKAGE_VERSION "0.6.0")
+set(CPACK_PACKAGE_VERSION_MAJOR 0)
+set(CPACK_PACKAGE_VERSION_MINOR 8)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VERSION "0.8.0")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
+set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")
+
+set(CPACK_NSIS_DISPLAY_NAME "Firelight")
+set(CPACK_NSIS_PACKAGE_NAME "Firelight")
+set(CPACK_NSIS_UNINSTALL_NAME "Firelight Uninstaller")
+set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/assets/img/icon.ico")
+set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/assets/img/icon.ico")
+
 
 set(deploy_tool_options_arg "")
 if (APPLE)

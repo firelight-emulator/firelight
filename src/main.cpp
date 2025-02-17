@@ -307,7 +307,7 @@ int main(int argc, char *argv[]) {
     });
   }
 
-  window->setIcon(QIcon("qrc:/images/firelight-logo"));
+  window->setIcon(QIcon("qrc:images/firelight-logo"));
 
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
   sdlEventLoop.moveToThread(&sdlEventLoop);
