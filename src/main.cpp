@@ -80,11 +80,11 @@ int main(int argc, char *argv[]) {
 
   QSettings::setDefaultFormat(QSettings::Format::IniFormat);
 
-  QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-  QSurfaceFormat format;
-  format.setProfile(QSurfaceFormat::OpenGLContextProfile::CompatibilityProfile);
-  format.setVersion(4, 1);
-  QSurfaceFormat::setDefaultFormat(format);
+  // QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+  // QSurfaceFormat format;
+  // format.setProfile(QSurfaceFormat::OpenGLContextProfile::CompatibilityProfile);
+  // format.setVersion(4, 1);
+  // QSurfaceFormat::setDefaultFormat(format);
 
   QApplication app(argc, argv);
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setControllerRepository(&controllerRepository);
 
   controllerManager.refreshControllerList();
-  QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+  // QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPathString +  "/userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
