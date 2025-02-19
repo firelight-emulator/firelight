@@ -69,7 +69,7 @@ namespace firelight::gui {
     }
 
     void AchievementListModel::setSortType(const QString &sortType) {
-        printf("AchievementListModel::setSortType: %s\n", sortType.toStdString().c_str());
+        // TODO printf("AchievementListModel::setSortType: %s\n", sortType.toStdString().c_str());
     }
 
     int AchievementListModel::size() const {

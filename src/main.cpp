@@ -21,7 +21,6 @@
 #include "app/audio/SfxPlayer.hpp"
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
-#include "app/library/library_scanner.hpp"
 #include "app/library/library_scanner2.hpp"
 #include "app/library/sqlite_library_database.hpp"
 #include "app/saves/save_manager.hpp"
@@ -45,6 +44,7 @@
 #include "app/input/gamepad_status_item.hpp"
 #include "app/input/input_mapping_item.hpp"
 #include "app/input/keyboard_mapping_item.hpp"
+#include "app/library/library_path_model.hpp"
 #include "app/library/sqlite_user_library.hpp"
 #include "gui/models/library/entry_list_model.hpp"
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setControllerRepository(&controllerRepository);
 
   controllerManager.refreshControllerList();
-  // QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+  QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPathString +  "/userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
@@ -198,13 +198,8 @@ int main(int argc, char *argv[]) {
   QObject::connect(&libScanner2, &firelight::library::LibraryScanner2::scanFinished,
                    &entryListModel, &firelight::library::EntryListModel::reset, Qt::QueuedConnection);
 
-  firelight::gui::LibraryPathModel libraryPathModel(userLibrary);
-
   firelight::gui::PlatformListModel platformListModel;
   firelight::shop::ShopItemModel shopItemModel(contentDatabase);
-
-  LibraryScanner libraryManager(&libraryDatabase, &contentDatabase);
-  firelight::ManagerAccessor::setLibraryManager(&libraryManager);
 
   auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>(userdata_database);
   firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
@@ -230,14 +225,12 @@ int main(int argc, char *argv[]) {
   firelight::gui::Router router;
 
   QNetworkInformation::loadDefaultBackend();
-  spdlog::info("Reachability: {}", (int)QNetworkInformation::instance()->reachability());
   if (QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Online) {
     raClient.m_connected = true;
     offlineRaClient.syncOfflineAchievements();
   }
 
   QObject::connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged, [&raClient, &offlineRaClient](QNetworkInformation::Reachability reachability) {
-    spdlog::info("Reachability changed: {}", (int)reachability);
     if (reachability == QNetworkInformation::Reachability::Online) {
       raClient.m_connected = true;
       offlineRaClient.syncOfflineAchievements();
@@ -259,10 +252,8 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("library_model", &libModel);
   engine.rootContext()->setContextProperty("library_short_model",
                                            &libSortModel);
-  engine.rootContext()->setContextProperty("library_manager", &libraryManager);
   engine.rootContext()->setContextProperty("library_database",
                                            &libraryDatabase);
-  engine.rootContext()->setContextProperty("library_scan_path_model", &libraryPathModel);
   engine.rootContext()->setContextProperty("controller_model",
                                            &controllerListModel);
   engine.rootContext()->setContextProperty("controller_manager",

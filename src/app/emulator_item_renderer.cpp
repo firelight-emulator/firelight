@@ -122,8 +122,8 @@ void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
 
 void EmulatorItemRenderer::setPixelFormat(retro_pixel_format *format) {
     switch (*format) {
-        case RETRO_PIXEL_FORMAT_0RGB1555:
-            printf("Pixel format: 0RGB1555\n");
+    case RETRO_PIXEL_FORMAT_0RGB1555:
+            spdlog::debug("Pixel format: 0RGB1555\n");
             break;
         case RETRO_PIXEL_FORMAT_XRGB8888:
             m_pixelFormat = QImage::Format_RGB32;
@@ -132,7 +132,7 @@ void EmulatorItemRenderer::setPixelFormat(retro_pixel_format *format) {
             m_pixelFormat = QImage::Format_RGB16;
             break;
         case RETRO_PIXEL_FORMAT_UNKNOWN:
-            printf("Pixel format: UNKNOWN\n");
+            spdlog::debug("Pixel format: UNKNOWN\n");
             break;
     }
 }
@@ -345,7 +345,6 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
     if (emulatorItem->window() != nullptr) {
         if (emulatorItem->window()->screen() != nullptr) {
-          printf("Refresh rate: %f\n", emulatorItem->window()->screen()->refreshRate());
           auto refreshRate = emulatorItem->window()->screen()->refreshRate();
           if (floor(refreshRate) == 120 || ceil(refreshRate) == 120) {
                 m_waitFrames = 1;
@@ -534,10 +533,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
         m_currentUpdateBatch = resourceUpdates;
 
         cb->beginExternal();
-        m_core->run(0);
-        getAchievementManager()->doFrame(m_core.get());
-        m_core->run(0);
-        getAchievementManager()->doFrame(m_core.get());
         m_core->run(0);
         getAchievementManager()->doFrame(m_core.get());
         update();

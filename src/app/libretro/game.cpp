@@ -36,7 +36,6 @@ namespace libretro {
   void *Game::getData() { return &this->data[0]; }
 
   size_t Game::getSize() {
-    printf("size: %llu\n", this->data.size());
     return this->data.size();
   }
 } // namespace libretro

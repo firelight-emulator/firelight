@@ -640,6 +640,7 @@ ApplicationWindow {
 
         onClosed: function () {
             quickMenuStack.clear()
+            // screenStack.forceActiveFocus()
         }
 
         Overlay.modal: Rectangle {

@@ -157,13 +157,13 @@ void EmulatorItem::loadGame(int entryId) {
 
     if (romFile->inArchive() &&
         !std::filesystem::exists(romFile->getArchivePathName().toStdString())) {
-      printf("content path doesn't exist\n");
+      spdlog::error("Content path doesn't exist: {}", romFile->getArchivePathName().toStdString());
       return;
     }
 
     if (!romFile->inArchive() &&
         !std::filesystem::exists(romFile->getFilePath().toStdString())) {
-      printf("content path doesn't exist\n");
+      spdlog::error("Content path doesn't exist: {}", romFile->getFilePath().toStdString());
       return;
     }
 

@@ -12,8 +12,9 @@ set(CMAKE_OSX_ARCHITECTURES "arm64")
 set(VCPKG_DISABLE_COMPILER_TRACKING ON)
 
 set(CMAKE_BUILD_RPATH ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
+set(Qt6_DIR "C:/Qt/Qt-6.10.0")
 
-list(APPEND CMAKE_PREFIX_PATH "/Users/alexcharles/Qt/6.7.2/macos" "/opt/homebrew" "C:/Qt/6.8.1/mingw_64")
+list(APPEND CMAKE_PREFIX_PATH "/Users/alexcharles/Qt/6.7.2/macos" "/opt/homebrew" "C:/Qt/Qt-6.8.2")
 
 list(APPEND CMAKE_INCLUDE_PATH "/opt/homebrew/include")
 
@@ -46,7 +47,7 @@ find_package(LibArchive REQUIRED)
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
 
-qt6_standard_project_setup(REQUIRES 6.7)
+qt6_standard_project_setup(REQUIRES 6.8)
 
 #add_compile_definitions(QT_QML_DEBUG)
 set(CMAKE_CXX_STANDARD 20)
@@ -206,15 +207,17 @@ target_link_libraries(firelight PUBLIC
 #endif ()
 
 find_program(MINGW_PATH gcc)
-get_filename_component(MINGW_DIR ${MINGW_PATH} DIRECTORY)
-set(SHARED_LIB_DIR "${MINGW_DIR}")
+get_filename_component(MINGW_BIN_DIR ${MINGW_PATH} DIRECTORY)
+get_filename_component(MINGW_DIR ${MINGW_BIN_DIR} DIRECTORY)
+set(SHARED_LIB_DIR "${MINGW_BIN_DIR}")
+set(QT_PLUGIN_DIR "${MINGW_DIR}/plugins")
 
 #include(GNUInstallDirs)
 install(TARGETS firelight
         RUNTIME_DEPENDENCIES
         PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-" "Qt6"
         POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
-        DIRECTORIES ${SHARED_LIB_DIR}
+        DIRECTORIES ${SHARED_LIB_DIR} ${QT_PLUGIN_DIR} "C:/Qt/Qt-6.8.2/bin"
         BUNDLE DESTINATION .
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -344,26 +347,33 @@ elseif (WIN32)
     set(deploy_tool_options_arg --no-compiler-runtime)
 endif ()
 
-qt6_generate_deploy_qml_app_script(
-        TARGET firelight
-        OUTPUT_SCRIPT deploy_script
-        #        MACOS_BUNDLE_POST_BUILD
-        DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
-)
-
-
-install(
-        SCRIPT ${deploy_script}
-)
+#qt6_generate_deploy_qml_app_script(
+#        TARGET firelight
+#        OUTPUT_SCRIPT deploy_script
+#        #        MACOS_BUNDLE_POST_BUILD
+#        DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
+#)
+#
+#
+#install(
+#        SCRIPT ${deploy_script}
+#)
 
 if (WIN32)
     install(
             PROGRAMS
-            ${SHARED_LIB_DIR}/libsqlite3-0.dll
-            TYPE BIN
-    )
-    install(
-            PROGRAMS
+#            ${SHARED_LIB_DIR}/libsqlite3-0.dll
+#            ${SHARED_LIB_DIR}/libjpeg-8.dll
+#            ${SHARED_LIB_DIR}/libgio-2.0-0.dll
+#            ${SHARED_LIB_DIR}/libjasper.dll
+#            ${SHARED_LIB_DIR}/libtiff-6.dll
+#            ${SHARED_LIB_DIR}/libwebp-7.dll
+#            ${SHARED_LIB_DIR}/libwebpdemux-2.dll
+#            ${SHARED_LIB_DIR}/libwebpmux-3.dll
+#            ${SHARED_LIB_DIR}/libgobject-2.0-0.dll
+#            ${SHARED_LIB_DIR}/swresample-5.dll
+#            ${SHARED_LIB_DIR}/swscale-8.dll
+#            ${SHARED_LIB_DIR}/libffi-8.dll
             ${CMAKE_SOURCE_DIR}/lib/x86_64/discord_game_sdk.dll
             TYPE BIN
     )

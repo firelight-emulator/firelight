@@ -19,7 +19,7 @@ namespace firelight {
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 
     if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC | SDL_INIT_TIMER) < 0) {
-      printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+      spdlog::error("SDL could not initialize! SDL_Error: {}", SDL_GetError());
     }
 
     SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
@@ -56,7 +56,7 @@ namespace firelight {
         switch (ev.type) {
           case SDL_KEYDOWN:
           case SDL_KEYUP:
-            printf("key: %d, state: %d\n", ev.key.keysym.sym, ev.key.state);
+            // TODO
             break;
           case SDL_CONTROLLERDEVICEADDED:
           case SDL_CONTROLLERDEVICEREMOVED:

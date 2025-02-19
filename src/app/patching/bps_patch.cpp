@@ -2,6 +2,7 @@
 #include "util.hpp"
 #include <filesystem>
 #include <fstream>
+#include <spdlog/spdlog.h>
 #include <zlib.h>
 
 namespace firelight::patching {
@@ -60,7 +61,7 @@ BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
     }
     default:
       // TODO: Put actual error here + test
-      printf("Invalid action type: %llu\n", action.type);
+      spdlog::warn("Invalid action type: {}", action.type);
       m_isValid = false;
       return;
     }
@@ -80,7 +81,7 @@ BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
   auto crc = crc32(0L, nullptr, 0);
   crc = crc32(crc, data.data(), data.size() - 4);
   if (crc != m_patchFileCRC32Checksum) {
-    printf("Patch data does not match expected checksum");
+    spdlog::warn("Patch data does not match expected checksum");
     m_isValid = false;
   }
 }

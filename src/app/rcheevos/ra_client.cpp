@@ -45,7 +45,6 @@ namespace firelight::achievements {
         break;
       }
       case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW: {
-        printf("Showing challenge indicator (%s)\n", event->achievement->title);
         char urlBuffer[256];
 
         auto success = rc_client_achievement_get_image_url(
@@ -58,7 +57,6 @@ namespace firelight::achievements {
         break;
       }
       case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE: {
-        printf("Hiding challenge indicator (%s)\n", event->achievement->title);
         emit raClient->hideChallengeIndicator(event->achievement->id);
         break;
       }
@@ -170,9 +168,6 @@ namespace firelight::achievements {
         const auto raClient =
             static_cast<RAClient *>(rc_client_get_userdata(client));
 
-        spdlog::info("url: {}", url);
-        spdlog::info("content type: {}", contentType);
-        spdlog::info("Post data: {}", postData);
         const auto response = raClient->m_httpClient->sendRequest(url, postData, contentType);
 
         if (callback) {
@@ -370,7 +365,7 @@ namespace firelight::achievements {
     std::vector<uint8_t> state(size);
     auto result = rc_client_serialize_progress_sized(m_client, state.data(), size);
     if (result != RC_OK) {
-      printf("Failed to serialize state: %d\n", result);
+      spdlog::warn("Failed to serialize state: {}", result);
     }
 
     return state;
@@ -384,7 +379,7 @@ namespace firelight::achievements {
     const auto size = rc_client_progress_size(m_client);
     if (state.size() != size) {
       // TODO: Handle this better. Do we need to reset?
-      printf("State size mismatch: %llu != %llu\n", state.size(), size);
+      spdlog::warn("State size mismatch: {} != {}", state.size(), size);
       return;
     }
 
@@ -420,7 +415,6 @@ namespace firelight::achievements {
 
     const auto id = m_contentDb.getRetroAchievementsIdForGame(gameId);
     if (!id.has_value()) {
-      printf("No value\n");
       return {};
     }
 
@@ -465,10 +459,8 @@ namespace firelight::achievements {
 
       auto json = QJsonDocument::fromJson(QByteArray::fromStdString(response.text)).object();
       if (json.isEmpty()) {
-        printf("json is empty\n");
         return;
       }
-      printf("GOT JSON\n");
 
       auto achievements = json["Achievements"].toObject();
 
@@ -547,12 +539,10 @@ namespace firelight::achievements {
 
       auto json = QJsonDocument::fromJson(QByteArray::fromStdString(response.text)).object();
       if (json.isEmpty()) {
-        printf("json is empty\n");
         return;
       }
 
       if (json.keys().length() != 1) {
-        printf("what the\n");
         return;
       }
 

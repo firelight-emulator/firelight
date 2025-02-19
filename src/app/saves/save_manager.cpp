@@ -395,7 +395,7 @@ QFuture<bool> SaveManager::writeSaveData(const QString &contentHash, int saveSlo
     }
 
     // TODO: Delete metadata
-    printf("Deleting suspend point from disk\n");
+    spdlog::debug("Deleting suspend point from disk");
 
     QFile stateFile(dir + "/suspendpoint.state");
     if (stateFile.exists()) {

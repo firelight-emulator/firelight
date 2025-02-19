@@ -5,7 +5,6 @@
 namespace firelight {
   input::ControllerManager *ManagerAccessor::m_controllerManager;
   saves::SaveManager *ManagerAccessor::m_saveManager;
-  LibraryScanner *ManagerAccessor::m_libraryManager;
   db::IUserdataDatabase *ManagerAccessor::m_userdataDatabase;
   db::ILibraryDatabase *ManagerAccessor::m_libraryDatabase;
   achievements::RAClient *ManagerAccessor::m_achievementManager;
@@ -24,10 +23,6 @@ namespace firelight {
 
   void ManagerAccessor::setSaveManager(saves::SaveManager *t_manager) {
     m_saveManager = t_manager;
-  }
-
-  void ManagerAccessor::setLibraryManager(LibraryScanner *t_libraryManager) {
-    m_libraryManager = t_libraryManager;
   }
 
   void ManagerAccessor::setUserdataManager(
@@ -80,10 +75,6 @@ namespace firelight {
   }
 
   saves::SaveManager *ManagerAccessor::getSaveManager() { return m_saveManager; }
-
-  LibraryScanner *ManagerAccessor::getLibraryManager() {
-    return m_libraryManager;
-  }
 
   db::IUserdataDatabase *ManagerAccessor::getUserdataManager() {
     return m_userdataDatabase;

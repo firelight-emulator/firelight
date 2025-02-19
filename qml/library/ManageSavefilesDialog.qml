@@ -99,10 +99,6 @@ Dialog {
                         anchors.fill: parent
                     }
 
-                    onClicked: {
-                        // console.log("Clicked on " + model.slot)
-                    }
-
                     Text {
                         visible: model.thing === ""
                         text: "nothin here boss"

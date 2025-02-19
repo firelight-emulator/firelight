@@ -1,6 +1,7 @@
 #include "emulator_config_manager.hpp"
 #include "platform_metadata.hpp"
 
+#include <spdlog/spdlog.h>
 #include <utility>
 
 static QString thing = "disabled";
@@ -34,16 +35,16 @@ std::shared_ptr<CoreConfiguration> EmulatorConfigManager::getCoreConfigFor(
 }
 
 void EmulatorConfigManager::setOptionValueForPlatform(const int platformId, const QString &key, const QString &value) {
-    printf("Setting PLATFORM option %s to %s\n", key.toStdString().c_str(), value.toStdString().c_str());
+    spdlog::debug("Setting PLATFORM option {} to {}", key.toStdString().c_str(), value.toStdString().c_str());
     m_userdataDatabase.setPlatformSettingValue(platformId, key.toStdString(), value.toStdString());
 }
 
 void EmulatorConfigManager::setOptionValueForEntry(int entryId, const QString &key, const QString &value) {
-    printf("Changing ENTRY option %s to %s\n", key.toStdString().c_str(), value.toStdString().c_str());
+    spdlog::debug("Changing ENTRY option {} to {}", key.toStdString().c_str(), value.toStdString().c_str());
 }
 
 QString EmulatorConfigManager::getOptionValueForPlatform(const int platformId, const QString &key) {
-    printf("Getting PLATFORM option %s\n", key.toStdString().c_str());
+    spdlog::debug("Getting PLATFORM option {}", key.toStdString().c_str());
 
     auto val = m_userdataDatabase.getPlatformSettingValue(platformId, key.toStdString());
     if (!val.has_value()) {
@@ -51,16 +52,14 @@ QString EmulatorConfigManager::getOptionValueForPlatform(const int platformId, c
     }
 
     if (val.has_value()) {
-        printf("Found value (%s)!\n", val.value().c_str());
         return QString::fromStdString(val.value());
     }
 
-    printf("No value\n");
     return "";
 }
 
 QString EmulatorConfigManager::getOptionValueForEntry(int entryId, const QString &key) {
-    printf("Getting ENTRY option %s\n", key.toStdString().c_str());
+    spdlog::debug("Getting ENTRY option {}", key.toStdString().c_str());
     return "";
 }
 

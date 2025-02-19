@@ -116,7 +116,6 @@ namespace firelight::gui {
 
     for (const auto &entry: m_libraryDatabase->getAllLibraryEntries()) {
       if (entry.modId == modId) {
-        printf("Found mod in library: %d %s\n", modId, entry.displayName.c_str());
         return true;
       }
     }

@@ -102,7 +102,6 @@ FocusScope {
                 }
                 onToggled: function () {
                     contentStack.replaceCurrentItem(root.libraryPage, {}, StackView.ReplaceTransition)
-                    console.log("clicked library")
                 }
             }
 
@@ -132,7 +131,6 @@ FocusScope {
                 }
                 onToggled: function () {
                     contentStack.replaceCurrentItem(root.modShopPage, {}, StackView.ReplaceTransition)
-                    console.log("clicked mod shop")
                 }
             }
 

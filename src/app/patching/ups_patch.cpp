@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <spdlog/spdlog.h>
 #include <zlib.h>
 
 namespace firelight::patching {
@@ -50,7 +51,7 @@ UPSPatch::UPSPatch(const std::vector<uint8_t> &data) {
   auto crc = crc32(0L, nullptr, 0);
   crc = crc32(crc, data.data(), data.size() - 4);
   if (crc != patchFileCRC32Checksum) {
-    printf("Patch data does not match expected checksum");
+    spdlog::warn("Patch data does not match expected checksum");
     m_isValid = false;
   }
 }

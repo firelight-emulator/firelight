@@ -1,5 +1,7 @@
 #include "audio_manager.hpp"
 
+#include <spdlog/spdlog.h>
+
 extern "C" {
 #include <libswresample/swresample.h>
 }
@@ -15,11 +17,6 @@ void AudioManager::initializeResampler(int64_t in_channel_layout, int in_sample_
 
   av_channel_layout_describe(m_channelLayout, thing, sizeof(thing));
 
-  printf("VERSION: %s\n", av_version_info());
-
-  printf("Initializing resampler for %s\n", thing);
-
-
   // Set options for input and output
   // av_opt_set_int(m_swrContext, "in_channel_layout", in_channel_layout, 0);
   av_opt_set_chlayout(m_swrContext, "ichl", m_channelLayout, 0);
@@ -30,9 +27,8 @@ void AudioManager::initializeResampler(int64_t in_channel_layout, int in_sample_
   av_opt_set_int(m_swrContext, "out_sample_rate", out_sample_rate, 0);
   av_opt_set_sample_fmt(m_swrContext, "out_sample_fmt", out_sample_fmt, 0);
 
-  if (int returnCode = swr_init(m_swrContext) < 0) {
-    fprintf(stderr, "Failed to initialize the resampling context\n");
-    printf("failure: %s\n", av_err2str(returnCode));
+  if (const int returnCode = swr_init(m_swrContext) < 0) {
+    spdlog::error("Failed to initialize the resampling context: {}", av_err2str(returnCode));
     swr_free(&m_swrContext);
   }
 }
@@ -105,7 +101,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
 
     const int max_output_samples = swr_get_out_samples(m_swrContext, numFrames);
     if (max_output_samples < 0) {
-      fprintf(stderr, "Error calculating maximum output samples\n");
+      spdlog::error("Error calculating maximum output samples");
       return 0;
     }
 

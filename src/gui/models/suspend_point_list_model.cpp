@@ -57,7 +57,6 @@ namespace firelight::emulation {
     }
 
     bool SuspendPointListModel::setData(const QModelIndex &index, const QVariant &value, int role) {
-        printf("gonna change that there data: %d, index: %d\n", role, index.row());
 
         // Access the item by reference to modify it in place
         auto &item = m_items[index.row()];
