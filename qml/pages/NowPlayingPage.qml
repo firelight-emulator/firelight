@@ -132,6 +132,7 @@ FocusScope {
                 Layout.preferredHeight: 40
                 checkable: false
                 alignRight: true
+                enabled: false
 
 
                 onActiveFocusChanged: function () {
@@ -164,8 +165,8 @@ FocusScope {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 checkable: false
-                enabled: true
                 alignRight: true
+                enabled: false
                 pseudoChildFocused: root.previouslyFocusedItem === loadSuspendPointButton
 
                 ButtonGroup.group: navButtonGroup
@@ -217,8 +218,8 @@ FocusScope {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 Layout.preferredHeight: 40
                 checkable: false
-                enabled: true
                 alignRight: true
+                enabled: false
                 pseudoChildFocused: root.previouslyFocusedItem === createSuspendPointButton
 
                 ButtonGroup.group: navButtonGroup
