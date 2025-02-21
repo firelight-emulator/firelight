@@ -346,6 +346,10 @@ ApplicationWindow {
     Component {
         id: rewindMenu
         RewindMenu {
+            onRewindPointSelected: function(index) {
+                emulatorLoader.item.loadRewindPoint(index)
+                screenStack.currentItem.close()
+            }
 
         }
     }
@@ -354,7 +358,10 @@ ApplicationWindow {
         id: emuPage
         NewEmulatorPage {
             onRewindPointsReady: function(points) {
-                screenStack.pushItem(rewindMenu, {model: points}, StackView.Immediate)
+                screenStack.pushItem(rewindMenu, {
+                    model: points,
+                    aspectRatio: emulatorLoader.item.videoAspectRatio
+                }, StackView.Immediate)
             }
         }
     }
@@ -435,11 +442,15 @@ ApplicationWindow {
         initialItem: GeneralSettings.showNewUserFlow ? newUserFlow : homeScreen
 
         Keys.onRightPressed: function(event) {
-            highlightBounceAnimationRight.running = true
+            if (activeFocusHighlight.visible) {
+                highlightBounceAnimationRight.running = true
+            }
         }
 
         Keys.onLeftPressed: function(event) {
-            highlightBounceAnimationLeft.running = true
+            if (activeFocusHighlight.visible) {
+                highlightBounceAnimationLeft.running = true
+            }
         }
 
         property bool blur: false

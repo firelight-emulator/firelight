@@ -65,6 +65,8 @@ public:
 
     Q_INVOKABLE void createRewindPoints();
 
+    Q_INVOKABLE void loadRewindPoint(int index);
+
 protected:
     void hoverMoveEvent(QHoverEvent *event) override;
 

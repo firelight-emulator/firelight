@@ -129,6 +129,7 @@ FocusScope {
     FocusScope {
         anchors.fill: parent
         visible: listView.count > 0
+        focus: visible
         Pane {
             id: details
 

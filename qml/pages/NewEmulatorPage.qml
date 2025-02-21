@@ -13,6 +13,8 @@ FocusScope {
 
     clip: true
 
+    property alias videoAspectRatio: emulator.videoAspectRatio
+
     function loadGame(entryId) {
         emulator.loadGame(entryId)
     }
@@ -33,6 +35,10 @@ FocusScope {
 
     function createRewindPoints() {
         emulator.createRewindPoints()
+    }
+
+    function loadRewindPoint(index) {
+        emulator.loadRewindPoint(index)
     }
 
     function loadSuspendPoint(index) {

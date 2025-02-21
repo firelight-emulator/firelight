@@ -387,7 +387,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
                 suspendPoint.state = m_core->serializeState();
                 suspendPoint.image = m_currentImage;
                 suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
-                // suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
+                suspendPoint.retroachievementsState = getAchievementManager()->serializeState();
                 m_rewindPoints.push_front(suspendPoint);
             }
             break;
@@ -420,7 +420,18 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
                 // Handle emit rewind points
             }
             break;
-            case LoadRewindPoint:
+            case LoadRewindPoint: {
+              auto point = m_rewindPoints.at(command.rewindPointIndex - 1);
+              m_core->deserializeState(point.state);
+              if (!point.retroachievementsState.empty()) {
+                getAchievementManager()->deserializeState(point.retroachievementsState);
+              }
+              if (m_paused) {
+                m_overlayImage = point.image;
+                m_overlayImage.mirror();
+                m_overlayImage = m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+              }
+            }
                 break;
             case WriteSuspendPoint: {
                 SuspendPoint suspendPoint;

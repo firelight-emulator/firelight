@@ -31,6 +31,8 @@ namespace firelight::achievements {
     Q_PROPERTY(bool loggedIn MEMBER m_loggedIn NOTIFY loginStatusChanged)
     Q_PROPERTY(QString displayName MEMBER m_displayName NOTIFY loginSucceeded)
     Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY loginStatusChanged)
+    Q_PROPERTY(bool inHardcoreMode MEMBER m_defaultToHardcore WRITE
+      setDefaultToHardcore NOTIFY defaultModeChanged)
     Q_PROPERTY(bool defaultToHardcore MEMBER m_defaultToHardcore WRITE
       setDefaultToHardcore NOTIFY defaultModeChanged)
     Q_PROPERTY(int points READ numPoints NOTIFY pointsChanged)

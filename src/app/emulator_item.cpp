@@ -98,10 +98,13 @@ void EmulatorItem::loadSuspendPoint(const int index) {
 }
 
 void EmulatorItem::createRewindPoints() {
-    m_renderer->submitCommand({
-        .type = EmulatorItemRenderer::EmitRewindPoints
-    });
-    update();
+  m_renderer->submitCommand({.type = EmulatorItemRenderer::EmitRewindPoints});
+  update();
+}
+
+void EmulatorItem::loadRewindPoint(const int index) {
+  m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadRewindPoint, .rewindPointIndex = index});
+  update();
 }
 
 void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
