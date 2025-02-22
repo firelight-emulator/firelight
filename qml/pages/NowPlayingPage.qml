@@ -132,7 +132,7 @@ FocusScope {
                 Layout.preferredHeight: 40
                 checkable: false
                 alignRight: true
-                enabled: !achievement_manager.inHardcoreMode
+                enabled: !achievement_manager.loggedIn || !achievement_manager.inHardcoreMode
 
                 onActiveFocusChanged: function () {
                     if (activeFocus) {

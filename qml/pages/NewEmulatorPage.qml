@@ -14,6 +14,9 @@ FocusScope {
     clip: true
 
     property alias videoAspectRatio: emulator.videoAspectRatio
+    property alias contentHash: emulator.contentHash
+    property alias gameName: emulator.gameName
+    property alias entryId: emulator.entryId
 
     function loadGame(entryId) {
         emulator.loadGame(entryId)

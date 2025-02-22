@@ -11,6 +11,9 @@ protected:
 
 private:
     Q_OBJECT
+    Q_PROPERTY(int entryId MEMBER m_entryId NOTIFY entryIdChanged)
+    Q_PROPERTY(QString contentHash MEMBER m_contentHash NOTIFY contentHashChanged)
+    Q_PROPERTY(QString gameName MEMBER m_gameName NOTIFY gameNameChanged)
     Q_PROPERTY(bool started MEMBER m_started NOTIFY startedChanged)
     Q_PROPERTY(int videoWidth MEMBER m_coreBaseWidth NOTIFY videoWidthChanged)
     Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
@@ -26,6 +29,8 @@ public:
     bool m_startAfterLoading = false;
     bool m_loaded = false;
     bool m_started = false;
+
+    QString m_gameName;
 
     int m_entryId;
     QByteArray m_gameData;
@@ -97,6 +102,12 @@ signals:
     void rewindPointsReady(QList<QJsonObject> points);
 
     void audioBufferLevelChanged();
+
+    void entryIdChanged();
+
+    void contentHashChanged();
+
+    void gameNameChanged();
 
 protected:
     QQuickRhiItemRenderer *createRenderer() override;

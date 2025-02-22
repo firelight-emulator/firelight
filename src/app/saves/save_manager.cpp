@@ -335,22 +335,26 @@ QFuture<bool> SaveManager::writeSaveData(const QString &contentHash, int saveSlo
       return {};
     }
 
+    long long created = 0;
+
     QFile stateFile(dir + "/suspendpoint.state");
     if (!stateFile.open(QIODeviceBase::ReadOnly)) {
       return std::nullopt;
     }
+
+    created = stateFile.fileTime(QFileDevice::FileModificationTime).toMSecsSinceEpoch();
 
     std::vector<uint8_t> data(stateFile.size());
     stateFile.read(reinterpret_cast<char *>(data.data()), stateFile.size());
     stateFile.close();
 
     QImage image;
-    if (QDir(dir + "/screenshot.png").exists()) {
+    if (QFile(dir + "/screenshot.png").exists()) {
       image.load(dir + "/screenshot.png");
     }
 
     std::vector<uint8_t> rcheevosData;
-    if (auto rcheevosFile = dir + "/rcheevos.state"; QDir(rcheevosFile).exists()) {
+    if (auto rcheevosFile = dir + "/rcheevos.state"; QFile(rcheevosFile).exists()) {
       QFile file(rcheevosFile);
       file.open(QIODeviceBase::ReadOnly);
       auto bytes = file.readAll();
@@ -359,12 +363,12 @@ QFuture<bool> SaveManager::writeSaveData(const QString &contentHash, int saveSlo
     }
 
 
-    long long created = 0;
+    // long long created = 0;
     bool locked = false;
 
     auto metadata = m_userdataDatabase.getSuspendPointMetadata(contentHash.toStdString(), saveSlotNumber, slotNumber);
     if (metadata.has_value()) {
-      created = metadata->createdAt;
+      // created = metadata->createdAt;
       locked = metadata->locked;
     }
 

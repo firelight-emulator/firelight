@@ -137,6 +137,8 @@ void EmulatorItem::loadGame(int entryId) {
     if (!entry.has_value()) {
       spdlog::warn("Entry with id {} does not exist...", entryId);
     }
+
+    m_gameName = entry->displayName;
     //
     // m_currentEntry = *entry;
 

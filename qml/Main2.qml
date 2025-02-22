@@ -21,9 +21,9 @@ ApplicationWindow {
     title: qsTr("Firelight")
 
     property alias gameRunning: emulatorLoader.active
-    property var currentGameName: ""
-    property var currentEntryId: 0
-    property var currentContentHash: ""
+    property alias currentGameName: emulatorLoader.gameName
+    property alias currentEntryId: emulatorLoader.entryId
+    property alias currentContentHash: emulatorLoader.contentHash
 
     background: Rectangle {
         height: window.height
@@ -340,6 +340,14 @@ ApplicationWindow {
             onRewindPressed: function() {
                 emulatorLoader.item.createRewindPoints()
             }
+
+            onLoadSuspendPoint: function(index) {
+                emulatorLoader.item.loadSuspendPoint(index)
+            }
+
+            onWriteSuspendPoint: function(index) {
+                emulatorLoader.item.writeSuspendPoint(index)
+            }
         }
     }
 
@@ -368,7 +376,9 @@ ApplicationWindow {
 
     Loader {
         id: emulatorLoader
+        property var gameName
         property var entryId
+        property var contentHash
 
         property bool shouldDeactivate: false
 
@@ -415,6 +425,9 @@ ApplicationWindow {
             // })
             emulatorLoader.item.startGame()
             emulatorLoader.item.paused = emulatorLoader.paused
+
+            emulatorLoader.gameName = emulatorLoader.item.gameName
+            emulatorLoader.contentHash = emulatorLoader.item.contentHash
             // active = true
         }
 

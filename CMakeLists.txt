@@ -202,9 +202,9 @@ qt6_add_qml_module(firelight
 target_link_libraries(firelight PUBLIC
         firelight_lib)
 
-#if (CMAKE_BUILD_TYPE STREQUAL "Release")
-#    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
-#endif ()
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
+endif ()
 
 find_program(MINGW_PATH gcc)
 get_filename_component(MINGW_BIN_DIR ${MINGW_PATH} DIRECTORY)
@@ -338,7 +338,6 @@ set(CPACK_NSIS_PACKAGE_NAME "Firelight")
 set(CPACK_NSIS_UNINSTALL_NAME "Firelight Uninstaller")
 set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/assets/img/icon.ico")
 set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/assets/img/icon.ico")
-
 
 set(deploy_tool_options_arg "")
 if (APPLE)
