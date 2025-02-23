@@ -183,19 +183,39 @@ FocusScope {
                 // }
             }
 
-            FirelightButton {
-                id: assignAllButton
-                Layout.alignment: Qt.AlignRight
-                label: "Assign all"
+            RowLayout {
                 Layout.bottomMargin: 8
+                Layout.maximumHeight: 40
+                spacing: 12
 
                 KeyNavigation.up: headerBar
                 KeyNavigation.left: platformList
+                Item {
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                }
 
-                onClicked: function () {
-                    confirmDialog.open()
+                FirelightButton {
+                    id: assignAllButton
+                    Layout.alignment: Qt.AlignRight
+                    label: "Assign all"
+
+                    onClicked: function () {
+                        confirmDialog.open()
+                    }
+                }
+
+                FirelightButton {
+                    id: resetAllButton
+                    Layout.alignment: Qt.AlignRight
+                    label: "Reset all"
+
+                    onClicked: function () {
+                        confirmResetAllDialog.open()
+                    }
                 }
             }
+
 
             RowLayout {
                 Layout.fillWidth: true
@@ -387,6 +407,19 @@ FocusScope {
             dialog.buttons = platformList.currentItem.model.buttons
             dialog.currentIndex = 0
             dialog.open()
+        }
+    }
+
+    FirelightDialog {
+        id: confirmResetAllDialog
+        visible: false
+        enabled: visible
+
+        text: "Are you sure you want to reset all of your bindings for " + platformList.currentItem.model.display_name + " to the default values?"
+        showButtons: true
+
+        onAccepted: function () {
+            inputMapping.removeAllMappings()
         }
     }
 

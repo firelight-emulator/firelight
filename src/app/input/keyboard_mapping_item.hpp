@@ -28,6 +28,8 @@ namespace firelight::input {
 
         Q_INVOKABLE void addMapping(int input, int mappedInput);
 
+        Q_INVOKABLE void removeAllMappings();
+
         Q_INVOKABLE void removeMapping(int input);
 
         Q_INVOKABLE QString getKeyLabel(int input) const;

@@ -22,14 +22,16 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, Input t_button) {
     switch (t_button) {
       case RightBumper: return m_keyStates[Qt::Key_W];
       case LeftBumper: return m_keyStates[Qt::Key_Q];
+      case LeftTrigger: return m_keyStates[Qt::Key_E];
+      case RightTrigger: return m_keyStates[Qt::Key_R];
       case NorthFace: return m_keyStates[Qt::Key_S];
       case EastFace: return m_keyStates[Qt::Key_X];
       case WestFace: return m_keyStates[Qt::Key_A];
       case SouthFace: return m_keyStates[Qt::Key_Z];
-      case DpadUp: return m_keyStates[Qt::Key_Up];
-      case DpadDown: return m_keyStates[Qt::Key_Down];
-      case DpadLeft: return m_keyStates[Qt::Key_Left];
-      case DpadRight: return m_keyStates[Qt::Key_Right];
+      case DpadUp: return m_keyStates[Qt::Key_I];
+      case DpadDown: return m_keyStates[Qt::Key_K];
+      case DpadLeft: return m_keyStates[Qt::Key_J];
+      case DpadRight: return m_keyStates[Qt::Key_L];
       case Start: return m_keyStates[Qt::Key_Return];
       case Select: return m_keyStates[Qt::Key_Shift];
       default: return false;
@@ -37,10 +39,102 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, Input t_button) {
   }
 
   int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId) {
+    if (!m_keyboardMapping) {
+      if (m_keyStates[Qt::Key_Left]) {
+        return -32767;
+      }
+      if (m_keyStates[Qt::Key_Right]) {
+        return 32767;
+      }
+    }
+
+    const auto mappedLeft = m_keyboardMapping->getMappedKeyboardInput(LeftStickLeft);
+    const auto mappedRight = m_keyboardMapping->getMappedKeyboardInput(LeftStickRight);
+
+    if (mappedLeft.has_value() && mappedRight.has_value()) {
+      const auto valLeft = m_keyStates[static_cast<Qt::Key>(mappedLeft.value())];
+      const auto valRight = m_keyStates[static_cast<Qt::Key>(mappedRight.value())];
+
+      if (valLeft && valRight) {
+        return 0;
+      }
+
+      if (valLeft) {
+        return -32767;
+      }
+
+      if (valRight) {
+        return 32767;
+      }
+
+      return 0;
+    }
+
+    if (mappedLeft.has_value() && m_keyStates[static_cast<Qt::Key>(mappedLeft.value())]) {
+      return -32767;
+    }
+
+    if (mappedRight.has_value() && m_keyStates[static_cast<Qt::Key>(mappedRight.value())]) {
+      return 32767;
+    }
+
+    if (m_keyStates[Qt::Key_Left]) {
+      return -32767;
+    }
+    if (m_keyStates[Qt::Key_Right]) {
+      return 32767;
+    }
+
     return 0;
   }
 
   int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId) {
+    if (!m_keyboardMapping) {
+      if (m_keyStates[Qt::Key_Up]) {
+        return -32767;
+      }
+      if (m_keyStates[Qt::Key_Down]) {
+        return 32767;
+      }
+    }
+
+    const auto mappedUp = m_keyboardMapping->getMappedKeyboardInput(LeftStickUp);
+    const auto mappedDown = m_keyboardMapping->getMappedKeyboardInput(LeftStickDown);
+
+    if (mappedUp.has_value() && mappedDown.has_value()) {
+      const auto valLeft = m_keyStates[static_cast<Qt::Key>(mappedUp.value())];
+      const auto valRight = m_keyStates[static_cast<Qt::Key>(mappedDown.value())];
+
+      if (valLeft && valRight) {
+        return 0;
+      }
+
+      if (valLeft) {
+        return -32767;
+      }
+
+      if (valRight) {
+        return 32767;
+      }
+
+      return 0;
+    }
+
+    if (mappedUp.has_value() && m_keyStates[static_cast<Qt::Key>(mappedUp.value())]) {
+      return -32767;
+    }
+
+    if (mappedDown.has_value() && m_keyStates[static_cast<Qt::Key>(mappedDown.value())]) {
+      return 32767;
+    }
+
+    if (m_keyStates[Qt::Key_Up]) {
+      return -32767;
+    }
+    if (m_keyStates[Qt::Key_Down]) {
+      return 32767;
+    }
+
     return 0;
   }
 

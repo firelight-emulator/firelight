@@ -38,9 +38,20 @@ void KeyboardMappingItem::setPlatformId(const int platformId) {
 }
 
 void KeyboardMappingItem::addMapping(int input, const int mappedInput) {
-  m_inputMapping->addKeyboardMapping(static_cast<libretro::IRetroPad::Input>(input), mappedInput);
+  m_inputMapping->addKeyboardMapping(
+      static_cast<libretro::IRetroPad::Input>(input), mappedInput);
   m_inputMapping->sync();
   m_inputMappings.insert(QString::number(input), mappedInput);
+  emit inputMappingsChanged();
+}
+
+void KeyboardMappingItem::removeAllMappings() {
+  for (auto key: m_inputMappings.keys()) {
+    m_inputMapping->removeMapping(static_cast<libretro::IRetroPad::Input>(key.toInt()));
+    m_inputMappings.remove(key);
+  }
+
+  m_inputMapping->sync();
   emit inputMappingsChanged();
 }
 
@@ -88,16 +99,22 @@ QString KeyboardMappingItem::getKeyLabel(int input) const {
 
 QString KeyboardMappingItem::getDefaultKeyLabel(int input) const {
   switch (static_cast<libretro::IRetroPad::Input>(input)) {
+  case libretro::IRetroPad::LeftTrigger: return "E";
+  case libretro::IRetroPad::RightTrigger: return "R";
   case libretro::IRetroPad::RightBumper: return "W";
   case libretro::IRetroPad::LeftBumper: return "Q";
   case libretro::IRetroPad::NorthFace: return "S";
   case libretro::IRetroPad::EastFace: return "X";
   case libretro::IRetroPad::WestFace: return "A";
   case libretro::IRetroPad::SouthFace: return "Z";
-  case libretro::IRetroPad::DpadUp: return "Up";
-  case libretro::IRetroPad::DpadDown: return "Down";
-  case libretro::IRetroPad::DpadLeft: return "Left";
-  case libretro::IRetroPad::DpadRight: return "Right";
+  case libretro::IRetroPad::LeftStickUp: return "Up";
+  case libretro::IRetroPad::LeftStickDown: return "Down";
+  case libretro::IRetroPad::LeftStickLeft: return "Left";
+  case libretro::IRetroPad::LeftStickRight: return "Right";
+  case libretro::IRetroPad::DpadUp: return "I";
+  case libretro::IRetroPad::DpadDown: return "K";
+  case libretro::IRetroPad::DpadLeft: return "J";
+  case libretro::IRetroPad::DpadRight: return "L";
   case libretro::IRetroPad::Start: return "Return";
   case libretro::IRetroPad::Select: return "Shift";
   default: return "Unknown?";
