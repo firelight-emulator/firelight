@@ -46,6 +46,8 @@
 #include "app/input/keyboard_mapping_item.hpp"
 #include "app/library/library_path_model.hpp"
 #include "app/library/sqlite_user_library.hpp"
+#include "app/mods/ModInfoItem.hpp"
+#include "app/mods/SqliteModRepository.h"
 #include "gui/models/library/entry_list_model.hpp"
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
@@ -204,6 +206,8 @@ int main(int argc, char *argv[]) {
   auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>(userdata_database);
   firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
 
+  firelight::mods::SqliteModRepository modRepository;
+  firelight::ManagerAccessor::setModRepository(&modRepository);
   // QObject::connect(
   //   &libraryDatabase,
   //   &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
@@ -221,6 +225,7 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::input::KeyboardMappingItem>("Firelight", 1, 0, "KeyboardMapping");
   qmlRegisterType<firelight::input::InputMappingItem>("Firelight", 1, 0, "InputMapping");
   qmlRegisterType<firelight::PlatformMetadataItem>("Firelight", 1, 0, "PlatformMetadata");
+  qmlRegisterType<firelight::mods::ModInfoItem>("Firelight", 1, 0, "ModInfo");
 
   firelight::gui::Router router;
 

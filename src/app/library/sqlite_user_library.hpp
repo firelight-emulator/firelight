@@ -34,7 +34,15 @@ namespace firelight::library {
 
         std::vector<RomFile> getRomFiles() override;
 
-        bool removeRomFile(const QString &filePath, bool inArchive, const QString &archivePath) override;
+      bool removeRomFile(const QString &filePath, bool inArchive, const QString &archivePath) override;
+
+      void addPatchFile(PatchFile &file);
+
+      std::optional<PatchFile> getPatchFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes, bool inArchive);
+
+      std::vector<PatchFile> getPatchFiles();
+
+      bool removePatchFile(const QString &filePath, bool inArchive, const QString &archivePath);
 
         std::vector<WatchedDirectory> getWatchedDirectories() override;
 

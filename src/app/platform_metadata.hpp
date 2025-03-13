@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 namespace firelight {
   const static std::map<int, std::map<std::string, std::string> > defaultPlatformValues = {
     {
@@ -265,6 +267,23 @@ namespace firelight {
       }
 
       return defaultPlatformValues.at(platformId).at(key);
+    }
+
+    static std::string getPlatformName(const int platformId) {
+      switch (platformId) {
+        case PLATFORM_ID_GAMEBOY: return "GameBoy";
+        case PLATFORM_ID_GAMEBOY_COLOR: return "GameBoy Color";
+        case PLATFORM_ID_GAMEBOY_ADVANCE: return "GameBoy Advance";
+        case PLATFORM_ID_NES: return "NES";
+        case PLATFORM_ID_SNES: return "SNES";
+        case PLATFORM_ID_N64: return "Nintendo 64";
+        case PLATFORM_ID_NINTENDO_DS: return "Nintendo DS";
+        case PLATFORM_ID_SEGA_MASTER_SYSTEM: return "Sega Master System";
+        case PLATFORM_ID_SEGA_GENESIS: return "Sega Genesis";
+        case PLATFORM_ID_SEGA_GAMEGEAR: return "Sega GameGear";
+        case PLATFORM_ID_PLAYSTATION_PORTABLE: return "PlayStation Portable";
+        default: return "Unknown";
+      }
     }
 
     static int getIdFromFileExtension(const std::string &extension) {

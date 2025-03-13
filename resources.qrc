@@ -50,12 +50,52 @@
         <file alias="snes">assets/img/SNES.svg</file>
         <file alias="genesis">assets/img/genesis.svg</file>
     </qresource>
-    <qresource prefix="/images/mods">
-        <file alias="tajna">assets/img/mods/tajna.png</file>
-        <file alias="mk64ampedup">assets/img/mods/mk64ampedup.jpg</file>
-        <file alias="radicalred">assets/img/mods/radicalred.jpg</file>
-        <file alias="ultimategoomboss">assets/img/mods/ultimategoomboss.png</file>
-        <file alias="cursedmirror">assets/img/mods/cursedmirror.jpg</file>
+    <qresource prefix="/images/mods/cursedmirror">
+        <file alias="pic1">assets/img/mods/cursedmirror/cursedmirror1.png</file>
+        <file alias="pic2">assets/img/mods/cursedmirror/cursedmirror2.png</file>
+        <file alias="pic3">assets/img/mods/cursedmirror/cursedmirror3.png</file>
+        <file alias="pic4">assets/img/mods/cursedmirror/cursedmirror4.png</file>
+        <file alias="pic5">assets/img/mods/cursedmirror/cursedmirror5.png</file>
+        <file alias="pic6">assets/img/mods/cursedmirror/cursedmirror6.png</file>
+        <file alias="clearlogo">assets/img/mods/cursedmirror/cursedmirrorclear.png</file>
+        <file alias="capsule">assets/img/mods/cursedmirror/capsule.jpg</file>
+    </qresource>
+    <qresource prefix="/images/mods/tajna">
+        <file alias="pic1">assets/img/mods/tajna/tajna1.png</file>
+        <file alias="pic2">assets/img/mods/tajna/tajna2.png</file>
+        <file alias="pic3">assets/img/mods/tajna/tajna3.png</file>
+        <file alias="pic4">assets/img/mods/tajna/tajna4.png</file>
+        <file alias="pic5">assets/img/mods/tajna/tajna5.png</file>
+        <file alias="pic6">assets/img/mods/tajna/tajna6.png</file>
+        <file alias="capsule">assets/img/mods/tajna/capsule.png</file>
+    </qresource>
+    <qresource prefix="/images/mods/goomboss">
+        <file alias="pic1">assets/img/mods/goomboss/goom.png</file>
+        <file alias="pic2">assets/img/mods/goomboss/goom1.png</file>
+        <file alias="pic3">assets/img/mods/goomboss/goom2.png</file>
+        <file alias="pic4">assets/img/mods/goomboss/goom3.png</file>
+        <file alias="pic5">assets/img/mods/goomboss/goom4.png</file>
+        <file alias="capsule">assets/img/mods/goomboss/capsule.png</file>
+    </qresource>
+    <qresource prefix="/images/mods/mk64ampedup">
+        <file alias="pic1">assets/img/mods/mk64ampedup/ampedup1.png</file>
+        <file alias="pic2">assets/img/mods/mk64ampedup/ampedup2.png</file>
+        <file alias="pic3">assets/img/mods/mk64ampedup/ampedup3.png</file>
+        <file alias="pic4">assets/img/mods/mk64ampedup/ampedup4.png</file>
+        <file alias="pic5">assets/img/mods/mk64ampedup/ampedup5.png</file>
+        <file alias="pic6">assets/img/mods/mk64ampedup/ampedup6.png</file>
+        <file alias="capsule">assets/img/mods/mk64ampedup/capsule.jpg</file>
+    </qresource>
+    <qresource prefix="/images/mods/radicalred">
+        <file alias="pic1">assets/img/mods/radicalred/rr1.png</file>
+        <file alias="pic2">assets/img/mods/radicalred/rr2.png</file>
+        <file alias="pic3">assets/img/mods/radicalred/rr3.png</file>
+        <file alias="pic4">assets/img/mods/radicalred/rr4.png</file>
+        <file alias="pic5">assets/img/mods/radicalred/rr5.png</file>
+        <file alias="pic6">assets/img/mods/radicalred/rr6.png</file>
+        <file alias="pic7">assets/img/mods/radicalred/rr7.png</file>
+        <file alias="pic8">assets/img/mods/radicalred/rr8.png</file>
+        <file alias="capsule">assets/img/mods/radicalred/capsule.jpg</file>
     </qresource>
     <qresource prefix="/images/gbc-previews">
         <file alias="gb-dmg">assets/img/gbc-previews/gb-dmg.png</file>

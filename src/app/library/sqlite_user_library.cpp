@@ -30,6 +30,25 @@ namespace firelight::library {
                           createRomFilesTable.lastError().text().toStdString());
         }
 
+      QSqlQuery createPatchFilesTable(getDatabase());
+      createPatchFilesTable.prepare("CREATE TABLE IF NOT EXISTS patch_files("
+          "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+          "file_path TEXT UNIQUE NOT NULL,"
+          "file_size INTEGER NOT NULL,"
+          "file_md5 TEXT NOT NULL,"
+          "file_crc32 TEXT NOT NULL,"
+          "target_md5 TEXT,"
+          "patched_md5 TEXT,"
+          "patched_content_hash TEXT,"
+          "in_archive INTEGER NOT NULL DEFAULT 0,"
+          "archive_file_path TEXT,"
+          "created_at INTEGER NOT NULL);");
+
+      if (!createPatchFilesTable.exec()) {
+        spdlog::error("Table creation failed: {}",
+                      createPatchFilesTable.lastError().text().toStdString());
+      }
+
         QSqlQuery createEntriesTable(getDatabase());
         createEntriesTable.prepare("CREATE TABLE IF NOT EXISTS entriesv1("
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -350,34 +369,88 @@ namespace firelight::library {
         return directories;
     }
 
-    bool SqliteUserLibrary::removeRomFile(const QString &filePath, bool inArchive, const QString &archivePath) {
-        if (inArchive) {
-            QSqlQuery query(getDatabase());
-            query.prepare(
-                "DELETE FROM rom_files WHERE file_path = :filePath AND in_archive = 1 AND archive_file_path = :archivePath;");
-            query.bindValue(":filePath", filePath);
-            query.bindValue(":archivePath", archivePath);
-
-            if (!query.exec()) {
-                spdlog::error("Failed to delete rom file: {}",
-                              query.lastError().text().toStdString());
-                return false;
-            }
-
-            return true;
-        }
-
+    bool SqliteUserLibrary::removeRomFile(const QString &filePath,
+                                          bool inArchive,
+                                          const QString &archivePath) {
+      if (inArchive) {
         QSqlQuery query(getDatabase());
-        query.prepare("DELETE FROM rom_files WHERE file_path = :filePath AND in_archive = 0;");
+        query.prepare("DELETE FROM rom_files WHERE file_path = :filePath AND "
+                      "in_archive = 1 AND archive_file_path = :archivePath;");
         query.bindValue(":filePath", filePath);
+        query.bindValue(":archivePath", archivePath);
 
         if (!query.exec()) {
-            spdlog::error("Failed to delete rom file: {}",
-                          query.lastError().text().toStdString());
-            return false;
+          spdlog::error("Failed to delete rom file: {}",
+                        query.lastError().text().toStdString());
+          return false;
         }
 
         return true;
+      }
+
+      QSqlQuery query(getDatabase());
+      query.prepare("DELETE FROM rom_files WHERE file_path = :filePath AND "
+                    "in_archive = 0;");
+      query.bindValue(":filePath", filePath);
+
+      if (!query.exec()) {
+        spdlog::error("Failed to delete rom file: {}",
+                      query.lastError().text().toStdString());
+        return false;
+      }
+
+      return true;
+    }
+
+    void SqliteUserLibrary::addPatchFile(PatchFile &file) {
+        const QString queryString =
+                "INSERT OR IGNORE INTO patch_files ("
+                "file_path, "
+                "file_size, "
+                "file_md5, "
+                "file_crc32, "
+                "target_md5, "
+                "patched_md5, "
+                "patched_content_hash, "
+                "in_archive, "
+                "archive_file_path, "
+                "created_at) VALUES"
+                "(:filePath, :fileSize, :fileMd5, :fileCrc32, :targetMd5, :patchedMd5, :patchedContentHash, :inArchive, :archiveFilePath, :createdAt);";
+        QSqlQuery query(getDatabase());
+        query.prepare(queryString);
+        query.bindValue(":filePath", QString::fromStdString(file.m_filePath));
+        query.bindValue(":fileSize", file.m_fileSize);
+        query.bindValue(":fileMd5", QString::fromStdString(file.m_fileMd5));
+        query.bindValue(":fileCrc32", QString::fromStdString(file.m_fileCrc32));
+        query.bindValue(":targetMd5", QString::fromStdString(file.m_targetFileMd5));
+        query.bindValue(":patchedMd5", QString::fromStdString(file.m_patchedMd5));
+        query.bindValue(":patchedContentHash", QString::fromStdString(file.m_patchedContentHash));
+        query.bindValue(":inArchive", file.m_inArchive);
+        query.bindValue(":archiveFilePath", QString::fromStdString(file.m_archiveFilePath));
+        query.bindValue(":createdAt",
+                        std::chrono::duration_cast<std::chrono::milliseconds>(
+                            std::chrono::system_clock::now().time_since_epoch())
+                        .count());
+
+        if (!query.exec()) {
+            spdlog::error("Failed to add patch file with path {}: {}", file.m_filePath,
+                          query.lastError().text().toStdString());
+        }
+    }
+
+    std::optional<PatchFile> SqliteUserLibrary::getPatchFileWithPathAndSize(
+        const QString &filePath, size_t fileSizeBytes, bool inArchive) {
+
+    }
+
+    std::vector<PatchFile> SqliteUserLibrary::getPatchFiles() {
+
+    }
+
+    bool SqliteUserLibrary::removePatchFile(const QString &filePath,
+                                            bool inArchive,
+                                            const QString &archivePath) {
+
     }
 
     std::vector<WatchedDirectory> SqliteUserLibrary::getWatchedDirectories() {

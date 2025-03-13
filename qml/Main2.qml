@@ -95,6 +95,10 @@ ApplicationWindow {
         }
     }
 
+    FLFocusHighlight {
+        target: window.activeFocusItem
+    }
+
     Rectangle {
         id: activeFocusHighlight
         color: "transparent"
@@ -247,6 +251,8 @@ ApplicationWindow {
                     activeFocusHighlight.parent = cursorItem
                     if (cursorItem.hasOwnProperty('background')) {
                         activeFocusHighlight.radius = cursorItem.background.radius + 4
+                    } else if (cursorItem.hasOwnProperty('radius')) {
+                        activeFocusHighlight.radius = cursorItem.radius + 4
                     }
                 } else {
                     activeFocusHighlight.parent = null
@@ -452,8 +458,13 @@ ApplicationWindow {
         id: screenStack
         anchors.fill: parent
         focus: true
-        initialItem: GeneralSettings.showNewUserFlow ? newUserFlow : homeScreen
+        // initialItem: FLTwoColumnMenu {
+        //     menuItems: ["Home", "Controllers"]
+        //     pages: [homeScreen, controllerPage]
+        // }
+        // initialItem: GeneralSettings.showNewUserFlow ? newUserFlow : homeScreen
 
+        initialItem: FLThing{}
         Keys.onRightPressed: function(event) {
             if (activeFocusHighlight.visible) {
                 highlightBounceAnimationRight.running = true

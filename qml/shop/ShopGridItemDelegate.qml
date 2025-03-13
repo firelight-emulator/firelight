@@ -33,9 +33,9 @@ FocusScope {
         }
         focus: true
 
-        // onClicked: function () {
-        //     myDelegate.doTheThing()
-        // }
+        onClicked: function () {
+            myDelegate.doTheThing()
+        }
 
         hoverEnabled: false
         leftInset: 2

@@ -15,6 +15,7 @@ namespace firelight {
   input::InputManager *ManagerAccessor::m_inputManager;
   input::IControllerRepository *ManagerAccessor::m_controllerRepository;
   std::string ManagerAccessor::m_coreSystemDirectory;
+  mods::IModRepository *ManagerAccessor::m_modDatabase;
 
   void ManagerAccessor::setControllerManager(
     input::ControllerManager *t_manager) {
@@ -68,6 +69,9 @@ namespace firelight {
       const std::string &t_coreSystemDirectory) {
     m_coreSystemDirectory = t_coreSystemDirectory;
   }
+  void ManagerAccessor::setModRepository(mods::IModRepository *t_modDatabase) {
+    m_modDatabase = t_modDatabase;
+  }
 
   input::ControllerManager *ManagerAccessor::getControllerManager() {
     // TODO: Check for nullptr and throw exception or something
@@ -113,5 +117,8 @@ namespace firelight {
   }
   std::string ManagerAccessor::getCoreSystemDirectory() {
     return m_coreSystemDirectory;
+  }
+  mods::IModRepository *ManagerAccessor::getModRepository() {
+    return m_modDatabase;
   }
   } // namespace firelight

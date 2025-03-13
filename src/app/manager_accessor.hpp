@@ -4,10 +4,11 @@
 #include <firelight/activity/activity_log.hpp>
 
 #include "emulator_config_manager.hpp"
-#include "rcheevos/ra_client.hpp"
+#include "firelight/mods/mod_repository.hpp"
 #include "firelight/userdata_database.hpp"
 #include "input/controller_manager.hpp"
 #include "input/input_manager.hpp"
+#include "rcheevos/ra_client.hpp"
 #include "saves/save_manager.hpp"
 
 namespace firelight {
@@ -43,6 +44,8 @@ namespace firelight {
 
         static void setCoreSystemDirectory(const std::string &t_coreSystemDirectory);
 
+        static void setModRepository(mods::IModRepository *t_modDatabase);
+
         static input::ControllerManager *getControllerManager();
 
         static saves::SaveManager *getSaveManager();
@@ -67,6 +70,8 @@ namespace firelight {
 
         static std::string getCoreSystemDirectory();
 
+        static mods::IModRepository *getModRepository();
+
     private:
         static input::ControllerManager *m_controllerManager;
         static saves::SaveManager *m_saveManager;
@@ -80,5 +85,6 @@ namespace firelight {
         static input::InputManager *m_inputManager;
         static input::IControllerRepository *m_controllerRepository;
         static std::string m_coreSystemDirectory;
+        static mods::IModRepository *m_modDatabase;
     };
 } // namespace firelight

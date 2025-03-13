@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(firelight
-        VERSION 0.8.0
+        VERSION 0.8.1
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -21,6 +21,8 @@ list(APPEND CMAKE_INCLUDE_PATH "/opt/homebrew/include")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+#set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 
 #set(VCPKG_TRACE_FIND_PACKAGE ON)
 
@@ -135,6 +137,15 @@ add_library(firelight_lib
         src/app/video_decoder.h
         src/app/image_cache_url_interceptor.cpp
         src/app/image_cache_url_interceptor.h
+        src/app/AchievementSetItem.hpp
+        src/app/SuspendPointListItem.h
+        src/app/AchievementSetItem.cpp
+        src/app/mods/ModInfoItem.cpp
+        src/app/mods/ModInfoItem.hpp
+        include/firelight/mods/mod_repository.hpp
+        include/firelight/mods/mod_info.hpp
+        src/app/mods/SqliteModRepository.cpp
+        src/app/mods/SqliteModRepository.h
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
@@ -327,8 +338,8 @@ set(CPACK_PACKAGE_NAME "Firelight")
 set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 8)
-set(CPACK_PACKAGE_VERSION_PATCH 0)
-set(CPACK_PACKAGE_VERSION "0.8.0")
+set(CPACK_PACKAGE_VERSION_PATCH 1)
+set(CPACK_PACKAGE_VERSION "0.8.1")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")

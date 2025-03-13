@@ -9,6 +9,7 @@
 
 #include "../platform_metadata.hpp"
 
+#include <zlib.h>
 
 namespace firelight::library {
     LibraryScanner2::LibraryScanner2(IUserLibrary &library) : m_library(library) {
@@ -207,9 +208,35 @@ namespace firelight::library {
 
             if (extension == "ips" || extension == "bps" || extension == "ups" ||
                 extension == "mod") {
-                spdlog::info("Skipping patch file for now: {}",
-                             fileInfo.filePath().toStdString());
+
+              QFile file(fileInfo.filePath());
+              if (!file.open(QIODevice::ReadOnly)) {
+                spdlog::error("Failed to open patch file: {}",
+                              fileInfo.filePath().toStdString());
                 continue;
+              }
+
+              auto bytes = file.readAll();
+
+              auto md5 = QCryptographicHash::hash(bytes, QCryptographicHash::Algorithm::Md5).toHex();
+
+              const auto crc = crc32(0L, nullptr, 0);
+              auto fileCrc32 = QString::number(crc32(crc, reinterpret_cast<const Bytef *>(bytes.data()), bytes.size()));
+
+              auto patch = PatchFile{};
+              patch.m_filePath = fileInfo.filePath().toStdString();
+              patch.m_fileSize = fileInfo.size();
+              patch.m_fileMd5 = md5.toStdString();
+              patch.m_fileCrc32 = fileCrc32.toStdString();
+              patch.m_inArchive = false;
+
+              m_library.addPatchFile(patch);
+
+              spdlog::info("Skipping patch file for now: {}",
+                           fileInfo.filePath().toStdString());
+
+              file.close();
+              continue;
                 // Get md5 of the file
                 // Do we recognize the md5? If so, we know what the md5 (contentID?) of the target rom file is
                 // If we don't recognize the md5, there's nothing we can do

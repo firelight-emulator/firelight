@@ -18,6 +18,14 @@ namespace firelight::library {
 
         virtual bool removeRomFile(const QString &filePath, bool inArchive, const QString &archivePath) = 0;
 
+        virtual void addPatchFile(PatchFile &file) = 0;
+
+        virtual std::optional<PatchFile> getPatchFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes, bool inArchive) = 0;
+
+        virtual std::vector<PatchFile> getPatchFiles() = 0;
+
+        virtual bool removePatchFile(const QString &filePath, bool inArchive, const QString &archivePath) = 0;
+
         virtual std::vector<Entry> getEntries(int offset, int limit) = 0;
 
         virtual std::optional<Entry> getEntry(int entryId) = 0;

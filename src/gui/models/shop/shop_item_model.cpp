@@ -13,11 +13,11 @@ namespace firelight::shop {
             .platformName = "Nintendo 64",
             .targetGameId = 1,
             .targetGameName = "Mario Kart 64",
-            .capsuleImageUrl = "qrc:images/mods/mk64ampedup",
+            .capsuleImageUrl = "qrc:images/mods/mk64ampedup/capsule",
             .userHasRequiredGame = true
         });
         m_items.emplace_back(Item{
-            .id = 1,
+            .id = 2,
             .title = "Pokémon Radical Red",
             .tagline = "Tagline",
             .description = "Description",
@@ -27,11 +27,11 @@ namespace firelight::shop {
             .platformName = "GBA",
             .targetGameId = 1,
             .targetGameName = "Pokémon FireRed Version",
-            .capsuleImageUrl = "qrc:images/mods/radicalred",
+            .capsuleImageUrl = "qrc:images/mods/radicalred/capsule",
             .userHasRequiredGame = true
         });
         m_items.emplace_back(Item{
-            .id = 1,
+            .id = 3,
             .title = "Tajna and the Mana Seeds",
             .tagline = "Take control of Tajna in this complete overhaul hack for Super Mario World!",
             .description =
@@ -42,11 +42,11 @@ namespace firelight::shop {
             .platformName = "SNES",
             .targetGameId = 1,
             .targetGameName = "Super Mario World",
-            .capsuleImageUrl = "qrc:images/mods/tajna",
+            .capsuleImageUrl = "qrc:images/mods/tajna/capsule",
             .userHasRequiredGame = true
         });
         m_items.emplace_back(Item{
-            .id = 1,
+            .id = 4,
             .title = "Ultimate Goomboss Challenge",
             .tagline = "Saving the world is hungry work.",
             .description =
@@ -57,11 +57,11 @@ namespace firelight::shop {
             .platformName = "Nintendo 64",
             .targetGameId = 1,
             .targetGameName = "Paper Mario",
-            .capsuleImageUrl = "qrc:images/mods/ultimategoomboss",
+            .capsuleImageUrl = "qrc:images/mods/goomboss/capsule",
             .userHasRequiredGame = true
         });
         m_items.emplace_back(Item{
-            .id = 1,
+            .id = 5,
             .title = "Super Mario 64: Beyond the Cursed Mirror",
             .tagline =
             "Greetings Superstar, did you know that your nemesis hid in the decrepit castle all this time? It appears he fosters his strength in a hidden compartment behind one cursed mirror. I implore you to defeat him, once and for all – for the sake of the kingdom. -Yours truly, The Showrunner",
@@ -74,7 +74,7 @@ namespace firelight::shop {
             .targetGameId = 1,
             .targetGameName = "Super Mario 64",
             .clearLogoImageUrl = "file:system/_img/cursedmirrorclear.png",
-            .capsuleImageUrl = "qrc:images/mods/cursedmirror",
+            .capsuleImageUrl = "qrc:images/mods/cursedmirror/capsule",
             .userHasRequiredGame = true,
             .screenshotUrls = {
                 "file:system/_img/cursedmirror1.png",
