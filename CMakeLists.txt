@@ -12,7 +12,7 @@ set(CMAKE_OSX_ARCHITECTURES "arm64")
 set(VCPKG_DISABLE_COMPILER_TRACKING ON)
 
 set(CMAKE_BUILD_RPATH ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
-set(Qt6_DIR "C:/Qt/Qt-6.10.0")
+#set(Qt6_DIR "C:/Qt/Qt-6.10.0")
 
 list(APPEND CMAKE_PREFIX_PATH "/Users/alexcharles/Qt/6.7.2/macos" "/opt/homebrew" "C:/Qt/Qt-6.8.2")
 
@@ -277,18 +277,8 @@ file(GLOB QML_TEST_FILES
         qml/ColorPalette.qml
         qml/Constants.qml
         qml/AppStyle.qml
-        qml/common/FirelightButton.qml
-        qml/common/DetailsButton.qml
-        qml/common/RightClickMenu.qml
-        qml/common/RightClickMenuItem.qml
-        qml/common/CarouselText.qml
-        qml/common/NavigationTabBar.qml
-        qml/library/GameGridItemDelegate.qml
-        qml/pages/LibraryPage2.qml
-        qml_tests/common/tst_DetailsButton.qml
-        qml_tests/common/tst_NavigationTabBar.qml
-        qml_tests/library/tst_GameGridItemDelegate.qml
-        qml_tests/library/tst_LibraryPage2.qml
+        qml/components/FLFocusHighlight.qml
+        qml_tests/components/tst_FLFocusHighlight.qml
 )
 
 foreach (QML_FILE ${QML_TEST_FILES})

@@ -97,169 +97,170 @@ ApplicationWindow {
 
     FLFocusHighlight {
         target: window.activeFocusItem
+        usingMouse: InputMethodManager.usingMouse
     }
 
-    Rectangle {
-        id: activeFocusHighlight
-        color: "transparent"
-        border.color: "lightblue"
-        border.width: 2
-        radius: 2
-        visible: !InputMethodManager.usingMouse && parent !== null
-        anchors.fill: parent
-        anchors.margins: -4
-
-        property int bounceAmplitude: 16
-
-        SequentialAnimation {
-            id: highlightBounceAnimationRight
-            running: false
-            ParallelAnimation {
-                ScriptAction {
-                    script: {
-                        sfx_player.play("uibump")
-                    }
-                }
-                PropertyAnimation {
-                    target: activeFocusHighlight
-                    property: "anchors.leftMargin"
-                    duration: 40
-                    from: -4
-                    to: -4 + activeFocusHighlight.bounceAmplitude
-                    easing.type: Easing.Linear
-                }
-                PropertyAnimation {
-                    target: activeFocusHighlight
-                    property: "anchors.rightMargin"
-                    duration: 40
-                    from: -4
-                    to: -4 - activeFocusHighlight.bounceAmplitude
-                    easing.type: Easing.Linear
-                }
-            }
-            ParallelAnimation {
-                PropertyAnimation {
-                    target: activeFocusHighlight
-                    property: "anchors.leftMargin"
-                    duration: 40
-                    from: -4 + activeFocusHighlight.bounceAmplitude
-                    to: -4
-                    easing.type: Easing.OutElastic
-                    easing.amplitude: 1.5
-                }
-                PropertyAnimation {
-                    target: activeFocusHighlight
-                    property: "anchors.rightMargin"
-                    duration: 40
-                    from: -4 - activeFocusHighlight.bounceAmplitude
-                    to: -4
-                    easing.type: Easing.OutElastic
-                    easing.amplitude: 1.5
-                }
-            }
-        }
-
-        SequentialAnimation {
-            id: highlightBounceAnimationLeft
-            running: false
-            ParallelAnimation {
-                ScriptAction {
-                    script: {
-                        sfx_player.play("uibump")
-                    }
-                }
-                PropertyAnimation {
-                    target: activeFocusHighlight
-                    property: "anchors.leftMargin"
-                    duration: 40
-                    from: -4
-                    to: -4 - activeFocusHighlight.bounceAmplitude
-                    easing.type: Easing.Linear
-                }
-                PropertyAnimation {
-                    target: activeFocusHighlight
-                    property: "anchors.rightMargin"
-                    duration: 40
-                    from: -4
-                    to: -4 + activeFocusHighlight.bounceAmplitude
-                    easing.type: Easing.Linear
-                }
-            }
-            ParallelAnimation {
-                PropertyAnimation {
-                    target: activeFocusHighlight
-                    property: "anchors.leftMargin"
-                    duration: 40
-                    from: -4 - activeFocusHighlight.bounceAmplitude
-                    to: -4
-                    easing.type: Easing.OutElastic
-                    easing.amplitude: 1.5
-                }
-                PropertyAnimation {
-                    target: activeFocusHighlight
-                    property: "anchors.rightMargin"
-                    duration: 40
-                    from: -4 + activeFocusHighlight.bounceAmplitude
-                    to: -4
-                    easing.type: Easing.OutElastic
-                    easing.amplitude: 1.5
-                }
-            }
-        }
-
-
-        // NumberAnimation {
-        //     target: activeFocusHighlight
-        //     property: "opacity"
-        //     duration: 100
-        //     easing.type: Easing.InOutQuad
-        //     loops: Animation.Infinite
-        // }
-
-        SequentialAnimation {
-            running: true
-            loops: Animation.Infinite // Loop the animation infinitely
-            NumberAnimation {
-                target: activeFocusHighlight
-                property: "opacity"
-                from: 0.65
-                to: 1.0
-                duration: 2000
-                easing.type: Easing.InOutQuad
-            }
-            NumberAnimation {
-                target: activeFocusHighlight
-                property: "opacity"
-                from: 1.0
-                to: 0.65
-                duration: 2000
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        Connections {
-            target: window
-
-            function onActiveFocusItemChanged() {
-                let item = window.activeFocusItem
-                if (item && item.hasOwnProperty('showGlobalCursor') && item.showGlobalCursor) {
-                    let cursorItem = item
-
-                    if (cursorItem.hasOwnProperty("globalCursorProxy")) {
-                        cursorItem = cursorItem.globalCursorProxy
-                    }
-                    activeFocusHighlight.parent = cursorItem
-                    if (cursorItem.hasOwnProperty('background')) {
-                        activeFocusHighlight.radius = cursorItem.background.radius + 4
-                    } else if (cursorItem.hasOwnProperty('radius')) {
-                        activeFocusHighlight.radius = cursorItem.radius + 4
-                    }
-                } else {
-                    activeFocusHighlight.parent = null
-                }
-            }
-        }
-    }
+    // Rectangle {
+    //     id: activeFocusHighlight
+    //     color: "transparent"
+    //     border.color: "lightblue"
+    //     border.width: 2
+    //     radius: 2
+    //     visible: !InputMethodManager.usingMouse && parent !== null
+    //     anchors.fill: parent
+    //     anchors.margins: -4
+    //
+    //     property int bounceAmplitude: 16
+    //
+    //     SequentialAnimation {
+    //         id: highlightBounceAnimationRight
+    //         running: false
+    //         ParallelAnimation {
+    //             ScriptAction {
+    //                 script: {
+    //                     sfx_player.play("uibump")
+    //                 }
+    //             }
+    //             PropertyAnimation {
+    //                 target: activeFocusHighlight
+    //                 property: "anchors.leftMargin"
+    //                 duration: 40
+    //                 from: -4
+    //                 to: -4 + activeFocusHighlight.bounceAmplitude
+    //                 easing.type: Easing.Linear
+    //             }
+    //             PropertyAnimation {
+    //                 target: activeFocusHighlight
+    //                 property: "anchors.rightMargin"
+    //                 duration: 40
+    //                 from: -4
+    //                 to: -4 - activeFocusHighlight.bounceAmplitude
+    //                 easing.type: Easing.Linear
+    //             }
+    //         }
+    //         ParallelAnimation {
+    //             PropertyAnimation {
+    //                 target: activeFocusHighlight
+    //                 property: "anchors.leftMargin"
+    //                 duration: 40
+    //                 from: -4 + activeFocusHighlight.bounceAmplitude
+    //                 to: -4
+    //                 easing.type: Easing.OutElastic
+    //                 easing.amplitude: 1.5
+    //             }
+    //             PropertyAnimation {
+    //                 target: activeFocusHighlight
+    //                 property: "anchors.rightMargin"
+    //                 duration: 40
+    //                 from: -4 - activeFocusHighlight.bounceAmplitude
+    //                 to: -4
+    //                 easing.type: Easing.OutElastic
+    //                 easing.amplitude: 1.5
+    //             }
+    //         }
+    //     }
+    //
+    //     SequentialAnimation {
+    //         id: highlightBounceAnimationLeft
+    //         running: false
+    //         ParallelAnimation {
+    //             ScriptAction {
+    //                 script: {
+    //                     sfx_player.play("uibump")
+    //                 }
+    //             }
+    //             PropertyAnimation {
+    //                 target: activeFocusHighlight
+    //                 property: "anchors.leftMargin"
+    //                 duration: 40
+    //                 from: -4
+    //                 to: -4 - activeFocusHighlight.bounceAmplitude
+    //                 easing.type: Easing.Linear
+    //             }
+    //             PropertyAnimation {
+    //                 target: activeFocusHighlight
+    //                 property: "anchors.rightMargin"
+    //                 duration: 40
+    //                 from: -4
+    //                 to: -4 + activeFocusHighlight.bounceAmplitude
+    //                 easing.type: Easing.Linear
+    //             }
+    //         }
+    //         ParallelAnimation {
+    //             PropertyAnimation {
+    //                 target: activeFocusHighlight
+    //                 property: "anchors.leftMargin"
+    //                 duration: 40
+    //                 from: -4 - activeFocusHighlight.bounceAmplitude
+    //                 to: -4
+    //                 easing.type: Easing.OutElastic
+    //                 easing.amplitude: 1.5
+    //             }
+    //             PropertyAnimation {
+    //                 target: activeFocusHighlight
+    //                 property: "anchors.rightMargin"
+    //                 duration: 40
+    //                 from: -4 + activeFocusHighlight.bounceAmplitude
+    //                 to: -4
+    //                 easing.type: Easing.OutElastic
+    //                 easing.amplitude: 1.5
+    //             }
+    //         }
+    //     }
+    //
+    //
+    //     // NumberAnimation {
+    //     //     target: activeFocusHighlight
+    //     //     property: "opacity"
+    //     //     duration: 100
+    //     //     easing.type: Easing.InOutQuad
+    //     //     loops: Animation.Infinite
+    //     // }
+    //
+    //     SequentialAnimation {
+    //         running: true
+    //         loops: Animation.Infinite // Loop the animation infinitely
+    //         NumberAnimation {
+    //             target: activeFocusHighlight
+    //             property: "opacity"
+    //             from: 0.65
+    //             to: 1.0
+    //             duration: 2000
+    //             easing.type: Easing.InOutQuad
+    //         }
+    //         NumberAnimation {
+    //             target: activeFocusHighlight
+    //             property: "opacity"
+    //             from: 1.0
+    //             to: 0.65
+    //             duration: 2000
+    //             easing.type: Easing.InOutQuad
+    //         }
+    //     }
+    //
+    //     Connections {
+    //         target: window
+    //
+    //         function onActiveFocusItemChanged() {
+    //             let item = window.activeFocusItem
+    //             if (item && item.hasOwnProperty('showGlobalCursor') && item.showGlobalCursor) {
+    //                 let cursorItem = item
+    //
+    //                 if (cursorItem.hasOwnProperty("globalCursorProxy")) {
+    //                     cursorItem = cursorItem.globalCursorProxy
+    //                 }
+    //                 activeFocusHighlight.parent = cursorItem
+    //                 if (cursorItem.hasOwnProperty('background')) {
+    //                     activeFocusHighlight.radius = cursorItem.background.radius + 4
+    //                 } else if (cursorItem.hasOwnProperty('radius')) {
+    //                     activeFocusHighlight.radius = cursorItem.radius + 4
+    //                 }
+    //             } else {
+    //                 activeFocusHighlight.parent = null
+    //             }
+    //         }
+    //     }
+    // }
 
     Connections {
         target: Router
