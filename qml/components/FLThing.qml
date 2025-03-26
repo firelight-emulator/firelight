@@ -4,6 +4,7 @@ import QtMultimedia
 import QtQuick.Effects
 import QtQml
 import Qt.labs.qmlmodels 1.0
+import QtQuick.Shapes 1.8
 // import Qt5Compat.GraphicalEffects
 import Firelight 1.0
 
@@ -167,6 +168,80 @@ FocusScope {
             // }
         }
 
+        SequentialAnimation {
+            id: listAnimation
+
+            property Item target
+
+            PropertyAction {
+                target: listAnimation.target
+                property: "opacity"
+                value: 0.24
+            }
+
+            PropertyAction {
+                target: listAnimation.target
+                property: "visible"
+                value: true
+            }
+
+            ParallelAnimation {
+                ScriptAction {
+                    script: {
+                        sfx_player.play("startgame")
+                    }
+                }
+                NumberAnimation {
+                    target: listAnimation.target
+                    property: "scale"
+                    from: 1.0
+                    to: 1.2
+                    duration: 800
+                    easing.type: Easing.OutQuad
+                }
+                SequentialAnimation {
+                    PauseAnimation {
+                        duration: 760
+                    }
+                    NumberAnimation {
+                        target: listAnimation.target
+                        property: "opacity"
+                        to: 0
+                        duration: 300
+                        easing.type: Easing.InQuad
+                    }
+                }
+            }
+
+            PropertyAction {
+                target: listAnimation.target
+                property: "visible"
+                value: false
+            }
+
+            NumberAnimation {
+                target: overlay
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: 350
+                easing.type: Easing.InQuad
+            }
+
+            PauseAnimation {
+                duration: 1000
+            }
+
+            NumberAnimation {
+                target: overlay
+                property: "opacity"
+                from: 1
+                to: 0
+                duration: 350
+                easing.type: Easing.InQuad
+            }
+        }
+
         DelegateChooser {
             id: chooser
 
@@ -179,6 +254,7 @@ FocusScope {
                     id: gameDele
 
                     required property var model
+                    required property var index
 
                     height: 270
                     width: ListView.isCurrentItem ? 270 : 180
@@ -189,15 +265,14 @@ FocusScope {
                         }
                     }
 
-                    Image {
-                        id: sourceItem
-
+                    Button {
                         property bool showGlobalCursor: true
-
                         anchors.bottom: parent.bottom
+                        padding: 0
+                        spacing: 0
+                        horizontalPadding: 0
                         focus: true
                         height: gameDele.ListView.isCurrentItem ? 270 : 180
-                        source: model.cover
                         width: gameDele.ListView.isCurrentItem ? 270 : 180
 
                         Behavior on height {
@@ -213,10 +288,64 @@ FocusScope {
                             }
                         }
 
+                        onClicked: {
+                            if (!gameDele.ListView.isCurrentItem) {
+                                gameDele.ListView.view.currentIndex = gameDele.index
+                                return
+                            } else {
+                                listAnimation.target = imageClone
+                                listAnimation.start()
+                            }
+                        }
+
                         HoverHandler {
                             cursorShape: Qt.PointingHandCursor
                         }
+
+                        contentItem: Item {
+
+                            // Image {
+                            //     id: imageClone
+                            //     visible: false
+                            //     anchors.fill: parent
+                            //     source: model.cover
+                            // }
+                            Image {
+                                id: sourceImage
+                                anchors.fill: parent
+                                source: model.cover
+                            }
+                            MultiEffect {
+                                id: imageClone
+                                visible: false
+                                source: sourceImage
+                                anchors.fill: parent
+                                maskEnabled: true
+
+                                // maskInverted: true
+                                // maskSource: ShaderEffectSource {
+                                //     anchors.fill: parent
+                                //     sourceItem: Rectangle {
+                                //         anchors.fill: parent
+                                //         radius: height / 4
+                                //         color: "#000000ff"
+                                //     }
+                                // }
+                                maskSource: Image {
+                                    source: "file:rectangle17.png"
+                                    anchors.fill: parent
+                                }
+                                maskSpreadAtMax: 1.0 // Adjust for smoother fade
+                                maskSpreadAtMin: 1.0 // Adjust for smoother fade
+                                maskThresholdMax: 1.0 // Usually leave at 1.0
+                                maskThresholdMin: 0.4 // Usually leave at 0.0
+                                // blurEnabled: true
+                                // blurMax: 64
+                                // blur: 1.0
+                            }
+                        }
                     }
+
                     Text {
                         id: titleText
 
@@ -306,5 +435,12 @@ FocusScope {
             }
 
         }
+    }
+
+    Rectangle {
+        id: overlay
+        anchors.fill: parent
+        color: "black"
+        opacity: 0
     }
 }
