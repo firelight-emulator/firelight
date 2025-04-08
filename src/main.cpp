@@ -12,6 +12,11 @@
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <dwmapi.h>
+#endif
+
 #include <discord/discord.h>
 #include "app/input/sqlite_controller_repository.hpp"
 #include "app/rcheevos/ra_client.hpp"
@@ -48,6 +53,7 @@
 #include "app/library/sqlite_user_library.hpp"
 #include "app/mods/ModInfoItem.hpp"
 #include "app/mods/SqliteModRepository.h"
+#include "gui/EventEmitter.h"
 #include "gui/models/library/entry_list_model.hpp"
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
@@ -250,6 +256,7 @@ int main(int argc, char *argv[]) {
   // engine.addUrlInterceptor(&imageCacheUrlInterceptor);
   engine.addImageProvider("gameImages", gameImageProvider);
 
+  engine.rootContext()->setContextProperty("EventEmitter", new firelight::gui::EventEmitter());
   engine.rootContext()->setContextProperty("Router", &router);
   engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
@@ -281,7 +288,7 @@ int main(int argc, char *argv[]) {
   QObject::connect(
     &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
     []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-  engine.loadFromModule("QMLFirelight", "Main2");
+  engine.loadFromModule("QMLFirelight", "Main3");
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);

@@ -1,68 +1,53 @@
 {
-  "version": 6,
-  "configurePresets": [
-    {
-      "name": "debug",
-      "displayName": "Debug",
-      "generator": "Ninja",
-      "binaryDir": "build/debug",
-      "toolchainFile": "/Users/alexcharles/vcpkg/scripts/buildsystems/vcpkg.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
-      "name": "debug-win",
-      "displayName": "Debug",
-      "generator": "Ninja",
-      "binaryDir": "build/debug-win",
-      "environment": {
-        "VCPKG_DEFAULT_TRIPLET": "x64-mingw-dynamic",
-        "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-dynamic",
-        "VCPKG_DEFAULT_TARGET_TRIPLET": "x64-mingw-dynamic"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "VCPKG_LIBRARY_LINKAGE": "static",
-        "VCPKG_DISABLE_COMPILER_TRACKING": "ON",
-        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
-        "VCPKG_HOST_TRIPLET": "x64-mingw-dynamic",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
-      "name": "release-win",
-      "displayName": "Release",
-      "generator": "Ninja",
-      "binaryDir": "build/release-win",
-      "environment": {
-        "VCPKG_DEFAULT_TRIPLET": "x64-mingw-dynamic",
-        "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-dynamic",
-        "VCPKG_DEFAULT_TARGET_TRIPLET": "x64-mingw-dynamic"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "VCPKG_DISABLE_COMPILER_TRACKING": "ON",
-        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
-        "VCPKG_HOST_TRIPLET": "x64-mingw-dynamic",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
-      "name": "xcode",
-      "displayName": "XCode",
-      "generator": "Xcode",
-      "binaryDir": "build/xcode",
-      "toolchainFile": "/Users/alexcharles/vcpkg/scripts/buildsystems/vcpkg.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    }
-  ]
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "debug-win",
+            "displayName": "Debug",
+            "generator": "Ninja",
+            "binaryDir": "build/debug-win",
+            "toolchainFile": "C:/msys64/mingw64/share/cmake/Modules/Platform/Windows-Clang.cmake",
+            "environment": {
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_C_COMPILER": "clang",
+                "VCPKG_DISABLE_COMPILER_TRACKING": "ON",
+                "VCPKG_HOST_TRIPLET": "x64-windows-static",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+            }
+        },
+        {
+            "name": "release-win",
+            "displayName": "Release",
+            "generator": "Ninja",
+            "binaryDir": "build/release-win",
+            "environment": {
+                "VCPKG_DEFAULT_TRIPLET": "x64-mingw-dynamic",
+                "VCPKG_DEFAULT_HOST_TRIPLET": "x64-mingw-dynamic",
+                "VCPKG_DEFAULT_TARGET_TRIPLET": "x64-mingw-dynamic"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "VCPKG_DISABLE_COMPILER_TRACKING": "ON",
+                "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
+                "VCPKG_HOST_TRIPLET": "x64-mingw-dynamic",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "xcode",
+            "displayName": "XCode",
+            "generator": "Xcode",
+            "binaryDir": "build/xcode",
+            "toolchainFile": "/Users/alexcharles/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        }
+    ]
 }

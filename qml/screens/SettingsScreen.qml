@@ -2,72 +2,74 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-FocusScope {
+Pane {
     id: root
 
     property bool movingDown: true
-    required property string section
+    property string section
 
     Component.onCompleted: {
         sectionChanged();
     }
-    Keys.onEscapePressed: {
-        root.StackView.view.pop();
-    }
 
-    Pane {
-        id: headerBar
+    background: Item{}
+    horizontalPadding: AppStyle.windowPadding
+    verticalPadding: 0
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        height: 72
-        padding: 16
-
-        background: Item {
-        }
-        contentItem: RowLayout {
-            spacing: 24
-
-            Text {
-                Layout.fillHeight: true
-                Layout.leftMargin: 24
-                color: ColorPalette.neutral100
-                font.family: Constants.regularFontFamily
-                font.pixelSize: 24
-                font.weight: Font.Normal
-                horizontalAlignment: Text.AlignHCenter
-                text: "Settings"
-                verticalAlignment: Text.AlignVCenter
-            }
-            Item {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-            }
-            FirelightButton {
-                id: closeButton
-
-                Layout.fillHeight: true
-                Layout.preferredWidth: height
-                Layout.rightMargin: 24
-                flat: true
-                iconCode: "\ue5cd"
-                tooltipLabel: "Close"
-
-                onClicked: {
-                    root.StackView.view.pop();
-                }
-            }
-        }
-    }
+    // Pane {
+    //     id: headerBar
+    //
+    //     anchors.left: parent.left
+    //     anchors.right: parent.right
+    //     anchors.top: parent.top
+    //     height: 72
+    //     padding: 16
+    //
+    //     background: Item {
+    //     }
+    //     contentItem: RowLayout {
+    //         spacing: 24
+    //
+    //         Text {
+    //             Layout.fillHeight: true
+    //             Layout.leftMargin: 24
+    //             color: ColorPalette.neutral100
+    //             font.family: Constants.regularFontFamily
+    //             font.pixelSize: 24
+    //             font.weight: Font.Normal
+    //             horizontalAlignment: Text.AlignHCenter
+    //             text: "Settings"
+    //             verticalAlignment: Text.AlignVCenter
+    //         }
+    //         Item {
+    //             Layout.fillHeight: true
+    //             Layout.fillWidth: true
+    //         }
+    //         FirelightButton {
+    //             id: closeButton
+    //
+    //             Layout.fillHeight: true
+    //             Layout.preferredWidth: height
+    //             Layout.rightMargin: 24
+    //             flat: true
+    //             iconCode: "\ue5cd"
+    //             tooltipLabel: "Close"
+    //
+    //             onClicked: {
+    //                 root.StackView.view.pop();
+    //             }
+    //         }
+    //     }
+    // }
     FLTwoColumnMenu {
-        KeyNavigation.up: closeButton
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.leftMargin: 40
-        anchors.right: parent.right
-        anchors.rightMargin: 40
-        anchors.top: headerBar.bottom
+        // KeyNavigation.up: closeButton
+        // anchors.bottom: parent.bottom
+        // anchors.left: parent.left
+        // anchors.leftMargin: 40
+        // anchors.right: parent.right
+        // anchors.rightMargin: 40
+        // anchors.top: headerBar.bottom
+        anchors.fill: parent
         menuItems: ["Appearance", "Directories", "Controllers", "Achievements", "Audio / Video", "Platforms"]
         pages: [appearanceSettings, directorySettings, controllerSettings, retroAchievementSettings, videoSettings, platformSettings]
     }

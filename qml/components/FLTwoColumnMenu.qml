@@ -116,7 +116,7 @@ FocusScope {
             interactive: false
             keyNavigationEnabled: true
             model: root.menuItems
-            width: 400
+            width: 300
 
             delegate: FirelightMenuItem {
                 required property var index

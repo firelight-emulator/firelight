@@ -36,14 +36,20 @@ Rectangle {
     }
 
     onTargetChanged: {
-        if (target && target.hasOwnProperty('showGlobalCursor') && target.showGlobalCursor) {
+        if (target === null) {
+            activeFocusHighlight.parent = null
+            return
+        }
+
+        if (target.hasOwnProperty('showGlobalCursor') && target.showGlobalCursor) {
             if (target.hasOwnProperty("globalCursorProxy") && target.globalCursorProxy) {
                 activeFocusHighlight.parent = target.globalCursorProxy
             } else {
                 activeFocusHighlight.parent = target
             }
-        } else {
-            activeFocusHighlight.parent = null
+            return
         }
+
+        activeFocusHighlight.parent = null
     }
 }

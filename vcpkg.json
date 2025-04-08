@@ -1,0 +1,15 @@
+{
+  "dependencies": [
+    "cpr",
+    "ffmpeg",
+    "qtquick3d",
+    "qtmultimedia",
+    "qtbase",
+    "qtdeclarative",
+    "sdl2",
+    "spdlog",
+    "gtest",
+    "nlohmann-json",
+    "libarchive"
+  ]
+}

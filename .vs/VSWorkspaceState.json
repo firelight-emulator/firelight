@@ -1,0 +1,17 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "build\\debug-win",
+      "build\\release-win",
+      "build\\xcode"
+    ]
+  },
+  "ExpandedNodes": [
+    "",
+    "\\libs",
+    "\\libs\\rcheevos",
+    "\\libs\\rcheevos\\test"
+  ],
+  "SelectedNode": "\\libs\\rcheevos\\test\\rcheevos-test.sln",
+  "PreviewInSolutionExplorer": false
+}

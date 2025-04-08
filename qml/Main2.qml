@@ -15,20 +15,91 @@ ApplicationWindow {
     width: 1280
     height: 720
 
+    // flags: Qt.FramelessWindowHint
+
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
 
     title: qsTr("Firelight")
+
+    property bool blur: false
 
     property alias gameRunning: emulatorLoader.active
     property alias currentGameName: emulatorLoader.gameName
     property alias currentEntryId: emulatorLoader.entryId
     property alias currentContentHash: emulatorLoader.contentHash
 
+    // Rectangle {
+    //     id: titleBar
+    //     width: parent.width   // Span the full width of the window
+    //     height: 35            // Adjust height as needed
+    //     color: "steelblue"    // Give it a distinct color
+    //     anchors.top: parent.top // Anchor it to the top of the window
+    //     anchors.left: parent.left
+    //     anchors.right: parent.right
+    //
+    //     // Display some text (optional)
+    //     Text {
+    //         anchors.centerIn: parent
+    //         text: window.title // Use the window's title
+    //         color: "white"
+    //         font.pixelSize: 14
+    //     }
+    //
+    //     // --- The MouseArea to handle dragging ---
+    //     MouseArea {
+    //         anchors.fill: parent // Cover the entire titleBar rectangle
+    //         acceptedButtons: Qt.LeftButton // Only react to left mouse button clicks
+    //
+    //         // When the left mouse button is pressed down within this area...
+    //         onPressed: (mouse) => {
+    //             // ...tell the window system to start a move operation.
+    //             // Qt internally handles the logic of tracking the mouse
+    //             // and moving the window based on this call.
+    //             window.startSystemMove();
+    //
+    //             // Note: We don't need to pass the 'mouse' event argument here.
+    //             // Calling startSystemMove() on the window is sufficient.
+    //         }
+    //
+    //         // Optional: Add double-click behavior (e.g., maximize/restore)
+    //         onDoubleClicked: (mouse) => {
+    //             if (window.visibility === Window.Maximized) {
+    //                 window.showNormal();
+    //             } else {
+    //                 window.showMaximized();
+    //             }
+    //         }
+    //     }
+    // }
+
     background: Rectangle {
+        id: theBackground
         height: window.height
         width: window.width
         color: ColorPalette.neutral1000
+
+        property real blurAmount: window.blur ? 0.5 : 0
+
+        Behavior on blurAmount {
+            NumberAnimation {
+                easing.type: Easing.InOutQuad
+                duration: 250
+            }
+        }
+
+        layer.enabled: blurAmount !== 0
+        layer.effect: MultiEffect {
+            // enabled: root.blurAmount !== 0
+            source: theBackground
+            anchors.fill: theBackground
+            blurEnabled: true
+            blurMultiplier: 0
+            blurMax: 64
+            blur: theBackground.blurAmount
+        }
+
+
         Item {
             anchors.fill: parent
             visible: AppearanceSettings.usingCustomBackground && AppearanceSettings.backgroundFile !== ""
@@ -47,7 +118,7 @@ ApplicationWindow {
             Rectangle {
                 anchors.fill: parent
                 color: "black"
-                opacity: 0.8
+                opacity: 0.65
             }
 
             Rectangle {
@@ -478,9 +549,7 @@ ApplicationWindow {
             }
         }
 
-        property bool blur: false
-
-        property real blurAmount: blur ? 0.5 : 0
+        property real blurAmount: window.blur ? 0.5 : 0
 
         Behavior on blurAmount {
             NumberAnimation {
@@ -657,7 +726,7 @@ ApplicationWindow {
 
         onAboutToShow: function () {
             sfx_player.play("quickopen")
-            screenStack.blur = true
+            window.blur = true
             if (window.gameRunning && screenStack.currentItem === emulatorLoader) {
                 quickMenuStack.pushItem(nowPlayingPage, {
                     entryId: currentEntryId,
@@ -671,7 +740,7 @@ ApplicationWindow {
         }
 
         onAboutToHide: function () {
-            screenStack.blur = false
+            window.blur = false
         }
 
         onClosed: function () {
@@ -680,9 +749,9 @@ ApplicationWindow {
         }
 
         Overlay.modal: Rectangle {
-            color: "black"
+            color: "#131313"
             anchors.fill: parent
-            opacity: 0.6
+            opacity: 0.8
             Behavior on opacity {
                 NumberAnimation {
                     duration: 200
@@ -702,9 +771,9 @@ ApplicationWindow {
                 }
                 PropertyAnimation {
                     target: contentThing
-                    property: "y"
-                    from: 20
-                    to: 0
+                    property: "x"
+                    from: -20
+                    to: 20
                     duration: 250
                     easing.type: Easing.InOutQuad
                 }
@@ -723,9 +792,9 @@ ApplicationWindow {
                 }
                 PropertyAnimation {
                     target: contentThing
-                    property: "y"
-                    from: 0
-                    to: 20
+                    property: "x"
+                    from: 20
+                    to: -20
                     duration: 250
                     easing.type: Easing.InOutQuad
                 }
@@ -753,9 +822,9 @@ ApplicationWindow {
                 KeyNavigation.up: closeButton
                 enabled: depth > 0
                 anchors.top: parent.top
-                anchors.left: parent.left
+                anchors.left: menuBar.right
                 anchors.right: parent.right
-                anchors.bottom: menuBar.top
+                anchors.bottom: parent.bottom
 
                 // onActiveFocusChanged: function () {
                 //     if (!InputMethodManager.usingMouse && !quickMenuStack.activeFocus) {
@@ -786,7 +855,7 @@ ApplicationWindow {
                         easing.type: Easing.InOutQuad
                     }
                     PropertyAnimation {
-                        property: "y"
+                        property: "x"
                         from: 20
                         to: 0
                         duration: 150
@@ -804,7 +873,7 @@ ApplicationWindow {
                         easing.type: Easing.InOutQuad
                     }
                     PropertyAnimation {
-                        property: "y"
+                        property: "x"
                         from: 0
                         to: 20
                         duration: 150
@@ -821,7 +890,7 @@ ApplicationWindow {
                         easing.type: Easing.InOutQuad
                     }
                     PropertyAnimation {
-                        property: "y"
+                        property: "x"
                         from: 20
                         to: 0
                         duration: 150
@@ -838,7 +907,7 @@ ApplicationWindow {
                         easing.type: Easing.InOutQuad
                     }
                     PropertyAnimation {
-                        property: "y"
+                        property: "x"
                         from: 0
                         to: 20
                         duration: 150
@@ -882,12 +951,13 @@ ApplicationWindow {
             ListView {
                 id: menuBar
                 KeyNavigation.up: quickMenuStack.enabled ? quickMenuStack : closeButton
-                width: (48 * 4) + 5 * 42
+                height: (24 * 4) + 5 * 42
                 focus: true
-                height: 32
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                orientation: ListView.Horizontal
+                width: 32
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.topMargin: 72
+                orientation: ListView.Vertical
                 currentIndex: 0
                 interactive: false
 
@@ -914,7 +984,7 @@ ApplicationWindow {
                         icon: "\ue8ac"; label: "Power"
                     }
                 }
-                spacing: 48
+                spacing: 24
                 delegate: FirelightButton {
                     id: theButton
                     focus: true

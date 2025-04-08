@@ -62,7 +62,7 @@ Item {
 
         function test_initial_state() {
             var item = createTemporaryObject(testItemComponent, root)
-            var highlight = createTemporaryObject(activeFocusHighlightComponent, item, {
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
                 target: item,
                 usingMouse: false
             })
@@ -76,7 +76,7 @@ Item {
 
         function test_radius_with_background() {
             var itemWithBackground = createTemporaryObject(testItemWithBackgroundComponent, root)
-            var highlight = createTemporaryObject(activeFocusHighlightComponent, itemWithBackground, {
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
                 target: itemWithBackground,
                 usingMouse: false
             })
@@ -86,7 +86,7 @@ Item {
 
         function test_radius_without_radius_or_background() {
             var item = createTemporaryObject(testItemComponent, root);
-            var highlight = createTemporaryObject(activeFocusHighlightComponent, item, {
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
                 target: item,
                 usingMouse: false
             })
@@ -98,7 +98,7 @@ Item {
 
         function test_visibility_with_mouse() {
             var item = createTemporaryObject(testItemComponent, root)
-            var highlight = createTemporaryObject(activeFocusHighlightComponent, item, {
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
                 target: item,
                 usingMouse: true
             })
@@ -108,7 +108,7 @@ Item {
 
         function test_target_change_with_global_cursor() {
             var itemWithProxy = createTemporaryObject(testItemWithProxyComponent, root)
-            var highlight = createTemporaryObject(activeFocusHighlightComponent, itemWithProxy, {
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
                 target: itemWithProxy,
                 usingMouse: false
             })
@@ -138,7 +138,7 @@ Item {
 
         function test_target_change_radius() {
             var item = createTemporaryObject(testItemComponent, root);
-            var highlight = createTemporaryObject(activeFocusHighlightComponent, item, {
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
                 target: item,
                 usingMouse: false
             });
@@ -150,7 +150,7 @@ Item {
 
         function test_target_change_background_radius() {
             var item = createTemporaryObject(testItemWithBackgroundComponent, root);
-            var highlight = createTemporaryObject(activeFocusHighlightComponent, item, {
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
                 target: item,
                 usingMouse: false
             });
@@ -158,6 +158,76 @@ Item {
             item.background.radius = 10;
             highlight.target = item;
             compare(highlight.radius, 14, "Radius should update when target background radius changes");
+        }
+
+        function test_border_properties() {
+            var item = createTemporaryObject(testItemComponent, root)
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
+                target: item,
+                usingMouse: false,
+                borderColor: "red",
+                borderWidth: 4
+            })
+
+            compare(highlight.border.color, "#ff0000", "Border color should match custom value")
+            compare(highlight.border.width, 4, "Border width should match custom value")
+        }
+
+        function test_bounce_amplitude_property() {
+            var item = createTemporaryObject(testItemComponent, root)
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
+                target: item,
+                usingMouse: false,
+                bounceAmplitude: 24
+            })
+
+            compare(highlight.bounceAmplitude, 24, "Bounce amplitude should match custom value")
+        }
+
+        // function test_show_global_cursor_change() {
+        //     var item = createTemporaryObject(testItemComponent, root)
+        //     var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
+        //         target: item,
+        //         usingMouse: false
+        //     })
+        //
+        //     item.showGlobalCursor = false
+        //     highlight.target = item
+        //     compare(highlight.parent, null, "Parent should be null when showGlobalCursor is false")
+        //
+        //     item.showGlobalCursor = true
+        //     highlight.target = item
+        //     compare(highlight.parent, item, "Parent should be item when showGlobalCursor is true")
+        // }
+
+        function test_visibility_parent_change() {
+            var item = createTemporaryObject(testItemComponent, root)
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, root, {
+                target: item,
+                usingMouse: false
+            })
+
+            compare(highlight.visible, true, "Highlight should be visible initially")
+
+            highlight.parent = null
+            compare(highlight.visible, false, "Highlight should be invisible when parent is null")
+
+            highlight.parent = item
+            compare(highlight.visible, true, "Highlight should be visible when parent is restored")
+        }
+
+        function test_target_null_to_valid() {
+            var item = createTemporaryObject(testItemComponent, root)
+            var highlight = createTemporaryObject(activeFocusHighlightComponent, null, {
+                target: null,
+                usingMouse: false
+            })
+
+            compare(highlight.visible, false, "Highlight should be invisible with null target")
+
+            highlight.target = item
+            compare(highlight.visible, true, "Highlight should become visible with valid target")
+            compare(highlight.parent, item, "Parent should be set to target")
         }
     }
 }

@@ -26,7 +26,26 @@
     </qresource>
     <qresource prefix="/images">
         <file alias="retroachievements-banner">assets/img/retroachievements_banner.png</file>
-        <file alias="firelight-logo">assets/img/firelight_logo.png</file>
+        <file alias="firelight-logo">assets/img/firelight_logo1 (1).svg</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file alias="add">assets/img/icons/filled-rounded/add.svg</file>
+        <file alias="add-circle">assets/img/icons/filled-rounded/add-circle.svg</file>
+        <file alias="arrow-back">assets/img/icons/filled-rounded/arrow-back.svg</file>
+        <file alias="arrow-forward">assets/img/icons/filled-rounded/arrow-forward.svg</file>
+        <file alias="bell">assets/img/icons/filled-rounded/bell.svg</file>
+        <file alias="book">assets/img/icons/filled-rounded/book2.svg</file>
+        <file alias="bookmark-star">assets/img/icons/filled-rounded/bookmark-star.svg</file>
+        <file alias="browse">assets/img/icons/filled-rounded/browse.svg</file>
+        <file alias="controller">assets/img/icons/filled-rounded/controller.svg</file>
+        <file alias="history">assets/img/icons/filled-rounded/history.svg</file>
+        <file alias="home">assets/img/icons/filled-rounded/home.svg</file>
+        <file alias="kid-star">assets/img/icons/filled-rounded/kid-star.svg</file>
+        <file alias="new-folder">assets/img/icons/filled-rounded/new-folder.svg</file>
+        <file alias="search">assets/img/icons/filled-rounded/search.svg</file>
+        <file alias="settings">assets/img/icons/filled-rounded/settings.svg</file>
+        <file alias="star">assets/img/icons/filled-rounded/star.svg</file>
+        <file alias="star-shine">assets/img/icons/filled-rounded/star-shine.svg</file>
     </qresource>
     <qresource prefix="/images/platform-icons">
         <file alias="nes">assets/img/nes.svg</file>
