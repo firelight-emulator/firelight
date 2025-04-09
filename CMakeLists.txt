@@ -6,6 +6,7 @@ project(firelight
         LANGUAGES CXX
 )
 
+
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
 set(CMAKE_OSX_ARCHITECTURES "arm64")
@@ -23,6 +24,20 @@ list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+#option(ENABLE_ASAN "Enable Address Sanitizer" ON)
+#if(ENABLE_ASAN)
+#    message(STATUS "AddressSanitizer (ASan) enabled.")
+#    # Check if the compiler is Clang or GCC (ASan flag is the same)
+#    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+#        add_compile_options(-fsanitize=address -g) # Add -g for debug symbols
+#        add_link_options(-fsanitize=address)
+#        # For older CMake versions that don't support target_link_options, you might use:
+#        # target_link_libraries(YourApp PRIVATE -fsanitize=address)
+#    else()
+#        message(WARNING "ASan requested, but compiler is not Clang or GCC. ASan not enabled.")
+#    endif()
+#endif()
 
 #set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 
@@ -42,9 +57,16 @@ set(CMAKE_AUTOUIC ON)
 
 # set(QT6_DIR "C:/Qt/Qt-6.9.0")
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
+pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
+pkg_check_modules(AVUTIL REQUIRED IMPORTED_TARGET libavutil)
+pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
+pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
+
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
+# find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
 find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
@@ -159,7 +181,7 @@ if (WIN32)
     target_link_libraries(firelight_lib PUBLIC mingw32)
 endif ()
 
-target_link_libraries(firelight_lib PRIVATE
+target_link_libraries(firelight_lib PUBLIC
         SDL2::SDL2
         z
         nlohmann_json::nlohmann_json
@@ -174,7 +196,13 @@ target_link_libraries(firelight_lib PRIVATE
         Qt6::GuiPrivate
         Qt6::Network
         Qt6::Widgets
-        ${FFMPEG_LIBRARIES}
+        # ${FFMPEG_LIBRARIES}
+        PkgConfig::AVCODEC
+        PkgConfig::AVFORMAT
+        PkgConfig::AVUTIL
+        # Add other PkgConfig::<PREFIX> targets as needed
+        PkgConfig::SWSCALE
+        PkgConfig::SWRESAMPLE
         LibArchive::LibArchive
         spdlog::spdlog
         cpr::cpr

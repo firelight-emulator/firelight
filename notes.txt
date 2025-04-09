@@ -1,3 +1,6 @@
+pacman -S mingw-w64-clang-x86_64-toolchain
+mingw-w64-x86_64-clang-analyzer
+
 install PIP (should come with Python)
 
 might need to set on PATH
@@ -22,3 +25,6 @@ C:/msys64/msys2_shell.cmd -defterm -here -no-start -mingw64 -use-full-path
 export PERL5LIB="/usr/share/automake-1.17"
 
 warning: The vcpkg C:\vcpkg\vcpkg.exe is using detected vcpkg root C:\vcpkg and ignoring mismatched VCPKG_ROOT environment value C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg. To suppress this message, unset the environment variable or use the --vcpkg-root command line switch.
+
+
+packages can provide a cmake config file or a pkg config file most of the time... sometimes both... cmake config file works with just find_package and .pc files need pkgconfig

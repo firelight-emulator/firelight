@@ -132,7 +132,7 @@ namespace firelight::library {
 
     QHash<int, QByteArray> EntryListModel::roleNames() const {
         QHash<int, QByteArray> roles;
-        roles[Id] = "id";
+        roles[Id] = "entryId";
         roles[DisplayName] = "displayName";
         roles[ContentHash] = "contentHash";
         roles[PlatformId] = "platformId";

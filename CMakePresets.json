@@ -6,7 +6,6 @@
             "displayName": "Debug",
             "generator": "Ninja",
             "binaryDir": "build/debug-win",
-            "toolchainFile": "C:/msys64/mingw64/share/cmake/Modules/Platform/Windows-Clang.cmake",
             "environment": {
             },
             "cacheVariables": {

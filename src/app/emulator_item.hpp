@@ -26,7 +26,7 @@ public:
 
     ~EmulatorItem() override;
 
-    bool m_startAfterLoading = false;
+    bool m_startAfterLoading = true;
     bool m_loaded = false;
     bool m_started = false;
 
