@@ -6,9 +6,9 @@ import Firelight 1.0
 FocusScope {
     id: root
 
-    required property string title
+    property string title: ""
 
-    implicitHeight: titleText.height + navItems.height
+    implicitHeight: (titleText.visible ? titleText.height : 0) + navItems.height
 
     default property list<FLNavItem> items
 
@@ -23,15 +23,16 @@ FocusScope {
         width: parent.width
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        height: 20
+        visible: root.title !== ""
+        height: visible ? 20 : 0
         padding: 0
     }
 
     ColumnLayout {
         id: navItems
         // spacing: 12
-        spacing: 2
-        anchors.topMargin: 6
+        spacing: 8
+        anchors.topMargin: root.title === "" ? 0 : 6
         anchors.top: titleText.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -41,8 +42,8 @@ FocusScope {
             delegate: Pane {
                 required property var modelData
                 focus: true
-                Layout.minimumHeight: 38
-                Layout.maximumHeight: 38
+                Layout.minimumHeight: 42
+                Layout.maximumHeight: 42
                 Layout.fillWidth: true
 
                 padding: 0

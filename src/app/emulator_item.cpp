@@ -107,6 +107,16 @@ void EmulatorItem::loadRewindPoint(const int index) {
   update();
 }
 
+void EmulatorItem::setPlaybackMultiplier(int playbackMultiplier) {
+    if (m_playbackMultiplier != playbackMultiplier) {
+        m_playbackMultiplier = playbackMultiplier;
+        emit playbackMultiplierChanged();
+
+        m_renderer->submitCommand({.type = EmulatorItemRenderer::SetPlaybackMultiplier, .playbackMultiplier = m_playbackMultiplier});
+        update();
+    }
+}
+
 void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
     const auto pos = event->position();
     const auto bounds = boundingRect();

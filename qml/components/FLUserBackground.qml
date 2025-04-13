@@ -11,6 +11,8 @@ Rectangle {
 
     property real blurAmount: root.blur ? 0.5 : 0
 
+    color: defaultColor
+
     Behavior on blurAmount {
         NumberAnimation {
             easing.type: Easing.InOutQuad
@@ -39,6 +41,8 @@ Rectangle {
             fillMode: Image.PreserveAspectCrop
             anchors.fill: parent
             playing: true
+
+            cache: false
 
             onSourceChanged: {
                 playing = true

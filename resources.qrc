@@ -42,10 +42,23 @@
         <file alias="home">assets/img/icons/filled-rounded/home.svg</file>
         <file alias="kid-star">assets/img/icons/filled-rounded/kid-star.svg</file>
         <file alias="new-folder">assets/img/icons/filled-rounded/new-folder.svg</file>
+        <file alias="photo-library">assets/img/icons/filled-rounded/photo-library.svg</file>
         <file alias="search">assets/img/icons/filled-rounded/search.svg</file>
         <file alias="settings">assets/img/icons/filled-rounded/settings.svg</file>
+        <file alias="shopping-bag">assets/img/icons/filled-rounded/shopping-bag.svg</file>
         <file alias="star">assets/img/icons/filled-rounded/star.svg</file>
         <file alias="star-shine">assets/img/icons/filled-rounded/star-shine.svg</file>
+        <file alias="platform-gba">assets/img/platform-icons/gbaicon.svg</file>
+        <file alias="platform-gbc">assets/img/platform-icons/gbcicon.svg</file>
+        <file alias="platform-gb">assets/img/platform-icons/gbicon.svg</file>
+        <file alias="platform-ds">assets/img/platform-icons/dsicon.svg</file>
+        <file alias="platform-genesis">assets/img/platform-icons/genesisicon.svg</file>
+        <file alias="platform-gamegear">assets/img/platform-icons/gamegearicon.svg</file>
+        <file alias="platform-mastersystem">assets/img/platform-icons/mastersystemicon.svg</file>
+        <file alias="platform-n64">assets/img/platform-icons/n64icon.svg</file>
+        <file alias="platform-nes">assets/img/platform-icons/nesicon.svg</file>
+        <file alias="platform-snes">assets/img/platform-icons/snesicon.svg</file>
+        <file alias="platform-psp">assets/img/platform-icons/pspicon.svg</file>
     </qresource>
     <qresource prefix="/images/platform-icons">
         <file alias="nes">assets/img/nes.svg</file>

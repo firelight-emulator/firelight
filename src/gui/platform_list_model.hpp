@@ -17,6 +17,10 @@ namespace firelight::gui {
 
         [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
+        Q_INVOKABLE QString getPlatformIconName(int platformId) const;
+
+        Q_INVOKABLE QString getPlatformDisplayName(int platformId) const;
+
     private:
         enum Roles { PlatformId = Qt::UserRole + 1, DisplayName, IconUrl, Buttons, Sticks };
 
@@ -24,6 +28,7 @@ namespace firelight::gui {
             int platformId;
             QString displayName;
             QString iconUrl;
+            QString iconName;
             QVector<QJsonObject> buttons;
             QVector<QJsonObject> sticks;
         };

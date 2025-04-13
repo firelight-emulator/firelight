@@ -20,11 +20,14 @@ private:
     Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY videoAspectRatioChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(float audioBufferLevel READ audioBufferLevel NOTIFY audioBufferLevelChanged)
+    Q_PROPERTY(int playbackMultiplier READ playbackMultiplier WRITE setPlaybackMultiplier NOTIFY playbackMultiplierChanged)
 
 public:
     explicit EmulatorItem(QQuickItem *parent = nullptr);
 
     ~EmulatorItem() override;
+
+    int m_playbackMultiplier = 1;
 
     bool m_startAfterLoading = true;
     bool m_loaded = false;
@@ -72,6 +75,18 @@ public:
 
     Q_INVOKABLE void loadRewindPoint(int index);
 
+    int playbackMultiplier() const { return m_playbackMultiplier; }
+    void setPlaybackMultiplier(int playbackMultiplier);
+
+    Q_INVOKABLE void incrementPlaybackMultiplier() {
+        setPlaybackMultiplier(m_playbackMultiplier + 1);
+    }
+
+    Q_INVOKABLE void decrementPlaybackMultiplier() {
+        setPlaybackMultiplier(m_playbackMultiplier - 1);
+    }
+    
+
 protected:
     void hoverMoveEvent(QHoverEvent *event) override;
 
@@ -108,6 +123,9 @@ signals:
     void contentHashChanged();
 
     void gameNameChanged();
+
+    void playbackMultiplierChanged();
+    
 
 protected:
     QQuickRhiItemRenderer *createRenderer() override;

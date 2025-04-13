@@ -13,10 +13,6 @@ ApplicationWindow {
     id: window
     objectName: "Application Window"
 
-    onActiveFocusItemChanged: {
-        console.log("Active focus item changed to", window.activeFocusItem)
-    }
-
     width: 1920
     height: 1080
 
@@ -36,87 +32,12 @@ ApplicationWindow {
         backgroundFile: AppearanceSettings.backgroundFile
     }
 
-    Component {
-        id: emuPage
-        NewEmulatorPage {
-            onRewindPointsReady: function(points) {
-                screenStack.pushItem(rewindMenu, {
-                    model: points,
-                    aspectRatio: emulatorLoader.item.videoAspectRatio
-                }, StackView.Immediate)
-            }
-        }
-    }
-
-    Loader {
-        id: emulatorLoader
-        property var gameName
-        property var entryId
-        property var contentHash
-
-        property bool shouldDeactivate: false
-
-        active: false
-        sourceComponent: emuPage
-
-        property bool paused: !emulatorLoader.activeFocus
-
-        function stopGame() {
-            shouldDeactivate = true
-            if (emulatorLoader.StackView.status === StackView.Active) {
-                emulatorLoader.StackView.view.popCurrentItem()
-            }
-        }
-
-        onPausedChanged: function () {
-            if (emulatorLoader.item != null) {
-                emulatorLoader.item.paused = emulatorLoader.paused
-            }
-        }
-
-        // onActiveChanged: {
-        //     if (!active && emulatorLoader.StackView.status === StackView.Active) {
-        //         emulatorLoader.StackView.view.popCurrentItem()
-        //     }
-        // }
-
-        StackView.onDeactivated: {
-            if (shouldDeactivate) {
-                active = false
-                shouldDeactivate = false
-            }
-        }
-
-        StackView.onActivating: {
-            // setSource(emuPage, {
-            //     gameData: emulatorLoader.gameData,
-            //     saveData: emulatorLoader.saveData,
-            //     corePath: emulatorLoader.corePath,
-            //     contentHash: emulatorLoader.contentHash,
-            //     saveSlotNumber: emulatorLoader.saveSlotNumber,
-            //     platformId: emulatorLoader.platformId,
-            //     contentPath: emulatorLoader.contentPath
-            // })
-            // active = true
-        }
-
-        onLoaded: function () {
-            emulatorLoader.item.loadGame(emulatorLoader.entryId)
-            // emulatorLoader.item.startGame()
-            // emulatorLoader.item.paused = emulatorLoader.paused
-            //
-            // emulatorLoader.gameName = emulatorLoader.item.gameName
-            // emulatorLoader.contentHash = emulatorLoader.item.contentHash
-            // emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
-            // emulatorLoader.item.paused = emulatorLoader.paused
-        }
-    }
-
-
     SplitView {
         id: splitView
         anchors.fill: parent
         orientation: Qt.Horizontal
+
+        // background: Item {}
 
         focus: true
 
@@ -147,7 +68,8 @@ ApplicationWindow {
             id: navbar
             padding: 16
 
-            SplitView.minimumWidth: 230
+            SplitView.minimumWidth: 74
+            SplitView.maximumWidth: 260
             focus: true
 
             background: Item {
@@ -174,83 +96,194 @@ ApplicationWindow {
             }
 
             contentItem: ColumnLayout {
-                spacing: 36
-                Row {
-                    Layout.alignment: Qt.AlignCenter
-                    padding: 8
-                    Layout.minimumHeight: 32
-                    Layout.maximumHeight: 32
-                    spacing: 12
+                spacing: 42
+
+                RowLayout {
+                    Layout.leftMargin: 7
+                    Layout.maximumHeight: 36
+                    Layout.minimumHeight: 36
+                    Layout.fillWidth: true
                     Image {
                         source: "qrc:/images/firelight-logo"
-                        height: parent.height
+                        Layout.preferredHeight: parent.height
                         sourceSize.height: parent.height
                         mipmap: true
                     }
-                    Text {
-                        color: "white"
-                        padding: 0
-                        height: parent.height
-                        text: "Firelight"
-                        font.pixelSize: 24
-                        font.weight: Font.Bold
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
+                    // Text {
+                    //     color: "white"
+                    //     padding: 0
+                    //     opacity: parent.width > 140 ? 1 : 0
+                    //     text: "Firelight"
+                    //     Layout.preferredWidth: opacity > 0 ?
+                    //     font.pixelSize: 20
+                    //     font.weight: Font.Bold
+                    //     font.family: Constants.regularFontFamily
+                    //     horizontalAlignment: Text.AlignLeft
+                    //     verticalAlignment: Text.AlignVCenter
 
-                    }
+                    //     Behavior on opacity {
+                    //         NumberAnimation {
+                    //             duration: 100
+                    //             easing.type: Easing.InOutQuad
+                    //         }
+                    //     }
+                    // }
                 }
+                // RowLayout {
+                //     Layout.alignment: Qt.AlignCenter
+                //     Layout.minimumHeight: 32
+                //     Layout.maximumHeight: 32
+                //     spacing: 12
+                //     Image {
+                //         source: "qrc:/images/firelight-logo"
+                //         Layout.preferredHeight: parent.height
+                //         sourceSize.height: parent.height
+                //         mipmap: true
+                //     }
+                //     Text {
+                //         color: "white"
+                //         padding: 0
+                //         Layout.preferredHeight: parent.height
+                //         text: "Firelight"
+                //         font.pixelSize: 24
+                //         font.weight: Font.Bold
+                //         font.family: Constants.regularFontFamily
+                //         horizontalAlignment: Text.AlignLeft
+                //         verticalAlignment: Text.AlignVCenter
+
+                //     }
+                // }
                 FLNavSection {
                     Layout.fillWidth: true
-                    title: "LIBRARY"
 
                     focus: true
 
                     FLNavItem {
-                        label: "All games"
+                        label: "Library"
                         iconName: "book"
+                        checked: Router.currentRoute === "/library"
                         onClicked: {
-                            contentStack.pushItem(allGamesPage, {}, StackView.PushTransition)
+                            Router.navigateTo("/library")
                         }
                     }
 
                     FLNavItem {
-                        label: "Favorites"
-                        iconName: "kid-star"
-                    }
-
-                    FLNavItem {
-                        label: "Recent"
-                        iconName: "history"
-                    }
-
-                    FLNavItem {
-                        label: "Newest"
-                        iconName: "add"
-                    }
-                }
-                FLNavSection {
-                    title: "MOD SHOP"
-                    Layout.fillWidth: true
-
-                    FLNavItem {
-                        label: "Browse"
-                        iconName: "browse"
+                        label: "Mod Shop"
+                        iconName: "shopping-bag"
+                        checked: Router.currentRoute === "/shop"
                         onClicked: {
-                            contentStack.pushItem(shopPage, {}, StackView.PushTransition)
+                            Router.navigateTo("/shop")
                         }
                     }
 
                     FLNavItem {
-                        label: "Featured"
-                        iconName: "bookmark-star"
+                        label: "Gallery"
+                        iconName: "photo-library"
+                        checked: Router.currentRoute === "/gallery"
+                        onClicked: {
+                            Router.navigateTo("/gallery")
+                        }
                     }
 
                     FLNavItem {
-                        label: "New Arrivals"
-                        iconName: "star-shine"
+                        label: "Controllers"
+                        iconName: "controller"
+                        checked: Router.currentRoute === "/controllers"
+                        onClicked: {
+                            Router.navigateTo("/controllers")
+                        }
                     }
+
+                    FLNavItem {
+                        label: "Settings"
+                        iconName: "settings"
+                        checked: Router.currentRoute === "/settings"
+                        onClicked: {
+                            Router.navigateTo("/settings")
+                        }
+                    }
+
+                    // FLNavItem {
+                    //     label: "Favorites"
+                    //     iconName: "kid-star"
+                    // }
+
+                    // FLNavItem {
+                    //     label: "Recent"
+                    //     iconName: "history"
+                    // }
+
+                    // FLNavItem {
+                    //     label: "Newest"
+                    //     iconName: "add"
+                    // }
                 }
+                // FLNavSection {
+                //     Layout.fillWidth: true
+                //     title: "LIBRARY"
+
+                //     focus: true
+
+                //     FLNavItem {
+                //         label: "All games"
+                //         iconName: "book"
+                //         checked: Router.currentRoute === "/library"
+                //         onClicked: {
+                //             Router.navigateTo("/library")
+                //         }
+                //     }
+
+                //     // FLNavItem {
+                //     //     label: "Favorites"
+                //     //     iconName: "kid-star"
+                //     // }
+
+                //     // FLNavItem {
+                //     //     label: "Recent"
+                //     //     iconName: "history"
+                //     // }
+
+                //     // FLNavItem {
+                //     //     label: "Newest"
+                //     //     iconName: "add"
+                //     // }
+                // }
+                // FLNavSection {
+                //     title: "MOD SHOP"
+                //     Layout.fillWidth: true
+
+                //     FLNavItem {
+                //         label: "Browse"
+                //         iconName: "browse"
+                //         checked: Router.currentRoute === "/shop"
+                //         onClicked: {
+                //             Router.navigateTo("/shop")
+                //         }
+                //     }
+
+                //     // FLNavItem {
+                //     //     label: "Featured"
+                //     //     iconName: "bookmark-star"
+                //     // }
+
+                //     // FLNavItem {
+                //     //     label: "New Arrivals"
+                //     //     iconName: "star-shine"
+                //     // }
+                // }
+                // FLNavSection {
+                //     title: "OTHER"
+                //     Layout.fillWidth: true
+
+                //     FLNavItem {
+                //         label: "Settings"
+                //         iconName: "settings"
+                //         checked: Router.currentRoute === "/settings"
+                //         onClicked: {
+                //             Router.navigateTo("/settings")
+                //         }
+                //     }
+                // }
                 Item {
                     Layout.fillHeight: true
                     Layout.fillWidth: true
@@ -293,10 +326,11 @@ ApplicationWindow {
                             color: parent.enabled ? "white" : "#727272"
                         }
 
-                        enabled: contentStack.depth > 1
+                        enabled: Router.historySize > 1
 
                         onClicked: {
-                            contentStack.popCurrentItem()
+                            Router.goBack()
+                            // contentStack.popCurrentItem()
                         }
                     }
 
@@ -323,62 +357,82 @@ ApplicationWindow {
                     //     enabled: false
                     // }
 
-                    Item {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.horizontalStretchFactor: 1
-                    }
+                    
+                    // Text {
+                    //     color: "white"
+                    //     font.family: Constants.regularFontFamily
+                    //     text: "Library"
+                    //     font.pixelSize: 28
+                    //     font.weight: Font.Bold
+                    //     Layout.fillHeight: true
+                    //     verticalAlignment: Text.AlignVCenter
+                    // }
 
-                    Pane {
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: 460
-                        Layout.alignment: Qt.AlignHCenter
-                        padding: 8
-                        horizontalPadding: 10
-                        background: Rectangle {
-                            color: "#1D1D1D"
-                            opacity: 0.8
-                            radius: 8
-                            border.color: "#4B4B4B"
-                        }
+                    // Item {
+                    //     Layout.fillWidth: true
+                    //     Layout.fillHeight: true
+                    //     Layout.horizontalStretchFactor: 1
+                    // }
 
-                        contentItem: RowLayout {
-                            TextInput {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                color: "white"
-                                font.pixelSize: 15
-                                font.family: Constants.regularFontFamily
-                                horizontalAlignment: Text.AlignLeft
-                                verticalAlignment: Text.AlignVCenter
+                    // Pane {
+                    //     Layout.fillHeight: true
+                    //     Layout.preferredWidth: 460
+                    //     Layout.alignment: Qt.AlignHCenter
+                    //     padding: 8
+                    //     horizontalPadding: 10
+                    //     background: Rectangle {
+                    //         color: "#1D1D1D"
+                    //         opacity: 0.8
+                    //         radius: 8
+                    //         border.color: "#4B4B4B"
+                    //     }
 
-                                HoverHandler {
-                                    cursorShape: Qt.IBeamCursor
-                                }
+                    //     contentItem: RowLayout {
+                    //         TextInput {
+                    //             id: searchTextInput
+                    //             Layout.fillWidth: true
+                    //             Layout.fillHeight: true
+                    //             color: "white"
+                    //             font.pixelSize: 15
+                    //             font.family: Constants.regularFontFamily
+                    //             horizontalAlignment: Text.AlignLeft
+                    //             verticalAlignment: Text.AlignVCenter
 
-                                Text {
-                                    text: "Search"
-                                    anchors.fill: parent
-                                    color: "#727272"
-                                    font.pixelSize: 15
-                                    font.family: Constants.regularFontFamily
-                                    horizontalAlignment: Text.AlignLeft
-                                    verticalAlignment: Text.AlignVCenter
-                                    visible: (parent.length === 0) && !parent.activeFocus
-                                }
-                            }
-                            FLIcon {
-                                Layout.fillHeight: true
-                                icon: "search"
-                                size: height
-                                color: "#7C7C7C"
+                    //             HoverHandler {
+                    //                 cursorShape: Qt.IBeamCursor
+                    //             }
 
-                                HoverHandler {
-                                    cursorShape: Qt.PointingHandCursor
-                                }
-                            }
-                        }
-                    }
+                    //             Text {
+                    //                 text: "Search"
+                    //                 anchors.fill: parent
+                    //                 color: "#727272"
+                    //                 font.pixelSize: 15
+                    //                 font.family: Constants.regularFontFamily
+                    //                 horizontalAlignment: Text.AlignLeft
+                    //                 verticalAlignment: Text.AlignVCenter
+                    //                 visible: (parent.length === 0) && !parent.activeFocus
+                    //             }
+
+                    //             Rectangle {
+                    //                 anchors.top: parent.bottom
+                    //                 width: parent.width
+                    //                 height: 300
+                    //                 color: "#1D1D1D"
+                    //                 visible: searchTextInput.length !== 0
+                    //             }
+                    //         }
+                    //         FLIcon {
+                    //             Layout.fillHeight: true
+                    //             icon: "search"
+                    //             size: height
+                    //             color: "#7C7C7C"
+
+                    //             HoverHandler {
+                    //                 cursorShape: Qt.PointingHandCursor
+                    //             }
+                    //         }
+                    //     }
+                    // }
 
                     Item {
                         Layout.fillWidth: true
@@ -392,6 +446,35 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
+                    Connections {
+                        target: Router
+
+                        function onRouteChanged(route) {
+                            if (route === "/shop") {
+                                contentStack.clear()
+                                contentStack.pushItem(shopPage, {}, StackView.PushTransition)
+                            } else if (route === "/library") {
+                                contentStack.clear()
+                                contentStack.pushItem(allGamesPage, {}, StackView.PushTransition)
+                            } else if (route.startsWith("/shop/mods/")) {
+                                let things = route.split("/")
+                                console.log(things)
+                            } else if (route === "/settings") {
+                                contentStack.push(settingsScreen)
+                            } else {
+                                contentStack.push(lol)
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: lol
+                        Text {
+                            text: "bruh"
+                            color: "white"
+                        }
+                    }
+
                     pushEnter: Transition {}
                     pushExit: Transition {}
                     popEnter: Transition {}
@@ -403,523 +486,420 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: emuPage
+        NewEmulatorPage {
+            onRewindPointsReady: function(points) {
+                screenStack.pushItem(rewindMenu, {
+                    model: points,
+                    aspectRatio: emulatorLoader.item.videoAspectRatio
+                }, StackView.Immediate)
+            }
+        }
+    }
+
+    Loader {
+        id: emulatorLoader
+        property var gameName
+        property var entryId
+        property var contentHash
+        property bool shouldDeactivate: false
+
+        visible: false
+
+        anchors.fill: parent
+
+        Keys.onEscapePressed: {
+            console.log("pressed escape")
+        }
+
+        active: false
+        sourceComponent: emuPage
+
+        property bool paused: !emulatorLoader.activeFocus || (emulatorLoader.item ? !emulatorLoader.item.activeFocus : false)
+
+        function stopGame() {
+            shouldDeactivate = true
+            if (emulatorLoader.StackView.status === StackView.Active) {
+                emulatorLoader.StackView.view.popCurrentItem()
+            }
+        }
+
+        onPausedChanged: function () {
+            if (emulatorLoader.item != null) {
+                emulatorLoader.item.paused = emulatorLoader.paused
+            }
+        }
+
+        // onActiveChanged: {
+        //     if (!active && emulatorLoader.StackView.status === StackView.Active) {
+        //         emulatorLoader.StackView.view.popCurrentItem()
+        //     }
+        // }
+
+        StackView.onDeactivated: {
+            if (shouldDeactivate) {
+                active = false
+                shouldDeactivate = false
+            }
+        }
+
+        StackView.onActivating: {
+            // setSource(emuPage, {
+            //     gameData: emulatorLoader.gameData,
+            //     saveData: emulatorLoader.saveData,
+            //     corePath: emulatorLoader.corePath,
+            //     contentHash: emulatorLoader.contentHash,
+            //     saveSlotNumber: emulatorLoader.saveSlotNumber,
+            //     platformId: emulatorLoader.platformId,
+            //     contentPath: emulatorLoader.contentPath
+            // })
+            // active = true
+        }
+
+        onLoaded: function () {
+            const emu = (emulatorLoader.item as NewEmulatorPage)
+
+            emu.pausedChanged.connect(function( ){
+                console.log("game started")
+            })
+
+            emu.closing.connect(function() {
+                emulatorLoader.visible = false
+                emulatorLoader.active = false
+            })
+
+            overlay.opacity = 0
+
+            emu.loadGame(emulatorLoader.entryId)
+            emu.forceActiveFocus()
+            // emulatorLoader.item.startGame()
+            // emulatorLoader.item.paused = emulatorLoader.paused
+            //
+            // emulatorLoader.gameName = emulatorLoader.item.gameName
+            // emulatorLoader.contentHash = emulatorLoader.item.contentHash
+            // emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+            // emulatorLoader.item.paused = emulatorLoader.paused
+        }
+    }
+
+    Rectangle {
+        id: overlay
+        color: "black"
+        anchors.fill: parent
+        opacity: 0
+    }
+
+    SequentialAnimation {
+        id: startGameAnimation
+
+        property var entryId: -1
+        NumberAnimation {
+            target: overlay
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 400
+            easing.type: Easing.InOutQuad
+        }
+
+        ScriptAction {
+            script: {
+                emulatorLoader.entryId = startGameAnimation.entryId
+                emulatorLoader.active = true
+                emulatorLoader.visible = true
+            }
+        }
+    }
+
+    // Rectangle {
+    //     id: overlay
+    //     color: "green"
+    //     visible: true
+    //     anchors.bottom: parent.bottom
+    //     width: parent.width
+    //     height: 100
+
+    //     Behavior on height {
+    //         NumberAnimation {
+    //             property: "height"
+    //             duration: 200
+    //             easing.type: Easing.InOutQuad
+    //         }
+    //     }
+
+    //     TapHandler {
+    //         onTapped: {
+    //             if (overlay.height === 100) {
+    //                 overlay.height = overlay.parent.height
+    //             } else {
+    //                 overlay.height = 100
+    //             }
+    //         }
+    //     }
+    // }
+
     FLFocusHighlight {
         target: window.activeFocusItem
         usingMouse: InputMethodManager.usingMouse
     }
 
-    // Pane {
-    //     parent: Overlay.overlay
-    //     z: 2
-    //
-    //     anchors.top: parent.top
-    //     anchors.right: parent.right
-    //     height: AppStyle.mainHeaderHeight
-    //     padding: AppStyle.mainHeaderPadding
-    //
-    //     background: Item {
-    //     }
-    //
-    //     RowLayout {
-    //         spacing: 16
-    //         // FirelightButton {
-    //         //     iconCode: "\ue8b8"
-    //         //     tooltipLabel: "Settings"
-    //         //     flat: true
-    //         //     circle: true
-    //         //     Layout.fillHeight: true
-    //         //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-    //         //
-    //         //     onClicked: {
-    //         //         quickMenuBar.visible = false
-    //         //         screenStack.pushItem(settingsScreen, {}, StackView.PushTransition)
-    //         //     }
-    //         // }
-    //
-    //         Text {
-    //             property bool drawColon: true
-    //             Timer {
-    //                 triggeredOnStart: true
-    //                 interval: 1000
-    //                 running: true
-    //                 repeat: true
-    //                 onTriggered: {
-    //                     parent.text = new Date().toLocaleTimeString(Qt.locale("en_US"), Locale.ShortFormat)
-    //                     if (!parent.drawColon) {
-    //                         parent.text = parent.text.replace(":", " ")
-    //                         parent.drawColon = true
-    //                     } else {
-    //                         parent.drawColon = false
-    //                     }
-    //                 }
-    //                 // console.log("tick")
-    //             }
-    //             text: ""
-    //             color: "white"
-    //             font.pixelSize: 18
-    //             horizontalAlignment: Text.AlignRight
-    //             verticalAlignment: Text.AlignVCenter
-    //             Layout.rightMargin: 12
-    //             font.weight: Font.Normal
-    //             font.family: Constants.regularFontFamily
-    //             Layout.preferredWidth: 85
-    //             Layout.fillHeight: true
-    //         }
-    //     }
-    // }
-    //
-    // StackView {
-    //     id: screenStack
-    //     anchors.fill: parent
-    //     anchors.topMargin: AppStyle.mainHeaderHeight
-    //     anchors.bottomMargin: inputGuideBar.height
-    //     padding: AppStyle.windowPadding
-    //     focus: true
-    //     // initialItem: FLTwoColumnMenu {
-    //     //     menuItems: ["Home", "Controllers"]
-    //     //     pages: [homeScreen, controllerPage]
-    //     // }
-    //     // initialItem: GeneralSettings.showNewUserFlow ? newUserFlow : homeScreen
-    //
-    //     initialItem: FLThing{
-    //         libraryPage: libraryPage2
-    //     }
-    //
-    //     property real blurAmount: window.blur ? 0.5 : 0
-    //
-    //     Behavior on blurAmount {
-    //         NumberAnimation {
-    //             easing.type: Easing.InOutQuad
-    //             duration: 250
-    //         }
-    //     }
-    //
-    //     layer.enabled: blurAmount !== 0
-    //     layer.effect: MultiEffect {
-    //         // enabled: root.blurAmount !== 0
-    //         source: screenStack
-    //         anchors.fill: screenStack
-    //         blurEnabled: true
-    //         blurMultiplier: 0
-    //         blurMax: 64
-    //         blur: screenStack.blurAmount
-    //     }
-    //
-    //     Keys.onPressed: function (event) {
-    //         if (event.key === Qt.Key_Escape) {
-    //             if (screenStack.depth > 1) {
-    //                 screenStack.popCurrentItem()
-    //             } else {
-    //                 quickMenuBar.visible = true
-    //             }
-    //         } else {
-    //             inputGuideBar.hidden = !inputGuideBar.hidden
-    //         }
-    //     }
-    //
-    //     pushEnter: Transition {
-    //         ParallelAnimation {
-    //             PropertyAnimation {
-    //                 property: "scale"
-    //                 from: 1.03
-    //                 to: 1
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //             PropertyAnimation {
-    //                 property: "opacity"
-    //                 from: 0
-    //                 to: 1
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //     }
-    //     pushExit: Transition {
-    //         ParallelAnimation {
-    //             PropertyAnimation {
-    //                 property: "opacity"
-    //                 from: 1
-    //                 to: 0
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //             PropertyAnimation {
-    //                 property: "scale"
-    //                 from: 1
-    //                 to: 0.97
-    //                 duration: 250
-    //                 easing.type: Easing.OutQuad
-    //             }
-    //         }
-    //     }
-    //     popEnter: Transition {
-    //         ParallelAnimation {
-    //             PropertyAnimation {
-    //                 property: "scale"
-    //                 from: 0.97
-    //                 to: 1
-    //                 duration: 250
-    //                 easing.type: Easing.InQuad
-    //             }
-    //             PropertyAnimation {
-    //                 property: "opacity"
-    //                 from: 0
-    //                 to: 1
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //     }
-    //     popExit: Transition {
-    //         ParallelAnimation {
-    //             PropertyAnimation {
-    //                 property: "opacity"
-    //                 from: 1
-    //                 to: 0
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //             PropertyAnimation {
-    //                 property: "scale"
-    //                 from: 1
-    //                 to: 1.03
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //     }
-    //
-    //     replaceEnter: Transition {
-    //         PropertyAnimation {
-    //             property: "opacity"
-    //             from: 0
-    //             to: 1
-    //             duration: 200
-    //             easing.type: Easing.InOutQuad
-    //         }
-    //     }
-    //     replaceExit: Transition {
-    //         PropertyAnimation {
-    //             property: "opacity"
-    //             from: 1
-    //             to: 0
-    //             duration: 200
-    //             easing.type: Easing.InOutQuad
-    //         }
-    //     }
-    // }
-    //
-    // FLInputGuideBar {
-    //     id: inputGuideBar
-    //     target: window.activeFocusItem
-    //     parent: Overlay.overlay
-    //     width: parent.width
-    //     anchors.bottom: parent.bottom
-    //     z: 1
-    // }
-    //
-    // Popup {
-    //     id: quickMenuBar
-    //     parent: Overlay.overlay
-    //     modal: true
-    //     focus: true
-    //
-    //     padding: AppStyle.windowPadding
-    //
-    //     closePolicy: Popup.NoAutoClose
-    //
-    //     width: 240
-    //     height: parent.height - inputGuideBar.height
-    //     // height: parent.height
-    //
-    //     onAboutToShow: function () {
-    //         sfx_player.play("quickopen")
-    //         window.blur = true
-    //         if (window.gameRunning && screenStack.currentItem === emulatorLoader) {
-    //             quickMenuStack.pushItem(nowPlayingPage, {
-    //                 entryId: currentEntryId,
-    //                 contentHash: currentContentHash,
-    //                 undoEnabled: false
-    //             }, StackView.PushTransition)
-    //             quickMenuStack.forceActiveFocus()
-    //         } else {
-    //             menuBar.forceActiveFocus()
-    //         }
-    //     }
-    //
-    //     onAboutToHide: function () {
-    //         window.blur = false
-    //     }
-    //
-    //     Overlay.modal: Rectangle {
-    //         color: "#131313"
-    //         anchors.fill: parent
-    //         opacity: 0.7
-    //         Behavior on opacity {
-    //             NumberAnimation {
-    //                 duration: 200
-    //             }
-    //         }
-    //     }
-    //
-    //     enter: Transition {
-    //         ParallelAnimation {
-    //             PropertyAnimation {
-    //                 property: "opacity"
-    //                 from: 0
-    //                 to: 1
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //             PropertyAnimation {
-    //                 property: "x"
-    //                 from: -20
-    //                 to: 0
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //     }
-    //
-    //     exit: Transition {
-    //         ParallelAnimation {
-    //             PropertyAnimation {
-    //                 property: "opacity"
-    //                 from: 1
-    //                 to: 0
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //             PropertyAnimation {
-    //                 property: "x"
-    //                 from: 0
-    //                 to: -20
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //     }
-    //
-    //     // background: Rectangle {
-    //     //     color: ColorPalette.neutral900
-    //     //     opacity: 0.96
-    //     // }
-    //
-    //     background: Item {}
-    //
-    //     contentItem: FocusScope {
-    //         focus: true
-    //         id: contentThing
-    //
-    //         Keys.onEscapePressed: function (event) {
-    //             sfx_player.play("quickclose")
-    //             quickMenuBar.close()
-    //         }
-    //
-    //         Keys.onBackPressed: function (event) {
-    //             sfx_player.play("quickclose")
-    //             quickMenuBar.close()
-    //         }
-    //
-    //         ColumnLayout {
-    //             width: contentThing.width
-    //             anchors.top: parent.top
-    //             anchors.left: parent.left
-    //             anchors.bottom: parent.bottom
-    //             // anchors.bottomMargin: 24
-    //
-    //             spacing: 16
-    //
-    //             FirelightButton {
-    //                 id: closeButton
-    //                 tooltipLabel: "Close menu"
-    //                 flat: true
-    //                 circle: true
-    //                 tooltipOnRight: true
-    //
-    //                 iconCode: "\ue5cd"
-    //
-    //                 onClicked: {
-    //                     sfx_player.play("quickclose")
-    //                     quickMenuBar.close()
-    //                 }
-    //             }
-    //
-    //             FirelightButton {
-    //                 tooltipLabel: "Library"
-    //                 tooltipOnRight: true
-    //                 circle: true
-    //                 iconCode: "\ue88a"
-    //                 onClicked: {
-    //                     quickMenuBar.visible = false
-    //                     screenStack.clear()
-    //                     screenStack.pushItem(libraryPage2, {}, StackView.ReplaceTransition)
-    //                 }
-    //             }
-    //
-    //             FirelightButton {
-    //                 tooltipLabel: "Mop Shop"
-    //                 tooltipOnRight: true
-    //                 circle: true
-    //                 iconCode: "\uf1cc"
-    //                 onClicked: {
-    //                     quickMenuBar.visible = false
-    //                     screenStack.clear()
-    //                     screenStack.pushItem(shopPage, {}, StackView.ReplaceTransition)
-    //                 }
-    //             }
-    //
-    //             FirelightButton {
-    //                 tooltipLabel: "Controllers"
-    //                 tooltipOnRight: true
-    //                 circle: true
-    //                 iconCode: "\uf135"
-    //             }
-    //
-    //             FirelightButton {
-    //                 tooltipLabel: "Settings"
-    //                 tooltipOnRight: true
-    //                 circle: true
-    //                 iconCode: "\ue8b8"
-    //                 onClicked: {
-    //                     quickMenuBar.visible = false
-    //                     screenStack.clear()
-    //                     screenStack.pushItem(settingsScreen, {}, StackView.ReplaceTransition)
-    //                 }
-    //             }
-    //
-    //             FirelightButton {
-    //                 tooltipLabel: "Power"
-    //                 tooltipOnRight: true
-    //                 circle: true
-    //                 iconCode: "\ue8ac"
-    //             }
-    //
-    //             Item {
-    //                 Layout.fillHeight: true
-    //                 Layout.fillWidth: true
-    //             }
-    //         }
-    //
-    //         // ListView {
-    //         //     id: menuBar
-    //         //     // height: (spacing * 4) + 5 * 42
-    //         //     height: parent.height
-    //         //     focus: true
-    //         //     width: contentThing.width
-    //         //     // anchors.verticalCenter: parent.verticalCenter
-    //         //     anchors.top: parent.top
-    //         //     anchors.topMargin: 72
-    //         //     orientation: ListView.Vertical
-    //         //     currentIndex: 0
-    //         //     interactive: false
-    //         //
-    //         //     keyNavigationEnabled: true
-    //         //
-    //         //     model: ListModel {
-    //         //         ListElement {
-    //         //             icon: "\ue88a"; label: "Home"
-    //         //         }
-    //         //         ListElement {
-    //         //             icon: "\uf1cc"; label: "Mop Shop"
-    //         //         }
-    //         //         ListElement {
-    //         //             icon: "\uf135"; label: "Controllers"
-    //         //         }
-    //         //         ListElement {
-    //         //             icon: "\ue8b8"; label: "Settings"
-    //         //         }
-    //         //         ListElement {
-    //         //             icon: "\ue8ac"; label: "Power"
-    //         //         }
-    //         //     }
-    //         //     spacing: 12
-    //         //     delegate: FirelightButton {
-    //         //         id: theButton
-    //         //         focus: true
-    //         //         required property var model
-    //         //         required property var index
-    //         //         tooltipLabel: model.label
-    //         //         tooltipOnRight: true
-    //         //         circle: true
-    //         //         flat: true
-    //         //         iconCode: model.icon
-    //         //     }
-    //         //     // delegate: Text {
-    //         //     //     text: model.label
-    //         //     //     font.pixelSize: 18
-    //         //     //     width: ListView.view.width
-    //         //     //     height: 36
-    //         //     //     color: "white"
-    //         //     //     font.family: Constants.regularFontFamily
-    //         //     //     horizontalAlignment: Text.AlignLeft
-    //         //     //     verticalAlignment: Text.AlignVCenter
-    //         //     //
-    //         //     // }
-    //         // }
-    //     }
-    // }
-
     Component {
         id: allGamesPage
-        ListView {
-            highlightMoveDuration: 80
-            highlightMoveVelocity: -1
-            highlightRangeMode: ListView.ApplyRange
-            preferredHighlightBegin: 200
-            preferredHighlightEnd: height - 200
-            model: LibraryEntryModel
-            delegate: Button {
-                required property var model
-                required property var index
+        FocusScope {
+            // ListView {
+            //     id: gameNavList
+            //     anchors.left: parent.left
+            //     anchors.top: parent.top
+            //     anchors.bottom: parent.bottom
+            //     width: 250
 
-                property bool showGlobalCursor: true
+            //     property int lastIndex: 0
+            //     property bool movingDown: true
+            //     // KeyNavigation.right: stack
+            //     // anchors.bottom: parent.bottom
+            //     // anchors.left: parent.left
+            //     // anchors.top: parent.top
+            //     currentIndex: 0
+            //     focus: true
+            //     interactive: false
+            //     keyNavigationEnabled: true
+            //     model: [
+            //         "All games",
+            //         "Recently played",
+            //         "Favorites",
+            //         "Newly added"
+            //     ]
 
-                onDoubleClicked: {
-                    emulatorLoader.entryId = model.entryId
-                    emulatorLoader.active = true
-                    contentStack.pushItem(emulatorLoader, {}, StackView.PushTransition)
+            //     delegate: FirelightMenuItem {
+            //         required property var index
+            //         required property var modelData
+            //         property bool showGlobalCursor: true
+
+            //         checked: ListView.isCurrentItem
+            //         focus: ListView.isCurrentItem
+            //         height: 50
+            //         labelText: modelData
+            //         width: ListView.view.width
+
+            //         onToggled: {
+            //             if (checked) {
+            //                 ListView.view.currentIndex = index;
+            //             }
+            //         }
+            //     }
+            // }
+
+            Text {
+                id: titleText
+                color: "white"
+                text: "Library"
+                font.pixelSize: 30
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                verticalAlignment: Qt.AlignVCenter
+            }
+
+            ListView {
+                id: theList
+                // anchors.left: gameNavList.right
+                anchors.top: titleText.bottom
+                anchors.topMargin: 16
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                // anchors.fill: parent
+                highlightMoveDuration: 80
+                highlightMoveVelocity: -1
+                highlightRangeMode: ListView.ApplyRange
+                preferredHighlightBegin: 64
+                preferredHighlightEnd: height - 64
+                model: LibraryEntryModel
+
+                clip: true
+                // keyNavigationEnabled: false
+
+                // Keys.onPressed: function(event) {
+                //     // theList.highlightRangeMode = ListView.ApplyRange
+                //     if (event.key === Qt.Key_Up) {
+                //         if (theList.currentIndex === 0 && !event.isAutoRepeat) {
+                //             theList.currentIndex = theList.count - 1
+                //         } else {
+                //             theList.decrementCurrentIndex()
+                //         }
+                //     } else if (event.key === Qt.Key_Down) {
+                //         if (theList.currentIndex === theList.count - 1 && !event.isAutoRepeat) {
+                //             theList.currentIndex = 0
+                //         } else {
+                //             theList.incrementCurrentIndex()
+                //         }
+                //     }
+                // }
+
+                property var icons: [
+                    "https://cdn2.steamgriddb.com/thumb/5554ae4bc3d7ecf085bdc1f8b0a29f39.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/988fff1d881114ab5a56f0c0c69e0cfe.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/2fe0ac4f5a258e637671444f00d1835f.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/08ba346be1fd6a4a481429ba2cd48e6b.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/3c7a5ad35fa82f1d37d6296c21a9e52c.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/630b919fef718760f557be12e1cb6b4c.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/4bf486c3a04b32aa9dec6c542d7011ac.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/fdf301019dd996435263a651bd60d739.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/1e75612dbe09ed687c51498db305d2ed.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/1df5456e9760c85c7b649fd7961a9f66.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/e5494d23b18b5c822bcaa9fe8fd077bf.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/7e4c8f455b0699609758957b7c4e2f6f.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/7e4c8f455b0699609758957b7c4e2f6f.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/83754cee0fe637d0dcc1de38824a4e6d.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/b32d70b3e23ee6ee3eaa85623213eae3.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/cf68791aa992ebbe8c0ea1ac0d887e90.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/cedd27aa368c97ff84de86fb2b2b12c0.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/425d383ef78226dfbc600a00f2aa9b3b.png",
+                    "https://cdn2.steamgriddb.com/thumb/372529e17424eb989b7aaf97716c2d11.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/425d383ef78226dfbc600a00f2aa9b3b.png",
+                    "https://cdn2.steamgriddb.com/thumb/630b919fef718760f557be12e1cb6b4c.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/280bb2c98809304e66151313503f14fb.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/c52cc42f66f3aadad1b1f9170fbbcf4e.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/c179f2dd50f1440ed0a755468950dc66.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/a0b4b91a4d8b7da56ab2711853f7b588.jpg",
+                    "https://cdn2.steamgriddb.com/thumb/a0b4b91a4d8b7da56ab2711853f7b588.jpg"
+                ]
+
+                Timer {
+                    id: wheelTimer
+                    interval: 500
+                    repeat: false
                 }
 
-                height: 60
-                padding: 12
+                WheelHandler {
+                    onWheel: function(event) {
+                        if (wheelTimer.running) {
+                            if (theList.currentIndex === 0 && event.angleDelta.y >= 0) {
+                                wheelTimer.restart()
+                                return
+                            } else if (theList.currentIndex === theList.count - 1 && event.angleDelta.y < 0) {
+                                wheelTimer.restart()
+                                return
+                            }
+                        }
 
-                background: Item {}
-                contentItem: RowLayout {
+                        if (event.angleDelta.y >= 0) {
+                            // theList.highlightRangeMode = ListView.ApplyRange
+                            theList.decrementCurrentIndex()
+                        } else {
+                            // theList.highlightRangeMode = ListView.ApplyRange
+                            theList.incrementCurrentIndex()
+                        }
 
-                    spacing: 16
-                    FLIcon {
-                        icon: "star"
-                        color: "grey"
-                        Layout.preferredHeight: 32
-                        Layout.preferredWidth: 32
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        size: height
+                        wheelTimer.restart()
                     }
-                    Image {
-                        source: "https://cdn2.steamgriddb.com/thumb/914dffd52e08c7be71f43865656f703e.jpg"
-                        Layout.preferredHeight: 48
-                        Layout.preferredWidth: 48
-                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        sourceSize.width: 48
-                        sourceSize.height: 48
-                        smooth: false
-                        fillMode: Image.PreserveAspectFit
+                }
+
+                delegate: Button {
+                    id: tttt
+                    required property var model
+                    required property var index
+                    width: ListView.view.width
+
+
+                    TapHandler {
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onDoubleTapped: {
+                            startGameAnimation.entryId = model.entryId
+                            startGameAnimation.start()
+                            console.log(tttt.model.entryId + " double tapped")
+                        }
+
+                        onSingleTapped: function(event, button) {
+                            if (tttt.ListView.view.currentIndex !== tttt.index) {
+                                // theList.highlightRangeMode = ListView.NoHighlightRange
+                                tttt.ListView.view.currentIndex = tttt.index
+                            }
+                            console.log(tttt.model.entryId + " tapped with " + button)
+                        }
+
+                        onLongPressed: {
+                            console.log(tttt.model.entryId + " long pressed")
+                        }
                     }
-                    Text {
-                        text: model.displayName
-                        font.pixelSize: 17
-                        font.weight: Font.Bold
-                        font.family: Constants.regularFontFamily
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
+                    height: 64
+                    padding: 6
+                    horizontalPadding: 12
+
+                    background: Rectangle {
                         color: "white"
-                        Layout.fillHeight: true
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
+                        radius: 2
+                        visible: tttt.ListView.isCurrentItem
+                    }
+
+                    contentItem: RowLayout {
+                        property real random: Math.random() * 50
+                        spacing: 16
+                        // FLIcon {
+                        //     icon: "star"
+                        //     color: "grey"
+                        //     Layout.preferredHeight: 32
+                        //     Layout.preferredWidth: 32
+                        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                        //     size: height
+                        // }
+                        // Image {
+                        //     source: tttt.index < theList.icons.length ? theList.icons[tttt.index] : "https://cdn2.steamgriddb.com/thumb/2c323abe873b4f9fa8a72f45785df5f0.jpg"
+                        //     Layout.preferredHeight: parent.height
+                        //     Layout.preferredWidth: parent.height
+                        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                        //     sourceSize.width: parent.height
+                        //     sourceSize.height: parent.height
+                        //     smooth: false
+                        //     fillMode: Image.PreserveAspectFit
+                        // }
+                        Text {
+                            text: tttt.model.displayName
+                            font.pixelSize: 17
+                            font.weight: Font.DemiBold
+                            font.family: Constants.regularFontFamily
+                            color: tttt.ListView.isCurrentItem ? "black" : "white"
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: 600
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        FLIcon {
+                            icon: platform_model.getPlatformIconName(tttt.model.platformId)
+                            color: tttt.ListView.isCurrentItem ? "#2A2A2A" : "#d3d3d3"
+                            Layout.preferredHeight: 40
+                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                            size: height
+                        }
+                        Text {
+                            text: platform_model.getPlatformDisplayName(tttt.model.platformId)
+                            font.pixelSize: 17
+                            font.weight: Font.Medium
+                            font.family: Constants.regularFontFamily
+                            color: tttt.ListView.isCurrentItem ? "#2A2A2A" : "#d3d3d3"
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: 300
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Item {
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                        }
                     }
                 }
             }
-        }
+    }
+        
     }
 
     Component {
@@ -940,8 +920,6 @@ ApplicationWindow {
         }
     }
 
-
-
     Component {
         id: shopPage
         ShopLandingPage {
@@ -949,6 +927,12 @@ ApplicationWindow {
             property string topLevelName: "shop"
             property string pageTitle: "Mod shop (coming soon!)"
             model: shop_item_model
+        }
+    }
+
+    Component {
+        id: shopItemPage
+        ShopItemPage {
         }
     }
 

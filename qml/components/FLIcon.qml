@@ -11,6 +11,7 @@ Image {
     property color color: "#e8eaed"
 
     source: "qrc:/icons/" + root.icon
+    fillMode: Image.PreserveAspectFit
 
     sourceSize.width: root.size
     sourceSize.height: root.size

@@ -383,6 +383,9 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
                 if (m_paused) {
                     return;
                 }
+                if (m_rewindPoints.length() > 10) {
+                  return;
+                }
                 SuspendPoint suspendPoint;
                 suspendPoint.state = m_core->serializeState();
                 suspendPoint.image = m_currentImage;
@@ -464,6 +467,10 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
             case UndoLoadSuspendPoint:
                 // Handle undo load suspend point
                 break;
+            case SetPlaybackMultiplier:
+                spdlog::info("Setting playback multiplier to {}", command.playbackMultiplier);
+                m_playbackMultiplier = command.playbackMultiplier;
+                break;
         }
     }
 }
@@ -544,10 +551,12 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
         m_currentUpdateBatch = resourceUpdates;
 
         cb->beginExternal();
-        m_core->run(0);
-        getAchievementManager()->doFrame(m_core.get());
-        update();
+        for (int i = 0; i < m_playbackMultiplier; i++) {
+            m_core->run(0);
+            getAchievementManager()->doFrame(m_core.get());
+        }
 
+        update();
         cb->endExternal();
 
         // if (m_frameNumber == 1000) {

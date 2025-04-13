@@ -28,3 +28,26 @@ warning: The vcpkg C:\vcpkg\vcpkg.exe is using detected vcpkg root C:\vcpkg and 
 
 
 packages can provide a cmake config file or a pkg config file most of the time... sometimes both... cmake config file works with just find_package and .pc files need pkgconfig
+
+EmulatorItem:
+        properties:
+                - paused
+                - loaded
+                - contentHash
+                - displayName
+                - platformId
+                - saveSlotNumber
+                - audioBufferFilledPercent
+                - contentAspectRatio
+                - contentHeight
+                - contentWidth
+        methods:
+                - loadGame(entryId)
+                - loadGame(contentHash)
+        signals:
+                - gameLoadSucceeded
+                - gameLoadFailed
+                - readyToStart
+                - rewindPointsCreated
+                - suspendPointLoaded
+                - suspendPointCreated

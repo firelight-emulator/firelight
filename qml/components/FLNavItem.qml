@@ -1,37 +1,24 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts 1.0
 import Firelight 1.0
 
 Button {
     id: root
     verticalPadding: 6
-    horizontalPadding: 8
+    horizontalPadding: 6
 
     property bool showGlobalCursor: true
-    // property Item globalCursorProxy: mask
-
-    // containmentMask: Rectangle {
-    //     id: mask
-    //     color: "transparent"
-    //     radius: 4
-    //     x: -8
-    //     width: root.width + 16
-    //     y: -6
-    //     height: root.height + 12
-    // }
-
-    // leftInset: -8
-    // rightInset: -8
-    // topInset: -6
-    // bottomInset: -6
+    checkable: true
+    
     required property string label
     required property string iconName
 
     background: Rectangle {
         color: "white"
-        opacity: root.pressed ? 0.16 : root.activeFocus ? 0.12 : 0.08
+        opacity: root.pressed ? 0.16 : root.checked ? 0.12 : 0.08
         radius: 4
-        visible: hoverHandler.hovered || root.pressed || root.activeFocus
+        visible: hoverHandler.hovered || root.pressed || root.checked
     }
 
     HoverHandler {
@@ -39,25 +26,35 @@ Button {
         cursorShape: Qt.PointingHandCursor
     }
 
-    contentItem: Row {
+    contentItem: RowLayout {
         spacing: 20
 
         FLIcon {
-            width: parent.height
-            height: parent.height
+            Layout.preferredWidth: parent.height
+            Layout.preferredHeight: parent.height
             size: parent.height
             icon: root.iconName
         }
 
         Text {
+            id: labelText
+            opacity: parent.width > 140 ? 1 : 0
             text: root.label
             font.pixelSize: 17
             font.weight: Font.DemiBold
             font.family: Constants.regularFontFamily
             color: "#DDDDDD"
-            height: parent.height
+            Layout.fillHeight: true
+            Layout.fillWidth: true
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+            }
         }
     }
 

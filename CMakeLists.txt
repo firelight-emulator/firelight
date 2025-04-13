@@ -6,6 +6,8 @@ project(firelight
         LANGUAGES CXX
 )
 
+set(QT_QML_GENERATE_QMLLS_INI ON)
+
 
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)

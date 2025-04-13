@@ -6,6 +6,9 @@
 #include <QNetworkInformation>
 #include <QQuickWindow>
 #include <QWindow>
+#include <QNetworkAccessManager>
+#include <QNetworkDiskCache>
+#include <QQmlNetworkAccessManagerFactory>
 #include <filesystem>
 #include <qstandardpaths.h>
 #include <csignal>
@@ -41,6 +44,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 #include <QtConcurrent>
+#include "network_cache.hpp"
 
 #include "app/PlatformMetadataItem.hpp"
 #include "app/activity/sqlite_activity_log.hpp"
@@ -74,7 +78,7 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
-  discord::Core* core{};
+//  discord::Core* core{};
   // discord::Core::Create(1208162396921929739, DiscordCreateFlags_Default, &core);
 
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
@@ -145,33 +149,33 @@ int main(int argc, char *argv[]) {
   controllerManager.refreshControllerList();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-  // firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPathString +  "/userdata.db");
-  // firelight::ManagerAccessor::setUserdataManager(&userdata_database);
+   firelight::db::SqliteUserdataDatabase userdata_database(defaultAppDataPathString +  "/userdata.db");
+   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
-  // firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString + "/activity.db");
-  // firelight::ManagerAccessor::setActivityLog(&activityLog);
+   firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString + "/activity.db");
+   firelight::ManagerAccessor::setActivityLog(&activityLog);
 
-  // auto gameImageProvider = new firelight::gui::GameImageProvider();
-  // firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
+   auto gameImageProvider = new firelight::gui::GameImageProvider();
+   firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
 
-  // **** Load Content Database ****
-  // firelight::db::SqliteContentDatabase contentDatabase(defaultAppDataPathString + "/content.db");
-  //
-  // firelight::db::SqliteLibraryDatabase libraryDatabase(defaultAppDataPathString + "/library.db");
-  // firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
+//   **** Load Content Database ****
+   firelight::db::SqliteContentDatabase contentDatabase(defaultAppDataPathString + "/content.db");
 
-  // firelight::saves::SaveManager saveManager(savesPath, libraryDatabase, userdata_database, *gameImageProvider);
-  // firelight::ManagerAccessor::setSaveManager(&saveManager);
+   firelight::db::SqliteLibraryDatabase libraryDatabase(defaultAppDataPathString + "/library.db");
+   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
+
+   firelight::saves::SaveManager saveManager(savesPath, libraryDatabase, userdata_database, *gameImageProvider);
+   firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   firelight::library::SqliteUserLibrary userLibrary(defaultAppDataPathString + "/library.db", romsPath);
 
-  // if (userLibrary.getWatchedDirectories().empty()) {
-  //   firelight::library::WatchedDirectory dir{
-  //     .path = QString::fromStdString(canonical(romsDir).string())
-  //   };
-  //
-  //   userLibrary.addWatchedDirectory(dir);
-  // }
+//   if (userLibrary.getWatchedDirectories().empty()) {
+//     firelight::library::WatchedDirectory dir{
+//       .path = QString::fromStdString(canonical(romsDir).string())
+//     };
+//
+//     userLibrary.addWatchedDirectory(dir);
+//   }
 
   firelight::ManagerAccessor::setUserLibrary(&userLibrary);
 
@@ -188,43 +192,46 @@ int main(int argc, char *argv[]) {
   firelight::library::LibraryScanner2 libScanner2(userLibrary);
   libScanner2.scanAll();
 
-  // firelight::achievements::RetroAchievementsCache raCache(defaultAppDataPathString + "/rcheevos.db");
-  // firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(raCache);
-  // firelight::achievements::RAClient raClient(contentDatabase, offlineRaClient, raCache);
-  // firelight::ManagerAccessor::setAchievementManager(&raClient);
-  //
-  // // Set up the models for QML ***********************************************
-  // firelight::gui::ControllerListModel controllerListModel(controllerManager);
-  // firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
-  // firelight::gui::LibraryItemModel libModel(&libraryDatabase, &contentDatabase,
-  //                                           &userdata_database);
-  // firelight::gui::LibrarySortFilterModel libSortModel;
-  // libSortModel.setSourceModel(&libModel);
+   firelight::achievements::RetroAchievementsCache raCache(defaultAppDataPathString + "/rcheevos.db");
+   firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(raCache);
+   firelight::achievements::RAClient raClient(contentDatabase, offlineRaClient, raCache);
+   firelight::ManagerAccessor::setAchievementManager(&raClient);
+
+   // Set up the models for QML ***********************************************
+   firelight::gui::ControllerListModel controllerListModel(controllerManager);
+   firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
+   firelight::gui::LibraryItemModel libModel(&libraryDatabase, &contentDatabase,
+                                             &userdata_database);
+   firelight::gui::LibrarySortFilterModel libSortModel;
+   libSortModel.setSourceModel(&libModel);
 
   firelight::library::EntryListModel entryListModel(userLibrary);
 
-  // QObject::connect(&libScanner2, &firelight::library::LibraryScanner2::scanFinished,
-  //                  &entryListModel, &firelight::library::EntryListModel::reset, Qt::QueuedConnection);
+  QSortFilterProxyModel entrySearchModel;
+  entrySearchModel.setSourceModel(&entryListModel);
 
-  // firelight::gui::PlatformListModel platformListModel;
-  // firelight::shop::ShopItemModel shopItemModel(contentDatabase);
-  //
-  // auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>(userdata_database);
-  // firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
+   QObject::connect(&libScanner2, &firelight::library::LibraryScanner2::scanFinished,
+                    &entryListModel, &firelight::library::EntryListModel::reset, Qt::QueuedConnection);
+
+   firelight::gui::PlatformListModel platformListModel;
+   firelight::shop::ShopItemModel shopItemModel(contentDatabase);
+
+   auto emulatorConfigManager = std::make_shared<EmulatorConfigManager>(userdata_database);
+   firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
 
   firelight::mods::SqliteModRepository modRepository;
   firelight::ManagerAccessor::setModRepository(&modRepository);
-  // QObject::connect(
-  //   &libraryDatabase,
-  //   &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
-  //   &libraryManager, &LibraryScanner::startScan);
-  //
-  // QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
-  //                  &firelight::gui::LibraryItemModel::refresh);
+//   QObject::connect(
+//     &libraryDatabase,
+//     &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
+//     &libraryManager, &LibraryScanner::startScan);
+//
+//   QObject::connect(&libraryManager, &LibraryScanner::scanFinished, &libModel,
+//                    &firelight::gui::LibraryItemModel::refresh);
+//
+//   libraryManager.startScan();
 
-  // libraryManager.startScan();
-
-  // qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
+//   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0, "GamepadStatus");
@@ -236,45 +243,59 @@ int main(int argc, char *argv[]) {
   firelight::gui::Router router;
 
   QNetworkInformation::loadDefaultBackend();
-  // if (QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Online) {
-  //   raClient.m_connected = true;
-  //   offlineRaClient.syncOfflineAchievements();
-  // }
+   if (QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Online) {
+     raClient.m_connected = true;
+     offlineRaClient.syncOfflineAchievements();
+   }
 
-  // QObject::connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged, [&raClient, &offlineRaClient](QNetworkInformation::Reachability reachability) {
-  //   if (reachability == QNetworkInformation::Reachability::Online) {
-  //     raClient.m_connected = true;
-  //     offlineRaClient.syncOfflineAchievements();
-  //   } else {
-  //     raClient.m_connected = false;
-  //   }
-  // });
+   QObject::connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged, [&raClient, &offlineRaClient](QNetworkInformation::Reachability reachability) {
+     if (reachability == QNetworkInformation::Reachability::Online) {
+       raClient.m_connected = true;
+       offlineRaClient.syncOfflineAchievements();
+     } else {
+       raClient.m_connected = false;
+     }
+   });
 
   firelight::ImageCacheUrlInterceptor imageCacheUrlInterceptor("");
 
+  // QQmlNetworkAccessManagerFactory::create();
+  // QNetworkAccessManager *manager = new QNetworkAccessManager();
+  // QNetworkDiskCache *diskCache = new QNetworkDiskCache();
+  // QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+  //         + QLatin1StringView("/cacheDir/");
+  // diskCache->setCacheDirectory(directory);
+  // manager->setCache(diskCache);
+
+  auto cache = new CachingNetworkAccessManagerFactory();
+
   QQmlApplicationEngine engine;
+  engine.setNetworkAccessManagerFactory(cache);
+  // engine.networkAccessManager()->setCache(diskCache);
+  
   // engine.addUrlInterceptor(&imageCacheUrlInterceptor);
-  // engine.addImageProvider("gameImages", gameImageProvider);
+   engine.addImageProvider("gameImages", gameImageProvider);
 
   engine.rootContext()->setContextProperty("EventEmitter", new firelight::gui::EventEmitter());
   engine.rootContext()->setContextProperty("Router", &router);
-  // engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
-  // engine.rootContext()->setContextProperty("achievement_manager", &raClient);
-  // engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
-  // engine.rootContext()->setContextProperty("library_model", &libModel);
-  // engine.rootContext()->setContextProperty("library_short_model",
-  //                                          &libSortModel);
-  // engine.rootContext()->setContextProperty("library_database",
-  //                                          &libraryDatabase);
-  // engine.rootContext()->setContextProperty("controller_model",
-  //                                          &controllerListModel);
-  // engine.rootContext()->setContextProperty("controller_manager",
-  //                                          &controllerManager);
-  // engine.rootContext()->setContextProperty("platform_model", &platformListModel);
-  // engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
-  // engine.rootContext()->setContextProperty("SaveManager", &saveManager);
+   engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
+   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
+   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
+   engine.rootContext()->setContextProperty("library_model", &libModel);
+   engine.rootContext()->setContextProperty("library_short_model",
+                                            &libSortModel);
+   engine.rootContext()->setContextProperty("library_database",
+                                            &libraryDatabase);
+   engine.rootContext()->setContextProperty("controller_model",
+                                            &controllerListModel);
+   engine.rootContext()->setContextProperty("controller_manager",
+                                            &controllerManager);
+   engine.rootContext()->setContextProperty("platform_model", &platformListModel);
+   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
+   engine.rootContext()->setContextProperty("SaveManager", &saveManager);
   engine.rootContext()->setContextProperty("UserLibrary", &userLibrary);
   engine.rootContext()->setContextProperty("LibraryEntryModel", &entryListModel);
+  engine.rootContext()->setContextProperty("SearchLibraryEntryModel", &entrySearchModel);
   engine.rootContext()->setContextProperty("LibraryScanner", &libScanner2);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();
@@ -295,20 +316,20 @@ int main(int argc, char *argv[]) {
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
 
-  QObject::connect(window, &QQuickWindow::afterRendering, [&]() {
-    if (core != nullptr) {
-      core->RunCallbacks();
-    }
-  });
-
-  if (core) {
-  discord::Activity activity{};
-    core->ActivityManager().UpdateActivity(activity, [](discord::Result result) {
-      if (result != discord::Result::Ok) {
-        spdlog::error("Failed to update activity: {}", (int)result);
-      }
-    });
-  }
+//  QObject::connect(window, &QQuickWindow::afterRendering, [&]() {
+//    if (core != nullptr) {
+//      core->RunCallbacks();
+//    }
+//  });
+//
+//  if (core) {
+//  discord::Activity activity{};
+//    core->ActivityManager().UpdateActivity(activity, [](discord::Result result) {
+//      if (result != discord::Result::Ok) {
+//        spdlog::error("Failed to update activity: {}", (int)result);
+//      }
+//    });
+//  }
 
   window->setIcon(QIcon("qrc:images/firelight-logo"));
 
