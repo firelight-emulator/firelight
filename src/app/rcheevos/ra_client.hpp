@@ -9,7 +9,7 @@
 #include <QTimer>
 #include <QJsonObject>
 #include <firelight/content_database.hpp>
-#include <firelight/library_entry.hpp>
+#include <library/library_entry.hpp>
 #include <qsettings.h>
 #include <spdlog/spdlog.h>
 #include <QMap>
@@ -17,7 +17,7 @@
 #include <utility>
 
 #include "regular_http_client.hpp"
-#include "achievement_list_sort_filter_model.hpp"
+#include "achievements/gui/achievement_list_sort_filter_model.hpp"
 
 namespace libretro {
   class Core;

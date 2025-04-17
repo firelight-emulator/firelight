@@ -29,6 +29,11 @@ Item {
     }
 
     FontLoader {
+        id: main
+        source: "qrc:/fonts/main"
+    }
+
+    FontLoader {
         id: localFont
         source: "qrc:/fonts/lexend"
     }

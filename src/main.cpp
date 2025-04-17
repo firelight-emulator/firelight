@@ -1,19 +1,20 @@
 #define SDL_MAIN_HANDLED
 
+#include "app/achievements/gui/AchievementSetItem.hpp"
 #include <QApplication>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QNetworkInformation>
-#include <QQuickWindow>
-#include <QWindow>
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
+#include <QNetworkInformation>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QQmlNetworkAccessManagerFactory>
+#include <QQuickWindow>
+#include <QWindow>
+#include <csignal>
+#include <cstdlib>
 #include <filesystem>
 #include <qstandardpaths.h>
-#include <csignal>
 #include <spdlog/spdlog.h>
-#include <cstdlib>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -30,15 +31,12 @@
 #include "app/input/controller_manager.hpp"
 #include "app/input/sdl_event_loop.hpp"
 #include "app/library/library_scanner2.hpp"
-#include "app/library/sqlite_library_database.hpp"
 #include "app/saves/save_manager.hpp"
-#include "app/input/controller_list_model.hpp"
+#include "app/input/gui/controller_list_model.hpp"
 #include "gui/game_image_provider.hpp"
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
-#include "app/library/library_item_model.hpp"
-#include "app/library/library_sort_filter_model.hpp"
 #include "gui/platform_list_model.hpp"
-#include "app/library/playlist_item_model.hpp"
+#include "app/library/gui/playlist_item_model.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/models/shop/shop_item_model.hpp"
 #include <archive.h>
@@ -50,15 +48,16 @@
 #include "app/activity/sqlite_activity_log.hpp"
 #include "app/emulator_item.hpp"
 #include "app/image_cache_url_interceptor.h"
-#include "app/input/gamepad_status_item.hpp"
-#include "app/input/input_mapping_item.hpp"
-#include "app/input/keyboard_mapping_item.hpp"
-#include "app/library/library_path_model.hpp"
+#include "app/input/gui/gamepad_status_item.hpp"
+#include "app/input/gui/input_mapping_item.hpp"
+#include "app/input/gui/keyboard_mapping_item.hpp"
+#include "app/library/gui/library_path_model.hpp"
 #include "app/library/sqlite_user_library.hpp"
-#include "app/mods/ModInfoItem.hpp"
+#include "app/library/gui/library_entry_item.hpp"
+#include "app/mods/gui/ModInfoItem.hpp"
 #include "app/mods/SqliteModRepository.h"
 #include "gui/EventEmitter.h"
-#include "gui/models/library/entry_list_model.hpp"
+#include "app/library/gui/entry_list_model.hpp"
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
@@ -161,10 +160,7 @@ int main(int argc, char *argv[]) {
 //   **** Load Content Database ****
    firelight::db::SqliteContentDatabase contentDatabase(defaultAppDataPathString + "/content.db");
 
-   firelight::db::SqliteLibraryDatabase libraryDatabase(defaultAppDataPathString + "/library.db");
-   firelight::ManagerAccessor::setLibraryDatabase(&libraryDatabase);
-
-   firelight::saves::SaveManager saveManager(savesPath, libraryDatabase, userdata_database, *gameImageProvider);
+   firelight::saves::SaveManager saveManager(savesPath, userdata_database, *gameImageProvider);
    firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   firelight::library::SqliteUserLibrary userLibrary(defaultAppDataPathString + "/library.db", romsPath);
@@ -199,11 +195,6 @@ int main(int argc, char *argv[]) {
 
    // Set up the models for QML ***********************************************
    firelight::gui::ControllerListModel controllerListModel(controllerManager);
-   firelight::gui::PlaylistItemModel playlistModel(&libraryDatabase);
-   firelight::gui::LibraryItemModel libModel(&libraryDatabase, &contentDatabase,
-                                             &userdata_database);
-   firelight::gui::LibrarySortFilterModel libSortModel;
-   libSortModel.setSourceModel(&libModel);
 
   firelight::library::EntryListModel entryListModel(userLibrary);
 
@@ -239,6 +230,9 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::input::InputMappingItem>("Firelight", 1, 0, "InputMapping");
   qmlRegisterType<firelight::PlatformMetadataItem>("Firelight", 1, 0, "PlatformMetadata");
   qmlRegisterType<firelight::mods::ModInfoItem>("Firelight", 1, 0, "ModInfo");
+  qmlRegisterType<firelight::achievements::AchievementSetItem>("Firelight", 1, 0, "AchievementSet");
+  qmlRegisterType<firelight::LibraryEntryItem>("Firelight", 1, 0, "LibraryEntry");
+
 
   firelight::gui::Router router;
 
@@ -280,12 +274,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("Router", &router);
    engine.rootContext()->setContextProperty("emulator_config_manager", emulatorConfigManager.get());
    engine.rootContext()->setContextProperty("achievement_manager", &raClient);
-   engine.rootContext()->setContextProperty("playlist_model", &playlistModel);
-   engine.rootContext()->setContextProperty("library_model", &libModel);
-   engine.rootContext()->setContextProperty("library_short_model",
-                                            &libSortModel);
-   engine.rootContext()->setContextProperty("library_database",
-                                            &libraryDatabase);
    engine.rootContext()->setContextProperty("controller_model",
                                             &controllerListModel);
    engine.rootContext()->setContextProperty("controller_manager",

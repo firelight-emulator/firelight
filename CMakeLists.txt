@@ -94,6 +94,7 @@ add_subdirectory(libs/discord)
 
 file(GLOB QML_FILES
         qml/*.qml
+        qml/components/navigation/*.qml
         qml/**/*.qml
 )
 
@@ -120,17 +121,12 @@ add_library(firelight_lib
         src/app/saves/save_manager.cpp
         src/app/saves/savefile.cpp
         src/app/db/sqlite_userdata_database.cpp
-        src/app/input/controller_list_model.cpp
-        src/app/library/library_item_model.cpp
-        src/app/library/library_sort_filter_model.cpp
-        src/app/library/playlist_item_model.cpp
-        src/app/saves/savefile_list_model.cpp
-        src/app/mods/mod_manager.cpp
+        src/app/input/gui/controller_list_model.cpp
+        src/app/saves/gui/savefile_list_model.cpp
         src/app/rcheevos/ra_client.cpp
         src/gui/eventhandlers/window_resize_handler.cpp
-        src/app/library/library_path_model.cpp
-        src/app/rcheevos/achievement_list_model.cpp
-        src/app/rcheevos/achievement_list_sort_filter_model.cpp
+        src/app/achievements/gui/achievement_list_model.cpp
+        src/app/achievements/gui/achievement_list_sort_filter_model.cpp
         src/gui/router.cpp
         src/app/input/profiles/controller_profile.cpp
         src/app/input/profiles/input_mapping.cpp
@@ -138,7 +134,7 @@ add_library(firelight_lib
         src/app/libretro/core_configuration.cpp
         src/app/emulator_config_manager.cpp
         src/gui/models/shop/shop_item_model.cpp
-        src/gui/models/suspend_point_list_model.cpp
+        src/app/saves/gui/suspend_point_list_model.cpp
         src/gui/game_image_provider.cpp
         src/app/audio/SfxPlayer.cpp
         src/app/rcheevos/regular_http_client.cpp
@@ -146,37 +142,36 @@ add_library(firelight_lib
         src/app/rcheevos/offline/rcheevos_offline_client.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/input/keyboard_input_handler.cpp
-        src/gui/models/library/entry_list_model.cpp
+        src/app/library/gui/entry_list_model.cpp
         src/app/emulator_item_renderer.cpp
         src/app/emulator_item.cpp
-        src/app/input/gamepad_status_item.cpp
+        src/app/input/gui/gamepad_status_item.cpp
         src/app/activity/sqlite_activity_log.cpp
         src/app/PlatformMetadataItem.cpp
         src/app/input/sqlite_controller_repository.cpp
         src/app/input/input_manager.cpp
-        src/app/input/input_mapping_item.cpp
-        src/app/library_entry_item.cpp
+        src/app/input/gui/input_mapping_item.cpp
+        src/app/library/gui/library_entry_item.cpp
         src/app/input/profiles/keyboard_mapping.cpp
-        src/app/input/keyboard_mapping_item.cpp
-        src/app/video_encoder.cpp
-        src/app/video_encoder.h
-        src/app/video_decoder.cpp
-        src/app/video_decoder.h
+        src/app/input/gui/keyboard_mapping_item.cpp
+        src/later/video_encoder.cpp
+        src/later/video_encoder.h
+        src/later/video_decoder.cpp
+        src/later/video_decoder.h
         src/app/image_cache_url_interceptor.cpp
         src/app/image_cache_url_interceptor.h
-        src/app/AchievementSetItem.hpp
-        src/app/SuspendPointListItem.h
-        src/app/AchievementSetItem.cpp
-        src/app/mods/ModInfoItem.cpp
-        src/app/mods/ModInfoItem.hpp
-        include/firelight/mods/mod_repository.hpp
-        include/firelight/mods/mod_info.hpp
+        src/app/achievements/gui/AchievementSetItem.hpp
+        src/app/achievements/gui/AchievementSetItem.cpp
+        src/app/mods/gui/ModInfoItem.cpp
+        src/app/mods/gui/ModInfoItem.hpp
+        src/app/mods/mod_repository.hpp
+        src/app/mods/mod_info.hpp
         src/app/mods/SqliteModRepository.cpp
         src/app/mods/SqliteModRepository.h
         src/gui/EventEmitter.h
 )
 
-target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
+target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
 target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS})
 
 if (WIN32)

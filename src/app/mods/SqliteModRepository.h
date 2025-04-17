@@ -1,5 +1,5 @@
 #pragma once
-#include "firelight/mods/mod_repository.hpp"
+#include "mod_repository.hpp"
 
 #include <map>
 

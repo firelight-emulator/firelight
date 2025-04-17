@@ -1,9 +1,11 @@
+
+#include "rom_file.hpp"
+
 #include <archive.h>
 #include <archive_entry.h>
 #include <qcryptographichash.h>
 #include <QFile>
 #include <zlib.h>
-#include <firelight/library/rom_file.hpp>
 #include <rcheevos/rc_hash.h>
 
 #include "../platform_metadata.hpp"

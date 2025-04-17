@@ -17,8 +17,8 @@
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"
 #include "manager_accessor.hpp"
-#include "video_decoder.h"
-#include "video_encoder.h"
+// #include "../later/video_decoder.h"
+// #include "video_encoder.h"
 
 class EmulatorItemRenderer : public QQuickRhiItemRenderer, public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver, public firelight::ManagerAccessor {
@@ -94,8 +94,8 @@ protected:
     void render(QRhiCommandBuffer *cb) override;
 
 private:
-    firelight::av::VideoEncoder *m_encoder = nullptr;
-    firelight::av::VideoDecoder *m_decoder = nullptr;
+    // firelight::av::VideoEncoder *m_encoder = nullptr;
+    // firelight::av::VideoDecoder *m_decoder = nullptr;
     const QSGRendererInterface::GraphicsApi m_graphicsApi;
 
     QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;

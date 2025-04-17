@@ -23,6 +23,7 @@
         <file alias="font-semibold">assets/fonts/Lexend-Medium.ttf</file>
         <file alias="lexend-black">assets/fonts/NunitoSans_10pt_SemiCondensed-Black.ttf</file>
         <file alias="symbols">assets/fonts/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf</file>
+        <file alias="main">assets/fonts/Lexend-VariableFont_wght.ttf</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="retroachievements-banner">assets/img/retroachievements_banner.png</file>
@@ -59,6 +60,11 @@
         <file alias="platform-nes">assets/img/platform-icons/nesicon.svg</file>
         <file alias="platform-snes">assets/img/platform-icons/snesicon.svg</file>
         <file alias="platform-psp">assets/img/platform-icons/pspicon.svg</file>
+    </qresource>
+    <qresource prefix="/icons/empty">
+        <file alias="book">assets/img/icons/notfilled-rounded/book2-notfilled.svg</file>
+        <file alias="settings">assets/img/icons/notfilled-rounded/settings-notfilled.svg</file>
+        <file alias="shopping-bag">assets/img/icons/notfilled-rounded/shopping-bag-notfilled.svg</file>
     </qresource>
     <qresource prefix="/images/platform-icons">
         <file alias="nes">assets/img/nes.svg</file>

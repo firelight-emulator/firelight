@@ -1,6 +1,6 @@
 #pragma once
 
-#include "firelight/activity/activity_log.hpp"
+#include "activity/activity_log.hpp"
 
 #include <QSqlDatabase>
 

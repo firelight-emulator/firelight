@@ -12,11 +12,11 @@
 #include <spdlog/spdlog.h>
 
 #include "regular_http_client.hpp"
-#include "firelight/achievement.hpp"
+#include "achievements/achievement.hpp"
 
 #include "../../../libs/rcheevos/include/rc_api_runtime.h"
-#include "achievement_list_model.hpp"
-#include "achievement_list_sort_filter_model.hpp"
+#include "achievements/gui/achievement_list_model.hpp"
+#include "achievements/gui/achievement_list_sort_filter_model.hpp"
 #include "ra_constants.h"
 
 namespace firelight::achievements {
@@ -92,7 +92,7 @@ namespace firelight::achievements {
 
         break;
       case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_HIDE:
-        // Intentionally ignored as we dynamically update the same popup and set out own duration.
+        // Intentionally ignored as we dynamically update the same popup and set our own duration.
         break;
       case RC_CLIENT_EVENT_GAME_COMPLETED:
         printf("game completed: %d\n", event->type);

@@ -1,6 +1,6 @@
 #include "save_manager.hpp"
 
-#include "firelight/library_entry.hpp"
+#include "library/library_entry.hpp"
 
 #include <fstream>
 #include <qcryptographichash.h>
@@ -12,10 +12,9 @@
 
 namespace firelight::saves {
   SaveManager::SaveManager(const QString &defaultSaveDir,
-                         db::ILibraryDatabase &libraryDatabase,
                          db::IUserdataDatabase &userdataDatabase,
                          gui::GameImageProvider &gameImageProvider)
-    : m_libraryDatabase(libraryDatabase), m_userdataDatabase(userdataDatabase),
+    : m_userdataDatabase(userdataDatabase),
       m_gameImageProvider(gameImageProvider) {
   m_ioThreadPool = std::make_unique<QThreadPool>();
   m_ioThreadPool->setMaxThreadCount(1);

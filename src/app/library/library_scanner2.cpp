@@ -3,7 +3,7 @@
 #include <QtConcurrent>
 #include <archive.h>
 #include <archive_entry.h>
-#include <firelight/library/rom_file.hpp>
+#include "rom_file.hpp"
 #include <rcheevos/rc_hash.h>
 #include <spdlog/spdlog.h>
 

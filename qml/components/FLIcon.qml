@@ -8,9 +8,11 @@ Image {
 
     required property var size
     required property string icon
+    property bool filled: true
+
     property color color: "#e8eaed"
 
-    source: "qrc:/icons/" + root.icon
+    source: filled ? ("qrc:/icons/" + root.icon) : ("qrc:/icons/empty/" + root.icon)
     fillMode: Image.PreserveAspectFit
 
     sourceSize.width: root.size

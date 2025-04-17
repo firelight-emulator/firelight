@@ -161,7 +161,7 @@ ApplicationWindow {
                     FLNavItem {
                         label: "Library"
                         iconName: "book"
-                        checked: Router.currentRoute === "/library"
+                        checked: Router.currentRoute.startsWith("/library")
                         onClicked: {
                             Router.navigateTo("/library")
                         }
@@ -170,34 +170,34 @@ ApplicationWindow {
                     FLNavItem {
                         label: "Mod Shop"
                         iconName: "shopping-bag"
-                        checked: Router.currentRoute === "/shop"
+                        checked: Router.currentRoute.startsWith("/shop")
                         onClicked: {
                             Router.navigateTo("/shop")
                         }
                     }
 
-                    FLNavItem {
-                        label: "Gallery"
-                        iconName: "photo-library"
-                        checked: Router.currentRoute === "/gallery"
-                        onClicked: {
-                            Router.navigateTo("/gallery")
-                        }
-                    }
+                    // FLNavItem {
+                    //     label: "Gallery"
+                    //     iconName: "photo-library"
+                    //     checked: Router.currentRoute === "/gallery"
+                    //     onClicked: {
+                    //         Router.navigateTo("/gallery")
+                    //     }
+                    // }
 
-                    FLNavItem {
-                        label: "Controllers"
-                        iconName: "controller"
-                        checked: Router.currentRoute === "/controllers"
-                        onClicked: {
-                            Router.navigateTo("/controllers")
-                        }
-                    }
+                    // FLNavItem {
+                    //     label: "Controllers"
+                    //     iconName: "controller"
+                    //     checked: Router.currentRoute === "/controllers"
+                    //     onClicked: {
+                    //         Router.navigateTo("/controllers")
+                    //     }
+                    // }
 
                     FLNavItem {
                         label: "Settings"
                         iconName: "settings"
-                        checked: Router.currentRoute === "/settings"
+                        checked: Router.currentRoute.startsWith("/settings")
                         onClicked: {
                             Router.navigateTo("/settings")
                         }
@@ -456,6 +456,13 @@ ApplicationWindow {
                             } else if (route === "/library") {
                                 contentStack.clear()
                                 contentStack.pushItem(allGamesPage, {}, StackView.PushTransition)
+                            } else if (route.startsWith("/library/entries/")) {
+                                let things = route.split("/")
+                                if (things.length === 4) {
+                                    console.log("THREE: " + things[3])
+                                    contentStack.pushItem(gameDetailsPage, {entryId: things[3]}, StackView.PushTransition)
+                                }
+                                console.log(things)
                             } else if (route.startsWith("/shop/mods/")) {
                                 let things = route.split("/")
                                 console.log(things)
@@ -801,6 +808,26 @@ ApplicationWindow {
                     required property var index
                     width: ListView.view.width
 
+                    RightClickMenu {
+                        id: rightClick
+
+                        RightClickMenuItem {
+                            text: "Play"
+                            // externalLink: true
+                            // onTriggered: {
+                            //     Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id)
+                            // }
+                        }
+
+                        RightClickMenuItem {
+                            text: "View details"
+                            onTriggered: {
+                                Router.navigateTo("/library/entries/" + tttt.model.entryId)
+                            }
+                        }
+                        
+                    }
+
 
                     TapHandler {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -811,6 +838,9 @@ ApplicationWindow {
                         }
 
                         onSingleTapped: function(event, button) {
+                            if (button === 2) {
+                                rightClick.popupNormal()
+                            }
                             if (tttt.ListView.view.currentIndex !== tttt.index) {
                                 // theList.highlightRangeMode = ListView.NoHighlightRange
                                 tttt.ListView.view.currentIndex = tttt.index
@@ -898,7 +928,7 @@ ApplicationWindow {
                     }
                 }
             }
-    }
+        }
         
     }
 
@@ -917,6 +947,13 @@ ApplicationWindow {
             // onEntryClicked: function (id) {
             //     emulatorScreen.loadGame(id)
             // }
+        }
+    }
+
+    Component {
+        id: gameDetailsPage
+        FLGameDetailsPanel {
+
         }
     }
 

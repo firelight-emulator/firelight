@@ -6,7 +6,18 @@ Menu {
     id: control
 
     padding: 4
+    horizontalPadding: 8
 
+    implicitWidth: 300
+    implicitHeight: {
+        var height = 8
+
+        for (var i = 0; i < count; i++) {
+            height += itemAt(i).implicitHeight
+        }
+        return height
+        
+    }
 
     currentIndex: 0
 
@@ -44,12 +55,10 @@ Menu {
     // // implicitContentHeight: control.count * Constants.rightClickMenuItem_DefaultHeight
 
     background: Rectangle {
-        id: bg
-        implicitWidth: 240
-        implicitHeight: 60
-        color: ColorPalette.neutral1000
-        border.color: ColorPalette.neutral800
-        radius: 2
+        color: "#1D1D1D"
+        // opacity: 0.9
+        radius: 4
+        border.color: "#4B4B4B"
     }
 
     delegate: RightClickMenuItem {

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "activity/play_session.hpp"
-#include "savefile_metadata.hpp"
-#include "suspend_point_metadata.hpp"
+#include <saves/savefile_metadata.hpp>
+#include <saves/suspend_point_metadata.hpp>
 
 #include <optional>
 #include <map>

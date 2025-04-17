@@ -1,16 +1,16 @@
 #pragma once
 
-#include "firelight/library_entry.hpp"
+#include "library/library_entry.hpp"
 #include "firelight/userdata_database.hpp"
 #include "savefile.hpp"
 #include <filesystem>
 #include <qfuture.h>
 #include <map>
 #include <firelight/content_database.hpp>
-#include <firelight/library_database.hpp>
+#include <library/library_database.hpp>
 #include "../../gui/game_image_provider.hpp"
 
-#include "../../gui/models/suspend_point_list_model.hpp"
+#include "gui/suspend_point_list_model.hpp" // TODO: get rid of
 #include "suspend_point.hpp"
 
 #include <qdir.h>
@@ -23,7 +23,6 @@ namespace firelight::saves {
 
     public:
         SaveManager(const QString &defaultSaveDir,
-                    db::ILibraryDatabase &libraryDatabase,
                     db::IUserdataDatabase &userdataDatabase,
                     gui::GameImageProvider &gameImageProvider);
 
@@ -68,7 +67,6 @@ namespace firelight::saves {
 
         QSettings m_settings;
 
-        db::ILibraryDatabase &m_libraryDatabase;
         db::IUserdataDatabase &m_userdataDatabase;
         gui::GameImageProvider &m_gameImageProvider;
         QString m_saveDirectory;
