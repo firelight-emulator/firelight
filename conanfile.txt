@@ -1,7 +1,0 @@
-[requires]
-spdlog/1.15.1
-ffmpeg/7.1.1
-
-[generators]
-CMakeDeps
-CMakeToolchain

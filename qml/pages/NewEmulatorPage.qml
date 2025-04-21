@@ -8,8 +8,10 @@ import QtQuick.Effects
 import QtMultimedia
 import Firelight 1.0
 
-StackView {
+FocusScope {
     id: root
+
+    property bool blurEnabled: false
 
     signal closing()
 
@@ -32,10 +34,6 @@ StackView {
 
     Keys.onDigit8Pressed: {
         emulator.decrementPlaybackMultiplier()
-    }
-
-    Keys.onEscapePressed: {
-        root.closing()
     }
 
     Keys.onPressed: function(event) {
@@ -113,7 +111,7 @@ StackView {
         anchors.fill: parent
     }
 
-    initialItem: EmulatorItem {
+    EmulatorItem {
         id: emulator
         focus: true
         anchors.centerIn: parent

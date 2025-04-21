@@ -41,7 +41,7 @@ ApplicationWindow {
 
         focus: true
 
-        handle: Rectangle{
+        handle: Rectangle {
             id: handleDelegate
             color: handleHover.hovered ? "#8e8e8e" : "#4B4B4B"
             implicitWidth: 1
@@ -493,102 +493,112 @@ ApplicationWindow {
         }
     }
 
-    Component {
-        id: emuPage
-        NewEmulatorPage {
-            onRewindPointsReady: function(points) {
-                screenStack.pushItem(rewindMenu, {
-                    model: points,
-                    aspectRatio: emulatorLoader.item.videoAspectRatio
-                }, StackView.Immediate)
-            }
-        }
-    }
-
-    Loader {
-        id: emulatorLoader
-        property var gameName
-        property var entryId
-        property var contentHash
-        property bool shouldDeactivate: false
-
+    FLEmulationPlayer {
+        id: emulator
+        anchors.fill: parent
         visible: false
 
-        anchors.fill: parent
-
-        Keys.onEscapePressed: {
-            console.log("pressed escape")
-        }
-
-        active: false
-        sourceComponent: emuPage
-
-        property bool paused: !emulatorLoader.activeFocus || (emulatorLoader.item ? !emulatorLoader.item.activeFocus : false)
-
-        function stopGame() {
-            shouldDeactivate = true
-            if (emulatorLoader.StackView.status === StackView.Active) {
-                emulatorLoader.StackView.view.popCurrentItem()
-            }
-        }
-
-        onPausedChanged: function () {
-            if (emulatorLoader.item != null) {
-                emulatorLoader.item.paused = emulatorLoader.paused
-            }
-        }
-
-        // onActiveChanged: {
-        //     if (!active && emulatorLoader.StackView.status === StackView.Active) {
-        //         emulatorLoader.StackView.view.popCurrentItem()
-        //     }
-        // }
-
-        StackView.onDeactivated: {
-            if (shouldDeactivate) {
-                active = false
-                shouldDeactivate = false
-            }
-        }
-
-        StackView.onActivating: {
-            // setSource(emuPage, {
-            //     gameData: emulatorLoader.gameData,
-            //     saveData: emulatorLoader.saveData,
-            //     corePath: emulatorLoader.corePath,
-            //     contentHash: emulatorLoader.contentHash,
-            //     saveSlotNumber: emulatorLoader.saveSlotNumber,
-            //     platformId: emulatorLoader.platformId,
-            //     contentPath: emulatorLoader.contentPath
-            // })
-            // active = true
-        }
-
-        onLoaded: function () {
-            const emu = (emulatorLoader.item as NewEmulatorPage)
-
-            emu.pausedChanged.connect(function( ){
-                console.log("game started")
-            })
-
-            emu.closing.connect(function() {
-                emulatorLoader.visible = false
-                emulatorLoader.active = false
-            })
-
-            overlay.opacity = 0
-
-            emu.loadGame(emulatorLoader.entryId)
-            emu.forceActiveFocus()
-            // emulatorLoader.item.startGame()
-            // emulatorLoader.item.paused = emulatorLoader.paused
-            //
-            // emulatorLoader.gameName = emulatorLoader.item.gameName
-            // emulatorLoader.contentHash = emulatorLoader.item.contentHash
-            // emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
-            // emulatorLoader.item.paused = emulatorLoader.paused
+        onUnloaded: {
+            emulator.visible = false
         }
     }
+
+    // Component {
+    //     id: emuPage
+    //     NewEmulatorPage {
+    //         onRewindPointsReady: function(points) {
+    //             screenStack.pushItem(rewindMenu, {
+    //                 model: points,
+    //                 aspectRatio: emulatorLoader.item.videoAspectRatio
+    //             }, StackView.Immediate)
+    //         }
+    //     }
+    // }
+    //
+    // Loader {
+    //     id: emulatorLoader
+    //     property var gameName
+    //     property var entryId
+    //     property var contentHash
+    //     property bool shouldDeactivate: false
+    //
+    //     visible: false
+    //
+    //     anchors.fill: parent
+    //
+    //     Keys.onEscapePressed: {
+    //         console.log("pressed escape")
+    //     }
+    //
+    //     active: false
+    //     sourceComponent: emuPage
+    //
+    //     property bool paused: !emulatorLoader.activeFocus || (emulatorLoader.item ? !emulatorLoader.item.activeFocus : false)
+    //
+    //     function stopGame() {
+    //         shouldDeactivate = true
+    //         if (emulatorLoader.StackView.status === StackView.Active) {
+    //             emulatorLoader.StackView.view.popCurrentItem()
+    //         }
+    //     }
+    //
+    //     onPausedChanged: function () {
+    //         if (emulatorLoader.item != null) {
+    //             emulatorLoader.item.paused = emulatorLoader.paused
+    //         }
+    //     }
+    //
+    //     // onActiveChanged: {
+    //     //     if (!active && emulatorLoader.StackView.status === StackView.Active) {
+    //     //         emulatorLoader.StackView.view.popCurrentItem()
+    //     //     }
+    //     // }
+    //
+    //     StackView.onDeactivated: {
+    //         if (shouldDeactivate) {
+    //             active = false
+    //             shouldDeactivate = false
+    //         }
+    //     }
+    //
+    //     StackView.onActivating: {
+    //         // setSource(emuPage, {
+    //         //     gameData: emulatorLoader.gameData,
+    //         //     saveData: emulatorLoader.saveData,
+    //         //     corePath: emulatorLoader.corePath,
+    //         //     contentHash: emulatorLoader.contentHash,
+    //         //     saveSlotNumber: emulatorLoader.saveSlotNumber,
+    //         //     platformId: emulatorLoader.platformId,
+    //         //     contentPath: emulatorLoader.contentPath
+    //         // })
+    //         // active = true
+    //     }
+    //
+    //     onLoaded: function () {
+    //         const emu = (emulatorLoader.item as NewEmulatorPage)
+    //
+    //         emu.pausedChanged.connect(function( ){
+    //             console.log("game started")
+    //         })
+    //
+    //         emu.closing.connect(function() {
+    //             emulatorLoader.visible = false
+    //             emulatorLoader.active = false
+    //         })
+    //
+    //         overlay.opacity = 0
+    //
+    //         emu.loadGame(emulatorLoader.entryId)
+    //         emu.forceActiveFocus()
+    //         // emulatorLoader.item.startGame()
+    //         // emulatorLoader.item.paused = emulatorLoader.paused
+    //         //
+    //         // emulatorLoader.gameName = emulatorLoader.item.gameName
+    //         // emulatorLoader.contentHash = emulatorLoader.item.contentHash
+    //         // emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
+    //         // emulatorLoader.item.paused = emulatorLoader.paused
+    //     }
+    // }
 
     Rectangle {
         id: overlay
@@ -612,9 +622,9 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
-                emulatorLoader.entryId = startGameAnimation.entryId
-                emulatorLoader.active = true
-                emulatorLoader.visible = true
+                emulator.load(startGameAnimation.entryId)
+                emulator.visible = true
+                overlay.opacity = 0
             }
         }
     }
@@ -774,6 +784,7 @@ ApplicationWindow {
 
                 Timer {
                     id: wheelTimer
+
                     interval: 500
                     repeat: false
                 }

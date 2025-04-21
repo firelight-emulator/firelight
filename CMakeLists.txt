@@ -158,8 +158,6 @@ add_library(firelight_lib
         src/later/video_encoder.h
         src/later/video_decoder.cpp
         src/later/video_decoder.h
-        src/app/image_cache_url_interceptor.cpp
-        src/app/image_cache_url_interceptor.h
         src/app/achievements/gui/AchievementSetItem.hpp
         src/app/achievements/gui/AchievementSetItem.cpp
         src/app/mods/gui/ModInfoItem.cpp
@@ -169,6 +167,7 @@ add_library(firelight_lib
         src/app/mods/SqliteModRepository.cpp
         src/app/mods/SqliteModRepository.h
         src/gui/EventEmitter.h
+        src/app/saves/gui/suspend_points_item.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -395,18 +394,18 @@ endif ()
 if (WIN32)
     install(
             PROGRAMS
-#            ${SHARED_LIB_DIR}/libsqlite3-0.dll
-#            ${SHARED_LIB_DIR}/libjpeg-8.dll
-#            ${SHARED_LIB_DIR}/libgio-2.0-0.dll
-#            ${SHARED_LIB_DIR}/libjasper.dll
-#            ${SHARED_LIB_DIR}/libtiff-6.dll
-#            ${SHARED_LIB_DIR}/libwebp-7.dll
-#            ${SHARED_LIB_DIR}/libwebpdemux-2.dll
-#            ${SHARED_LIB_DIR}/libwebpmux-3.dll
-#            ${SHARED_LIB_DIR}/libgobject-2.0-0.dll
-#            ${SHARED_LIB_DIR}/swresample-5.dll
-#            ${SHARED_LIB_DIR}/swscale-8.dll
-#            ${SHARED_LIB_DIR}/libffi-8.dll
+            #            ${SHARED_LIB_DIR}/libsqlite3-0.dll
+            #            ${SHARED_LIB_DIR}/libjpeg-8.dll
+            #            ${SHARED_LIB_DIR}/libgio-2.0-0.dll
+            #            ${SHARED_LIB_DIR}/libjasper.dll
+            #            ${SHARED_LIB_DIR}/libtiff-6.dll
+            #            ${SHARED_LIB_DIR}/libwebp-7.dll
+            #            ${SHARED_LIB_DIR}/libwebpdemux-2.dll
+            #            ${SHARED_LIB_DIR}/libwebpmux-3.dll
+            #            ${SHARED_LIB_DIR}/libgobject-2.0-0.dll
+            #            ${SHARED_LIB_DIR}/swresample-5.dll
+            #            ${SHARED_LIB_DIR}/swscale-8.dll
+            #            ${SHARED_LIB_DIR}/libffi-8.dll
             ${CMAKE_SOURCE_DIR}/lib/x86_64/discord_game_sdk.dll
             TYPE BIN
     )
