@@ -95,6 +95,7 @@ add_subdirectory(libs/discord)
 file(GLOB QML_FILES
         qml/*.qml
         qml/components/navigation/*.qml
+        qml/components/transitions/*.qml
         qml/**/*.qml
 )
 

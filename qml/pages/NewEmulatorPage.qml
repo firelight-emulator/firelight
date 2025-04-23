@@ -58,6 +58,7 @@ FocusScope {
     property alias contentHash: emulator.contentHash
     property alias gameName: emulator.gameName
     property alias entryId: emulator.entryId
+    property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
     function loadGame(entryId) {
         emulator.loadGame(entryId)
@@ -93,6 +94,10 @@ FocusScope {
         emulator.writeSuspendPoint(index)
     }
 
+    function undoLoadSuspendPoint() {
+        emulator.undoLastLoadSuspendPoint()
+    }
+
     property alias paused: emulator.paused
 
     // StackView.visible: true
@@ -118,6 +123,10 @@ FocusScope {
         width: parent.height * videoAspectRatio
         height: parent.height
         smooth: false
+
+        onVideoAspectRatioChanged: {
+            console.log("new aspect ratio: " + videoAspectRatio)
+        }
 
         // onGameStarted: {
         //     emulator.paused = false

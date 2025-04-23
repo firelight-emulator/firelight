@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::info);
   }
 
-  QApplication::setOrganizationDomain("firelight-emulator.com");
-  QApplication::setApplicationName("Firelight");
+  QGuiApplication::setOrganizationDomain("firelight-emulator.com");
+  QGuiApplication::setApplicationName("Firelight");
 
   QSettings::setDefaultFormat(QSettings::Format::IniFormat);
 
@@ -98,9 +98,9 @@ int main(int argc, char *argv[]) {
   // format.setVersion(4, 1);
   // QSurfaceFormat::setDefaultFormat(format);
 
-  QApplication app(argc, argv);
+  QGuiApplication app(argc, argv);
 
-  std::signal(SIGINT, [](int signal) { QApplication::quit(); });
+  std::signal(SIGINT, [](int signal) { QGuiApplication::quit(); });
 
   // TODO: Check for portable mode marker file
 
@@ -355,7 +355,7 @@ int main(int argc, char *argv[]) {
   //    });
   //  }
 
-  window->setIcon(QIcon("qrc:images/firelight-logo"));
+  // window->setIcon(QIcon("firelight_logo1 (1).svg"));
 
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
   sdlEventLoop.moveToThread(&sdlEventLoop);
@@ -364,9 +364,9 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("sfx_player",
                                            new firelight::audio::SfxPlayer());
 
-  int exitCode = QApplication::exec();
+  int exitCode = QGuiApplication::exec();
 
-  spdlog::info("Exiting QApplication");
+  spdlog::info("Exiting QGuiApplication");
 
   sdlEventLoop.stopProcessing();
   //

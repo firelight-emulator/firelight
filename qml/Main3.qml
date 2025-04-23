@@ -16,12 +16,16 @@ ApplicationWindow {
     width: 1920
     height: 1080
 
-    // flags: Qt.FramelessWindowHint
+    // flags: Qt.NoTitleBarBackgroundHint
 
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
 
-    title: qsTr("Firelight")
+    // title: qsTr("Firelight")
+
+    Component.onCompleted: {
+        console.log("Completed app window")
+    }
 
     property bool blur: false
 
@@ -30,6 +34,10 @@ ApplicationWindow {
         defaultColor: ColorPalette.neutral1000
         usingCustomBackground: AppearanceSettings.usingCustomBackground
         backgroundFile: AppearanceSettings.backgroundFile
+
+        Component.onCompleted: {
+            console.log("Background loaded")
+        }
     }
 
     SplitView {
@@ -503,103 +511,6 @@ ApplicationWindow {
         }
     }
 
-    // Component {
-    //     id: emuPage
-    //     NewEmulatorPage {
-    //         onRewindPointsReady: function(points) {
-    //             screenStack.pushItem(rewindMenu, {
-    //                 model: points,
-    //                 aspectRatio: emulatorLoader.item.videoAspectRatio
-    //             }, StackView.Immediate)
-    //         }
-    //     }
-    // }
-    //
-    // Loader {
-    //     id: emulatorLoader
-    //     property var gameName
-    //     property var entryId
-    //     property var contentHash
-    //     property bool shouldDeactivate: false
-    //
-    //     visible: false
-    //
-    //     anchors.fill: parent
-    //
-    //     Keys.onEscapePressed: {
-    //         console.log("pressed escape")
-    //     }
-    //
-    //     active: false
-    //     sourceComponent: emuPage
-    //
-    //     property bool paused: !emulatorLoader.activeFocus || (emulatorLoader.item ? !emulatorLoader.item.activeFocus : false)
-    //
-    //     function stopGame() {
-    //         shouldDeactivate = true
-    //         if (emulatorLoader.StackView.status === StackView.Active) {
-    //             emulatorLoader.StackView.view.popCurrentItem()
-    //         }
-    //     }
-    //
-    //     onPausedChanged: function () {
-    //         if (emulatorLoader.item != null) {
-    //             emulatorLoader.item.paused = emulatorLoader.paused
-    //         }
-    //     }
-    //
-    //     // onActiveChanged: {
-    //     //     if (!active && emulatorLoader.StackView.status === StackView.Active) {
-    //     //         emulatorLoader.StackView.view.popCurrentItem()
-    //     //     }
-    //     // }
-    //
-    //     StackView.onDeactivated: {
-    //         if (shouldDeactivate) {
-    //             active = false
-    //             shouldDeactivate = false
-    //         }
-    //     }
-    //
-    //     StackView.onActivating: {
-    //         // setSource(emuPage, {
-    //         //     gameData: emulatorLoader.gameData,
-    //         //     saveData: emulatorLoader.saveData,
-    //         //     corePath: emulatorLoader.corePath,
-    //         //     contentHash: emulatorLoader.contentHash,
-    //         //     saveSlotNumber: emulatorLoader.saveSlotNumber,
-    //         //     platformId: emulatorLoader.platformId,
-    //         //     contentPath: emulatorLoader.contentPath
-    //         // })
-    //         // active = true
-    //     }
-    //
-    //     onLoaded: function () {
-    //         const emu = (emulatorLoader.item as NewEmulatorPage)
-    //
-    //         emu.pausedChanged.connect(function( ){
-    //             console.log("game started")
-    //         })
-    //
-    //         emu.closing.connect(function() {
-    //             emulatorLoader.visible = false
-    //             emulatorLoader.active = false
-    //         })
-    //
-    //         overlay.opacity = 0
-    //
-    //         emu.loadGame(emulatorLoader.entryId)
-    //         emu.forceActiveFocus()
-    //         // emulatorLoader.item.startGame()
-    //         // emulatorLoader.item.paused = emulatorLoader.paused
-    //         //
-    //         // emulatorLoader.gameName = emulatorLoader.item.gameName
-    //         // emulatorLoader.contentHash = emulatorLoader.item.contentHash
-    //         // emulatorLoader.item.startGame(gameData, saveData, corePath, contentHash, saveSlotNumber, platformId, contentPath)
-    //         // emulatorLoader.item.paused = emulatorLoader.paused
-    //     }
-    // }
-
     Rectangle {
         id: overlay
         color: "black"
@@ -629,33 +540,6 @@ ApplicationWindow {
         }
     }
 
-    // Rectangle {
-    //     id: overlay
-    //     color: "green"
-    //     visible: true
-    //     anchors.bottom: parent.bottom
-    //     width: parent.width
-    //     height: 100
-
-    //     Behavior on height {
-    //         NumberAnimation {
-    //             property: "height"
-    //             duration: 200
-    //             easing.type: Easing.InOutQuad
-    //         }
-    //     }
-
-    //     TapHandler {
-    //         onTapped: {
-    //             if (overlay.height === 100) {
-    //                 overlay.height = overlay.parent.height
-    //             } else {
-    //                 overlay.height = 100
-    //             }
-    //         }
-    //     }
-    // }
-
     FLFocusHighlight {
         target: window.activeFocusItem
         usingMouse: InputMethodManager.usingMouse
@@ -664,49 +548,6 @@ ApplicationWindow {
     Component {
         id: allGamesPage
         FocusScope {
-            // ListView {
-            //     id: gameNavList
-            //     anchors.left: parent.left
-            //     anchors.top: parent.top
-            //     anchors.bottom: parent.bottom
-            //     width: 250
-
-            //     property int lastIndex: 0
-            //     property bool movingDown: true
-            //     // KeyNavigation.right: stack
-            //     // anchors.bottom: parent.bottom
-            //     // anchors.left: parent.left
-            //     // anchors.top: parent.top
-            //     currentIndex: 0
-            //     focus: true
-            //     interactive: false
-            //     keyNavigationEnabled: true
-            //     model: [
-            //         "All games",
-            //         "Recently played",
-            //         "Favorites",
-            //         "Newly added"
-            //     ]
-
-            //     delegate: FirelightMenuItem {
-            //         required property var index
-            //         required property var modelData
-            //         property bool showGlobalCursor: true
-
-            //         checked: ListView.isCurrentItem
-            //         focus: ListView.isCurrentItem
-            //         height: 50
-            //         labelText: modelData
-            //         width: ListView.view.width
-
-            //         onToggled: {
-            //             if (checked) {
-            //                 ListView.view.currentIndex = index;
-            //             }
-            //         }
-            //     }
-            // }
-
             Text {
                 id: titleText
                 color: "white"
@@ -836,7 +677,7 @@ ApplicationWindow {
                                 Router.navigateTo("/library/entries/" + tttt.model.entryId)
                             }
                         }
-                        
+
                     }
 
 
@@ -940,7 +781,7 @@ ApplicationWindow {
                 }
             }
         }
-        
+
     }
 
     Component {

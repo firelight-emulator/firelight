@@ -9,10 +9,12 @@ void SuspendPointsItem::setContentHash(const QString &contentHash) {
 
   m_contentHash = contentHash;
 
-  auto points =
-      getSaveManager()->getSuspendPoints(m_contentHash, m_saveSlotNumber);
-  for (int i = 0; i < points.size(); ++i) {
-    m_suspendPointsModel->updateData(i, points[i]);
+  for (auto i = 0; i < 16; ++i) {
+    auto point =
+        getSaveManager()->readSuspendPoint(m_contentHash, m_saveSlotNumber, i);
+    if (point.has_value()) {
+      m_suspendPointsModel->updateData(i, point.value());
+    }
   }
 
   emit suspendPointsChanged();
@@ -27,10 +29,12 @@ void SuspendPointsItem::setSaveSlotNumber(const int saveSlotNumber) {
 
   m_saveSlotNumber = saveSlotNumber;
 
-  auto points =
-      getSaveManager()->getSuspendPoints(m_contentHash, m_saveSlotNumber);
-  for (int i = 0; i < points.size(); ++i) {
-    m_suspendPointsModel->updateData(i, points[i]);
+  for (auto i = 0; i < 16; ++i) {
+    auto point =
+        getSaveManager()->readSuspendPoint(m_contentHash, m_saveSlotNumber, i);
+    if (point.has_value()) {
+      m_suspendPointsModel->updateData(i, point.value());
+    }
   }
 
   emit suspendPointsChanged();

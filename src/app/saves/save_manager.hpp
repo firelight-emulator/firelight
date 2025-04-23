@@ -42,6 +42,9 @@ public:
   std::optional<SuspendPoint> readSuspendPoint(const QString &contentHash,
                                                int saveSlotNumber, int index);
 
+  void deleteSuspendPoint(const QString &contentHash, int saveSlotNumber,
+                          int index);
+
   [[nodiscard]] QString getSaveDirectory() const;
 
   void setSaveDirectory(const QString &saveDirectory);
@@ -59,6 +62,10 @@ public slots:
 
 signals:
   void saveDirectoryChanged(const QString &saveDirectory);
+  void suspendPointUpdated(const QString &contentHash, int saveSlotNumber,
+                           int index);
+  void suspendPointDeleted(const QString &contentHash, int saveSlotNumber,
+                           int index);
 
 private:
   void writeSuspendPointToDisk(const QString &contentHash, int index,

@@ -145,17 +145,21 @@ QFuture<bool> SaveManager::writeSuspendPoint(const QString &contentHash,
 
   // m_suspendPoints[index] = suspendPoint;
   writeSuspendPointToDisk(contentHash, index, suspendPoint);
+  emit suspendPointUpdated(contentHash, saveSlotNumber, index);
   return {};
 }
 
 std::optional<SuspendPoint>
 SaveManager::readSuspendPoint(const QString &contentHash, int saveSlotNumber,
                               int index) {
-  if (m_suspendPoints.contains(index)) {
-    return m_suspendPoints.at(index);
-  }
+  return readSuspendPointFromDisk(contentHash, saveSlotNumber, index);
+}
 
-  return {};
+void SaveManager::deleteSuspendPoint(const QString &contentHash,
+                                     const int saveSlotNumber,
+                                     const int index) {
+  deleteSuspendPointFromDisk(contentHash, saveSlotNumber, index);
+  emit suspendPointDeleted(contentHash, saveSlotNumber, index);
 }
 
 QString SaveManager::getSaveDirectory() const { return m_saveDirectory; }
@@ -221,11 +225,13 @@ QVector<SuspendPoint>
 SaveManager::getSuspendPoints(const QString &contentHash,
                               const int saveSlotNumber) const {
   QVector<SuspendPoint> suspendPoints;
-  for (int i = 0; i < 8; ++i) {
+  for (int i = 0; i < 16; ++i) {
     auto p = readSuspendPointFromDisk(contentHash, saveSlotNumber, i);
-    if (p.has_value()) {
-      suspendPoints.append(p.value());
+    if (!p.has_value()) {
+      continue;
     }
+
+    suspendPoints.append(p.value());
   }
 
   return suspendPoints;

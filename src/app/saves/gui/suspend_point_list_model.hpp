@@ -5,7 +5,7 @@
 #include "../suspend_point.hpp"
 
 namespace firelight::saves {
-static constexpr int MAX_NUM_SUSPEND_POINTS = 8;
+static constexpr int MAX_NUM_SUSPEND_POINTS = 16;
 
 class SuspendPointListModel final : public QAbstractListModel {
   Q_OBJECT
@@ -50,13 +50,11 @@ public:
 
   void updateData(int index, const SuspendPoint &suspendPoint);
 
-  std::optional<Item> getItem(int index);
-
 signals:
   void suspendPointUpdated(int index);
 
 private:
   gui::GameImageProvider &m_imageProvider;
-  QVector<Item> m_items;
+  QList<Item> m_items = QList<Item>(MAX_NUM_SUSPEND_POINTS);
 };
 } // namespace firelight::saves

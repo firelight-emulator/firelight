@@ -377,14 +377,17 @@ void RAClient::deserializeState(const std::vector<uint8_t> &state) {
     return;
   }
 
-  const auto size = rc_client_progress_size(m_client);
-  if (state.size() != size) {
-    // TODO: Handle this better. Do we need to reset?
-    spdlog::warn("State size mismatch: {} != {}", state.size(), size);
-    return;
-  }
+  // const auto size = rc_client_progress_size(m_client);
+  // if (state.size() != size) {
+  //   // TODO: Handle this better. Do we need to reset?
+  //   spdlog::warn("State size mismatch: {} != {}", state.size(), size);
+  //   return;
+  // }
 
-  rc_client_deserialize_progress_sized(m_client, state.data(), size);
+  if (rc_client_deserialize_progress_sized(m_client, state.data(),
+                                           state.size()) != RC_OK) {
+    spdlog::warn("Failed to deserialize RC_Client state");
+  }
 }
 
 void RAClient::setDefaultToHardcore(const bool hardcore) {

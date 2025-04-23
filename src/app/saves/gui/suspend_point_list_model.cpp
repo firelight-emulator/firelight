@@ -9,8 +9,6 @@ SuspendPointListModel::SuspendPointListModel(
 
 bool SuspendPointListModel::setData(const QModelIndex &index,
                                     const QVariant &value, int role) {
-
-  // Access the item by reference to modify it in place
   auto &item = m_items[index.row()];
 
   if (role == HasData) {
@@ -19,7 +17,6 @@ bool SuspendPointListModel::setData(const QModelIndex &index,
     item.locked = value.toBool();
   }
 
-  // Notify the view that data has changed for the given index and role
   emit suspendPointUpdated(index.row());
   emit dataChanged(index, index, {role});
 
@@ -66,22 +63,19 @@ Qt::ItemFlags SuspendPointListModel::flags(const QModelIndex &index) const {
 }
 
 void SuspendPointListModel::deleteData(const int index) {
-  emit beginResetModel();
-  auto item = m_items.at(index);
-  item.hasData = false;
-
-  emit endResetModel();
+  m_items[index].hasData = false;
   emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
 }
 
 void SuspendPointListModel::updateData(const int index,
                                        const SuspendPoint &suspendPoint) {
   if (index >= m_items.size()) {
+    beginInsertRows(QModelIndex(), m_items.size(), m_items.size());
     m_items.append({QDateTime::fromMSecsSinceEpoch(suspendPoint.timestamp)
                         .toString("yyyy-MM-dd hh:mm:ss"),
                     suspendPoint.locked,
                     m_imageProvider.setImage(suspendPoint.image), true});
-    emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
+    endInsertRows();
     return;
   }
 
@@ -99,14 +93,5 @@ void SuspendPointListModel::updateData(const int index,
                       .toString("yyyy-MM-dd hh:mm:ss");
 
   emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
-}
-
-std::optional<SuspendPointListModel::Item>
-SuspendPointListModel::getItem(const int index) {
-  if (index > m_items.size()) {
-    return std::nullopt;
-  }
-
-  return {m_items[index]};
 }
 } // namespace firelight::saves

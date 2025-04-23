@@ -110,47 +110,165 @@ StackView {
         Item {
             SuspendPoints {
                 id: suspendData
-                // contentHash: emulatorLoader.contentHash
-                contentHash: "8e2c29a1e65111fe2078359e685e7943"
+                contentHash: emulatorLoader.item.contentHash
+                // contentHash: "8e2c29a1e65111fe2078359e685e7943"
                 saveSlotNumber: 1
             }
+
+            FirelightDialog {
+                id: deleteSuspendPointDialog
+                property int index: 0
+                text: "Are you sure you want to delete the Suspend Point in slot " + (index + 1) + "?"
+                onAccepted: {
+                    suspendData.deleteSuspendPoint(index)
+                    index = 0
+                }
+            }
+
+            FirelightDialog {
+                id: overwriteSuspendPointDialog
+                property int index: 0
+                text: "Are you sure you want to overwrite the data in slot " + (index + 1) + "?"
+                onAccepted: {
+                    emulatorLoader.item.writeSuspendPoint(index)
+                    index = 0
+                }
+            }
+
             GridView {
+                id: suspendPointGrid
                 anchors.fill: parent
                 anchors.leftMargin: (parent.width % cellWidth) / 2
                 anchors.rightMargin: (parent.width % cellWidth) / 2
                 model: suspendData.suspendPoints
                 cellWidth: 300
-                cellHeight: 250
+                cellHeight: 360
 
-                populate: Transition {
-                    id: popTransition
-                    SequentialAnimation {
-                        PropertyAction {
-                            property: "opacity"
-                            value: 0
-                        }
-                        PauseAnimation {
-                            duration: popTransition.ViewTransition.index * 30
-                        }
-                        ParallelAnimation {
-                            PropertyAnimation {
-                                property: "opacity"
-                                from: 0
-                                to: 1
-                                duration: 200
-                                easing.type: Easing.InOutQuad
+                header: Pane {
+                    width: GridView.view.width
+                    verticalPadding: 0
+                    horizontalPadding: 8
+                    background: Item {}
+                    contentItem: ColumnLayout {
+                        spacing: 8
+                        RowLayout {
+                            spacing: 12
+                            Layout.preferredHeight: 40
+                            Layout.fillWidth: true
+                            Text {
+                                Layout.fillHeight: true
+                                text: "Suspend Points"
+                                color: "white"
+                                font.family: Constants.regularFontFamily
+                                font.pixelSize: 22
+                                font.weight: Font.DemiBold
+                                verticalAlignment: Text.AlignVCenter
                             }
-                            PropertyAnimation {
-                                property: "y"
-                                from: popTransition.ViewTransition.destination.y + 20
-                                to: popTransition.ViewTransition.destination.y
-                                duration: 200
-                                easing.type: Easing.InOutQuad
+                            Item {
+                                Layout.fillHeight: true
+                                Layout.fillWidth: true
                             }
+                            Button {
+                                id: undoButton
+                                Layout.fillHeight: true
+                                horizontalPadding: 12
+                                background: Rectangle {
+                                    color: "white"
+                                    opacity: parent.pressed ? 0.16 : 0.1
+                                    radius: 4
+                                    visible: createHoverHandler.hovered && parent.enabled
+                                }
+                                HoverHandler {
+                                    id: createHoverHandler
+                                    cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                }
+                                contentItem: RowLayout {
+                                    spacing: 8
+                                    FLIcon {
+                                        id: createIcon
+                                        icon: "undo"
+                                        Layout.fillHeight: true
+                                        size: height
+                                        color: undoButton.enabled ? "white" : "#737373"
+                                    }
+                                    Text {
+                                        Layout.fillHeight: true
+                                        Layout.fillWidth: true
+                                         text: "Undo last load"
+                                         color: undoButton.enabled ? "white" : "#737373"
+                                         font.family: Constants.regularFontFamily
+                                         font.pixelSize: 16
+                                         font.weight: Font.Medium
+                                         verticalAlignment: Text.AlignVCenter
+                                            horizontalAlignment: Text.AlignHCenter
+                                     }
+                                 }
+
+                                 enabled: emulatorLoader.item.canUndoLoadSuspendPoint
+
+                                 onClicked: {
+                                    emulatorLoader.item.undoLoadSuspendPoint()
+                                 }
+                            }
+
                         }
+                        // RowLayout {
+                        //     spacing: 12
+                        //     Layout.preferredHeight: 40
+                        //     Layout.fillWidth: true
+                        //     Button {
+                        //         Layout.fillHeight: true
+                        //         horizontalPadding: 12
+                        //         background: Rectangle {
+                        //             color: "white"
+                        //             opacity: parent.pressed ? 0.16 : 0.1
+                        //             radius: 4
+                        //             visible: createHoverHandler.hovered && parent.enabled
+                        //         }
+                        //         HoverHandler {
+                        //             id: createHoverHandler
+                        //             cursorShape: Qt.PointingHandCursor
+                        //         }
+                        //         contentItem: RowLayout {
+                        //             spacing: 8
+                        //             FLIcon {
+                        //                 id: createIcon
+                        //                 icon: "undo"
+                        //                 Layout.fillHeight: true
+                        //                 size: height
+                        //                 color: "white"
+                        //             }
+                        //             Text {
+                        //                 Layout.fillHeight: true
+                        //                 Layout.fillWidth: true
+                        //                  text: "Undo last load"
+                        //                  color: "white"
+                        //                  font.family: Constants.regularFontFamily
+                        //                  font.pixelSize: 16
+                        //                  font.weight: Font.Medium
+                        //                  verticalAlignment: Text.AlignVCenter
+                        //                     horizontalAlignment: Text.AlignHCenter
+                        //              }
+                        //          }
+                        //
+                        //          // onClicked: {
+                        //          //    emulatorLoader.item.writeSuspendPoint(suspendPointGrid.count)
+                        //          // }
+                        //     }
+                        //     Item {
+                        //         Layout.fillHeight: true
+                        //         Layout.fillWidth: true
+                        //     }
+                        //
+                        // }
                     }
                 }
+
+                populate: FLGridViewPopulateTransition {}
+                add: FLGridViewAddTransition {}
+
                 delegate: Pane {
+                    id: theThing
                     required property var model
                     required property var index
                     width: GridView.view.cellWidth
@@ -159,82 +277,51 @@ StackView {
                     background: Item {}
 
                     property bool showGlobalCursor: true
-                    property var globalCursorProxy: button
+                    property var globalCursorProxy: contentItem
 
-                    contentItem: Button {
-                        id: button
-                        padding: 8
+                    contentItem: FocusScope {
+                        FLSuspendPointCard {
+                            anchors.fill: parent
+                            visible: model.has_data
+                            imageUrl: theThing.model.image_url
+                            dateTimeString: theThing.model.timestamp
+                            index: theThing.index
 
-                        Component.onCompleted: {
-                            console.log("y: " + y)
+                            onDeleteClicked: function() {
+                                deleteSuspendPointDialog.index = index
+                                deleteSuspendPointDialog.open()
+                            }
+
+                            onOverwriteClicked: function() {
+                                overwriteSuspendPointDialog.index = index
+                                overwriteSuspendPointDialog.open()
+                            }
                         }
-
-                        y: pressed ? 10 : 8
-
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            source: button
-                            anchors.fill: button
-                            autoPaddingEnabled: true
-                            shadowBlur: 1.0
-                            shadowColor: 'black'
-                            shadowOpacity: 0.5
-                            shadowEnabled: true
-                            shadowVerticalOffset: button.pressed ? 1 : 3
-                        }
-
-                        HoverHandler {
-                            id: hoverHandler
-                            cursorShape: Qt.PointingHandCursor
-                        }
-                        background: Rectangle {
-                            color: "#222222"
-                            opacity: 0.9
-                            radius: 6
-                            border.color: "#737373"
-
-                            Rectangle {
-                                id: highlight
-                                anchors.fill: parent
+                        Button {
+                            anchors.fill: parent
+                            visible: !model.has_data
+                            HoverHandler {
+                                id: theHoverHandler
+                                cursorShape: Qt.PointingHandCursor
+                            }
+                            background: Rectangle {
                                 color: "white"
-                                opacity: hoverHandler.hovered ? 0.1 : 0
+                                opacity: parent.pressed ? 0.08 : theHoverHandler.hovered ? 0.24 : 0.16
+                                border.color: "#737373"
+                                radius: 4
                             }
-                        }
-                        contentItem: ColumnLayout {
-                            Image {
-                                Layout.fillHeight: true
-                                Layout.fillWidth: true
-                                fillMode: Image.PreserveAspectFit
-                                source: model.image_url
-                                visible: model.has_data
+                            contentItem: Text {
+                                color: "white"
+                                text: "Create in slot " + (theThing.index + 1)
+                                font.pixelSize: 15
+                                font.family: Constants.regularFontFamily
+                                font.weight: Font.DemiBold
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
                             }
-                            RowLayout {
-                                Layout.preferredHeight: 32
-                                Layout.fillWidth: true
-                                Text {
-                                    Layout.fillHeight: true
-                                    text: "Slot " + (model.index + 1)
-                                    font.pixelSize: 16
-                                    font.family: Constants.regularFontFamily
-                                    font.weight: Font.DemiBold
-                                    color: "white"
-                                    horizontalAlignment: Text.AlignLeft
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-                                Item {
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
-                                }
-                                Text {
-                                    Layout.fillHeight: true
-                                    text: model.timestamp
-                                    font.pixelSize: 16
-                                    font.family: Constants.regularFontFamily
-                                    font.weight: Font.Normal
-                                    color: "#d1d1d1"
-                                    horizontalAlignment: Text.AlignLeft
-                                    verticalAlignment: Text.AlignVCenter
-                                }
+                            onClicked: {
+                                console.log("clicked create suspend point")
+                                emulatorLoader.item.writeSuspendPoint(theThing.index)
                             }
                         }
                     }
@@ -282,7 +369,7 @@ StackView {
                      FirelightMenuItem {
                          id: rewindButton
                          labelText: "Rewind"
-                         KeyNavigation.down: loadSuspendPointButton
+                         KeyNavigation.down: suspendPointButton
                          Layout.fillWidth: true
                          // Layout.preferredWidth: parent.width / 2
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -299,10 +386,10 @@ StackView {
                          color: "#dadada"
                      }
                      FirelightMenuItem {
-                         id: loadSuspendPointButton
-                         labelText: "Load Suspend Point"
+                         id: suspendPointButton
+                         labelText: "Suspend Points"
                          Layout.fillWidth: true
-                         KeyNavigation.down: createSuspendPointButton
+                         KeyNavigation.down: closeGameButton
                          // Layout.preferredWidth: parent.width / 2
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                          Layout.preferredHeight: 40
@@ -313,29 +400,7 @@ StackView {
                              quickMenuStack.pushItem(suspendPointMenu, {}, StackView.Immediate)
                          }
                      }
-                     FirelightMenuItem {
-                         id: createSuspendPointButton
-                         KeyNavigation.down: undo
-                         labelText: "Create Suspend Point"
-                         Layout.fillWidth: true
-                         // Layout.preferredWidth: parent.width / 2
-                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                         Layout.preferredHeight: 40
-                         checkable: false
-                         alignRight: true
-                         enabled: false
-                     }
-                     FirelightMenuItem {
-                         id: undo
-                         labelText: "Undo Last Load"
-                         Layout.fillWidth: true
-                         KeyNavigation.down: closeGameButton
-                         // Layout.preferredWidth: parent.width / 2
-                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                         Layout.preferredHeight: 40
-                         checkable: false
-                         alignRight: true
-                     }
+
                      Rectangle {
                          Layout.fillWidth: true
                          // Layout.preferredWidth: parent.width / 2
@@ -377,7 +442,6 @@ StackView {
         id: emulatorLoader
         property var gameName
         property var entryId: root.entryId
-        property var contentHash
         property bool shouldDeactivate: false
 
         // StackView.onActivated: {

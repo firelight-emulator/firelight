@@ -39,6 +39,7 @@
         <file alias="bookmark-star">assets/img/icons/filled-rounded/bookmark-star.svg</file>
         <file alias="browse">assets/img/icons/filled-rounded/browse.svg</file>
         <file alias="controller">assets/img/icons/filled-rounded/controller.svg</file>
+        <file alias="delete">assets/img/icons/filled-rounded/delete.svg</file>
         <file alias="history">assets/img/icons/filled-rounded/history.svg</file>
         <file alias="home">assets/img/icons/filled-rounded/home.svg</file>
         <file alias="kid-star">assets/img/icons/filled-rounded/kid-star.svg</file>
@@ -49,6 +50,7 @@
         <file alias="shopping-bag">assets/img/icons/filled-rounded/shopping-bag.svg</file>
         <file alias="star">assets/img/icons/filled-rounded/star.svg</file>
         <file alias="star-shine">assets/img/icons/filled-rounded/star-shine.svg</file>
+        <file alias="undo">assets/img/icons/filled-rounded/undo.svg</file>
         <file alias="platform-gba">assets/img/platform-icons/gbaicon.svg</file>
         <file alias="platform-gbc">assets/img/platform-icons/gbcicon.svg</file>
         <file alias="platform-gb">assets/img/platform-icons/gbicon.svg</file>
@@ -63,8 +65,10 @@
     </qresource>
     <qresource prefix="/icons/empty">
         <file alias="book">assets/img/icons/notfilled-rounded/book2-notfilled.svg</file>
+        <file alias="delete">assets/img/icons/notfilled-rounded/delete-notfilled.svg</file>
         <file alias="settings">assets/img/icons/notfilled-rounded/settings-notfilled.svg</file>
         <file alias="shopping-bag">assets/img/icons/notfilled-rounded/shopping-bag-notfilled.svg</file>
+        <file alias="undo">assets/img/icons/notfilled-rounded/undo-notfilled.svg</file>
     </qresource>
     <qresource prefix="/images/platform-icons">
         <file alias="nes">assets/img/nes.svg</file>
