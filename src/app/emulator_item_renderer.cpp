@@ -37,7 +37,9 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
   m_quitting = true;
 
   if (!m_paused) {
-    m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
+    if (m_playSessionTimer.isValid()) {
+      m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
+    }
   }
 
   m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
@@ -398,10 +400,16 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   }
 
   if (m_paused && !emulatorItem->paused()) {
-    m_playSessionTimer.restart();
+    if (m_playSessionTimer.isValid()) {
+      m_playSessionTimer.restart();
+    } else {
+      m_playSessionTimer.start();
+    }
     // Going from paused to unpaused
   } else if (!m_paused && emulatorItem->paused()) {
-    m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
+    if (m_playSessionTimer.isValid()) {
+      m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
+    }
     // Going from unpaused to paused
   }
 

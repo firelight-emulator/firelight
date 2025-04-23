@@ -21,6 +21,11 @@ ColumnLayout {
         setId: libEntry.achievementSetId
     }
 
+    GameActivity {
+        id: gameActivity
+        contentHash: libEntry.contentHash
+    }
+
     RowLayout {
         Layout.maximumHeight: 60
         Layout.minimumHeight: 60
@@ -47,8 +52,63 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
 
-        menuItems: ["Achievements"]
-        pages: [thing]
+        menuItems: ["Achievements", "Activity"]
+        pages: [thing, activity]
+    }
+
+    Component {
+        id: activity
+        ListView {
+            model: gameActivity.playSessions
+            delegate: RowLayout {
+                id: item
+                required property var model
+                required property var index
+
+                height: 32
+                width: ListView.view.width
+
+                spacing: 8
+
+                Text {
+                    text: {
+                        let date = new Date(item.model.startTime)
+                        return date.toLocaleString()
+                    }
+                    font.pixelSize: 17
+                    font.weight: Font.Medium
+                    font.family: Constants.regularFontFamily
+                    color: "white"
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignLeft
+                }
+
+                Text {
+                    text: {
+                        let date = new Date(item.model.endTime)
+                        return date.toLocaleString()
+                    }
+                    font.pixelSize: 17
+                    font.weight: Font.Medium
+                    font.family: Constants.regularFontFamily
+                    color: "white"
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignLeft
+                }
+
+                Text {
+                    text: model.numUnpausedSeconds
+                    font.pixelSize: 17
+                    font.weight: Font.Medium
+                    font.family: Constants.regularFontFamily
+                    color: "white"
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignLeft
+                }
+
+
+            }
+        }
     }
 
     // RowLayout {

@@ -159,16 +159,14 @@ add_library(firelight_lib
         src/later/video_encoder.h
         src/later/video_decoder.cpp
         src/later/video_decoder.h
-        src/app/achievements/gui/AchievementSetItem.hpp
         src/app/achievements/gui/AchievementSetItem.cpp
         src/app/mods/gui/ModInfoItem.cpp
-        src/app/mods/gui/ModInfoItem.hpp
-        src/app/mods/mod_repository.hpp
-        src/app/mods/mod_info.hpp
         src/app/mods/SqliteModRepository.cpp
         src/app/mods/SqliteModRepository.h
         src/gui/EventEmitter.h
         src/app/saves/gui/suspend_points_item.cpp
+        src/app/activity/gui/game_activity_item.cpp
+        src/app/activity/gui/play_session_list_model.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

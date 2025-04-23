@@ -21,6 +21,7 @@
 #include <windows.h>
 #endif
 
+#include "activity/gui/game_activity_item.hpp"
 #include "app/audio/SfxPlayer.hpp"
 #include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
@@ -39,6 +40,7 @@
 #include "gui/platform_list_model.hpp"
 #include "gui/router.hpp"
 #include "network_cache.hpp"
+
 #include <QtConcurrent>
 #include <archive.h>
 #include <archive_entry.h>
@@ -259,6 +261,8 @@ int main(int argc, char *argv[]) {
                                                "LibraryEntry");
   qmlRegisterType<firelight::saves::SuspendPointsItem>("Firelight", 1, 0,
                                                        "SuspendPoints");
+  qmlRegisterType<firelight::activity::GameActivityItem>("Firelight", 1, 0,
+                                                         "GameActivity");
 
   firelight::gui::Router router;
 
