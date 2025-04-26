@@ -303,10 +303,10 @@ ApplicationWindow {
         }
 
         Pane {
-            padding: 16
+            padding: 24
             background: Item {}
             contentItem: ColumnLayout {
-                spacing: 16
+                spacing: 8
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.maximumHeight: 42
@@ -340,6 +340,23 @@ ApplicationWindow {
                             Router.goBack()
                             // contentStack.popCurrentItem()
                         }
+                    }
+
+                    Image {
+                        Layout.fillHeight: true
+                        sourceSize.height: height
+                        source: "https://media.retroachievements.org/Images/041428.png"
+                    }
+
+                    Text {
+                        text: "Mario and Luigi"
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: "white"
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.DemiBold
+                        font.pixelSize: 24
+                        verticalAlignment: Qt.AlignVCenter
                     }
 
                     // Button {
@@ -709,7 +726,7 @@ ApplicationWindow {
                         cursorShape: Qt.PointingHandCursor
                     }
 
-                    height: 64
+                    height: 48
                     padding: 6
                     horizontalPadding: 12
 
@@ -756,7 +773,7 @@ ApplicationWindow {
                         FLIcon {
                             icon: platform_model.getPlatformIconName(tttt.model.platformId)
                             color: tttt.ListView.isCurrentItem ? "#2A2A2A" : "#d3d3d3"
-                            Layout.preferredHeight: 40
+                            Layout.preferredHeight: 24
                             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                             size: height
                         }

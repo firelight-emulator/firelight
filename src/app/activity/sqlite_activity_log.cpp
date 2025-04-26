@@ -79,8 +79,8 @@ SqliteActivityLog::getLatestPlaySession(std::string contentHash) {
 std::vector<PlaySession>
 SqliteActivityLog::getPlaySessions(const std::string contentHash) {
   // Query DB for all play sessions with the given content hash
-  const QString queryString =
-      "SELECT * FROM play_sessions WHERE content_hash = :contentHash;";
+  const QString queryString = "SELECT * FROM play_sessions WHERE content_hash "
+                              "= :contentHash ORDER BY start_time DESC;";
 
   auto query = QSqlQuery(getDatabase());
   query.prepare(queryString);

@@ -8,6 +8,8 @@ TabBar {
     required property int tabWidth
     required property list<string> tabs
 
+    spacing: 8
+
     implicitWidth: tabWidth * tabs.length + (spacing * (tabs.length - 1))
     implicitHeight: 48
 
@@ -18,8 +20,8 @@ TabBar {
         width: control.tabWidth
         height: 4
         radius: 2
-        color: "white"
-        x: control.tabWidth * control.currentIndex
+        color: "#acacac"
+        x: (control.tabWidth * control.currentIndex) + (control.spacing * control.currentIndex)
         y: control.height - 4
 
         Behavior on x {

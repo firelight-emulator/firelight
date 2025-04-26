@@ -27,7 +27,7 @@ Button {
     }
 
     contentItem: RowLayout {
-        spacing: 20
+        spacing: 12
 
         FLIcon {
             Layout.preferredWidth: parent.height

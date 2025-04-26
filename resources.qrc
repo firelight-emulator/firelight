@@ -34,6 +34,7 @@
         <file alias="add-circle">assets/img/icons/filled-rounded/add-circle.svg</file>
         <file alias="arrow-back">assets/img/icons/filled-rounded/arrow-back.svg</file>
         <file alias="arrow-forward">assets/img/icons/filled-rounded/arrow-forward.svg</file>
+        <file alias="bar-chart">assets/img/icons/filled-rounded/bar-chart.svg</file>
         <file alias="bell">assets/img/icons/filled-rounded/bell.svg</file>
         <file alias="book">assets/img/icons/filled-rounded/book2.svg</file>
         <file alias="bookmark-star">assets/img/icons/filled-rounded/bookmark-star.svg</file>
@@ -42,6 +43,7 @@
         <file alias="delete">assets/img/icons/filled-rounded/delete.svg</file>
         <file alias="history">assets/img/icons/filled-rounded/history.svg</file>
         <file alias="home">assets/img/icons/filled-rounded/home.svg</file>
+        <file alias="info">assets/img/icons/filled-rounded/info.svg</file>
         <file alias="kid-star">assets/img/icons/filled-rounded/kid-star.svg</file>
         <file alias="new-folder">assets/img/icons/filled-rounded/new-folder.svg</file>
         <file alias="photo-library">assets/img/icons/filled-rounded/photo-library.svg</file>
@@ -50,6 +52,7 @@
         <file alias="shopping-bag">assets/img/icons/filled-rounded/shopping-bag.svg</file>
         <file alias="star">assets/img/icons/filled-rounded/star.svg</file>
         <file alias="star-shine">assets/img/icons/filled-rounded/star-shine.svg</file>
+        <file alias="trophy">assets/img/icons/filled-rounded/trophy.svg</file>
         <file alias="undo">assets/img/icons/filled-rounded/undo.svg</file>
         <file alias="platform-gba">assets/img/platform-icons/gbaicon.svg</file>
         <file alias="platform-gbc">assets/img/platform-icons/gbcicon.svg</file>
@@ -64,10 +67,13 @@
         <file alias="platform-psp">assets/img/platform-icons/pspicon.svg</file>
     </qresource>
     <qresource prefix="/icons/empty">
+        <file alias="bar-chart">assets/img/icons/notfilled-rounded/bar-chart-notfilled.svg</file>
         <file alias="book">assets/img/icons/notfilled-rounded/book2-notfilled.svg</file>
         <file alias="delete">assets/img/icons/notfilled-rounded/delete-notfilled.svg</file>
+        <file alias="info">assets/img/icons/notfilled-rounded/info-notfilled.svg</file>
         <file alias="settings">assets/img/icons/notfilled-rounded/settings-notfilled.svg</file>
         <file alias="shopping-bag">assets/img/icons/notfilled-rounded/shopping-bag-notfilled.svg</file>
+        <file alias="trophy">assets/img/icons/notfilled-rounded/trophy-notfilled.svg</file>
         <file alias="undo">assets/img/icons/notfilled-rounded/undo-notfilled.svg</file>
     </qresource>
     <qresource prefix="/images/platform-icons">
