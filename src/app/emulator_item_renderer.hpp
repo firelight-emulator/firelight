@@ -1,142 +1,154 @@
 #pragma once
 
-#include <QSGRenderNode>
-#include <QOpenGLFunctions>
 #include <QImage>
 #include <QMediaCaptureSession>
 #include <QMediaRecorder>
 #include <QOpenGLFramebufferObject>
+#include <QOpenGLFunctions>
 #include <QQueue>
 #include <QQuickRhiItemRenderer>
+#include <QSGRenderNode>
 #include <QVideoFrameInput>
-#include <qsgrendererinterface.h>
 #include <firelight/libretro/video_data_receiver.hpp>
+#include <qsgrendererinterface.h>
 #include <rhi/qrhi.h>
 
 #include "audio/audio_manager.hpp"
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"
 #include "manager_accessor.hpp"
-#include "video_decoder.h"
-#include "video_encoder.h"
+// #include "../later/video_decoder.h"
+// #include "video_encoder.h"
 
-class EmulatorItemRenderer : public QQuickRhiItemRenderer, public QOpenGLFunctions,
-                             public firelight::libretro::IVideoDataReceiver, public firelight::ManagerAccessor {
+class EmulatorItemRenderer : public QQuickRhiItemRenderer,
+                             public QOpenGLFunctions,
+                             public firelight::libretro::IVideoDataReceiver,
+                             public firelight::ManagerAccessor {
 public:
-    explicit EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api, std::unique_ptr<libretro::Core> core);
+  explicit EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api,
+                                std::unique_ptr<libretro::Core> core);
 
-    void onGeometryChanged(const std::function<void(int, int, float)> &callback) {
-        m_geometryChangedCallback = callback;
-    }
+  void onGeometryChanged(const std::function<void(int, int, float)> &callback) {
+    m_geometryChangedCallback = callback;
+  }
 
-    void receive(const void *data, unsigned width, unsigned height, size_t pitch) override;
+  void receive(const void *data, unsigned width, unsigned height,
+               size_t pitch) override;
 
-    retro_hw_context_type getPreferredHwRender() override;
+  retro_hw_context_type getPreferredHwRender() override;
 
-    void getHwRenderContext(retro_hw_context_type &contextType, unsigned int &major, unsigned int &minor) override;
+  void getHwRenderContext(retro_hw_context_type &contextType,
+                          unsigned int &major, unsigned int &minor) override;
 
-    proc_address_t getProcAddress(const char *sym) override;
+  proc_address_t getProcAddress(const char *sym) override;
 
-    void setResetContextFunc(context_reset_func contextResetFunc) override;
+  void setResetContextFunc(context_reset_func contextResetFunc) override;
 
-    void setDestroyContextFunc(context_destroy_func contextDestroyFunc) override;
+  void setDestroyContextFunc(context_destroy_func contextDestroyFunc) override;
 
-    uintptr_t getCurrentFramebufferId() override;
+  uintptr_t getCurrentFramebufferId() override;
 
-    void setSystemAVInfo(retro_system_av_info *info) override;
+  void setSystemAVInfo(retro_system_av_info *info) override;
 
-    void setPixelFormat(retro_pixel_format *format) override;
+  void setPixelFormat(retro_pixel_format *format) override;
 
-    void setHwRenderContextNegotiationInterface(retro_hw_render_context_negotiation_interface *iface) override;
+  void setHwRenderContextNegotiationInterface(
+      retro_hw_render_context_negotiation_interface *iface) override;
 
-    void setHwRenderInterface(retro_hw_render_interface **iface) override;
+  void setHwRenderInterface(retro_hw_render_interface **iface) override;
 
-    QByteArray m_gameData;
-    QByteArray m_saveData;
-    QString m_corePath;
-    QString m_contentHash;
-    int m_saveSlotNumber;
-    int m_platformId;
-    QString m_contentPath;
-    bool m_gameReady;
+  QByteArray m_gameData;
+  QByteArray m_saveData;
+  QString m_corePath;
+  QString m_contentHash;
+  int m_saveSlotNumber;
+  int m_platformId;
+  QString m_contentPath;
+  bool m_gameReady;
+  int m_playbackMultiplier = 1;
 
-    enum EmulatorCommandType {
-        ResetGame,
-        WriteSaveFile,
-        WriteRewindPoint,
-        EmitRewindPoints,
-        LoadRewindPoint,
-        WriteSuspendPoint,
-        LoadSuspendPoint,
-        UndoLoadSuspendPoint
-    };
+  enum EmulatorCommandType {
+    ResetGame,
+    WriteSaveFile,
+    WriteRewindPoint,
+    EmitRewindPoints,
+    LoadRewindPoint,
+    WriteSuspendPoint,
+    LoadSuspendPoint,
+    UndoLoadSuspendPoint,
+    SetPlaybackMultiplier
+  };
 
-    struct EmulatorCommand {
-        EmulatorCommandType type;
-        int suspendPointIndex;
-        int rewindPointIndex;
-    };
+  struct EmulatorCommand {
+    EmulatorCommandType type;
+    int suspendPointIndex;
+    int rewindPointIndex;
+    int playbackMultiplier;
+  };
 
-    void submitCommand(EmulatorCommand command);
+  void submitCommand(EmulatorCommand command);
 
-    void save(bool waitForFinish) const;
+  void save(bool waitForFinish) const;
 
 protected:
-    ~EmulatorItemRenderer() override;
+  ~EmulatorItemRenderer() override;
 
-    void initialize(QRhiCommandBuffer *cb) override;
+  void initialize(QRhiCommandBuffer *cb) override;
 
-    void synchronize(QQuickRhiItem *item) override;
+  void synchronize(QQuickRhiItem *item) override;
 
-    void render(QRhiCommandBuffer *cb) override;
+  void render(QRhiCommandBuffer *cb) override;
 
 private:
-    firelight::av::VideoEncoder *m_encoder = nullptr;
-    firelight::av::VideoDecoder *m_decoder = nullptr;
-    const QSGRendererInterface::GraphicsApi m_graphicsApi;
+  // firelight::av::VideoEncoder *m_encoder = nullptr;
+  // firelight::av::VideoDecoder *m_decoder = nullptr;
+  const QSGRendererInterface::GraphicsApi m_graphicsApi;
 
-    QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
+  QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
 
-    QQueue<EmulatorCommand> m_commandQueue;
+  QQueue<EmulatorCommand> m_commandQueue;
 
-    QImage m_overlayImage;
-    QImage m_currentImage;
+  QImage m_overlayImage;
+  QImage m_currentImage;
 
-    QElapsedTimer m_playSessionTimer;
-    firelight::activity::PlaySession m_playSession{};
+  SuspendPoint m_beforeLastLoadSuspendPoint;
 
-    bool m_quitting = false;
+  QList<QString> m_rewindImageUrls{};
 
-    int m_frameNumber = 0;
+  QElapsedTimer m_playSessionTimer;
+  firelight::activity::PlaySession m_playSession{};
 
-    int m_currentWaitFrames = 0;
-    int m_waitFrames = 0;
+  bool m_quitting = false;
 
-    QList<SuspendPoint> m_rewindPoints;
+  int m_frameNumber = 0;
 
-    std::unique_ptr<libretro::Core> m_core = nullptr;
-    bool m_coreInitialized = false;
+  int m_currentWaitFrames = 0;
+  int m_waitFrames = 0;
 
-    std::function<void (int, int, float)> m_geometryChangedCallback = nullptr;
+  QList<SuspendPoint> m_rewindPoints;
 
-    // HW rendering members
-    bool m_openGlInitialized = false;
-    GLint m_currentFramebufferId = 0;
-    std::function<void()> m_resetContextFunction = nullptr;
-    std::function<void()> m_destroyContextFunction = nullptr;
+  std::unique_ptr<libretro::Core> m_core = nullptr;
+  bool m_coreInitialized = false;
 
+  std::function<void(int, int, float)> m_geometryChangedCallback = nullptr;
 
-    // Default according to libretro docs
-    QImage::Format m_pixelFormat = QImage::Format_RGB16;
+  // HW rendering members
+  bool m_openGlInitialized = false;
+  GLint m_currentFramebufferId = 0;
+  std::function<void()> m_resetContextFunction = nullptr;
+  std::function<void()> m_destroyContextFunction = nullptr;
 
-    bool m_paused = false;
+  // Default according to libretro docs
+  QImage::Format m_pixelFormat = QImage::Format_RGB16;
 
-    uint m_coreBaseWidth = 0;
-    uint m_coreBaseHeight = 0;
-    uint m_coreMaxWidth = 0;
-    uint m_coreMaxHeight = 0;
-    float m_coreAspectRatio = 0.0f;
-    float m_calculatedAspectRatio = 0.0f;
+  bool m_paused = false;
 
-    bool m_shouldSave = false;
+  uint m_coreBaseWidth = 0;
+  uint m_coreBaseHeight = 0;
+  uint m_coreMaxWidth = 0;
+  uint m_coreMaxHeight = 0;
+  float m_coreAspectRatio = 0.0f;
+  float m_calculatedAspectRatio = 0.0f;
+
+  bool m_shouldSave = false;
 };

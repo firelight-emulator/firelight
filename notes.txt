@@ -1,0 +1,53 @@
+pacman -S mingw-w64-clang-x86_64-toolchain
+mingw-w64-x86_64-clang-analyzer
+
+install PIP (should come with Python)
+
+might need to set on PATH
+
+
+$ VCPKG_DEFAULT_TRIPLET=x64-mingw-static ../qt5/configure.bat -init-submodules -submodules qtbase,qtimageformats,qtshadertools,qtsvg,qtlanguageserver,qtdeclarative,qtquick3d,qtmultimedia,qtcharts,qtconnectivity,qttools,qtgraphs -skip qtxmlpatterns,qtwebview,qtwebsockets,qtserialbus,qtserialport -release -static -vcpkg -nomake tests -nomake examples -opensource
+
+Once everything is built, you must run 'cmake --install .'
+Qt will be installed into 'C:/Qt/Qt-6.9.0'
+
+To configure and build other Qt modules, you can use the following convenience script:
+        C:/Qt/Qt-6.9.0/bin/qt-configure-module.bat
+
+If reconfiguration fails for some reason, try removing 'CMakeCache.txt' from the build directory
+Alternatively, you can add the --fresh flag to your CMake flags.
+
+C:/msys64/msys2_shell.cmd -defterm -here -no-start -mingw64 -use-full-path
+
+
+'C:/msys64/mingw64/bin/cmake.exe' '-DBUILD_qtxmlpatterns=OFF' '-DBUILD_qtwebview=OFF' '-DBUILD_qtwebsockets=OFF' '-DBUILD_qtserialbus=OFF' '-DBUILD_qtserialport=OFF' '-DQT_BUILD_SUBMODULES=qtbase;qtimageformats;qtshadertools;qtsvg;qtlanguageserver;qtdeclarative;qtquicktimeline;qtquick3d;qtmultimedia;qtcharts;qtconnectivity;qtactiveqt;qttools;qtgraphs' '-DBUILD_qtbase=ON' '-DBUILD_qtimageformats=ON' '-DBUILD_qtshadertools=ON' '-DBUILD_qtsvg=ON' '-DBUILD_qtlanguageserver=ON' '-DBUILD_qtdeclarative=ON' '-DBUILD_qtquicktimeline=ON' '-DBUILD_qtquick3d=ON' '-DBUILD_qtmultimedia=ON' '-DBUILD_qtcharts=ON' '-DBUILD_qtconnectivity=ON' '-DBUILD_qtactiveqt=ON' '-DBUILD_qttools=ON' '-DBUILD_qtgraphs=ON' '-DQT_INTERNAL_CALLED_FROM_CONFIGURE:BOOL=TRUE' '-DQT_USE_VCPKG=ON' '-DBUILD_SHARED_LIBS=OFF' '-DQT_BUILD_TESTS=FALSE' '-DQT_BUILD_EXAMPLES=FALSE' '-DCMAKE_BUILD_TYPE=Release' '-G' 'Ninja' 'C:/msys64/home/alexs/git/qt5'
+
+export PERL5LIB="/usr/share/automake-1.17"
+
+warning: The vcpkg C:\vcpkg\vcpkg.exe is using detected vcpkg root C:\vcpkg and ignoring mismatched VCPKG_ROOT environment value C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg. To suppress this message, unset the environment variable or use the --vcpkg-root command line switch.
+
+
+packages can provide a cmake config file or a pkg config file most of the time... sometimes both... cmake config file works with just find_package and .pc files need pkgconfig
+
+EmulatorItem:
+        properties:
+                - paused
+                - loaded
+                - contentHash
+                - displayName
+                - platformId
+                - saveSlotNumber
+                - audioBufferFilledPercent
+                - contentAspectRatio
+                - contentHeight
+                - contentWidth
+        methods:
+                - loadGame(entryId)
+                - loadGame(contentHash)
+        signals:
+                - gameLoadSucceeded
+                - gameLoadFailed
+                - readyToStart
+                - rewindPointsCreated
+                - suspendPointLoaded
+                - suspendPointCreated

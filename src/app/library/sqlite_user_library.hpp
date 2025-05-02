@@ -1,8 +1,8 @@
 #pragma once
 #include <QSqlDatabase>
 #include <QString>
-#include <firelight/library/rom_file.hpp>
-#include <firelight/library/user_library.hpp>
+#include "rom_file.hpp"
+#include "user_library.hpp"
 #include <qsettings.h>
 
 namespace firelight::library {

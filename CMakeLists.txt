@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22.1)
+cmake_minimum_required(VERSION 3.23.5...3.31.6)
 project(firelight
         VERSION 0.8.1
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
@@ -6,21 +6,40 @@ project(firelight
         LANGUAGES CXX
 )
 
+set(QT_QML_GENERATE_QMLLS_INI ON)
+
+
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
 set(CMAKE_OSX_ARCHITECTURES "arm64")
 set(VCPKG_DISABLE_COMPILER_TRACKING ON)
 
+set(QT_NO_PRIVATE_MODULE_WARNING ON)
 set(CMAKE_BUILD_RPATH ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
-#set(Qt6_DIR "C:/Qt/Qt-6.10.0")
 
-list(APPEND CMAKE_PREFIX_PATH "/Users/alexcharles/Qt/6.7.2/macos" "/opt/homebrew" "C:/Qt/Qt-6.8.2")
+# list(APPEND CMAKE_PREFIX_PATH "/Users/alexcharles/Qt/6.7.2/macos" "/opt/homebrew" "C:/Qt/Qt-6.9.0")
 
-list(APPEND CMAKE_INCLUDE_PATH "/opt/homebrew/include")
+# list(APPEND CMAKE_INCLUDE_PATH "/opt/homebrew/include")
+
+list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+#option(ENABLE_ASAN "Enable Address Sanitizer" ON)
+#if(ENABLE_ASAN)
+#    message(STATUS "AddressSanitizer (ASan) enabled.")
+#    # Check if the compiler is Clang or GCC (ASan flag is the same)
+#    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+#        add_compile_options(-fsanitize=address -g) # Add -g for debug symbols
+#        add_link_options(-fsanitize=address)
+#        # For older CMake versions that don't support target_link_options, you might use:
+#        # target_link_libraries(YourApp PRIVATE -fsanitize=address)
+#    else()
+#        message(WARNING "ASan requested, but compiler is not Clang or GCC. ASan not enabled.")
+#    endif()
+#endif()
 
 #set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 
@@ -38,18 +57,27 @@ set(CMAKE_AUTOUIC ON)
 
 #set(QT_ENABLE_VERBOSE_DEPLOYMENT ON)
 
+# set(QT6_DIR "C:/Qt/Qt-6.9.0")
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
+pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
+pkg_check_modules(AVUTIL REQUIRED IMPORTED_TARGET libavutil)
+pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
+pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
+
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql Charts QuickTest Multimedia Network REQUIRED)
+# find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(FFmpeg REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
 find_package(LibArchive REQUIRED)
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
-
 qt6_standard_project_setup(REQUIRES 6.8)
+
 
 #add_compile_definitions(QT_QML_DEBUG)
 set(CMAKE_CXX_STANDARD 20)
@@ -66,6 +94,9 @@ add_subdirectory(libs/discord)
 
 file(GLOB QML_FILES
         qml/*.qml
+        qml/components/navigation/*.qml
+        qml/components/transitions/*.qml
+        qml/components/rewind/*.qml
         qml/**/*.qml
 )
 
@@ -79,7 +110,6 @@ set_source_files_properties(qml/ColorPalette.qml PROPERTIES QT_QML_SINGLETON_TYP
 set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/NewRouter.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 add_library(firelight_lib
         src/app/libretro/core.cpp
@@ -93,17 +123,12 @@ add_library(firelight_lib
         src/app/saves/save_manager.cpp
         src/app/saves/savefile.cpp
         src/app/db/sqlite_userdata_database.cpp
-        src/app/input/controller_list_model.cpp
-        src/app/library/library_item_model.cpp
-        src/app/library/library_sort_filter_model.cpp
-        src/app/library/playlist_item_model.cpp
-        src/app/saves/savefile_list_model.cpp
-        src/app/mods/mod_manager.cpp
+        src/app/input/gui/controller_list_model.cpp
+        src/app/saves/gui/savefile_list_model.cpp
         src/app/rcheevos/ra_client.cpp
         src/gui/eventhandlers/window_resize_handler.cpp
-        src/app/library/library_path_model.cpp
-        src/app/rcheevos/achievement_list_model.cpp
-        src/app/rcheevos/achievement_list_sort_filter_model.cpp
+        src/app/achievements/gui/achievement_list_model.cpp
+        src/app/achievements/gui/achievement_list_sort_filter_model.cpp
         src/gui/router.cpp
         src/app/input/profiles/controller_profile.cpp
         src/app/input/profiles/input_mapping.cpp
@@ -111,7 +136,7 @@ add_library(firelight_lib
         src/app/libretro/core_configuration.cpp
         src/app/emulator_config_manager.cpp
         src/gui/models/shop/shop_item_model.cpp
-        src/gui/models/suspend_point_list_model.cpp
+        src/app/saves/gui/suspend_point_list_model.cpp
         src/gui/game_image_provider.cpp
         src/app/audio/SfxPlayer.cpp
         src/app/rcheevos/regular_http_client.cpp
@@ -119,36 +144,33 @@ add_library(firelight_lib
         src/app/rcheevos/offline/rcheevos_offline_client.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/input/keyboard_input_handler.cpp
-        src/gui/models/library/entry_list_model.cpp
+        src/app/library/gui/entry_list_model.cpp
         src/app/emulator_item_renderer.cpp
         src/app/emulator_item.cpp
-        src/app/input/gamepad_status_item.cpp
+        src/app/input/gui/gamepad_status_item.cpp
         src/app/activity/sqlite_activity_log.cpp
         src/app/PlatformMetadataItem.cpp
         src/app/input/sqlite_controller_repository.cpp
         src/app/input/input_manager.cpp
-        src/app/input/input_mapping_item.cpp
-        src/app/library_entry_item.cpp
+        src/app/input/gui/input_mapping_item.cpp
+        src/app/library/gui/library_entry_item.cpp
         src/app/input/profiles/keyboard_mapping.cpp
-        src/app/input/keyboard_mapping_item.cpp
-        src/app/video_encoder.cpp
-        src/app/video_encoder.h
-        src/app/video_decoder.cpp
-        src/app/video_decoder.h
-        src/app/image_cache_url_interceptor.cpp
-        src/app/image_cache_url_interceptor.h
-        src/app/AchievementSetItem.hpp
-        src/app/SuspendPointListItem.h
-        src/app/AchievementSetItem.cpp
-        src/app/mods/ModInfoItem.cpp
-        src/app/mods/ModInfoItem.hpp
-        include/firelight/mods/mod_repository.hpp
-        include/firelight/mods/mod_info.hpp
+        src/app/input/gui/keyboard_mapping_item.cpp
+        src/later/video_encoder.cpp
+        src/later/video_encoder.h
+        src/later/video_decoder.cpp
+        src/later/video_decoder.h
+        src/app/achievements/gui/AchievementSetItem.cpp
+        src/app/mods/gui/ModInfoItem.cpp
         src/app/mods/SqliteModRepository.cpp
         src/app/mods/SqliteModRepository.h
+        src/gui/EventEmitter.h
+        src/app/saves/gui/suspend_points_item.cpp
+        src/app/activity/gui/game_activity_item.cpp
+        src/app/activity/gui/play_session_list_model.cpp
 )
 
-target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include)
+target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
 target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS})
 
 if (WIN32)
@@ -165,13 +187,18 @@ target_link_libraries(firelight_lib PUBLIC
         Qt6::QuickControls2
         Qt6::Quick3D
         Qt6::Sql
-        Qt6::Charts
         Qt6::QuickTest
         Qt6::Multimedia
         Qt6::GuiPrivate
         Qt6::Network
-        #        PkgConfig::FFMPEG
-        ${FFMPEG_LIBRARIES}
+        Qt6::Widgets
+        # ${FFMPEG_LIBRARIES}
+        PkgConfig::AVCODEC
+        PkgConfig::AVFORMAT
+        PkgConfig::AVUTIL
+        # Add other PkgConfig::<PREFIX> targets as needed
+        PkgConfig::SWSCALE
+        PkgConfig::SWRESAMPLE
         LibArchive::LibArchive
         spdlog::spdlog
         cpr::cpr
@@ -179,6 +206,9 @@ target_link_libraries(firelight_lib PUBLIC
         patching
         rcheevos
         discord)
+
+# qt_import_plugins(firelight_lib
+#         INCLUDE QFFmpegMediaPlugin)
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/app_resources.rc")
 
@@ -210,25 +240,27 @@ qt6_add_qml_module(firelight
 
 #target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
 #target_link_libraries(firelight PRIVATE firelight_lib)
-target_link_libraries(firelight PUBLIC
+target_link_libraries(firelight PRIVATE
         firelight_lib)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
 endif ()
 
-find_program(MINGW_PATH gcc)
-get_filename_component(MINGW_BIN_DIR ${MINGW_PATH} DIRECTORY)
-get_filename_component(MINGW_DIR ${MINGW_BIN_DIR} DIRECTORY)
-set(SHARED_LIB_DIR "${MINGW_BIN_DIR}")
-set(QT_PLUGIN_DIR "${MINGW_DIR}/plugins")
+# if (MINGW)
+#         find_program(MINGW_PATH gcc)
+#         get_filename_component(MINGW_BIN_DIR ${MINGW_PATH} DIRECTORY)
+#         get_filename_component(MINGW_DIR ${MINGW_BIN_DIR} DIRECTORY)
+#         set(SHARED_LIB_DIR "${MINGW_BIN_DIR}")
+#         set(QT_PLUGIN_DIR "${MINGW_DIR}/plugins")
+# endif ()
 
 #include(GNUInstallDirs)
 install(TARGETS firelight
         RUNTIME_DEPENDENCIES
         PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-" "Qt6"
         POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
-        DIRECTORIES ${SHARED_LIB_DIR} ${QT_PLUGIN_DIR} "C:/Qt/Qt-6.8.2/bin"
+        DIRECTORIES ${SHARED_LIB_DIR} ${QT_PLUGIN_DIR} "C:/Qt/Qt-6.9.0/bin"
         BUNDLE DESTINATION .
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -362,18 +394,18 @@ endif ()
 if (WIN32)
     install(
             PROGRAMS
-#            ${SHARED_LIB_DIR}/libsqlite3-0.dll
-#            ${SHARED_LIB_DIR}/libjpeg-8.dll
-#            ${SHARED_LIB_DIR}/libgio-2.0-0.dll
-#            ${SHARED_LIB_DIR}/libjasper.dll
-#            ${SHARED_LIB_DIR}/libtiff-6.dll
-#            ${SHARED_LIB_DIR}/libwebp-7.dll
-#            ${SHARED_LIB_DIR}/libwebpdemux-2.dll
-#            ${SHARED_LIB_DIR}/libwebpmux-3.dll
-#            ${SHARED_LIB_DIR}/libgobject-2.0-0.dll
-#            ${SHARED_LIB_DIR}/swresample-5.dll
-#            ${SHARED_LIB_DIR}/swscale-8.dll
-#            ${SHARED_LIB_DIR}/libffi-8.dll
+            #            ${SHARED_LIB_DIR}/libsqlite3-0.dll
+            #            ${SHARED_LIB_DIR}/libjpeg-8.dll
+            #            ${SHARED_LIB_DIR}/libgio-2.0-0.dll
+            #            ${SHARED_LIB_DIR}/libjasper.dll
+            #            ${SHARED_LIB_DIR}/libtiff-6.dll
+            #            ${SHARED_LIB_DIR}/libwebp-7.dll
+            #            ${SHARED_LIB_DIR}/libwebpdemux-2.dll
+            #            ${SHARED_LIB_DIR}/libwebpmux-3.dll
+            #            ${SHARED_LIB_DIR}/libgobject-2.0-0.dll
+            #            ${SHARED_LIB_DIR}/swresample-5.dll
+            #            ${SHARED_LIB_DIR}/swscale-8.dll
+            #            ${SHARED_LIB_DIR}/libffi-8.dll
             ${CMAKE_SOURCE_DIR}/lib/x86_64/discord_game_sdk.dll
             TYPE BIN
     )

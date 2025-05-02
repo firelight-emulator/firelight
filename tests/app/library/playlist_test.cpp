@@ -1,4 +1,4 @@
-#include "firelight/playlist.hpp"
+#include "library/playlist.hpp"
 #include <gtest/gtest.h>
 
 namespace firelight::db {

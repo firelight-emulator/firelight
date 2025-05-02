@@ -7,6 +7,9 @@ cmake-build-debug-event-trace
 cmake-build-mingw
 artifact
 
+.vs
+.vscode
+
 .gitbak
 out
 build
@@ -21,7 +24,5 @@ build-old
 vcpkg_installed
 
 .obsidian
-
-.vscode
 
 .DS_Store

@@ -70,6 +70,7 @@ namespace firelight::library {
             "publisher TEXT, "
             "genres TEXT, "
             "region_ids TEXT, "
+            "retroachievements_set_id INTEGER, "
             "created_at INTEGER NOT NULL);");
 
         if (!createEntriesTable.exec()) {
@@ -284,6 +285,7 @@ namespace firelight::library {
                 .publisher = query.value("publisher").toString(),
                 .genres = query.value("genres").toString(),
                 .regionIds = query.value("region_ids").toString(),
+                .retroachievementsSetId = query.value("retroachievements_set_id").toUInt(),
                 .createdAt = query.value("created_at").toUInt()
             });
         }
@@ -324,6 +326,7 @@ namespace firelight::library {
                 .publisher = query.value("publisher").toString(),
                 .genres = query.value("genres").toString(),
                 .regionIds = query.value("region_ids").toString(),
+                .retroachievementsSetId = query.value("retroachievements_set_id").toUInt(),
                 .createdAt = query.value("created_at").toUInt()
             }
         };

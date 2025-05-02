@@ -13,7 +13,7 @@ FocusScope {
     required property var model
     required property var aspectRatio
 
-    property var barHeight: 220
+    property var barHeight: 300
 
     Rectangle {
         color: "black"
@@ -173,153 +173,162 @@ FocusScope {
             color: ColorPalette.neutral1000
         }
 
-        contentItem: ListView {
+        contentItem: RewindList {
             id: theList
-            orientation: ListView.Horizontal
-            layoutDirection: Qt.RightToLeft
-            highlightMoveDuration: 80
-            highlightMoveVelocity: -1
-            focus: true
-            keyNavigationEnabled: true
-            highlightRangeMode: ListView.StrictlyEnforceRange
-            preferredHighlightBegin: width / 2 - (theList.height * root.aspectRatio / 2)
-            preferredHighlightEnd: width / 2 + (theList.height * root.aspectRatio / 2)
-            currentIndex: 0
-            spacing: 8
-            highlight: Item {
-            }
-
-            onCurrentIndexChanged: {
-                sfx_player.play("rewindscroll")
-            }
-
-
             model: root.model
-            delegate: Button {
-                id: dele
-                required property var model
-                required property var index
-                height: ListView.view.height
-                width: height * root.aspectRatio
-                focus: true
+            aspectRatio: root.aspectRatio
 
-                onClicked: {
-                    if (dele.ListView.isCurrentItem) {
-                        theList.highlightFollowsCurrentItem = false
-                        root.rewindPointSelected(dele.index)
-                    } else {
-                        theList.currentIndex = index
-                    }
-                }
-
-                background: Rectangle {
-                    color: "transparent"
-                    radius: 2
-                }
-
-                property bool showGlobalCursor: true
-
-                contentItem: Image {
-                    id: imageThing
-
-                    cache: false
-                    mipmap: true
-                    smooth: false
-                    source: dele.model.modelData.image_url
-                    fillMode: Image.Stretch
-
-                    Behavior on height {
-                        NumberAnimation {
-                            duration: 100
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 100
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
+            onItemSelected: function (index) {
+                if (index === 0) {
+                    exitAnimation.start()
+                } else {
+                    root.rewindPointSelected(index)
                 }
             }
-            // delegate: Item {
-            //     id: dele
-            //     required property var model
-            //     required property var index
-            //     height: dele.ListView.view.height
-            //     width: imageThing.width
-            //     focus: true
-            //
-            //     property bool showGlobalCursor: true
-            //
-            //     Item {
-            //         anchors.top: parent.top
-            //         anchors.right: parent.right
-            //         anchors.left: parent.left
-            //         anchors.bottom: timeLabel.top
-            //
-            //         Image {
-            //             id: imageThing
-            //             // Rectangle {
-            //             //     visible: dele.ListView.isCurrentItem
-            //             //     z: -10
-            //             //     width: parent.width + 8
-            //             //     height: parent.height + 8
-            //             //     x: -4
-            //             //     y: -4
-            //             //     color: "white"
-            //             // }
-            //
-            //             cache: false
-            //             TapHandler {
-            //                 onTapped: {
-            //                     theList.currentIndex = index
-            //                 }
-            //             }
-            //
-            //
-            //             mipmap: true
-            //             smooth: false
-            //             source: dele.model.modelData.image_url
-            //             height: parent.height
-            //             // height: dele.ListView.isCurrentItem ? dele.height - 20 : dele.height - 40
-            //             // height: dele.height - 20
-            //             Behavior on height {
-            //                 NumberAnimation {
-            //                     duration: 100
-            //                     easing.type: Easing.InOutQuad
-            //                 }
-            //             }
-            //             Behavior on width {
-            //                 NumberAnimation {
-            //                     duration: 100
-            //                     easing.type: Easing.InOutQuad
-            //                 }
-            //             }
-            //             fillMode: Image.PreserveAspectFit
-            //         }
-            //     }
-            //
-            //
-            //     Text {
-            //         id: timeLabel
-            //         anchors.left: parent.left
-            //         // anchors.bottom: timeAgoLabel.top
-            //         anchors.bottom: parent.bottom
-            //         anchors.right: parent.right
-            //         height: 24
-            //         text: dele.model.modelData.time
-            //         font.pixelSize: 14
-            //         font.family: Constants.regularFontFamily
-            //         font.weight: Font.DemiBold
-            //         wrapMode: Text.WordWrap
-            //         padding: 12
-            //         color: ColorPalette.neutral200
-            //         horizontalAlignment: Text.AlignHCenter
-            //         verticalAlignment: Text.AlignVCenter
-            //     }
-            // }
         }
+
+        // contentItem: ListView {
+        //     id: theList
+        //     orientation: ListView.Horizontal
+        //     layoutDirection: Qt.RightToLeft
+        //     highlightMoveDuration: 80
+        //     highlightMoveVelocity: -1
+        //     focus: true
+        //     keyNavigationEnabled: true
+        //     highlightRangeMode: ListView.StrictlyEnforceRange
+        //     preferredHighlightBegin: width / 2 - (theList.height * root.aspectRatio / 2)
+        //     preferredHighlightEnd: width / 2 + (theList.height * root.aspectRatio / 2)
+        //     currentIndex: 0
+        //     spacing: 8
+        //     highlight: Item {
+        //     }
+        //
+        //     model: root.model
+        //     delegate: Button {
+        //         id: dele
+        //         required property var model
+        //         required property var index
+        //         height: ListView.view.height
+        //         width: height * root.aspectRatio
+        //         focus: true
+        //
+        //         onClicked: {
+        //             if (dele.ListView.isCurrentItem) {
+        //                 theList.highlightFollowsCurrentItem = false
+        //                 root.rewindPointSelected(dele.index)
+        //             } else {
+        //                 theList.currentIndex = index
+        //             }
+        //         }
+        //
+        //         background: Rectangle {
+        //             color: "transparent"
+        //             radius: 2
+        //         }
+        //
+        //         property bool showGlobalCursor: true
+        //
+        //         contentItem: Image {
+        //             id: imageThing
+        //
+        //             cache: false
+        //             mipmap: true
+        //             smooth: false
+        //             source: dele.model.modelData.image_url
+        //             fillMode: Image.Stretch
+        //
+        //             Behavior on height {
+        //                 NumberAnimation {
+        //                     duration: 100
+        //                     easing.type: Easing.InOutQuad
+        //                 }
+        //             }
+        //             Behavior on width {
+        //                 NumberAnimation {
+        //                     duration: 100
+        //                     easing.type: Easing.InOutQuad
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     // delegate: Item {
+        //     //     id: dele
+        //     //     required property var model
+        //     //     required property var index
+        //     //     height: dele.ListView.view.height
+        //     //     width: imageThing.width
+        //     //     focus: true
+        //     //
+        //     //     property bool showGlobalCursor: true
+        //     //
+        //     //     Item {
+        //     //         anchors.top: parent.top
+        //     //         anchors.right: parent.right
+        //     //         anchors.left: parent.left
+        //     //         anchors.bottom: timeLabel.top
+        //     //
+        //     //         Image {
+        //     //             id: imageThing
+        //     //             // Rectangle {
+        //     //             //     visible: dele.ListView.isCurrentItem
+        //     //             //     z: -10
+        //     //             //     width: parent.width + 8
+        //     //             //     height: parent.height + 8
+        //     //             //     x: -4
+        //     //             //     y: -4
+        //     //             //     color: "white"
+        //     //             // }
+        //     //
+        //     //             cache: false
+        //     //             TapHandler {
+        //     //                 onTapped: {
+        //     //                     theList.currentIndex = index
+        //     //                 }
+        //     //             }
+        //     //
+        //     //
+        //     //             mipmap: true
+        //     //             smooth: false
+        //     //             source: dele.model.modelData.image_url
+        //     //             height: parent.height
+        //     //             // height: dele.ListView.isCurrentItem ? dele.height - 20 : dele.height - 40
+        //     //             // height: dele.height - 20
+        //     //             Behavior on height {
+        //     //                 NumberAnimation {
+        //     //                     duration: 100
+        //     //                     easing.type: Easing.InOutQuad
+        //     //                 }
+        //     //             }
+        //     //             Behavior on width {
+        //     //                 NumberAnimation {
+        //     //                     duration: 100
+        //     //                     easing.type: Easing.InOutQuad
+        //     //                 }
+        //     //             }
+        //     //             fillMode: Image.PreserveAspectFit
+        //     //         }
+        //     //     }
+        //     //
+        //     //
+        //     //     Text {
+        //     //         id: timeLabel
+        //     //         anchors.left: parent.left
+        //     //         // anchors.bottom: timeAgoLabel.top
+        //     //         anchors.bottom: parent.bottom
+        //     //         anchors.right: parent.right
+        //     //         height: 24
+        //     //         text: dele.model.modelData.time
+        //     //         font.pixelSize: 14
+        //     //         font.family: Constants.regularFontFamily
+        //     //         font.weight: Font.DemiBold
+        //     //         wrapMode: Text.WordWrap
+        //     //         padding: 12
+        //     //         color: ColorPalette.neutral200
+        //     //         horizontalAlignment: Text.AlignHCenter
+        //     //         verticalAlignment: Text.AlignVCenter
+        //     //     }
+        //     // }
+        // }
     }
 
 

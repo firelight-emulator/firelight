@@ -21,7 +21,8 @@ public:
             case SONY_DUALSHOCK_4:
                 return "qrc:/images/controllers/dualshock4";
             case SONY_DUALSENSE:
-                return "qrc:/images/controllers/dualsense";
+                // return "qrc:/images/controllers/dualsense";
+                return "file:whatever.svg";
             case NINTENDO_SWITCH_PRO:
                 return "qrc:/images/controllers/switch-pro";
             case NINTENDO_NSO_N64:

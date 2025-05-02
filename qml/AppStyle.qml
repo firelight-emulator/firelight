@@ -3,6 +3,11 @@ import QtQuick
 pragma Singleton
 
 Item {
+
+    readonly property var windowPadding: 18
+    readonly property var mainHeaderHeight: 42 + mainHeaderPadding * 2
+    readonly property var mainHeaderPadding: 18
+
     readonly property color buttonBackgroundColorDisabled: ColorPalette.neutral700
     readonly property color buttonBackgroundColorInactive: ColorPalette.neutral800
     readonly property color buttonBackgroundColorHovered: ColorPalette.neutral700

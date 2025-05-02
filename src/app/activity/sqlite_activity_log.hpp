@@ -1,21 +1,25 @@
 #pragma once
 
-#include "firelight/activity/activity_log.hpp"
+#include "activity/activity_log.hpp"
 
 #include <QSqlDatabase>
 
 namespace firelight::activity {
-    class SqliteActivityLog final : public IActivityLog {
-    public:
-      explicit SqliteActivityLog(QString dbPath);
+class SqliteActivityLog final : public IActivityLog {
+public:
+  explicit SqliteActivityLog(QString dbPath);
 
-        bool createPlaySession(PlaySession &session) override;
+  bool createPlaySession(PlaySession &session) override;
 
-        std::optional<PlaySession> getLatestPlaySession(std::string contentHash) override;
+  std::optional<PlaySession>
+  getLatestPlaySession(std::string contentHash) override;
 
-        [[nodiscard]] QSqlDatabase getDatabase() const;
-    private:
-        QString databasePath;
-    };
-} // activity
+  [[nodiscard]] QSqlDatabase getDatabase() const;
+
+  std::vector<PlaySession> getPlaySessions(std::string contentHash) override;
+
+private:
+  QString databasePath;
+};
+} // namespace firelight::activity
 // firelight

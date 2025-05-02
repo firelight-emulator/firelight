@@ -1,4 +1,4 @@
-#include "firelight/savefile_metadata.hpp"
+#include "saves/savefile_metadata.hpp"
 #include <gtest/gtest.h>
 
 namespace firelight::db {

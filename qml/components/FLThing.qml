@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtMultimedia
 import QtQuick.Effects
+import QtQuick.Layouts
 import QtQml
 import Qt.labs.qmlmodels 1.0
 import QtQuick.Shapes 1.8
@@ -11,10 +12,19 @@ import Firelight 1.0
 FocusScope {
     id: root
 
+    // required property Component libraryPage
+
     Timer {
         id: wheelTimer
         interval: 500
         repeat: false
+    }
+
+    Component {
+        id: gameDetailsPanel
+        FLGameDetailsPanel {
+
+        }
     }
 
     WheelHandler {
@@ -28,53 +38,26 @@ FocusScope {
                     return
                 }
             }
+
             if (event.angleDelta.y >= 0) {
                 list.decrementCurrentIndex()
             } else {
                 list.incrementCurrentIndex()
             }
+
             wheelTimer.restart()
-            // list.incrementCurrentIndex()
-            console.log("Wheel event: ", event.angleDelta.y)
-
         }
     }
 
-
-
-    MediaPlayer {
-        id: sound
-
+    FLSoundEffect {
+        id: sfx
         source: "qrc:sfx/click"
-
-        audioOutput: AudioOutput {
-        }
-    }
-    PropertyAnimation {
-        id: volumeFadeOut
-
-        duration: 50  // Quick fade-out
-        property: "volume"
-        target: sound.audioOutput
-        to: 0.0
-
-        onStopped: {
-            sound.stop();
-            sound.audioOutput.volume = 0.8;  // Reset volume
-            sound.playbackRate = (Math.random() * 0.25) + 1;
-            sound.play();
-        }  // Stop sound once faded out
     }
 
-    // SoundEffect {
-    //     id: sound
-    //     source: "qrc:sfx/click"
-    //
-    // }
     ListView {
         id: list
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 32
+        anchors.top: parent.top
+        anchors.topMargin: 60
         focus: true
         height: 300
         highlightMoveDuration: 80
@@ -83,8 +66,8 @@ FocusScope {
         keyNavigationEnabled: true
         keyNavigationWraps: true
         orientation: ListView.Horizontal
-        preferredHighlightBegin: 140
-        preferredHighlightEnd: 340
+        preferredHighlightBegin: 100
+        preferredHighlightEnd: 300
         spacing: 16
         width: parent.width
 
@@ -159,7 +142,7 @@ FocusScope {
         onCurrentIndexChanged: {
             // sound.stop()
             // sound.play()
-            volumeFadeOut.start();
+            sfx.play();
             // if (sound.playbackState === SoundEffect.PlayingState) {
             //     volumeFadeOut.start()
             // } else {
@@ -267,13 +250,24 @@ FocusScope {
 
                     Button {
                         property bool showGlobalCursor: true
-                        anchors.bottom: parent.bottom
+                        anchors.top: parent.top
                         padding: 0
                         spacing: 0
                         horizontalPadding: 0
                         focus: true
                         height: gameDele.ListView.isCurrentItem ? 270 : 180
                         width: gameDele.ListView.isCurrentItem ? 270 : 180
+
+                        property var inputHints: [
+                            {
+                                input: Qt.Key_Select,
+                                label: "Play"
+                            },
+                            {
+                                input: Qt.Key_Menu,
+                                label: "Details"
+                            }
+                        ]
 
                         Behavior on height {
                             NumberAnimation {
@@ -286,6 +280,10 @@ FocusScope {
                             NumberAnimation {
                                 duration: 80
                             }
+                        }
+
+                        Keys.onMenuPressed: function (event) {
+                            root.StackView.view.push(gameDetailsPanel, {}, StackView.PushTransition)
                         }
 
                         onClicked: {
@@ -302,6 +300,8 @@ FocusScope {
                             cursorShape: Qt.PointingHandCursor
                         }
 
+                        background: Item {}
+
                         contentItem: Item {
 
                             // Image {
@@ -310,39 +310,70 @@ FocusScope {
                             //     anchors.fill: parent
                             //     source: model.cover
                             // }
+
+                            // Rectangle {
+                            //     id: maskShape
+                            //     width: 256
+                            //     height: 256
+                            //     radius: 16
+                            //     color: "black" // Color determines opacity for the mask
+                            //     visible: false // Don't need to see the mask itself
+                            //
+                            //     // *** Crucial Part for MultiEffect ***
+                            //     layer.enabled: true // Rasterize the rectangle into a texture
+                            //     layer.smooth: true  // Improve edge quality
+                            //     layer.samples: 16
+                            //     // Optional: layer.samples helps with anti-aliasing, especially for curves
+                            //     // layer.samples: 4
+                            // }
+
                             Image {
                                 id: sourceImage
                                 anchors.fill: parent
                                 source: model.cover
-                            }
-                            MultiEffect {
-                                id: imageClone
-                                visible: false
-                                source: sourceImage
-                                anchors.fill: parent
-                                maskEnabled: true
-
-                                // maskInverted: true
-                                // maskSource: ShaderEffectSource {
-                                //     anchors.fill: parent
-                                //     sourceItem: Rectangle {
-                                //         anchors.fill: parent
-                                //         radius: height / 4
-                                //         color: "#000000ff"
-                                //     }
+                                // layer.enabled: true
+                                // layer.effect: MultiEffect {
+                                //     id: rounded
+                                //     source: sourceImage
+                                //     height: 256
+                                //     width: 256
+                                //     maskEnabled: true
+                                //     maskSource: maskShape
+                                //     // maskSpreadAtMax: 0.02 // Adjust for smoother fade
+                                //     // maskSpreadAtMin: 0.02 // Adjust for smoother fade
+                                //     // maskThresholdMax: 1.0 // Usually leave at 1.0
+                                //     // maskThresholdMin: 0 // Usually leave at 0.0
                                 // }
-                                maskSource: Image {
-                                    source: "file:rectangle17.png"
-                                    anchors.fill: parent
-                                }
-                                maskSpreadAtMax: 1.0 // Adjust for smoother fade
-                                maskSpreadAtMin: 1.0 // Adjust for smoother fade
-                                maskThresholdMax: 1.0 // Usually leave at 1.0
-                                maskThresholdMin: 0.4 // Usually leave at 0.0
-                                // blurEnabled: true
-                                // blurMax: 64
-                                // blur: 1.0
                             }
+
+                            // MultiEffect {
+                            //     id: imageClone
+                            //     visible: false
+                            //     source: sourceImage
+                            //     anchors.fill: parent
+                            //     maskEnabled: true
+                            //
+                            //     // maskInverted: true
+                            //     // maskSource: ShaderEffectSource {
+                            //     //     anchors.fill: parent
+                            //     //     sourceItem: Rectangle {
+                            //     //         anchors.fill: parent
+                            //     //         radius: height / 4
+                            //     //         color: "#000000ff"
+                            //     //     }
+                            //     // }
+                            //     // maskSource: Image {
+                            //     //     source: "file:rectangle17.png"
+                            //     //     anchors.fill: parent
+                            //     // }
+                            //     maskSpreadAtMax: 1.0 // Adjust for smoother fade
+                            //     maskSpreadAtMin: 1.0 // Adjust for smoother fade
+                            //     maskThresholdMax: 1.0 // Usually leave at 1.0
+                            //     maskThresholdMin: 0.4 // Usually leave at 0.0
+                            //     // blurEnabled: true
+                            //     // blurMax: 64
+                            //     // blur: 1.0
+                            // }
                         }
                     }
 
@@ -351,7 +382,8 @@ FocusScope {
 
                         anchors.left: gameDele.right
                         anchors.leftMargin: 16
-                        anchors.top: gameDele.top
+                        anchors.bottom: platformText.top
+                        anchors.bottomMargin: 4
                         color: "white"
                         font.pixelSize: 32
                         font.weight: Font.Bold
@@ -359,10 +391,10 @@ FocusScope {
                         visible: gameDele.ListView.isCurrentItem
                     }
                     Text {
+                        id: platformText
                         anchors.left: gameDele.right
                         anchors.leftMargin: 16
-                        anchors.top: titleText.bottom
-                        anchors.topMargin: 4
+                        anchors.bottom: gameDele.bottom
                         color: "white"
                         font.pixelSize: 20
                         // font.weight: Font.Bold
@@ -397,6 +429,13 @@ FocusScope {
                         height: (allDele.ListView.isCurrentItem ? 270 : 180) - padding * 2
                         width: (allDele.ListView.isCurrentItem ? 270 : 180) - padding * 2
 
+                        property var inputHints: [
+                            {
+                                input: Qt.Key_Select,
+                                label: "Select"
+                            }
+                        ]
+
                         Behavior on height {
                             NumberAnimation {
                                 duration: 80
@@ -414,6 +453,10 @@ FocusScope {
                             color: "white"
                             opacity: 0.2
                             radius: parent.height / 2
+                        }
+
+                        onClicked: {
+                            root.StackView.view.pushItem(libraryPage, {}, StackView.PushTransition)
                         }
 
                         // contentItem: Image {

@@ -100,7 +100,8 @@ FocusScope {
             cellSpacing: gridView.cellSpacing
 
             onDoTheThing: {
-                page.StackView.view.push(shopItemPage, {model: delegate.model})
+                Router.navigateTo("/shop/mods/" + delegate.model.id)
+                // page.StackView.view.push(shopItemPage, {model: delegate.model})
             }
 
             // Button {

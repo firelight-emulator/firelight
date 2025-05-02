@@ -11,12 +11,54 @@ import Firelight 1.0
 FocusScope {
     id: root
 
+    property bool blurEnabled: false
+
+    signal closing()
+
     clip: true
+    focus: true
+
+    Timer {
+        id: ctrlTimer
+        interval: 500
+        repeat: false
+
+        onTriggered: {
+            redThing.opacity = 0.7
+        }
+    }
+
+    Keys.onDigit9Pressed: {
+        emulator.incrementPlaybackMultiplier()
+    }
+
+    Keys.onDigit8Pressed: {
+        emulator.decrementPlaybackMultiplier()
+    }
+
+    Keys.onPressed: function(event) {
+        console.log("pressed: " + event.key)
+        if (event.key === Qt.Key_Control) {
+            ctrlTimer.start()
+        }
+    }
+
+    Keys.onReleased: function(event) {
+        console.log("released: " + event.key)
+        if (event.key === Qt.Key_Control) {
+            if (redThing.visible) {
+                redThing.opacity = 0
+            }
+
+            ctrlTimer.stop()
+        }
+    }
 
     property alias videoAspectRatio: emulator.videoAspectRatio
     property alias contentHash: emulator.contentHash
     property alias gameName: emulator.gameName
     property alias entryId: emulator.entryId
+    property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
     function loadGame(entryId) {
         emulator.loadGame(entryId)
@@ -52,17 +94,21 @@ FocusScope {
         emulator.writeSuspendPoint(index)
     }
 
+    function undoLoadSuspendPoint() {
+        emulator.undoLastLoadSuspendPoint()
+    }
+
     property alias paused: emulator.paused
 
-    StackView.visible: true
+    // StackView.visible: true
 
-    StackView.onDeactivating: function () {
-        emulator.paused = true
-    }
-    StackView.onActivated: function () {
-        emulator.paused = false
-        debugWindow2.visible = true
-    }
+    // StackView.onDeactivating: function () {
+    //     emulator.paused = true
+    // }
+    // StackView.onActivated: function () {
+    //     emulator.paused = false
+    //     debugWindow2.visible = true
+    // }
 
     Rectangle {
         id: background
@@ -78,6 +124,10 @@ FocusScope {
         height: parent.height
         smooth: false
 
+        onVideoAspectRatioChanged: {
+            console.log("new aspect ratio: " + videoAspectRatio)
+        }
+
         // onGameStarted: {
         //     emulator.paused = false
         // }
@@ -86,8 +136,24 @@ FocusScope {
             root.rewindPointsReady(points)
         }
 
-        Keys.onDigit1Pressed: {
-            emulator.loadSuspendPoint(1)
+        // Keys.onDigit1Pressed: {
+        //     emulator.loadSuspendPoint(1)
+        // }
+    }
+
+    Rectangle {
+        id: redThing
+        color: "red"
+        opacity: 0
+        width: 600
+        height: 400
+        anchors.centerIn: parent
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.InOutQuad
+            }
         }
     }
 

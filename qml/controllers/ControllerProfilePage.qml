@@ -179,66 +179,10 @@ FocusScope {
 
         }
     }
-
-    Pane {
-        id: headerBar
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.left: parent.left
-        height: 72
-        padding: 16
-
-        background: Item {
-        }
-
-        contentItem: RowLayout {
-            spacing: 24
-
-            Text {
-                text: "Editing controller profile (" + gamepadStatus.name + ")"
-                color: ColorPalette.neutral100
-                font.pixelSize: 24
-                font.weight: Font.Normal
-                font.family: Constants.regularFontFamily
-                Layout.fillHeight: true
-                Layout.leftMargin: 24
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-
-
-            Item {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-            }
-
-            FirelightButton {
-                tooltipLabel: "Close"
-                flat: true
-                focus: true
-
-                Layout.fillHeight: true
-                Layout.preferredWidth: height
-                Layout.rightMargin: 24
-
-                iconCode: "\ue5cd"
-
-                onClicked: {
-                    root.StackView.view.popCurrentItem(StackView.PopTransition)
-                }
-            }
-        }
-    }
-
     RowLayout {
-        anchors.top: headerBar.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.fill: parent
         anchors.leftMargin: 40
         anchors.rightMargin: 40
-
-        KeyNavigation.up: headerBar
 
         Item {
             Layout.fillHeight: true

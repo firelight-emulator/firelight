@@ -9,6 +9,8 @@ MenuItem {
     property bool externalLink: false
     property bool dangerous: false
 
+    implicitHeight: 46
+
     Text {
         id: externalIndicator
         visible: control.externalLink
@@ -46,19 +48,16 @@ MenuItem {
         }
     }
 
+    HoverHandler {
+        id: renameHover
+        acceptedDevices: PointerDevice.Mouse
+    }
+
     background: Rectangle {
         // x: 1
         // y: 1
 
         // radius: Constants.rightClickMenuItem_BackgroundRadius
-
-        HoverHandler {
-            id: renameHover
-            acceptedDevices: PointerDevice.Mouse
-        }
-
-        implicitWidth: 240
-        implicitHeight: 40
         // implicitHeight: Constants.rightClickMenuItem_DefaultHeight
         color: enabled ? (renameHover.hovered ? (control.dangerous ? ColorPalette.red700 : ColorPalette.neutral900) : "transparent") : "transparent"
     }
@@ -66,8 +65,8 @@ MenuItem {
     contentItem: CarouselText {
         hovered: renameHover.hovered
         text: control.text
-        color: enabled ? hovered ? "white" : (control.dangerous ? ColorPalette.red500 : "#cacaca") : "grey"
-        font.pixelSize: 14
+        color: enabled ? hovered ? "white" : (control.dangerous ? ColorPalette.red500 : "#dfdfdf") : "grey"
+        font.pixelSize: 16
         font.weight: Font.DemiBold
         font.family: Constants.regularFontFamily
         // font.weight: Font.DemiBold

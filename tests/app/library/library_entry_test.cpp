@@ -1,4 +1,4 @@
-#include "firelight/library_entry.hpp"
+#include <library/library_entry.hpp>
 #include <gtest/gtest.h>
 
 namespace firelight::db {

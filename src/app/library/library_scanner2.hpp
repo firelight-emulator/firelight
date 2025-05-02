@@ -6,7 +6,7 @@
 #include <QQueue>
 #include <QReadWriteLock>
 #include <QTimer>
-#include <firelight/library/user_library.hpp>
+#include "user_library.hpp"
 
 namespace firelight::library {
     class LibraryScanner2 : public QObject {

@@ -9,7 +9,7 @@ import Firelight 1.0
 Flickable {
     id: page
 
-    required property var model
+    required property var modId
 
     // onWidthChanged: function() {
     //     console.log("page width changed: ", width)
@@ -26,8 +26,8 @@ Flickable {
         landscape: page.width > page.height
         // width: parent.width
         anchors.horizontalCenter: parent.horizontalCenter
-        modId: model.id
-        width: Math.min(parent.width, 1600)
+        modId: page.modId
+        width: Math.min(parent.width, 1200)
     }
 
     // Pane {

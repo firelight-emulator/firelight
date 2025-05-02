@@ -1,13 +1,13 @@
 #pragma once
 
-#include <firelight/library/user_library.hpp>
-#include <firelight/activity/activity_log.hpp>
+#include <library/user_library.hpp>
+#include <activity/activity_log.hpp>
 
 #include "emulator_config_manager.hpp"
-#include "firelight/mods/mod_repository.hpp"
 #include "firelight/userdata_database.hpp"
 #include "input/controller_manager.hpp"
 #include "input/input_manager.hpp"
+#include "mods/mod_repository.hpp"
 #include "rcheevos/ra_client.hpp"
 #include "saves/save_manager.hpp"
 
