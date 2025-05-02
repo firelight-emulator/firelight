@@ -69,8 +69,10 @@
     <qresource prefix="/icons/empty">
         <file alias="bar-chart">assets/img/icons/notfilled-rounded/bar-chart-notfilled.svg</file>
         <file alias="book">assets/img/icons/notfilled-rounded/book2-notfilled.svg</file>
+        <file alias="controller">assets/img/icons/notfilled-rounded/controller-notfilled.svg</file>
         <file alias="delete">assets/img/icons/notfilled-rounded/delete-notfilled.svg</file>
         <file alias="info">assets/img/icons/notfilled-rounded/info-notfilled.svg</file>
+        <file alias="photo-library">assets/img/icons/notfilled-rounded/photo-library-notfilled.svg</file>
         <file alias="settings">assets/img/icons/notfilled-rounded/settings-notfilled.svg</file>
         <file alias="shopping-bag">assets/img/icons/notfilled-rounded/shopping-bag-notfilled.svg</file>
         <file alias="trophy">assets/img/icons/notfilled-rounded/trophy-notfilled.svg</file>

@@ -96,12 +96,12 @@ StackView {
     Component {
         id: emuPage
         NewEmulatorPage {
-            // onRewindPointsReady: function(points) {
-            //     screenStack.pushItem(rewindMenu, {
-            //         model: points,
-            //         aspectRatio: emulatorLoader.item.videoAspectRatio
-            //     }, StackView.Immediate)
-            // }
+            onRewindPointsReady: function(points) {
+                root.pushItem(rewindMenu, {
+                    model: points,
+                    aspectRatio: emulatorLoader.item.videoAspectRatio
+                }, StackView.Immediate)
+            }
         }
     }
 
@@ -331,6 +331,17 @@ StackView {
     }
 
     Component {
+        id: rewindMenu
+        RewindMenu {
+            onRewindPointSelected: function(point) {
+                emulatorLoader.item.loadRewindPoint(point)
+                root.currentItem.close()
+                // root.popCurrentItem(StackView.Immediate)
+            }
+        }
+    }
+
+    Component {
         id: quickMenu
         Pane {
             padding: 32
@@ -365,6 +376,9 @@ StackView {
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                          checkable: false
                          alignRight: true
+                         onClicked: {
+                             emulatorLoader.item.resetGameDialog.show()
+                         }
                      }
                      FirelightMenuItem {
                          id: rewindButton
@@ -376,6 +390,9 @@ StackView {
                          Layout.preferredHeight: 40
                          checkable: false
                          alignRight: true
+                         onClicked: {
+                             emulatorLoader.item.createRewindPoints()
+                         }
                      }
                      Rectangle {
                          Layout.fillWidth: true
@@ -495,7 +512,7 @@ StackView {
         active: false
         sourceComponent: emuPage
 
-        property bool paused: emulatorLoader.StackView.status !== StackView.Active
+        property bool paused: emulatorLoader.StackView.status !== StackView.Active || unsupportedEmulatorDialog.visible
         function stopGame() {
             shouldDeactivate = true
             if (emulatorLoader.StackView.status === StackView.Active) {
@@ -566,6 +583,31 @@ StackView {
         text: "Are you sure you want to close the game?"
         onAccepted: {
             root.unload()
+        }
+    }
+
+    FirelightDialog {
+        id: resetGameDialog
+        text: "Are you sure you want to reset the game?"
+        onAccepted: {
+            emulatorLoader.item.resetGame()
+             root.popCurrentItem()
+        }
+    }
+
+    FirelightDialog {
+        id: unsupportedEmulatorDialog
+        text: "In order to use hardcore mode, please use the latest version of Firelight. \n\n If you continue, you will automatically be switched to softcore mode."
+
+        acceptText: "Continue"
+        rejectText: "Close game"
+
+        Connections {
+            target: achievement_manager
+
+            function onUnsupportedEmulatorError() {
+                unsupportedEmulatorDialog.open()
+            }
         }
     }
 

@@ -113,6 +113,8 @@ private:
 
   SuspendPoint m_beforeLastLoadSuspendPoint;
 
+  QList<QString> m_rewindImageUrls{};
+
   QElapsedTimer m_playSessionTimer;
   firelight::activity::PlaySession m_playSession{};
 

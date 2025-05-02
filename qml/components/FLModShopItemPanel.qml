@@ -76,21 +76,21 @@ ColumnLayout {
                 wrapMode: Text.WordWrap
             }
         }
-        FirelightButton {
-            Layout.alignment: Qt.AlignHCenter
-            focus: true
-            label: "Install"
-
-            onClicked: {
-                console.log("Install button clicked");
-            }
-        }
+        // FirelightButton {
+        //     Layout.alignment: Qt.AlignHCenter
+        //     focus: true
+        //     label: "Install"
+        //
+        //     onClicked: {
+        //         console.log("Install button clicked");
+        //     }
+        // }
         Text {
             Layout.fillWidth: true
             bottomPadding: 24
             color: "white"
             font.family: Constants.regularFontFamily
-            font.pixelSize: 16
+            font.pixelSize: 20
             font.weight: Font.DemiBold
             lineHeight: 1.2
             text: modInfo.tagline
@@ -133,7 +133,7 @@ ColumnLayout {
                 bottomPadding: 24
                 color: "white"
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 16
+                font.pixelSize: 20
                 font.weight: Font.DemiBold
                 lineHeight: 1.2
                 text: modInfo.tagline
@@ -167,15 +167,15 @@ ColumnLayout {
                 fillMode: Image.PreserveAspectFit
                 source: modInfo.clearLogoUrl
             }
-            FirelightButton {
-                Layout.alignment: Qt.AlignHCenter
-                label: "Install"
-                focus: true
-
-                onClicked: {
-                    console.log("Install button clicked");
-                }
-            }
+            // FirelightButton {
+            //     Layout.alignment: Qt.AlignHCenter
+            //     label: "Install"
+            //     focus: true
+            //
+            //     onClicked: {
+            //         console.log("Install button clicked");
+            //     }
+            // }
             Text {
                 Layout.fillWidth: true
                 Layout.topMargin: 16

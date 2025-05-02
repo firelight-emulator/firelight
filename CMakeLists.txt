@@ -96,6 +96,7 @@ file(GLOB QML_FILES
         qml/*.qml
         qml/components/navigation/*.qml
         qml/components/transitions/*.qml
+        qml/components/rewind/*.qml
         qml/**/*.qml
 )
 

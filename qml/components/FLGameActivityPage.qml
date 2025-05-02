@@ -21,6 +21,10 @@ Pane {
         Rectangle {
             id: overviewBanner
             color: "#1E1E1E"
+            radius: 8
+            border.color: "#2A2A2A"
+            border.width: 1
+            opacity: 0.8
             width: Math.min(1000, parent.width)
             anchors.horizontalCenter: parent.horizontalCenter
             height: 260
@@ -33,7 +37,7 @@ Pane {
             anchors.horizontalCenter: parent.horizontalCenter
 
             tabWidth: 120
-            tabs: ["Overview", "Achievements", "Activity"]
+            tabs: ["Overview", "Achievements", "Activity", "Settings"]
         }
 
         ColumnLayout {
@@ -62,6 +66,7 @@ Pane {
                 background: Rectangle {
                     color: "#1E1E1E"
                     radius: 8
+                    opacity: 0.8
                     border.color: "#2A2A2A"
                     border.width: 1
                 }
@@ -181,7 +186,7 @@ Pane {
 
                                 let hours = Math.floor(val / 3600)
                                let minutes = Math.floor((val % 3600) / 60)
-                               let seconds = val % 60
+                               let seconds = Math.round(val % 60)
 
                                if (hours > 0) {
                                    return ("<b>" + hours + "</b>h ") + ("<b>" + minutes + "</b>m ") + ("<b>" + seconds + "</b>s ")
@@ -258,7 +263,7 @@ Pane {
                 delegate: Pane {
                     id: item
                     required property var model
-                    height: 72
+                    height: 60
                     width: ListView.view.width
                     verticalPadding: 8
                     horizontalPadding: 16

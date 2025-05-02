@@ -12,7 +12,7 @@ import Firelight 1.0
 FocusScope {
     id: root
 
-    required property Component libraryPage
+    // required property Component libraryPage
 
     Timer {
         id: wheelTimer
@@ -346,34 +346,34 @@ FocusScope {
                                 // }
                             }
 
-                            MultiEffect {
-                                id: imageClone
-                                visible: false
-                                source: sourceImage
-                                anchors.fill: parent
-                                maskEnabled: true
-
-                                // maskInverted: true
-                                // maskSource: ShaderEffectSource {
-                                //     anchors.fill: parent
-                                //     sourceItem: Rectangle {
-                                //         anchors.fill: parent
-                                //         radius: height / 4
-                                //         color: "#000000ff"
-                                //     }
-                                // }
-                                maskSource: Image {
-                                    source: "file:rectangle17.png"
-                                    anchors.fill: parent
-                                }
-                                maskSpreadAtMax: 1.0 // Adjust for smoother fade
-                                maskSpreadAtMin: 1.0 // Adjust for smoother fade
-                                maskThresholdMax: 1.0 // Usually leave at 1.0
-                                maskThresholdMin: 0.4 // Usually leave at 0.0
-                                // blurEnabled: true
-                                // blurMax: 64
-                                // blur: 1.0
-                            }
+                            // MultiEffect {
+                            //     id: imageClone
+                            //     visible: false
+                            //     source: sourceImage
+                            //     anchors.fill: parent
+                            //     maskEnabled: true
+                            //
+                            //     // maskInverted: true
+                            //     // maskSource: ShaderEffectSource {
+                            //     //     anchors.fill: parent
+                            //     //     sourceItem: Rectangle {
+                            //     //         anchors.fill: parent
+                            //     //         radius: height / 4
+                            //     //         color: "#000000ff"
+                            //     //     }
+                            //     // }
+                            //     // maskSource: Image {
+                            //     //     source: "file:rectangle17.png"
+                            //     //     anchors.fill: parent
+                            //     // }
+                            //     maskSpreadAtMax: 1.0 // Adjust for smoother fade
+                            //     maskSpreadAtMin: 1.0 // Adjust for smoother fade
+                            //     maskThresholdMax: 1.0 // Usually leave at 1.0
+                            //     maskThresholdMin: 0.4 // Usually leave at 0.0
+                            //     // blurEnabled: true
+                            //     // blurMax: 64
+                            //     // blur: 1.0
+                            // }
                         }
                     }
 

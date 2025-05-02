@@ -47,6 +47,12 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
 
   save(true);
   getAchievementManager()->unloadGame();
+
+  for (auto &url : m_rewindImageUrls) {
+    getGameImageProvider()->removeImageWithUrl(url);
+  }
+
+  m_rewindImageUrls.clear();
   // Don't need to destroy the context here as it is handled by the Core object.
 }
 
@@ -428,6 +434,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     switch (const auto command = m_commandQueue.dequeue(); command.type) {
     case ResetGame:
       m_core->reset();
+      getAchievementManager()->reset();
       break;
     case WriteSaveFile:
       m_shouldSave = true;
@@ -448,6 +455,12 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       m_rewindPoints.push_front(suspendPoint);
     } break;
     case EmitRewindPoints: {
+      for (auto &url : m_rewindImageUrls) {
+        getGameImageProvider()->removeImageWithUrl(url);
+      }
+
+      m_rewindImageUrls.clear();
+
       QList<QJsonObject> points;
       int i = 1;
 
@@ -457,8 +470,9 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         auto diff = time.secsTo(QDateTime::fromMSecsSinceEpoch(now).time());
 
         QJsonObject obj;
-        getGameImageProvider()->setImage(QString::number(i), point.image);
-        obj["image_url"] = "image://gameimages/" + QString::number(i++);
+        auto url = getGameImageProvider()->setImage(point.image);
+        m_rewindImageUrls.append(url);
+        obj["image_url"] = url;
         // obj["time"] = now - point.timestamp;
         obj["time"] = time.toString();
         obj["ago"] = QString::number(diff) + " seconds ago";
@@ -466,14 +480,14 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       }
 
       QJsonObject obj;
-      getGameImageProvider()->setImage("0", m_currentImage);
-      obj["image_url"] = "image://gameimages/0";
+      auto url = getGameImageProvider()->setImage(m_currentImage);
+      m_rewindImageUrls.append(url);
+      obj["image_url"] = url;
       obj["time"] = QDateTime::fromMSecsSinceEpoch(now).time().toString();
       obj["ago"] = "Just now";
       points.prepend(obj);
 
       emulatorItem->rewindPointsReady(points);
-      // Handle emit rewind points
     } break;
     case LoadRewindPoint: {
       auto point = m_rewindPoints.at(command.rewindPointIndex - 1);
@@ -486,6 +500,11 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         m_overlayImage.mirror();
         m_overlayImage = m_overlayImage.convertToFormat(
             QImage::Format_RGBA8888_Premultiplied);
+
+        m_currentImage = m_overlayImage;
+        if (m_graphicsApi == QSGRendererInterface::OpenGL) {
+          m_currentImage.flip();
+        }
       }
     } break;
     case WriteSuspendPoint: {

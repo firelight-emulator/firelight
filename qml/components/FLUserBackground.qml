@@ -23,6 +23,7 @@ Rectangle {
     layer.enabled: blurAmount !== 0
     layer.effect: MultiEffect {
         // enabled: root.blurAmount !== 0
+
         source: root
         anchors.fill: root
         blurEnabled: true
@@ -52,7 +53,7 @@ Rectangle {
         Rectangle {
             anchors.fill: parent
             color: "black"
-            opacity: 0.75
+            opacity: 0.65
         }
 
         Rectangle {

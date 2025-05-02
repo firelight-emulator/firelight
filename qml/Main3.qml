@@ -21,7 +21,10 @@ ApplicationWindow {
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
 
-    // title: qsTr("Firelight")
+    title: qsTr("Firelight")
+
+    property var maxContentWidth: 1400
+
 
     Component.onCompleted: {
         console.log("Completed app window")
@@ -31,7 +34,7 @@ ApplicationWindow {
 
     background: FLUserBackground {
         blur: window.blur
-        defaultColor: ColorPalette.neutral1000
+        defaultColor: "#222328"
         usingCustomBackground: AppearanceSettings.usingCustomBackground
         backgroundFile: AppearanceSettings.backgroundFile
 
@@ -40,483 +43,646 @@ ApplicationWindow {
         }
     }
 
-    SplitView {
-        id: splitView
-        anchors.fill: parent
-        orientation: Qt.Horizontal
+    LeftNavigationBar {
+        id: navigationBar
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+    }
 
-        // background: Item {}
+    Pane {
+        id: content
+        anchors.left: navigationBar.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
 
-        focus: true
+        property string title: "Firelight"
 
-        handle: Rectangle {
-            id: handleDelegate
-            color: handleHover.hovered ? "#8e8e8e" : "#4B4B4B"
-            implicitWidth: 1
+        padding: 16
+        background: Item {}
+        contentItem: ColumnLayout {
+            spacing: 16
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.maximumHeight: 42
+                Layout.minimumHeight: 42
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-            }
+                spacing: 12
 
-            HoverHandler {
-                id: handleHover
-            }
-
-            containmentMask: Item {
-                x: (handleDelegate.width - width) / 2
-                width: 16
-                height: splitView.height
-            }
-        }
-
-        Pane {
-            id: navbar
-            padding: 16
-
-            SplitView.minimumWidth: 74
-            SplitView.maximumWidth: 260
-            focus: true
-
-            background: Item {
-                MultiEffect {
-                    source: ShaderEffectSource {
-                        width: navbar.width
-                        height: navbar.height
-                        sourceItem: window.background
-                        sourceRect: Qt.rect(navbar.x, navbar.y, navbar.width, navbar.height)
-                    }
-
-                    anchors.fill: parent
-                    blurEnabled: true
-                    blurMultiplier: 1.0
-                    blurMax: 32
-                    blur: 1.0
-                }
-
-                Rectangle {
-                    color: "#1D1D1D"
-                    opacity: 0.8
-                    anchors.fill: parent
-                }
-            }
-
-            contentItem: ColumnLayout {
-                spacing: 42
-
-                RowLayout {
-                    Layout.leftMargin: 7
-                    Layout.maximumHeight: 36
-                    Layout.minimumHeight: 36
-                    Layout.fillWidth: true
-                    Image {
-                        source: "qrc:/images/firelight-logo"
-                        Layout.preferredHeight: parent.height
-                        sourceSize.height: parent.height
-                        mipmap: true
-                    }
-                    // Text {
-                    //     color: "white"
-                    //     padding: 0
-                    //     opacity: parent.width > 140 ? 1 : 0
-                    //     text: "Firelight"
-                    //     Layout.preferredWidth: opacity > 0 ?
-                    //     font.pixelSize: 20
-                    //     font.weight: Font.Bold
-                    //     font.family: Constants.regularFontFamily
-                    //     horizontalAlignment: Text.AlignLeft
-                    //     verticalAlignment: Text.AlignVCenter
-
-                    //     Behavior on opacity {
-                    //         NumberAnimation {
-                    //             duration: 100
-                    //             easing.type: Easing.InOutQuad
-                    //         }
-                    //     }
-                    // }
-                }
-                // RowLayout {
-                //     Layout.alignment: Qt.AlignCenter
-                //     Layout.minimumHeight: 32
-                //     Layout.maximumHeight: 32
-                //     spacing: 12
-                //     Image {
-                //         source: "qrc:/images/firelight-logo"
-                //         Layout.preferredHeight: parent.height
-                //         sourceSize.height: parent.height
-                //         mipmap: true
-                //     }
-                //     Text {
-                //         color: "white"
-                //         padding: 0
-                //         Layout.preferredHeight: parent.height
-                //         text: "Firelight"
-                //         font.pixelSize: 24
-                //         font.weight: Font.Bold
-                //         font.family: Constants.regularFontFamily
-                //         horizontalAlignment: Text.AlignLeft
-                //         verticalAlignment: Text.AlignVCenter
-
-                //     }
-                // }
-                FLNavSection {
-                    Layout.fillWidth: true
-
-                    focus: true
-
-                    FLNavItem {
-                        label: "Library"
-                        iconName: "book"
-                        checked: Router.currentRoute.startsWith("/library")
-                        onClicked: {
-                            Router.navigateTo("/library")
-                        }
-                    }
-
-                    FLNavItem {
-                        label: "Mod Shop"
-                        iconName: "shopping-bag"
-                        checked: Router.currentRoute.startsWith("/shop")
-                        onClicked: {
-                            Router.navigateTo("/shop")
-                        }
-                    }
-
-                    // FLNavItem {
-                    //     label: "Gallery"
-                    //     iconName: "photo-library"
-                    //     checked: Router.currentRoute === "/gallery"
-                    //     onClicked: {
-                    //         Router.navigateTo("/gallery")
-                    //     }
-                    // }
-
-                    // FLNavItem {
-                    //     label: "Controllers"
-                    //     iconName: "controller"
-                    //     checked: Router.currentRoute === "/controllers"
-                    //     onClicked: {
-                    //         Router.navigateTo("/controllers")
-                    //     }
-                    // }
-
-                    FLNavItem {
-                        label: "Settings"
-                        iconName: "settings"
-                        checked: Router.currentRoute.startsWith("/settings")
-                        onClicked: {
-                            Router.navigateTo("/settings")
-                        }
-                    }
-
-                    // FLNavItem {
-                    //     label: "Favorites"
-                    //     iconName: "kid-star"
-                    // }
-
-                    // FLNavItem {
-                    //     label: "Recent"
-                    //     iconName: "history"
-                    // }
-
-                    // FLNavItem {
-                    //     label: "Newest"
-                    //     iconName: "add"
-                    // }
-                }
-                // FLNavSection {
-                //     Layout.fillWidth: true
-                //     title: "LIBRARY"
-
-                //     focus: true
-
-                //     FLNavItem {
-                //         label: "All games"
-                //         iconName: "book"
-                //         checked: Router.currentRoute === "/library"
-                //         onClicked: {
-                //             Router.navigateTo("/library")
-                //         }
-                //     }
-
-                //     // FLNavItem {
-                //     //     label: "Favorites"
-                //     //     iconName: "kid-star"
-                //     // }
-
-                //     // FLNavItem {
-                //     //     label: "Recent"
-                //     //     iconName: "history"
-                //     // }
-
-                //     // FLNavItem {
-                //     //     label: "Newest"
-                //     //     iconName: "add"
-                //     // }
-                // }
-                // FLNavSection {
-                //     title: "MOD SHOP"
-                //     Layout.fillWidth: true
-
-                //     FLNavItem {
-                //         label: "Browse"
-                //         iconName: "browse"
-                //         checked: Router.currentRoute === "/shop"
-                //         onClicked: {
-                //             Router.navigateTo("/shop")
-                //         }
-                //     }
-
-                //     // FLNavItem {
-                //     //     label: "Featured"
-                //     //     iconName: "bookmark-star"
-                //     // }
-
-                //     // FLNavItem {
-                //     //     label: "New Arrivals"
-                //     //     iconName: "star-shine"
-                //     // }
-                // }
-                // FLNavSection {
-                //     title: "OTHER"
-                //     Layout.fillWidth: true
-
-                //     FLNavItem {
-                //         label: "Settings"
-                //         iconName: "settings"
-                //         checked: Router.currentRoute === "/settings"
-                //         onClicked: {
-                //             Router.navigateTo("/settings")
-                //         }
-                //     }
-                // }
-                Item {
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-                }
-            }
-
-
-
-        }
-
-        Pane {
-            padding: 24
-            background: Item {}
-            contentItem: ColumnLayout {
-                spacing: 8
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.maximumHeight: 42
-                    Layout.minimumHeight: 42
-
-                    spacing: 12
-
-                    Button {
-                        background: Rectangle {
-                            color: "white"
-                            opacity: parent.pressed ? 0.16 : 0.1
-                            radius: 4
-                            visible: theHoverHandler.hovered && parent.enabled
-                        }
-                        HoverHandler {
-                            id: theHoverHandler
-                            cursorShape: Qt.PointingHandCursor
-                        }
-                        padding: 4
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: parent.height
-                        contentItem: FLIcon {
-                            icon: "arrow-back"
-                            size: height
-                            color: parent.enabled ? "white" : "#727272"
-                        }
-
-                        enabled: Router.historySize > 1
-
-                        onClicked: {
-                            Router.goBack()
-                            // contentStack.popCurrentItem()
-                        }
-                    }
-
-                    Image {
-                        Layout.fillHeight: true
-                        sourceSize.height: height
-                        source: "https://media.retroachievements.org/Images/041428.png"
-                    }
-
-                    Text {
-                        text: "Mario and Luigi"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                Button {
+                    background: Rectangle {
                         color: "white"
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        font.pixelSize: 24
-                        verticalAlignment: Qt.AlignVCenter
+                        opacity: parent.pressed ? 0.16 : 0.1
+                        radius: 4
+                        visible: theHoverHandler.hovered && parent.enabled
+                    }
+                    HoverHandler {
+                        id: theHoverHandler
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                    padding: 4
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: parent.height
+                    contentItem: FLIcon {
+                        icon: "arrow-back"
+                        size: height
+                        color: parent.enabled ? "white" : "#727272"
                     }
 
-                    // Button {
-                    //     background: Rectangle {
-                    //         color: "white"
-                    //         opacity: 0.1
-                    //         radius: 4
-                    //         visible: theHoverHandler2.hovered
-                    //     }
-                    //     HoverHandler {
-                    //         id: theHoverHandler2
-                    //         cursorShape: Qt.PointingHandCursor
-                    //     }
-                    //     padding: 4
-                    //     Layout.fillHeight: true
-                    //     Layout.preferredWidth: parent.height
-                    //     contentItem: FLIcon {
-                    //         icon: "arrow-forward"
-                    //         size: height
-                    //         color: parent.enabled ? "white" : "#727272"
-                    //     }
-                    //
-                    //     enabled: false
-                    // }
+                    enabled: Router.historySize > 1
 
-                    
-                    // Text {
-                    //     color: "white"
-                    //     font.family: Constants.regularFontFamily
-                    //     text: "Library"
-                    //     font.pixelSize: 28
-                    //     font.weight: Font.Bold
-                    //     Layout.fillHeight: true
-                    //     verticalAlignment: Text.AlignVCenter
-                    // }
-
-                    // Item {
-                    //     Layout.fillWidth: true
-                    //     Layout.fillHeight: true
-                    //     Layout.horizontalStretchFactor: 1
-                    // }
-
-                    // Pane {
-                    //     Layout.fillHeight: true
-                    //     Layout.preferredWidth: 460
-                    //     Layout.alignment: Qt.AlignHCenter
-                    //     padding: 8
-                    //     horizontalPadding: 10
-                    //     background: Rectangle {
-                    //         color: "#1D1D1D"
-                    //         opacity: 0.8
-                    //         radius: 8
-                    //         border.color: "#4B4B4B"
-                    //     }
-
-                    //     contentItem: RowLayout {
-                    //         TextInput {
-                    //             id: searchTextInput
-                    //             Layout.fillWidth: true
-                    //             Layout.fillHeight: true
-                    //             color: "white"
-                    //             font.pixelSize: 15
-                    //             font.family: Constants.regularFontFamily
-                    //             horizontalAlignment: Text.AlignLeft
-                    //             verticalAlignment: Text.AlignVCenter
-
-                    //             HoverHandler {
-                    //                 cursorShape: Qt.IBeamCursor
-                    //             }
-
-                    //             Text {
-                    //                 text: "Search"
-                    //                 anchors.fill: parent
-                    //                 color: "#727272"
-                    //                 font.pixelSize: 15
-                    //                 font.family: Constants.regularFontFamily
-                    //                 horizontalAlignment: Text.AlignLeft
-                    //                 verticalAlignment: Text.AlignVCenter
-                    //                 visible: (parent.length === 0) && !parent.activeFocus
-                    //             }
-
-                    //             Rectangle {
-                    //                 anchors.top: parent.bottom
-                    //                 width: parent.width
-                    //                 height: 300
-                    //                 color: "#1D1D1D"
-                    //                 visible: searchTextInput.length !== 0
-                    //             }
-                    //         }
-                    //         FLIcon {
-                    //             Layout.fillHeight: true
-                    //             icon: "search"
-                    //             size: height
-                    //             color: "#7C7C7C"
-
-                    //             HoverHandler {
-                    //                 cursorShape: Qt.PointingHandCursor
-                    //             }
-                    //         }
-                    //     }
-                    // }
-
-                    Item {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.horizontalStretchFactor: 1
+                    onClicked: {
+                        Router.goBack()
+                        // contentStack.popCurrentItem()
                     }
                 }
 
-                StackView {
-                    id: contentStack
+                Text {
+                    text: content.title
+                    // Layout.fillWidth: true
+                    // Layout.fillHeight: true
+                    color: "white"
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                    font.pixelSize: 24
+                    verticalAlignment: Qt.AlignVCenter
+                }
+
+                Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    Layout.horizontalStretchFactor: 1
+                }
+            }
 
-                    Connections {
-                        target: Router
+            StackView {
+                id: contentStack
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-                        function onRouteChanged(route) {
-                            if (route === "/shop") {
-                                contentStack.clear()
-                                contentStack.pushItem(shopPage, {}, StackView.PushTransition)
-                            } else if (route === "/library") {
-                                contentStack.clear()
-                                contentStack.pushItem(allGamesPage, {}, StackView.PushTransition)
-                            } else if (route.startsWith("/library/entries/")) {
-                                let things = route.split("/")
-                                if (things.length === 4) {
-                                    console.log("THREE: " + things[3])
-                                    contentStack.pushItem(gameDetailsPage, {entryId: things[3]}, StackView.PushTransition)
-                                }
-                                console.log(things)
-                            } else if (route.startsWith("/shop/mods/")) {
-                                let things = route.split("/")
-                                console.log(things)
-                            } else if (route === "/settings") {
-                                contentStack.push(settingsScreen)
+                Component.onCompleted: {
+                    Router.navigateTo("/library")
+                }
+
+                Connections {
+                    target: Router
+
+                    function onRouteChanged(route) {
+                        if (route === "/shop") {
+                            contentStack.clear()
+                            content.title = "Mod Shop"
+                            contentStack.pushItem(shopPage, {}, StackView.PushTransition)
+                        } else if (route === "/library") {
+                            contentStack.clear()
+                            content.title = "Library"
+                            contentStack.pushItem(allGamesPage, {}, StackView.PushTransition)
+                        } else if (route.startsWith("/library/entries/")) {
+                            let things = route.split("/")
+                            if (things.length === 4) {
+                                console.log("THREE: " + things[3])
+                                content.title = "Game Details"
+                                contentStack.pushItem(gameDetailsPage, {entryId: things[3]}, StackView.PushTransition)
+                            }
+                            console.log(things)
+                        } else if (route.startsWith("/shop/mods/")) {
+                            let things = route.split("/")
+                            content.title = "Mod Details"
+                            contentStack.pushItem(shopItemPage, {modId: things[3]}, StackView.PushTransition)
+                        } else if (route === "/settings") {
+                            content.title = "Settings"
+                            contentStack.push(settingsScreen)
+                        } else if (route === "/controllers") {
+                            content.title = "Controllers"
+                            contentStack.push(controllersPage)
+                        } else if (route.startsWith("/controllers/keyboard/")) {
+                            content.title = "Edit keyboard profile"
+                            let things = route.split("/")
+                            if (things.length === 4) {
+                                contentStack.pushItem(keyboardInputMappingPage, {playerNumber: things[3]}, StackView.PushTransition)
                             } else {
                                 contentStack.push(lol)
                             }
+                        } else if (route.startsWith("/controllers/profiles/")) {
+                            content.title = "Edit controller profile"
+                            let things = route.split("/")
+                            if (things.length === 4) {
+                                contentStack.pushItem(controllerInputMappingPage, {playerNumber: things[3]}, StackView.PushTransition)
+                            } else {
+                                contentStack.push(lol)
+                            }
+                        } else {
+                            contentStack.push(lol)
                         }
                     }
-
-                    Component {
-                        id: lol
-                        Text {
-                            text: "bruh"
-                            color: "white"
-                        }
-                    }
-
-                    pushEnter: Transition {}
-                    pushExit: Transition {}
-                    popEnter: Transition {}
-                    popExit: Transition {}
-                    replaceEnter: Transition {}
-                    replaceExit: Transition {}
                 }
+
+                Component {
+                    id: lol
+                    Text {
+                        text: "How did you even get here"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: "white"
+                    }
+                }
+
+                pushEnter: Transition {}
+                pushExit: Transition {}
+                popEnter: Transition {}
+                popExit: Transition {}
+                replaceEnter: Transition {}
+                replaceExit: Transition {}
             }
         }
     }
+
+    // SplitView {
+    //     id: splitView
+    //     anchors.fill: parent
+    //     orientation: Qt.Horizontal
+    //
+    //     // background: Item {}
+    //
+    //     focus: true
+    //
+    //     handle: Rectangle {
+    //         id: handleDelegate
+    //         color: handleHover.hovered ? "#8e8e8e" : "#4B4B4B"
+    //         implicitWidth: 1
+    //
+    //         Behavior on color {
+    //             ColorAnimation {
+    //                 duration: 250
+    //                 easing.type: Easing.InOutQuad
+    //             }
+    //         }
+    //
+    //         HoverHandler {
+    //             id: handleHover
+    //         }
+    //
+    //         containmentMask: Item {
+    //             x: (handleDelegate.width - width) / 2
+    //             width: 16
+    //             height: splitView.height
+    //         }
+    //     }
+    //
+    //     LeftNavigationBar {
+    //         id: navigationBar
+    //         anchors.left: parent.left
+    //         anchors.top: parent.top
+    //         anchors.bottom: parent.bottom
+    //     }
+    //
+    //     // Pane {
+    //     //     id: navbar
+    //     //     padding: 16
+    //     //
+    //     //     SplitView.minimumWidth: 100
+    //     //     SplitView.maximumWidth: 300
+    //     //     focus: true
+    //     //
+    //     //     background: Item {
+    //     //         // MultiEffect {
+    //     //         //     source: ShaderEffectSource {
+    //     //         //         width: navbar.width
+    //     //         //         height: navbar.height
+    //     //         //         sourceItem: window.background
+    //     //         //         sourceRect: Qt.rect(navbar.x, navbar.y, navbar.width, navbar.height)
+    //     //         //     }
+    //     //         //
+    //     //         //     anchors.fill: parent
+    //     //         //     blurEnabled: true
+    //     //         //     blurMultiplier: 1.0
+    //     //         //     blurMax: 32
+    //     //         //     blur: 1.0
+    //     //         // }
+    //     //
+    //     //         Rectangle {
+    //     //             color: "#19181d"
+    //     //             opacity: 1.0
+    //     //             anchors.fill: parent
+    //     //         }
+    //     //     }
+    //     //
+    //     //     contentItem: ColumnLayout {
+    //     //         spacing: 42
+    //     //
+    //     //         RowLayout {
+    //     //             Layout.leftMargin: 7
+    //     //             Layout.maximumHeight: 36
+    //     //             Layout.minimumHeight: 36
+    //     //             Layout.fillWidth: true
+    //     //             Image {
+    //     //                 source: "qrc:/images/firelight-logo"
+    //     //                 Layout.preferredHeight: parent.height
+    //     //                 sourceSize.height: parent.height
+    //     //                 mipmap: true
+    //     //             }
+    //     //             // Text {
+    //     //             //     color: "white"
+    //     //             //     padding: 0
+    //     //             //     opacity: parent.width > 140 ? 1 : 0
+    //     //             //     text: "Firelight"
+    //     //             //     Layout.preferredWidth: opacity > 0 ?
+    //     //             //     font.pixelSize: 20
+    //     //             //     font.weight: Font.Bold
+    //     //             //     font.family: Constants.regularFontFamily
+    //     //             //     horizontalAlignment: Text.AlignLeft
+    //     //             //     verticalAlignment: Text.AlignVCenter
+    //     //
+    //     //             //     Behavior on opacity {
+    //     //             //         NumberAnimation {
+    //     //             //             duration: 100
+    //     //             //             easing.type: Easing.InOutQuad
+    //     //             //         }
+    //     //             //     }
+    //     //             // }
+    //     //         }
+    //     //         // RowLayout {
+    //     //         //     Layout.alignment: Qt.AlignCenter
+    //     //         //     Layout.minimumHeight: 32
+    //     //         //     Layout.maximumHeight: 32
+    //     //         //     spacing: 12
+    //     //         //     Image {
+    //     //         //         source: "qrc:/images/firelight-logo"
+    //     //         //         Layout.preferredHeight: parent.height
+    //     //         //         sourceSize.height: parent.height
+    //     //         //         mipmap: true
+    //     //         //     }
+    //     //         //     Text {
+    //     //         //         color: "white"
+    //     //         //         padding: 0
+    //     //         //         Layout.preferredHeight: parent.height
+    //     //         //         text: "Firelight"
+    //     //         //         font.pixelSize: 24
+    //     //         //         font.weight: Font.Bold
+    //     //         //         font.family: Constants.regularFontFamily
+    //     //         //         horizontalAlignment: Text.AlignLeft
+    //     //         //         verticalAlignment: Text.AlignVCenter
+    //     //
+    //     //         //     }
+    //     //         // }
+    //     //         FLNavSection {
+    //     //             Layout.fillWidth: true
+    //     //
+    //     //             focus: true
+    //     //
+    //     //             FLNavItem {
+    //     //                 label: "Library"
+    //     //                 iconName: "book"
+    //     //                 checked: Router.currentRoute.startsWith("/library")
+    //     //                 onClicked: {
+    //     //                     Router.navigateTo("/library")
+    //     //                 }
+    //     //             }
+    //     //
+    //     //             FLNavItem {
+    //     //                 label: "Mod Shop"
+    //     //                 iconName: "shopping-bag"
+    //     //                 checked: Router.currentRoute.startsWith("/shop")
+    //     //                 onClicked: {
+    //     //                     Router.navigateTo("/shop")
+    //     //                 }
+    //     //             }
+    //     //
+    //     //             // FLNavItem {
+    //     //             //     label: "Gallery"
+    //     //             //     iconName: "photo-library"
+    //     //             //     checked: Router.currentRoute === "/gallery"
+    //     //             //     onClicked: {
+    //     //             //         Router.navigateTo("/gallery")
+    //     //             //     }
+    //     //             // }
+    //     //
+    //     //             // FLNavItem {
+    //     //             //     label: "Controllers"
+    //     //             //     iconName: "controller"
+    //     //             //     checked: Router.currentRoute === "/controllers"
+    //     //             //     onClicked: {
+    //     //             //         Router.navigateTo("/controllers")
+    //     //             //     }
+    //     //             // }
+    //     //
+    //     //             FLNavItem {
+    //     //                 label: "Settings"
+    //     //                 iconName: "settings"
+    //     //                 checked: Router.currentRoute.startsWith("/settings")
+    //     //                 onClicked: {
+    //     //                     Router.navigateTo("/settings")
+    //     //                 }
+    //     //             }
+    //     //
+    //     //             // FLNavItem {
+    //     //             //     label: "Favorites"
+    //     //             //     iconName: "kid-star"
+    //     //             // }
+    //     //
+    //     //             // FLNavItem {
+    //     //             //     label: "Recent"
+    //     //             //     iconName: "history"
+    //     //             // }
+    //     //
+    //     //             // FLNavItem {
+    //     //             //     label: "Newest"
+    //     //             //     iconName: "add"
+    //     //             // }
+    //     //         }
+    //     //         // FLNavSection {
+    //     //         //     Layout.fillWidth: true
+    //     //         //     title: "LIBRARY"
+    //     //
+    //     //         //     focus: true
+    //     //
+    //     //         //     FLNavItem {
+    //     //         //         label: "All games"
+    //     //         //         iconName: "book"
+    //     //         //         checked: Router.currentRoute === "/library"
+    //     //         //         onClicked: {
+    //     //         //             Router.navigateTo("/library")
+    //     //         //         }
+    //     //         //     }
+    //     //
+    //     //         //     // FLNavItem {
+    //     //         //     //     label: "Favorites"
+    //     //         //     //     iconName: "kid-star"
+    //     //         //     // }
+    //     //
+    //     //         //     // FLNavItem {
+    //     //         //     //     label: "Recent"
+    //     //         //     //     iconName: "history"
+    //     //         //     // }
+    //     //
+    //     //         //     // FLNavItem {
+    //     //         //     //     label: "Newest"
+    //     //         //     //     iconName: "add"
+    //     //         //     // }
+    //     //         // }
+    //     //         // FLNavSection {
+    //     //         //     title: "MOD SHOP"
+    //     //         //     Layout.fillWidth: true
+    //     //
+    //     //         //     FLNavItem {
+    //     //         //         label: "Browse"
+    //     //         //         iconName: "browse"
+    //     //         //         checked: Router.currentRoute === "/shop"
+    //     //         //         onClicked: {
+    //     //         //             Router.navigateTo("/shop")
+    //     //         //         }
+    //     //         //     }
+    //     //
+    //     //         //     // FLNavItem {
+    //     //         //     //     label: "Featured"
+    //     //         //     //     iconName: "bookmark-star"
+    //     //         //     // }
+    //     //
+    //     //         //     // FLNavItem {
+    //     //         //     //     label: "New Arrivals"
+    //     //         //     //     iconName: "star-shine"
+    //     //         //     // }
+    //     //         // }
+    //     //         // FLNavSection {
+    //     //         //     title: "OTHER"
+    //     //         //     Layout.fillWidth: true
+    //     //
+    //     //         //     FLNavItem {
+    //     //         //         label: "Settings"
+    //     //         //         iconName: "settings"
+    //     //         //         checked: Router.currentRoute === "/settings"
+    //     //         //         onClicked: {
+    //     //         //             Router.navigateTo("/settings")
+    //     //         //         }
+    //     //         //     }
+    //     //         // }
+    //     //         Item {
+    //     //             Layout.fillHeight: true
+    //     //             Layout.fillWidth: true
+    //     //         }
+    //     //     }
+    //     //
+    //     //
+    //     //
+    //     // }
+    //
+    //     Pane {
+    //         id: content
+    //
+    //         property string title: "Firelight"
+    //
+    //         padding: 16
+    //         background: Item {}
+    //         contentItem: ColumnLayout {
+    //             spacing: 16
+    //             RowLayout {
+    //                 Layout.fillWidth: true
+    //                 Layout.maximumHeight: 42
+    //                 Layout.minimumHeight: 42
+    //
+    //                 spacing: 12
+    //
+    //                 Button {
+    //                     background: Rectangle {
+    //                         color: "white"
+    //                         opacity: parent.pressed ? 0.16 : 0.1
+    //                         radius: 4
+    //                         visible: theHoverHandler.hovered && parent.enabled
+    //                     }
+    //                     HoverHandler {
+    //                         id: theHoverHandler
+    //                         cursorShape: Qt.PointingHandCursor
+    //                     }
+    //                     padding: 4
+    //                     Layout.fillHeight: true
+    //                     Layout.preferredWidth: parent.height
+    //                     contentItem: FLIcon {
+    //                         icon: "arrow-back"
+    //                         size: height
+    //                         color: parent.enabled ? "white" : "#727272"
+    //                     }
+    //
+    //                     enabled: Router.historySize > 1
+    //
+    //                     onClicked: {
+    //                         Router.goBack()
+    //                         // contentStack.popCurrentItem()
+    //                     }
+    //                 }
+    //
+    //                 Text {
+    //                     text: content.title
+    //                     // Layout.fillWidth: true
+    //                     // Layout.fillHeight: true
+    //                     color: "white"
+    //                     font.family: Constants.regularFontFamily
+    //                     font.weight: Font.DemiBold
+    //                     font.pixelSize: 24
+    //                     verticalAlignment: Qt.AlignVCenter
+    //                 }
+    //
+    //                 // Button {
+    //                 //     background: Rectangle {
+    //                 //         color: "white"
+    //                 //         opacity: 0.1
+    //                 //         radius: 4
+    //                 //         visible: theHoverHandler2.hovered
+    //                 //     }
+    //                 //     HoverHandler {
+    //                 //         id: theHoverHandler2
+    //                 //         cursorShape: Qt.PointingHandCursor
+    //                 //     }
+    //                 //     padding: 4
+    //                 //     Layout.fillHeight: true
+    //                 //     Layout.preferredWidth: parent.height
+    //                 //     contentItem: FLIcon {
+    //                 //         icon: "arrow-forward"
+    //                 //         size: height
+    //                 //         color: parent.enabled ? "white" : "#727272"
+    //                 //     }
+    //                 //
+    //                 //     enabled: false
+    //                 // }
+    //
+    //
+    //                 // Text {
+    //                 //     color: "white"
+    //                 //     font.family: Constants.regularFontFamily
+    //                 //     text: "Library"
+    //                 //     font.pixelSize: 28
+    //                 //     font.weight: Font.Bold
+    //                 //     Layout.fillHeight: true
+    //                 //     verticalAlignment: Text.AlignVCenter
+    //                 // }
+    //
+    //                 // Item {
+    //                 //     Layout.fillWidth: true
+    //                 //     Layout.fillHeight: true
+    //                 //     Layout.horizontalStretchFactor: 1
+    //                 // }
+    //
+    //                 // Pane {
+    //                 //     Layout.fillHeight: true
+    //                 //     Layout.preferredWidth: 460
+    //                 //     Layout.alignment: Qt.AlignHCenter
+    //                 //     padding: 8
+    //                 //     horizontalPadding: 10
+    //                 //     background: Rectangle {
+    //                 //         color: "#1D1D1D"
+    //                 //         opacity: 0.8
+    //                 //         radius: 8
+    //                 //         border.color: "#4B4B4B"
+    //                 //     }
+    //
+    //                 //     contentItem: RowLayout {
+    //                 //         TextInput {
+    //                 //             id: searchTextInput
+    //                 //             Layout.fillWidth: true
+    //                 //             Layout.fillHeight: true
+    //                 //             color: "white"
+    //                 //             font.pixelSize: 15
+    //                 //             font.family: Constants.regularFontFamily
+    //                 //             horizontalAlignment: Text.AlignLeft
+    //                 //             verticalAlignment: Text.AlignVCenter
+    //
+    //                 //             HoverHandler {
+    //                 //                 cursorShape: Qt.IBeamCursor
+    //                 //             }
+    //
+    //                 //             Text {
+    //                 //                 text: "Search"
+    //                 //                 anchors.fill: parent
+    //                 //                 color: "#727272"
+    //                 //                 font.pixelSize: 15
+    //                 //                 font.family: Constants.regularFontFamily
+    //                 //                 horizontalAlignment: Text.AlignLeft
+    //                 //                 verticalAlignment: Text.AlignVCenter
+    //                 //                 visible: (parent.length === 0) && !parent.activeFocus
+    //                 //             }
+    //
+    //                 //             Rectangle {
+    //                 //                 anchors.top: parent.bottom
+    //                 //                 width: parent.width
+    //                 //                 height: 300
+    //                 //                 color: "#1D1D1D"
+    //                 //                 visible: searchTextInput.length !== 0
+    //                 //             }
+    //                 //         }
+    //                 //         FLIcon {
+    //                 //             Layout.fillHeight: true
+    //                 //             icon: "search"
+    //                 //             size: height
+    //                 //             color: "#7C7C7C"
+    //
+    //                 //             HoverHandler {
+    //                 //                 cursorShape: Qt.PointingHandCursor
+    //                 //             }
+    //                 //         }
+    //                 //     }
+    //                 // }
+    //
+    //                 Item {
+    //                     Layout.fillWidth: true
+    //                     Layout.fillHeight: true
+    //                     Layout.horizontalStretchFactor: 1
+    //                 }
+    //             }
+    //
+    //             StackView {
+    //                 id: contentStack
+    //                 Layout.fillWidth: true
+    //                 Layout.fillHeight: true
+    //
+    //                 Connections {
+    //                     target: Router
+    //
+    //                     function onRouteChanged(route) {
+    //                         if (route === "/shop") {
+    //                             contentStack.clear()
+    //                             content.title = "Mod Shop"
+    //                             contentStack.pushItem(shopPage, {}, StackView.PushTransition)
+    //                         } else if (route === "/library") {
+    //                             contentStack.clear()
+    //                             content.title = "Library"
+    //                             contentStack.pushItem(allGamesPage, {}, StackView.PushTransition)
+    //                         } else if (route.startsWith("/library/entries/")) {
+    //                             let things = route.split("/")
+    //                             if (things.length === 4) {
+    //                                 console.log("THREE: " + things[3])
+    //                                 content.title = "Game Details"
+    //                                 contentStack.pushItem(gameDetailsPage, {entryId: things[3]}, StackView.PushTransition)
+    //                             }
+    //                             console.log(things)
+    //                         } else if (route.startsWith("/shop/mods/")) {
+    //                             let things = route.split("/")
+    //                             console.log(things)
+    //                         } else if (route === "/settings") {
+    //                             content.title = "Settings"
+    //                             contentStack.push(settingsScreen)
+    //                         } else {
+    //                             contentStack.push(lol)
+    //                         }
+    //                     }
+    //                 }
+    //
+    //                 Component {
+    //                     id: lol
+    //                     Text {
+    //                         text: "bruh"
+    //                         color: "white"
+    //                     }
+    //                 }
+    //
+    //                 pushEnter: Transition {}
+    //                 pushExit: Transition {}
+    //                 popEnter: Transition {}
+    //                 popExit: Transition {}
+    //                 replaceEnter: Transition {}
+    //                 replaceExit: Transition {}
+    //             }
+    //         }
+    //     }
+    // }
 
     FLEmulationPlayer {
         id: emulator
@@ -565,25 +731,16 @@ ApplicationWindow {
     Component {
         id: allGamesPage
         FocusScope {
-            Text {
-                id: titleText
-                color: "white"
-                text: "Library"
-                font.pixelSize: 30
-                font.family: Constants.regularFontFamily
-                font.weight: Font.DemiBold
-                verticalAlignment: Qt.AlignVCenter
-            }
-
             ListView {
                 id: theList
                 // anchors.left: gameNavList.right
-                anchors.top: titleText.bottom
-                anchors.topMargin: 16
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                // anchors.fill: parent
+
+                // anchors.top: titleText.bottom
+                // anchors.topMargin: 16
+                // anchors.bottom: parent.bottom
+                // anchors.left: parent.left
+                // anchors.right: parent.right
+                anchors.fill: parent
                 highlightMoveDuration: 80
                 highlightMoveVelocity: -1
                 highlightRangeMode: ListView.ApplyRange
@@ -677,29 +834,29 @@ ApplicationWindow {
                     required property var index
                     width: ListView.view.width
 
-                    RightClickMenu {
-                        id: rightClick
-
-                        RightClickMenuItem {
-                            text: "Play"
-                            // externalLink: true
-                            // onTriggered: {
-                            //     Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id)
-                            // }
-                        }
-
-                        RightClickMenuItem {
-                            text: "View details"
-                            onTriggered: {
-                                Router.navigateTo("/library/entries/" + tttt.model.entryId)
-                            }
-                        }
-
-                    }
+                    // RightClickMenu {
+                    //     id: rightClick
+                    //
+                    //     RightClickMenuItem {
+                    //         text: "Play"
+                    //         // externalLink: true
+                    //         // onTriggered: {
+                    //         //     Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id)
+                    //         // }
+                    //     }
+                    //
+                    //     RightClickMenuItem {
+                    //         text: "View details"
+                    //         onTriggered: {
+                    //             Router.navigateTo("/library/entries/" + tttt.model.entryId)
+                    //         }
+                    //     }
+                    //
+                    // }
 
 
                     TapHandler {
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        acceptedButtons: Qt.LeftButton
                         onDoubleTapped: {
                             startGameAnimation.entryId = model.entryId
                             startGameAnimation.start()
@@ -707,9 +864,9 @@ ApplicationWindow {
                         }
 
                         onSingleTapped: function(event, button) {
-                            if (button === 2) {
-                                rightClick.popupNormal()
-                            }
+                            // if (button === 2) {
+                            //     rightClick.popupNormal()
+                            // }
                             if (tttt.ListView.view.currentIndex !== tttt.index) {
                                 // theList.highlightRangeMode = ListView.NoHighlightRange
                                 tttt.ListView.view.currentIndex = tttt.index
@@ -846,6 +1003,39 @@ ApplicationWindow {
         id: settingsScreen
 
         SettingsScreen {
+        }
+    }
+
+    Component {
+        id: controllersPage
+
+        ControllersPage {
+            onEditProfileButtonClicked: function (name, playerNumber) {
+                if (name === "Keyboard") {
+                    Router.navigateTo("/controllers/keyboard/" + playerNumber)
+                    // screenStack.pushItem(keyboardProfileEditor, {playerNumber: playerNumber}, StackView.PushTransition)
+                } else {
+                    Router.navigateTo("/controllers/profiles/" + playerNumber)
+                    // screenStack.pushItem(profileEditor, {playerNumber: playerNumber}, StackView.PushTransition)
+                }
+            }
+
+        }
+    }
+
+    Component {
+        id: controllerInputMappingPage
+
+        ControllerProfilePage {
+
+        }
+    }
+
+    Component {
+        id: keyboardInputMappingPage
+
+        KeyboardProfilePage {
+
         }
     }
 }

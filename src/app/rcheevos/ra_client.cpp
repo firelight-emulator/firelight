@@ -28,7 +28,7 @@ static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
   switch (event->type) {
   case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED: {
     if (event->achievement->id == UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID) {
-      spdlog::warn("Got warning about unsupported emulator");
+      emit raClient->unsupportedEmulatorError();
       // TODO: Show user a message or something.
       break;
     }
@@ -370,6 +370,13 @@ std::vector<uint8_t> RAClient::serializeState() {
   }
 
   return state;
+}
+void RAClient::reset() {
+  if (!m_loggedIn) {
+    return;
+  }
+
+  rc_client_reset(m_client);
 }
 
 void RAClient::deserializeState(const std::vector<uint8_t> &state) {

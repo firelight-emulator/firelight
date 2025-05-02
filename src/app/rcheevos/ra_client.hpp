@@ -66,6 +66,8 @@ public:
 
   std::vector<uint8_t> serializeState();
 
+  void reset();
+
   void deserializeState(const std::vector<uint8_t> &state);
 
   rc_libretro_memory_regions_t m_memoryRegions{};
@@ -131,6 +133,8 @@ signals:
   void hideChallengeIndicator(int id);
 
   void notificationSettingsChanged();
+
+  void unsupportedEmulatorError();
 
 public slots:
   void logout();
