@@ -294,7 +294,6 @@ FocusScope {
                 label: "Assign all"
                 Layout.bottomMargin: 8
 
-                KeyNavigation.up: headerBar
                 KeyNavigation.left: platformList
 
                 onClicked: function () {

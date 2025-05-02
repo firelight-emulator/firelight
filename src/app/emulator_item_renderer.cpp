@@ -399,8 +399,15 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   if (emulatorItem->window() != nullptr) {
     if (emulatorItem->window()->screen() != nullptr) {
       auto refreshRate = emulatorItem->window()->screen()->refreshRate();
-      if (floor(refreshRate) == 120 || ceil(refreshRate) == 120) {
+      auto floor = std::floor(refreshRate);
+      auto ceil = std::ceil(refreshRate);
+
+      if (floor == 120 || ceil == 120) {
         m_waitFrames = 1;
+      } else if ((floor < 182 && floor > 172) || (ceil < 182 && ceil > 172)) {
+        // TODO: Do something here to indicate that the timing is gonna be a bit
+        // off
+        m_waitFrames = 2;
       }
     }
   }
@@ -443,9 +450,6 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       if (m_paused) {
         return;
       }
-      if (m_rewindPoints.length() > 10) {
-        return;
-      }
       SuspendPoint suspendPoint;
       suspendPoint.state = m_core->serializeState();
       suspendPoint.image = m_currentImage;
@@ -453,6 +457,11 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       suspendPoint.retroachievementsState =
           getAchievementManager()->serializeState();
       m_rewindPoints.push_front(suspendPoint);
+
+      if (m_rewindPoints.length() > 10) {
+        m_rewindPoints.pop_back();
+      }
+
     } break;
     case EmitRewindPoints: {
       for (auto &url : m_rewindImageUrls) {

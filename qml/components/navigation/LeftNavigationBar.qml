@@ -103,7 +103,7 @@ Pane {
             label: "Controllers"
             iconName: "controller"
 
-            KeyNavigation.down: galleryButton
+            KeyNavigation.down: settingsButton
 
             Layout.fillWidth: true
 
@@ -115,22 +115,22 @@ Pane {
             }
         }
 
-        LeftNavigationItem {
-            id: galleryButton
-            label: "Gallery"
-            iconName: "photo-library"
-
-            KeyNavigation.down: settingsButton
-
-            Layout.fillWidth: true
-
-            checked: Router.currentRoute.startsWith("/gallery")
-            onToggled: {
-                if (toggled) {
-                    Router.navigateTo("/gallery")
-                }
-            }
-        }
+        // LeftNavigationItem {
+        //     id: galleryButton
+        //     label: "Gallery"
+        //     iconName: "photo-library"
+        //
+        //     KeyNavigation.down: settingsButton
+        //
+        //     Layout.fillWidth: true
+        //
+        //     checked: Router.currentRoute.startsWith("/gallery")
+        //     onToggled: {
+        //         if (toggled) {
+        //             Router.navigateTo("/gallery")
+        //         }
+        //     }
+        // }
 
         Item {
             Layout.fillWidth: true

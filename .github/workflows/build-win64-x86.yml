@@ -64,7 +64,7 @@ jobs:
 
       - name: Build zip
         working-directory: build
-        run: cpack -G ZIP && mv Firelight-9.0-win64.zip Firelight-0.9.0-win64-portable.zip
+        run: cpack -G ZIP && mv Firelight-9.0.0-win64.zip Firelight-0.9.0-win64-portable.zip
 
       - name: Build installer
         working-directory: build

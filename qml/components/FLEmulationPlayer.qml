@@ -377,7 +377,7 @@ StackView {
                          checkable: false
                          alignRight: true
                          onClicked: {
-                             emulatorLoader.item.resetGameDialog.show()
+                             resetGameDialog.open()
                          }
                      }
                      FirelightMenuItem {
@@ -512,7 +512,7 @@ StackView {
         active: false
         sourceComponent: emuPage
 
-        property bool paused: emulatorLoader.StackView.status !== StackView.Active || unsupportedEmulatorDialog.visible
+        property bool paused: emulatorLoader.StackView.status !== StackView.Active
         function stopGame() {
             shouldDeactivate = true
             if (emulatorLoader.StackView.status === StackView.Active) {
@@ -595,20 +595,20 @@ StackView {
         }
     }
 
-    FirelightDialog {
-        id: unsupportedEmulatorDialog
-        text: "In order to use hardcore mode, please use the latest version of Firelight. \n\n If you continue, you will automatically be switched to softcore mode."
-
-        acceptText: "Continue"
-        rejectText: "Close game"
-
-        Connections {
-            target: achievement_manager
-
-            function onUnsupportedEmulatorError() {
-                unsupportedEmulatorDialog.open()
-            }
-        }
-    }
+    // FirelightDialog {
+    //     id: unsupportedEmulatorDialog
+    //     text: "In order to use hardcore mode, please use the latest version of Firelight. \n\n If you continue, you will automatically be switched to softcore mode."
+    //
+    //     acceptText: "Continue"
+    //     rejectText: "Close game"
+    //
+    //     Connections {
+    //         target: achievement_manager
+    //
+    //         function onUnsupportedEmulatorError() {
+    //             unsupportedEmulatorDialog.open()
+    //         }
+    //     }
+    // }
 
 }
