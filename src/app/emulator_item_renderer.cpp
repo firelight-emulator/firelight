@@ -503,7 +503,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
         m_currentImage = m_overlayImage;
         if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-          m_currentImage.flip();
+          m_currentImage.mirror();
         }
       }
     } break;
@@ -543,13 +543,13 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
         if (m_paused) {
           m_overlayImage = point->image;
-          m_overlayImage.flip();
+          m_overlayImage.mirror();
           m_overlayImage = m_overlayImage.convertToFormat(
               QImage::Format_RGBA8888_Premultiplied);
 
           m_currentImage = m_overlayImage;
           if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-            m_currentImage.flip();
+            m_currentImage.mirror();
           }
         }
       }
@@ -569,13 +569,13 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
       if (m_paused) {
         m_overlayImage = m_beforeLastLoadSuspendPoint.image;
-        m_overlayImage.flip();
+        m_overlayImage.mirror();
         m_overlayImage = m_overlayImage.convertToFormat(
             QImage::Format_RGBA8888_Premultiplied);
 
         m_currentImage = m_overlayImage;
         if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-          m_currentImage.flip();
+          m_currentImage.mirror();
         }
       }
 
