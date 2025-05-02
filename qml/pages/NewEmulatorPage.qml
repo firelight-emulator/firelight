@@ -36,23 +36,23 @@ FocusScope {
         emulator.decrementPlaybackMultiplier()
     }
 
-    Keys.onPressed: function(event) {
-        console.log("pressed: " + event.key)
-        if (event.key === Qt.Key_Control) {
-            ctrlTimer.start()
-        }
-    }
-
-    Keys.onReleased: function(event) {
-        console.log("released: " + event.key)
-        if (event.key === Qt.Key_Control) {
-            if (redThing.visible) {
-                redThing.opacity = 0
-            }
-
-            ctrlTimer.stop()
-        }
-    }
+    // Keys.onPressed: function(event) {
+    //     console.log("pressed: " + event.key)
+    //     if (event.key === Qt.Key_Control) {
+    //         ctrlTimer.start()
+    //     }
+    // }
+    //
+    // Keys.onReleased: function(event) {
+    //     console.log("released: " + event.key)
+    //     if (event.key === Qt.Key_Control) {
+    //         if (redThing.visible) {
+    //             redThing.opacity = 0
+    //         }
+    //
+    //         ctrlTimer.stop()
+    //     }
+    // }
 
     property alias videoAspectRatio: emulator.videoAspectRatio
     property alias contentHash: emulator.contentHash
