@@ -252,7 +252,7 @@ if (MINGW)
     get_filename_component(MINGW_BIN_DIR ${MINGW_PATH} DIRECTORY)
     get_filename_component(MINGW_DIR ${MINGW_BIN_DIR} DIRECTORY)
     set(SHARED_LIB_DIR "${MINGW_BIN_DIR}")
-    set(QT_PLUGIN_DIR "${MINGW_DIR}/plugins")
+    set(QT_PLUGIN_DIR "${MINGW_DIR}/share/qt6/plugins")
 endif ()
 
 #include(GNUInstallDirs)
@@ -379,17 +379,17 @@ elseif (WIN32)
     set(deploy_tool_options_arg --no-compiler-runtime)
 endif ()
 
-#qt6_generate_deploy_qml_app_script(
-#        TARGET firelight
-#        OUTPUT_SCRIPT deploy_script
-#        #        MACOS_BUNDLE_POST_BUILD
-#        DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
-#)
-#
-#
-#install(
-#        SCRIPT ${deploy_script}
-#)
+qt6_generate_deploy_qml_app_script(
+        TARGET firelight
+        OUTPUT_SCRIPT deploy_script
+        #        MACOS_BUNDLE_POST_BUILD
+        DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
+)
+
+
+install(
+        SCRIPT ${deploy_script}
+)
 
 if (WIN32)
     install(
