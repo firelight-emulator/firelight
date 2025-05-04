@@ -394,7 +394,7 @@ install(
 if (WIN32)
     install(
             PROGRAMS
-            ${SHARED_LIB_DIR}/libsqlite3-0.dllz
+            ${SHARED_LIB_DIR}/libsqlite3-0.dll
             #            ${SHARED_LIB_DIR}/libjpeg-8.dll
             #            ${SHARED_LIB_DIR}/libgio-2.0-0.dll
             #            ${SHARED_LIB_DIR}/libjasper.dll
