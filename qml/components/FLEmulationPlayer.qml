@@ -389,6 +389,7 @@ StackView {
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                          Layout.preferredHeight: 40
                          checkable: false
+                         enabled: !achievement_manager.loggedIn || !achievement_manager.inHardcoreMode
                          alignRight: true
                          onClicked: {
                              emulatorLoader.item.createRewindPoints()

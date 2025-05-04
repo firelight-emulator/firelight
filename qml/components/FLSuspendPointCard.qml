@@ -78,6 +78,8 @@ Button {
             Layout.maximumHeight: 42
             Layout.minimumHeight: 42
 
+            enabled: !achievement_manager.loggedIn || !achievement_manager.inHardcoreMode
+
             background: Rectangle {
                 id: bg
                 color: "white"
@@ -95,6 +97,8 @@ Button {
                     shadowEnabled: true
                     shadowVerticalOffset: 6
                 }
+
+                visible: parent.enabled
             }
 
             onClicked: function(event) {
@@ -106,7 +110,7 @@ Button {
                 cursorShape: Qt.PointingHandCursor
             }
             contentItem: Text {
-                color: "white"
+                color: parent.enabled ? "white" : "#727272"
                 text: "Load Suspend Point"
                 font.pixelSize: 15
                 font.family: Constants.regularFontFamily

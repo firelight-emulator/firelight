@@ -61,6 +61,8 @@
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
 
+#include <unistd.h>
+
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
   std::error_code error_code;
   for (const auto &path : list) {
@@ -377,7 +379,7 @@ int main(int argc, char *argv[]) {
   sdlEventLoop.quit();
   sdlEventLoop.wait();
 
-  engine.removeImageProvider("gameImages");
+  // engine.removeImageProvider("gameImages");
   // TODO: Let daemons finish
 
   return exitCode;
