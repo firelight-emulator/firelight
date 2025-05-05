@@ -413,6 +413,12 @@ endif ()
 
 install(
         FILES
+        ${CMAKE_SOURCE_DIR}/ca-bundle.crt
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/../etc/ssl/certs/
+)
+
+install(
+        FILES
         ${CMAKE_SOURCE_DIR}/content.db
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
