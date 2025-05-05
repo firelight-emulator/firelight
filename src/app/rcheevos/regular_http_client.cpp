@@ -2,42 +2,42 @@
 #include "ra_constants.h"
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 
 namespace firelight::achievements {
-    rc_api_server_response_t RegularHttpClient::sendRequest(const std::string &url, const std::string &postBody,
-                                                            const std::string &contentType) {
-        if (m_online) {
-            const auto headers = cpr::Header{
-                {"User-Agent", USER_AGENT},
-                {"Content-Type", contentType}
-            };
+rc_api_server_response_t
+RegularHttpClient::sendRequest(const std::string &url,
+                               const std::string &postBody,
+                               const std::string &contentType) {
+  spdlog::info("Online status: {}", m_online);
+  const auto headers =
+      cpr::Header{{"User-Agent", USER_AGENT}, {"Content-Type", contentType}};
 
-            const auto response = Post(cpr::Url{url}, headers, cpr::Body{postBody});
+  spdlog::info("Sending request to URL: {} with body {}", url, postBody);
+  const auto response = Post(cpr::Url{url}, headers, cpr::Body{postBody});
 
-            rc_api_server_response_t rcResponse;
-            rcResponse.http_status_code = response.status_code;
+  spdlog::info("response: {}", response.text);
+  spdlog::info("response status code: {}", response.status_code);
 
-            if (response.error) {
-                // printf("Woah theah boah I said woah theah\n");
-                // m_online = false;
-                //  TODO: I don't love this buttttttt it might be fine.
-                return m_offlineClient.handleRequest(url, postBody, contentType);
-            }
+  rc_api_server_response_t rcResponse;
+  rcResponse.http_status_code = response.status_code;
 
-            m_online = true;
+  if (response.error) {
+    // printf("Woah theah boah I said woah theah\n");
+    // m_online = false;
+    //  TODO: I don't love this buttttttt it might be fine.
+    return m_offlineClient.handleRequest(url, postBody, contentType);
+  }
 
-            rcResponse.body = strdup(response.text.c_str());
-            rcResponse.body_length = response.text.size();
+  rcResponse.body = strdup(response.text.c_str());
+  rcResponse.body_length = response.text.size();
 
-            m_offlineClient.processResponse(postBody, response.text);
+  m_offlineClient.processResponse(postBody, response.text);
 
-            return rcResponse;
-        }
+  return rcResponse;
+}
 
-        return m_offlineClient.handleRequest(url, postBody, contentType);
-    }
-
-    void RegularHttpClient::setOnlineForTesting(const bool online) {
-        m_online = online;
-    }
-} // firelight::achievements
+void RegularHttpClient::setOnlineForTesting(const bool online) {
+  m_online = online;
+}
+} // namespace firelight::achievements
