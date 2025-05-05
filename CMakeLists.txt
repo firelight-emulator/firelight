@@ -243,9 +243,9 @@ qt6_add_qml_module(firelight
 target_link_libraries(firelight PUBLIC
         firelight_lib)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
-endif ()
+#if (CMAKE_BUILD_TYPE STREQUAL "Release")
+#    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
+#endif ()
 
 if (MINGW)
     find_program(MINGW_PATH gcc)
