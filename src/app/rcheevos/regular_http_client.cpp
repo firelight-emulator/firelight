@@ -19,16 +19,14 @@ RegularHttpClient::sendRequest(const std::string &url,
   spdlog::info("response: {}", response.text);
   spdlog::info("response status code: {}", response.status_code);
 
-  spdlog::info("response error: {}", response.error.code());
+  spdlog::info("response error: {}", (int)response.error.code);
   spdlog::info("response error message: {}", response.error.message);
-
-  spdlog::info("response error: {}", response.error);
 
   rc_api_server_response_t rcResponse;
   rcResponse.http_status_code = response.status_code;
 
   if (response.error) {
-    spdlog::info("Response error: {}, doing offline", response.error);
+    spdlog::info("Response error: {}, doing offline", (int)response.error.code);
     // printf("Woah theah boah I said woah theah\n");
     // m_online = false;
     //  TODO: I don't love this buttttttt it might be fine.
