@@ -26,8 +26,6 @@ EmulatorItemRenderer::EmulatorItemRenderer(
     : m_graphicsApi(api), m_core(std::move(core)) {
   m_core->setVideoReceiver(this);
   globalRenderer = this;
-  m_frametimeTimer.start();
-  m_oneFrameTimer.start();
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
@@ -443,6 +441,9 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
   while (!m_commandQueue.isEmpty()) {
     switch (const auto command = m_commandQueue.dequeue(); command.type) {
+    case RunFrame:
+      m_shouldRunFrame = true;
+      break;
     case ResetGame:
       m_core->reset();
       getAchievementManager()->reset();
@@ -675,7 +676,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     if (!m_paused) {
       m_playSessionTimer.start();
     }
-  } else if (!m_paused && m_core && m_coreInitialized) {
+  } else if (!m_paused && m_core && m_coreInitialized && m_shouldRunFrame) {
+    m_shouldRunFrame = false;
     // m_frameNumber++;
 
     if (m_shouldSave) {

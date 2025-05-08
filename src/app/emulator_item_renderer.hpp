@@ -77,7 +77,8 @@ public:
     WriteSuspendPoint,
     LoadSuspendPoint,
     UndoLoadSuspendPoint,
-    SetPlaybackMultiplier
+    SetPlaybackMultiplier,
+    RunFrame
   };
 
   struct EmulatorCommand {
@@ -116,13 +117,11 @@ private:
 
   QList<QString> m_rewindImageUrls{};
 
-  QElapsedTimer m_frametimeTimer{};
-  QElapsedTimer m_oneFrameTimer{};
-
   QElapsedTimer m_playSessionTimer;
   firelight::activity::PlaySession m_playSession{};
 
   bool m_quitting = false;
+  bool m_shouldRunFrame = true;
 
   int m_frameNumber = 0;
 

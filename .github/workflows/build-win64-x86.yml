@@ -64,23 +64,23 @@ jobs:
 
       - name: Build zip
         working-directory: build
-        run: cpack -G ZIP && mv Firelight-0.9.1-win64.zip Firelight-0.9.1-win64-portable.zip
+        run: cpack -G ZIP && mv Firelight-0.9.2-win64.zip Firelight-0.9.2-win64-portable.zip
 
       - name: Build installer
         working-directory: build
-        run: cpack -G NSIS && mv Firelight-0.9.1-win64.exe Firelight-0.9.1-win64-installer.exe
+        run: cpack -G NSIS && mv Firelight-0.9.2-win64.exe Firelight-0.9.2-win64-installer.exe
 
 #      - name: Upload artifact
 #        uses: actions/upload-artifact@v4
 #        with:
-#          name: Firelight-0.9.1-win64-portable
-#          path: build/Firelight-0.9.1-win64-portable.zip
+#          name: Firelight-0.9.2-win64-portable
+#          path: build/Firelight-0.9.2-win64-portable.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Firelight-0.9.1-win64-installer
-          path: build/Firelight-0.9.1-win64-installer.exe
+          name: Firelight-0.9.2-win64-installer
+          path: build/Firelight-0.9.2-win64-installer.exe
 
         # - name: Prepare artifact
         #   run: |

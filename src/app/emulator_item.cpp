@@ -50,14 +50,18 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   m_emulationTimer.setTimerType(Qt::PreciseTimer);
   m_emulationTimer.setInterval(ns);
   m_emulationTimer.setSingleShot(false);
-  // m_emulationTimer.callOnTimeout([&] {
-  //   if (m_emulationActualTimer.nsecsElapsed() > 16566667) {
-  //     update();
-  //     m_emulationActualTimer.restart();
-  //   }
-  // });
-  connect(&m_emulationTimer, &QChronoTimer::timeout, this, &QQuickItem::update,
-          Qt::DirectConnection);
+  // m_emulationTimer.callOnTimeout([&] {});
+  connect(
+      &m_emulationTimer, &QChronoTimer::timeout, this,
+      [&] {
+        if (m_renderer) {
+          m_renderer->submitCommand(EmulatorItemRenderer::EmulatorCommand{
+              .type = EmulatorItemRenderer::RunFrame});
+        }
+
+        update();
+      },
+      Qt::DirectConnection);
   m_emulationTimer.start();
 }
 
