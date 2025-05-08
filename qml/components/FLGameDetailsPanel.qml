@@ -16,10 +16,10 @@ ColumnLayout {
         entryId: root.entryId
     }
 
-    AchievementSet {
-        id: achievements
-        setId: libEntry.achievementSetId
-    }
+    // AchievementSet {
+    //     id: achievements
+    //     setId: libEntry.achievementSetId
+    // }
 
     GameActivity {
         id: gameActivity

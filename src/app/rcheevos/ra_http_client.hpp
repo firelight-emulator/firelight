@@ -4,11 +4,11 @@
 #include <string>
 
 namespace firelight::achievements {
-    class IRetroAchievementsHttpClient {
+    class IRetroAchievementsRequestHandler {
     public:
-        virtual ~IRetroAchievementsHttpClient() = default;
+        virtual ~IRetroAchievementsRequestHandler() = default;
 
-        virtual rc_api_server_response_t sendRequest(const std::string &url, const std::string &postBody,
+        virtual rc_api_server_response_t handleRequest(const std::string &url, const std::string &postBody,
                                                      const std::string &contentType) =
         0;
     };

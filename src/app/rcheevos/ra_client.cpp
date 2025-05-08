@@ -4,8 +4,6 @@
 #include "../manager_accessor.hpp"
 #include "cpr/cpr.h"
 #include "rcheevos/rc_consoles.h"
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QThreadPool>
 #include <algorithm>
 #include <cstdio>
@@ -14,9 +12,6 @@
 #include "achievements/achievement.hpp"
 #include "regular_http_client.hpp"
 
-#include "../../../libs/rcheevos/include/rc_api_runtime.h"
-#include "achievements/gui/achievement_list_model.hpp"
-#include "achievements/gui/achievement_list_sort_filter_model.hpp"
 #include "ra_constants.h"
 
 namespace firelight::achievements {
@@ -170,7 +165,7 @@ static void httpCallback(const rc_api_request_t *request,
           static_cast<RAClient *>(rc_client_get_userdata(client));
 
       const auto response =
-          raClient->m_httpClient->sendRequest(url, postData, contentType);
+          raClient->m_httpClient->handleRequest(url, postData, contentType);
 
       if (callback) {
         callback(&response, callback_data);
@@ -183,23 +178,15 @@ static void logCallback(const char *message, const rc_client_t *client) {
   spdlog::info("[RetroAchievements] {}", message);
 }
 
-RAClient::RAClient(db::IContentDatabase &contentDb,
-                   RetroAchievementsOfflineClient &offlineClient,
+RAClient::RAClient(RetroAchievementsOfflineClient &offlineClient,
                    RetroAchievementsCache &cache)
-    : m_contentDb(contentDb), m_offlineClient(offlineClient), m_cache(cache) {
+    : m_offlineClient(offlineClient), m_cache(cache) {
   m_client = rc_client_create(readMemoryCallback, httpCallback);
   rc_client_enable_logging(m_client, RC_CLIENT_LOG_LEVEL_VERBOSE, logCallback);
   rc_client_set_event_handler(m_client, eventHandler);
   rc_client_set_userdata(m_client, this);
 
-  // m_cache = std::make_shared<RetroAchievementsCache>("./system/rcheevos.db");
-  // auto offlineClient =
-  // std::make_shared<RetroAchievementsOfflineClient>(m_cache);
   m_httpClient = std::make_unique<RegularHttpClient>(m_offlineClient);
-
-  for (auto a : m_cache.getUnsyncedAchievements("BiscuitCakes")) {
-    spdlog::info("Unsynced achievement: {}", a.ID);
-  }
 
   m_idleTimer.setInterval(2000);
   connect(&m_idleTimer, &QTimer::timeout, this,
@@ -418,63 +405,24 @@ void RAClient::setChallengeIndicatorsEnabled(bool enabled) {
   m_settings->setValue("ChallengeIndicatorsEnabled", enabled);
 }
 
-// void RAClient::getAchievementsOverview(int gameId) {
-//   if (!m_loggedIn) {
-//     return;
-//   }
-//
-//   const auto id = m_contentDb.getRetroAchievementsIdForGame(gameId);
-//   if (!id.has_value()) {
-//     return;
-//   }
-//
-//   QThreadPool::globalInstance()->start([this, id, gameId] {
-//     const auto url =
-//     cpr::Url{"https://retroachievements.org/API/API_GetUserProgress.php"};
-//     const auto headers = cpr::Header{
-//       {"User-Agent", "FirelightEmulator/1.0"},
-//       {"Content-Type", "application/json"}
-//     };
-//
-//     const auto userInfo = rc_client_get_user_info(m_client);
-//
-//     cpr::Parameters params = {
-//       {"i", std::to_string(*id)},
-//       {"z", userInfo->username},
-//       {"y", "5wMVoSCizWMtXXYJHx5ZpJhCttTuQk84"},
-//       {"u", userInfo->username}
-//     };
-//
-//     const auto response = Post(url, headers, params);
-//
-//     if (response.status_code != 200) {
-//       spdlog::error("[RetroAchievements] Failed to get achievements for game
-//       ID: {}",
-//                     gameId);
-//       return;
-//     }
-//
-//
-//     auto json =
-//     QJsonDocument::fromJson(QByteArray::fromStdString(response.text)).object();
-//     if (json.isEmpty()) {
-//       return;
-//     }
-//
-//     if (json.keys().length() != 1) {
-//       return;
-//     }
-//
-//     emit
-//     achievementSummaryAvailable(json.value(json.keys().at(0)).toObject());
-//   });
-// }
-
 void RAClient::setOnlineForTesting(const bool online) const {
   m_httpClient->setOnlineForTesting(online);
 }
+std::optional<User> RAClient::getCurrentUser() const {
+  if (!m_loggedIn) {
+    return {};
+  }
 
-// bool RAClient::gameLoaded() const { return m_gameLoaded; }
+  auto data = rc_client_get_user_info(m_client);
+
+  User user;
+  user.username = data->username;
+  user.token = data->token;
+  user.points = data->score_softcore;
+  user.hardcore_points = data->score;
+
+  return {user};
+}
 
 void RAClient::logInUserWithPassword(const QString &username,
                                      const QString &password) {

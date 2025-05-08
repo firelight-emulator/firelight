@@ -6,11 +6,13 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-void AudioManager::initializeResampler(int64_t in_channel_layout, int in_sample_rate, enum AVSampleFormat in_sample_fmt,
-                                       int64_t out_channel_layout, int out_sample_rate,
+void AudioManager::initializeResampler(int64_t in_channel_layout,
+                                       int in_sample_rate,
+                                       enum AVSampleFormat in_sample_fmt,
+                                       int64_t out_channel_layout,
+                                       int out_sample_rate,
                                        AVSampleFormat out_sample_fmt) {
   m_swrContext = swr_alloc();
-
 
   av_channel_layout_default(m_channelLayout, 2);
   char thing[256];
@@ -28,14 +30,14 @@ void AudioManager::initializeResampler(int64_t in_channel_layout, int in_sample_
   av_opt_set_sample_fmt(m_swrContext, "out_sample_fmt", out_sample_fmt, 0);
 
   if (const int returnCode = swr_init(m_swrContext) < 0) {
-    spdlog::error("Failed to initialize the resampling context: {}", av_err2str(returnCode));
+    spdlog::error("Failed to initialize the resampling context: {}",
+                  av_err2str(returnCode));
     swr_free(&m_swrContext);
   }
 }
 
-AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged) : m_onAudioBufferLevelChanged(
-  std::move(onAudioBufferLevelChanged)) {
-}
+AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
+    : m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {}
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   if (!m_isMuted && m_audioDevice) {
@@ -47,7 +49,8 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
       m_onAudioBufferLevelChanged();
     }
     static constexpr int numSamples = 10; // Number of frames to average over
-    static int buffer_avg[numSamples] = {}; // Circular buffer for past buffer usages
+    static int buffer_avg[numSamples] =
+        {}; // Circular buffer for past buffer usages
     static int buffer_index = 0;
     int sum = 0;
 
@@ -56,23 +59,25 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     buffer_index = (buffer_index + 1) % numSamples;
 
     // Calculate the moving average for buffer usage
-    for (const int i: buffer_avg) {
+    for (const int i : buffer_avg) {
       sum += i;
     }
     const int average_used = sum / numSamples;
 
-    m_deltaFrames -= average_used; // Use the average value for smoother buffer adjustment
+    m_deltaFrames -=
+        average_used; // Use the average value for smoother buffer adjustment
 
-
-    double targetBufferFill = m_audioSink->bufferSize() * 0.5; // Aim for half the buffer size as the target
-    double bufferDeviation = (average_used - targetBufferFill) / targetBufferFill;
+    double targetBufferFill = m_audioSink->bufferSize() *
+                              0.6; // Aim for half the buffer size as the target
+    double bufferDeviation =
+        (average_used - targetBufferFill) / targetBufferFill;
 
     // // Gradual adjustment of m_changeThing using smoothing factor
-    // const double smoothing_factor = 0.1; // Adjust this for more or less smoothing
-    // const double desired_change = (m_deltaFrames < 0) ? -1 : (m_deltaFrames > 0) ? 1 : 0;
+    // const double smoothing_factor = 0.1; // Adjust this for more or less
+    // smoothing const double desired_change = (m_deltaFrames < 0) ? -1 :
+    // (m_deltaFrames > 0) ? 1 : 0;
     //
     // m_changeThing += smoothing_factor * (desired_change - bufferDeviation);
-
 
     int delta = 0;
     if (bufferDeviation > 0.8) {
@@ -106,13 +111,17 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
 
     uint8_t *outputBuffer[2];
-    av_samples_alloc(outputBuffer, NULL, 2, max_output_samples, AV_SAMPLE_FMT_S16, 0); // 2 channels, 16-bit samples
+    av_samples_alloc(outputBuffer, NULL, 2, max_output_samples,
+                     AV_SAMPLE_FMT_S16, 0); // 2 channels, 16-bit samples
 
-    // Resample the input data and apply the dynamic compensation using delta samples
-    const int output_samples = swr_convert(m_swrContext, outputBuffer, max_output_samples, (const uint8_t **) &data,
-                                           numFrames);
+    // Resample the input data and apply the dynamic compensation using delta
+    // samples
+    const int output_samples =
+        swr_convert(m_swrContext, outputBuffer, max_output_samples,
+                    (const uint8_t **)&data, numFrames);
 
-    m_deltaFrames += m_audioDevice->write((char *) outputBuffer[0], output_samples * 4);
+    m_deltaFrames +=
+        m_audioDevice->write((char *)outputBuffer[0], output_samples * 4);
 
     av_freep(&outputBuffer[0]);
   }
@@ -132,17 +141,13 @@ void AudioManager::initialize(const double new_freq) {
 
   m_audioSink = new QAudioSink(format);
 
-  m_audioSink->setBufferSize(16384);
+  m_audioSink->setBufferSize(32768);
   m_audioDevice = m_audioSink->start();
 }
 
-void AudioManager::setMuted(bool muted) {
-  m_isMuted = muted;
-}
+void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
 
-float AudioManager::getBufferLevel() const {
-  return m_currentBufferLevel;
-}
+float AudioManager::getBufferLevel() const { return m_currentBufferLevel; }
 
 AudioManager::~AudioManager() {
   m_audioSink->stop();

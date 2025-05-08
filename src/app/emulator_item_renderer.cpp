@@ -26,6 +26,8 @@ EmulatorItemRenderer::EmulatorItemRenderer(
     : m_graphicsApi(api), m_core(std::move(core)) {
   m_core->setVideoReceiver(this);
   globalRenderer = this;
+  m_frametimeTimer.start();
+  m_oneFrameTimer.start();
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
@@ -136,7 +138,7 @@ void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
 
     if (m_geometryChangedCallback) {
       m_geometryChangedCallback(m_coreBaseWidth, m_coreBaseHeight,
-                                m_coreAspectRatio);
+                                m_coreAspectRatio, info->timing.fps);
     }
   }
 }
@@ -396,21 +398,23 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     return;
   }
 
-  if (emulatorItem->window() != nullptr) {
-    if (emulatorItem->window()->screen() != nullptr) {
-      auto refreshRate = emulatorItem->window()->screen()->refreshRate();
-      auto floor = std::floor(refreshRate);
-      auto ceil = std::ceil(refreshRate);
-
-      if (floor == 120 || ceil == 120) {
-        m_waitFrames = 1;
-      } else if ((floor < 182 && floor > 172) || (ceil < 182 && ceil > 172)) {
-        // TODO: Do something here to indicate that the timing is gonna be a bit
-        // off
-        m_waitFrames = 2;
-      }
-    }
-  }
+  // if (emulatorItem->window() != nullptr) {
+  //   if (emulatorItem->window()->screen() != nullptr) {
+  //     auto refreshRate = emulatorItem->window()->screen()->refreshRate();
+  //     auto floor = std::floor(refreshRate);
+  //     auto ceil = std::ceil(refreshRate);
+  //
+  //     if (floor == 120 || ceil == 120) {
+  //       m_waitFrames = 1;
+  //     } else if ((floor < 182 && floor > 172) || (ceil < 182 && ceil > 172))
+  //     {
+  //       // TODO: Do something here to indicate that the timing is gonna be a
+  //       bit
+  //       // off
+  //       m_waitFrames = 2;
+  //     }
+  //   }
+  // }
 
   if (m_paused && !emulatorItem->paused()) {
     if (m_playSessionTimer.isValid()) {
@@ -606,6 +610,11 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
+  // auto elapsed = m_oneFrameTimer.nsecsElapsed();
+  // m_oneFrameTimer.restart();
+  //
+  // spdlog::info("Time between frames: {}", elapsed);
+
   globalCb = cb;
   // auto nativeHandles = reinterpret_cast<const QRhiGles2NativeHandles
   // *>(rhi()->nativeHandles());
@@ -626,7 +635,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
   if (m_core && m_coreInitialized && m_currentWaitFrames > 0) {
     m_currentWaitFrames--;
-    update();
+    // update();
     return;
   }
 
@@ -686,7 +695,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
       getAchievementManager()->doFrame(m_core.get());
     }
 
-    update();
+    // update();
     cb->endExternal();
 
     // if (m_frameNumber == 1000) {
@@ -749,6 +758,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = nullptr;
     cb->endPass(resourceUpdates);
   }
+
+  // spdlog::info("Time rendering: {}", m_oneFrameTimer.nsecsElapsed());
 }
 
 void EmulatorItemRenderer::save(const bool waitForFinish) const {

@@ -50,8 +50,7 @@ class RAClient : public QObject {
   // Q_PROPERTY(bool gameLoaded READ gameLoaded NOTIFY gameLoadSucceeded)
 
 public:
-  explicit RAClient(db::IContentDatabase &contentDb,
-                    RetroAchievementsOfflineClient &offlineClient,
+  explicit RAClient(RetroAchievementsOfflineClient &offlineClient,
                     RetroAchievementsCache &cache);
 
   ~RAClient() override;
@@ -88,6 +87,10 @@ public:
 
   std::unique_ptr<RegularHttpClient> m_httpClient = nullptr;
 
+  RetroAchievementsCache &cache() { return m_cache; }
+
+  std::optional<User> getCurrentUser() const;
+
   // bool gameLoaded() const;
 
 signals:
@@ -110,8 +113,6 @@ signals:
 
   void gameLoadSucceeded(QString imageUrl, QString title, int numEarned,
                          int numTotal);
-
-  void achievementSummaryAvailable(QJsonObject summary);
 
   void gameLoadFailed();
 
@@ -156,11 +157,6 @@ private:
   bool m_challengeIndicatorsEnabled = true;
   bool m_defaultToHardcore = true;
   bool m_expectToBeLoggedIn = false;
-
-  db::IContentDatabase &m_contentDb;
-
-  QHash<int, std::shared_ptr<gui::AchievementListSortFilterModel>>
-      m_achievementModels;
 
   RetroAchievementsOfflineClient &m_offlineClient;
   RetroAchievementsCache &m_cache;

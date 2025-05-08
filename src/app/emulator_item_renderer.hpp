@@ -28,7 +28,8 @@ public:
   explicit EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api,
                                 std::unique_ptr<libretro::Core> core);
 
-  void onGeometryChanged(const std::function<void(int, int, float)> &callback) {
+  void onGeometryChanged(
+      const std::function<void(int, int, float, double)> &callback) {
     m_geometryChangedCallback = callback;
   }
 
@@ -115,6 +116,9 @@ private:
 
   QList<QString> m_rewindImageUrls{};
 
+  QElapsedTimer m_frametimeTimer{};
+  QElapsedTimer m_oneFrameTimer{};
+
   QElapsedTimer m_playSessionTimer;
   firelight::activity::PlaySession m_playSession{};
 
@@ -130,7 +134,8 @@ private:
   std::unique_ptr<libretro::Core> m_core = nullptr;
   bool m_coreInitialized = false;
 
-  std::function<void(int, int, float)> m_geometryChangedCallback = nullptr;
+  std::function<void(int, int, float, double)> m_geometryChangedCallback =
+      nullptr;
 
   // HW rendering members
   bool m_openGlInitialized = false;

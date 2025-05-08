@@ -1,16 +1,21 @@
 #pragma once
 #include "achievement_list_model.hpp"
 #include <QObject>
+#include <manager_accessor.hpp>
 
 namespace firelight::achievements {
-class AchievementSetItem : public QObject {
+class AchievementSetItem : public QObject, public ManagerAccessor {
   Q_OBJECT
-  Q_PROPERTY(int setId READ getSetId WRITE setSetId NOTIFY setIdChanged)
-  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY contentHashChanged)
+  Q_PROPERTY(int setId READ getSetId NOTIFY setIdChanged)
+  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
+                 contentHashChanged)
   Q_PROPERTY(QString name READ getSetName NOTIFY setNameChanged)
-  Q_PROPERTY(int numAchievements READ getNumAchievements NOTIFY achievementsChanged)
-  Q_PROPERTY(int totalNumPoints READ getTotalNumPoints NOTIFY totalNumPointsChanged)
-  Q_PROPERTY(QAbstractListModel *achievements READ getAchievements NOTIFY achievementsChanged)
+  Q_PROPERTY(
+      int numAchievements READ getNumAchievements NOTIFY achievementsChanged)
+  Q_PROPERTY(
+      int totalNumPoints READ getTotalNumPoints NOTIFY totalNumPointsChanged)
+  Q_PROPERTY(QAbstractListModel *achievements READ getAchievements NOTIFY
+                 achievementsChanged)
 
 public:
   [[nodiscard]] QString getContentHash() const;
@@ -19,7 +24,6 @@ public:
   [[nodiscard]] int getTotalNumPoints() const;
 
   [[nodiscard]] QString getSetName() const;
-  void setSetId(int setId);
   [[nodiscard]] int getSetId() const;
 
   [[nodiscard]] gui::AchievementListModel *getAchievements() const;
@@ -47,4 +51,4 @@ private:
   // user's progress
 };
 
-}
+} // namespace firelight::achievements

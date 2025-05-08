@@ -130,7 +130,7 @@ examples soon sry
 
 ## Contributing
 
-I'm not currently accepting contributions, but in the future I will!
+I'm happy to accept contributions as long as you've spoken to me on Discord and have created a GitHub issue for the change!
 
 [//]: # (Please read [CONTRIBUTING.md]&#40;https://gist.github.com/PurpleBooth/b24679402957c63ec426&#41; to see the process for)
 

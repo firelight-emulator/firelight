@@ -5,6 +5,8 @@
 #include "libretro/core_configuration.hpp"
 #include "manager_accessor.hpp"
 
+#include <qchronotimer.h>
+
 class EmulatorItem : public QQuickRhiItem, public firelight::ManagerAccessor {
 protected:
   void mouseMoveEvent(QMouseEvent *event) override;
@@ -105,10 +107,6 @@ protected:
 public slots:
   void loadGame(int entryId);
   void startGame();
-  void startGame(const QByteArray &gameData, const QByteArray &saveData,
-                 const QString &corePath, const QString &contentHash,
-                 unsigned int saveSlotNumber, unsigned int platformId,
-                 const QString &contentPath);
 
 signals:
   void startedChanged();
@@ -142,6 +140,7 @@ protected:
 
 private:
   QThreadPool m_threadPool;
+  QChronoTimer m_emulationTimer{};
   QTimer m_autosaveTimer;
   QTimer m_rewindPointTimer;
   EmulatorItemRenderer *m_renderer = nullptr;

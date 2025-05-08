@@ -102,6 +102,10 @@ int main(int argc, char *argv[]) {
   // format.setVersion(4, 1);
   // QSurfaceFormat::setDefaultFormat(format);
 
+  QSurfaceFormat format;
+  format.setSwapInterval(0);
+  QSurfaceFormat::setDefaultFormat(format);
+
   QGuiApplication app(argc, argv);
 
   std::signal(SIGINT, [](int signal) { QGuiApplication::quit(); });
@@ -208,8 +212,7 @@ int main(int argc, char *argv[]) {
       defaultAppDataPathString + "/rcheevos.db");
   firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(
       raCache);
-  firelight::achievements::RAClient raClient(contentDatabase, offlineRaClient,
-                                             raCache);
+  firelight::achievements::RAClient raClient(offlineRaClient, raCache);
   firelight::ManagerAccessor::setAchievementManager(&raClient);
 
   // Set up the models for QML ***********************************************

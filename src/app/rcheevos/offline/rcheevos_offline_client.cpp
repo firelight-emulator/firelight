@@ -85,7 +85,7 @@ RetroAchievementsOfflineClient::handleRequest(const std::string &url,
   }
 
   if (params["r"] == LOGIN2) {
-    return handleLogin2Response(params["u"], params["p"], params["t"]);
+    return handleLogin2Request(params["u"], params["p"], params["t"]);
   }
 
   if (params["r"] == PING) {
@@ -310,6 +310,8 @@ rc_api_server_response_t
 RetroAchievementsOfflineClient::handleStartSessionRequest(
     const std::string &username, const int gameId, bool hardcore) const {
 
+  // TODO: If hardcore.... disallow?
+
   // Simulate some latency...
   std::this_thread::sleep_for(std::chrono::milliseconds(300));
   const auto duration = std::chrono::system_clock::now().time_since_epoch();
@@ -346,20 +348,57 @@ rc_api_server_response_t
 RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     const std::string &username, const std::string &token,
     const int achievementId, const bool hardcore) {
-  if (!m_cache.awardAchievement(username, token, achievementId, hardcore)) {
-    spdlog::warn("Failed to award achievement: {}", achievementId);
+
+  // If we don't know the game ID, we can't award the achievement, return
+  auto gameId = m_cache.getGameIdFromAchievementId(achievementId);
+  if (!gameId.has_value()) {
+    spdlog::error("Failed to get game ID from achievement ID: {}",
+                  achievementId);
+    return GENERIC_SUCCESS; // TODO
   }
 
-  auto gameId = 0;
-  const auto cachedGameId = m_cache.getGameIdFromAchievementId(achievementId);
-  if (cachedGameId.has_value()) {
-    gameId = cachedGameId.value();
+  // If there is no status for the achievement, return
+  auto status = m_cache.getUserAchievementStatus(username, achievementId);
+  if (!status.has_value()) {
+    spdlog::error("Failed to get user achievement status: {}", achievementId);
+    return GENERIC_SUCCESS; // TODO
   }
 
+  // If the user already has the achievement, return
+  if ((hardcore && status->achievedHardcore) ||
+      (!hardcore && status->achieved)) {
+    spdlog::info("User {} already has achievement {}", username, achievementId);
+    return GENERIC_SUCCESS; // TODO
+  }
+
+  // Get achievement info
+  auto achievement = m_cache.getAchievement(achievementId);
+  if (!achievement.has_value()) {
+    return GENERIC_SUCCESS; // TODO
+  }
+
+  // Update user points
+  const auto currentPoints = m_cache.getUserScore(username, hardcore);
+  m_cache.setUserScore(username, currentPoints + achievement->points, hardcore);
+
+  if (hardcore) {
+    status->achievedHardcore = true;
+    status->timestampHardcore = QDateTime::currentSecsSinceEpoch();
+  } else {
+    status->achieved = true;
+    status->timestamp = QDateTime::currentSecsSinceEpoch();
+  }
+
+  // Update unlock status
+  m_cache.updateUserAchievementStatus(username, achievementId, status.value());
+
+  // TODO: MARK THE ACHIEVEMENT AS UNSYNCED
+
+  // If in hardcore session, update the current session achievements
   if (m_inHardcoreSession) {
     m_currentSessionAchievements.emplace_back(CachedAchievement{
         .ID = achievementId,
-        .GameID = gameId,
+        .GameID = gameId.value(),
         .When = hardcore ? 0 : QDateTime::currentSecsSinceEpoch(),
         .WhenHardcore = hardcore ? QDateTime::currentSecsSinceEpoch() : 0,
         .Points = 0,
@@ -367,13 +406,14 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
         .EarnedHardcore = hardcore});
   }
 
+  // Build the response
   AwardAchievementResponse resp{
       .Success = true,
       .Score = m_cache.getUserScore(username, true),
       .SoftcoreScore = m_cache.getUserScore(username, false),
       .AchievementID = achievementId,
-      .AchievementsRemaining =
-          m_cache.getNumRemainingAchievements(username, gameId, hardcore)};
+      .AchievementsRemaining = m_cache.getNumRemainingAchievements(
+          username, gameId.value(), hardcore)};
 
   const auto json = nlohmann::json(resp).dump();
 
@@ -384,10 +424,13 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
   return rcResponse;
 }
 
-rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Response(
+rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(
     const std::string &username, const std::string &password,
     const std::string &token) const {
   // TODO: How to handle unknown user.....
+  if (!password.empty()) {
+    return GENERIC_SERVER_ERROR;
+  }
 
   Login2Response response{.AccountType = "1",
                           .Messages = 0,
@@ -454,6 +497,31 @@ void RetroAchievementsOfflineClient::processPatchResponse(
   const auto json = nlohmann::json::parse(response);
   const auto patchResponse = json.get<PatchResponse>();
   m_cache.setPatchResponse(username, gameId, patchResponse);
+
+  // TODO: Only insert ones that have the flags set right
+  // TODO: Remove ones that aren't present in the patch response
+  for (const auto &a : patchResponse.PatchData.Achievements) {
+    auto achievement = Achievement{.id = a.ID,
+                                   .name = a.Title,
+                                   .description = a.Description,
+                                   .points = a.Points,
+                                   .setId = gameId,
+                                   .flags = a.Flags};
+    if (m_cache.createAchievement(achievement) == -1) {
+      spdlog::error("Failed to create achievement: {}", achievement.id);
+      continue;
+    }
+
+    if (!m_cache.getUserAchievementStatus(username, a.ID).has_value()) {
+      auto newStatus = UserAchievementStatus{.achievementId = a.ID,
+                                             .achieved = false,
+                                             .achievedHardcore = false,
+                                             .timestamp = 0,
+                                             .timestampHardcore = 0};
+
+      m_cache.updateUserAchievementStatus(username, a.ID, newStatus);
+    }
+  }
 }
 
 void RetroAchievementsOfflineClient::processStartSessionResponse(
@@ -535,6 +603,7 @@ void RetroAchievementsOfflineClient::processStartSessionResponse(
 void RetroAchievementsOfflineClient::processAwardAchievementResponse(
     const std::string &username, const bool hardcore,
     const std::string &response) const {
+  // TODO: CHECK FOR ATTEMPTING HARDCORE UNLOCK BUT GETTING SOFTCORE RESPONSE
   const auto duration = std::chrono::system_clock::now().time_since_epoch();
   const auto epochSeconds =
       std::chrono::duration_cast<std::chrono::seconds>(duration).count();

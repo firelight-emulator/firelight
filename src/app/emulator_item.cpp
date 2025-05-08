@@ -45,6 +45,20 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     }
   });
   m_rewindPointTimer.start();
+
+  std::chrono::nanoseconds ns(16666667);
+  m_emulationTimer.setTimerType(Qt::PreciseTimer);
+  m_emulationTimer.setInterval(ns);
+  m_emulationTimer.setSingleShot(false);
+  // m_emulationTimer.callOnTimeout([&] {
+  //   if (m_emulationActualTimer.nsecsElapsed() > 16566667) {
+  //     update();
+  //     m_emulationActualTimer.restart();
+  //   }
+  // });
+  connect(&m_emulationTimer, &QChronoTimer::timeout, this, &QQuickItem::update,
+          Qt::DirectConnection);
+  m_emulationTimer.start();
 }
 
 EmulatorItem::~EmulatorItem() {
@@ -229,10 +243,24 @@ void EmulatorItem::startGame() {
     m_renderer = new EmulatorItemRenderer(
         window()->rendererInterface()->graphicsApi(), std::move(m_core));
 
-    m_renderer->onGeometryChanged(
-        [this](unsigned int width, unsigned int height, float aspectRatio) {
-          updateGeometry(width, height, aspectRatio);
-        });
+    m_renderer->onGeometryChanged([this](unsigned int width,
+                                         unsigned int height, float aspectRatio,
+                                         double framerate) {
+      updateGeometry(width, height, aspectRatio);
+
+      auto millis = 1000.0 / framerate; // Ensure floating-point division
+      auto nanos =
+          static_cast<std::int64_t>(millis * 1000000.0); // Cast to integer
+      spdlog::info(
+          "Emulation timing changed; framerate: {}, millis: {}, nanos: {}",
+          framerate, millis, nanos);
+      QMetaObject::invokeMethod(
+          &m_emulationTimer,
+          [this, nanos]() {
+            m_emulationTimer.setInterval(std::chrono::nanoseconds(nanos));
+          },
+          Qt::QueuedConnection);
+    });
 
     // m_core->init();
 
@@ -250,61 +278,6 @@ void EmulatorItem::startGame() {
 
     m_started = true;
     emit gameStarted();
-  });
-}
-
-void EmulatorItem::startGame(const QByteArray &gameData,
-                             const QByteArray &saveData,
-                             const QString &corePath,
-                             const QString &contentHash,
-                             const unsigned int saveSlotNumber,
-                             const unsigned int platformId,
-                             const QString &contentPath) {
-  m_gameData = gameData;
-  m_saveData = saveData;
-  m_corePath = corePath;
-  m_contentHash = contentHash;
-  m_saveSlotNumber = saveSlotNumber;
-  m_platformId = platformId;
-  m_contentPath = contentPath;
-
-  QThreadPool::globalInstance()->start([this] {
-    auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(
-        m_platformId, m_contentHash);
-    auto m_core = std::make_unique<libretro::Core>(
-        m_platformId, m_corePath.toStdString(), configProvider,
-        getCoreSystemDirectory());
-
-    m_audioManager = std::make_shared<AudioManager>(
-        [this] { emit audioBufferLevelChanged(); });
-    m_core->setAudioReceiver(m_audioManager);
-    m_core->setRetropadProvider(getControllerManager());
-    m_core->setPointerInputProvider(getInputManager());
-
-    // Qt owns the renderer, so it will destoy it.
-    m_renderer = new EmulatorItemRenderer(
-        window()->rendererInterface()->graphicsApi(), std::move(m_core));
-
-    m_renderer->onGeometryChanged(
-        [this](unsigned int width, unsigned int height, float aspectRatio) {
-          updateGeometry(width, height, aspectRatio);
-        });
-
-    // m_core->init();
-
-    // Setting these causes the item's geometry to be visible, and the renderer
-    // is initialized. If an item is not visible, the renderer is not
-    // initialized.
-    m_coreBaseWidth = 1;
-    m_coreBaseHeight = 1;
-    m_calculatedAspectRatio = 0.000001;
-    m_coreAspectRatio = 0.000001;
-
-    emit videoWidthChanged();
-    emit videoHeightChanged();
-    emit videoAspectRatioChanged();
-
-    m_started = true;
   });
 }
 

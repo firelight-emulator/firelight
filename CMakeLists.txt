@@ -168,6 +168,10 @@ add_library(firelight_lib
         src/app/saves/gui/suspend_points_item.cpp
         src/app/activity/gui/game_activity_item.cpp
         src/app/activity/gui/play_session_list_model.cpp
+        src/app/achievements/retroachievements_service.hpp
+        src/app/achievements/retroachievements_backend.hpp
+        src/app/achievements/retroachievements_backend.cpp
+        src/app/achievements/user_achievement_status.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -302,6 +306,9 @@ add_executable(fl_test
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
         tests/app/db/sqlite_content_database_test.cpp
+        tests/app/rcheevos/ra_cache_test.cpp
+        tests/app/rcheevos/rcheevos_offline_client_test.cpp
+
         tests/main.cpp
 )
 
