@@ -93,12 +93,12 @@ StackView {
      replaceEnter: Transition {}
         replaceExit: Transition {}
 
-    Component {
-        id: achievementsView
-        AchievementSetView {
-            contentHash: emulatorLoader.item.contentHash
-        }
-    }
+    // Component {
+    //     id: achievementsView
+    //     AchievementSetView {
+    //         contentHash: emulatorLoader.item.contentHash
+    //     }
+    // }
 
     Component {
         id: emuPage
@@ -414,7 +414,7 @@ StackView {
                          id: suspendPointButton
                          labelText: "Suspend Points"
                          Layout.fillWidth: true
-                         KeyNavigation.down: achievementsButton
+                         KeyNavigation.down: closeGameButton
                          // Layout.preferredWidth: parent.width / 2
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                          Layout.preferredHeight: 40
@@ -425,29 +425,29 @@ StackView {
                              quickMenuStack.pushItem(suspendPointMenu, {}, StackView.Immediate)
                          }
                      }
-                     Rectangle {
-                         Layout.fillWidth: true
-                         // Layout.preferredWidth: parent.width / 2
-                         Layout.preferredHeight: 1
-                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                         opacity: 0.3
-                         color: "#dadada"
-                     }
-                     FirelightMenuItem {
-                         id: achievementsButton
-                         labelText: "Achievements"
-                         Layout.fillWidth: true
-                         KeyNavigation.down: closeGameButton
-                         // Layout.preferredWidth: parent.width / 2
-                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                         Layout.preferredHeight: 40
-                         checkable: false
-                         alignRight: true
-                         // enabled: false
-                         onClicked: {
-                             quickMenuStack.pushItem(achievementsView, {}, StackView.Immediate)
-                         }
-                     }
+                     // Rectangle {
+                     //     Layout.fillWidth: true
+                     //     // Layout.preferredWidth: parent.width / 2
+                     //     Layout.preferredHeight: 1
+                     //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     //     opacity: 0.3
+                     //     color: "#dadada"
+                     // }
+                     // FirelightMenuItem {
+                     //     id: achievementsButton
+                     //     labelText: "Achievements"
+                     //     Layout.fillWidth: true
+                     //     KeyNavigation.down: closeGameButton
+                     //     // Layout.preferredWidth: parent.width / 2
+                     //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     //     Layout.preferredHeight: 40
+                     //     checkable: false
+                     //     alignRight: true
+                     //     // enabled: false
+                     //     onClicked: {
+                     //         quickMenuStack.pushItem(achievementsView, {}, StackView.Immediate)
+                     //     }
+                     // }
 
                      Rectangle {
                          Layout.fillWidth: true
