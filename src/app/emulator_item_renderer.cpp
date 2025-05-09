@@ -642,21 +642,24 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
-  m_renderCallTimes.push_back(m_renderCallTimer.nsecsElapsed());
-  m_renderCallTimer.restart();
+  auto elapsedSinceLastFrame = m_emulationTimer.nsecsElapsed();
+  auto renderTime = m_renderCallTimer.nsecsElapsed();
+  if (renderTime < m_emulationTimingTargetNs) {
+    m_renderCallTimes.push_back(renderTime);
 
-  if (m_renderCallTimes.size() > 40) {
-    m_renderCallTimes.pop_front();
+    if (m_renderCallTimes.size() > 40) {
+      m_renderCallTimes.pop_front();
+    }
+
+    auto sum = std::accumulate(m_renderCallTimes.begin(),
+                               m_renderCallTimes.end(), 0LL);
+    m_averageTimeBetweenRenderCalls = sum / m_renderCallTimes.size();
   }
 
-  auto sum =
-      std::accumulate(m_renderCallTimes.begin(), m_renderCallTimes.end(), 0LL);
-  m_averageTimeBetweenRenderCalls = sum / m_renderCallTimes.size();
+  m_renderCallTimer.restart();
 
   // spdlog::info("Average time between render calls: {}",
   //              m_averageTimeBetweenRenderCalls);
-
-  auto elapsedSinceLastFrame = m_emulationTimer.nsecsElapsed();
 
   auto deviationIfRunNow = elapsedSinceLastFrame - m_emulationTimingTargetNs;
   auto deviationIfRunLater = elapsedSinceLastFrame +

@@ -57,6 +57,7 @@ bool EmulatorItem::paused() const { return m_paused; }
 void EmulatorItem::setPaused(const bool paused) {
   if (m_paused != paused) {
     m_paused = paused;
+    m_audioManager->setMuted(m_paused);
     emit pausedChanged();
     update();
   }
