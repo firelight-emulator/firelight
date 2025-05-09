@@ -7,6 +7,12 @@ import Firelight 1.0
 StackView {
     id: root
 
+    property alias running: emulatorLoader.active
+
+    TapHandler {
+
+    }
+
     Rectangle {
         color: "black"
         anchors.fill: parent
@@ -103,6 +109,10 @@ StackView {
     Component {
         id: emuPage
         NewEmulatorPage {
+            id: emuPage
+            onAboutToRunFrame: function() {
+                bufferGraph.addValue(emuPage.audioBufferLevel)
+            }
             onRewindPointsReady: function(points) {
                 root.pushItem(rewindMenu, {
                     model: points,
@@ -586,10 +596,6 @@ StackView {
         onLoaded: function () {
             const emu = (emulatorLoader.item as NewEmulatorPage)
 
-            emu.pausedChanged.connect(function( ){
-                console.log("game started")
-            })
-
             emu.closing.connect(function() {
                 emulatorLoader.active = false
                 root.unloaded()
@@ -624,6 +630,70 @@ StackView {
             emulatorLoader.item.resetGame()
              root.popCurrentItem()
         }
+    }
+
+    Window {
+        id: debugWindow
+        // visible: emulatorLoader.active
+        visible: false
+        width: 400
+        height: 300
+
+        color: "black"
+
+        Pane {
+            id: bufferGraph
+            anchors.fill: parent
+
+            property var bufferValues: []
+
+            function addValue(value) {
+                bufferValues.push(value)
+                if (bufferValues.length > 100) {
+                    bufferValues.shift()
+                }
+                canvas.requestPaint()
+                // bufferGraph.update()
+                // canvas.paint()
+            }
+
+
+            padding: 12
+            background: Rectangle {
+                color: "black"
+            }
+
+            contentItem: Canvas {
+                id: canvas
+                width: parent.width
+                height: parent.height
+                onPaint: {
+                    var ctx = getContext("2d");
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.fillStyle = "white";
+                    for (var i = 0; i < bufferGraph.bufferValues.length; i++) {
+                        var x = (i / bufferGraph.bufferValues.length) * width;
+                        var y = height - (bufferGraph.bufferValues[i] * height);
+                        ctx.fillRect(x, y, width / bufferGraph.bufferValues.length, height);
+                    }
+                    ctx.fillStyle = "green";
+                    ctx.fillRect(0, height / 2, width, 1); // Draw a middle line
+                }
+
+            }
+
+            Text {
+                id: buffer
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: emulator.audioBufferLevel
+                color: "white"
+                font.pixelSize: 14
+                font.family: Constants.regularFontFamily
+            }
+
+        }
+
     }
 
     // FirelightDialog {

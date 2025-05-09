@@ -45,24 +45,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     }
   });
   m_rewindPointTimer.start();
-
-  std::chrono::nanoseconds ns(16666667);
-  m_emulationTimer.setTimerType(Qt::PreciseTimer);
-  m_emulationTimer.setInterval(ns);
-  m_emulationTimer.setSingleShot(false);
-  // m_emulationTimer.callOnTimeout([&] {});
-  connect(
-      &m_emulationTimer, &QChronoTimer::timeout, this,
-      [&] {
-        if (m_renderer) {
-          m_renderer->submitCommand(EmulatorItemRenderer::EmulatorCommand{
-              .type = EmulatorItemRenderer::RunFrame});
-        }
-
-        update();
-      },
-      Qt::DirectConnection);
-  m_emulationTimer.start();
 }
 
 EmulatorItem::~EmulatorItem() {
@@ -251,19 +233,6 @@ void EmulatorItem::startGame() {
                                          unsigned int height, float aspectRatio,
                                          double framerate) {
       updateGeometry(width, height, aspectRatio);
-
-      auto millis = 1000.0 / framerate; // Ensure floating-point division
-      auto nanos =
-          static_cast<std::int64_t>(millis * 1000000.0); // Cast to integer
-      spdlog::info(
-          "Emulation timing changed; framerate: {}, millis: {}, nanos: {}",
-          framerate, millis, nanos);
-      QMetaObject::invokeMethod(
-          &m_emulationTimer,
-          [this, nanos]() {
-            m_emulationTimer.setInterval(std::chrono::nanoseconds(nanos));
-          },
-          Qt::QueuedConnection);
     });
 
     // m_core->init();

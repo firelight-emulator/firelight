@@ -300,10 +300,10 @@ int main(int argc, char *argv[]) {
   // diskCache->setCacheDirectory(directory);
   // manager->setCache(diskCache);
 
-  // auto cache = new CachingNetworkAccessManagerFactory();
+  auto cache = new CachingNetworkAccessManagerFactory();
 
   QQmlApplicationEngine engine;
-  // engine.setNetworkAccessManagerFactory(cache);
+  engine.setNetworkAccessManagerFactory(cache);
   // engine.networkAccessManager()->setCache(diskCache);
 
   // engine.addUrlInterceptor(&imageCacheUrlInterceptor);

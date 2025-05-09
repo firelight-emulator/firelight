@@ -12,8 +12,10 @@ FocusScope {
     id: root
 
     property bool blurEnabled: false
+    property alias audioBufferLevel: emulator.audioBufferLevel
 
     signal closing()
+    signal aboutToRunFrame()
 
     clip: true
     focus: true
@@ -126,6 +128,10 @@ FocusScope {
 
         onVideoAspectRatioChanged: {
             console.log("new aspect ratio: " + videoAspectRatio)
+        }
+
+        onAboutToRunFrame: {
+            root.aboutToRunFrame()
         }
 
         // onGameStarted: {

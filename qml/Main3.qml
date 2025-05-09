@@ -1003,6 +1003,7 @@ ApplicationWindow {
         id: settingsScreen
 
         SettingsScreen {
+            gameRunning: emulator.running
         }
     }
 

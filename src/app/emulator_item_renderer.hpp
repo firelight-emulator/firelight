@@ -17,9 +17,12 @@
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"
 #include "manager_accessor.hpp"
+
+#include <qchronotimer.h>
 // #include "../later/video_decoder.h"
 // #include "video_encoder.h"
 
+class EmulatorItem;
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver,
@@ -102,6 +105,7 @@ protected:
   void render(QRhiCommandBuffer *cb) override;
 
 private:
+  EmulatorItem *m_emulatorItem;
   // firelight::av::VideoEncoder *m_encoder = nullptr;
   // firelight::av::VideoDecoder *m_decoder = nullptr;
   const QSGRendererInterface::GraphicsApi m_graphicsApi;
@@ -122,6 +126,20 @@ private:
 
   bool m_quitting = false;
   bool m_shouldRunFrame = true;
+
+  QElapsedTimer m_emulationTimer{};
+  long m_emulationTimingTargetNs = 1000000;
+  long m_totalTargetDeviation = 0;
+  bool m_runNextFrame = false;
+
+  QElapsedTimer m_renderCallTimer{};
+  QList<int64_t> m_renderCallTimes;
+  int64_t m_averageTimeBetweenRenderCalls = 0;
+
+  bool m_measureTime = false;
+  QThread m_emulationTimerThread{};
+  QList<int64_t> m_emulationWorkTimeBuffer{};
+  int64_t m_averageEmulationTime = 0;
 
   int m_frameNumber = 0;
 

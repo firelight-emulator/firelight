@@ -109,6 +109,8 @@ public slots:
   void startGame();
 
 signals:
+  void aboutToRunFrame();
+
   void startedChanged();
 
   void gameStarted();
@@ -140,7 +142,6 @@ protected:
 
 private:
   QThreadPool m_threadPool;
-  QChronoTimer m_emulationTimer{};
   QTimer m_autosaveTimer;
   QTimer m_rewindPointTimer;
   EmulatorItemRenderer *m_renderer = nullptr;

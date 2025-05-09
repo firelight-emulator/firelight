@@ -26,6 +26,27 @@ EmulatorItemRenderer::EmulatorItemRenderer(
     : m_graphicsApi(api), m_core(std::move(core)) {
   m_core->setVideoReceiver(this);
   globalRenderer = this;
+  m_emulationTimer.start();
+  m_renderCallTimer.start();
+  // m_actualTimer.setInterval(std::chrono::nanoseconds(100000));
+  // m_actualTimer.setSingleShot(false);
+  // m_actualTimer.setTimerType(Qt::PreciseTimer);
+  //
+  // QObject::connect(&m_actualTimer, &QChronoTimer::timeout, [&] { update();
+  // }); m_actualTimer.callOnTimeout([&] {
+  //   auto elapsed = m_emulationTimer.nsecsElapsed();
+  //   if (elapsed > m_emulationTimingTargetNs) {
+  //     m_emulationTimer.restart();
+  //     QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+  //     update();
+  //   }
+  //   // spdlog::info("Actual timer elapsed: {}",
+  //   // m_emulationTimer.nsecsElapsed());
+  // });
+
+  // m_emulationTimerThread.start();
+  // m_actualTimer.moveToThread(&m_emulationTimerThread);
+  // QMetaObject::invokeMethod(&m_actualTimer, "start", Qt::QueuedConnection);
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
@@ -35,6 +56,8 @@ void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
 EmulatorItemRenderer::~EmulatorItemRenderer() {
   spdlog::info("Destroying EmulatorItemRenderer");
   m_quitting = true;
+
+  m_emulationTimer.invalidate();
 
   if (!m_paused) {
     if (m_playSessionTimer.isValid()) {
@@ -133,6 +156,9 @@ void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
     m_coreAspectRatio = info->geometry.aspect_ratio;
     m_calculatedAspectRatio = static_cast<float>(m_coreBaseWidth) /
                               static_cast<float>(m_coreBaseHeight);
+
+    auto millis = 1000.0 / info->timing.fps;
+    m_emulationTimingTargetNs = static_cast<std::int64_t>(millis * 1000000.0);
 
     if (m_geometryChangedCallback) {
       m_geometryChangedCallback(m_coreBaseWidth, m_coreBaseHeight,
@@ -396,6 +422,11 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     return;
   }
 
+  m_emulatorItem = emulatorItem;
+  // spdlog::error(
+  //     "Synchronizing: {}",
+  //     std::chrono::high_resolution_clock::now().time_since_epoch().count());
+
   // if (emulatorItem->window() != nullptr) {
   //   if (emulatorItem->window()->screen() != nullptr) {
   //     auto refreshRate = emulatorItem->window()->screen()->refreshRate();
@@ -611,6 +642,120 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
+  m_renderCallTimes.push_back(m_renderCallTimer.nsecsElapsed());
+  m_renderCallTimer.restart();
+
+  if (m_renderCallTimes.size() > 40) {
+    m_renderCallTimes.pop_front();
+  }
+
+  auto sum =
+      std::accumulate(m_renderCallTimes.begin(), m_renderCallTimes.end(), 0LL);
+  m_averageTimeBetweenRenderCalls = sum / m_renderCallTimes.size();
+
+  // spdlog::info("Average time between render calls: {}",
+  //              m_averageTimeBetweenRenderCalls);
+
+  auto elapsedSinceLastFrame = m_emulationTimer.nsecsElapsed();
+
+  auto deviationIfRunNow = elapsedSinceLastFrame - m_emulationTimingTargetNs;
+  auto deviationIfRunLater = elapsedSinceLastFrame +
+                             m_averageTimeBetweenRenderCalls -
+                             m_emulationTimingTargetNs;
+
+  if (deviationIfRunLater < 0 && deviationIfRunNow < 0) {
+    update();
+    return;
+  }
+
+  // spdlog::info("If we run now: {}, If we run later: {}", deviationIfRunNow,
+  //              deviationIfRunLater);
+
+  // if (m_measureTime) {
+  //   m_measureTime = false;
+  //   m_emulationWorkTimeBuffer.push_back(elapsedSinceLastFrame);
+  //   if (m_emulationWorkTimeBuffer.size() > 40) {
+  //     m_emulationWorkTimeBuffer.pop_front();
+  //   }
+  //
+  //   // get average
+  //   auto sum = std::accumulate(m_emulationWorkTimeBuffer.begin(),
+  //                              m_emulationWorkTimeBuffer.end(), 0LL);
+  //   m_averageEmulationTime = sum / m_emulationWorkTimeBuffer.size();
+  // }
+  //
+  // // spdlog::info("Average time: {}", m_averageEmulationTime);
+  //
+  // if (!m_runNextFrame) {
+  //   auto ifRunBefore = elapsedSinceLastFrame;
+  //   auto ifRunAfter = elapsedSinceLastFrame + m_averageEmulationTime;
+  //
+  //   if (ifRunBefore < m_emulationTimingTargetNs &&
+  //       ifRunAfter < m_emulationTimingTargetNs) {
+  //     update();
+  //     return;
+  //   }
+  //
+  //   // spdlog::info("diff if run before: {}",
+  //   //              ifRunBefore - m_emulationTimingTargetNs);
+  //   // spdlog::info("diff if run after: {}", ifRunAfter -
+  //   // m_emulationTimingTargetNs);
+  //
+  //   auto diffIfRunBefore = std::abs(ifRunBefore - m_emulationTimingTargetNs);
+  //   auto diffIfRunAfter = std::abs(ifRunAfter - m_emulationTimingTargetNs);
+  //
+  //   // spdlog::info("Before: {}, After: {}", diffIfRunBefore,
+  //   diffIfRunAfter);
+  //
+  //   if (diffIfRunBefore > diffIfRunAfter) {
+  //     update();
+  //     return;
+  //   }
+  //
+  //   // spdlog::info("Total target deviation: {}", m_totalTargetDeviation);
+  //
+  //   if (m_totalTargetDeviation < 0) {
+  //     m_runNextFrame = true;
+  //     update();
+  //     return;
+  //   }
+  //   //
+  //   // if (m_totalTargetDeviation) {
+  //   //   update();
+  //   //   return;
+  //   // }
+  // }
+  //
+  // m_totalTargetDeviation += elapsedSinceLastFrame -
+  // m_emulationTimingTargetNs; m_runNextFrame = false;
+
+  // spdlog::info("total target deviation: {}", m_totalTargetDeviation);
+
+  // if (abs(m_emulationTimingTargetNs - ifRunBefore))
+
+  // if (elapsed < m_emulationTimingTargetNs - 300000) {
+  //   // spdlog::info("Diff: {}", m_emulationTimingTargetNs - elapsed);
+  //   // if (m_emulationTimingTargetNs - elapsed >
+  //   //     std::chrono::milliseconds(3).count()) {
+  //   //   // sleep for 2ms
+  //   //   std::this_thread::sleep_for(std::chrono::microseconds(100));
+  //   // }
+  //   update();
+  //   return;
+  // }
+
+  // spdlog::info("Running frame after {}ms", elapsed / 1000000.0f);
+
+  if (m_emulatorItem) {
+    emit m_emulatorItem->aboutToRunFrame();
+  }
+
+  m_emulationTimer.restart();
+
+  // spdlog::error(
+  //     "Starting frame: {}",
+  //     std::chrono::high_resolution_clock::now().time_since_epoch().count());
+
   // auto elapsed = m_oneFrameTimer.nsecsElapsed();
   // m_oneFrameTimer.restart();
   //
@@ -676,8 +821,10 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     if (!m_paused) {
       m_playSessionTimer.start();
     }
+
+    update();
   } else if (!m_paused && m_core && m_coreInitialized && m_shouldRunFrame) {
-    m_shouldRunFrame = false;
+    // m_shouldRunFrame = false;
     // m_frameNumber++;
 
     if (m_shouldSave) {
@@ -697,7 +844,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
       getAchievementManager()->doFrame(m_core.get());
     }
 
-    // update();
+    update();
     cb->endExternal();
 
     // if (m_frameNumber == 1000) {
@@ -761,7 +908,22 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     cb->endPass(resourceUpdates);
   }
 
-  // spdlog::info("Time rendering: {}", m_oneFrameTimer.nsecsElapsed());
+  m_measureTime = true;
+
+  // spdlog::error(
+  //     "Finishing frame: {}",
+  //     std::chrono::high_resolution_clock::now().time_since_epoch().count());
+
+  // spdlog::info("Time to run frame: {}", m_emulationTimer.nsecsElapsed());
+  // m_emulationWorkTimeBuffer.push_back(m_emulationTimer.nsecsElapsed());
+  // if (m_emulationWorkTimeBuffer.size() > 40) {
+  //   m_emulationWorkTimeBuffer.pop_front();
+  // }
+  //
+  // // get average
+  // auto sum = std::accumulate(m_emulationWorkTimeBuffer.begin(),
+  //                            m_emulationWorkTimeBuffer.end(), 0);
+  // m_averageEmulationTime = sum / m_emulationWorkTimeBuffer.size();
 }
 
 void EmulatorItemRenderer::save(const bool waitForFinish) const {

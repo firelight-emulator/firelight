@@ -66,6 +66,8 @@ Button {
             id: theControl
             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
+            enabled: root.enabled
+
             checked: root.checked
 
             onCheckedChanged: {

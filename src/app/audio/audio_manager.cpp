@@ -37,17 +37,29 @@ void AudioManager::initializeResampler(int64_t in_channel_layout,
 }
 
 AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
-    : m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {}
+    : m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
+  m_elapsedTimer.start();
+}
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
+
+  m_numSamples += numFrames;
+  if (m_elapsedTimer.elapsed() > 1000) {
+    m_elapsedTimer.restart();
+    // spdlog::info("Last second average samples: {}", m_numSamples);
+    m_numSamples = 0;
+  }
+
+  // spdlog::info("Writing {} bytes", numFrames * 4);
+  // m_audioDevice->write((char *)data, numFrames * 4);
   if (!m_isMuted && m_audioDevice) {
-    m_frameNumber++;
 
     const auto used = m_audioSink->bufferSize() - m_audioSink->bytesFree();
     m_currentBufferLevel = static_cast<float>(used) / m_audioSink->bufferSize();
     if (m_onAudioBufferLevelChanged) {
       m_onAudioBufferLevelChanged();
     }
+
     static constexpr int numSamples = 10; // Number of frames to average over
     static int buffer_avg[numSamples] =
         {}; // Circular buffer for past buffer usages
@@ -64,40 +76,26 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
     const int average_used = sum / numSamples;
 
-    m_deltaFrames -=
-        average_used; // Use the average value for smoother buffer adjustment
-
-    double targetBufferFill = m_audioSink->bufferSize() *
-                              0.6; // Aim for half the buffer size as the target
+    double targetBufferFill =
+        m_audioSink->bufferSize() * 0.5; // Aim for half the buffer size as the
     double bufferDeviation =
         (average_used - targetBufferFill) / targetBufferFill;
 
-    // // Gradual adjustment of m_changeThing using smoothing factor
-    // const double smoothing_factor = 0.1; // Adjust this for more or less
-    // smoothing const double desired_change = (m_deltaFrames < 0) ? -1 :
-    // (m_deltaFrames > 0) ? 1 : 0;
-    //
-    // m_changeThing += smoothing_factor * (desired_change - bufferDeviation);
-
     int delta = 0;
-    if (bufferDeviation > 0.8) {
-      delta = -4;
-    } else if (bufferDeviation > 0.4) {
-      delta = -3;
-    } else if (bufferDeviation > 0.2) {
-      delta = -2;
+    if (bufferDeviation > 0.6) {
+      delta = -7;
+    } else if (bufferDeviation > 0.3) {
+      delta = -6;
     } else if (bufferDeviation > 0.1) {
-      delta = -1;
+      delta = -5;
     } else if (bufferDeviation > -0.1) {
       delta = 0;
-    } else if (bufferDeviation > -0.2) {
-      delta = 1;
-    } else if (bufferDeviation > -0.4) {
-      delta = 2;
-    } else if (bufferDeviation > -0.8) {
+    } else if (bufferDeviation > -0.3) {
       delta = 3;
-    } else {
+    } else if (bufferDeviation > -0.6) {
       delta = 4;
+    } else {
+      delta = 5;
     }
 
     if (numFrames > 300 || delta > 0) {
@@ -120,8 +118,10 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
         swr_convert(m_swrContext, outputBuffer, max_output_samples,
                     (const uint8_t **)&data, numFrames);
 
-    m_deltaFrames +=
+    auto written =
         m_audioDevice->write((char *)outputBuffer[0], output_samples * 4);
+    // spdlog::info("Wanting to write {} bytes, wrote {} bytes",
+    //              output_samples * 4, written);
 
     av_freep(&outputBuffer[0]);
   }
@@ -141,7 +141,11 @@ void AudioManager::initialize(const double new_freq) {
 
   m_audioSink = new QAudioSink(format);
 
-  m_audioSink->setBufferSize(32768);
+  auto mult = 2;
+  if (m_sampleRate > 44000) {
+    mult = 4;
+  }
+  m_audioSink->setBufferSize(8192 * mult);
   m_audioDevice = m_audioSink->start();
 }
 
