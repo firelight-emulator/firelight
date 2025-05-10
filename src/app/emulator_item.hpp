@@ -145,6 +145,11 @@ private:
   QTimer m_autosaveTimer;
   QTimer m_rewindPointTimer;
   EmulatorItemRenderer *m_renderer = nullptr;
+
+  QThread m_emulationThread;
+  QChronoTimer m_emulationTimer{};
+  int64_t m_emulationTimingTargetNs = 16666667;
+
   bool m_mousePressed = false;
 
   void updateGeometry(unsigned int width, unsigned int height,

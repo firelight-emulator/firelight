@@ -45,11 +45,160 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     }
   });
   m_rewindPointTimer.start();
+
+  auto target = 16666667;
+  const int64_t ACTUAL_TARGET_INTERVAL_NS = 16666667LL; // Your new target
+
+  const int64_t BUSY_WAIT_MARGIN_NS = 1100000LL; // 1.5ms
+
+  m_emulationThread.setPriority(QThread::TimeCriticalPriority);
+  m_emulationThread.setServiceLevel(QThread::QualityOfService::High);
+  m_emulationTimer.setInterval(std::chrono::nanoseconds(BUSY_WAIT_MARGIN_NS));
+  // m_emulatorTimer.setSingleShot(false);
+  m_emulationTimer.setTimerType(Qt::PreciseTimer);
+
+  connect(&m_emulationTimer, &QChronoTimer::timeout, [this] {
+    auto actualTargetNs = m_emulationTimingTargetNs;
+    // Static variables for timing and rolling average
+    static int64_t previousFrameActualEndTimeNs =
+        0; // When the last frame *actually* ended (after spin)
+    static int64_t timingCorrectionNs =
+        0; // Adaptive correction for the spin target
+
+    const std::size_t windowSize = 200;
+    static std::deque<int64_t> recentSignedDifferencesNs_deque;
+    static std::deque<int64_t> recentAbsoluteDifferencesNs_deque;
+    static int64_t rollingSumOfSignedDifferencesNs = 0;
+    static int64_t rollingSumOfAbsoluteDifferencesNs = 0;
+
+    // auto osTimerWakeupTimeNs =
+    // std::chrono::high_resolution_clock::now().time_since_epoch().count();
+
+    if (previousFrameActualEndTimeNs == 0) {
+      // First call, or after a reset. Perform work and set the baseline.
+      // CALL YOUR FRAME UPDATE/WORK FUNCTION HERE (e.g.,
+      // your_main_update_function();)
+
+      QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+      previousFrameActualEndTimeNs =
+          std::chrono::high_resolution_clock::now().time_since_epoch().count();
+      spdlog::info(
+          "Timing initialized. First frame processed. End time recorded.");
+      return;
+    }
+
+    // Determine the target end time for *this* frame's spin.
+    // Add the adaptive timingCorrectionNs here.
+    int64_t intendedTargetFrameEndTimeNs =
+        previousFrameActualEndTimeNs + actualTargetNs + timingCorrectionNs;
+    int64_t spinStartTimeNs =
+        std::chrono::high_resolution_clock::now().time_since_epoch().count();
+
+    // --- Busy Wait (Spin Loop) ---
+    if (spinStartTimeNs < intendedTargetFrameEndTimeNs) {
+      while (
+          std::chrono::high_resolution_clock::now().time_since_epoch().count() <
+          intendedTargetFrameEndTimeNs) {
+        // This is a hard spin, consumes 100% CPU on one core.
+        // Optional: If there's significant time left (e.g., > 0.2-0.5 ms),
+        // you could std::this_thread::yield(); or a platform-specific short
+        // pause to reduce CPU load, at the cost of slightly less precision.
+        // Example:
+        // if (intendedTargetFrameEndTimeNs -
+        //         std::chrono::high_resolution_clock::now()
+        //             .time_since_epoch()
+        //             .count() >
+        //     200000) { // > 0.2ms
+        //   std::this_thread::yield();
+        // }
+      }
+    }
+    // --- End of Busy Wait ---
+
+    auto currentFrameActualEndTimeNs =
+        std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    int64_t achievedFrameDurationNs =
+        currentFrameActualEndTimeNs - previousFrameActualEndTimeNs;
+    previousFrameActualEndTimeNs =
+        currentFrameActualEndTimeNs; // Update for the next frame's
+                                     // calculation
+
+    if (achievedFrameDurationNs <= 0 ||
+        achievedFrameDurationNs > (actualTargetNs * 5)) {
+      spdlog::warn(
+          "Anomalous achieved frame duration: {} ns. Skipping this sample.",
+          achievedFrameDurationNs);
+      // TODO: Consider resetting timingCorrectionNs if this happens often, or
+      // if the pause was very long timingCorrectionNs = 0;
+      return;
+    }
+
+    int64_t currentSignedDifferenceNs =
+        actualTargetNs - achievedFrameDurationNs; // Target - Actual
+    int64_t currentAbsoluteDifferenceNs = std::abs(currentSignedDifferenceNs);
+
+    rollingSumOfSignedDifferencesNs += currentSignedDifferenceNs;
+    recentSignedDifferencesNs_deque.push_back(currentSignedDifferenceNs);
+
+    rollingSumOfAbsoluteDifferencesNs += currentAbsoluteDifferenceNs;
+    recentAbsoluteDifferencesNs_deque.push_back(currentAbsoluteDifferenceNs);
+
+    if (recentSignedDifferencesNs_deque.size() > windowSize) {
+      rollingSumOfSignedDifferencesNs -=
+          recentSignedDifferencesNs_deque.front();
+      recentSignedDifferencesNs_deque.pop_front();
+      rollingSumOfAbsoluteDifferencesNs -=
+          recentAbsoluteDifferencesNs_deque.front();
+      recentAbsoluteDifferencesNs_deque.pop_front();
+    }
+
+    std::size_t currentSamplesInWindow = recentSignedDifferencesNs_deque.size();
+
+    if (currentSamplesInWindow > 0) {
+      double averageSignedDifferenceNs =
+          static_cast<double>(rollingSumOfSignedDifferencesNs) /
+          currentSamplesInWindow;
+      double averageAbsoluteDifferenceNs =
+          static_cast<double>(rollingSumOfAbsoluteDifferencesNs) /
+          currentSamplesInWindow;
+      double averageSignedDifferenceFraction =
+          averageSignedDifferenceNs / static_cast<double>(actualTargetNs);
+
+      // spdlog::info("Rolling Perf (last {} samples, Target: {:.1f}ms): "
+      //              "SignedDev: {:.0f}ns ({:.2f}%), AbsDev: {:.0f}ns",
+      //              currentSamplesInWindow, actualTargetNs / 1.0e6,
+      //              averageSignedDifferenceNs,
+      //              averageSignedDifferenceFraction * 100.0,
+      //              averageAbsoluteDifferenceNs);
+
+      if (currentSamplesInWindow >
+          windowSize / 2) { // Wait for some stability in average
+        timingCorrectionNs = static_cast<int64_t>(
+            averageSignedDifferenceNs / 10.0); // Apply 10% of the average error
+      }
+      // Clamp the correction to avoid excessive adjustments
+      const int64_t maxCorrectionNs =
+          BUSY_WAIT_MARGIN_NS /
+          2; // Don't correct by more than half the spin margin
+      timingCorrectionNs = std::max(
+          -maxCorrectionNs, std::min(timingCorrectionNs, maxCorrectionNs));
+    }
+
+    QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+  });
+
+  m_emulationThread.start();
+  m_emulationTimer.moveToThread(&m_emulationThread);
+  QMetaObject::invokeMethod(&m_emulationTimer, "start", Qt::QueuedConnection);
 }
 
 EmulatorItem::~EmulatorItem() {
   spdlog::info("Destroying EmulatorItem");
   m_autosaveTimer.stop();
+  m_emulationThread.quit();
+  // QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::QueuedConnection);
+  m_emulationThread.exit();
+  m_emulationThread.wait();
 }
 
 bool EmulatorItem::paused() const { return m_paused; }
@@ -234,6 +383,10 @@ void EmulatorItem::startGame() {
                                          unsigned int height, float aspectRatio,
                                          double framerate) {
       updateGeometry(width, height, aspectRatio);
+      m_emulationTimingTargetNs = static_cast<int64_t>(1e9 / framerate);
+      // QMetaObject::invokeMethod(
+      //     &m_emulationTimer, "setInterval",
+      //     Q_ARG(std::chrono::nanoseconds, std::chrono::nanoseconds(nanos)));
     });
 
     // m_core->init();

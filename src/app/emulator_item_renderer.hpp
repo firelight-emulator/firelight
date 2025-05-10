@@ -132,6 +132,9 @@ private:
   long m_totalTargetDeviation = 0;
   bool m_runNextFrame = false;
 
+  QThread m_emulatorThread;
+  QChronoTimer m_emulatorTimer{};
+
   QElapsedTimer m_renderCallTimer{};
   QList<int64_t> m_renderCallTimes;
   int64_t m_averageTimeBetweenRenderCalls = 0;

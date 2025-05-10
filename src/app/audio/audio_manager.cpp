@@ -42,91 +42,188 @@ AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
 }
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
-
   m_numSamples += numFrames;
   if (m_elapsedTimer.elapsed() > 1000) {
     m_elapsedTimer.restart();
-    // spdlog::info("Last second average samples: {}", m_numSamples);
     m_numSamples = 0;
   }
 
-  // spdlog::info("Writing {} bytes", numFrames * 4);
-  // m_audioDevice->write((char *)data, numFrames * 4);
-  if (!m_isMuted && m_audioDevice) {
+  if (!m_isMuted && m_audioDevice && m_audioSink) { // Added m_audioSink check
+    const auto bufferTotalCapacity = m_audioSink->bufferSize();
+    if (bufferTotalCapacity == 0)
+      return numFrames; // Avoid division by zero
 
-    const auto used = m_audioSink->bufferSize() - m_audioSink->bytesFree();
-    m_currentBufferLevel = static_cast<float>(used) / m_audioSink->bufferSize();
+    const auto usedBytes = bufferTotalCapacity - m_audioSink->bytesFree();
+    m_currentBufferLevel = static_cast<float>(usedBytes) / bufferTotalCapacity;
     if (m_onAudioBufferLevelChanged) {
       m_onAudioBufferLevelChanged();
     }
 
-    static constexpr int numSamples = 10; // Number of frames to average over
-    static int buffer_avg[numSamples] =
-        {}; // Circular buffer for past buffer usages
-    static int buffer_index = 0;
-    int sum = 0;
+    // --- Moving Average Calculation for Buffer Usage ---
+    static constexpr int AVG_WINDOW_SIZE =
+        10; // Number of observations to average over
+    static int avg_buffer_usage_bytes[AVG_WINDOW_SIZE] =
+        {}; // Circular buffer for past buffer usages (bytes)
+    static int avg_buffer_idx = 0;
+    static int avg_buffer_populated_count =
+        0; // To correctly average when buffer isn't full yet
+    static double previous_avg_fill_ratio =
+        -1.0; // Previous cycle's average fill ratio, -1.0 indicates
+              // uninitialized
 
-    // Insert the current used value into the circular buffer
-    buffer_avg[buffer_index] = used;
-    buffer_index = (buffer_index + 1) % numSamples;
+    // Insert the current usedBytes into the circular buffer
+    avg_buffer_usage_bytes[avg_buffer_idx] = usedBytes;
+    avg_buffer_idx = (avg_buffer_idx + 1) % AVG_WINDOW_SIZE;
 
-    // Calculate the moving average for buffer usage
-    for (const int i : buffer_avg) {
-      sum += i;
+    if (avg_buffer_populated_count < AVG_WINDOW_SIZE) {
+      avg_buffer_populated_count++;
     }
-    const int average_used = sum / numSamples;
 
-    double targetBufferFill =
-        m_audioSink->bufferSize() * 0.5; // Aim for half the buffer size as the
+    long long sum_used_bytes =
+        0; // Use long long for sum to avoid overflow if usedBytes can be large
+    for (int i = 0; i < avg_buffer_populated_count; ++i) {
+      sum_used_bytes += avg_buffer_usage_bytes[i];
+    }
+    const double current_average_used_bytes =
+        static_cast<double>(sum_used_bytes) / avg_buffer_populated_count;
+    const double current_avg_fill_ratio =
+        current_average_used_bytes / bufferTotalCapacity;
+
+    // --- Trend Analysis & Resampling Decision ---
+    const double TARGET_FILL_RATIO = 0.5;
+    const double TARGET_FILL_BYTES = bufferTotalCapacity * TARGET_FILL_RATIO;
+
+    // Deviation of current average from target
     double bufferDeviation =
-        (average_used - targetBufferFill) / targetBufferFill;
+        (current_average_used_bytes - TARGET_FILL_BYTES) / TARGET_FILL_BYTES;
 
-    int delta = 0;
-    if (bufferDeviation > 0.6) {
-      delta = -7;
-    } else if (bufferDeviation > 0.3) {
-      delta = -6;
-    } else if (bufferDeviation > 0.1) {
-      delta = -5;
-    } else if (bufferDeviation > -0.1) {
-      delta = 0;
-    } else if (bufferDeviation > -0.3) {
-      delta = 3;
-    } else if (bufferDeviation > -0.6) {
-      delta = 4;
-    } else {
-      delta = 5;
+    int delta = 0; // Default to no compensation
+    bool allowResamplingAdjustment = true;
+
+    // Only perform trend analysis if we have a stable previous average
+    if (previous_avg_fill_ratio >= 0.0 &&
+        avg_buffer_populated_count == AVG_WINDOW_SIZE) {
+      const double current_error_ratio =
+          current_avg_fill_ratio - TARGET_FILL_RATIO;
+      const double previous_error_ratio =
+          previous_avg_fill_ratio - TARGET_FILL_RATIO;
+
+      const double WITHIN_TARGET_TOLERANCE_RATIO = 0.05; // e.g., 45%-55% fill
+      const double EXTREME_DEVIATION_THRESHOLD_RATIO =
+          0.25; // e.g., <25% or >75% fill
+
+      bool isTrendingWell =
+          (std::abs(current_error_ratio) < std::abs(previous_error_ratio));
+      bool isNearTarget =
+          (std::abs(current_error_ratio) <= WITHIN_TARGET_TOLERANCE_RATIO);
+      bool isExtremelyDeviated =
+          (std::abs(current_error_ratio) > EXTREME_DEVIATION_THRESHOLD_RATIO);
+
+      if (isNearTarget) {
+        allowResamplingAdjustment =
+            false; // Already close to target, no need to intervene
+        // spdlog::debug("Buffer near target ({:.2f}%), no resampling.",
+        // current_avg_fill_ratio * 100);
+      } else if (isTrendingWell && !isExtremelyDeviated) {
+        allowResamplingAdjustment =
+            false; // Trending correctly and not in an extreme state
+        // spdlog::debug("Buffer trending well ({:.2f}%), error reducing, no
+        // resampling.", current_avg_fill_ratio * 100);
+      }
+      // Else, allowResamplingAdjustment remains true (either not trending well,
+      // or trending well but still extremely deviated)
     }
 
-    if (numFrames > 300 || delta > 0) {
+    // Update previous average fill ratio for the next call,
+    // only after the circular buffer is fully populated for consistent average
+    // comparison.
+    if (avg_buffer_populated_count == AVG_WINDOW_SIZE) {
+      previous_avg_fill_ratio = current_avg_fill_ratio;
+    }
+
+    if (allowResamplingAdjustment) {
+      // Calculate delta based on current buffer deviation
+      // This is your existing logic for determining delta
+      if (bufferDeviation > 0.6) { // >80% full (target is 50%)
+        delta = -5;
+      } else if (bufferDeviation > 0.3) { // >65%
+        delta = -4;
+      } else if (bufferDeviation > 0.1) { // >55%
+        delta = -3;
+      } else if (bufferDeviation > -0.1) { // 45%-55% (This will be overridden
+                                           // by isNearTarget usually)
+        delta = 0;
+      } else if (bufferDeviation > -0.3) { // 35%-45%
+        // Original logic had delta = 0 here. If buffer is consistently too low
+        // and not trending up, we might want to add samples.
+        // Consider if this should be delta = 1 or if deadband is intentional.
+        // For now, keeping original logic unless overridden by trend:
+        delta = 0; // Maintained original logic for this band if adjustment is
+                   // allowed but if it's stuck here and not trending well, this
+                   // might need to be positive. However, the
+                   // EXTREME_DEVIATION_THRESHOLD_RATIO for allowing adjustment
+                   // helps.
+      } else if (bufferDeviation > -0.6) { // 20%-35%
+        delta = 1;
+      } else { // <20%
+        delta = 2;
+      }
+      // spdlog::debug("Resampling allowed. BufferDev: {:.2f}, Delta: {}",
+      // bufferDeviation, delta);
+    } else {
+      delta = 0; // Trend is good or near target, so force no compensation
+    }
+
+    // Apply resampling if delta is non-zero OR if numFrames is large (original
+    // condition)
+    if (numFrames > 300 || delta != 0) {
       swr_set_compensation(m_swrContext, delta, numFrames);
     }
 
     const int max_output_samples = swr_get_out_samples(m_swrContext, numFrames);
     if (max_output_samples < 0) {
-      spdlog::error("Error calculating maximum output samples");
+      spdlog::error("Error calculating maximum output samples: {}",
+                    av_err2str(max_output_samples));
+      // av_freep(&outputBuffer[0]); // This would be an error, outputBuffer not
+      // allocated yet
+      return 0; // Or handle error appropriately
+    }
+    if (max_output_samples == 0 && numFrames > 0) {
+      // This can happen if delta causes all samples to be dropped.
+      // Or if numFrames is very small and context cannot produce output.
+      // No data to write, but not necessarily an error if intended.
+      // spdlog::debug("Max output samples is 0 for numFrames: {}", numFrames);
+      return numFrames; // Input consumed, no output produced.
+    }
+
+    uint8_t *outputBuffer[2] = {nullptr, nullptr}; // Initialize to nullptr
+    // Assuming stereo (2 channels), AV_SAMPLE_FMT_S16
+    if (av_samples_alloc(outputBuffer, NULL, 2, max_output_samples,
+                         AV_SAMPLE_FMT_S16, 0) < 0) {
+      spdlog::error("Failed to allocate output buffer for resampling.");
       return 0;
     }
 
-    uint8_t *outputBuffer[2];
-    av_samples_alloc(outputBuffer, NULL, 2, max_output_samples,
-                     AV_SAMPLE_FMT_S16, 0); // 2 channels, 16-bit samples
-
-    // Resample the input data and apply the dynamic compensation using delta
-    // samples
     const int output_samples =
         swr_convert(m_swrContext, outputBuffer, max_output_samples,
                     (const uint8_t **)&data, numFrames);
 
-    auto written =
-        m_audioDevice->write((char *)outputBuffer[0], output_samples * 4);
-    // spdlog::info("Wanting to write {} bytes, wrote {} bytes",
-    //              output_samples * 4, written);
+    if (output_samples < 0) {
+      spdlog::error("Error during swr_convert: {}", av_err2str(output_samples));
+      av_freep(&outputBuffer[0]);
+      return 0; // Or handle error
+    }
 
-    av_freep(&outputBuffer[0]);
+    if (output_samples > 0) {
+      m_audioDevice->write(reinterpret_cast<char *>(outputBuffer[0]),
+                           output_samples * 2 * sizeof(int16_t)); // stereo, s16
+    }
+
+    av_freep(&outputBuffer[0]); // Frees the entire buffer allocated by
+                                // av_samples_alloc
   }
 
-  return numFrames;
+  return numFrames; // Return original number of frames consumed
 }
 
 void AudioManager::initialize(const double new_freq) {
