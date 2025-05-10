@@ -46,10 +46,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   });
   m_rewindPointTimer.start();
 
-  auto target = 16666667;
-  const int64_t ACTUAL_TARGET_INTERVAL_NS = 16666667LL; // Your new target
-
-  const int64_t BUSY_WAIT_MARGIN_NS = 1100000LL; // 1.5ms
+  const int64_t BUSY_WAIT_MARGIN_NS = 800000LL;
 
   m_emulationThread.setPriority(QThread::TimeCriticalPriority);
   m_emulationThread.setServiceLevel(QThread::QualityOfService::High);

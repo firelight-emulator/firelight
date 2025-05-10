@@ -21,6 +21,7 @@ jobs:
     steps:
       - uses: msys2/setup-msys2@v2
         with:
+          update: true
           msystem: 'MINGW64'
           cache: true
           install: >-
