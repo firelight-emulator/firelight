@@ -634,8 +634,8 @@ StackView {
 
     Window {
         id: debugWindow
-        visible: emulatorLoader.active
-        // visible: false
+        // visible: emulatorLoader.active
+        visible: false
         width: 400
         height: 300
 
