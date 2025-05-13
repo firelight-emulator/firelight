@@ -14,6 +14,7 @@ protected:
 private:
   Q_OBJECT
   Q_PROPERTY(int entryId MEMBER m_entryId NOTIFY entryIdChanged)
+  Q_PROPERTY(int platformId MEMBER m_platformId NOTIFY platformIdChanged)
   Q_PROPERTY(QString contentHash MEMBER m_contentHash NOTIFY contentHashChanged)
   Q_PROPERTY(QString gameName MEMBER m_gameName NOTIFY gameNameChanged)
   Q_PROPERTY(bool started MEMBER m_started NOTIFY startedChanged)
@@ -128,6 +129,8 @@ signals:
   void audioBufferLevelChanged();
 
   void entryIdChanged();
+
+  void platformIdChanged();
 
   void contentHashChanged();
 

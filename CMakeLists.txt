@@ -172,6 +172,9 @@ add_library(firelight_lib
         src/app/achievements/retroachievements_backend.hpp
         src/app/achievements/retroachievements_backend.cpp
         src/app/achievements/user_achievement_status.hpp
+        src/app/settings/gui/game_settings_item.cpp
+        src/app/settings/sqlite_emulation_settings_manager.cpp
+        src/app/settings/sqlite_emulation_settings_manager.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

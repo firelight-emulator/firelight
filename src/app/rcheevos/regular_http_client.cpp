@@ -9,7 +9,6 @@ rc_api_server_response_t
 RegularHttpClient::handleRequest(const std::string &url,
                                  const std::string &postBody,
                                  const std::string &contentType) {
-  spdlog::info("Online status: {}", m_online);
   const auto headers =
       cpr::Header{{"User-Agent", USER_AGENT}, {"Content-Type", contentType}};
 

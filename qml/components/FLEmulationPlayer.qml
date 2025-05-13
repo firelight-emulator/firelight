@@ -20,6 +20,9 @@ StackView {
     }
 
     property var entryId: 0
+    property var contentHash: ""
+    property var platformId: 0
+
     function load(entryId) {
         root.entryId = entryId
         emulatorLoader.active = true
@@ -106,10 +109,17 @@ StackView {
     //     }
     // }
 
+    GameSettings {
+        id: theGameSettings
+        platformId: root.platformId
+        contentHash: root.contentHash
+    }
+
     Component {
         id: emuPage
         NewEmulatorPage {
             id: emuPage
+            gameSettings: theGameSettings
             onAboutToRunFrame: function() {
                 bufferGraph.addValue(emuPage.audioBufferLevel)
             }
@@ -119,6 +129,12 @@ StackView {
                     aspectRatio: emulatorLoader.item.videoAspectRatio
                 }, StackView.Immediate)
             }
+        }
+    }
+
+    Component {
+        id: gameSettingsView
+        GameSettingsView {
         }
     }
 
@@ -412,17 +428,32 @@ StackView {
                              emulatorLoader.item.createRewindPoints()
                          }
                      }
-                     Rectangle {
-                         Layout.fillWidth: true
-                         // Layout.preferredWidth: parent.width / 2
-                         Layout.preferredHeight: 1
-                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                         opacity: 0.3
-                         color: "#dadada"
-                     }
+                     // Rectangle {
+                     //     Layout.fillWidth: true
+                     //     // Layout.preferredWidth: parent.width / 2
+                     //     Layout.preferredHeight: 1
+                     //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     //     opacity: 0.3
+                     //     color: "#dadada"
+                     // }
                      FirelightMenuItem {
                          id: suspendPointButton
                          labelText: "Suspend Points"
+                         Layout.fillWidth: true
+                         KeyNavigation.down: gameSettingsButton
+                         // Layout.preferredWidth: parent.width / 2
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         Layout.preferredHeight: 40
+                         checkable: false
+                         alignRight: true
+                         // enabled: false
+                         onClicked: {
+                             quickMenuStack.pushItem(suspendPointMenu, {}, StackView.Immediate)
+                         }
+                     }
+                     FirelightMenuItem {
+                         id: gameSettingsButton
+                         labelText: "Game settings"
                          Layout.fillWidth: true
                          KeyNavigation.down: closeGameButton
                          // Layout.preferredWidth: parent.width / 2
@@ -432,7 +463,7 @@ StackView {
                          alignRight: true
                          // enabled: false
                          onClicked: {
-                             quickMenuStack.pushItem(suspendPointMenu, {}, StackView.Immediate)
+                             quickMenuStack.pushItem(gameSettingsView, {gameSettings: theGameSettings}, StackView.Immediate)
                          }
                      }
                      // Rectangle {
@@ -459,14 +490,14 @@ StackView {
                      //     }
                      // }
 
-                     Rectangle {
-                         Layout.fillWidth: true
-                         // Layout.preferredWidth: parent.width / 2
-                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                         Layout.preferredHeight: 1
-                         opacity: 0.3
-                         color: "#dadada"
-                     }
+                     // Rectangle {
+                     //     Layout.fillWidth: true
+                     //     // Layout.preferredWidth: parent.width / 2
+                     //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     //     Layout.preferredHeight: 1
+                     //     opacity: 0.3
+                     //     color: "#dadada"
+                     // }
                      FirelightMenuItem {
                          id: closeGameButton
                          labelText: "Close Game"
@@ -605,6 +636,17 @@ StackView {
 
             emu.loadGame(emulatorLoader.entryId)
             emu.forceActiveFocus()
+
+            emu.contentHashChanged.connect(function() {
+                root.contentHash = emu.contentHash
+            })
+
+            emu.platformIdChanged.connect(function() {
+                root.platformId = emu.platformId
+            })
+
+            // theGameSettings.contentHash = emu.contentHash
+            // theGameSettings.platformId = emu.platformId
             // emulatorLoader.item.startGame()
             // emulatorLoader.item.paused = emulatorLoader.paused
             //

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <library/user_library.hpp>
 #include <activity/activity_log.hpp>
+#include <library/user_library.hpp>
 
 #include "emulator_config_manager.hpp"
 #include "firelight/userdata_database.hpp"
@@ -10,81 +10,89 @@
 #include "mods/mod_repository.hpp"
 #include "rcheevos/ra_client.hpp"
 #include "saves/save_manager.hpp"
+#include "settings/emulation_settings_manager.hpp"
 
 namespace firelight {
-    namespace gui {
-        class GameImageProvider;
-    }
+namespace gui {
+class GameImageProvider;
+}
 
-    class ManagerAccessor {
-    public:
-        static void setControllerManager(input::ControllerManager *t_manager);
+class ManagerAccessor {
+public:
+  static void setControllerManager(input::ControllerManager *t_manager);
 
-        static void setSaveManager(saves::SaveManager *t_manager);
+  static void setSaveManager(saves::SaveManager *t_manager);
 
-        static void setUserdataManager(db::IUserdataDatabase *t_userdataManager);
+  static void setUserdataManager(db::IUserdataDatabase *t_userdataManager);
 
-        static void setLibraryDatabase(db::ILibraryDatabase *t_libraryDatabase);
+  static void setLibraryDatabase(db::ILibraryDatabase *t_libraryDatabase);
 
-        static void
-        setAchievementManager(achievements::RAClient *t_achievementManager);
+  static void
+  setAchievementManager(achievements::RAClient *t_achievementManager);
 
-        static void setEmulatorConfigManager(
-            std::shared_ptr<EmulatorConfigManager> t_emulatorConfigManager);
+  static void setEmulatorConfigManager(
+      std::shared_ptr<EmulatorConfigManager> t_emulatorConfigManager);
 
-        static void setGameImageProvider(gui::GameImageProvider *t_gameImageProvider);
+  static void setGameImageProvider(gui::GameImageProvider *t_gameImageProvider);
 
-        static void setUserLibrary(library::IUserLibrary *t_userLibrary);
+  static void setUserLibrary(library::IUserLibrary *t_userLibrary);
 
-        static void setActivityLog(activity::IActivityLog *t_activityLog);
+  static void setActivityLog(activity::IActivityLog *t_activityLog);
 
-        static void setInputManager(input::InputManager *t_inputManager);
+  static void setInputManager(input::InputManager *t_inputManager);
 
-        static void setControllerRepository(input::IControllerRepository *t_controllerRepository);
+  static void
+  setControllerRepository(input::IControllerRepository *t_controllerRepository);
 
-        static void setCoreSystemDirectory(const std::string &t_coreSystemDirectory);
+  static void setCoreSystemDirectory(const std::string &t_coreSystemDirectory);
 
-        static void setModRepository(mods::IModRepository *t_modDatabase);
+  static void setModRepository(mods::IModRepository *t_modDatabase);
 
-        static input::ControllerManager *getControllerManager();
+  static void setEmulationSettingsManager(
+      settings::IEmulationSettingsManager *t_emulationSettingsManager);
 
-        static saves::SaveManager *getSaveManager();
+  static input::ControllerManager *getControllerManager();
 
-        static db::IUserdataDatabase *getUserdataManager();
+  static saves::SaveManager *getSaveManager();
 
-        static db::ILibraryDatabase *getLibraryDatabase();
+  static db::IUserdataDatabase *getUserdataManager();
 
-        static achievements::RAClient *getAchievementManager();
+  static db::ILibraryDatabase *getLibraryDatabase();
 
-        static std::shared_ptr<EmulatorConfigManager> getEmulatorConfigManager();
+  static achievements::RAClient *getAchievementManager();
 
-        static gui::GameImageProvider *getGameImageProvider();
+  static std::shared_ptr<EmulatorConfigManager> getEmulatorConfigManager();
 
-        static library::IUserLibrary *getUserLibrary();
+  static gui::GameImageProvider *getGameImageProvider();
 
-        static activity::IActivityLog *getActivityLog();
+  static library::IUserLibrary *getUserLibrary();
 
-        static input::InputManager *getInputManager();
+  static activity::IActivityLog *getActivityLog();
 
-        static input::IControllerRepository *getControllerRepository();
+  static input::InputManager *getInputManager();
 
-        static std::string getCoreSystemDirectory();
+  static input::IControllerRepository *getControllerRepository();
 
-        static mods::IModRepository *getModRepository();
+  static std::string getCoreSystemDirectory();
 
-    private:
-        static input::ControllerManager *m_controllerManager;
-        static saves::SaveManager *m_saveManager;
-        static db::IUserdataDatabase *m_userdataDatabase;
-        static db::ILibraryDatabase *m_libraryDatabase;
-        static achievements::RAClient *m_achievementManager;
-        static std::shared_ptr<EmulatorConfigManager> m_emulatorConfigManager;
-        static gui::GameImageProvider *m_gameImageProvider;
-        static library::IUserLibrary *m_userLibrary;
-        static activity::IActivityLog *m_activityLog;
-        static input::InputManager *m_inputManager;
-        static input::IControllerRepository *m_controllerRepository;
-        static std::string m_coreSystemDirectory;
-        static mods::IModRepository *m_modDatabase;
-    };
+  static mods::IModRepository *getModRepository();
+
+  static settings::IEmulationSettingsManager *getEmulationSettingsManager();
+
+private:
+  static input::ControllerManager *m_controllerManager;
+  static saves::SaveManager *m_saveManager;
+  static db::IUserdataDatabase *m_userdataDatabase;
+  static db::ILibraryDatabase *m_libraryDatabase;
+  static achievements::RAClient *m_achievementManager;
+  static std::shared_ptr<EmulatorConfigManager> m_emulatorConfigManager;
+  static gui::GameImageProvider *m_gameImageProvider;
+  static library::IUserLibrary *m_userLibrary;
+  static activity::IActivityLog *m_activityLog;
+  static input::InputManager *m_inputManager;
+  static input::IControllerRepository *m_controllerRepository;
+  static std::string m_coreSystemDirectory;
+  static mods::IModRepository *m_modDatabase;
+  static settings::IEmulationSettingsManager *m_emulationSettingsManager;
+};
 } // namespace firelight

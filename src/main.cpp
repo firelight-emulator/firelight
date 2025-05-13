@@ -60,7 +60,9 @@
 #include "app/mods/gui/ModInfoItem.hpp"
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
+#include "settings/sqlite_emulation_settings_manager.hpp"
 
+#include <settings/gui/game_settings_item.hpp>
 #include <unistd.h>
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
@@ -237,6 +239,11 @@ int main(int argc, char *argv[]) {
 
   firelight::mods::SqliteModRepository modRepository;
   firelight::ManagerAccessor::setModRepository(&modRepository);
+
+  firelight::settings::SqliteEmulationSettingsManager emulationSettingsManager(
+      defaultAppDataPathString + "/settings.db");
+  firelight::ManagerAccessor::setEmulationSettingsManager(
+      &emulationSettingsManager);
   //   QObject::connect(
   //     &libraryDatabase,
   //     &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
@@ -268,6 +275,9 @@ int main(int argc, char *argv[]) {
                                                        "SuspendPoints");
   qmlRegisterType<firelight::activity::GameActivityItem>("Firelight", 1, 0,
                                                          "GameActivity");
+
+  qmlRegisterType<firelight::settings::GameSettingsItem>("Firelight", 1, 0,
+                                                         "GameSettings");
 
   firelight::gui::Router router;
 

@@ -48,7 +48,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
   const int64_t BUSY_WAIT_MARGIN_NS = 800000LL;
 
-  m_emulationThread.setPriority(QThread::TimeCriticalPriority);
   m_emulationThread.setServiceLevel(QThread::QualityOfService::High);
   m_emulationTimer.setInterval(std::chrono::nanoseconds(BUSY_WAIT_MARGIN_NS));
   // m_emulatorTimer.setSingleShot(false);
@@ -185,6 +184,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   });
 
   m_emulationThread.start();
+  m_emulationThread.setPriority(QThread::TimeCriticalPriority);
   m_emulationTimer.moveToThread(&m_emulationThread);
   QMetaObject::invokeMethod(&m_emulationTimer, "start", Qt::QueuedConnection);
 }
@@ -346,6 +346,11 @@ void EmulatorItem::loadGame(int entryId) {
     m_saveSlotNumber = entry->activeSaveSlot;
     m_platformId = entry->platformId;
     m_contentPath = romFile->getFilePath();
+
+    emit entryIdChanged();
+    emit gameNameChanged();
+    emit contentHashChanged();
+    emit platformIdChanged();
 
     m_loaded = true;
     if (m_startAfterLoading) {

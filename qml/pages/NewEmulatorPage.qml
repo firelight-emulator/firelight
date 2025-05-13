@@ -14,6 +14,8 @@ FocusScope {
     property bool blurEnabled: false
     property alias audioBufferLevel: emulator.audioBufferLevel
 
+    required property GameSettings gameSettings
+
     signal closing()
     signal aboutToRunFrame()
 
@@ -38,6 +40,17 @@ FocusScope {
         emulator.decrementPlaybackMultiplier()
     }
 
+    Keys.onDigit7Pressed: {
+        if (gameSettings.pictureMode === "stretch") {
+            gameSettings.pictureMode = "aspect-ratio-fill"
+        } else if (gameSettings.pictureMode === "aspect-ratio-fill") {
+            gameSettings.pictureMode = "integer-scale"
+        } else if (gameSettings.pictureMode === "integer-scale") {
+            gameSettings.pictureMode = "stretch"
+        }
+
+    }
+
     // Keys.onPressed: function(event) {
     //     console.log("pressed: " + event.key)
     //     if (event.key === Qt.Key_Control) {
@@ -60,6 +73,7 @@ FocusScope {
     property alias contentHash: emulator.contentHash
     property alias gameName: emulator.gameName
     property alias entryId: emulator.entryId
+    property alias platformId: emulator.platformId
     property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
     function loadGame(entryId) {
@@ -122,9 +136,48 @@ FocusScope {
         id: emulator
         focus: true
         anchors.centerIn: parent
-        width: parent.height * videoAspectRatio
-        height: parent.height
+        width: {
+            if (gameSettings.pictureMode === "stretch") {
+                return parent.width
+            } else if (gameSettings.pictureMode === "aspect-ratio-fill") {
+                return height * videoAspectRatio
+            } else if (gameSettings.pictureMode === "integer-scale") {
+                return height * videoAspectRatio
+            }
+            // let num = parent.width / emulator.videoWidth
+            // console.log("NUM!!!!: " + num)
+            // return Math.floor(num) * emulator.videoWidth
+
+
+        }
+        height: {
+            if (gameSettings.pictureMode === "stretch") {
+                return parent.height
+            } else if (gameSettings.pictureMode === "aspect-ratio-fill") {
+                return parent.height
+            } else if (gameSettings.pictureMode === "integer-scale"){
+                let num = parent.height / emulator.videoHeight
+                return Math.floor(num) * emulator.videoHeight
+            }
+            // console.log("Picture mode: " + gameSettings.pictureMode)
+
+            // return parent.width / videoAspectRatio
+        }
+
+        // Behavior on width {
+        //     NumberAnimation {
+        //         duration: 200
+        //         easing.type: Easing.InOutQuad
+        //     }
+        // }
+        // Behavior on height {
+        //     NumberAnimation {
+        //         duration: 200
+        //         easing.type: Easing.InOutQuad
+        //     }
+        // }
         smooth: false
+
 
         onVideoAspectRatioChanged: {
             console.log("new aspect ratio: " + videoAspectRatio)
