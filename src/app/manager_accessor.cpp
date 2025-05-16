@@ -18,6 +18,7 @@ std::string ManagerAccessor::m_coreSystemDirectory;
 mods::IModRepository *ManagerAccessor::m_modDatabase;
 settings::IEmulationSettingsManager
     *ManagerAccessor::m_emulationSettingsManager;
+discord::DiscordManager *ManagerAccessor::m_discordManager;
 
 void ManagerAccessor::setControllerManager(
     input::ControllerManager *t_manager) {
@@ -80,6 +81,10 @@ void ManagerAccessor::setEmulationSettingsManager(
     settings::IEmulationSettingsManager *t_emulationSettingsManager) {
   m_emulationSettingsManager = t_emulationSettingsManager;
 }
+void ManagerAccessor::setDiscordManager(
+    discord::DiscordManager *t_discordManager) {
+  m_discordManager = t_discordManager;
+}
 
 input::ControllerManager *ManagerAccessor::getControllerManager() {
   // TODO: Check for nullptr and throw exception or something
@@ -133,5 +138,8 @@ mods::IModRepository *ManagerAccessor::getModRepository() {
 settings::IEmulationSettingsManager *
 ManagerAccessor::getEmulationSettingsManager() {
   return m_emulationSettingsManager;
+}
+discord::DiscordManager *ManagerAccessor::getDiscordManager() {
+  return m_discordManager;
 }
 } // namespace firelight

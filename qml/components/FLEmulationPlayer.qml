@@ -422,7 +422,7 @@ StackView {
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                          Layout.preferredHeight: 40
                          checkable: false
-                         enabled: !achievement_manager.loggedIn || !achievement_manager.inHardcoreMode
+                         enabled: (!achievement_manager.loggedIn || !achievement_manager.inHardcoreMode) && theGameSettings.rewindEnabled
                          alignRight: true
                          onClicked: {
                              emulatorLoader.item.createRewindPoints()
@@ -566,7 +566,7 @@ StackView {
             color: "black"
             // opacity: emulatorLoader.StackView.status === StackView.Active ? 0 * 0.4
             // opacity: emulatorLoader.StackView.status !== StackView.Active ? 0.4 : 0
-            opacity: emulatorLoader.blurAmount * 0.4
+            opacity: emulatorLoader.blurAmount * 0.55
             anchors.fill: parent
 
             // Behavior on opacity {

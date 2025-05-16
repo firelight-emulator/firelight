@@ -225,7 +225,14 @@ public:
   static constexpr int PLATFORM_ID_SEGA_MASTER_SYSTEM = 12;
   static constexpr int PLATFORM_ID_SEGA_GENESIS = 13;
   static constexpr int PLATFORM_ID_SEGA_GAMEGEAR = 14;
+  static constexpr int PLATFORM_ID_SEGA_SATURN = 15;
+  static constexpr int PLATFORM_ID_SEGA_32X = 16;
+  static constexpr int PLATFORM_ID_SEGA_CD = 17;
+  static constexpr int PLATFORM_ID_PS1 = 18;
+  static constexpr int PLATFORM_ID_PS2 = 19;
   static constexpr int PLATFORM_ID_PLAYSTATION_PORTABLE = 20;
+  static constexpr int PLATFORM_ID_TURBOGRAFX16 = 21;
+  static constexpr int PLATFORM_ID_SUPERGRAFX = 22;
 
   static std::map<std::string, std::string>
   getDefaultConfigValues(const int platformId) {
@@ -273,6 +280,10 @@ public:
       return "Sega GameGear";
     case PLATFORM_ID_PLAYSTATION_PORTABLE:
       return "PlayStation Portable";
+    case PLATFORM_ID_TURBOGRAFX16:
+      return "TurboGrafx-16";
+    case PLATFORM_ID_SUPERGRAFX:
+      return "SuperGrafx";
     default:
       return "Unknown";
     }
@@ -309,6 +320,12 @@ public:
     if (extension == "sms") {
       return PLATFORM_ID_SEGA_MASTER_SYSTEM;
     }
+    if (extension == "pce") {
+      return PLATFORM_ID_TURBOGRAFX16;
+    }
+    if (extension == "sgx") {
+      return PLATFORM_ID_SUPERGRAFX;
+    }
     return PLATFORM_ID_UNKNOWN;
   }
 
@@ -334,7 +351,10 @@ public:
     case PLATFORM_ID_SEGA_MASTER_SYSTEM:
       return "./system/_cores/genesis_plus_gx_libretro.dll";
     case PLATFORM_ID_PLAYSTATION_PORTABLE:
-      return "./system/cores/ppsspp_libretro.dll";
+      return "./system/_cores/ppsspp_libretro.dll";
+    case PLATFORM_ID_TURBOGRAFX16:
+    case PLATFORM_ID_SUPERGRAFX:
+      return "./system/_cores/mednafen_supergrafx_libretro.dll";
     default:
       return "";
     }

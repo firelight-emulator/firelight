@@ -65,6 +65,8 @@
         <file alias="platform-nes">assets/img/platform-icons/nesicon.svg</file>
         <file alias="platform-snes">assets/img/platform-icons/snesicon.svg</file>
         <file alias="platform-psp">assets/img/platform-icons/pspicon.svg</file>
+        <file alias="platform-turbografx16">assets/img/platform-icons/turbografx16icon.svg</file>
+        <file alias="platform-supergrafx">assets/img/platform-icons/supergrafxicon.svg</file>
     </qresource>
     <qresource prefix="/icons/empty">
         <file alias="bar-chart">assets/img/icons/notfilled-rounded/bar-chart-notfilled.svg</file>

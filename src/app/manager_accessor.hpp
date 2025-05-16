@@ -3,6 +3,7 @@
 #include <activity/activity_log.hpp>
 #include <library/user_library.hpp>
 
+#include "discord/discord_manager.hpp"
 #include "emulator_config_manager.hpp"
 #include "firelight/userdata_database.hpp"
 #include "input/controller_manager.hpp"
@@ -51,6 +52,8 @@ public:
   static void setEmulationSettingsManager(
       settings::IEmulationSettingsManager *t_emulationSettingsManager);
 
+  static void setDiscordManager(discord::DiscordManager *t_discordManager);
+
   static input::ControllerManager *getControllerManager();
 
   static saves::SaveManager *getSaveManager();
@@ -79,6 +82,8 @@ public:
 
   static settings::IEmulationSettingsManager *getEmulationSettingsManager();
 
+  static discord::DiscordManager *getDiscordManager();
+
 private:
   static input::ControllerManager *m_controllerManager;
   static saves::SaveManager *m_saveManager;
@@ -94,5 +99,6 @@ private:
   static std::string m_coreSystemDirectory;
   static mods::IModRepository *m_modDatabase;
   static settings::IEmulationSettingsManager *m_emulationSettingsManager;
+  static discord::DiscordManager *m_discordManager;
 };
 } // namespace firelight

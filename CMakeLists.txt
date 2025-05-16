@@ -175,10 +175,12 @@ add_library(firelight_lib
         src/app/settings/gui/game_settings_item.cpp
         src/app/settings/sqlite_emulation_settings_manager.cpp
         src/app/settings/sqlite_emulation_settings_manager.hpp
+        src/app/discord/discord_manager.hpp
+        src/app/discord/discord_manager.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
-target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS})
+target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS} ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/lib/debug)
 
 if (WIN32)
     target_link_libraries(firelight_lib PUBLIC mingw32)
@@ -212,7 +214,8 @@ target_link_libraries(firelight_lib PUBLIC
         library
         patching
         rcheevos
-        discord)
+        discord
+        discord_partner_sdk)
 
 # qt_import_plugins(firelight_lib
 #         INCLUDE QFFmpegMediaPlugin)
@@ -248,6 +251,7 @@ qt6_add_qml_module(firelight
 #target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
 #target_link_libraries(firelight PRIVATE firelight_lib)
 target_link_libraries(firelight PUBLIC
+        discord
         firelight_lib)
 
 #if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -288,8 +292,20 @@ add_custom_target(copy_resources ALL
 file(COPY ${CMAKE_SOURCE_DIR}/_cores DESTINATION ${CMAKE_BINARY_DIR}/system)
 file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
 
+#if (DISCORD_SDK_RUNTIME_LIBRARY_FILE AND EXISTS "${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
+#    add_custom_command(TARGET firelight POST_BUILD
+#            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#            "${DISCORD_SDK_RUNTIME_LIBRARY_FILE}"
+#            $<TARGET_FILE_DIR:firelight> # Copies to the directory where MyGame.exe is built
+#            COMMENT "Copying Discord SDK shared library to output directory for MyGame"
+#    )
+#else ()
+#    message(WARNING "DISCORD_SDK_RUNTIME_LIBRARY_FILE is not defined or file does not exist. "
+#            "Discord SDK shared library will not be copied. Path: ${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
+#endif ()
+
 if (WIN32)
-    file(COPY ${CMAKE_SOURCE_DIR}/lib/x86_64/discord_game_sdk.dll DESTINATION ${CMAKE_BINARY_DIR})
+    file(COPY ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/bin/release/discord_partner_sdk.dll DESTINATION ${CMAKE_BINARY_DIR})
 endif ()
 
 enable_testing()

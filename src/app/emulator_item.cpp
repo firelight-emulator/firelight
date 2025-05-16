@@ -191,6 +191,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
 EmulatorItem::~EmulatorItem() {
   spdlog::info("Destroying EmulatorItem");
+  getDiscordManager()->clearActivity();
   m_autosaveTimer.stop();
   m_emulationThread.quit();
   // QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::QueuedConnection);
@@ -377,7 +378,7 @@ void EmulatorItem::startGame() {
     m_core->setPointerInputProvider(getInputManager());
     m_core->setSystemDirectory(getCoreSystemDirectory());
 
-    // Qt owns the renderer, so it will destoy it.
+    // Qt owns the renderer, so it will destroy it.
     m_renderer = new EmulatorItemRenderer(
         window()->rendererInterface()->graphicsApi(), std::move(m_core));
 
@@ -386,12 +387,7 @@ void EmulatorItem::startGame() {
                                          double framerate) {
       updateGeometry(width, height, aspectRatio);
       m_emulationTimingTargetNs = static_cast<int64_t>(1e9 / framerate);
-      // QMetaObject::invokeMethod(
-      //     &m_emulationTimer, "setInterval",
-      //     Q_ARG(std::chrono::nanoseconds, std::chrono::nanoseconds(nanos)));
     });
-
-    // m_core->init();
 
     // Setting these causes the item's geometry to be visible, and the renderer
     // is initialized. If an item is not visible, the renderer is not
@@ -407,21 +403,13 @@ void EmulatorItem::startGame() {
 
     m_started = true;
     emit gameStarted();
+
+    getDiscordManager()->startGameActivity(
+        m_contentHash.toStdString(), m_gameName.toStdString(), m_platformId);
   });
 }
 
-QQuickRhiItemRenderer *EmulatorItem::createRenderer() {
-  // const auto renderer = new
-  // EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(),
-  //                                                m_core.get());
-  //
-  // renderer->onGeometryChanged([this](int width, int height, float
-  // aspectRatio) {
-  //     updateGeometry(width, height, aspectRatio);
-  // });
-
-  return m_renderer;
-}
+QQuickRhiItemRenderer *EmulatorItem::createRenderer() { return m_renderer; }
 
 void EmulatorItem::updateGeometry(unsigned int width, unsigned int height,
                                   float aspectRatio) {

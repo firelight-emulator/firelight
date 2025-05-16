@@ -1,4 +1,5 @@
 #define SDL_MAIN_HANDLED
+#define DISCORDPP_IMPLEMENTATION
 
 #include "app/achievements/gui/AchievementSetItem.hpp"
 #include <QApplication>
@@ -61,6 +62,7 @@
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
 #include "settings/sqlite_emulation_settings_manager.hpp"
+#include <discordpp.h>
 
 #include <settings/gui/game_settings_item.hpp>
 #include <unistd.h>
@@ -83,9 +85,14 @@ bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
-  //  discord::Core* core{};
-  // discord::Core::Create(1208162396921929739, DiscordCreateFlags_Default,
-  // &core);
+  // discord::Core *core{};
+  // auto result = discord::Core::Create(
+  //     1208162396921929739, DiscordCreateFlags_NoRequireDiscord, &core);
+  // if (result == discord::Result::Ok) {
+  //   spdlog::info("Discord core created");
+  // } else {
+  //   spdlog::error("Discord core creation failed: {}", (int)result);
+  // }
 
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
@@ -358,21 +365,12 @@ int main(int argc, char *argv[]) {
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
 
-  //  QObject::connect(window, &QQuickWindow::afterRendering, [&]() {
-  //    if (core != nullptr) {
-  //      core->RunCallbacks();
-  //    }
-  //  });
-  //
-  //  if (core) {
-  //  discord::Activity activity{};
-  //    core->ActivityManager().UpdateActivity(activity, [](discord::Result
-  //    result) {
-  //      if (result != discord::Result::Ok) {
-  //        spdlog::error("Failed to update activity: {}", (int)result);
-  //      }
-  //    });
-  //  }
+  firelight::discord::DiscordManager discordManager;
+  discordManager.initialize();
+  firelight::ManagerAccessor::setDiscordManager(&discordManager);
+
+  QObject::connect(window, &QQuickWindow::afterRendering,
+                   [&]() { discordManager.runCallbacks(); });
 
   // window->setIcon(QIcon("firelight_logo1 (1).svg"));
 

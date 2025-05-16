@@ -9,6 +9,8 @@ void GameSettingsItem::setPlatformId(const int platformId) {
   }
 
   m_platformId = platformId;
+  emit pictureModeChanged();
+  emit rewindEnabledChanged();
   emit platformIdChanged();
 }
 
@@ -21,14 +23,15 @@ void GameSettingsItem::setContentHash(const QString &contentHash) {
   }
 
   m_contentHash = contentHash;
+  emit pictureModeChanged();
+  emit rewindEnabledChanged();
   emit contentHashChanged();
 }
 QString GameSettingsItem::getPictureMode() {
   return getValue("picture-mode", "aspect-ratio-fill");
 }
-
-void GameSettingsItem::setPictureMode(const QString &pictureMode) {
-  setValue("picture-mode", pictureMode);
+bool GameSettingsItem::isRewindEnabled() const {
+  return getValue("rewind-enabled", "true") == "true";
 }
 
 QString GameSettingsItem::getValue(const QString &key,
@@ -73,7 +76,104 @@ void GameSettingsItem::setValue(const QString &key, const QString &value) {
   emit settingChanged(key, value);
   if (key == "picture-mode") {
     emit pictureModeChanged();
+  } else if (key == "rewind-enabled") {
+    emit rewindEnabledChanged();
   }
 }
+
+QString GameSettingsItem::getValue(const SettingsLevel level,
+                                   const QString &key) const {
+  switch (level) {
+  case Global:
+    return QString::fromStdString(getEmulationSettingsManager()
+                                      ->getGlobalValue(key.toStdString())
+                                      .value_or(""));
+  case Platform:
+    return QString::fromStdString(
+        getEmulationSettingsManager()
+            ->getPlatformValue(m_platformId, key.toStdString())
+            .value_or(""));
+  case Game:
+    return QString::fromStdString(
+        getEmulationSettingsManager()
+            ->getGameValue(m_contentHash.toStdString(), m_platformId,
+                           key.toStdString())
+            .value_or(""));
+  default:
+    return {};
+  }
+}
+void GameSettingsItem::setValue(const SettingsLevel level, const QString &key,
+                                const QString &value) {
+  switch (level) {
+  case Global:
+    getEmulationSettingsManager()->setGlobalValue(key.toStdString(),
+                                                  value.toStdString());
+    if (key == "rewind-enabled") {
+      emit rewindEnabledChanged();
+    } else if (key == "picture-mode") {
+      emit pictureModeChanged();
+    }
+    emit settingChanged(key, value);
+    return;
+  case Platform:
+    getEmulationSettingsManager()->setPlatformValue(
+        m_platformId, key.toStdString(), value.toStdString());
+    if (key == "rewind-enabled") {
+      emit rewindEnabledChanged();
+    } else if (key == "picture-mode") {
+      emit pictureModeChanged();
+    }
+    emit settingChanged(key, value);
+    return;
+  case Game:
+    getEmulationSettingsManager()->setGameValue(m_contentHash.toStdString(),
+                                                m_platformId, key.toStdString(),
+                                                value.toStdString());
+    if (key == "rewind-enabled") {
+      emit rewindEnabledChanged();
+    } else if (key == "picture-mode") {
+      emit pictureModeChanged();
+    }
+    emit settingChanged(key, value);
+    return;
+  }
+}
+
+bool GameSettingsItem::valueIsOverridingHigherLevel(SettingsLevel level,
+                                                    const QString &key) const {
+
+  switch (level) {
+  case Global:
+    return false;
+  case Platform: {
+    auto platformValue = getEmulationSettingsManager()->getPlatformValue(
+        m_platformId, key.toStdString());
+    auto globalValue =
+        getEmulationSettingsManager()->getGlobalValue(key.toStdString());
+
+    if (platformValue.has_value() && globalValue.has_value()) {
+      return platformValue.value() != globalValue.value();
+    }
+
+    return false;
+  }
+  case Game: {
+    auto gameValue = getEmulationSettingsManager()->getPlatformValue(
+        m_platformId, key.toStdString());
+    auto platformValue =
+        getEmulationSettingsManager()->getGlobalValue(key.toStdString());
+
+    if (gameValue.has_value() && platformValue.has_value()) {
+      return gameValue.value() != platformValue.value();
+    }
+
+    return false;
+  }
+  default:
+    return {};
+  }
+}
+
 void GameSettingsItem::resetValue(const QString &key) {}
 } // namespace firelight::settings
