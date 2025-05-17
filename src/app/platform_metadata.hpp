@@ -329,6 +329,39 @@ public:
     return PLATFORM_ID_UNKNOWN;
   }
 
+  static std::string getDiscordLargeImageName(const int platformId) {
+    switch (platformId) {
+    case PLATFORM_ID_GAMEBOY:
+      return "gb";
+    case PLATFORM_ID_GAMEBOY_COLOR:
+      return "gbc";
+    case PLATFORM_ID_GAMEBOY_ADVANCE:
+      return "gba";
+    case PLATFORM_ID_NES:
+      return "nes";
+    case PLATFORM_ID_SNES:
+      return "snes";
+    case PLATFORM_ID_N64:
+      return "n64";
+    case PLATFORM_ID_NINTENDO_DS:
+      return "ds";
+    case PLATFORM_ID_SEGA_MASTER_SYSTEM:
+      return "sms";
+    case PLATFORM_ID_SEGA_GENESIS:
+      return "gen";
+    case PLATFORM_ID_SEGA_GAMEGEAR:
+      return "gg";
+    case PLATFORM_ID_PLAYSTATION_PORTABLE:
+      return "psp";
+    case PLATFORM_ID_TURBOGRAFX16:
+      return "pce";
+    case PLATFORM_ID_SUPERGRAFX:
+      return "sgx";
+    default:
+      return "firelight-logo-white";
+    }
+  }
+
   static std::string getCoreDllPath(const int platformId) {
     switch (platformId) {
     case PLATFORM_ID_GAMEBOY:

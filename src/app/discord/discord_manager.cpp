@@ -9,7 +9,7 @@ void DiscordManager::initialize() {
   m_client.SetApplicationId(1208162396921929739);
   m_client.AddLogCallback(
       [](const auto &message, auto severity) { spdlog::info(message); },
-      discordpp::LoggingSeverity::Verbose);
+      discordpp::LoggingSeverity::Info);
 
   m_defaultActivity.SetDetails("Chilling in the menus");
   m_client.UpdateRichPresence(
@@ -28,25 +28,11 @@ void DiscordManager::startGameActivity(const std::string &contentHash,
   discordpp::Activity activity;
   activity.SetType(discordpp::ActivityTypes::Playing);
   activity.SetDetails("Playing " + displayName);
-
-  auto largeImageName = "";
-  switch (platformId) {
-  case PlatformMetadata::PLATFORM_ID_N64:
-    largeImageName = "n64";
-    break;
-  case PlatformMetadata::PLATFORM_ID_NES:
-    largeImageName = "nes";
-    break;
-  case PlatformMetadata::PLATFORM_ID_SNES:
-    largeImageName = "snes";
-    break;
-  default:
-    largeImageName = "firelight-logo-white";
-    break;
-  }
+  // activity.SetState(PlatformMetadata::getPlatformName(platformId));
 
   discordpp::ActivityAssets assets;
-  assets.SetLargeImage(largeImageName);
+  assets.SetLargeImage(PlatformMetadata::getDiscordLargeImageName(platformId));
+  assets.SetSmallImage("firelight-logo-white");
   activity.SetAssets(assets);
 
   m_client.UpdateRichPresence(

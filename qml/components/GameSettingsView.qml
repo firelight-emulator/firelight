@@ -19,55 +19,55 @@ FocusScope {
         //     label: "Window Mode?"
         // }
 
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 80
-            spacing: 0
-
-            Button {
-                id: gameButton
-                text: "Game"
-                autoExclusive: true
-                checkable: true
-                checked: true
-
-                onToggled: {
-                    if (checked) {
-                        console.log("Changing level to game")
-                        root.level = GameSettings.Game
-                    }
-                }
-                Layout.fillWidth: true
-            }
-
-            Button {
-                text: "Platform"
-                autoExclusive: true
-                checkable: true
-
-                onToggled: {
-                    if (checked) {
-                        console.log("Changing level to platform")
-                        root.level = GameSettings.Platform
-                    }
-                }
-                Layout.fillWidth: true
-            }
-
-            Button {
-                text: "Global"
-                autoExclusive: true
-                checkable: true
-
-                onToggled: {
-                    if (checked) {
-                        console.log("Changing level to global")
-                        root.level = GameSettings.Global
-                    }
-                }
-                Layout.fillWidth: true
-            }
-        }
+        // RowLayout {
+        //     Layout.fillWidth: true
+        //     Layout.preferredHeight: 80
+        //     spacing: 0
+        //
+        //     Button {
+        //         id: gameButton
+        //         text: "Game"
+        //         autoExclusive: true
+        //         checkable: true
+        //         checked: true
+        //
+        //         onToggled: {
+        //             if (checked) {
+        //                 console.log("Changing level to game")
+        //                 root.level = GameSettings.Game
+        //             }
+        //         }
+        //         Layout.fillWidth: true
+        //     }
+        //
+        //     Button {
+        //         text: "Platform"
+        //         autoExclusive: true
+        //         checkable: true
+        //
+        //         onToggled: {
+        //             if (checked) {
+        //                 console.log("Changing level to platform")
+        //                 root.level = GameSettings.Platform
+        //             }
+        //         }
+        //         Layout.fillWidth: true
+        //     }
+        //
+        //     Button {
+        //         text: "Global"
+        //         autoExclusive: true
+        //         checkable: true
+        //
+        //         onToggled: {
+        //             if (checked) {
+        //                 console.log("Changing level to global")
+        //                 root.level = GameSettings.Global
+        //             }
+        //         }
+        //         Layout.fillWidth: true
+        //     }
+        // }
 
         RowLayout {
             Layout.fillWidth: true
@@ -91,14 +91,12 @@ FocusScope {
                     let val = gameSettings.getValue(level, "picture-mode")
                     for (let i = 0; i < pictureModeOption.model.length; i++) {
                         if (pictureModeOption.model[i].value === val) {
-                            console.log("Changing value to: " + val)
                             pictureModeOption.currentIndex = i
                             initialized = true;
                             return
                         }
                     }
 
-                    console.log("Tried changing value to: " + val)
                     initialized = true;
                 }
 
@@ -107,7 +105,6 @@ FocusScope {
                         return
                     }
                     gameSettings.setValue(level, "picture-mode", pictureModeOption.currentValue)
-                    // console.log("Picture mode changed to: " + currentValue)
                 }
 
                 Connections {
@@ -116,12 +113,10 @@ FocusScope {
                         let val = gameSettings.getValue(level, "picture-mode")
                         for (let i = 0; i < pictureModeOption.model.length; i++) {
                             if (pictureModeOption.model[i].value === val) {
-                                console.log("Changing value to: " + val)
                                 pictureModeOption.currentIndex = i
                                 return
                             }
                         }
-                        console.log("Tried changing value to: " + val)
                     }
                 }
 
@@ -135,8 +130,6 @@ FocusScope {
                                 return
                             }
                         }
-
-                        console.log("Tried changing value to: " + val)
                     }
                 }
             }
@@ -153,6 +146,7 @@ FocusScope {
             id: enableRewindOption
             Layout.fillWidth: true
             label: "Enable rewind"
+            description: "Note: Rewind is always disabled when using RetroAchievements in Hardcore mode."
             property bool initialized: false
 
             checked: gameSettings.getValue(level, "rewind-enabled") === "true"
@@ -173,7 +167,6 @@ FocusScope {
                 target: gameSettings
                 function onSettingChanged(key, value) {
                     let val = gameSettings.getValue(level, "rewind-enabled")
-                    console.log("Changing setting to: " + val)
                     enableRewindOption.checked = val === "true"
                 }
             }
@@ -182,7 +175,6 @@ FocusScope {
                 target: root
                 function onLevelChanged() {
                     let val = gameSettings.getValue(level, "rewind-enabled")
-                    console.log("rewind-enabled: " + val)
                     enableRewindOption.checked = val === "true"
                 }
             }
