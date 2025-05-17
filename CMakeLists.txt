@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23.5...3.31.6)
 project(firelight
-        VERSION 0.9.3
+        VERSION 0.9.4
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -386,8 +386,8 @@ set(CPACK_PACKAGE_NAME "Firelight")
 set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 9)
-set(CPACK_PACKAGE_VERSION_PATCH 3)
-set(CPACK_PACKAGE_VERSION "0.9.3")
+set(CPACK_PACKAGE_VERSION_PATCH 4)
+set(CPACK_PACKAGE_VERSION "0.9.4")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")
@@ -432,7 +432,7 @@ if (WIN32)
             #            ${SHARED_LIB_DIR}/swresample-5.dll
             #            ${SHARED_LIB_DIR}/swscale-8.dll
             #            ${SHARED_LIB_DIR}/libffi-8.dll
-            ${CMAKE_SOURCE_DIR}/lib/x86_64/discord_game_sdk.dll
+            ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/bin/release/discord_partner_sdk.dll
             TYPE BIN
     )
 endif ()
