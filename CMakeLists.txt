@@ -304,9 +304,9 @@ file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
 #            "Discord SDK shared library will not be copied. Path: ${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
 #endif ()
 
-#if (WIN32)
-#    file(COPY ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/bin/release/discord_partner_sdk.dll DESTINATION ${CMAKE_BINARY_DIR})
-#endif ()
+if (WIN32)
+    file(COPY ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/bin/release/discord_partner_sdk.dll DESTINATION ${CMAKE_BINARY_DIR})
+endif ()
 
 enable_testing()
 include(GoogleTest)
