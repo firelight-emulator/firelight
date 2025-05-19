@@ -1,3 +1,5 @@
+#define DISCORDPP_IMPLEMENTATION
+
 #include "discord_manager.hpp"
 
 #include <platform_metadata.hpp>

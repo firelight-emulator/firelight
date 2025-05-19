@@ -1,5 +1,4 @@
 #define SDL_MAIN_HANDLED
-#define DISCORDPP_IMPLEMENTATION
 
 #include "app/achievements/gui/AchievementSetItem.hpp"
 #include <QApplication>
