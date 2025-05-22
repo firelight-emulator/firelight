@@ -145,6 +145,7 @@ void RomFile::load() {
 }
 
 bool RomFile::isValid() const { return m_isValid; }
+int RomFile::getId() { return m_id; }
 
 QByteArray RomFile::getContentBytes() { return m_contentBytes; }
 

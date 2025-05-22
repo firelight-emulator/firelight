@@ -1,73 +1,79 @@
 #pragma once
-#include <QSqlDatabase>
-#include <QString>
 #include "rom_file.hpp"
 #include "user_library.hpp"
+#include <QSqlDatabase>
+#include <QString>
 #include <qsettings.h>
 
 namespace firelight::library {
-    class SqliteUserLibrary final : public QObject, public IUserLibrary {
-        Q_OBJECT
-        Q_PROPERTY(
-            QString mainGameDirectory READ getMainGameDirectory WRITE setMainGameDirectory NOTIFY
-            mainGameDirectoryChanged)
+class SqliteUserLibrary final : public QObject, public IUserLibrary {
+  Q_OBJECT
+  Q_PROPERTY(QString mainGameDirectory READ getMainGameDirectory WRITE
+                 setMainGameDirectory NOTIFY mainGameDirectoryChanged)
 
-    public:
-        explicit SqliteUserLibrary(QString path, QString mainGameDirectory);
+public:
+  explicit SqliteUserLibrary(QString path, QString mainGameDirectory);
 
-        ~SqliteUserLibrary() override;
+  ~SqliteUserLibrary() override;
 
-        void setMainGameDirectory(const QString &directory);
+  void setMainGameDirectory(const QString &directory);
 
-        QString getMainGameDirectory();
+  QString getMainGameDirectory();
 
-        void addRomFile(RomFile &romFile) override;
+  void addRomFile(RomFile &romFile) override;
 
-        std::optional<RomFile> getRomFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes,
-                                                         bool inArchive) override;
+  std::optional<RomFile> getRomFileWithPathAndSize(const QString &filePath,
+                                                   size_t fileSizeBytes,
+                                                   bool inArchive) override;
 
-        std::vector<Entry> getEntries(int offset, int limit) override;
+  std::vector<Entry> getEntries(int offset, int limit) override;
 
-        std::optional<Entry> getEntry(int entryId) override;
+  std::optional<Entry> getEntry(int entryId) override;
 
-        std::vector<RomFile> getRomFilesWithContentHash(const QString &contentHash) override;
+  std::vector<RunConfiguration>
+  getRunConfigurations(const QString &contentHash) override;
 
-        std::vector<RomFile> getRomFiles() override;
+  void doStuffWithRunConfigurations() override;
 
-      bool removeRomFile(const QString &filePath, bool inArchive, const QString &archivePath) override;
+  std::vector<RomFile>
+  getRomFilesWithContentHash(const QString &contentHash) override;
 
-      void addPatchFile(PatchFile &file);
+  std::vector<RomFile> getRomFiles() override;
 
-      std::optional<PatchFile> getPatchFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes, bool inArchive);
+  std::optional<RomFile> getRomFile(int id) override;
 
-      std::vector<PatchFile> getPatchFiles();
+  void addPatchFile(PatchFile &file);
 
-      bool removePatchFile(const QString &filePath, bool inArchive, const QString &archivePath);
+  std::optional<PatchFile> getPatchFileWithPathAndSize(const QString &filePath,
+                                                       size_t fileSizeBytes,
+                                                       bool inArchive);
 
-        std::vector<WatchedDirectory> getWatchedDirectories() override;
+  std::vector<PatchFile> getPatchFiles();
 
-        bool addWatchedDirectory(const WatchedDirectory &directory) override;
+  std::vector<WatchedDirectory> getWatchedDirectories() override;
 
-        bool updateWatchedDirectory(const WatchedDirectory &directory) override;
+  bool addWatchedDirectory(const WatchedDirectory &directory) override;
 
-    signals:
-        void mainGameDirectoryChanged(const QString &newDirectory);
+  bool updateWatchedDirectory(const WatchedDirectory &directory) override;
 
-        void romFileAdded(int id, const QString &contentHash);
+signals:
+  void mainGameDirectoryChanged(const QString &newDirectory);
 
-        void entryCreated(int id, const QString &contentHash);
+  void romFileAdded(int id, const QString &contentHash);
 
-        void watchedDirectoryAdded(int id, const QString &path);
+  void entryCreated(int id, const QString &contentHash);
 
-    private:
-        static constexpr auto DATABASE_PREFIX = "userlibrary_";
+  void watchedDirectoryAdded(int id, const QString &path);
 
-        QString m_mainGameDirectory;
+private:
+  static constexpr auto DATABASE_PREFIX = "userlibrary_";
 
-        QSettings m_settings;
+  QString m_mainGameDirectory;
 
-        [[nodiscard]] QSqlDatabase getDatabase() const;
+  QSettings m_settings;
 
-        QString m_databasePath;
-    };
-} // library
+  [[nodiscard]] QSqlDatabase getDatabase() const;
+
+  QString m_databasePath;
+};
+} // namespace firelight::library
