@@ -127,7 +127,7 @@ const static std::map<int, std::map<std::string, std::string>>
         // N64
         {7,
          {{"mupen64plus-169screensize", "960x540"},
-          {"mupen64plus-43screensize", "640x480"},
+          {"mupen64plus-43screensize", "1280x960"},
           {"mupen64plus-BackgroundMode", "OnePiece"},
           {"mupen64plus-BilinearMode", "standard"},
           {"mupen64plus-CorrectTexrectCoords", "Off"},

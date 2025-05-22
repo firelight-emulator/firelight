@@ -190,6 +190,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 }
 
 EmulatorItem::~EmulatorItem() {
+  m_stopping = true;
   spdlog::info("Destroying EmulatorItem");
   getDiscordManager()->clearActivity();
   m_autosaveTimer.stop();
@@ -197,6 +198,8 @@ EmulatorItem::~EmulatorItem() {
   // QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::QueuedConnection);
   m_emulationThread.exit();
   m_emulationThread.wait();
+
+  m_threadPool.waitForDone();
 }
 
 bool EmulatorItem::paused() const { return m_paused; }
@@ -204,9 +207,26 @@ bool EmulatorItem::paused() const { return m_paused; }
 void EmulatorItem::setPaused(const bool paused) {
   if (m_paused != paused) {
     m_paused = paused;
-    m_audioManager->setMuted(m_paused);
+    if (m_audioManager) {
+      m_audioManager->setMuted(m_paused);
+    }
     emit pausedChanged();
     update();
+  }
+}
+bool EmulatorItem::isRewindEnabled() const { return m_rewindEnabled; }
+void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
+  if (m_rewindEnabled == rewindEnabled) {
+    return;
+  }
+
+  m_rewindEnabled = rewindEnabled;
+  emit rewindEnabledChanged();
+
+  if (rewindEnabled && !m_rewindPointTimer.isActive()) {
+    m_rewindPointTimer.start();
+  } else if (!rewindEnabled && m_rewindPointTimer.isActive()) {
+    m_rewindPointTimer.stop();
   }
 }
 
@@ -284,78 +304,76 @@ void EmulatorItem::loadGame(int entryId) {
 
     auto entry = getUserLibrary()->getEntry(entryId);
 
-    // auto entry = getLibraryDatabase()->getLibraryEntry(entryId);
-    //
     if (!entry.has_value()) {
       spdlog::warn("Entry with id {} does not exist...", entryId);
     }
 
-    m_gameName = entry->displayName;
-    //
-    // m_currentEntry = *entry;
+    auto runConfigurations =
+        getUserLibrary()->getRunConfigurations(entry->contentHash);
 
-    auto roms =
-        getUserLibrary()->getRomFilesWithContentHash(entry->contentHash);
-    if (roms.empty()) {
-      spdlog::warn("No ROM file found for entry with id {}", entryId);
+    if (runConfigurations.empty()) {
+      spdlog::warn("No run configuration found for entry with id {}", entryId);
+      return;
     }
 
-    auto romFile = std::unique_ptr<firelight::library::RomFile>();
-    for (auto &rom : roms) {
-      if (!rom.inArchive()) {
-        romFile = std::make_unique<firelight::library::RomFile>(rom);
+    auto runConfig = runConfigurations[0];
+    spdlog::info("Got run configuration for entry with contentHash {}: {}",
+                 entry->contentHash.toStdString(), runConfig.id);
+
+    if (runConfig.type == firelight::library::RunConfiguration::TYPE_ROM) {
+      auto romId = runConfig.romId;
+      auto rom = getUserLibrary()->getRomFile(romId);
+
+      if (!rom.has_value()) {
+        return;
       }
-    }
 
-    // If we didn't find one that isn't in an archive, just use the first one
-    if (!romFile) {
-      romFile = std::make_unique<firelight::library::RomFile>(roms[0]);
-    }
+      if (rom->inArchive() &&
+          !std::filesystem::exists(rom->getArchivePathName().toStdString())) {
+        spdlog::error("Content path doesn't exist: {}",
+                      rom->getArchivePathName().toStdString());
+        return;
+      }
 
-    if (romFile->inArchive() &&
-        !std::filesystem::exists(romFile->getArchivePathName().toStdString())) {
-      spdlog::error("Content path doesn't exist: {}",
-                    romFile->getArchivePathName().toStdString());
-      return;
-    }
+      if (!rom->inArchive() &&
+          !std::filesystem::exists(rom->getFilePath().toStdString())) {
+        spdlog::error("Content path doesn't exist: {}",
+                      rom->getFilePath().toStdString());
+        return;
+      }
 
-    if (!romFile->inArchive() &&
-        !std::filesystem::exists(romFile->getFilePath().toStdString())) {
-      spdlog::error("Content path doesn't exist: {}",
-                    romFile->getFilePath().toStdString());
-      return;
-    }
+      rom->load();
 
-    romFile->load();
+      std::string corePath =
+          firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
+      //
+      QByteArray saveDataBytes;
+      const auto saveData = getSaveManager()->readSaveData(
+          rom->getContentHash(), entry->activeSaveSlot);
+      if (saveData.has_value()) {
+        saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
+                                   saveData->getSaveRamData().size());
+      }
 
-    std::string corePath =
-        firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
-    //
-    QByteArray saveDataBytes;
-    const auto saveData = getSaveManager()->readSaveData(
-        romFile->getContentHash(), entry->activeSaveSlot);
-    if (saveData.has_value()) {
-      saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                 saveData->getSaveRamData().size());
-    }
+      m_entryId = entryId;
+      m_gameName = entry->displayName;
+      m_gameData = rom->getContentBytes();
+      m_saveData = saveDataBytes;
+      m_corePath = QString::fromStdString(corePath);
+      m_contentHash = rom->getContentHash();
+      m_saveSlotNumber = entry->activeSaveSlot;
+      m_platformId = entry->platformId;
+      m_contentPath = rom->getFilePath();
 
-    m_entryId = entryId;
-    m_gameData = romFile->getContentBytes();
-    m_saveData = saveDataBytes;
-    m_corePath = QString::fromStdString(corePath);
-    m_contentHash = romFile->getContentHash();
-    m_saveSlotNumber = entry->activeSaveSlot;
-    m_platformId = entry->platformId;
-    m_contentPath = romFile->getFilePath();
+      emit entryIdChanged();
+      emit gameNameChanged();
+      emit contentHashChanged();
+      emit platformIdChanged();
 
-    emit entryIdChanged();
-    emit gameNameChanged();
-    emit contentHashChanged();
-    emit platformIdChanged();
-
-    m_loaded = true;
-    if (m_startAfterLoading) {
-      startGame();
+      m_loaded = true;
+      if (m_startAfterLoading && !m_stopping) {
+        startGame();
+      }
     }
   });
 }
@@ -379,8 +397,9 @@ void EmulatorItem::startGame() {
     m_core->setSystemDirectory(getCoreSystemDirectory());
 
     // Qt owns the renderer, so it will destroy it.
-    m_renderer = new EmulatorItemRenderer(
-        window()->rendererInterface()->graphicsApi(), std::move(m_core));
+    m_renderer =
+        new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(),
+                                 std::move(m_core), window());
 
     m_renderer->onGeometryChanged([this](unsigned int width,
                                          unsigned int height, float aspectRatio,

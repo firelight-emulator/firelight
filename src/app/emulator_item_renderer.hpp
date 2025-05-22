@@ -18,6 +18,7 @@
 #include "libretro/core_configuration.hpp"
 #include "manager_accessor.hpp"
 
+#include <libretro/libretro_vulkan.h>
 #include <qchronotimer.h>
 // #include "../later/video_decoder.h"
 // #include "video_encoder.h"
@@ -29,7 +30,9 @@ class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public firelight::ManagerAccessor {
 public:
   explicit EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api,
-                                std::unique_ptr<libretro::Core> core);
+                                std::unique_ptr<libretro::Core> core,
+                                QWindow *window);
+  void setHwRenderInterface(retro_hw_render_callback *iface) override;
 
   void onGeometryChanged(
       const std::function<void(int, int, float, double)> &callback) {
@@ -105,6 +108,7 @@ protected:
   void render(QRhiCommandBuffer *cb) override;
 
 private:
+  QWindow *m_window = nullptr;
   EmulatorItem *m_emulatorItem;
   // firelight::av::VideoEncoder *m_encoder = nullptr;
   // firelight::av::VideoDecoder *m_decoder = nullptr;
@@ -162,6 +166,8 @@ private:
   GLint m_currentFramebufferId = 0;
   std::function<void()> m_resetContextFunction = nullptr;
   std::function<void()> m_destroyContextFunction = nullptr;
+  retro_vulkan_create_device_t m_vulkanCreateDeviceFunc = nullptr;
+  retro_vulkan_image m_vulkanImage;
 
   // Default according to libretro docs
   QImage::Format m_pixelFormat = QImage::Format_RGB16;

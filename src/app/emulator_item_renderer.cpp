@@ -22,10 +22,24 @@ static QRhiCommandBuffer *globalCb = nullptr;
 
 EmulatorItemRenderer::EmulatorItemRenderer(
     const QSGRendererInterface::GraphicsApi api,
-    std::unique_ptr<libretro::Core> core)
-    : m_graphicsApi(api), m_core(std::move(core)) {
+    std::unique_ptr<libretro::Core> core, QWindow *window)
+    : m_graphicsApi(api), m_core(std::move(core)), m_window(window) {
   m_core->setVideoReceiver(this);
   globalRenderer = this;
+}
+void EmulatorItemRenderer::setHwRenderInterface(
+    retro_hw_render_callback *iface) {
+
+  iface->get_proc_address = [](const char *sym) -> retro_proc_address_t {
+    return globalRenderer->getProcAddress(sym);
+  };
+
+  iface->get_current_framebuffer = [] {
+    return globalRenderer->getCurrentFramebufferId();
+  };
+
+  setResetContextFunc(iface->context_reset);
+  setDestroyContextFunc(iface->context_destroy);
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
@@ -67,6 +81,23 @@ void EmulatorItemRenderer::receive(const void *data, unsigned width,
     auto newImage =
         image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
     m_currentUpdateBatch->uploadTexture(colorTexture(), newImage);
+  } else if (data == RETRO_HW_FRAME_BUFFER_VALID) {
+    // QRhiTexture *texture = rhi()->newTexture(
+    //     QRhiTexture::RGBA8, QSize(m_coreMaxWidth, m_coreMaxHeight));
+    // // if (!texture->createFrom(
+    // //         {.layout = m_vulkanImage.image_layout,
+    // //          .object = (quint64)m_vulkanImage.create_info.image})) {
+    // //   spdlog::error("woah there");
+    // // }
+    // texture->create();
+    // // QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
+    // QImage image(m_coreMaxWidth, m_coreMaxHeight, QImage::Format_RGBA8888);
+    // image.fill(Qt::green);
+    // m_currentUpdateBatch->uploadTexture(texture, image);
+    //
+    // m_currentUpdateBatch->copyTexture(colorTexture(), texture);
+
+    // m_currentUpdateBatch->uploadTexture({}, QRhiTextureUploadDescription{});
   }
 }
 
@@ -88,6 +119,7 @@ void EmulatorItemRenderer::getHwRenderContext(
   // contextType = RETRO_HW_CONTEXT_OPENGLES_VERSION;
   // major = 3;
   // minor = 1;
+  spdlog::info("heya");
 }
 
 proc_address_t EmulatorItemRenderer::getProcAddress(const char *sym) {
@@ -169,48 +201,39 @@ void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
         retro_hw_render_context_negotiation_interface_vulkan *>(inter);
 
     auto thingggg = *iface;
-    // iface->create_device = [](retro_vulkan_context *context, VkInstance
-    // instance, VkPhysicalDevice gpu,
-    //                           VkSurfaceKHR surface, PFN_vkGetInstanceProcAddr
-    //                           get_instance_proc_addr, const char
-    //                           **required_device_extensions, unsigned
-    //                           num_required_device_extensions, const char
-    //                           **required_device_layers, unsigned
-    //                           num_required_device_layers, const
-    //                           VkPhysicalDeviceFeatures *required_features) {
-    //     spdlog::info("Calling create_device");
-    //     return false;
-    // };
-    // iface->create_device2 = [](retro_vulkan_context *context, VkInstance
-    // instance, VkPhysicalDevice gpu,
-    //                            VkSurfaceKHR surface,
-    //                            PFN_vkGetInstanceProcAddr
-    //                            get_instance_proc_addr,
-    //                            retro_vulkan_create_device_wrapper_t
-    //                            create_device_wrapper, void *opaque) {
-    //     printf("Calling create device 2***************\n");
-    //     // auto vulkanHandles = reinterpret_cast<const
-    //     QRhiVulkanNativeHandles *>(rhi()->nativeHandles());
-    //     // return vulkanHandles-;
-    //     return false;
-    // };
-    //
-    // iface->create_instance = [](PFN_vkGetInstanceProcAddr
-    // get_instance_proc_addr, const VkApplicationInfo *app,
-    //                             retro_vulkan_create_instance_wrapper_t
-    //                             create_instance_wrapper, void *opaque) {
-    //     spdlog::info("Calling create_instance");
-    //     printf("Calling create instance***************\n");
-    //     auto vulkanHandles = reinterpret_cast<const QRhiVulkanNativeHandles
-    //     *>(globalRenderer->rhi()->
-    //         nativeHandles());
-    //     return vulkanHandles->inst->vkInstance();
-    // };
-    //
-    // iface->destroy_device = []() {
-    //     printf("destroy device***************\n");
-    //     spdlog::info("Doing nothing in destroy device");
-    // };
+    auto info = iface->get_application_info();
+
+    m_vulkanCreateDeviceFunc = iface->create_device;
+    iface->create_device2 =
+        [](retro_vulkan_context *context, VkInstance instance,
+           VkPhysicalDevice gpu, VkSurfaceKHR surface,
+           PFN_vkGetInstanceProcAddr get_instance_proc_addr,
+           retro_vulkan_create_device_wrapper_t create_device_wrapper,
+           void *opaque) {
+          printf("Calling create device 2***************\n");
+          // auto vulkanHandles = reinterpret_cast<const
+          // QRhiVulkanNativeHandles *>(rhi()->nativeHandles());
+          // return vulkanHandles-;
+          return false;
+        };
+
+    iface->create_instance =
+        [](PFN_vkGetInstanceProcAddr get_instance_proc_addr,
+           const VkApplicationInfo *app,
+           retro_vulkan_create_instance_wrapper_t create_instance_wrapper,
+           void *opaque) {
+          spdlog::info("Calling create_instance");
+          printf("Calling create instance***************\n");
+          auto vulkanHandles =
+              reinterpret_cast<const QRhiVulkanNativeHandles *>(
+                  globalRenderer->rhi()->nativeHandles());
+          return vulkanHandles->inst->vkInstance();
+        };
+
+    iface->destroy_device = []() {
+      printf("destroy device***************\n");
+      spdlog::info("Doing nothing in destroy device");
+    };
   }
 }
 
@@ -255,29 +278,36 @@ void EmulatorItemRenderer::setHwRenderInterface(
       return;
     };
     (*ptr)->get_sync_index = [](void *handle) {
-      spdlog::info("Calling get sync index");
-      return (uint32_t)0;
+      spdlog::info("Calling get sync index: {}", globalRhi->currentFrameSlot());
+      return (uint32_t)globalRhi->currentFrameSlot();
     };
     (*ptr)->get_sync_index_mask = [](void *handle) {
       spdlog::info("Calling get sync index mask");
-      return (uint32_t)4;
+      return (uint32_t)2;
     };
+
     (*ptr)->lock_queue = [](void *handle) {
       spdlog::info("Calling lock queue");
     };
+    (*ptr)->unlock_queue = [](void *handle) {
+      spdlog::info("Calling unlock queue");
+    };
+
     (*ptr)->set_command_buffers = [](void *handle, uint32_t num_cmd,
                                      const VkCommandBuffer *cmd) {
       spdlog::info("Calling set command buffers");
     };
-    (*ptr)->set_image =
-        [](void *handle, const retro_vulkan_image *image,
-           uint32_t num_semaphores, const VkSemaphore *semaphores,
-           uint32_t src_queue_family) { spdlog::info("Calling set image"); };
+
+    (*ptr)->set_image = [](void *handle, const retro_vulkan_image *image,
+                           uint32_t num_semaphores,
+                           const VkSemaphore *semaphores,
+                           uint32_t src_queue_family) {
+      spdlog::info("Calling set image");
+      globalRenderer->m_vulkanImage = *image;
+    };
+
     (*ptr)->set_signal_semaphore = [](void *handle, VkSemaphore semaphore) {
       spdlog::info("Calling set signal semaphore");
-    };
-    (*ptr)->unlock_queue = [](void *handle) {
-      spdlog::info("Calling unlock queue");
     };
   }
 }
@@ -386,6 +416,40 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
     spdlog::info("Calling reset context function");
     m_resetContextFunction();
     m_resetContextFunction = nullptr;
+
+    if (m_vulkanCreateDeviceFunc) {
+      static const char *vulkan_device_extensions[] = {
+          "VK_KHR_swapchain",
+      };
+      auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(
+          rhi()->nativeHandles());
+
+      VkPhysicalDeviceFeatures deviceFeatures[] = {
+          VkPhysicalDeviceFeatures{.geometryShader = VK_TRUE}};
+
+      auto layers = handles->inst->supportedLayers();
+      const char *layersArray[layers.size()];
+
+      int i = 0;
+      for (const auto &layer : layers) {
+        layersArray[i++] = layer.name.toStdString().c_str();
+      }
+
+      retro_vulkan_context ctx{};
+      m_vulkanCreateDeviceFunc(
+          &ctx, handles->inst->vkInstance(), handles->physDev,
+          QVulkanInstance::surfaceForWindow(m_window),
+          [](VkInstance instance, const char *pName) {
+            spdlog::info("Getting instance proc addr: {}", pName);
+            auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(
+                globalRhi->nativeHandles());
+            return handles->inst->getInstanceProcAddr(pName);
+          },
+          vulkan_device_extensions, 1, layersArray, i, deviceFeatures);
+
+      m_vulkanCreateDeviceFunc = nullptr;
+      spdlog::info("Initialized Vulkan device");
+    }
 
     cb->endExternal();
     cb->endPass(resourceUpdates);
@@ -706,6 +770,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
       getAchievementManager()->doFrame(m_core.get());
     }
 
+    auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(
+        rhi()->nativeHandles());
+
     // update();
     cb->endExternal();
 
@@ -773,7 +840,9 @@ void EmulatorItemRenderer::save(const bool waitForFinish) const {
   spdlog::debug("Saving game data");
   firelight::saves::Savefile saveData(
       m_core->getMemoryData(libretro::SAVE_RAM));
-  saveData.setImage(m_currentImage.copy());
+  if (!m_currentImage.isNull()) {
+    saveData.setImage(m_currentImage.copy());
+  }
 
   QFuture<bool> result = getSaveManager()->writeSaveData(
       m_contentHash, m_saveSlotNumber, saveData);

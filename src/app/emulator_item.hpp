@@ -29,6 +29,8 @@ private:
                  audioBufferLevelChanged)
   Q_PROPERTY(int playbackMultiplier READ playbackMultiplier WRITE
                  setPlaybackMultiplier NOTIFY playbackMultiplierChanged)
+  Q_PROPERTY(bool rewindEnabled READ isRewindEnabled WRITE setRewindEnabled
+                 NOTIFY rewindEnabledChanged)
 
 public:
   explicit EmulatorItem(QQuickItem *parent = nullptr);
@@ -72,6 +74,10 @@ public:
   [[nodiscard]] bool paused() const;
 
   void setPaused(bool paused);
+
+  bool isRewindEnabled() const;
+
+  void setRewindEnabled(bool rewindEnabled);
 
   [[nodiscard]] float audioBufferLevel() const;
 
@@ -140,14 +146,19 @@ signals:
 
   void canUndoLoadSuspendPointChanged();
 
+  void rewindEnabledChanged();
+
 protected:
   QQuickRhiItemRenderer *createRenderer() override;
 
 private:
+  bool m_stopping = false;
   QThreadPool m_threadPool;
   QTimer m_autosaveTimer;
   QTimer m_rewindPointTimer;
   EmulatorItemRenderer *m_renderer = nullptr;
+
+  bool m_rewindEnabled = true;
 
   QThread m_emulationThread;
   QChronoTimer m_emulationTimer{};

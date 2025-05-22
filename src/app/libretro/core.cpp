@@ -211,22 +211,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_HW_RENDER: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
     auto *renderCallback = static_cast<retro_hw_render_callback *>(data);
-
-    videoReceiver->getHwRenderContext(renderCallback->context_type,
-                                      renderCallback->version_major,
-                                      renderCallback->version_minor);
-
-    renderCallback->get_proc_address =
-        [](const char *sym) -> retro_proc_address_t {
-      return currentCore->videoReceiver->getProcAddress(sym);
-    };
-
-    renderCallback->get_current_framebuffer = [] {
-      return currentCore->videoReceiver->getCurrentFramebufferId();
-    };
-
-    videoReceiver->setResetContextFunc(renderCallback->context_reset);
-    videoReceiver->setDestroyContextFunc(renderCallback->context_destroy);
+    videoReceiver->setHwRenderInterface(renderCallback);
     m_destroyContextFunction = renderCallback->context_destroy;
 
     break;
@@ -566,10 +551,12 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE");
 
-    auto ptr = static_cast<retro_hw_render_interface_vulkan **>(data);
-    *ptr = new retro_hw_render_interface_vulkan;
+    auto ptr = static_cast<retro_hw_render_interface **>(data);
+    // *ptr = new retro_hw_render_interface_vulkan;
     (*ptr)->interface_type = RETRO_HW_RENDER_INTERFACE_VULKAN;
     (*ptr)->interface_version = RETRO_HW_RENDER_INTERFACE_VULKAN_VERSION;
+
+    currentCore->videoReceiver->setHwRenderInterface(ptr);
 
     auto content = *ptr;
     // ptr->interface_type = RETRO_HW_RENDER_INTERFACE_VULKAN;
@@ -587,6 +574,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
         "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE");
     auto ptr =
         static_cast<retro_hw_render_context_negotiation_interface *>(data);
+    currentCore->videoReceiver->setHwRenderContextNegotiationInterface(ptr);
     auto type = ptr->interface_type;
     auto version = ptr->interface_version;
 
