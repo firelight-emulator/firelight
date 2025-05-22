@@ -20,6 +20,7 @@ Dialog {
     modal: true
     // parent: Overlay.overlay
     anchors.centerIn: Overlay.overlay
+    focus: true
     padding: 24
 
     property var doOnAccepted

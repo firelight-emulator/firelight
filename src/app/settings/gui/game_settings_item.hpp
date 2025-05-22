@@ -62,6 +62,7 @@ signals:
   void settingChanged(QString key, QString value);
 
 private:
+  QMap<QString, std::string> m_defaultSettings{};
   int m_platformId = 0;
   QString m_contentHash;
 };

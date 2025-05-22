@@ -11,10 +11,23 @@ import Firelight 1.0
 FocusScope {
     id: root
 
+    objectName: "emulatorPage"
+
+    required property StackView stackView
+    required property int entryId
+    property GameSettings gameSettings: GameSettings {
+        platformId: root.platformId
+        contentHash: root.contentHash
+    }
+
     property bool blurEnabled: false
     property alias audioBufferLevel: emulator.audioBufferLevel
 
-    required property GameSettings gameSettings
+    Component.onCompleted: {
+        emulator.loadGame(entryId)
+    }
+
+    property alias paused: emulator.paused
 
     signal closing()
     signal aboutToRunFrame()
@@ -48,7 +61,6 @@ FocusScope {
         } else if (gameSettings.pictureMode === "integer-scale") {
             gameSettings.pictureMode = "stretch"
         }
-
     }
 
     // Keys.onPressed: function(event) {
@@ -72,7 +84,6 @@ FocusScope {
     property alias videoAspectRatio: emulator.videoAspectRatio
     property alias contentHash: emulator.contentHash
     property alias gameName: emulator.gameName
-    property alias entryId: emulator.entryId
     property alias platformId: emulator.platformId
     property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
@@ -114,18 +125,6 @@ FocusScope {
         emulator.undoLastLoadSuspendPoint()
     }
 
-    property alias paused: emulator.paused
-
-    // StackView.visible: true
-
-    // StackView.onDeactivating: function () {
-    //     emulator.paused = true
-    // }
-    // StackView.onActivated: function () {
-    //     emulator.paused = false
-    //     debugWindow2.visible = true
-    // }
-
     Rectangle {
         id: background
         color: "black"
@@ -136,6 +135,9 @@ FocusScope {
         id: emulator
         focus: true
         anchors.centerIn: parent
+
+        layer.enabled: true
+
         width: {
             if (gameSettings.pictureMode === "stretch") {
                 return parent.width
@@ -144,11 +146,8 @@ FocusScope {
             } else if (gameSettings.pictureMode === "integer-scale") {
                 return height * videoAspectRatio
             }
-            // let num = parent.width / emulator.videoWidth
-            // console.log("NUM!!!!: " + num)
-            // return Math.floor(num) * emulator.videoWidth
 
-
+            return emulator.videoWidth
         }
         height: {
             if (gameSettings.pictureMode === "stretch") {
@@ -159,45 +158,25 @@ FocusScope {
                 let num = parent.height / emulator.videoHeight
                 return Math.floor(num) * emulator.videoHeight
             }
-            // console.log("Picture mode: " + gameSettings.pictureMode)
 
-            // return parent.width / videoAspectRatio
+            return emulator.videoHeight
         }
 
-        // Behavior on width {
-        //     NumberAnimation {
-        //         duration: 200
-        //         easing.type: Easing.InOutQuad
-        //     }
-        // }
-        // Behavior on height {
-        //     NumberAnimation {
-        //         duration: 200
-        //         easing.type: Easing.InOutQuad
-        //     }
-        // }
+        rewindEnabled: root.gameSettings.rewindEnabled
+
         smooth: false
-
-
-        onVideoAspectRatioChanged: {
-            console.log("new aspect ratio: " + videoAspectRatio)
-        }
 
         onAboutToRunFrame: {
             root.aboutToRunFrame()
         }
 
-        // onGameStarted: {
-        //     emulator.paused = false
-        // }
-
         onRewindPointsReady: function (points) {
-            root.rewindPointsReady(points)
+            root.stackView.pushItem(rewindPage, {
+                model: points,
+                aspectRatio: emulator.videoAspectRatio
+            }, StackView.Immediate)
+            // root.rewindPointsReady(points)
         }
-
-        // Keys.onDigit1Pressed: {
-        //     emulator.loadSuspendPoint(1)
-        // }
     }
 
     Rectangle {
@@ -263,6 +242,13 @@ FocusScope {
         anchors.right: parent.right
         anchors.topMargin: 12
         anchors.rightMargin: 12
+    }
+
+    Component {
+        id: rewindPage
+        RewindMenu {
+
+        }
     }
 
     // FrameAnimation {

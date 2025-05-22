@@ -8,7 +8,6 @@ FocusScope {
     required property GameSettings gameSettings
 
     property var level: GameSettings.Game
-    property var settings: null
 
     ColumnLayout {
         spacing: 8
@@ -155,7 +154,6 @@ FocusScope {
                 if (!initialized) {
                     return
                 }
-                // console.log("Changing setting to: " + checked)
                 gameSettings.setValue(level, "rewind-enabled", checked ? "true" : "false")
             }
 

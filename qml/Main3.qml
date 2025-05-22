@@ -16,6 +16,19 @@ ApplicationWindow {
     width: 1920
     height: 1080
 
+    // onActiveFocusItemChanged: {
+    //     console.log("Active focus item changed to: " + window.activeFocusItem)
+    //     let item = window.activeFocusItem
+    //     let level = 0
+    //     while (item) {
+    //         let spaces = " ".repeat(level * 2)
+    //
+    //         console.log(spaces + item)
+    //         item = item.parent
+    //         level++
+    //     }
+    // }
+
     // flags: Qt.NoTitleBarBackgroundHint
 
     visible: true
@@ -25,11 +38,6 @@ ApplicationWindow {
 
     property var maxContentWidth: 1400
 
-
-    Component.onCompleted: {
-        console.log("Completed app window")
-    }
-
     property bool blur: false
 
     background: FLUserBackground {
@@ -37,660 +45,134 @@ ApplicationWindow {
         defaultColor: "#222328"
         usingCustomBackground: AppearanceSettings.usingCustomBackground
         backgroundFile: AppearanceSettings.backgroundFile
+    }
 
-        Component.onCompleted: {
-            console.log("Background loaded")
+    Loader {
+        id: emulatorLoader
+        // visible: status === Loader.Ready
+        focus: true
+
+        StackView.visible: true
+
+        property real blurAmount: 0
+
+        Behavior on blurAmount {
+            NumberAnimation {
+                easing.type: Easing.InOutQuad
+                duration: 250
+            }
+        }
+
+        layer.enabled: blurAmount !== 0
+        layer.effect: MultiEffect {
+            // enabled: root.blurAmount !== 0
+            source: emulatorLoader
+            anchors.fill: emulatorLoader
+            blurEnabled: true
+            blurMultiplier: 0
+            blurMax: 64
+            autoPaddingEnabled: false
+            blur: emulatorLoader.blurAmount
+        }
+
+        Rectangle {
+            id: dimmer
+            color: "black"
+            visible: emulatorLoader.status === Loader.Ready
+            opacity: emulatorLoader.blurAmount * 0.55
+            anchors.fill: parent
+
+            z: 10
+        }
+
+        Keys.onEscapePressed: function(event) {
+            Router.navigateTo("/quick-menu")
+            mainContentStack.pushItem(content, {}, StackView.PushTransition)
+        }
+
+        StackView.onActivating: {
+            emulatorLoader.blurAmount = 0
+        }
+
+        StackView.onActivated: {
+            emulatorLoader.item.paused = false
+        }
+
+        StackView.onDeactivating: {
+            emulatorLoader.blurAmount = 1
+            emulatorLoader.item.paused = true
         }
     }
 
-    LeftNavigationBar {
-        id: navigationBar
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-    }
-
-    Pane {
+    MainContent {
         id: content
-        anchors.left: navigationBar.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-
-        property string title: "Firelight"
-
-        padding: 16
-        background: Item {}
-        contentItem: ColumnLayout {
-            spacing: 16
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.maximumHeight: 42
-                Layout.minimumHeight: 42
-
-                spacing: 12
-
-                Button {
-                    background: Rectangle {
-                        color: "white"
-                        opacity: parent.pressed ? 0.16 : 0.1
-                        radius: 4
-                        visible: theHoverHandler.hovered && parent.enabled
-                    }
-                    HoverHandler {
-                        id: theHoverHandler
-                        cursorShape: Qt.PointingHandCursor
-                    }
-                    padding: 4
-                    Layout.fillHeight: true
-                    Layout.preferredWidth: parent.height
-                    contentItem: FLIcon {
-                        icon: "arrow-back"
-                        size: height
-                        color: parent.enabled ? "white" : "#727272"
-                    }
-
-                    enabled: Router.historySize > 1
-
-                    onClicked: {
-                        Router.goBack()
-                        // contentStack.popCurrentItem()
-                    }
-                }
-
-                Text {
-                    text: content.title
-                    // Layout.fillWidth: true
-                    // Layout.fillHeight: true
-                    color: "white"
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.DemiBold
-                    font.pixelSize: 24
-                    verticalAlignment: Qt.AlignVCenter
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.horizontalStretchFactor: 1
-                }
-            }
-
-            StackView {
-                id: contentStack
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                Component.onCompleted: {
-                    Router.navigateTo("/library")
-                }
-
-                Connections {
-                    target: Router
-
-                    function onRouteChanged(route) {
-                        if (route === "/shop") {
-                            contentStack.clear()
-                            content.title = "Mod Shop"
-                            contentStack.pushItem(shopPage, {}, StackView.PushTransition)
-                        } else if (route === "/library") {
-                            contentStack.clear()
-                            content.title = "Library"
-                            contentStack.pushItem(allGamesPage, {}, StackView.PushTransition)
-                        } else if (route.startsWith("/library/entries/")) {
-                            let things = route.split("/")
-                            if (things.length === 4) {
-                                console.log("THREE: " + things[3])
-                                content.title = "Game Details"
-                                contentStack.pushItem(gameDetailsPage, {entryId: things[3]}, StackView.PushTransition)
-                            }
-                            console.log(things)
-                        } else if (route.startsWith("/shop/mods/")) {
-                            let things = route.split("/")
-                            content.title = "Mod Details"
-                            contentStack.pushItem(shopItemPage, {modId: things[3]}, StackView.PushTransition)
-                        } else if (route === "/settings") {
-                            content.title = "Settings"
-                            contentStack.push(settingsScreen)
-                        } else if (route === "/controllers") {
-                            content.title = "Controllers"
-                            contentStack.push(controllersPage)
-                        } else if (route.startsWith("/controllers/keyboard/")) {
-                            content.title = "Edit keyboard profile"
-                            let things = route.split("/")
-                            if (things.length === 4) {
-                                contentStack.pushItem(keyboardInputMappingPage, {playerNumber: things[3]}, StackView.PushTransition)
-                            } else {
-                                contentStack.push(lol)
-                            }
-                        } else if (route.startsWith("/controllers/profiles/")) {
-                            content.title = "Edit controller profile"
-                            let things = route.split("/")
-                            if (things.length === 4) {
-                                contentStack.pushItem(controllerInputMappingPage, {playerNumber: things[3]}, StackView.PushTransition)
-                            } else {
-                                contentStack.push(lol)
-                            }
-                        } else {
-                            contentStack.push(lol)
-                        }
-                    }
-                }
-
-                Component {
-                    id: lol
-                    Text {
-                        text: "How did you even get here"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: "white"
-                    }
-                }
-
-                pushEnter: Transition {}
-                pushExit: Transition {}
-                popEnter: Transition {}
-                popExit: Transition {}
-                replaceEnter: Transition {}
-                replaceExit: Transition {}
-            }
-        }
-    }
-
-    // SplitView {
-    //     id: splitView
-    //     anchors.fill: parent
-    //     orientation: Qt.Horizontal
-    //
-    //     // background: Item {}
-    //
-    //     focus: true
-    //
-    //     handle: Rectangle {
-    //         id: handleDelegate
-    //         color: handleHover.hovered ? "#8e8e8e" : "#4B4B4B"
-    //         implicitWidth: 1
-    //
-    //         Behavior on color {
-    //             ColorAnimation {
-    //                 duration: 250
-    //                 easing.type: Easing.InOutQuad
-    //             }
-    //         }
-    //
-    //         HoverHandler {
-    //             id: handleHover
-    //         }
-    //
-    //         containmentMask: Item {
-    //             x: (handleDelegate.width - width) / 2
-    //             width: 16
-    //             height: splitView.height
-    //         }
-    //     }
-    //
-    //     LeftNavigationBar {
-    //         id: navigationBar
-    //         anchors.left: parent.left
-    //         anchors.top: parent.top
-    //         anchors.bottom: parent.bottom
-    //     }
-    //
-    //     // Pane {
-    //     //     id: navbar
-    //     //     padding: 16
-    //     //
-    //     //     SplitView.minimumWidth: 100
-    //     //     SplitView.maximumWidth: 300
-    //     //     focus: true
-    //     //
-    //     //     background: Item {
-    //     //         // MultiEffect {
-    //     //         //     source: ShaderEffectSource {
-    //     //         //         width: navbar.width
-    //     //         //         height: navbar.height
-    //     //         //         sourceItem: window.background
-    //     //         //         sourceRect: Qt.rect(navbar.x, navbar.y, navbar.width, navbar.height)
-    //     //         //     }
-    //     //         //
-    //     //         //     anchors.fill: parent
-    //     //         //     blurEnabled: true
-    //     //         //     blurMultiplier: 1.0
-    //     //         //     blurMax: 32
-    //     //         //     blur: 1.0
-    //     //         // }
-    //     //
-    //     //         Rectangle {
-    //     //             color: "#19181d"
-    //     //             opacity: 1.0
-    //     //             anchors.fill: parent
-    //     //         }
-    //     //     }
-    //     //
-    //     //     contentItem: ColumnLayout {
-    //     //         spacing: 42
-    //     //
-    //     //         RowLayout {
-    //     //             Layout.leftMargin: 7
-    //     //             Layout.maximumHeight: 36
-    //     //             Layout.minimumHeight: 36
-    //     //             Layout.fillWidth: true
-    //     //             Image {
-    //     //                 source: "qrc:/images/firelight-logo"
-    //     //                 Layout.preferredHeight: parent.height
-    //     //                 sourceSize.height: parent.height
-    //     //                 mipmap: true
-    //     //             }
-    //     //             // Text {
-    //     //             //     color: "white"
-    //     //             //     padding: 0
-    //     //             //     opacity: parent.width > 140 ? 1 : 0
-    //     //             //     text: "Firelight"
-    //     //             //     Layout.preferredWidth: opacity > 0 ?
-    //     //             //     font.pixelSize: 20
-    //     //             //     font.weight: Font.Bold
-    //     //             //     font.family: Constants.regularFontFamily
-    //     //             //     horizontalAlignment: Text.AlignLeft
-    //     //             //     verticalAlignment: Text.AlignVCenter
-    //     //
-    //     //             //     Behavior on opacity {
-    //     //             //         NumberAnimation {
-    //     //             //             duration: 100
-    //     //             //             easing.type: Easing.InOutQuad
-    //     //             //         }
-    //     //             //     }
-    //     //             // }
-    //     //         }
-    //     //         // RowLayout {
-    //     //         //     Layout.alignment: Qt.AlignCenter
-    //     //         //     Layout.minimumHeight: 32
-    //     //         //     Layout.maximumHeight: 32
-    //     //         //     spacing: 12
-    //     //         //     Image {
-    //     //         //         source: "qrc:/images/firelight-logo"
-    //     //         //         Layout.preferredHeight: parent.height
-    //     //         //         sourceSize.height: parent.height
-    //     //         //         mipmap: true
-    //     //         //     }
-    //     //         //     Text {
-    //     //         //         color: "white"
-    //     //         //         padding: 0
-    //     //         //         Layout.preferredHeight: parent.height
-    //     //         //         text: "Firelight"
-    //     //         //         font.pixelSize: 24
-    //     //         //         font.weight: Font.Bold
-    //     //         //         font.family: Constants.regularFontFamily
-    //     //         //         horizontalAlignment: Text.AlignLeft
-    //     //         //         verticalAlignment: Text.AlignVCenter
-    //     //
-    //     //         //     }
-    //     //         // }
-    //     //         FLNavSection {
-    //     //             Layout.fillWidth: true
-    //     //
-    //     //             focus: true
-    //     //
-    //     //             FLNavItem {
-    //     //                 label: "Library"
-    //     //                 iconName: "book"
-    //     //                 checked: Router.currentRoute.startsWith("/library")
-    //     //                 onClicked: {
-    //     //                     Router.navigateTo("/library")
-    //     //                 }
-    //     //             }
-    //     //
-    //     //             FLNavItem {
-    //     //                 label: "Mod Shop"
-    //     //                 iconName: "shopping-bag"
-    //     //                 checked: Router.currentRoute.startsWith("/shop")
-    //     //                 onClicked: {
-    //     //                     Router.navigateTo("/shop")
-    //     //                 }
-    //     //             }
-    //     //
-    //     //             // FLNavItem {
-    //     //             //     label: "Gallery"
-    //     //             //     iconName: "photo-library"
-    //     //             //     checked: Router.currentRoute === "/gallery"
-    //     //             //     onClicked: {
-    //     //             //         Router.navigateTo("/gallery")
-    //     //             //     }
-    //     //             // }
-    //     //
-    //     //             // FLNavItem {
-    //     //             //     label: "Controllers"
-    //     //             //     iconName: "controller"
-    //     //             //     checked: Router.currentRoute === "/controllers"
-    //     //             //     onClicked: {
-    //     //             //         Router.navigateTo("/controllers")
-    //     //             //     }
-    //     //             // }
-    //     //
-    //     //             FLNavItem {
-    //     //                 label: "Settings"
-    //     //                 iconName: "settings"
-    //     //                 checked: Router.currentRoute.startsWith("/settings")
-    //     //                 onClicked: {
-    //     //                     Router.navigateTo("/settings")
-    //     //                 }
-    //     //             }
-    //     //
-    //     //             // FLNavItem {
-    //     //             //     label: "Favorites"
-    //     //             //     iconName: "kid-star"
-    //     //             // }
-    //     //
-    //     //             // FLNavItem {
-    //     //             //     label: "Recent"
-    //     //             //     iconName: "history"
-    //     //             // }
-    //     //
-    //     //             // FLNavItem {
-    //     //             //     label: "Newest"
-    //     //             //     iconName: "add"
-    //     //             // }
-    //     //         }
-    //     //         // FLNavSection {
-    //     //         //     Layout.fillWidth: true
-    //     //         //     title: "LIBRARY"
-    //     //
-    //     //         //     focus: true
-    //     //
-    //     //         //     FLNavItem {
-    //     //         //         label: "All games"
-    //     //         //         iconName: "book"
-    //     //         //         checked: Router.currentRoute === "/library"
-    //     //         //         onClicked: {
-    //     //         //             Router.navigateTo("/library")
-    //     //         //         }
-    //     //         //     }
-    //     //
-    //     //         //     // FLNavItem {
-    //     //         //     //     label: "Favorites"
-    //     //         //     //     iconName: "kid-star"
-    //     //         //     // }
-    //     //
-    //     //         //     // FLNavItem {
-    //     //         //     //     label: "Recent"
-    //     //         //     //     iconName: "history"
-    //     //         //     // }
-    //     //
-    //     //         //     // FLNavItem {
-    //     //         //     //     label: "Newest"
-    //     //         //     //     iconName: "add"
-    //     //         //     // }
-    //     //         // }
-    //     //         // FLNavSection {
-    //     //         //     title: "MOD SHOP"
-    //     //         //     Layout.fillWidth: true
-    //     //
-    //     //         //     FLNavItem {
-    //     //         //         label: "Browse"
-    //     //         //         iconName: "browse"
-    //     //         //         checked: Router.currentRoute === "/shop"
-    //     //         //         onClicked: {
-    //     //         //             Router.navigateTo("/shop")
-    //     //         //         }
-    //     //         //     }
-    //     //
-    //     //         //     // FLNavItem {
-    //     //         //     //     label: "Featured"
-    //     //         //     //     iconName: "bookmark-star"
-    //     //         //     // }
-    //     //
-    //     //         //     // FLNavItem {
-    //     //         //     //     label: "New Arrivals"
-    //     //         //     //     iconName: "star-shine"
-    //     //         //     // }
-    //     //         // }
-    //     //         // FLNavSection {
-    //     //         //     title: "OTHER"
-    //     //         //     Layout.fillWidth: true
-    //     //
-    //     //         //     FLNavItem {
-    //     //         //         label: "Settings"
-    //     //         //         iconName: "settings"
-    //     //         //         checked: Router.currentRoute === "/settings"
-    //     //         //         onClicked: {
-    //     //         //             Router.navigateTo("/settings")
-    //     //         //         }
-    //     //         //     }
-    //     //         // }
-    //     //         Item {
-    //     //             Layout.fillHeight: true
-    //     //             Layout.fillWidth: true
-    //     //         }
-    //     //     }
-    //     //
-    //     //
-    //     //
-    //     // }
-    //
-    //     Pane {
-    //         id: content
-    //
-    //         property string title: "Firelight"
-    //
-    //         padding: 16
-    //         background: Item {}
-    //         contentItem: ColumnLayout {
-    //             spacing: 16
-    //             RowLayout {
-    //                 Layout.fillWidth: true
-    //                 Layout.maximumHeight: 42
-    //                 Layout.minimumHeight: 42
-    //
-    //                 spacing: 12
-    //
-    //                 Button {
-    //                     background: Rectangle {
-    //                         color: "white"
-    //                         opacity: parent.pressed ? 0.16 : 0.1
-    //                         radius: 4
-    //                         visible: theHoverHandler.hovered && parent.enabled
-    //                     }
-    //                     HoverHandler {
-    //                         id: theHoverHandler
-    //                         cursorShape: Qt.PointingHandCursor
-    //                     }
-    //                     padding: 4
-    //                     Layout.fillHeight: true
-    //                     Layout.preferredWidth: parent.height
-    //                     contentItem: FLIcon {
-    //                         icon: "arrow-back"
-    //                         size: height
-    //                         color: parent.enabled ? "white" : "#727272"
-    //                     }
-    //
-    //                     enabled: Router.historySize > 1
-    //
-    //                     onClicked: {
-    //                         Router.goBack()
-    //                         // contentStack.popCurrentItem()
-    //                     }
-    //                 }
-    //
-    //                 Text {
-    //                     text: content.title
-    //                     // Layout.fillWidth: true
-    //                     // Layout.fillHeight: true
-    //                     color: "white"
-    //                     font.family: Constants.regularFontFamily
-    //                     font.weight: Font.DemiBold
-    //                     font.pixelSize: 24
-    //                     verticalAlignment: Qt.AlignVCenter
-    //                 }
-    //
-    //                 // Button {
-    //                 //     background: Rectangle {
-    //                 //         color: "white"
-    //                 //         opacity: 0.1
-    //                 //         radius: 4
-    //                 //         visible: theHoverHandler2.hovered
-    //                 //     }
-    //                 //     HoverHandler {
-    //                 //         id: theHoverHandler2
-    //                 //         cursorShape: Qt.PointingHandCursor
-    //                 //     }
-    //                 //     padding: 4
-    //                 //     Layout.fillHeight: true
-    //                 //     Layout.preferredWidth: parent.height
-    //                 //     contentItem: FLIcon {
-    //                 //         icon: "arrow-forward"
-    //                 //         size: height
-    //                 //         color: parent.enabled ? "white" : "#727272"
-    //                 //     }
-    //                 //
-    //                 //     enabled: false
-    //                 // }
-    //
-    //
-    //                 // Text {
-    //                 //     color: "white"
-    //                 //     font.family: Constants.regularFontFamily
-    //                 //     text: "Library"
-    //                 //     font.pixelSize: 28
-    //                 //     font.weight: Font.Bold
-    //                 //     Layout.fillHeight: true
-    //                 //     verticalAlignment: Text.AlignVCenter
-    //                 // }
-    //
-    //                 // Item {
-    //                 //     Layout.fillWidth: true
-    //                 //     Layout.fillHeight: true
-    //                 //     Layout.horizontalStretchFactor: 1
-    //                 // }
-    //
-    //                 // Pane {
-    //                 //     Layout.fillHeight: true
-    //                 //     Layout.preferredWidth: 460
-    //                 //     Layout.alignment: Qt.AlignHCenter
-    //                 //     padding: 8
-    //                 //     horizontalPadding: 10
-    //                 //     background: Rectangle {
-    //                 //         color: "#1D1D1D"
-    //                 //         opacity: 0.8
-    //                 //         radius: 8
-    //                 //         border.color: "#4B4B4B"
-    //                 //     }
-    //
-    //                 //     contentItem: RowLayout {
-    //                 //         TextInput {
-    //                 //             id: searchTextInput
-    //                 //             Layout.fillWidth: true
-    //                 //             Layout.fillHeight: true
-    //                 //             color: "white"
-    //                 //             font.pixelSize: 15
-    //                 //             font.family: Constants.regularFontFamily
-    //                 //             horizontalAlignment: Text.AlignLeft
-    //                 //             verticalAlignment: Text.AlignVCenter
-    //
-    //                 //             HoverHandler {
-    //                 //                 cursorShape: Qt.IBeamCursor
-    //                 //             }
-    //
-    //                 //             Text {
-    //                 //                 text: "Search"
-    //                 //                 anchors.fill: parent
-    //                 //                 color: "#727272"
-    //                 //                 font.pixelSize: 15
-    //                 //                 font.family: Constants.regularFontFamily
-    //                 //                 horizontalAlignment: Text.AlignLeft
-    //                 //                 verticalAlignment: Text.AlignVCenter
-    //                 //                 visible: (parent.length === 0) && !parent.activeFocus
-    //                 //             }
-    //
-    //                 //             Rectangle {
-    //                 //                 anchors.top: parent.bottom
-    //                 //                 width: parent.width
-    //                 //                 height: 300
-    //                 //                 color: "#1D1D1D"
-    //                 //                 visible: searchTextInput.length !== 0
-    //                 //             }
-    //                 //         }
-    //                 //         FLIcon {
-    //                 //             Layout.fillHeight: true
-    //                 //             icon: "search"
-    //                 //             size: height
-    //                 //             color: "#7C7C7C"
-    //
-    //                 //             HoverHandler {
-    //                 //                 cursorShape: Qt.PointingHandCursor
-    //                 //             }
-    //                 //         }
-    //                 //     }
-    //                 // }
-    //
-    //                 Item {
-    //                     Layout.fillWidth: true
-    //                     Layout.fillHeight: true
-    //                     Layout.horizontalStretchFactor: 1
-    //                 }
-    //             }
-    //
-    //             StackView {
-    //                 id: contentStack
-    //                 Layout.fillWidth: true
-    //                 Layout.fillHeight: true
-    //
-    //                 Connections {
-    //                     target: Router
-    //
-    //                     function onRouteChanged(route) {
-    //                         if (route === "/shop") {
-    //                             contentStack.clear()
-    //                             content.title = "Mod Shop"
-    //                             contentStack.pushItem(shopPage, {}, StackView.PushTransition)
-    //                         } else if (route === "/library") {
-    //                             contentStack.clear()
-    //                             content.title = "Library"
-    //                             contentStack.pushItem(allGamesPage, {}, StackView.PushTransition)
-    //                         } else if (route.startsWith("/library/entries/")) {
-    //                             let things = route.split("/")
-    //                             if (things.length === 4) {
-    //                                 console.log("THREE: " + things[3])
-    //                                 content.title = "Game Details"
-    //                                 contentStack.pushItem(gameDetailsPage, {entryId: things[3]}, StackView.PushTransition)
-    //                             }
-    //                             console.log(things)
-    //                         } else if (route.startsWith("/shop/mods/")) {
-    //                             let things = route.split("/")
-    //                             console.log(things)
-    //                         } else if (route === "/settings") {
-    //                             content.title = "Settings"
-    //                             contentStack.push(settingsScreen)
-    //                         } else {
-    //                             contentStack.push(lol)
-    //                         }
-    //                     }
-    //                 }
-    //
-    //                 Component {
-    //                     id: lol
-    //                     Text {
-    //                         text: "bruh"
-    //                         color: "white"
-    //                     }
-    //                 }
-    //
-    //                 pushEnter: Transition {}
-    //                 pushExit: Transition {}
-    //                 popEnter: Transition {}
-    //                 popExit: Transition {}
-    //                 replaceEnter: Transition {}
-    //                 replaceExit: Transition {}
-    //             }
-    //         }
-    //     }
-    // }
-
-    FLEmulationPlayer {
-        id: emulator
-        anchors.fill: parent
         visible: false
 
-        onUnloaded: {
-            emulator.visible = false
+        Keys.onEscapePressed: function(event) {
+            if (Router.currentRoute !== "/quick-menu") {
+                Router.navigateTo("/quick-menu")
+                return
+            }
+
+            mainContentStack.popCurrentItem()
+        }
+    }
+
+    StackView {
+        id: mainContentStack
+        focus: true
+        anchors.fill: parent
+        Component.onCompleted: {
+            pushItems([emulatorLoader, content], StackView.Immediate)
+        }
+
+        onActiveFocusChanged: {
+            if (activeFocus && depth > 0) {
+                mainContentStack.currentItem.forceActiveFocus()
+            }
+        }
+
+        pushEnter: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "x"
+                    from: -20
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        pushExit: Transition {}
+        popEnter: Transition {}
+        popExit: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "x"
+                    from: 0
+                    to: -20
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        replaceEnter: Transition {
+        }
+        replaceExit: Transition {
         }
     }
 
@@ -716,9 +198,10 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
-                emulator.load(startGameAnimation.entryId)
-                emulator.visible = true
-                overlay.opacity = 0
+                mainContentStack.popCurrentItem(StackView.Immediate)
+                emulatorLoader.setSource("NewEmulatorPage.qml", {entryId: startGameAnimation.entryId, stackView: mainContentStack})
+                    overlay.opacity = 0
+
             }
         }
     }
@@ -733,13 +216,6 @@ ApplicationWindow {
         FocusScope {
             ListView {
                 id: theList
-                // anchors.left: gameNavList.right
-
-                // anchors.top: titleText.bottom
-                // anchors.topMargin: 16
-                // anchors.bottom: parent.bottom
-                // anchors.left: parent.left
-                // anchors.right: parent.right
                 anchors.fill: parent
                 highlightMoveDuration: 80
                 highlightMoveVelocity: -1
@@ -749,53 +225,6 @@ ApplicationWindow {
                 model: LibraryEntryModel
 
                 clip: true
-                // keyNavigationEnabled: false
-
-                // Keys.onPressed: function(event) {
-                //     // theList.highlightRangeMode = ListView.ApplyRange
-                //     if (event.key === Qt.Key_Up) {
-                //         if (theList.currentIndex === 0 && !event.isAutoRepeat) {
-                //             theList.currentIndex = theList.count - 1
-                //         } else {
-                //             theList.decrementCurrentIndex()
-                //         }
-                //     } else if (event.key === Qt.Key_Down) {
-                //         if (theList.currentIndex === theList.count - 1 && !event.isAutoRepeat) {
-                //             theList.currentIndex = 0
-                //         } else {
-                //             theList.incrementCurrentIndex()
-                //         }
-                //     }
-                // }
-
-                property var icons: [
-                    "https://cdn2.steamgriddb.com/thumb/5554ae4bc3d7ecf085bdc1f8b0a29f39.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/988fff1d881114ab5a56f0c0c69e0cfe.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/2fe0ac4f5a258e637671444f00d1835f.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/08ba346be1fd6a4a481429ba2cd48e6b.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/3c7a5ad35fa82f1d37d6296c21a9e52c.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/630b919fef718760f557be12e1cb6b4c.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/4bf486c3a04b32aa9dec6c542d7011ac.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/fdf301019dd996435263a651bd60d739.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/1e75612dbe09ed687c51498db305d2ed.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/1df5456e9760c85c7b649fd7961a9f66.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/e5494d23b18b5c822bcaa9fe8fd077bf.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/7e4c8f455b0699609758957b7c4e2f6f.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/7e4c8f455b0699609758957b7c4e2f6f.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/83754cee0fe637d0dcc1de38824a4e6d.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/b32d70b3e23ee6ee3eaa85623213eae3.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/cf68791aa992ebbe8c0ea1ac0d887e90.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/cedd27aa368c97ff84de86fb2b2b12c0.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/425d383ef78226dfbc600a00f2aa9b3b.png",
-                    "https://cdn2.steamgriddb.com/thumb/372529e17424eb989b7aaf97716c2d11.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/425d383ef78226dfbc600a00f2aa9b3b.png",
-                    "https://cdn2.steamgriddb.com/thumb/630b919fef718760f557be12e1cb6b4c.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/280bb2c98809304e66151313503f14fb.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/c52cc42f66f3aadad1b1f9170fbbcf4e.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/c179f2dd50f1440ed0a755468950dc66.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/a0b4b91a4d8b7da56ab2711853f7b588.jpg",
-                    "https://cdn2.steamgriddb.com/thumb/a0b4b91a4d8b7da56ab2711853f7b588.jpg"
-                ]
 
                 Timer {
                     id: wheelTimer
@@ -871,11 +300,6 @@ ApplicationWindow {
                                 // theList.highlightRangeMode = ListView.NoHighlightRange
                                 tttt.ListView.view.currentIndex = tttt.index
                             }
-                            console.log(tttt.model.entryId + " tapped with " + button)
-                        }
-
-                        onLongPressed: {
-                            console.log(tttt.model.entryId + " long pressed")
                         }
                     }
 
@@ -959,20 +383,34 @@ ApplicationWindow {
     }
 
     Component {
+        id: quickMenuPage
+        QuickMenu {
+            onResumeGame: {
+                mainContentStack.popCurrentItem()
+            }
+
+            onResetGame: {
+                emulatorLoader.item.resetGame()
+                mainContentStack.popCurrentItem()
+            }
+
+            onCloseGame: {
+                emulatorLoader.source = ""
+                Router.navigateTo("/library")
+            }
+
+            onRewindPressed: {
+                 emulatorLoader.item.createRewindPoints()
+            }
+
+        }
+    }
+
+    Component {
         id: libraryPage2
         LibraryPage2 {
             id: libPage
-            objectName: "Library Page 2"
-            property bool topLevel: true
-            property string topLevelName: "library"
-            property string pageTitle: "Library"
-            // model: library_short_model
             model: LibraryEntryModel
-
-
-            // onEntryClicked: function (id) {
-            //     emulatorScreen.loadGame(id)
-            // }
         }
     }
 
@@ -986,9 +424,6 @@ ApplicationWindow {
     Component {
         id: shopPage
         ShopLandingPage {
-            property bool topLevel: true
-            property string topLevelName: "shop"
-            property string pageTitle: "Mod shop (coming soon!)"
             model: shop_item_model
         }
     }
@@ -1039,4 +474,63 @@ ApplicationWindow {
 
         }
     }
+
+    Component {
+        id: lol
+        Text {
+            text: "How did you even get here"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            color: "white"
+        }
+    }
+
+    Connections {
+            target: Router
+
+            function onRouteChanged(route) {
+                // if (!content.visible) {
+                //     console.log("NOT VISIBLE")
+                //     return
+                // }
+
+                if (route === "/shop") {
+                    content.goToContent("Mod Shop", shopPage, {}, StackView.PushTransition)
+                } else if (route === "/library") {
+                    content.goToContent("Library", allGamesPage, {}, StackView.PushTransition)
+                } else if (route.startsWith("/library/entries/")) {
+                    let things = route.split("/")
+                    if (things.length === 4) {
+                        content.goToContent("Game Details", gameDetailsPage, {entryId: things[3]}, StackView.PushTransition)
+                    } else {
+                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
+                    }
+                } else if (route.startsWith("/shop/mods/")) {
+                    let things = route.split("/")
+                    content.goToContent("Mod Details", shopItemPage, {modId: things[3]}, StackView.PushTransition)
+                } else if (route === "/settings") {
+                    content.goToContent("Settings", settingsScreen, {}, StackView.PushTransition)
+                } else if (route === "/controllers") {
+                    content.goToContent("Controllers", controllersPage, {}, StackView.PushTransition)
+                } else if (route.startsWith("/controllers/keyboard/")) {
+                    let things = route.split("/")
+                    if (things.length === 4) {
+                        content.goToContent("Edit keyboard profile", keyboardInputMappingPage, {playerNumber: things[3]}, StackView.PushTransition)
+                    } else {
+                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
+                    }
+                } else if (route.startsWith("/controllers/profiles/")) {
+                    let things = route.split("/")
+                    if (things.length === 4) {
+                        content.goToContent("Edit controller profile", controllerInputMappingPage, {playerNumber: things[3]}, StackView.PushTransition)
+                    } else {
+                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
+                    }
+                } else if (route === "/quick-menu") {
+                    content.goToContent("Quick Menu", quickMenuPage, {gameSettings: emulatorLoader.item.gameSettings}, StackView.PushTransition)
+                } else {
+                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
+                }
+            }
+        }
 }

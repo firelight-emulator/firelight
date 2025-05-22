@@ -1,7 +1,10 @@
 #include "game_settings_item.hpp"
 
 namespace firelight::settings {
-GameSettingsItem::GameSettingsItem(QQuickItem *parent) : QQuickItem(parent) {}
+GameSettingsItem::GameSettingsItem(QQuickItem *parent) : QQuickItem(parent) {
+  m_defaultSettings.insert("rewind-enabled", "true");
+  m_defaultSettings.insert("picture-mode", "aspect-ratio-fill");
+}
 
 void GameSettingsItem::setPlatformId(const int platformId) {
   if (m_platformId == platformId) {
@@ -28,9 +31,14 @@ void GameSettingsItem::setContentHash(const QString &contentHash) {
   emit contentHashChanged();
 }
 QString GameSettingsItem::getPictureMode() {
-  return getValue("picture-mode", "aspect-ratio-fill");
+  auto value = getValue("picture-mode", "aspect-ratio-fill");
+  spdlog::info("Getting picture-mode for {}, {}: {}",
+               m_contentHash.toStdString(), m_platformId, value.toStdString());
+  return value;
 }
 bool GameSettingsItem::isRewindEnabled() const {
+  spdlog::info("Getting rewind-enabled for {}, {}", m_contentHash.toStdString(),
+               m_platformId);
   return getValue("rewind-enabled", "true") == "true";
 }
 
@@ -87,18 +95,18 @@ QString GameSettingsItem::getValue(const SettingsLevel level,
   case Global:
     return QString::fromStdString(getEmulationSettingsManager()
                                       ->getGlobalValue(key.toStdString())
-                                      .value_or(""));
+                                      .value_or(m_defaultSettings[key]));
   case Platform:
     return QString::fromStdString(
         getEmulationSettingsManager()
             ->getPlatformValue(m_platformId, key.toStdString())
-            .value_or(""));
+            .value_or(m_defaultSettings[key]));
   case Game:
     return QString::fromStdString(
         getEmulationSettingsManager()
             ->getGameValue(m_contentHash.toStdString(), m_platformId,
                            key.toStdString())
-            .value_or(""));
+            .value_or(m_defaultSettings[key]));
   default:
     return {};
   }

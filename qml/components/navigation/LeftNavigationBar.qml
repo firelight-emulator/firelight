@@ -65,6 +65,23 @@ Pane {
         }
 
         LeftNavigationItem {
+            id: quickMenuButton
+            label: "Now Playing"
+            iconName: "controller"
+
+            KeyNavigation.down: libraryButton
+
+            Layout.fillWidth: true
+
+            checked: Router.currentRoute.startsWith("/quick-menu")
+            onToggled: {
+                if (toggled) {
+                    Router.navigateTo("/quick-menu")
+                }
+            }
+        }
+
+        LeftNavigationItem {
             id: libraryButton
             label: "Library"
             iconName: "book"
