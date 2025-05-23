@@ -42,6 +42,8 @@ public:
 
   std::optional<RomFile> getRomFile(int id) override;
 
+  std::optional<PatchFile> getPatchFile(int id) override;
+
   void addPatchFile(PatchFile &file);
 
   std::optional<PatchFile> getPatchFileWithPathAndSize(const QString &filePath,

@@ -247,7 +247,10 @@ FocusScope {
     Component {
         id: rewindPage
         RewindMenu {
-
+            onRewindPointSelected: function(index) {
+                emulator.loadRewindPoint(index)
+                root.stackView.popCurrentItem()
+            }
         }
     }
 

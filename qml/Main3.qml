@@ -395,8 +395,8 @@ ApplicationWindow {
             }
 
             onCloseGame: {
-                emulatorLoader.source = ""
                 Router.navigateTo("/library")
+                emulatorLoader.source = ""
             }
 
             onRewindPressed: {

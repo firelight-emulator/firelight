@@ -26,6 +26,8 @@ public:
   getPatchFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes,
                               bool inArchive) = 0;
 
+  virtual std::optional<PatchFile> getPatchFile(int id) = 0;
+
   virtual std::vector<PatchFile> getPatchFiles() = 0;
 
   virtual std::vector<Entry> getEntries(int offset, int limit) = 0;

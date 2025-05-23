@@ -16,7 +16,7 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
 
   QSqlQuery createRomFilesTable(getDatabase());
   createRomFilesTable.prepare("CREATE TABLE IF NOT EXISTS rom_files("
-                              "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                              "id INTEGER PRIMARY KEY,"
                               "file_path TEXT NOT NULL,"
                               "file_size INTEGER NOT NULL,"
                               "file_md5 TEXT NOT NULL,"
@@ -35,7 +35,7 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
 
   QSqlQuery createPatchFilesTable(getDatabase());
   createPatchFilesTable.prepare("CREATE TABLE IF NOT EXISTS patch_files("
-                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                "id INTEGER PRIMARY KEY,"
                                 "file_path TEXT UNIQUE NOT NULL,"
                                 "file_size INTEGER NOT NULL,"
                                 "file_md5 TEXT NOT NULL,"
@@ -54,7 +54,7 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
 
   QSqlQuery createEntriesTable(getDatabase());
   createEntriesTable.prepare("CREATE TABLE IF NOT EXISTS entriesv1("
-                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                             "id INTEGER PRIMARY KEY,"
                              "display_name TEXT NOT NULL,"
                              "content_hash TEXT NOT NULL,"
                              "platform_id INTEGER NOT NULL,"
@@ -84,7 +84,7 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
   QSqlQuery createRunConfigurationsTable(getDatabase());
   createRunConfigurationsTable.prepare(
       "CREATE TABLE IF NOT EXISTS run_configurations("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "id INTEGER PRIMARY KEY,"
       "type TEXT NOT NULL,"
       "content_hash TEXT NOT NULL,"
       "rom_id INTEGER NOT NULL,"
@@ -101,7 +101,7 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
   QSqlQuery createDirectoriesTable(getDatabase());
   createDirectoriesTable.prepare(
       "CREATE TABLE IF NOT EXISTS watched_directoriesv1("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "id INTEGER PRIMARY KEY,"
       "path TEXT NOT NULL,"
       "num_files INTEGER NOT NULL DEFAULT 0,"
       "num_content_files INTEGER NOT NULL DEFAULT 0,"
@@ -117,7 +117,7 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
   QSqlQuery createSubdirectoriesTable(getDatabase());
   createSubdirectoriesTable.prepare(
       "CREATE TABLE IF NOT EXISTS subdirectories("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "id INTEGER PRIMARY KEY,"
       "path TEXT NOT NULL,"
       "num_files INTEGER NOT NULL DEFAULT 0,"
       "num_content_files INTEGER NOT NULL DEFAULT 0,"
@@ -477,6 +477,28 @@ std::optional<RomFile> SqliteUserLibrary::getRomFile(int id) {
   }
 
   return {RomFile(query)};
+}
+std::optional<PatchFile> SqliteUserLibrary::getPatchFile(int id) {
+  auto queryString = "SELECT * FROM patch_files WHERE id = :id LIMIT 1;";
+  QSqlQuery query(getDatabase());
+  query.prepare(queryString);
+  query.bindValue(":id", id);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get patch file with id {}: {}", id,
+                  query.lastError().text().toStdString());
+  }
+
+  if (!query.next()) {
+    return std::nullopt;
+  }
+
+  PatchFile patchFile;
+  patchFile.m_filePath = query.value("file_path").toString().toStdString();
+  patchFile.m_fileSize = query.value("file_size").toInt();
+  patchFile.m_fileMd5 = query.value("file_md5").toString().toStdString();
+
+  return {patchFile};
 }
 
 void SqliteUserLibrary::addPatchFile(PatchFile &file) {
