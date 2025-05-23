@@ -108,6 +108,8 @@ ApplicationWindow {
         id: content
         visible: false
 
+        gameRunning: emulatorLoader.status === Loader.Ready
+
         Keys.onEscapePressed: function(event) {
             if (Router.currentRoute !== "/quick-menu") {
                 Router.navigateTo("/quick-menu")

@@ -67,6 +67,7 @@
         <file alias="platform-psp">assets/img/platform-icons/pspicon.svg</file>
         <file alias="platform-turbografx16">assets/img/platform-icons/turbografx16icon.svg</file>
         <file alias="platform-supergrafx">assets/img/platform-icons/supergrafxicon.svg</file>
+        <file alias="play-circle">assets/img/icons/filled-rounded/play-circle.svg</file>
     </qresource>
     <qresource prefix="/icons/empty">
         <file alias="bar-chart">assets/img/icons/notfilled-rounded/bar-chart-notfilled.svg</file>
@@ -75,6 +76,7 @@
         <file alias="delete">assets/img/icons/notfilled-rounded/delete-notfilled.svg</file>
         <file alias="info">assets/img/icons/notfilled-rounded/info-notfilled.svg</file>
         <file alias="photo-library">assets/img/icons/notfilled-rounded/photo-library-notfilled.svg</file>
+        <file alias="play-circle">assets/img/icons/notfilled-rounded/play-circle-notfilled.svg</file>
         <file alias="settings">assets/img/icons/notfilled-rounded/settings-notfilled.svg</file>
         <file alias="shopping-bag">assets/img/icons/notfilled-rounded/shopping-bag-notfilled.svg</file>
         <file alias="trophy">assets/img/icons/notfilled-rounded/trophy-notfilled.svg</file>

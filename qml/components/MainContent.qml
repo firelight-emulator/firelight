@@ -9,6 +9,7 @@ FocusScope {
     objectName: "mainContent"
 
     property bool showNavigationBar: true
+    property bool gameRunning: false
 
     states: [
         State {
@@ -54,6 +55,8 @@ FocusScope {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.bottom: parent.bottom
+
+        showQuickMenuButton: root.gameRunning
     }
 
     Pane {

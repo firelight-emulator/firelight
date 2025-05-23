@@ -10,6 +10,7 @@ Pane {
     padding: 16
 
     property bool expanded: false
+    property bool showQuickMenuButton: false
 
     states: [
         State {
@@ -67,7 +68,8 @@ Pane {
         LeftNavigationItem {
             id: quickMenuButton
             label: "Now Playing"
-            iconName: "controller"
+            iconName: "play-circle"
+            visible: root.showQuickMenuButton
 
             KeyNavigation.down: libraryButton
 
