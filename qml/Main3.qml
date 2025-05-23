@@ -219,43 +219,44 @@ ApplicationWindow {
                 anchors.fill: parent
                 highlightMoveDuration: 80
                 highlightMoveVelocity: -1
-                highlightRangeMode: ListView.ApplyRange
+                highlightRangeMode: InputMethodManager.usingMouse ? ListView.NoHighlightRange : ListView.ApplyRange
                 preferredHighlightBegin: 64
                 preferredHighlightEnd: height - 64
                 model: LibraryEntryModel
+                ScrollBar.vertical: ScrollBar { }
 
                 clip: true
-
-                Timer {
-                    id: wheelTimer
-
-                    interval: 500
-                    repeat: false
-                }
-
-                WheelHandler {
-                    onWheel: function(event) {
-                        if (wheelTimer.running) {
-                            if (theList.currentIndex === 0 && event.angleDelta.y >= 0) {
-                                wheelTimer.restart()
-                                return
-                            } else if (theList.currentIndex === theList.count - 1 && event.angleDelta.y < 0) {
-                                wheelTimer.restart()
-                                return
-                            }
-                        }
-
-                        if (event.angleDelta.y >= 0) {
-                            // theList.highlightRangeMode = ListView.ApplyRange
-                            theList.decrementCurrentIndex()
-                        } else {
-                            // theList.highlightRangeMode = ListView.ApplyRange
-                            theList.incrementCurrentIndex()
-                        }
-
-                        wheelTimer.restart()
-                    }
-                }
+                //
+                // Timer {
+                //     id: wheelTimer
+                //
+                //     interval: 500
+                //     repeat: false
+                // }
+                //
+                // WheelHandler {
+                //     onWheel: function(event) {
+                //         if (wheelTimer.running) {
+                //             if (theList.currentIndex === 0 && event.angleDelta.y >= 0) {
+                //                 wheelTimer.restart()
+                //                 return
+                //             } else if (theList.currentIndex === theList.count - 1 && event.angleDelta.y < 0) {
+                //                 wheelTimer.restart()
+                //                 return
+                //             }
+                //         }
+                //
+                //         if (event.angleDelta.y >= 0) {
+                //             // theList.highlightRangeMode = ListView.ApplyRange
+                //             theList.decrementCurrentIndex()
+                //         } else {
+                //             // theList.highlightRangeMode = ListView.ApplyRange
+                //             theList.incrementCurrentIndex()
+                //         }
+                //
+                //         wheelTimer.restart()
+                //     }
+                // }
 
                 delegate: Button {
                     id: tttt
@@ -287,9 +288,23 @@ ApplicationWindow {
                     TapHandler {
                         acceptedButtons: Qt.LeftButton
                         onDoubleTapped: {
-                            startGameAnimation.entryId = model.entryId
-                            startGameAnimation.start()
-                            console.log(tttt.model.entryId + " double tapped")
+                            if (emulatorLoader.status === Loader.Ready) {
+                                closeGameDialog.openAndDoOnAccepted(function () {
+                                                        emulatorLoader.source = ""
+
+                                                        startGameAnimation.entryId = model.entryId
+                                                        startGameAnimation.start()
+
+                                                        // emulatorLoader.entryId = entryId
+                                                        // emulatorLoader.active = true
+                                                        // libPage.playLaunchAnimation()
+                                                    })
+                            } else {
+
+
+                                                        startGameAnimation.entryId = model.entryId
+                                                        startGameAnimation.start()
+                            }
                         }
 
                         onSingleTapped: function(event, button) {
@@ -304,6 +319,7 @@ ApplicationWindow {
                     }
 
                     HoverHandler {
+                        id: gameItemHover
                         cursorShape: Qt.PointingHandCursor
                     }
 
@@ -314,7 +330,8 @@ ApplicationWindow {
                     background: Rectangle {
                         color: "white"
                         radius: 2
-                        visible: tttt.ListView.isCurrentItem
+                        opacity: tttt.ListView.isCurrentItem ? 1 : gameItemHover.hovered ? 0.1 : 1
+                        visible: tttt.ListView.isCurrentItem || gameItemHover.hovered
                     }
 
                     contentItem: RowLayout {
@@ -382,6 +399,12 @@ ApplicationWindow {
 
     }
 
+    FirelightDialog {
+        id: closeGameDialog
+        text: "You're currently playing:\n\n" + emulatorLoader.item.gameName + "\n\nDo you want to close it?"
+
+    }
+
     Component {
         id: quickMenuPage
         QuickMenu {
@@ -438,7 +461,7 @@ ApplicationWindow {
         id: settingsScreen
 
         SettingsScreen {
-            gameRunning: emulator.running
+            gameRunning: emulatorLoader.status === Loader.Ready
         }
     }
 

@@ -6,6 +6,7 @@
 #include <archive_entry.h>
 #include <qcryptographichash.h>
 #include <rcheevos/rc_hash.h>
+#include <spdlog/spdlog.h>
 #include <zlib.h>
 
 #include "../platform_metadata.hpp"
@@ -165,7 +166,31 @@ QString RomFile::getArchivePathName() { return m_archivePathName; }
 
 int RomFile::getPlatformId() const { return m_platformId; }
 
+void RomFile::applyPatchToFullBytes(const PatchFile &patchFile) {}
+void RomFile::applyPatchToContentBytes(const PatchFile &patchFile) {
+  if (m_contentBytes.isEmpty()) {
+    spdlog::warn("No content bytes to apply patch to");
+    return;
+  }
+
+  std::vector<uint8_t> bytes;
+  bytes.resize(m_contentBytes.size());
+  std::ranges::copy(m_contentBytes, bytes.begin());
+
+  const auto patched = patchFile.patch(bytes);
+  const QByteArray qBytes(reinterpret_cast<const char *>(patched.data()),
+                          patched.size());
+
+  generateContentBytesAndHash(qBytes);
+
+  spdlog::warn("Applying patch file {}", patchFile.m_filePath);
+}
+
 void RomFile::generateContentBytesAndHash(const QByteArray &fileBytes) {
+  // if (!m_contentBytes.isEmpty() && !m_contentHash.isEmpty()) {
+  //   return;
+  // }
+
   switch (m_platformId) {
   case PlatformMetadata::PLATFORM_ID_NES:
     m_contentBytes = fileBytes;

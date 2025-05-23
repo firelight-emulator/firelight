@@ -38,7 +38,9 @@ public:
 
   [[nodiscard]] int getPlatformId() const;
 
-  RomFile applyPatch(const PatchFile &patchFile);
+  void applyPatchToFullBytes(const PatchFile &patchFile);
+
+  void applyPatchToContentBytes(const PatchFile &patchFile);
 
 private:
   void generateContentBytesAndHash(const QByteArray &fileBytes);

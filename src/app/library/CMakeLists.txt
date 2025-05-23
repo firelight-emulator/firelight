@@ -8,6 +8,7 @@ set(LIBRARY_SOURCES
         rom_file.cpp
         sqlite_user_library.cpp
         sqlite_user_library.hpp
+        patch_file.cpp
 )
 
 add_library(library ${LIBRARY_SOURCES})

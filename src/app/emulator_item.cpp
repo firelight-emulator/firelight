@@ -386,46 +386,25 @@ void EmulatorItem::loadGame(int entryId) {
         return;
       }
 
-      if (rom->inArchive() &&
-          !std::filesystem::exists(rom->getArchivePathName().toStdString())) {
-        spdlog::error("Content path doesn't exist: {}",
-                      rom->getArchivePathName().toStdString());
-        return;
-      }
-
-      if (!rom->inArchive() &&
-          !std::filesystem::exists(rom->getFilePath().toStdString())) {
-        spdlog::error("Content path doesn't exist: {}",
-                      rom->getFilePath().toStdString());
-        return;
-      }
-
       rom->load();
+
+      if (!rom->isValid()) {
+        return;
+      }
 
       auto patchId = runConfig.patchId;
       auto patch = getUserLibrary()->getPatchFile(patchId);
 
-      QFile file(QString::fromStdString(patch->m_filePath));
-      if (!file.open(QIODevice::ReadOnly)) {
-        spdlog::error("Failed to open patch file: {}", patch->m_filePath);
+      if (!patch.has_value()) {
         return;
       }
 
-      std::vector<uint8_t> romData{};
-
-      for (auto &byte : rom->getContentBytes()) {
-        romData.push_back(byte);
-      }
-
-      std::vector<uint8_t> data{};
-      if (patch->m_filePath.ends_with(".ups")) {
-        firelight::patching::UPSPatch upsPatch(patch->m_filePath);
-        data = upsPatch.patchRom(romData);
-      }
+      patch->load();
+      rom->applyPatchToContentBytes(*patch);
 
       std::string corePath =
           firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
-      //
+
       QByteArray saveDataBytes;
       const auto saveData = getSaveManager()->readSaveData(
           rom->getContentHash(), entry->activeSaveSlot);
@@ -434,19 +413,15 @@ void EmulatorItem::loadGame(int entryId) {
                                    saveData->getSaveRamData().size());
       }
 
-      firelight::library::RomFile actualRom(
-          rom->getFilePath(), reinterpret_cast<const char *>(data.data()),
-          data.size());
-
       m_entryId = entryId;
       m_gameName = entry->displayName;
-      m_gameData = actualRom.getContentBytes();
+      m_gameData = rom->getContentBytes();
       m_saveData = saveDataBytes;
       m_corePath = QString::fromStdString(corePath);
-      m_contentHash = actualRom.getContentHash();
+      m_contentHash = rom->getContentHash();
       m_saveSlotNumber = entry->activeSaveSlot;
       m_platformId = entry->platformId;
-      m_contentPath = actualRom.getFilePath();
+      m_contentPath = rom->getFilePath();
 
       emit entryIdChanged();
       emit gameNameChanged();
