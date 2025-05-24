@@ -36,7 +36,7 @@ Button {
         color: control.enabled ? "white" : "transparent"
         opacity: parent.activeFocus && !InputMethodManager.usingMouse ? 1 : control.pseudoChildFocused || parent.checked ? 0.1 : parent.pressed ? 0.1 : parent.hovered ? 0.2 : 0
         // opacity: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? 1 : 0) : (mouse.containsMouse ? (control.pressed ? 0.1 : 0.2) : (control.pseudoChildFocused ? 0.3 : "transparent")) : "transparent"
-        radius: 0
+        radius: 4
     }
 
     MouseArea {

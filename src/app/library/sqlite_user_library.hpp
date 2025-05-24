@@ -16,6 +16,9 @@ public:
 
   ~SqliteUserLibrary() override;
 
+  bool create(EntryFolderInfo &folder) override;
+  std::vector<EntryFolderInfo> getFolders(EntryFolderInfo filter) override;
+
   void setMainGameDirectory(const QString &directory);
 
   QString getMainGameDirectory();

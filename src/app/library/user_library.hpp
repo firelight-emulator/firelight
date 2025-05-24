@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entry.hpp"
+#include "entry_folder_info.hpp"
 #include "rom_file.hpp"
 #include "run_configuration.hpp"
 #include "watched_directory.hpp"
@@ -9,6 +10,9 @@ namespace firelight::library {
 class IUserLibrary {
 public:
   virtual ~IUserLibrary() = default;
+
+  virtual bool create(EntryFolderInfo &folder) = 0;
+  virtual std::vector<EntryFolderInfo> getFolders(EntryFolderInfo filter) = 0;
 
   virtual void addRomFile(RomFile &path) = 0;
 

@@ -129,6 +129,18 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
     spdlog::error("Table creation failed: {}",
                   createSubdirectoriesTable.lastError().text().toStdString());
   }
+
+  QSqlQuery createFoldersTable(getDatabase());
+  createFoldersTable.prepare("CREATE TABLE IF NOT EXISTS entry_folders("
+                             "id INTEGER PRIMARY KEY,"
+                             "display_name TEXT UNIQUE NOT NULL,"
+                             "description TEXT,"
+                             "created_at INTEGER NOT NULL);");
+
+  if (!createFoldersTable.exec()) {
+    spdlog::error("Table creation failed: {}",
+                  createFoldersTable.lastError().text().toStdString());
+  }
 }
 
 SqliteUserLibrary::~SqliteUserLibrary() {
@@ -138,6 +150,50 @@ SqliteUserLibrary::~SqliteUserLibrary() {
       QSqlDatabase::removeDatabase(name);
     }
   }
+}
+
+bool SqliteUserLibrary::create(EntryFolderInfo &folder) {
+  QSqlQuery query(getDatabase());
+  query.prepare("INSERT INTO entry_folders("
+                "display_name, "
+                "description, "
+                "created_at) VALUES"
+                "(:displayName, :description, :createdAt);");
+
+  query.bindValue(":displayName", QString::fromStdString(folder.displayName));
+  query.bindValue(":description", QString::fromStdString(folder.description));
+  query.bindValue(":createdAt", QDateTime::currentSecsSinceEpoch());
+
+  if (!query.exec()) {
+    spdlog::error("Failed to create folder: {}",
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  return true;
+}
+
+std::vector<EntryFolderInfo>
+SqliteUserLibrary::getFolders(const EntryFolderInfo filter) {
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM entry_folders");
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get folders: {}",
+                  query.lastError().text().toStdString());
+    return {};
+  }
+
+  std::vector<EntryFolderInfo> folders;
+  while (query.next()) {
+    folders.emplace_back(EntryFolderInfo{
+        .id = query.value("id").toInt(),
+        .displayName = query.value("display_name").toString().toStdString(),
+        .description = query.value("description").toString().toStdString(),
+        .createdAt = query.value("created_at").toULongLong()});
+  }
+
+  return folders;
 }
 
 void SqliteUserLibrary::setMainGameDirectory(const QString &directory) {
