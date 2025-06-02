@@ -9,6 +9,11 @@ FocusScope {
 
     signal startGame(int entryId)
 
+    Component.onCompleted: {
+        FilteredLibraryEntryModel.folderId = -1
+        theList.currentIndex = 0
+    }
+
     ButtonGroup {
         id: libraryButtonGroup
         exclusive: true

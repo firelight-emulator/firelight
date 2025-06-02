@@ -42,6 +42,12 @@ AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
 }
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
+  // TODO: REALLY BAD SOLUTION for mupen sometimes sending very small number of
+  // frames
+  if (numFrames < 30) {
+    return numFrames;
+  }
+
   m_numSamples += numFrames;
   if (m_elapsedTimer.elapsed() > 1000) {
     m_elapsedTimer.restart();
