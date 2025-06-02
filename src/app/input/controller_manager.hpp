@@ -1,8 +1,7 @@
 #pragma once
 
-#include "sdl_controller.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
-#include "firelight/libretro/pointer_input_provider.hpp"
+#include "sdl_controller.hpp"
 #include <QAbstractListModel>
 #include <QObject>
 #include <SDL_events.h>
@@ -13,66 +12,87 @@
 #include <qsettings.h>
 
 namespace firelight::input {
-  class ControllerManager final : public QObject,
-                                  public libretro::IRetropadProvider {
-    Q_OBJECT
-    Q_PROPERTY(bool blockGamepadInput READ blockGamepadInput WRITE setBlockGamepadInput NOTIFY blockGamepadInputChanged)
-    Q_PROPERTY(bool prioritizeControllerOverKeyboard READ prioritizeControllerOverKeyboard WRITE setPrioritizeControllerOverKeyboard NOTIFY prioritizeControllerOverKeyboardChanged)
+class ControllerManager final : public QObject,
+                                public libretro::IRetropadProvider {
+  Q_OBJECT
+  Q_PROPERTY(bool blockGamepadInput READ blockGamepadInput WRITE
+                 setBlockGamepadInput NOTIFY blockGamepadInputChanged)
+  Q_PROPERTY(bool prioritizeControllerOverKeyboard READ
+                 prioritizeControllerOverKeyboard WRITE
+                     setPrioritizeControllerOverKeyboard NOTIFY
+                         prioritizeControllerOverKeyboardChanged)
+  Q_PROPERTY(
+      bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus
+          WRITE setOnlyPlayerOneCanNavigateMenus NOTIFY
+              onlyPlayerOneCanNavigateMenusChanged)
 
-  public:
-    bool m_blockGamepadInput = false;
+public:
+  bool m_blockGamepadInput = false;
 
-    explicit ControllerManager(IControllerRepository &controllerRepository);
+  explicit ControllerManager(IControllerRepository &controllerRepository);
 
-    void setKeyboardRetropad(KeyboardInputHandler *keyboard);
+  void setKeyboardRetropad(KeyboardInputHandler *keyboard);
 
-    void handleSDLControllerEvent(const SDL_Event &event);
+  void handleSDLControllerEvent(const SDL_Event &event);
 
-    void refreshControllerList();
+  int getPlayerIndexForControllerButtonEvent(
+      const SDL_ControllerButtonEvent &event) const;
 
-    [[nodiscard]] std::optional<IGamepad *>
-    getControllerForPlayerIndex(int t_player) const;
+  void refreshControllerList();
 
-    std::optional<libretro::IRetroPad *>
-    getRetropadForPlayerIndex(int t_player, int platformId) override;
+  [[nodiscard]] std::optional<IGamepad *>
+  getControllerForPlayerIndex(int t_player) const;
 
-    Q_INVOKABLE void updateControllerOrder(const QVector<int> &order);
+  std::optional<libretro::IRetroPad *>
+  getRetropadForPlayerIndex(int t_player, int platformId) override;
 
-    bool blockGamepadInput() const;
+  Q_INVOKABLE void updateControllerOrder(const QVector<int> &order);
 
-    void setBlockGamepadInput(bool blockGamepadInput);
+  bool blockGamepadInput() const;
 
-    void setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);
+  void setBlockGamepadInput(bool blockGamepadInput);
 
-    bool prioritizeControllerOverKeyboard() const;
+  void
+  setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);
 
-  public slots:
-    void updateControllerOrder(const QVariantMap &map);
+  [[nodiscard]] bool prioritizeControllerOverKeyboard() const;
 
-  signals:
-    void controllerConnected(int playerNumber, QString controllerName, QString iconSourceUrl);
+  void setOnlyPlayerOneCanNavigateMenus(bool onlyPlayerOneCanNavigateMenus);
 
-    void controllerDisconnected(int playerNumber, QString controllerName, QString iconSourceUrl);
+  [[nodiscard]] bool getOnlyPlayerOneCanNavigateMenus() const;
 
-    void controllerOrderChanged();
+public slots:
+  void updateControllerOrder(const QVariantMap &map);
 
-    void prioritizeControllerOverKeyboardChanged();
+signals:
+  void controllerConnected(int playerNumber, QString controllerName,
+                           QString iconSourceUrl);
 
-    void retropadInputStateChanged(int playerNumber, int input, bool activated);
+  void controllerDisconnected(int playerNumber, QString controllerName,
+                              QString iconSourceUrl);
 
-    void buttonStateChanged(int playerNumber, int button, bool pressed);
+  void controllerOrderChanged();
 
-    void axisStateChanged(int playerNumber, int axis, int value);
+  void prioritizeControllerOverKeyboardChanged();
 
-    void blockGamepadInputChanged();
+  void retropadInputStateChanged(int playerNumber, int input, bool activated);
 
-  private:
-    std::unique_ptr<QSettings> m_settings;
-    IControllerRepository &m_controllerRepository;
-    int m_numControllers = 0;
-    std::array<std::unique_ptr<SdlController>, 32> m_controllers{};
-    bool m_prioritizeControllerOverKeyboard;
+  void buttonStateChanged(int playerNumber, int button, bool pressed);
 
-    void openControllerWithDeviceIndex(int32_t t_deviceIndex);
-  };
+  void axisStateChanged(int playerNumber, int axis, int value);
+
+  void blockGamepadInputChanged();
+
+  void onlyPlayerOneCanNavigateMenusChanged();
+
+private:
+  std::unique_ptr<QSettings> m_settings;
+  IControllerRepository &m_controllerRepository;
+  int m_numControllers = 0;
+  std::array<std::unique_ptr<SdlController>, 32> m_controllers{};
+  bool m_prioritizeControllerOverKeyboard;
+  bool m_onlyPlayerOneCanNavigateMenus = true;
+
+  void openControllerWithDeviceIndex(int32_t t_deviceIndex);
+};
 } // namespace firelight::input

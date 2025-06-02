@@ -36,6 +36,19 @@ FocusScope {
                 }
             }
 
+            ToggleOption {
+                Layout.fillWidth: true
+                focus: true
+                label: "Only allow player one to navigate menus"
+                description: "When this is enabled, only the controller in the player one slot will be able to navigate menus. \n\nNote: The keyboard is always able to navigate menus, regardless of this setting."
+
+                checked: controller_manager.onlyPlayerOneCanNavigateMenus
+
+                onCheckedChanged: {
+                    controller_manager.onlyPlayerOneCanNavigateMenus = checked
+                }
+            }
+
         }
 
         Item {

@@ -26,10 +26,6 @@ FocusScope {
     }
     UpdateFolderDialog {
         id: updateFolderDialog
-        onAccepted: {
-            console.log("New folder name: " + updateFolderDialog.folderName)
-            // LibraryFolderModel.updateFolder(updateFolderDialog.folderId, updateFolderDialog.folderName)
-        }
     }
     ColumnLayout {
             id: libraryNavList
