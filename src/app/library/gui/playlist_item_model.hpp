@@ -1,11 +1,14 @@
 #pragma once
 
+#include "../../manager_accessor.hpp"
 #include "../library_database.hpp"
+
 #include <QAbstractListModel>
 
 namespace firelight::gui {
 
-class PlaylistItemModel final : public QAbstractListModel {
+class LibraryFolderListModel : public QAbstractListModel,
+                               public ManagerAccessor {
   Q_OBJECT
 
 public:
@@ -14,7 +17,7 @@ public:
     DisplayName,
   };
 
-  explicit PlaylistItemModel();
+  explicit LibraryFolderListModel();
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant data(const QModelIndex &index,
@@ -24,10 +27,10 @@ public:
                int role) override;
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-  Q_INVOKABLE void addPlaylist(const QString &displayName);
-  Q_INVOKABLE void removePlaylist(int playlistId);
-  Q_INVOKABLE void renamePlaylist(int playlistId, const QString &newName);
-  Q_INVOKABLE void addEntryToPlaylist(int playlistId, int entryId);
+  Q_INVOKABLE bool addFolder(const QString &displayName);
+
+  Q_INVOKABLE void deleteFolder(int folderId);
+  // Q_INVOKABLE void renamePlaylist(int playlistId, const QString &newName);
 
 private:
   struct Item {
@@ -35,7 +38,6 @@ private:
     QString displayName;
   };
 
-  db::ILibraryDatabase *m_libraryDatabase;
-  std::vector<Item> m_items;
+  std::vector<library::FolderInfo> m_items;
 };
 } // namespace firelight::gui

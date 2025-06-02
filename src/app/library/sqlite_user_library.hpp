@@ -16,14 +16,19 @@ public:
 
   ~SqliteUserLibrary() override;
 
-  bool create(EntryFolderInfo &folder) override;
-  std::vector<EntryFolderInfo> getFolders(EntryFolderInfo filter) override;
+  bool create(FolderInfo &folder) override;
+  bool create(FolderEntryInfo &folderEntry) override;
+  std::vector<FolderInfo> listFolders(FolderInfo filter) override;
+  bool deleteFolder(int folderId) override;
+
+  bool update(FolderInfo &folder) override;
+  bool deleteFolderEntry(FolderEntryInfo &info) override;
 
   void setMainGameDirectory(const QString &directory);
 
   QString getMainGameDirectory();
 
-  void addRomFile(RomFile &romFile) override;
+  void create(RomFile &romFile) override;
 
   std::optional<RomFile> getRomFileWithPathAndSize(const QString &filePath,
                                                    size_t fileSizeBytes,
@@ -47,7 +52,7 @@ public:
 
   std::optional<PatchFile> getPatchFile(int id) override;
 
-  void addPatchFile(PatchFile &file);
+  void create(PatchFile &file);
 
   std::optional<PatchFile> getPatchFileWithPathAndSize(const QString &filePath,
                                                        size_t fileSizeBytes,
@@ -63,6 +68,8 @@ public:
 
 signals:
   void mainGameDirectoryChanged(const QString &newDirectory);
+
+  void entryAddedToFolder(int folderId, int entryId);
 
   void romFileAdded(int id, const QString &contentHash);
 

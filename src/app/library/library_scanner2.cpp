@@ -187,7 +187,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
           //        romFile.getContentHash().toStdString().c_str());
 
           if (romFile.isValid()) {
-            m_library.addRomFile(romFile);
+            m_library.create(romFile);
           }
 
           delete[] buffer;
@@ -228,7 +228,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       patch.m_fileCrc32 = fileCrc32.toStdString();
       patch.m_inArchive = false;
 
-      m_library.addPatchFile(patch);
+      m_library.create(patch);
 
       spdlog::info("Skipping patch file for now: {}",
                    fileInfo.filePath().toStdString());
@@ -250,7 +250,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
 
     auto romFile = RomFile(fileInfo.filePath());
     if (romFile.isValid()) {
-      m_library.addRomFile(romFile);
+      m_library.create(romFile);
     }
 
     // metadata scan:

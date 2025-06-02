@@ -46,7 +46,7 @@ FocusScope {
 
     function goToContent(title, page, args, transition) {
         content.title = title
-        contentStack.pushItem(page, args, transition)
+        contentStack.replaceCurrentItem(page, args, transition)
     }
 
     LeftNavigationBar {
@@ -135,12 +135,71 @@ FocusScope {
                     Router.navigateTo("/library")
                 }
 
-                pushEnter: Transition {}
-                pushExit: Transition {}
+                pushEnter: Transition {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        property: "scale"
+                        from: 1.03
+                        to: 1
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+                pushExit: Transition {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        property: "scale"
+                        from: 1
+                        to: 0.97
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                }
                 popEnter: Transition {}
                 popExit: Transition {}
-                replaceEnter: Transition {}
-                replaceExit: Transition {}
+                replaceEnter: Transition {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        property: "x"
+                        from: -20
+                        to: 0
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+                replaceExit: Transition {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        property: "x"
+                        from: 0
+                        to: -20
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }}
             }
         }
     }

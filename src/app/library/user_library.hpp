@@ -1,7 +1,8 @@
 #pragma once
 
 #include "entry.hpp"
-#include "entry_folder_info.hpp"
+#include "folder_entry_info.hpp"
+#include "folder_info.hpp"
 #include "rom_file.hpp"
 #include "run_configuration.hpp"
 #include "watched_directory.hpp"
@@ -11,10 +12,16 @@ class IUserLibrary {
 public:
   virtual ~IUserLibrary() = default;
 
-  virtual bool create(EntryFolderInfo &folder) = 0;
-  virtual std::vector<EntryFolderInfo> getFolders(EntryFolderInfo filter) = 0;
+  virtual void create(RomFile &path) = 0;
+  virtual void create(PatchFile &file) = 0;
+  virtual bool create(FolderInfo &folder) = 0;
+  virtual bool create(FolderEntryInfo &folderEntry) = 0;
 
-  virtual void addRomFile(RomFile &path) = 0;
+  virtual bool update(FolderInfo &folder) = 0;
+  virtual std::vector<FolderInfo> listFolders(FolderInfo filter) = 0;
+  virtual bool deleteFolder(int folderId) = 0;
+
+  virtual bool deleteFolderEntry(FolderEntryInfo &info) = 0;
 
   virtual std::optional<RomFile>
   getRomFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes,
@@ -23,8 +30,6 @@ public:
   virtual std::vector<RomFile> getRomFiles() = 0;
 
   virtual std::optional<RomFile> getRomFile(int id) = 0;
-
-  virtual void addPatchFile(PatchFile &file) = 0;
 
   virtual std::optional<PatchFile>
   getPatchFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes,

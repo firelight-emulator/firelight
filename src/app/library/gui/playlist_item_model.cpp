@@ -2,33 +2,37 @@
 
 namespace firelight::gui {
 
-bool PlaylistItemModel::setData(const QModelIndex &index, const QVariant &value,
-                                int role) {
+bool LibraryFolderListModel::setData(const QModelIndex &index,
+                                     const QVariant &value, int role) {
   if (index.row() < 0 || index.row() >= m_items.size())
     return false;
 
-  Item &item = m_items[index.row()];
+  library::FolderInfo &item = m_items[index.row()];
 
   switch (role) {
   case PlaylistId:
     return false;
   case DisplayName:
-    item.displayName = value.toString();
+    item.displayName = value.toString().toStdString();
+    // TODO: Persist to db
     break;
   default:
     return false;
   }
+
+  getUserLibrary()->update(item);
 
   emit dataChanged(index, index, {role});
 
   return true;
 }
 
-Qt::ItemFlags PlaylistItemModel::flags(const QModelIndex &index) const {
+Qt::ItemFlags LibraryFolderListModel::flags(const QModelIndex &index) const {
   return QAbstractListModel::flags(index) | Qt::ItemIsEditable;
 }
 
-PlaylistItemModel::PlaylistItemModel() {
+LibraryFolderListModel::LibraryFolderListModel() {
+  m_items = getUserLibrary()->listFolders({});
   // const auto entries = m_libraryDatabase->getAllPlaylists();
 
   // for (const auto &entry : entries) {
@@ -37,11 +41,12 @@ PlaylistItemModel::PlaylistItemModel() {
   // }
 }
 
-int PlaylistItemModel::rowCount(const QModelIndex &parent) const {
+int LibraryFolderListModel::rowCount(const QModelIndex &parent) const {
   return m_items.size();
 }
 
-QVariant PlaylistItemModel::data(const QModelIndex &index, int role) const {
+QVariant LibraryFolderListModel::data(const QModelIndex &index,
+                                      int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
     return QVariant{};
   }
@@ -50,39 +55,47 @@ QVariant PlaylistItemModel::data(const QModelIndex &index, int role) const {
 
   switch (role) {
   case PlaylistId:
-    return item.playlistId;
+    return item.id;
   case DisplayName:
-    return item.displayName;
+    return QString::fromStdString(item.displayName);
   default:
     return QVariant{};
   }
 }
 
-QHash<int, QByteArray> PlaylistItemModel::roleNames() const {
+QHash<int, QByteArray> LibraryFolderListModel::roleNames() const {
   QHash<int, QByteArray> roles;
-  roles[PlaylistId] = "id";
+  roles[PlaylistId] = "playlist_id";
   roles[DisplayName] = "display_name";
   return roles;
 }
 
-void PlaylistItemModel::addPlaylist(const QString &displayName) {
+bool LibraryFolderListModel::addFolder(const QString &displayName) {
 
-  auto newPlaylist =
-      db::Playlist{.id = -1, .displayName = displayName.toStdString()};
-  m_libraryDatabase->createPlaylist(newPlaylist);
+  if (auto folder =
+          library::FolderInfo{.displayName = displayName.toStdString()};
+      getUserLibrary()->create(folder)) {
 
-  beginInsertRows(QModelIndex(), rowCount(QModelIndex()),
-                  rowCount(QModelIndex()));
+    beginInsertRows(QModelIndex(), rowCount(QModelIndex()),
+                    rowCount(QModelIndex()));
 
-  m_items.push_back({newPlaylist.id, displayName});
+    m_items.push_back(folder);
+    endInsertRows();
 
-  endInsertRows();
+    return true;
+  }
+
+  return false;
 }
-void PlaylistItemModel::removePlaylist(const int playlistId) {
-  m_libraryDatabase->deletePlaylist(playlistId);
+
+void LibraryFolderListModel::deleteFolder(const int folderId) {
+  if (!getUserLibrary()->deleteFolder(folderId)) {
+    spdlog::warn("Failed to delete folder with ID {}", folderId);
+    return;
+  }
 
   for (int i = 0; i < m_items.size(); ++i) {
-    if (m_items[i].playlistId == playlistId) {
+    if (m_items[i].id == folderId) {
       beginRemoveRows(QModelIndex(), i, i);
       m_items.erase(m_items.begin() + i);
       endRemoveRows();
@@ -90,22 +103,18 @@ void PlaylistItemModel::removePlaylist(const int playlistId) {
     }
   }
 }
-
-void PlaylistItemModel::renamePlaylist(const int playlistId,
-                                       const QString &newName) {
-  m_libraryDatabase->renamePlaylist(playlistId, newName.toStdString());
-
-  for (int i = 0; i < m_items.size(); ++i) {
-    if (m_items.at(i).playlistId == playlistId) {
-      setData(createIndex(i, 0), newName, DisplayName);
-      break;
-    }
-  }
-}
-
-void PlaylistItemModel::addEntryToPlaylist(const int playlistId,
-                                           const int entryId) {
-  m_libraryDatabase->addEntryToPlaylist(playlistId, entryId);
-}
+//
+// void PlaylistItemModel::renamePlaylist(const int playlistId,
+//                                        const QString &newName) {
+//   m_libraryDatabase->renamePlaylist(playlistId, newName.toStdString());
+//
+//   for (int i = 0; i < m_items.size(); ++i) {
+//     if (m_items.at(i).playlistId == playlistId) {
+//       setData(createIndex(i, 0), newName, DisplayName);
+//       break;
+//     }
+//   }
+// }
+//
 
 } // namespace firelight::gui

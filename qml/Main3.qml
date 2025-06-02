@@ -47,6 +47,24 @@ ApplicationWindow {
         backgroundFile: AppearanceSettings.backgroundFile
     }
 
+    function startGame(entryId) {
+        if (emulatorLoader.status === Loader.Ready) {
+            closeGameDialog.openAndDoOnAccepted(function () {
+                emulatorLoader.source = ""
+
+                startGameAnimation.entryId = entryId
+                startGameAnimation.start()
+
+                // emulatorLoader.entryId = entryId
+                // emulatorLoader.active = true
+                // libPage.playLaunchAnimation()
+            })
+        } else {
+            startGameAnimation.entryId = entryId
+            startGameAnimation.start()
+        }
+    }
+
     Loader {
         id: emulatorLoader
         // visible: status === Loader.Ready
@@ -202,7 +220,7 @@ ApplicationWindow {
             script: {
                 mainContentStack.popCurrentItem(StackView.Immediate)
                 emulatorLoader.setSource("NewEmulatorPage.qml", {entryId: startGameAnimation.entryId, stackView: mainContentStack})
-                    overlay.opacity = 0
+                overlay.opacity = 0
 
             }
         }
@@ -215,187 +233,9 @@ ApplicationWindow {
 
     Component {
         id: allGamesPage
-        FocusScope {
-            ListView {
-                id: theList
-                anchors.fill: parent
-                highlightMoveDuration: 80
-                highlightMoveVelocity: -1
-                highlightRangeMode: InputMethodManager.usingMouse ? ListView.NoHighlightRange : ListView.ApplyRange
-                preferredHighlightBegin: 64
-                preferredHighlightEnd: height - 64
-                model: LibraryEntryModel
-                ScrollBar.vertical: ScrollBar { }
-
-                clip: true
-                //
-                // Timer {
-                //     id: wheelTimer
-                //
-                //     interval: 500
-                //     repeat: false
-                // }
-                //
-                // WheelHandler {
-                //     onWheel: function(event) {
-                //         if (wheelTimer.running) {
-                //             if (theList.currentIndex === 0 && event.angleDelta.y >= 0) {
-                //                 wheelTimer.restart()
-                //                 return
-                //             } else if (theList.currentIndex === theList.count - 1 && event.angleDelta.y < 0) {
-                //                 wheelTimer.restart()
-                //                 return
-                //             }
-                //         }
-                //
-                //         if (event.angleDelta.y >= 0) {
-                //             // theList.highlightRangeMode = ListView.ApplyRange
-                //             theList.decrementCurrentIndex()
-                //         } else {
-                //             // theList.highlightRangeMode = ListView.ApplyRange
-                //             theList.incrementCurrentIndex()
-                //         }
-                //
-                //         wheelTimer.restart()
-                //     }
-                // }
-
-                delegate: Button {
-                    id: tttt
-                    required property var model
-                    required property var index
-                    width: ListView.view.width
-
-                    // RightClickMenu {
-                    //     id: rightClick
-                    //
-                    //     RightClickMenuItem {
-                    //         text: "Play"
-                    //         // externalLink: true
-                    //         // onTriggered: {
-                    //         //     Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id)
-                    //         // }
-                    //     }
-                    //
-                    //     RightClickMenuItem {
-                    //         text: "View details"
-                    //         onTriggered: {
-                    //             Router.navigateTo("/library/entries/" + tttt.model.entryId)
-                    //         }
-                    //     }
-                    //
-                    // }
-
-
-                    TapHandler {
-                        acceptedButtons: Qt.LeftButton
-                        onDoubleTapped: {
-                            if (emulatorLoader.status === Loader.Ready) {
-                                closeGameDialog.openAndDoOnAccepted(function () {
-                                                        emulatorLoader.source = ""
-
-                                                        startGameAnimation.entryId = model.entryId
-                                                        startGameAnimation.start()
-
-                                                        // emulatorLoader.entryId = entryId
-                                                        // emulatorLoader.active = true
-                                                        // libPage.playLaunchAnimation()
-                                                    })
-                            } else {
-
-
-                                                        startGameAnimation.entryId = model.entryId
-                                                        startGameAnimation.start()
-                            }
-                        }
-
-                        onSingleTapped: function(event, button) {
-                            // if (button === 2) {
-                            //     rightClick.popupNormal()
-                            // }
-                            if (tttt.ListView.view.currentIndex !== tttt.index) {
-                                // theList.highlightRangeMode = ListView.NoHighlightRange
-                                tttt.ListView.view.currentIndex = tttt.index
-                            }
-                        }
-                    }
-
-                    HoverHandler {
-                        id: gameItemHover
-                        cursorShape: Qt.PointingHandCursor
-                    }
-
-                    height: 48
-                    padding: 6
-                    horizontalPadding: 12
-
-                    background: Rectangle {
-                        color: "white"
-                        radius: 2
-                        opacity: tttt.ListView.isCurrentItem ? 1 : gameItemHover.hovered ? 0.1 : 1
-                        visible: tttt.ListView.isCurrentItem || gameItemHover.hovered
-                    }
-
-                    contentItem: RowLayout {
-                        property real random: Math.random() * 50
-                        spacing: 16
-                        // FLIcon {
-                        //     icon: "star"
-                        //     color: "grey"
-                        //     Layout.preferredHeight: 32
-                        //     Layout.preferredWidth: 32
-                        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        //     size: height
-                        // }
-                        // Image {
-                        //     source: tttt.index < theList.icons.length ? theList.icons[tttt.index] : "https://cdn2.steamgriddb.com/thumb/2c323abe873b4f9fa8a72f45785df5f0.jpg"
-                        //     Layout.preferredHeight: parent.height
-                        //     Layout.preferredWidth: parent.height
-                        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                        //     sourceSize.width: parent.height
-                        //     sourceSize.height: parent.height
-                        //     smooth: false
-                        //     fillMode: Image.PreserveAspectFit
-                        // }
-                        Text {
-                            text: tttt.model.displayName
-                            font.pixelSize: 17
-                            font.weight: Font.DemiBold
-                            font.family: Constants.regularFontFamily
-                            color: tttt.ListView.isCurrentItem ? "black" : "white"
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: 600
-                            elide: Text.ElideRight
-                            maximumLineCount: 1
-                            horizontalAlignment: Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        FLIcon {
-                            icon: platform_model.getPlatformIconName(tttt.model.platformId)
-                            color: tttt.ListView.isCurrentItem ? "#2A2A2A" : "#d3d3d3"
-                            Layout.preferredHeight: 24
-                            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                            size: height
-                        }
-                        Text {
-                            text: platform_model.getPlatformDisplayName(tttt.model.platformId)
-                            font.pixelSize: 17
-                            font.weight: Font.Medium
-                            font.family: Constants.regularFontFamily
-                            color: tttt.ListView.isCurrentItem ? "#2A2A2A" : "#d3d3d3"
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: 300
-                            elide: Text.ElideRight
-                            maximumLineCount: 1
-                            horizontalAlignment: Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Item {
-                            Layout.fillHeight: true
-                            Layout.fillWidth: true
-                        }
-                    }
-                }
+        LibraryPage{
+            onStartGame: function (entryId) {
+                window.startGame(entryId)
             }
         }
 
@@ -520,9 +360,9 @@ ApplicationWindow {
                 // }
 
                 if (route === "/shop") {
-                    content.goToContent("Mod Shop", shopPage, {}, StackView.PushTransition)
+                    content.goToContent("Mod Shop", shopPage, {}, StackView.ReplaceTransition)
                 } else if (route === "/library") {
-                    content.goToContent("Library", allGamesPage, {}, StackView.PushTransition)
+                    content.goToContent("Library", allGamesPage, {}, StackView.ReplaceTransition)
                 } else if (route.startsWith("/library/entries/")) {
                     let things = route.split("/")
                     if (things.length === 4) {
@@ -534,9 +374,9 @@ ApplicationWindow {
                     let things = route.split("/")
                     content.goToContent("Mod Details", shopItemPage, {modId: things[3]}, StackView.PushTransition)
                 } else if (route === "/settings") {
-                    content.goToContent("Settings", settingsScreen, {}, StackView.PushTransition)
+                    content.goToContent("Settings", settingsScreen, {}, StackView.ReplaceTransition)
                 } else if (route === "/controllers") {
-                    content.goToContent("Controllers", controllersPage, {}, StackView.PushTransition)
+                    content.goToContent("Controllers", controllersPage, {}, StackView.ReplaceTransition)
                 } else if (route.startsWith("/controllers/keyboard/")) {
                     let things = route.split("/")
                     if (things.length === 4) {
@@ -552,9 +392,9 @@ ApplicationWindow {
                         content.goToContent("Not found", lol, {}, StackView.PushTransition)
                     }
                 } else if (route === "/quick-menu") {
-                    content.goToContent("Quick Menu", quickMenuPage, {gameSettings: emulatorLoader.item.gameSettings}, StackView.PushTransition)
+                    content.goToContent("Quick Menu", quickMenuPage, {gameSettings: emulatorLoader.item.gameSettings}, StackView.ReplaceTransition)
                 } else {
-                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
+                        content.goToContent("Not found", lol, {}, StackView.ReplaceTransition)
                 }
             }
         }

@@ -2,7 +2,7 @@ find_package(Qt6 6.7 REQUIRED COMPONENTS Concurrent Sql REQUIRED)
 
 set(LIBRARY_SOURCES
         gui/library_path_model.cpp
-        gui/playlist_item_model.cpp
+        #        gui/playlist_item_model.cpp
         library_scanner2.cpp
         library_scanner2.hpp
         rom_file.cpp

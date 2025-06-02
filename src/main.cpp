@@ -53,6 +53,7 @@
 #include "app/input/gui/input_mapping_item.hpp"
 #include "app/input/gui/keyboard_mapping_item.hpp"
 #include "app/library/gui/entry_list_model.hpp"
+#include "app/library/gui/entry_sort_filter_list_model.hpp"
 #include "app/library/gui/library_entry_item.hpp"
 #include "app/library/gui/library_path_model.hpp"
 #include "app/library/sqlite_user_library.hpp"
@@ -227,8 +228,7 @@ int main(int argc, char *argv[]) {
   firelight::gui::ControllerListModel controllerListModel(controllerManager);
 
   firelight::library::EntryListModel entryListModel(userLibrary);
-
-  QSortFilterProxyModel entrySearchModel;
+  firelight::library::EntrySortFilterListModel entrySearchModel;
   entrySearchModel.setSourceModel(&entryListModel);
 
   QObject::connect(&libScanner2,
@@ -316,6 +316,8 @@ int main(int argc, char *argv[]) {
   // diskCache->setCacheDirectory(directory);
   // manager->setCache(diskCache);
 
+  firelight::gui::LibraryFolderListModel libraryFolderListModel;
+
   auto cache = new CachingNetworkAccessManagerFactory();
 
   QQmlApplicationEngine engine;
@@ -342,8 +344,13 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("UserLibrary", &userLibrary);
   engine.rootContext()->setContextProperty("LibraryEntryModel",
                                            &entryListModel);
-  engine.rootContext()->setContextProperty("SearchLibraryEntryModel",
+  engine.rootContext()->setContextProperty("FilteredLibraryEntryModel",
                                            &entrySearchModel);
+  // engine.rootContext()->setContextProperty("SearchLibraryEntryModel",
+  //                                          &entrySearchModel);
+
+  engine.rootContext()->setContextProperty("LibraryFolderModel",
+                                           &libraryFolderListModel);
   engine.rootContext()->setContextProperty("LibraryScanner", &libScanner2);
 
   auto resizeHandler = new firelight::gui::WindowResizeHandler();

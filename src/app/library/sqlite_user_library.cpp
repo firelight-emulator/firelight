@@ -131,15 +131,28 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
   }
 
   QSqlQuery createFoldersTable(getDatabase());
-  createFoldersTable.prepare("CREATE TABLE IF NOT EXISTS entry_folders("
+  createFoldersTable.prepare("CREATE TABLE IF NOT EXISTS folders("
                              "id INTEGER PRIMARY KEY,"
                              "display_name TEXT UNIQUE NOT NULL,"
                              "description TEXT,"
+                             "icon_source_url TEXT,"
                              "created_at INTEGER NOT NULL);");
 
   if (!createFoldersTable.exec()) {
     spdlog::error("Table creation failed: {}",
                   createFoldersTable.lastError().text().toStdString());
+  }
+
+  QSqlQuery createFolderEntriesTable(getDatabase());
+  createFolderEntriesTable.prepare("CREATE TABLE IF NOT EXISTS folder_entries("
+                                   "folder_id INTEGER NOT NULL,"
+                                   "entry_id INTEGER NOT NULL,"
+                                   "created_at INTEGER NOT NULL,"
+                                   "UNIQUE (folder_id, entry_id));");
+
+  if (!createFolderEntriesTable.exec()) {
+    spdlog::error("Table creation failed: {}",
+                  createFolderEntriesTable.lastError().text().toStdString());
   }
 }
 
@@ -152,16 +165,19 @@ SqliteUserLibrary::~SqliteUserLibrary() {
   }
 }
 
-bool SqliteUserLibrary::create(EntryFolderInfo &folder) {
+bool SqliteUserLibrary::create(FolderInfo &folder) {
   QSqlQuery query(getDatabase());
-  query.prepare("INSERT INTO entry_folders("
+  query.prepare("INSERT INTO folders("
                 "display_name, "
                 "description, "
+                "icon_source_url, "
                 "created_at) VALUES"
-                "(:displayName, :description, :createdAt);");
+                "(:displayName, :description, :iconSourceUrl, :createdAt);");
 
   query.bindValue(":displayName", QString::fromStdString(folder.displayName));
   query.bindValue(":description", QString::fromStdString(folder.description));
+  query.bindValue(":iconSourceUrl",
+                  QString::fromStdString(folder.iconSourceUrl));
   query.bindValue(":createdAt", QDateTime::currentSecsSinceEpoch());
 
   if (!query.exec()) {
@@ -170,13 +186,39 @@ bool SqliteUserLibrary::create(EntryFolderInfo &folder) {
     return false;
   }
 
+  folder.id = query.lastInsertId().toInt();
+
   return true;
 }
 
-std::vector<EntryFolderInfo>
-SqliteUserLibrary::getFolders(const EntryFolderInfo filter) {
+bool SqliteUserLibrary::create(FolderEntryInfo &folderEntry) {
   QSqlQuery query(getDatabase());
-  query.prepare("SELECT * FROM entry_folders");
+  query.prepare("INSERT INTO folder_entries("
+                "folder_id, "
+                "entry_id, "
+                "created_at) VALUES"
+                "(:folderId, :entryId, :createdAt);");
+
+  query.bindValue(":folderId", folderEntry.folderId);
+  query.bindValue(":entryId", folderEntry.entryId);
+  query.bindValue(":createdAt", QDateTime::currentSecsSinceEpoch());
+
+  if (!query.exec()) {
+    spdlog::error("Failed to create folder entry: {}",
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  emit entryAddedToFolder(folderEntry.folderId, folderEntry.entryId);
+  return true;
+}
+
+std::vector<FolderInfo>
+SqliteUserLibrary::listFolders(const FolderInfo filter) {
+  // TODO: Implement filtering
+
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM folders");
 
   if (!query.exec()) {
     spdlog::error("Failed to get folders: {}",
@@ -184,16 +226,90 @@ SqliteUserLibrary::getFolders(const EntryFolderInfo filter) {
     return {};
   }
 
-  std::vector<EntryFolderInfo> folders;
+  std::vector<FolderInfo> folders;
   while (query.next()) {
-    folders.emplace_back(EntryFolderInfo{
+    folders.emplace_back(FolderInfo{
         .id = query.value("id").toInt(),
         .displayName = query.value("display_name").toString().toStdString(),
         .description = query.value("description").toString().toStdString(),
+        .iconSourceUrl =
+            query.value("icon_source_url").toString().toStdString(),
         .createdAt = query.value("created_at").toULongLong()});
   }
 
   return folders;
+}
+
+bool SqliteUserLibrary::deleteFolder(int folderId) {
+  QSqlQuery query(getDatabase());
+  query.prepare("DELETE FROM folders WHERE id = :folderId;");
+  query.bindValue(":folderId", folderId);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to delete folder with ID {}: {}", folderId,
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  query.finish();
+
+  // Also delete all entries in the folder_entries table
+  QSqlQuery deleteEntriesQuery(getDatabase());
+  deleteEntriesQuery.prepare(
+      "DELETE FROM folder_entries WHERE folder_id = :folderId;");
+  deleteEntriesQuery.bindValue(":folderId", folderId);
+
+  if (!deleteEntriesQuery.exec()) {
+    spdlog::error("Failed to delete entries for folder ID {}: {}", folderId,
+                  deleteEntriesQuery.lastError().text().toStdString());
+    return false;
+  }
+
+  return true;
+}
+
+bool SqliteUserLibrary::update(FolderInfo &folder) {
+  if (folder.id <= 0) {
+    spdlog::error("Cannot update folder with invalid ID: {}", folder.id);
+    return false;
+  }
+
+  QSqlQuery query(getDatabase());
+  query.prepare("UPDATE folders SET "
+                "display_name = :displayName, "
+                "description = :description, "
+                "icon_source_url = :iconSourceUrl "
+                "WHERE id = :folderId;");
+
+  query.bindValue(":folderId", folder.id);
+  query.bindValue(":displayName", QString::fromStdString(folder.displayName));
+  query.bindValue(":description", QString::fromStdString(folder.description));
+  query.bindValue(":iconSourceUrl",
+                  QString::fromStdString(folder.iconSourceUrl));
+
+  if (!query.exec() || query.numRowsAffected() == 0) {
+    spdlog::error("Failed to update folder with ID {}: {}", folder.id,
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  return true;
+}
+
+bool SqliteUserLibrary::deleteFolderEntry(FolderEntryInfo &info) {
+  QSqlQuery query(getDatabase());
+  query.prepare("DELETE FROM folder_entries WHERE folder_id = :folderId AND "
+                "entry_id = :entryId;");
+  query.bindValue(":folderId", info.folderId);
+  query.bindValue(":entryId", info.entryId);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to delete folder entry: {}",
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  return true;
 }
 
 void SqliteUserLibrary::setMainGameDirectory(const QString &directory) {
@@ -219,7 +335,7 @@ QString SqliteUserLibrary::getMainGameDirectory() {
   return m_mainGameDirectory;
 }
 
-void SqliteUserLibrary::addRomFile(RomFile &romFile) {
+void SqliteUserLibrary::create(RomFile &romFile) {
   const QString queryString = "INSERT INTO rom_files ("
                               "file_path, "
                               "file_size, "
@@ -350,14 +466,29 @@ std::vector<Entry> SqliteUserLibrary::getEntries(int offset, int limit) {
   std::vector<Entry> entries;
 
   while (query.next()) {
+    // Get the entry ID
+    int entryId = query.value("id").toInt();
+    // Query for folder IDs for this entry
+    // QSqlQuery folderQuery(getDatabase());
+    // folderQuery.prepare("SELECT folder_id FROM folder_entries WHERE entry_id
+    // = :entryId;"); folderQuery.bindValue(":entryId", entryId);
+    // std::vector<int> folderIds;
+    // if (folderQuery.exec()) {
+    //   while (folderQuery.next()) {
+    //     folderIds.push_back(folderQuery.value("folder_id").toInt());
+    //   }
+    // } else {
+    //   spdlog::error("Failed to get folder IDs for entry {}: {}", entryId,
+    //   folderQuery.lastError().text().toStdString());
+    // }
+
     entries.emplace_back(Entry{
-        .id = query.value("id").toInt(),
+        .id = entryId,
         .displayName = query.value("display_name").toString(),
         .contentHash = query.value("content_hash").toString(),
         .platformId = query.value("platform_id").toUInt(),
         .activeSaveSlot = query.value("active_save_slot").toUInt(),
         // TODO
-
         // .hidden = query.value("hidden").toBool(),
         .hidden = !query.value("has_rom").toBool(),
         .icon1x1SourceUrl = query.value("icon_1x1_source_url").toString(),
@@ -373,6 +504,25 @@ std::vector<Entry> SqliteUserLibrary::getEntries(int offset, int limit) {
         .retroachievementsSetId =
             query.value("retroachievements_set_id").toUInt(),
         .createdAt = query.value("created_at").toUInt()});
+  }
+
+  query.finish();
+
+  for (auto &entry : entries) {
+    // Get folder IDs for each entry
+    QSqlQuery folderQuery(getDatabase());
+    folderQuery.prepare(
+        "SELECT folder_id FROM folder_entries WHERE entry_id = :entryId;");
+    folderQuery.bindValue(":entryId", entry.id);
+
+    if (folderQuery.exec()) {
+      while (folderQuery.next()) {
+        entry.folderIds.push_back(folderQuery.value("folder_id").toInt());
+      }
+    } else {
+      spdlog::error("Failed to get folder IDs for entry {}: {}", entry.id,
+                    folderQuery.lastError().text().toStdString());
+    }
   }
 
   return entries;
@@ -557,7 +707,7 @@ std::optional<PatchFile> SqliteUserLibrary::getPatchFile(int id) {
   return {patchFile};
 }
 
-void SqliteUserLibrary::addPatchFile(PatchFile &file) {
+void SqliteUserLibrary::create(PatchFile &file) {
   const QString queryString =
       "INSERT OR IGNORE INTO patch_files ("
       "file_path, "

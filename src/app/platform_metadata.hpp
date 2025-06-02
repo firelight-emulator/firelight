@@ -233,6 +233,7 @@ public:
   static constexpr int PLATFORM_ID_PLAYSTATION_PORTABLE = 20;
   static constexpr int PLATFORM_ID_TURBOGRAFX16 = 21;
   static constexpr int PLATFORM_ID_SUPERGRAFX = 22;
+  static constexpr int PLATFORM_ID_POKEMON_MINI = 23;
 
   static std::map<std::string, std::string>
   getDefaultConfigValues(const int platformId) {
@@ -326,6 +327,9 @@ public:
     if (extension == "sgx") {
       return PLATFORM_ID_SUPERGRAFX;
     }
+    if (extension == "min") {
+      return PLATFORM_ID_POKEMON_MINI;
+    }
     return PLATFORM_ID_UNKNOWN;
   }
 
@@ -357,6 +361,8 @@ public:
       return "pce";
     case PLATFORM_ID_SUPERGRAFX:
       return "sgx";
+    case PLATFORM_ID_POKEMON_MINI:
+      return "pkmn";
     default:
       return "firelight-logo-white";
     }

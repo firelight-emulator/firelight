@@ -97,6 +97,7 @@ file(GLOB QML_FILES
         qml/components/navigation/*.qml
         qml/components/transitions/*.qml
         qml/components/rewind/*.qml
+        qml/components/library/*.qml
         qml/**/*.qml
 )
 
@@ -177,6 +178,8 @@ add_library(firelight_lib
         src/app/settings/sqlite_emulation_settings_manager.hpp
         src/app/discord/discord_manager.hpp
         src/app/discord/discord_manager.cpp
+        src/app/library/gui/playlist_item_model.cpp
+        src/app/library/gui/entry_sort_filter_list_model.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -329,6 +332,7 @@ add_executable(fl_test
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
 
         tests/main.cpp
+        tests/app/library/sqlite_user_library_test.cpp
 )
 
 file(GLOB QML_TEST_FILES
