@@ -13,8 +13,26 @@ ApplicationWindow {
     id: window
     objectName: "Application Window"
 
-    width: 1920
-    height: 1080
+    width: GeneralSettings.mainWindowWidth
+    height: GeneralSettings.mainWindowHeight
+    x: GeneralSettings.mainWindowX
+    y: GeneralSettings.mainWindowY
+
+    onWidthChanged: {
+        GeneralSettings.mainWindowWidth = width
+    }
+
+    onHeightChanged: {
+        GeneralSettings.mainWindowHeight = height
+    }
+
+    onXChanged: {
+        GeneralSettings.mainWindowX = x
+    }
+
+    onYChanged: {
+        GeneralSettings.mainWindowY = y
+    }
 
     // onActiveFocusItemChanged: {
     //     console.log("Active focus item changed to: " + window.activeFocusItem)
@@ -231,14 +249,12 @@ ApplicationWindow {
         usingMouse: InputMethodManager.usingMouse
     }
 
-    Component {
+    LibraryPage {
         id: allGamesPage
-        LibraryPage{
-            onStartGame: function (entryId) {
-                window.startGame(entryId)
-            }
+        visible: false
+        onStartGame: function (entryId) {
+            window.startGame(entryId)
         }
-
     }
 
     FirelightDialog {
@@ -268,14 +284,6 @@ ApplicationWindow {
                  emulatorLoader.item.createRewindPoints()
             }
 
-        }
-    }
-
-    Component {
-        id: libraryPage2
-        LibraryPage2 {
-            id: libPage
-            model: LibraryEntryModel
         }
     }
 

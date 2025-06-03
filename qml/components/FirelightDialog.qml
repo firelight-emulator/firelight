@@ -33,8 +33,8 @@ Dialog {
         control.open()
     }
 
-    width: 520
-    height: Math.max(240, contentItem.implicitHeight + footer.height + spacing + verticalPadding * 2)
+    implicitWidth: Math.min(parent.width, 560)
+    implicitHeight: Math.min(parent.height, Math.max(240, (contentItem.contentHeight ? contentItem.contentHeight : contentItem.implicitHeight) + footer.height + spacing + verticalPadding * 2 + header.height))
 
     header: Text {
         text: control.headerText

@@ -27,6 +27,9 @@ FocusScope {
     UpdateFolderDialog {
         id: updateFolderDialog
     }
+    ManageSaveDataDialog {
+        id: manageSaveDataDialog
+    }
     ColumnLayout {
             id: libraryNavList
             focus: true
@@ -146,6 +149,10 @@ FocusScope {
 
         onRemoveFromFolderClicked: function(entryId) {
             LibraryEntryModel.removeEntryFromFolder(entryId, FilteredLibraryEntryModel.folderId)
+        }
+
+        onManageSaveDataClicked: function(entryId) {
+            manageSaveDataDialog.open()
         }
     }
 

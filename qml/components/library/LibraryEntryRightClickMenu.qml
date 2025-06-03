@@ -16,6 +16,7 @@ RightClickMenu {
 
     signal startGameClicked(int entryId)
     signal removeFromFolderClicked(int entryId)
+    signal manageSaveDataClicked(int entryId)
 
     RightClickMenuItem {
         text: "Play"
@@ -67,5 +68,17 @@ RightClickMenu {
             removeFromFolderClicked(root.entryId)
         }
     }
+
+    // RightClickMenuSeparator {
+    //     width: parent.width
+    // }
+    //
+    // RightClickMenuItem {
+    //     text: "Manage save data"
+    //
+    //     onTriggered: {
+    //         manageSaveDataClicked(root.entryId)
+    //     }
+    // }
 
 }
