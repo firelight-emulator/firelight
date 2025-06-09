@@ -23,6 +23,8 @@ public:
 
   virtual bool deleteFolderEntry(FolderEntryInfo &info) = 0;
 
+  virtual bool update(Entry &entry) = 0;
+
   virtual std::optional<RomFile>
   getRomFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes,
                             bool inArchive) = 0;

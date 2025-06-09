@@ -372,6 +372,7 @@ void EmulatorItem::loadGame(int entryId) {
       emit gameNameChanged();
       emit contentHashChanged();
       emit platformIdChanged();
+      emit saveSlotNumberChanged();
 
       m_loaded = true;
       if (m_startAfterLoading && !m_stopping) {
@@ -426,6 +427,7 @@ void EmulatorItem::loadGame(int entryId) {
       emit entryIdChanged();
       emit gameNameChanged();
       emit contentHashChanged();
+      emit saveSlotNumberChanged();
       emit platformIdChanged();
 
       m_loaded = true;

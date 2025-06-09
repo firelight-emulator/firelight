@@ -1,27 +1,35 @@
 #pragma once
-#include "firelight/userdata_database.hpp"
+
+#include "../savefile_info.hpp"
 #include <QAbstractListModel>
 
-namespace firelight::gui {
+namespace firelight::saves {
 
 class SavefileListModel : public QAbstractListModel {
   Q_OBJECT
 public:
-  SavefileListModel(db::IUserdataDatabase &userdataDatabase);
+  enum Roles {
+    HasData = Qt::UserRole + 1,
+    FilePath,
+    ContentHash,
+    SlotNumber,
+    SavefileMd5,
+    Name,
+    Description,
+    LastModified
+  };
+
+  SavefileListModel();
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant data(const QModelIndex &index,
                               int role) const override;
+  Qt::ItemFlags flags(const QModelIndex &index) const override;
+  QHash<int, QByteArray> roleNames() const override;
+
+  void reset(std::vector<SavefileInfo> items);
 
 private:
-  /**
-   * @struct Item
-   * @brief A struct representing an item in the model.
-   */
-  struct Item {
-    int slotNumber;
-  };
-  db::IUserdataDatabase &m_userdataDatabase;
-  std::vector<Item> m_items;
+  std::vector<SavefileInfo> m_items;
 };
 
-} // namespace firelight::gui
+} // namespace firelight::saves

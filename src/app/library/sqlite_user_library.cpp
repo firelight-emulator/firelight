@@ -311,6 +311,25 @@ bool SqliteUserLibrary::deleteFolderEntry(FolderEntryInfo &info) {
 
   return true;
 }
+bool SqliteUserLibrary::update(Entry &entry) {
+  QSqlQuery query(getDatabase());
+  query.prepare("UPDATE entriesv1 SET "
+                "display_name = :displayName, "
+                "active_save_slot = :activeSaveSlot, "
+                "hidden = :hidden WHERE id = :id;");
+
+  query.bindValue(":id", entry.id);
+  query.bindValue(":displayName", entry.displayName);
+  query.bindValue(":activeSaveSlot", entry.activeSaveSlot);
+  query.bindValue(":hidden", entry.hidden ? 1 : 0);
+  if (!query.exec() || query.numRowsAffected() == 0) {
+    spdlog::error("Failed to update entry with ID {}: {}", entry.id,
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  return true;
+}
 
 void SqliteUserLibrary::setMainGameDirectory(const QString &directory) {
   auto temp = directory;

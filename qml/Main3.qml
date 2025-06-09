@@ -34,6 +34,9 @@ ApplicationWindow {
         GeneralSettings.mainWindowY = y
     }
 
+    property int runningGameEntryId: emulatorLoader.item ? emulatorLoader.item.entryId : -1
+    property int runningGameSaveSlotNumber: emulatorLoader.item ? emulatorLoader.item.saveSlotNumber : -1
+
     // onActiveFocusItemChanged: {
     //     console.log("Active focus item changed to: " + window.activeFocusItem)
     //     let item = window.activeFocusItem
@@ -252,6 +255,7 @@ ApplicationWindow {
     LibraryPage {
         id: allGamesPage
         visible: false
+        currentEntryId: window.runningGameEntryId
         onStartGame: function (entryId) {
             window.startGame(entryId)
         }
@@ -266,6 +270,7 @@ ApplicationWindow {
     Component {
         id: quickMenuPage
         QuickMenu {
+            saveSlotNumber: window.runningGameSaveSlotNumber
             onResumeGame: {
                 mainContentStack.popCurrentItem()
             }

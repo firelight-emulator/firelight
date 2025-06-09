@@ -126,4 +126,25 @@ TEST_F(SqliteUserLibraryTest, CreateFolderEntryTest) {
   // TODO: Get entry and make sure the folder is associated with it
 }
 
+TEST_F(SqliteUserLibraryTest, DeleteFolderEntryTest) {
+  auto library = library::SqliteUserLibrary(":memory:", "file.txt");
+
+  auto info = library::FolderInfo{.displayName = "test"};
+  ASSERT_TRUE(library.create(info));
+
+  auto folderEntry =
+      library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
+  ASSERT_TRUE(library.create(folderEntry));
+
+  // Now delete the folder entry
+  ASSERT_TRUE(library.deleteFolderEntry(folderEntry));
+
+  // TODO: This isn't doing much right now, we need to get the entry and check
+  // the folders
+}
+
+TEST_F(SqliteUserLibraryTest, UpdateEntryTest) {
+  // TODO
+}
+
 } // namespace firelight::db

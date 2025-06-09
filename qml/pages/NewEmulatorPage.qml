@@ -85,6 +85,7 @@ FocusScope {
     property alias contentHash: emulator.contentHash
     property alias gameName: emulator.gameName
     property alias platformId: emulator.platformId
+    property alias saveSlotNumber: emulator.saveSlotNumber
     property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
     function loadGame(entryId) {

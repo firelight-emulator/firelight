@@ -8,22 +8,18 @@ Button {
     id: root
     required property var model
     required property var index
-    required property LibraryEntryRightClickMenu entryRightClickMenu
 
     implicitWidth: ListView.view.width
 
     signal startGameClicked(int entryId)
 
     TapHandler {
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton
         onDoubleTapped: {
             startGameClicked(root.model.entryId)
         }
 
         onSingleTapped: function(event, button) {
-            if (button === 2) {
-                entryRightClickMenu.openForEntry(root.model.entryId)
-            }
             if (root.ListView.view.currentIndex !== root.index) {
                 // theList.highlightRangeMode = ListView.NoHighlightRange
                 root.ListView.view.currentIndex = root.index

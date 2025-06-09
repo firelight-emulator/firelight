@@ -61,9 +61,11 @@
 #include "app/mods/gui/ModInfoItem.hpp"
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
+#include "gui/filesystem_utils.hpp"
 #include "settings/sqlite_emulation_settings_manager.hpp"
 #include <discordpp.h>
 
+#include <saves/gui/save_files_item.hpp>
 #include <settings/gui/game_settings_item.hpp>
 #include <unistd.h>
 
@@ -284,6 +286,8 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<firelight::settings::GameSettingsItem>("Firelight", 1, 0,
                                                          "GameSettings");
+  qmlRegisterType<firelight::saves::SaveFilesItem>("Firelight", 1, 0,
+                                                   "SaveDataInformation");
 
   firelight::gui::Router router;
 
@@ -327,6 +331,8 @@ int main(int argc, char *argv[]) {
   // engine.addUrlInterceptor(&imageCacheUrlInterceptor);
   engine.addImageProvider("gameImages", gameImageProvider);
 
+  engine.rootContext()->setContextProperty(
+      "FilesystemUtils", new firelight::gui::FilesystemUtils());
   engine.rootContext()->setContextProperty("EventEmitter",
                                            new firelight::gui::EventEmitter());
   engine.rootContext()->setContextProperty("Router", &router);
@@ -378,7 +384,7 @@ int main(int argc, char *argv[]) {
   QObject::connect(window, &QQuickWindow::afterRendering,
                    [&]() { discordManager.runCallbacks(); });
 
-  // window->setIcon(QIcon("firelight_logo1 (1).svg"));
+  window->setIcon(QIcon("qrc:images/firelight-logo"));
 
   firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
   sdlEventLoop.moveToThread(&sdlEventLoop);

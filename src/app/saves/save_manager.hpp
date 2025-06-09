@@ -4,6 +4,8 @@
 #include "firelight/userdata_database.hpp"
 #include "library/library_entry.hpp"
 #include "savefile.hpp"
+#include "savefile_info.hpp"
+
 #include <filesystem>
 #include <firelight/content_database.hpp>
 #include <library/library_database.hpp>
@@ -29,6 +31,9 @@ public:
 
   ~SaveManager() override;
 
+  [[nodiscard]] std::vector<SavefileInfo>
+  getSaveFileInfoList(const QString &contentHash) const;
+
   QFuture<bool> writeSaveData(const QString &contentHash, int saveSlotNumber,
                               const Savefile &saveData);
 
@@ -48,14 +53,6 @@ public:
   [[nodiscard]] QString getSaveDirectory() const;
 
   void setSaveDirectory(const QString &saveDirectory);
-
-  Q_INVOKABLE QAbstractListModel *
-  getSuspendPointListModel(const QString &contentHash, int saveSlotNumber = -1);
-
-  Q_INVOKABLE void clearSuspendPointListModel();
-
-  [[nodiscard]] QVector<SuspendPoint>
-  getSuspendPoints(const QString &contentHash, int saveSlotNumber) const;
 
 public slots:
   void handleUpdatedSuspendPoint(int index);
@@ -78,16 +75,11 @@ private:
   void deleteSuspendPointFromDisk(const QString &contentHash,
                                   int saveSlotNumber, int index);
 
-  QString m_currentSuspendPointListContentHash;
-  int m_currentSuspendPointListSaveSlotNumber = -1;
-  std::unique_ptr<SuspendPointListModel> m_suspendPointListModel;
-
   QSettings m_settings;
 
   db::IUserdataDatabase &m_userdataDatabase;
   gui::GameImageProvider &m_gameImageProvider;
   QString m_saveDirectory;
   std::unique_ptr<QThreadPool> m_ioThreadPool = nullptr;
-  std::map<int, SuspendPoint> m_suspendPoints;
 };
 } // namespace firelight::saves

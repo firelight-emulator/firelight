@@ -27,6 +27,41 @@ SaveManager::~SaveManager() {
   m_settings.setValue("SaveDirectory", m_saveDirectory);
 }
 
+std::vector<SavefileInfo>
+SaveManager::getSaveFileInfoList(const QString &contentHash) const {
+  std::vector<SavefileInfo> result;
+
+  for (auto i = 0; i < 8; ++i) {
+    auto dir =
+        m_saveDirectory + "/" + contentHash + "/slot" + QString::number(i + 1);
+    if (!QDir(dir).exists()) {
+      result.emplace_back(SavefileInfo{.hasData = false, .slotNumber = i + 1});
+      continue;
+    }
+
+    const auto saveFile =
+        std::filesystem::path((dir + "/savefile.srm").toStdString());
+
+    if (!exists(saveFile)) {
+      result.emplace_back(SavefileInfo{.hasData = false, .slotNumber = i + 1});
+      continue;
+    }
+
+    QFileInfo fileInfo(QString::fromStdString(saveFile.string()));
+
+    SavefileInfo info;
+    info.hasData = true;
+    info.contentHash = contentHash.toStdString();
+    info.filePath = saveFile.string();
+    info.slotNumber = i + 1;
+    info.lastModifiedEpochSeconds = fileInfo.lastModified().toSecsSinceEpoch();
+
+    result.emplace_back(info);
+  }
+
+  return result;
+}
+
 QFuture<bool> SaveManager::writeSaveData(const QString &contentHash,
                                          int saveSlotNumber,
                                          const Savefile &saveData) {
@@ -139,11 +174,6 @@ std::optional<Savefile> SaveManager::readSaveData(const QString &contentHash,
 QFuture<bool> SaveManager::writeSuspendPoint(const QString &contentHash,
                                              int saveSlotNumber, int index,
                                              const SuspendPoint &suspendPoint) {
-  if (contentHash == m_currentSuspendPointListContentHash) {
-    m_suspendPointListModel->updateData(index, suspendPoint);
-  }
-
-  // m_suspendPoints[index] = suspendPoint;
   writeSuspendPointToDisk(contentHash, index, suspendPoint);
   emit suspendPointUpdated(contentHash, saveSlotNumber, index);
   return {};
@@ -181,60 +211,6 @@ void SaveManager::setSaveDirectory(const QString &saveDirectory) {
   m_saveDirectory = temp;
   m_settings.setValue("SaveDirectory", m_saveDirectory);
   emit saveDirectoryChanged(m_saveDirectory);
-}
-
-QAbstractListModel *
-SaveManager::getSuspendPointListModel(const QString &contentHash,
-                                      int saveSlotNumber) {
-  if (contentHash == m_currentSuspendPointListContentHash &&
-      m_suspendPointListModel != nullptr) {
-    return m_suspendPointListModel.get();
-  }
-
-  if (m_suspendPointListModel != nullptr) {
-    m_suspendPointListModel.reset();
-    m_currentSuspendPointListContentHash.clear();
-    m_currentSuspendPointListSaveSlotNumber = -1;
-  }
-
-  m_currentSuspendPointListContentHash = contentHash;
-  m_currentSuspendPointListSaveSlotNumber = saveSlotNumber;
-  m_suspendPointListModel =
-      std::make_unique<SuspendPointListModel>(m_gameImageProvider, this);
-  connect(m_suspendPointListModel.get(),
-          &SuspendPointListModel::suspendPointUpdated, this,
-          &SaveManager::handleUpdatedSuspendPoint);
-
-  for (int i = 0; i < 8; ++i) {
-    auto p = readSuspendPointFromDisk(contentHash, saveSlotNumber, i);
-    if (p.has_value()) {
-      m_suspendPoints[i] = p.value();
-      m_suspendPointListModel->updateData(i, p.value());
-    }
-  }
-
-  return m_suspendPointListModel.get();
-}
-
-void SaveManager::clearSuspendPointListModel() {
-  m_suspendPointListModel.reset();
-  m_currentSuspendPointListContentHash.clear();
-}
-
-QVector<SuspendPoint>
-SaveManager::getSuspendPoints(const QString &contentHash,
-                              const int saveSlotNumber) const {
-  QVector<SuspendPoint> suspendPoints;
-  for (int i = 0; i < 16; ++i) {
-    auto p = readSuspendPointFromDisk(contentHash, saveSlotNumber, i);
-    if (!p.has_value()) {
-      continue;
-    }
-
-    suspendPoints.append(p.value());
-  }
-
-  return suspendPoints;
 }
 
 void SaveManager::handleUpdatedSuspendPoint(int index) {

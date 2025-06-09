@@ -8,6 +8,7 @@ FocusScope {
     id: root
 
     signal startGame(int entryId)
+    required property int currentEntryId
 
     Component.onCompleted: {
         FilteredLibraryEntryModel.folderId = -1
@@ -137,25 +138,6 @@ FocusScope {
         }
     }
 
-    LibraryEntryRightClickMenu {
-        id: entryRightClickMenu2
-
-        enableAddToFolder: folderList.count > 0
-        showRemoveFromFolder: FilteredLibraryEntryModel.folderId !== -1
-
-        onStartGameClicked: function(entryId) {
-            root.startGame(entryId)
-        }
-
-        onRemoveFromFolderClicked: function(entryId) {
-            LibraryEntryModel.removeEntryFromFolder(entryId, FilteredLibraryEntryModel.folderId)
-        }
-
-        onManageSaveDataClicked: function(entryId) {
-            manageSaveDataDialog.open()
-        }
-    }
-
     ListView {
         id: theList
         anchors.left: libraryNavList.right
@@ -204,9 +186,29 @@ FocusScope {
         clip: true
 
         delegate: LibraryEntryListDelegate {
-            entryRightClickMenu: entryRightClickMenu2
             onStartGameClicked: function(entryId) {
                 root.startGame(entryId)
+            }
+
+            ContextMenu.menu: LibraryEntryRightClickMenu {
+                entryId: model.entryId
+
+                enableAddToFolder: folderList.count > 0
+                showRemoveFromFolder: FilteredLibraryEntryModel.folderId !== -1
+                showManageSaveData: root.currentEntryId !== entryId
+
+                onStartGameClicked: function(entryId) {
+                    root.startGame(entryId)
+                }
+
+                onRemoveFromFolderClicked: function(entryId) {
+                    LibraryEntryModel.removeEntryFromFolder(entryId, FilteredLibraryEntryModel.folderId)
+                }
+
+                onManageSaveDataClicked: function(entryId) {
+                    manageSaveDataDialog.entryId = entryId
+                    manageSaveDataDialog.open()
+                }
             }
         }
     }

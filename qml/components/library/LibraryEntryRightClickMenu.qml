@@ -5,14 +5,10 @@ import Firelight 1.0
 RightClickMenu {
     id: root
 
-    property int entryId: -1
+    required property int entryId
     required property bool enableAddToFolder
     required property bool showRemoveFromFolder
-
-    function openForEntry(entryId) {
-        root.entryId = entryId
-        popupNormal()
-    }
+    required property bool showManageSaveData
 
     signal startGameClicked(int entryId)
     signal removeFromFolderClicked(int entryId)
@@ -69,16 +65,17 @@ RightClickMenu {
         }
     }
 
-    // RightClickMenuSeparator {
-    //     width: parent.width
-    // }
-    //
-    // RightClickMenuItem {
-    //     text: "Manage save data"
-    //
-    //     onTriggered: {
-    //         manageSaveDataClicked(root.entryId)
-    //     }
-    // }
+    RightClickMenuSeparator {
+        width: parent.width
+    }
+
+    RightClickMenuItem {
+        text: "Manage save data"
+        enabled: root.showManageSaveData
+
+        onTriggered: {
+            manageSaveDataClicked(root.entryId)
+        }
+    }
 
 }

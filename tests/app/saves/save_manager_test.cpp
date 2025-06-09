@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <qsignalspy.h>
 
 namespace firelight::saves {
 
@@ -8,6 +9,8 @@ protected:
 
   void TearDown() override {}
 };
+
+TEST_F(SaveManagerTest, Test) { QSignalSpy spy(nullptr, SIGNAL(nullptr)); }
 
 // Save file only writes if new/different
 // Save file metadata is updated/created correctly

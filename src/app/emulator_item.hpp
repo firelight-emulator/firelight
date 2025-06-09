@@ -17,6 +17,8 @@ private:
   Q_PROPERTY(int platformId MEMBER m_platformId NOTIFY platformIdChanged)
   Q_PROPERTY(QString contentHash MEMBER m_contentHash NOTIFY contentHashChanged)
   Q_PROPERTY(QString gameName MEMBER m_gameName NOTIFY gameNameChanged)
+  Q_PROPERTY(
+      int saveSlotNumber MEMBER m_saveSlotNumber NOTIFY saveSlotNumberChanged)
   Q_PROPERTY(bool started MEMBER m_started NOTIFY startedChanged)
   Q_PROPERTY(int videoWidth MEMBER m_coreBaseWidth NOTIFY videoWidthChanged)
   Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
@@ -137,6 +139,8 @@ signals:
   void entryIdChanged();
 
   void platformIdChanged();
+
+  void saveSlotNumberChanged();
 
   void contentHashChanged();
 

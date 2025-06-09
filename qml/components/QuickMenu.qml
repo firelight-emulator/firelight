@@ -7,6 +7,7 @@ Pane {
     id: root
 
     required property GameSettings gameSettings
+    required property int saveSlotNumber
 
     signal resumeGame()
     signal resetGame()
@@ -187,7 +188,7 @@ Pane {
                 id: suspendData
                 contentHash: emulatorLoader.item.contentHash
                 // contentHash: "8e2c29a1e65111fe2078359e685e7943"
-                saveSlotNumber: 1
+                saveSlotNumber: root.saveSlotNumber
             }
 
             FirelightDialog {

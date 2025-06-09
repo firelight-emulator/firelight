@@ -24,6 +24,8 @@ public:
   bool update(FolderInfo &folder) override;
   bool deleteFolderEntry(FolderEntryInfo &info) override;
 
+  bool update(Entry &entry) override;
+
   void setMainGameDirectory(const QString &directory);
 
   QString getMainGameDirectory();
