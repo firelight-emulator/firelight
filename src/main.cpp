@@ -66,7 +66,6 @@
 #include <discordpp.h>
 
 #include <saves/gui/save_files_item.hpp>
-#include <settings/gui/game_settings_item.hpp>
 #include <unistd.h>
 
 bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
@@ -284,8 +283,6 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::activity::GameActivityItem>("Firelight", 1, 0,
                                                          "GameActivity");
 
-  qmlRegisterType<firelight::settings::GameSettingsItem>("Firelight", 1, 0,
-                                                         "GameSettings");
   qmlRegisterType<firelight::saves::SaveFilesItem>("Firelight", 1, 0,
                                                    "SaveDataInformation");
 
@@ -331,6 +328,8 @@ int main(int argc, char *argv[]) {
   // engine.addUrlInterceptor(&imageCacheUrlInterceptor);
   engine.addImageProvider("gameImages", gameImageProvider);
 
+  engine.rootContext()->setContextProperty("EmulationSettingsManager",
+                                           &emulationSettingsManager);
   engine.rootContext()->setContextProperty(
       "FilesystemUtils", new firelight::gui::FilesystemUtils());
   engine.rootContext()->setContextProperty("EventEmitter",

@@ -124,8 +124,28 @@ FocusScope {
             delegate: LibraryFolderListDelegate {
                 id: folderDelegate
                 ButtonGroup.group: libraryButtonGroup
-                onDeleted: function(folderId) {
-                    allGamesButton.toggle()
+
+                ContextMenu.menu: RightClickMenu {
+                    RightClickMenuItem {
+                        text: "Rename"
+
+                        onTriggered: {
+                          editClicked(folderDelegate.model.playlist_id, folderDelegate.model.display_name)
+                        }
+                    }
+
+                    RightClickMenuItem {
+                        text: "Delete"
+                        dangerous: true
+
+                        onTriggered: {
+                              LibraryFolderModel.deleteFolder(folderDelegate.model.playlist_id)
+                              if (folderDelegate.ListView.isCurrentItem) {
+                                  FilteredLibraryEntryModel.folderId = -1
+                                  allGamesButton.toggle()
+                              }
+                        }
+                    }
                 }
 
                 onEditClicked: function(folderId, folderName) {

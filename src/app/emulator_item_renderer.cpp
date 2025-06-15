@@ -166,9 +166,6 @@ void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
     m_calculatedAspectRatio = static_cast<float>(m_coreBaseWidth) /
                               static_cast<float>(m_coreBaseHeight);
 
-    auto millis = 1000.0 / info->timing.fps;
-    m_emulationTimingTargetNs = static_cast<std::int64_t>(millis * 1000000.0);
-
     if (m_geometryChangedCallback) {
       m_geometryChangedCallback(m_coreBaseWidth, m_coreBaseHeight,
                                 m_coreAspectRatio, info->timing.fps);
@@ -750,7 +747,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
     update();
   } else if (!m_paused && m_core && m_coreInitialized && m_shouldRunFrame) {
-    // m_shouldRunFrame = false;
+    m_shouldRunFrame = false;
     // m_frameNumber++;
 
     if (m_shouldSave) {

@@ -30,6 +30,8 @@ int LibraryEntryItem::getEntryId() const { return m_entryId; }
 
 QString LibraryEntryItem::getContentHash() { return m_contentHash; }
 
+int LibraryEntryItem::getPlatformId() const { return m_platformId; }
+
 QString LibraryEntryItem::getName() const { return m_name; }
 
 int LibraryEntryItem::getAchievementSetId() const { return m_achievementSetId; }

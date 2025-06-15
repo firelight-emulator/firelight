@@ -119,6 +119,24 @@ settings::SqliteEmulationSettingsManager::getGameValue(
   return query.value("value").toString().toStdString();
 }
 
+std::string settings::SqliteEmulationSettingsManager::getEffectiveValue(
+    const std::string &contentHash, int platformId, const std::string &key,
+    const std::string &defaultValue) {
+  if (auto v = getGameValue(contentHash, platformId, key)) {
+    return *v;
+  }
+
+  if (auto v = getPlatformValue(platformId, key)) {
+    return *v;
+  }
+
+  if (auto v = getGlobalValue(key)) {
+    return *v;
+  }
+
+  return defaultValue;
+}
+
 void settings::SqliteEmulationSettingsManager::setGlobalValue(
     const std::string &key, const std::string &value) {
   QSqlQuery query(getDatabase());
@@ -132,9 +150,8 @@ void settings::SqliteEmulationSettingsManager::setGlobalValue(
                   query.lastError().text().toStdString());
   }
 
-  if (m_globalValueChangedCallback) {
-    m_globalValueChangedCallback(key, value);
-  }
+  emit globalValueChanged(QString::fromStdString(key),
+                          QString::fromStdString(value));
 }
 
 void settings::SqliteEmulationSettingsManager::setPlatformValue(
@@ -151,9 +168,8 @@ void settings::SqliteEmulationSettingsManager::setPlatformValue(
                   query.lastError().text().toStdString());
   }
 
-  if (m_platformValueChangedCallback) {
-    m_platformValueChangedCallback(platformId, key, value);
-  }
+  emit platformValueChanged(platformId, QString::fromStdString(key),
+                            QString::fromStdString(value));
 }
 
 void settings::SqliteEmulationSettingsManager::setGameValue(
@@ -174,9 +190,9 @@ void settings::SqliteEmulationSettingsManager::setGameValue(
                   query.lastError().text().toStdString());
   }
 
-  if (m_gameValueChangedCallback) {
-    m_gameValueChangedCallback(contentHash, platformId, key, value);
-  }
+  emit gameValueChanged(QString::fromStdString(contentHash), platformId,
+                        QString::fromStdString(key),
+                        QString::fromStdString(value));
 }
 
 void settings::SqliteEmulationSettingsManager::resetGlobalValue(
@@ -190,7 +206,7 @@ void settings::SqliteEmulationSettingsManager::resetGlobalValue(
                   query.lastError().text().toStdString());
   }
 
-  // TODO: Call the callback for global value reset
+  emit globalValueReset(QString::fromStdString(key));
 }
 
 void settings::SqliteEmulationSettingsManager::resetPlatformValue(
@@ -207,7 +223,7 @@ void settings::SqliteEmulationSettingsManager::resetPlatformValue(
                   query.lastError().text().toStdString());
   }
 
-  // TODO: Call the callback for platform value reset
+  emit platformValueReset(platformId, QString::fromStdString(key));
 }
 
 void settings::SqliteEmulationSettingsManager::resetGameValue(
@@ -225,27 +241,8 @@ void settings::SqliteEmulationSettingsManager::resetGameValue(
                   query.lastError().text().toStdString());
   }
 
-  // TODO: Call the callback for game value reset
-}
-
-void settings::SqliteEmulationSettingsManager::setOnGlobalValueChanged(
-    const std::function<void(const std::string &key, const std::string &value)>
-        callback) {
-  m_globalValueChangedCallback = callback;
-}
-
-void settings::SqliteEmulationSettingsManager::setOnPlatformValueChanged(
-    const std::function<void(int platformId, const std::string &key,
-                             const std::string &value)>
-        callback) {
-  m_platformValueChangedCallback = callback;
-}
-
-void settings::SqliteEmulationSettingsManager::setOnGameValueChanged(
-    const std::function<void(const std::string &contentHash, int platformId,
-                             const std::string &key, const std::string &value)>
-        callback) {
-  m_gameValueChangedCallback = callback;
+  emit gameValueReset(QString::fromStdString(contentHash), platformId,
+                      QString::fromStdString(key));
 }
 
 QSqlDatabase settings::SqliteEmulationSettingsManager::getDatabase() const {

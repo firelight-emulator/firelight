@@ -86,6 +86,14 @@ ApplicationWindow {
         }
     }
 
+    FirelightDialog {
+        id: quitDialog
+        text: "Are you sure you want to quit Firelight?"
+        onAccepted: {
+            Qt.quit()
+        }
+    }
+
     Loader {
         id: emulatorLoader
         // visible: status === Loader.Ready
@@ -108,7 +116,7 @@ ApplicationWindow {
             source: emulatorLoader
             anchors.fill: emulatorLoader
             blurEnabled: true
-            blurMultiplier: 0
+            blurMultiplier: 2
             blurMax: 64
             autoPaddingEnabled: false
             blur: emulatorLoader.blurAmount
@@ -134,18 +142,26 @@ ApplicationWindow {
         }
 
         StackView.onActivated: {
-            emulatorLoader.item.paused = false
+            if (emulatorLoader.item) {
+                emulatorLoader.item.paused = false
+            }
         }
 
         StackView.onDeactivating: {
             emulatorLoader.blurAmount = 1
-            emulatorLoader.item.paused = true
+            if (emulatorLoader.item) {
+                emulatorLoader.item.paused = true
+            }
         }
     }
 
     MainContent {
         id: content
         visible: false
+
+        onPowerButtonPressed: {
+            quitDialog.open()
+        }
 
         gameRunning: emulatorLoader.status === Loader.Ready
 

@@ -98,6 +98,7 @@ file(GLOB QML_FILES
         qml/components/transitions/*.qml
         qml/components/rewind/*.qml
         qml/components/library/*.qml
+        qml/components/settings/*.qml
         qml/**/*.qml
 )
 
@@ -173,7 +174,6 @@ add_library(firelight_lib
         src/app/achievements/retroachievements_backend.hpp
         src/app/achievements/retroachievements_backend.cpp
         src/app/achievements/user_achievement_status.hpp
-        src/app/settings/gui/game_settings_item.cpp
         src/app/settings/sqlite_emulation_settings_manager.cpp
         src/app/settings/sqlite_emulation_settings_manager.hpp
         src/app/discord/discord_manager.hpp

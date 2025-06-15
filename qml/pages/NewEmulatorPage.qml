@@ -15,7 +15,7 @@ FocusScope {
 
     required property StackView stackView
     required property int entryId
-    property GameSettings gameSettings: GameSettings {
+    property GameSettings2 gameSettings: GameSettings2 {
         platformId: root.platformId
         contentHash: root.contentHash
     }
@@ -139,23 +139,25 @@ FocusScope {
 
         layer.enabled: true
 
+        property string pictureMode: gameSettings.pictureMode
+
         width: {
-            if (gameSettings.pictureMode === "stretch") {
+            if (emulator.pictureMode === "stretch") {
                 return parent.width
-            } else if (gameSettings.pictureMode === "aspect-ratio-fill") {
+            } else if (emulator.pictureMode === "aspect-ratio-fill") {
                 return height * videoAspectRatio
-            } else if (gameSettings.pictureMode === "integer-scale") {
+            } else if (emulator.pictureMode === "integer-scale") {
                 return height * videoAspectRatio
             }
 
             return emulator.videoWidth
         }
         height: {
-            if (gameSettings.pictureMode === "stretch") {
+            if (emulator.pictureMode === "stretch") {
                 return parent.height
-            } else if (gameSettings.pictureMode === "aspect-ratio-fill") {
+            } else if (emulator.pictureMode === "aspect-ratio-fill") {
                 return parent.height
-            } else if (gameSettings.pictureMode === "integer-scale"){
+            } else if (emulator.pictureMode === "integer-scale"){
                 let num = parent.height / emulator.videoHeight
                 return Math.floor(num) * emulator.videoHeight
             }

@@ -183,6 +183,9 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
           -maxCorrectionNs, std::min(timingCorrectionNs, maxCorrectionNs));
     }
 
+    if (m_renderer) {
+      m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
+    }
     QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
   });
 
@@ -197,8 +200,8 @@ EmulatorItem::~EmulatorItem() {
   spdlog::info("Destroying EmulatorItem");
   getDiscordManager()->clearActivity();
   m_autosaveTimer.stop();
-  m_emulationThread.quit();
   // QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::QueuedConnection);
+  m_emulationThread.quit();
   m_emulationThread.exit();
   m_emulationThread.wait();
 

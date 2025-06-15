@@ -60,36 +60,17 @@ Button {
     }
 
     contentItem: RowLayout {
-        ColumnLayout {
-            id: theColumn
-            Layout.fillHeight: true
+        Text {
+            id: labelText
             Layout.fillWidth: true
-            spacing: 8
-
-            Text {
-                id: labelText
-                Layout.fillWidth: true
-                text: root.label
-                color: ColorPalette.neutral100
-                font.pixelSize: 16
-                Layout.alignment: Qt.AlignLeft
-                font.family: Constants.regularFontFamily
-                font.weight: Font.DemiBold
-            }
-            Text {
-                id: descriptionText
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                visible: root.description !== ""
-                text: root.description
-                font.pixelSize: 15
-                lineHeight: 1.2
-                Layout.alignment: Qt.AlignLeft
-                font.family: Constants.regularFontFamily
-                // font.weight: Font.
-                wrapMode: Text.WordWrap
-                color: ColorPalette.neutral300
-            }
+            Layout.preferredHeight: 44
+            text: root.label
+            color: ColorPalette.neutral100
+            font.pixelSize: 16
+            verticalAlignment: Text.AlignVCenter
+            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+            font.family: Constants.regularFontFamily
+            font.weight: Font.DemiBold
         }
 
         Item {

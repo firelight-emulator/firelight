@@ -11,6 +11,8 @@ FocusScope {
     property bool showNavigationBar: true
     property bool gameRunning: false
 
+    signal powerButtonPressed()
+
     states: [
         State {
             name: "hidden"
@@ -57,6 +59,9 @@ FocusScope {
         anchors.bottom: parent.bottom
 
         showQuickMenuButton: root.gameRunning
+        onPowerButtonClicked: {
+            root.powerButtonPressed()
+        }
     }
 
     Pane {

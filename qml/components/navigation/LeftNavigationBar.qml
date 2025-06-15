@@ -6,6 +6,8 @@ import Firelight 1.0
 Pane {
     id: root
 
+    signal powerButtonClicked()
+
     // implicitWidth: 320
     padding: 16
 
@@ -173,6 +175,20 @@ Pane {
                 if (toggled) {
                     Router.navigateTo("/settings")
                 }
+            }
+        }
+
+        LeftNavigationItem {
+            id: powerButton
+            label: "Power"
+            iconName: "power"
+
+            Layout.fillWidth: true
+
+            checkable: false
+
+            onClicked: {
+                root.powerButtonClicked()
             }
         }
     }

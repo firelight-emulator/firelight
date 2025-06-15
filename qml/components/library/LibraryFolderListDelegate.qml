@@ -27,33 +27,4 @@ FirelightMenuItem {
             FilteredLibraryEntryModel.folderId = model.playlist_id
           }
       }
-
-      onRightClicked: {
-            folderRightClick.popupNormal()
-      }
-
-      RightClickMenu {
-          id: folderRightClick
-
-          RightClickMenuItem {
-              text: "Rename"
-
-              onTriggered: {
-                editClicked(model.playlist_id, model.display_name)
-              }
-          }
-
-          RightClickMenuItem {
-              text: "Delete"
-              dangerous: true
-
-              onTriggered: {
-                    LibraryFolderModel.deleteFolder(model.playlist_id)
-                    if (root.ListView.isCurrentItem) {
-                        FilteredLibraryEntryModel.folderId = -1
-                        root.deleted(model.playlist_id)
-                    }
-              }
-          }
-      }
 }

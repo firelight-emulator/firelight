@@ -27,7 +27,21 @@ FocusScope {
                 Layout.fillWidth: true
                 focus: true
                 label: "Prioritize controllers over keyboard"
-                description: "When you connect a controller, replace the keyboard in the first available player number. \n\nFor example, connecting a controller while a keyboard is player one will push the keyboard to player two and the controller will be player one."
+
+                background: Rectangle {
+                    color: ColorPalette.neutral300
+                    radius: 6
+                    // border.color: ColorPalette.neutral700
+                    opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 100
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+
+                }
 
                 checked: controller_manager.prioritizeControllerOverKeyboard
 
@@ -36,17 +50,57 @@ FocusScope {
                 }
             }
 
+            Text {
+                font.pixelSize: 15
+                font.family: Constants.regularFontFamily
+                font.weight: Font.Medium
+                Layout.fillWidth: true
+                color: ColorPalette.neutral100
+                text: "When you connect a controller, replace the keyboard in the first available player number. \nFor example, connecting a controller while a keyboard is player one will push the keyboard to player two and the controller will be player one."
+                leftPadding: 12
+                lineHeight: 1.2
+                wrapMode: Text.WordWrap
+                Layout.bottomMargin: 20
+            }
+
             ToggleOption {
                 Layout.fillWidth: true
                 focus: true
                 label: "Only allow player one to navigate menus"
-                description: "When this is enabled, only the controller in the player one slot will be able to navigate menus. \n\nNote: The keyboard is always able to navigate menus, regardless of this setting."
+
+                background: Rectangle {
+                    color: ColorPalette.neutral300
+                    radius: 6
+                    // border.color: ColorPalette.neutral700
+                    opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 100
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+
+                }
 
                 checked: controller_manager.onlyPlayerOneCanNavigateMenus
 
                 onCheckedChanged: {
                     controller_manager.onlyPlayerOneCanNavigateMenus = checked
                 }
+            }
+
+            Text {
+                font.pixelSize: 15
+                font.family: Constants.regularFontFamily
+                font.weight: Font.Medium
+                Layout.fillWidth: true
+                color: ColorPalette.neutral100
+                text: "When this is enabled, only the controller in the player one slot will be able to navigate menus. \nNote: The keyboard is always able to navigate menus, regardless of this setting."
+                leftPadding: 12
+                lineHeight: 1.2
+                wrapMode: Text.WordWrap
+                Layout.bottomMargin: 20
             }
 
         }

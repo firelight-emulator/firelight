@@ -5,7 +5,7 @@ import QtMultimedia
 Rectangle {
     id: activeFocusHighlight
 
-    property color borderColor: "lightblue"
+    property color borderColor: "#ff9f38"
     property real borderWidth: 2
     property real bounceAmplitude: 16
     // property MediaPlayer bumpSfx: undefined

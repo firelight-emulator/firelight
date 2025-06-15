@@ -43,9 +43,10 @@ ComboBox {
 
     background: Rectangle {
         // implicitWidth: 140
-        implicitHeight: 40
-        color: ColorPalette.neutral700
-        radius: 8
+        implicitHeight: 32
+        color: ColorPalette.neutral300
+        radius: 6
+        opacity: 0.05
     }
 
     delegate: ItemDelegate {

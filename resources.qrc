@@ -68,6 +68,7 @@
         <file alias="platform-turbografx16">assets/img/platform-icons/turbografx16icon.svg</file>
         <file alias="platform-supergrafx">assets/img/platform-icons/supergrafxicon.svg</file>
         <file alias="play-circle">assets/img/icons/filled-rounded/play-circle.svg</file>
+        <file alias="power">assets/img/icons/filled-rounded/power.svg</file>
     </qresource>
     <qresource prefix="/icons/empty">
         <file alias="bar-chart">assets/img/icons/notfilled-rounded/bar-chart-notfilled.svg</file>
@@ -81,6 +82,7 @@
         <file alias="shopping-bag">assets/img/icons/notfilled-rounded/shopping-bag-notfilled.svg</file>
         <file alias="trophy">assets/img/icons/notfilled-rounded/trophy-notfilled.svg</file>
         <file alias="undo">assets/img/icons/notfilled-rounded/undo-notfilled.svg</file>
+        <file alias="power">assets/img/icons/notfilled-rounded/power.svg</file>
     </qresource>
     <qresource prefix="/images/platform-icons">
         <file alias="nes">assets/img/nes.svg</file>

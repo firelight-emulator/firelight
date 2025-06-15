@@ -8,14 +8,61 @@ FocusScope {
     implicitHeight: col.height
     ColumnLayout {
         id: col
-        spacing: 8
+        spacing: 4
         anchors.fill: parent
+
+        // SettingsSectionHeader {
+        //     sectionName: "Colors"
+        //     showTopPadding: false
+        // }
+        //
+        // ToggleOption {
+        //     id: cursorColor
+        //     Layout.fillWidth: true
+        //     focus: true
+        //     label: "Cursor color"
+        //
+        //     KeyNavigation.down: customBackgroundToggle
+        //
+        //     background: Rectangle {
+        //         color: ColorPalette.neutral300
+        //         radius: 8
+        //         border.color: ColorPalette.neutral500
+        //         opacity: parent.hovered || (!InputMethodManager.usingMouse && cursorColor.activeFocus) ? 0.2 : 0.1
+        //
+        //         Behavior on opacity {
+        //             NumberAnimation {
+        //                 duration: 100
+        //                 easing.type: Easing.InOutQuad
+        //             }
+        //         }
+        //     }
+        // }
+
+        SettingsSectionHeader {
+            sectionName: "Background"
+            showTopPadding: false
+        }
 
         ToggleOption {
             id: customBackgroundToggle
             Layout.fillWidth: true
             focus: true
-            label: "Use custom background"
+            label: "Custom background"
+
+            background: Rectangle {
+                color: ColorPalette.neutral300
+                radius: 8
+                border.color: ColorPalette.neutral500
+                opacity: parent.hovered || (!InputMethodManager.usingMouse && customBackgroundToggle.activeFocus) ? 0.2 : 0.1
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
 
             checked: AppearanceSettings.usingCustomBackground
 
@@ -28,10 +75,23 @@ FocusScope {
             id: customBackgroundFile
             KeyNavigation.up: customBackgroundToggle
             visible: customBackgroundToggle.checked
+
+            background: Rectangle {
+                color: ColorPalette.neutral300
+                radius: 8
+                border.color: ColorPalette.neutral500
+                opacity: parent.hovered || (!InputMethodManager.usingMouse && customBackgroundFile.activeFocus) ? 0.2 : 0.1
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+
             Layout.fillWidth: true
-            leftPadding: 24
             label: "Background file"
-            description: "This file will be used as your background. It can be either an image or a gif (pronounced jif)."
             value: AppearanceSettings.backgroundFile
 
             onValueChanged: function () {
@@ -40,18 +100,88 @@ FocusScope {
         }
 
         Text {
-            text: "I'll add other settings here soon to customize the background even more, but I wanted to get something in here quickly so it's pretty basic for now!"
-            wrapMode: Text.WordWrap
-            padding: 48
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter
-            color: ColorPalette.neutral300
-            font.pixelSize: 16
-            font.weight: Font.Normal
+            font.pixelSize: 15
+            visible: customBackgroundToggle.checked
             font.family: Constants.regularFontFamily
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+            font.weight: Font.Medium
+            Layout.fillWidth: true
+            color: ColorPalette.neutral100
+            text: "Choose an image or gif (pronounced jif) to use as your background."
+            leftPadding: 12
+            lineHeight: 1.2
+            wrapMode: Text.WordWrap
+            Layout.bottomMargin: 20
         }
+
+        // ToggleOption {
+        //     id: dimming
+        //     Layout.fillWidth: true
+        //     focus: true
+        //     label: "Dimming"
+        //
+        //     background: Rectangle {
+        //         color: ColorPalette.neutral300
+        //         radius: 8
+        //         border.color: ColorPalette.neutral500
+        //         opacity: parent.hovered || (!InputMethodManager.usingMouse && dimming.activeFocus) ? 0.2 : 0.1
+        //
+        //         Behavior on opacity {
+        //             NumberAnimation {
+        //                 duration: 100
+        //                 easing.type: Easing.InOutQuad
+        //             }
+        //         }
+        //     }
+        // }
+        //
+        // Text {
+        //     font.pixelSize: 15
+        //     visible: customBackgroundToggle.checked
+        //     font.family: Constants.regularFontFamily
+        //     font.weight: Font.Medium
+        //     Layout.fillWidth: true
+        //     color: ColorPalette.neutral100
+        //     text: "Lower values may make some UI elements more difficult to see."
+        //     leftPadding: 12
+        //     lineHeight: 1.2
+        //     wrapMode: Text.WordWrap
+        //     Layout.bottomMargin: 20
+        // }
+        //
+        // ToggleOption {
+        //     id: vignetting
+        //     Layout.fillWidth: true
+        //     focus: true
+        //     label: "Vignette"
+        //
+        //     background: Rectangle {
+        //         color: ColorPalette.neutral300
+        //         radius: 8
+        //         border.color: ColorPalette.neutral500
+        //         opacity: parent.hovered || (!InputMethodManager.usingMouse && vignetting.activeFocus) ? 0.2 : 0.1
+        //
+        //         Behavior on opacity {
+        //             NumberAnimation {
+        //                 duration: 100
+        //                 easing.type: Easing.InOutQuad
+        //             }
+        //         }
+        //     }
+        // }
+        //
+        // Text {
+        //     font.pixelSize: 15
+        //     visible: customBackgroundToggle.checked
+        //     font.family: Constants.regularFontFamily
+        //     font.weight: Font.Medium
+        //     Layout.fillWidth: true
+        //     color: ColorPalette.neutral100
+        //     text: "Lower values may make some UI elements more difficult to see."
+        //     leftPadding: 12
+        //     lineHeight: 1.2
+        //     wrapMode: Text.WordWrap
+        //     Layout.bottomMargin: 20
+        // }
 
         Item {
             Layout.fillWidth: true

@@ -5,12 +5,12 @@ import Firelight 1.0
 
 FocusScope {
     id: root
-    required property GameSettings gameSettings
+    required property GameSettings2 gameSettings
 
-    property var level: GameSettings.Game
+    // property var level: GameSettings.Game
 
     ColumnLayout {
-        spacing: 8
+        spacing: 4
         anchors.fill: parent
         // ComboBoxOption {
         //     Layout.fillWidth: true
@@ -68,115 +68,344 @@ FocusScope {
         //     }
         // }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
-
-            ComboBoxOption2 {
-                id: pictureModeOption
-                Layout.fillWidth: true
-                label: "Picture mode"
-                description: "Determines how the game image fills the screen."
-
-                property bool initialized: false
-
-                model: [
-                    {text: "Aspect Ratio Fill", value: "aspect-ratio-fill"},
-                    {text: "Integer Scale", value: "integer-scale"},
-                    {text: "Stretch", value: "stretch"}
-                ]
-
-                Component.onCompleted: {
-                    let val = gameSettings.getValue(level, "picture-mode")
-                    for (let i = 0; i < pictureModeOption.model.length; i++) {
-                        if (pictureModeOption.model[i].value === val) {
-                            pictureModeOption.currentIndex = i
-                            initialized = true;
-                            return
-                        }
-                    }
-
-                    initialized = true;
-                }
-
-                onCurrentValueChanged: {
-                    if (!initialized) {
-                        return
-                    }
-                    gameSettings.setValue(level, "picture-mode", pictureModeOption.currentValue)
-                }
-
-                Connections {
-                    target: gameSettings
-                    function onSettingChanged(key, value) {
-                        let val = gameSettings.getValue(level, "picture-mode")
-                        for (let i = 0; i < pictureModeOption.model.length; i++) {
-                            if (pictureModeOption.model[i].value === val) {
-                                pictureModeOption.currentIndex = i
-                                return
-                            }
-                        }
-                    }
-                }
-
-                Connections {
-                    target: root
-                    function onLevelChanged() {
-                        let val = gameSettings.getValue(level, "picture-mode")
-                        for (let i = 0; i < pictureModeOption.model.length; i++) {
-                            if (pictureModeOption.model[i].value === val) {
-                                pictureModeOption.currentIndex = i
-                                return
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Text {
-            //     Layout.preferredWidth: 80
-            //     visible: gameSettings.valueIsOverridingOther
-            //     text: "Overriding platform-level setting"
-            // }
+        SettingsSectionHeader {
+            showTopPadding: false
+            sectionName: "Video"
         }
 
+        ComboBoxOption2 {
+            id: pictureModeOption
+            Layout.fillWidth: true
+            label: "Picture mode"
+
+            KeyNavigation.down: enableRewindOption
+
+            background: Rectangle {
+                color: ColorPalette.neutral300
+                radius: 6
+                // border.color: ColorPalette.neutral700
+                opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+            }
+
+            property bool initialized: false
+
+            model: [
+                {text: "Aspect Ratio Fill", value: "aspect-ratio-fill"},
+                {text: "Integer Scale", value: "integer-scale"},
+                {text: "Stretch", value: "stretch"}
+            ]
+
+            Component.onCompleted: {
+                let val = gameSettings.getGameValue("picture-mode")
+                for (let i = 0; i < pictureModeOption.model.length; i++) {
+                    if (pictureModeOption.model[i].value === val) {
+                        pictureModeOption.currentIndex = i
+                        initialized = true;
+                        return
+                    }
+                }
+
+                initialized = true;
+            }
+
+            onCurrentValueChanged: {
+                if (!initialized) {
+                    return
+                }
+                gameSettings.setGameValue("picture-mode", pictureModeOption.currentValue)
+            }
+        }
+
+        Text {
+            font.pixelSize: 15
+            font.family: Constants.regularFontFamily
+            font.weight: Font.Medium
+            color: ColorPalette.neutral100
+            text: "Determines how the game image fills the screen."
+            leftPadding: 12
+            Layout.bottomMargin: 20
+        }
+
+
+
+        // ComboBoxOption2 {
+        //     id: testOption5
+        //     Layout.fillWidth: true
+        //     label: "Aspect ratio"
+        //
+        //     KeyNavigation.down: masterVolumeOption
+        //
+        //     model: [
+        //         {text: "Pixel perfect", value: "3"},
+        //         {text: "Corrected", value: "5"}
+        //     ]
+        //
+        //     background: Rectangle {
+        //         color: ColorPalette.neutral300
+        //         radius: 6
+        //         // border.color: ColorPalette.neutral700
+        //         opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+        //
+        //         Behavior on opacity {
+        //             NumberAnimation {
+        //                 duration: 100
+        //                 easing.type: Easing.InOutQuad
+        //             }
+        //         }
+        //
+        //     }
+        // }
+        //
+        //     // Text {
+        //     //     Layout.preferredWidth: 80
+        //     //     visible: gameSettings.valueIsOverridingOther
+        //     //     text: "Overriding platform-level setting"
+        //     // }
+        //
+        //
+        //
+        // RowLayout {
+        //     Layout.topMargin: 32
+        //     Layout.bottomMargin: 12
+        //     spacing: 12
+        //     Rectangle {
+        //         width: 4
+        //         implicitHeight: 24
+        //         color: ColorPalette.neutral300
+        //     }
+        //     Text {
+        //         Layout.preferredHeight: 23
+        //         font.pixelSize: 16
+        //         font.family: Constants.regularFontFamily
+        //         font.weight: Font.DemiBold
+        //         color: ColorPalette.neutral300
+        //         verticalAlignment: Text.AlignVCenter
+        //         text: "Audio"
+        //     }
+        // }
+        //
+        //
+        // ComboBoxOption2 {
+        //     id: masterVolumeOption
+        //     Layout.fillWidth: true
+        //     label: "Master volume"
+        //
+        //     KeyNavigation.down: enableRewindOption
+        //
+        //     background: Rectangle {
+        //         color: ColorPalette.neutral300
+        //         radius: 8
+        //         border.color: ColorPalette.neutral500
+        //         opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+        //
+        //         Behavior on opacity {
+        //             NumberAnimation {
+        //                 duration: 100
+        //                 easing.type: Easing.InOutQuad
+        //             }
+        //         }
+        //
+        //     }
+        //
+        //     property bool initialized: false
+        //
+        //     model: [
+        //         {text: "Aspect Ratio Fill", value: "aspect-ratio-fill"},
+        //         {text: "Integer Scale", value: "integer-scale"},
+        //         {text: "Stretch", value: "stretch"}
+        //     ]
+        //
+        //     Component.onCompleted: {
+        //         let val = gameSettings.getGameValue("picture-mode")
+        //         for (let i = 0; i < pictureModeOption.model.length; i++) {
+        //             if (pictureModeOption.model[i].value === val) {
+        //                 pictureModeOption.currentIndex = i
+        //                 initialized = true;
+        //                 return
+        //             }
+        //         }
+        //
+        //         initialized = true;
+        //     }
+        //
+        //     onCurrentValueChanged: {
+        //         if (!initialized) {
+        //             return
+        //         }
+        //         gameSettings.setValue(level, "picture-mode", pictureModeOption.currentValue)
+        //     }
+        //
+        //     Connections {
+        //         target: gameSettings
+        //         function onSettingChanged(key, value) {
+        //             let val = gameSettings.getGameValue("picture-mode")
+        //             for (let i = 0; i < pictureModeOption.model.length; i++) {
+        //                 if (pictureModeOption.model[i].value === val) {
+        //                     pictureModeOption.currentIndex = i
+        //                     return
+        //                 }
+        //             }
+        //         }
+        //     }
+        //
+        //     Connections {
+        //         target: root
+        //         function onLevelChanged() {
+        //             let val = gameSettings.getGameValue("picture-mode")
+        //             for (let i = 0; i < pictureModeOption.model.length; i++) {
+        //                 if (pictureModeOption.model[i].value === val) {
+        //                     pictureModeOption.currentIndex = i
+        //                     return
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+
+
+        SettingsSectionHeader {
+            sectionName: "Rewind"
+        }
 
         ToggleOption {
             id: enableRewindOption
             Layout.fillWidth: true
-            label: "Enable rewind"
-            description: "Note: Rewind is always disabled when using RetroAchievements in Hardcore mode."
+            label: "Rewind"
+            // description: "Note: Rewind is always disabled when using RetroAchievements in Hardcore mode."
             property bool initialized: false
 
-            checked: gameSettings.getValue(level, "rewind-enabled") === "true"
+            background: Rectangle {
+                color: ColorPalette.neutral300
+                radius: 6
+
+                // border.color: ColorPalette.neutral700
+                opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+            }
+
+            checked: gameSettings.getGameValue("rewind-enabled") === "true"
 
             onCheckedChanged: {
                 if (!initialized) {
                     return
                 }
-                gameSettings.setValue(level, "rewind-enabled", checked ? "true" : "false")
+                gameSettings.setGameValue("rewind-enabled", checked ? "true" : "false")
             }
 
             Component.onCompleted: {
                 initialized = true
             }
-
-            Connections {
-                target: gameSettings
-                function onSettingChanged(key, value) {
-                    let val = gameSettings.getValue(level, "rewind-enabled")
-                    enableRewindOption.checked = val === "true"
-                }
-            }
-
-            Connections {
-                target: root
-                function onLevelChanged() {
-                    let val = gameSettings.getValue(level, "rewind-enabled")
-                    enableRewindOption.checked = val === "true"
-                }
-            }
         }
+        //
+        Text {
+            font.pixelSize: 15
+            font.family: Constants.regularFontFamily
+            font.weight: Font.Medium
+            color: ColorPalette.neutral100
+            text: "Note: Rewind is always disabled when using RetroAchievements in Hardcore mode."
+            leftPadding: 12
+            Layout.bottomMargin: 20
+        }
+
+        // ComboBoxOption2 {
+        //     id: testOption2
+        //     Layout.fillWidth: true
+        //     label: "Rewind period"
+        //
+        //     KeyNavigation.down: testOption4
+        //
+        //     model: [
+        //         {text: "Every 3 seconds", value: "3"},
+        //         {text: "Every 5 seconds", value: "5"},
+        //         {text: "Every 10 seconds", value: "10"},
+        //         {text: "Every 20 seconds", value: "20"}
+        //     ]
+        //
+        //     background: Rectangle {
+        //         color: ColorPalette.neutral300
+        //         radius: 6
+        //         // border.color: ColorPalette.neutral700
+        //         opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+        //
+        //         Behavior on opacity {
+        //             NumberAnimation {
+        //                 duration: 100
+        //                 easing.type: Easing.InOutQuad
+        //             }
+        //         }
+        //
+        //     }
+        // }
+        //
+        // Text {
+        //     font.pixelSize: 15
+        //     font.family: Constants.regularFontFamily
+        //     font.weight: Font.Medium
+        //     color: ColorPalette.neutral100
+        //     text: "Shorter values can increase CPU usage."
+        //     leftPadding: 12
+        //     Layout.bottomMargin: 20
+        // }
+        //
+        // ComboBoxOption2 {
+        //     id: testOption4
+        //     Layout.fillWidth: true
+        //     label: "Maximum number of rewind points"
+        //
+        //     KeyNavigation.down: testOption3
+        //
+        //     model: [
+        //         {text: "30", value: "3"},
+        //     ]
+        //
+        //     background: Rectangle {
+        //         color: ColorPalette.neutral300
+        //         radius: 6
+        //         // border.color: ColorPalette.neutral700
+        //         opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+        //
+        //         Behavior on opacity {
+        //             NumberAnimation {
+        //                 duration: 100
+        //                 easing.type: Easing.InOutQuad
+        //             }
+        //         }
+        //
+        //     }
+        // }
+        //
+        // Text {
+        //     font.pixelSize: 15
+        //     font.family: Constants.regularFontFamily
+        //     font.weight: Font.Medium
+        //     color: ColorPalette.neutral100
+        //     text: "Higher values will increase memory usage."
+        //     leftPadding: 12
+        //     Layout.bottomMargin: 20
+        // }
+        //
+        // BaseSettingItem {
+        //     Layout.fillWidth: true
+        //     label: "Testing"
+        //     description: "This is a testing option!"
+        // }
+
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true

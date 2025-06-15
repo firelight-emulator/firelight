@@ -6,7 +6,7 @@ import Firelight 1.0
 Pane {
     id: root
 
-    required property GameSettings gameSettings
+    required property GameSettings2 gameSettings
     required property int saveSlotNumber
 
     signal resumeGame()
