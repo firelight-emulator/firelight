@@ -43,11 +43,13 @@ void EmulatorItemRenderer::setHwRenderInterface(
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
+  if (m_quitting) {
+    return;
+  }
   m_commandQueue.enqueue(command);
 }
 
 EmulatorItemRenderer::~EmulatorItemRenderer() {
-  spdlog::info("Destroying EmulatorItemRenderer");
   m_quitting = true;
 
   if (!m_paused) {

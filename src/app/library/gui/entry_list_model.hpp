@@ -41,6 +41,11 @@ public:
   [[nodiscard]] QVariant data(const QModelIndex &index,
                               int role) const override;
 
+  bool setData(const QModelIndex &index, const QVariant &value,
+               int role) override;
+
+  [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
+
   Q_INVOKABLE void addEntryToFolder(int entryId, int folderId);
 
   Q_INVOKABLE void removeEntryFromFolder(int entryId, int folderId);

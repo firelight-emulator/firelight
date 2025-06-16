@@ -11,6 +11,7 @@ RightClickMenu {
     required property bool showManageSaveData
 
     signal startGameClicked(int entryId)
+    signal editEntryClicked(int entryId)
     signal removeFromFolderClicked(int entryId)
     signal manageSaveDataClicked(int entryId)
 
@@ -19,6 +20,14 @@ RightClickMenu {
 
         onTriggered: {
             startGameClicked(root.entryId)
+        }
+    }
+
+    RightClickMenuItem {
+        text: "Edit"
+
+        onTriggered: {
+            editEntryClicked(root.entryId)
         }
     }
 

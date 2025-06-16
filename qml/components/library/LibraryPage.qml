@@ -28,6 +28,9 @@ FocusScope {
     UpdateFolderDialog {
         id: updateFolderDialog
     }
+    EditEntryDialog {
+        id: editEntryDialog
+    }
     ManageSaveDataDialog {
         id: manageSaveDataDialog
     }
@@ -219,6 +222,13 @@ FocusScope {
 
                 onStartGameClicked: function(entryId) {
                     root.startGame(entryId)
+                }
+
+                onEditEntryClicked: function(entryId) {
+                    editEntryDialog.text = model.displayName
+                    editEntryDialog.openAndDoOnAccepted(function() {
+                        model.displayName = editEntryDialog.text
+                    });
                 }
 
                 onRemoveFromFolderClicked: function(entryId) {

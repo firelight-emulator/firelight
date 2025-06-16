@@ -197,7 +197,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
 EmulatorItem::~EmulatorItem() {
   m_stopping = true;
-  spdlog::info("Destroying EmulatorItem");
   getDiscordManager()->clearActivity();
   m_autosaveTimer.stop();
   // QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::QueuedConnection);

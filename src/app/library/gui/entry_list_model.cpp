@@ -85,6 +85,30 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return QVariant{};
   }
 }
+bool EntryListModel::setData(const QModelIndex &index, const QVariant &value,
+                             int role) {
+  if (index.row() < 0 || index.row() >= m_items.size()) {
+    return false;
+  }
+
+  auto &item = m_items[index.row()];
+
+  switch (role) {
+  case DisplayName:
+    item.displayName = value.toString();
+    break;
+  default:
+    return false;
+  }
+
+  m_userLibrary.update(item);
+
+  return true;
+}
+
+Qt::ItemFlags EntryListModel::flags(const QModelIndex &index) const {
+  return QAbstractListModel::flags(index) | Qt::ItemIsEditable;
+}
 
 void EntryListModel::addEntryToFolder(int entryId, int folderId) {
   auto libraryEntryInfo =
