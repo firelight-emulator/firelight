@@ -68,21 +68,6 @@
 #include <saves/gui/save_files_item.hpp>
 #include <unistd.h>
 
-bool create_dirs(const std::initializer_list<std::filesystem::path> list) {
-  std::error_code error_code;
-  for (const auto &path : list) {
-    if (!exists(path)) {
-      spdlog::info("Directory not found, creating: {}", path.string());
-      if (!create_directories(path, error_code)) {
-        spdlog::error("Unable to create directory {}; Error code: {}",
-                      path.string(), error_code.message());
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
@@ -120,18 +105,32 @@ int main(int argc, char *argv[]) {
 
   std::signal(SIGINT, [](int signal) { QGuiApplication::quit(); });
 
-  // TODO: Check for portable mode marker file
-
-  auto defaultUserPathString =
-      QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
   auto docsPath =
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
       "/Firelight";
-  auto savesPath = docsPath + "/saves";
-  auto romsPath = docsPath + "/roms";
 
   auto defaultAppDataPathString =
       QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+  QFileInfo info(QCoreApplication::applicationDirPath() + "/portable.txt");
+  if (info.exists()) {
+    spdlog::info("Found \"portable.txt\"; Enabling portable mode");
+    docsPath = QCoreApplication::applicationDirPath();
+    defaultAppDataPathString = docsPath + "/appdata";
+  }
+
+  auto savesPath = docsPath + "/saves";
+  auto romsPath = docsPath + "/roms";
+
+  QFileInfo savesDirInfo(savesPath);
+  if (!savesDirInfo.exists() && QDir().mkpath(savesPath)) {
+    spdlog::info("Created saves directory at {}", savesPath.toStdString());
+  }
+
+  QFileInfo romsDirInfo(romsPath);
+  if (!romsDirInfo.exists() && QDir().mkpath(romsPath)) {
+    spdlog::info("Created roms directory at {}", romsPath.toStdString());
+  }
 
   QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope,
                      defaultAppDataPathString);
