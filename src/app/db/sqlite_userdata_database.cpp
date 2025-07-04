@@ -140,8 +140,8 @@ namespace firelight::db {
     query.bindValue(":saveSlotNumber", metadata.saveSlotNumber);
     query.bindValue(":slotNumber", metadata.slotNumber);
     query.bindValue(":locked", metadata.locked);
-    query.bindValue(":lastModifiedAt", timestamp);
-    query.bindValue(":createdAt", timestamp);
+    query.bindValue(":lastModifiedAt", QVariant::fromValue(timestamp));
+    query.bindValue(":createdAt", QVariant::fromValue(timestamp));
 
     if (!query.exec()) {
       query.finish();
@@ -193,7 +193,7 @@ namespace firelight::db {
     query.prepare("UPDATE suspend_point_metadata SET locked = :locked, "
       "last_modified_at = :lastModifiedAt WHERE id = :id;");
     query.bindValue(":locked", metadata.locked);
-    query.bindValue(":lastModifiedAt", metadata.lastModifiedAt);
+    query.bindValue(":lastModifiedAt", QVariant::fromValue(metadata.lastModifiedAt));
     query.bindValue(":id", metadata.id);
 
     if (!query.exec()) {
@@ -315,9 +315,9 @@ namespace firelight::db {
     query.bindValue(":savefileMd5", QString::fromStdString(metadata.savefileMd5));
     query.bindValue(":lastModifiedAt", metadata.lastModifiedAt);
     query.bindValue(":createdAt",
-                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                    QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
                       std::chrono::system_clock::now().time_since_epoch())
-                    .count());
+                    .count()));
 
     if (!query.exec()) {
       query.finish();

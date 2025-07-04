@@ -71,9 +71,9 @@ namespace firelight::input {
             insertQuery.bindValue(":productId", productId);
             insertQuery.bindValue(":productVersion", productVersion);
             insertQuery.bindValue(":createdAt",
-                                  std::chrono::duration_cast<std::chrono::milliseconds>(
+                                  QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
                                       std::chrono::system_clock::now().time_since_epoch())
-                                  .count());
+                                  .count()));
 
             if (!insertQuery.exec()) {
                 spdlog::error("Insert failed: {}", insertQuery.lastError().text().toStdString());
@@ -131,9 +131,9 @@ namespace firelight::input {
         insertQuery.bindValue(":platformId", platformId);
         insertQuery.bindValue(
             ":createdAt",
-            std::chrono::duration_cast<std::chrono::milliseconds>(
+            QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch())
-                .count());
+                .count()));
 
         if (!insertQuery.exec()) {
           spdlog::error("Insert failed: {}",
@@ -233,9 +233,9 @@ namespace firelight::input {
         insertQuery.bindValue(":platformId", platformId);
         insertQuery.bindValue(
             ":createdAt",
-            std::chrono::duration_cast<std::chrono::milliseconds>(
+            QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch())
-                .count());
+                .count()));
 
         if (!insertQuery.exec()) {
           spdlog::error("Insert failed: {}",

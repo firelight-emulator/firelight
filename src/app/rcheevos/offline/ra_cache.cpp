@@ -106,8 +106,8 @@ void RetroAchievementsCache::updateUserAchievementStatus(
 
   query.bindValue(":earned", status.achieved);
   query.bindValue(":earnedHardcore", status.achievedHardcore);
-  query.bindValue(":when", status.timestamp);
-  query.bindValue(":whenHardcore", status.timestampHardcore);
+  query.bindValue(":when", QVariant::fromValue(status.timestamp));
+  query.bindValue(":whenHardcore", QVariant::fromValue(status.timestampHardcore));
   query.bindValue(":username", QString::fromStdString(username));
   query.bindValue(":achievementId", achievementId);
 

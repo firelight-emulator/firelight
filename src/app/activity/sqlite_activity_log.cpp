@@ -55,10 +55,10 @@ bool SqliteActivityLog::createPlaySession(PlaySession &session) {
 
   query.bindValue(":contentHash", QString::fromStdString(session.contentHash));
   query.bindValue(":slotNumber", session.slotNumber);
-  query.bindValue(":startTime", session.startTime);
-  query.bindValue(":endTime", session.endTime);
+  query.bindValue(":startTime", QVariant::fromValue(session.startTime));
+  query.bindValue(":endTime", QVariant::fromValue(session.endTime));
   query.bindValue(":unpausedDurationSeconds",
-                  session.unpausedDurationMillis / 1000);
+                  QVariant::fromValue(session.unpausedDurationMillis / 1000));
 
   if (!query.exec()) {
     spdlog::warn("Insert into play_sessions failed: {}",
