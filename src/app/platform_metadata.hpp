@@ -235,6 +235,21 @@ public:
   static constexpr int PLATFORM_ID_SUPERGRAFX = 22;
   static constexpr int PLATFORM_ID_POKEMON_MINI = 23;
 
+  static constexpr int OS_ID_UNKNOWN = -1;
+  static constexpr int OS_ID_WINDOWS = 0;
+  static constexpr int OS_ID_MAC = 1;
+  static constexpr int OS_ID_LINUX = 2;
+
+#if _WIN32
+  static constexpr auto OS_ID = OS_ID_WINDOWS;
+#elif __APPLE__
+  static constexpr auto OS_ID = OS_ID_MAC;
+#elif __linux__
+  static constexpr auto OS_ID = OS_ID_LINUX;
+#else
+  static constexpr auto OS_ID = OS_ID_UNKNOWN;
+#endif
+
   static std::map<std::string, std::string>
   getDefaultConfigValues(const int platformId) {
     if (!defaultPlatformValues.contains(platformId)) {
@@ -368,35 +383,75 @@ public:
     }
   }
 
-  static std::string getCoreDllPath(const int platformId) {
-    switch (platformId) {
-    case PLATFORM_ID_GAMEBOY:
-    case PLATFORM_ID_GAMEBOY_COLOR:
-      return "./system/_cores/gambatte_libretro.dll";
-    // return "/Users/alexcharles/gambatte_libretro.dylib";
-    case PLATFORM_ID_GAMEBOY_ADVANCE:
-      return "./system/_cores/mgba_libretro.dll";
-    case PLATFORM_ID_NES:
-      return "./system/_cores/fceumm_libretro.dll";
-    case PLATFORM_ID_SNES:
-      return "./system/_cores/snes9x_libretro.dll";
-    case PLATFORM_ID_N64:
-      return "./system/_cores/mupen64plus_next_libretro.dll";
-    // return "/Users/alexcharles/mupen64plus_next_libretro.dylib";
-    case PLATFORM_ID_NINTENDO_DS:
-      return "./system/_cores/melondsds_libretro.dll";
-    case PLATFORM_ID_SEGA_GENESIS:
-    case PLATFORM_ID_SEGA_GAMEGEAR:
-    case PLATFORM_ID_SEGA_MASTER_SYSTEM:
-      return "./system/_cores/genesis_plus_gx_libretro.dll";
-    case PLATFORM_ID_PLAYSTATION_PORTABLE:
-      return "./system/_cores/ppsspp_libretro.dll";
-    case PLATFORM_ID_TURBOGRAFX16:
-    case PLATFORM_ID_SUPERGRAFX:
-      return "./system/_cores/mednafen_supergrafx_libretro.dll";
+  static std::string getCoreDirectoryPath() {
+    switch (OS_ID) {
+    case OS_ID_WINDOWS:
+      return "./system/_cores/";
+    case OS_ID_LINUX:
+      return "/usr/lib/libretro/";
+    default:
+    case OS_ID_MAC:
+      return "";
+    }
+  }
+
+  static std::string getCoreDllExtension() {
+    switch (OS_ID) {
+    case OS_ID_WINDOWS:
+      return ".dll";
+    case OS_ID_MAC:
+      return ".dylib";
+    case OS_ID_LINUX:
+      return ".so";
     default:
       return "";
     }
+  }
+
+  static std::string getCoreDllPath(const int platformId) {
+    const auto corePath = getCoreDirectoryPath();
+    const auto coreExt = getCoreDllExtension();
+    auto coreName = "";
+
+    switch (platformId) {
+    case PLATFORM_ID_GAMEBOY:
+    case PLATFORM_ID_GAMEBOY_COLOR:
+      coreName = "gambatte_libretro";
+      break;
+    case PLATFORM_ID_GAMEBOY_ADVANCE:
+      coreName = "mgba_libretro";
+      break;
+    case PLATFORM_ID_NES:
+      coreName = "fceumm_libretro";
+      break;
+    case PLATFORM_ID_SNES:
+      coreName = "snes9x_libretro";
+      break;
+    case PLATFORM_ID_N64:
+      coreName = "mupen64plus_next_libretro";
+      break;
+    case PLATFORM_ID_NINTENDO_DS:
+      coreName = "melondsds_libretro";
+      break;
+    case PLATFORM_ID_SEGA_GENESIS:
+    case PLATFORM_ID_SEGA_GAMEGEAR:
+    case PLATFORM_ID_SEGA_MASTER_SYSTEM:
+      coreName = "genesis_plus_gx_libretro";
+      break;
+    case PLATFORM_ID_PLAYSTATION_PORTABLE:
+      coreName = "ppsspp_libretro";
+      break;
+    case PLATFORM_ID_TURBOGRAFX16:
+    case PLATFORM_ID_SUPERGRAFX:
+      coreName = "mednafen_supergrafx_libretro";
+      break;
+    default:
+      coreName = "";
+      break;
+    }
+
+    const auto coreDllPath = corePath + coreName + coreExt;
+    return coreDllPath;
   }
 };
 } // namespace firelight
