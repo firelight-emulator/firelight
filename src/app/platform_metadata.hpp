@@ -327,7 +327,7 @@ public:
     if (extension == "nds") {
       return PLATFORM_ID_NINTENDO_DS;
     }
-    if (extension == "md") {
+    if (extension == "md" || extension == "gen") {
       return PLATFORM_ID_SEGA_GENESIS;
     }
     if (extension == "gg") {
