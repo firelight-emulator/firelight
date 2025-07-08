@@ -52,6 +52,7 @@ public:
 
 public slots:
   void reset();
+  void removeFolderId(int folderId);
 
 private:
   IUserLibrary &m_userLibrary;

@@ -59,7 +59,7 @@ Pane {
                  Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                  Layout.preferredHeight: 40
                  checkable: false
-                 enabled: (!achievement_manager.loggedIn || !achievement_manager.inHardcoreMode) && gameSettings.rewindEnabled
+                 enabled: (!achievement_manager.loggedIn || !achievement_manager.inHardcoreMode) && gameSettings ? gameSettings.rewindEnabled : true
                  alignRight: true
                  onClicked: {
                      root.rewindPressed()
@@ -186,7 +186,7 @@ Pane {
         Item {
             SuspendPoints {
                 id: suspendData
-                contentHash: emulatorLoader.item.contentHash
+                contentHash: emulatorLoader.item ? emulatorLoader.item.contentHash : ""
                 // contentHash: "8e2c29a1e65111fe2078359e685e7943"
                 saveSlotNumber: root.saveSlotNumber
             }
@@ -280,7 +280,7 @@ Pane {
                                      }
                                  }
 
-                                 enabled: emulatorLoader.item.canUndoLoadSuspendPoint
+                                 enabled: emulatorLoader.item ? emulatorLoader.item.canUndoLoadSuspendPoint : false
 
                                  onClicked: {
                                     emulatorLoader.item.undoLoadSuspendPoint()

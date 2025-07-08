@@ -168,4 +168,15 @@ void EntryListModel::reset() {
   }
   emit endResetModel();
 }
+
+void EntryListModel::removeFolderId(int folderId) {
+  beginResetModel();
+  for (auto &item : m_items) {
+    auto it = std::ranges::find(item.folderIds, folderId);
+    if (it != item.folderIds.end()) {
+      item.folderIds.erase(it);
+    }
+  }
+  endResetModel();
+}
 } // namespace firelight::library

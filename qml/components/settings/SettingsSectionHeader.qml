@@ -8,7 +8,7 @@ Pane {
     required property string sectionName
     property bool showTopPadding: true
 
-    topPadding: root.addTopPadding ? 32 : 0
+    topPadding: root.showTopPadding ? 32 : 0
     bottomPadding: 12
 
     leftPadding: 0

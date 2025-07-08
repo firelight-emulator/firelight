@@ -27,30 +27,36 @@ public:
   bool update(Entry &entry) override;
 
   void setMainGameDirectory(const QString &directory);
+  bool deleteContentDirectory(int id) override;
 
   QString getMainGameDirectory();
 
-  void create(RomFile &romFile) override;
+  bool create(RomFileInfo &romFile) override;
 
-  std::optional<RomFile> getRomFileWithPathAndSize(const QString &filePath,
-                                                   size_t fileSizeBytes,
-                                                   bool inArchive) override;
+  std::optional<RomFileInfo> getRomFileWithPathAndSize(const QString &filePath,
+                                                       size_t fileSizeBytes,
+                                                       bool inArchive) override;
+
+  bool deleteRomFile(int id) override;
 
   std::vector<Entry> getEntries(int offset, int limit) override;
 
   std::optional<Entry> getEntry(int entryId) override;
+
+  std::optional<Entry>
+  getEntryWithContentHash(const QString &contentHash) override;
 
   std::vector<RunConfiguration>
   getRunConfigurations(const QString &contentHash) override;
 
   void doStuffWithRunConfigurations() override;
 
-  std::vector<RomFile>
+  std::vector<RomFileInfo>
   getRomFilesWithContentHash(const QString &contentHash) override;
 
-  std::vector<RomFile> getRomFiles() override;
+  std::vector<RomFileInfo> getRomFiles() override;
 
-  std::optional<RomFile> getRomFile(int id) override;
+  std::optional<RomFileInfo> getRomFile(int id) override;
 
   std::optional<PatchFile> getPatchFile(int id) override;
 
@@ -64,20 +70,31 @@ public:
 
   std::vector<WatchedDirectory> getWatchedDirectories() override;
 
-  bool addWatchedDirectory(const WatchedDirectory &directory) override;
+  bool create(WatchedDirectory &directory) override;
 
-  bool updateWatchedDirectory(const WatchedDirectory &directory) override;
+  bool update(const WatchedDirectory &directory) override;
+  bool createEntry(Entry &entry);
 
 signals:
   void mainGameDirectoryChanged(const QString &newDirectory);
 
   void entryAddedToFolder(int folderId, int entryId);
 
-  void romFileAdded(int id, const QString &contentHash);
+  void romFileAdded(int id, QString path, int platformId, QString contentHash);
+  void romFileDeleted(int id);
 
   void entryCreated(int id, const QString &contentHash);
 
   void watchedDirectoryAdded(int id, const QString &path);
+  void watchedDirectoryUpdated(int id, const QString &oldPath,
+                               const QString &newPath);
+  void watchedDirectoryRemoved(int id, const QString &path);
+
+  void romRunConfigurationCreated(int id, QString path, int platformId,
+                                  QString contentHash);
+  void romRunConfigurationDeleted(QString contentHash);
+
+  void entryHidden(int entryId);
 
 private:
   static constexpr auto DATABASE_PREFIX = "userlibrary_";
@@ -85,6 +102,8 @@ private:
   QString m_mainGameDirectory;
 
   QSettings m_settings;
+  void createRomRunConfiguration(int romId, const QString &path, int platformId,
+                                 const QString &contentHash);
 
   [[nodiscard]] QSqlDatabase getDatabase() const;
 

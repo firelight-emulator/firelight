@@ -6,6 +6,7 @@
 #include "emulator_item_renderer.hpp"
 #include "platform_metadata.hpp"
 
+#include <library/rom_file.hpp>
 #include <patching/bps_patch.hpp>
 #include <patching/ups_patch.hpp>
 
@@ -327,34 +328,37 @@ void EmulatorItem::loadGame(int entryId) {
 
     if (runConfig.type == firelight::library::RunConfiguration::TYPE_ROM) {
       auto romId = runConfig.romId;
-      auto rom = getUserLibrary()->getRomFile(romId);
+      auto romInfo = getUserLibrary()->getRomFile(romId);
 
-      if (!rom.has_value()) {
+      if (!romInfo.has_value()) {
         return;
       }
 
-      if (rom->inArchive() &&
-          !std::filesystem::exists(rom->getArchivePathName().toStdString())) {
+      auto rom = firelight::library::RomFile(
+          QString::fromStdString(romInfo->m_filePath));
+
+      if (rom.inArchive() &&
+          !std::filesystem::exists(rom.getArchivePathName().toStdString())) {
         spdlog::error("Content path doesn't exist: {}",
-                      rom->getArchivePathName().toStdString());
+                      rom.getArchivePathName().toStdString());
         return;
       }
 
-      if (!rom->inArchive() &&
-          !std::filesystem::exists(rom->getFilePath().toStdString())) {
+      if (!rom.inArchive() &&
+          !std::filesystem::exists(rom.getFilePath().toStdString())) {
         spdlog::error("Content path doesn't exist: {}",
-                      rom->getFilePath().toStdString());
+                      rom.getFilePath().toStdString());
         return;
       }
 
-      rom->load();
+      rom.load();
 
       std::string corePath =
           firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
       //
       QByteArray saveDataBytes;
       const auto saveData = getSaveManager()->readSaveData(
-          rom->getContentHash(), entry->activeSaveSlot);
+          rom.getContentHash(), entry->activeSaveSlot);
       if (saveData.has_value()) {
         saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
                                    saveData->getSaveRamData().size());
@@ -362,13 +366,14 @@ void EmulatorItem::loadGame(int entryId) {
 
       m_entryId = entryId;
       m_gameName = entry->displayName;
-      m_gameData = rom->getContentBytes();
+      m_gameData = rom.getContentBytes();
       m_saveData = saveDataBytes;
       m_corePath = QString::fromStdString(corePath);
-      m_contentHash = rom->getContentHash();
+      m_contentHash = rom.getContentHash();
       m_saveSlotNumber = entry->activeSaveSlot;
       m_platformId = entry->platformId;
-      m_contentPath = rom->getFilePath();
+      m_contentPath = rom.getFilePath();
+      m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
 
       emit entryIdChanged();
       emit gameNameChanged();
@@ -383,15 +388,18 @@ void EmulatorItem::loadGame(int entryId) {
     } else if (runConfig.type ==
                firelight::library::RunConfiguration::TYPE_PATCH) {
       auto romId = runConfig.romId;
-      auto rom = getUserLibrary()->getRomFile(romId);
+      auto romInfo = getUserLibrary()->getRomFile(romId);
 
-      if (!rom.has_value()) {
+      if (!romInfo.has_value()) {
         return;
       }
 
-      rom->load();
+      auto rom = firelight::library::RomFile(
+          QString::fromStdString(romInfo->m_filePath));
 
-      if (!rom->isValid()) {
+      rom.load();
+
+      if (!rom.isValid()) {
         return;
       }
 
@@ -403,14 +411,14 @@ void EmulatorItem::loadGame(int entryId) {
       }
 
       patch->load();
-      rom->applyPatchToContentBytes(*patch);
+      rom.applyPatchToContentBytes(*patch);
 
       std::string corePath =
           firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
 
       QByteArray saveDataBytes;
       const auto saveData = getSaveManager()->readSaveData(
-          rom->getContentHash(), entry->activeSaveSlot);
+          rom.getContentHash(), entry->activeSaveSlot);
       if (saveData.has_value()) {
         saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
                                    saveData->getSaveRamData().size());
@@ -418,13 +426,14 @@ void EmulatorItem::loadGame(int entryId) {
 
       m_entryId = entryId;
       m_gameName = entry->displayName;
-      m_gameData = rom->getContentBytes();
+      m_gameData = rom.getContentBytes();
       m_saveData = saveDataBytes;
       m_corePath = QString::fromStdString(corePath);
-      m_contentHash = rom->getContentHash();
+      m_contentHash = rom.getContentHash();
       m_saveSlotNumber = entry->activeSaveSlot;
       m_platformId = entry->platformId;
-      m_contentPath = rom->getFilePath();
+      m_contentPath = rom.getFilePath();
+      m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
 
       emit entryIdChanged();
       emit gameNameChanged();
@@ -486,7 +495,8 @@ void EmulatorItem::startGame() {
     emit gameStarted();
 
     getDiscordManager()->startGameActivity(
-        m_contentHash.toStdString(), m_gameName.toStdString(), m_platformId);
+        m_contentHash.toStdString(), m_gameName.toStdString(), m_platformId,
+        m_iconSourceUrl1x1.toStdString());
   });
 }
 

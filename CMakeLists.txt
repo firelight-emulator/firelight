@@ -182,6 +182,7 @@ add_library(firelight_lib
         src/app/library/gui/entry_sort_filter_list_model.cpp
         src/gui/filesystem_utils.cpp
         src/app/saves/gui/save_files_item.cpp
+        src/app/library/gui/content_directory_model.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

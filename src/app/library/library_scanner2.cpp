@@ -34,55 +34,47 @@ LibraryScanner2::~LibraryScanner2() { m_shuttingDown = true; }
 void LibraryScanner2::watchPath(const QString &path) {
   m_watcher.addPath(path);
 }
+void LibraryScanner2::removePath(const QString &path) {
+  m_watcher.removePath(path);
+}
 
 QFuture<bool> LibraryScanner2::startScan() {
   if (m_scanRunning) {
     return QtConcurrent::run([] { return false; });
   }
 
-  return QtConcurrent::run(
-      &m_threadPool,
-      [this] {
-        QThread::currentThread()->setPriority(QThread::NormalPriority);
-        m_scanRunning = true;
-        emit scanningChanged();
+  return QtConcurrent::run(&m_threadPool, [this] {
+    QThread::currentThread()->setPriority(QThread::NormalPriority);
+    m_scanRunning = true;
+    emit scanningChanged();
 
-        // for (auto &romFile: m_library.getRomFiles()) {
-        //     auto path = romFile.getFilePath();
-        //     if (romFile.inArchive()) {
-        //         path = romFile.getArchivePathName();
-        //     }
-        //
-        //     if (!QFileInfo::exists(path)) {
-        //         spdlog::info("Removing missing file: {}",
-        //                      path.toStdString());
-        //         m_library.removeRomFile(romFile.getFilePath(),
-        //         romFile.inArchive(),
-        //                                 romFile.getArchivePathName());
-        //     }
-        // }
+    while (auto nextDirectory = getNextDirectory()) {
+      scanDirectory(nextDirectory.value());
 
-        while (auto nextDirectory = getNextDirectory()) {
-          scanDirectory(nextDirectory.value());
+      spdlog::debug("Finished scanning directory: {}",
+                    nextDirectory.value().toStdString());
+    }
 
-          spdlog::info("Finished scanning directory: {}",
-                       nextDirectory.value().toStdString());
-        }
-
-        m_library.doStuffWithRunConfigurations();
-
-        m_scanRunning = false;
-        emit scanFinished();
-        emit scanningChanged();
-        spdlog::info("Scan complete");
-        return true;
+    // m_library.doStuffWithRunConfigurations();
+    auto allRoms = m_library.getRomFiles();
+    for (auto &romFile : allRoms) {
+      auto filePath = romFile.m_filePath;
+      if (romFile.m_inArchive) {
+        filePath = romFile.m_archivePathName;
       }
 
-  );
+      if (!QFileInfo::exists(QString::fromStdString(filePath))) {
+        spdlog::debug("Removing missing file: {}", filePath);
+        m_library.deleteRomFile(romFile.m_id);
+      }
+    }
 
-  // Check for files that ARE in the database but not in the filesystem
-  // Calculate changeset between all directories - for example if removed from
-  // one but added to another
+    m_scanRunning = false;
+    emit scanFinished();
+    emit scanningChanged();
+    spdlog::info("Scan complete");
+    return true;
+  });
 }
 
 void LibraryScanner2::scanAll() {
@@ -122,9 +114,9 @@ void LibraryScanner2::scanDirectory(const QString &path) {
   QDirIterator iter(path, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
 
   auto dirInfo = QFileInfo(path);
-  spdlog::info("Scanning directory: {} (last modified: {})",
-               dirInfo.filePath().toStdString(),
-               dirInfo.lastModified().toString().toStdString());
+  spdlog::debug("Scanning directory: {} (last modified: {})",
+                dirInfo.filePath().toStdString(),
+                dirInfo.lastModified().toString().toStdString());
 
   // get directory info
   // if last modified is the same, skip
@@ -169,28 +161,52 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
         auto size = archive_entry_size(entry);
         if (size > 0) {
-          auto entryPathName = archive_entry_pathname(entry);
-          if (m_library.getRomFileWithPathAndSize(entryPathName, size, true)) {
-            spdlog::info("Skipping known file: {}",
-                         archive_entry_pathname(entry));
+          auto entryPathName = std::string(archive_entry_pathname(entry));
+          auto dotPos = entryPathName.find_last_of('.');
+
+          if (dotPos == std::string::npos) {
             continue;
           }
 
-          auto buffer = new char[size];
-          archive_read_data(a, buffer, size);
-          auto romFile =
-              RomFile(entryPathName, buffer, size, fileInfo.filePath());
+          auto archiveFileExtension =
+              QString::fromStdString(entryPathName.substr(dotPos + 1))
+                  .toLower();
 
-          // printf("ROM (platform %d) file: %s\n", romFile.getPlatformId(),
-          //        fileInfo.filePath().toStdString().c_str());
-          // printf("-- content hash: %s\n",
-          //        romFile.getContentHash().toStdString().c_str());
+          if (PlatformMetadata::isPossibleRomFileExtension(
+                  archiveFileExtension.toStdString())) {
+            if (m_library.getRomFileWithPathAndSize(
+                    QString::fromStdString(entryPathName), size, true)) {
+              spdlog::debug("Skipping known file: {}",
+                            archive_entry_pathname(entry));
+              continue;
+            }
 
-          if (romFile.isValid()) {
-            m_library.create(romFile);
+            auto buffer = new char[size];
+            archive_read_data(a, buffer, size);
+            auto romFile = RomFile(QString::fromStdString(entryPathName),
+                                   buffer, size, fileInfo.filePath());
+
+            // printf("ROM (platform %d) file: %s\n", romFile.getPlatformId(),
+            //        fileInfo.filePath().toStdString().c_str());
+            // printf("-- content hash: %s\n",
+            //        romFile.getContentHash().toStdString().c_str());
+
+            if (romFile.isValid()) {
+              auto romInfo = RomFileInfo{
+                  .m_filePath = romFile.getFilePath().toStdString(),
+                  .m_fileSizeBytes = romFile.getFileSizeBytes(),
+                  .m_fileMd5 = romFile.getFileMd5().toStdString(),
+                  .m_fileCrc32 = ":)",
+                  .m_inArchive = romFile.inArchive(),
+                  .m_archivePathName =
+                      romFile.getArchivePathName().toStdString(),
+                  .m_platformId = romFile.getPlatformId(),
+                  .m_contentHash = romFile.getContentHash().toStdString()};
+              m_library.create(romInfo);
+            }
+
+            delete[] buffer;
           }
-
-          delete[] buffer;
         }
         archive_read_data_skip(a);
       }
@@ -230,8 +246,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
 
       m_library.create(patch);
 
-      spdlog::info("Skipping patch file for now: {}",
-                   fileInfo.filePath().toStdString());
+      spdlog::debug("Skipping patch file for now: {}",
+                    fileInfo.filePath().toStdString());
 
       file.close();
       continue;
@@ -241,16 +257,27 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       // we can do
     }
 
-    if (m_library.getRomFileWithPathAndSize(fileInfo.filePath(),
-                                            fileInfo.size(), false)) {
-      spdlog::info("Skipping known file: {}",
-                   fileInfo.filePath().toStdString());
-      continue;
-    }
+    if (PlatformMetadata::isPossibleRomFileExtension(extension.toStdString())) {
+      if (m_library.getRomFileWithPathAndSize(fileInfo.filePath(),
+                                              fileInfo.size(), false)) {
+        spdlog::debug("Skipping known file: {}",
+                      fileInfo.filePath().toStdString());
+        continue;
+      }
 
-    auto romFile = RomFile(fileInfo.filePath());
-    if (romFile.isValid()) {
-      m_library.create(romFile);
+      auto romFile = RomFile(fileInfo.filePath());
+      if (romFile.isValid()) {
+        auto romInfo = RomFileInfo{
+            .m_filePath = romFile.getFilePath().toStdString(),
+            .m_fileSizeBytes = romFile.getFileSizeBytes(),
+            .m_fileMd5 = romFile.getFileMd5().toStdString(),
+            .m_fileCrc32 = ":)",
+            .m_inArchive = romFile.inArchive(),
+            .m_archivePathName = romFile.getArchivePathName().toStdString(),
+            .m_platformId = romFile.getPlatformId(),
+            .m_contentHash = romFile.getContentHash().toStdString()};
+        m_library.create(romInfo);
+      }
     }
 
     // metadata scan:
@@ -271,4 +298,5 @@ bool LibraryScanner2::pathIsQueued(const QString &path) {
   m_pathQueueLock.unlock();
   return result;
 }
+
 } // namespace firelight::library

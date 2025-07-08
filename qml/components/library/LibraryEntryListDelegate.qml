@@ -32,7 +32,7 @@ Button {
         cursorShape: Qt.PointingHandCursor
     }
 
-    height: 48
+    height: 60
     padding: 6
     horizontalPadding: 12
 
@@ -63,6 +63,33 @@ Button {
         //     smooth: false
         //     fillMode: Image.PreserveAspectFit
         // }
+        Rectangle {
+            color: "#292929"
+            visible: root.model.icon1x1SourceUrl === ""
+            implicitWidth: 48
+            implicitHeight: 48
+
+            FLIcon {
+                icon: platform_model.getPlatformIconName(root.model.platformId)
+                color: "#595959"
+                anchors.centerIn: parent
+                height: parent.height - 16
+                width: parent.width - 16
+                size: height
+            }
+        }
+        Image {
+            source: root.model.icon1x1SourceUrl
+            visible: root.model.icon1x1SourceUrl !== ""
+            asynchronous: true
+            Layout.preferredHeight: 48
+            Layout.preferredWidth: 48
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            sourceSize.width: 48
+            sourceSize.height: 48
+            smooth: true
+            fillMode: Image.PreserveAspectFit
+        }
         Text {
             text: root.model.displayName
             font.pixelSize: 17
@@ -75,13 +102,6 @@ Button {
             maximumLineCount: 1
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
-        }
-        FLIcon {
-            icon: platform_model.getPlatformIconName(root.model.platformId)
-            color: root.ListView.isCurrentItem ? "#2A2A2A" : "#d3d3d3"
-            Layout.preferredHeight: 24
-            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            size: height
         }
         Text {
             text: platform_model.getPlatformDisplayName(root.model.platformId)

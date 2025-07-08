@@ -34,6 +34,7 @@ ApplicationWindow {
         GeneralSettings.mainWindowY = y
     }
 
+    property string runningGameName: emulatorLoader.item ? emulatorLoader.item.gameName : ""
     property int runningGameEntryId: emulatorLoader.item ? emulatorLoader.item.entryId : -1
     property int runningGameSaveSlotNumber: emulatorLoader.item ? emulatorLoader.item.saveSlotNumber : -1
 
@@ -279,7 +280,7 @@ ApplicationWindow {
 
     FirelightDialog {
         id: closeGameDialog
-        text: "You're currently playing:\n\n" + emulatorLoader.item.gameName + "\n\nDo you want to close it?"
+        text: "You're currently playing:\n\n" + window.runningGameName  + "\n\nDo you want to close it?"
 
     }
 

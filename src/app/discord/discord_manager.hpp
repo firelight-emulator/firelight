@@ -8,7 +8,8 @@ public:
   void initialize();
   void runCallbacks();
   void startGameActivity(const std::string &contentHash,
-                         const std::string &displayName, int platformId);
+                         const std::string &displayName, int platformId,
+                         const std::string &iconUrl);
   void clearActivity();
 
 private:

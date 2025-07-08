@@ -7,17 +7,16 @@
 
 namespace firelight::gui {
 
-class LibraryFolderListModel : public QAbstractListModel,
-                               public ManagerAccessor {
+class ContentDirectoryModel : public QAbstractListModel {
   Q_OBJECT
 
 public:
   enum Roles {
-    PlaylistId = Qt::UserRole + 1,
-    DisplayName,
+    DirectoryId = Qt::UserRole + 1,
+    Path,
   };
 
-  explicit LibraryFolderListModel();
+  explicit ContentDirectoryModel(library::IUserLibrary &library);
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant data(const QModelIndex &index,
@@ -27,20 +26,11 @@ public:
                int role) override;
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-  Q_INVOKABLE bool addFolder(const QString &displayName);
-
-  Q_INVOKABLE void deleteFolder(int folderId);
-  // Q_INVOKABLE void renamePlaylist(int playlistId, const QString &newName);
-
-signals:
-  void folderDeleted(int folderId);
+  Q_INVOKABLE void deleteItem(int id);
+  Q_INVOKABLE void addItem(QString path);
 
 private:
-  struct Item {
-    int playlistId;
-    QString displayName;
-  };
-
-  std::vector<library::FolderInfo> m_items;
+  library::IUserLibrary &m_library;
+  std::vector<library::WatchedDirectory> m_items;
 };
 } // namespace firelight::gui

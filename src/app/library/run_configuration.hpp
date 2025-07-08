@@ -12,6 +12,6 @@ namespace firelight::library {
         std::string contentHash;
         int romId = -1;
         int patchId = -1;
-        unsigned createdAt = 0;
+        int64_t createdAt = 0;
     };
 } // namespace firelight::library

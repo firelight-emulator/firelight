@@ -29,6 +29,7 @@
 #include "app/input/gui/controller_list_model.hpp"
 #include "app/input/sdl_event_loop.hpp"
 #include "app/input/sqlite_controller_repository.hpp"
+#include "app/library/gui/content_directory_model.hpp"
 #include "app/library/gui/playlist_item_model.hpp"
 #include "app/library/library_scanner2.hpp"
 #include "app/rcheevos/ra_client.hpp"
@@ -202,20 +203,33 @@ int main(int argc, char *argv[]) {
 
   firelight::ManagerAccessor::setUserLibrary(&userLibrary);
 
-  QObject::connect(
-      &userLibrary, &firelight::library::SqliteUserLibrary::romFileAdded,
-      &userLibrary, [&](int id, const QString &contentHash) -> void {
-        spdlog::info("Rom file added: {}", contentHash.toStdString());
-      });
-
-  QObject::connect(
-      &userLibrary, &firelight::library::SqliteUserLibrary::entryCreated,
-      &userLibrary, [&](int id, const QString &contentHash) -> void {
-        spdlog::info("Entry created: {}", contentHash.toStdString());
-      });
-
   firelight::library::LibraryScanner2 libScanner2(userLibrary);
   libScanner2.scanAll();
+
+  QObject::connect(
+      &userLibrary,
+      &firelight::library::SqliteUserLibrary::watchedDirectoryAdded,
+      [&](int id, const QString &path) {
+        libScanner2.watchPath(path);
+        libScanner2.scanAll();
+      });
+
+  QObject::connect(
+      &userLibrary,
+      &firelight::library::SqliteUserLibrary::watchedDirectoryUpdated,
+      [&](int id, const QString &oldPath, const QString &newPath) {
+        libScanner2.removePath(oldPath);
+        libScanner2.watchPath(newPath);
+        libScanner2.scanAll();
+      });
+
+  QObject::connect(
+      &userLibrary,
+      &firelight::library::SqliteUserLibrary::watchedDirectoryRemoved,
+      [&](int id, const QString &path) {
+        libScanner2.removePath(path);
+        libScanner2.scanAll();
+      });
 
   firelight::achievements::RetroAchievementsCache raCache(
       defaultAppDataPathString + "/rcheevos.db");
@@ -238,6 +252,8 @@ int main(int argc, char *argv[]) {
 
   firelight::gui::PlatformListModel platformListModel;
   firelight::shop::ShopItemModel shopItemModel(contentDatabase);
+
+  firelight::gui::ContentDirectoryModel contentDirectoryModel(userLibrary);
 
   auto emulatorConfigManager =
       std::make_shared<EmulatorConfigManager>(userdata_database);
@@ -318,6 +334,11 @@ int main(int argc, char *argv[]) {
 
   firelight::gui::LibraryFolderListModel libraryFolderListModel;
 
+  QObject::connect(&libraryFolderListModel,
+                   &firelight::gui::LibraryFolderListModel::folderDeleted,
+                   &entryListModel, &firelight::library::EntryListModel::reset,
+                   Qt::QueuedConnection);
+
   auto cache = new CachingNetworkAccessManagerFactory();
 
   QQmlApplicationEngine engine;
@@ -346,6 +367,8 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
   engine.rootContext()->setContextProperty("SaveManager", &saveManager);
   engine.rootContext()->setContextProperty("UserLibrary", &userLibrary);
+  engine.rootContext()->setContextProperty("ContentDirectoryModel",
+                                           &contentDirectoryModel);
   engine.rootContext()->setContextProperty("LibraryEntryModel",
                                            &entryListModel);
   engine.rootContext()->setContextProperty("FilteredLibraryEntryModel",

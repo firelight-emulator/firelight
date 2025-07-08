@@ -45,7 +45,7 @@ namespace firelight::gui {
     switch (role) {
       case Path:
         item.path = QUrl(value.toString()).toLocalFile();
-        m_userLibrary.updateWatchedDirectory(item);
+        m_userLibrary.update(item);
 
         emit dataChanged(index, index, {Path, LocalFilename});
         return true;
