@@ -43,14 +43,22 @@ void DiscordManager::initialize() {
 void DiscordManager::runCallbacks() { discordpp::RunCallbacks(); }
 void DiscordManager::startGameActivity(const std::string &contentHash,
                                        const std::string &displayName,
-                                       int platformId) {
+                                       int platformId,
+                                       const std::string &iconUrl) {
   discordpp::Activity activity;
   activity.SetType(discordpp::ActivityTypes::Playing);
   activity.SetDetails("Playing " + displayName);
   // activity.SetState(PlatformMetadata::getPlatformName(platformId));
 
   discordpp::ActivityAssets assets;
-  assets.SetLargeImage(PlatformMetadata::getDiscordLargeImageName(platformId));
+  if (iconUrl.starts_with("http://") || iconUrl.starts_with("https://")) {
+    assets.SetLargeImage(iconUrl);
+  } else {
+    assets.SetLargeImage(
+        PlatformMetadata::getDiscordLargeImageName(platformId));
+  }
+
+  // assets.SetLargeImage(PlatformMetadata::getDiscordLargeImageName(platformId));
   assets.SetSmallImage("firelight-logo-white");
   activity.SetAssets(assets);
 

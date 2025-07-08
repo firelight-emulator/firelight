@@ -9,7 +9,8 @@ namespace firelight::gui {
 PlatformListModel::PlatformListModel() {
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_NES,
-       "NES",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_NES)),
        "qrc:images/platform-icons/nes",
        "platform-nes",
        {{{"display_name", "A"},
@@ -39,7 +40,8 @@ PlatformListModel::PlatformListModel() {
        {}});
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_SNES,
-       "SNES",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_SNES)),
        "qrc:images/platform-icons/snes",
        "platform-snes",
        {{{"display_name", "A"},
@@ -81,7 +83,8 @@ PlatformListModel::PlatformListModel() {
        {}});
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_GAMEBOY,
-       "Game Boy",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_GAMEBOY)),
        "qrc:images/platform-icons/gb",
        "platform-gb",
        {{{"display_name", "A"},
@@ -111,7 +114,8 @@ PlatformListModel::PlatformListModel() {
        {}});
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_GAMEBOY_COLOR,
-       "Game Boy Color",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_GAMEBOY_COLOR)),
        "qrc:images/platform-icons/gbc",
        "platform-gbc",
        {{{"display_name", "A"},
@@ -141,7 +145,8 @@ PlatformListModel::PlatformListModel() {
        {}});
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_GAMEBOY_ADVANCE,
-       "Game Boy Advance",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_GAMEBOY_ADVANCE)),
        "qrc:images/platform-icons/gba",
        "platform-gba",
        {{{"display_name", "A"},
@@ -177,7 +182,8 @@ PlatformListModel::PlatformListModel() {
        {}});
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_N64,
-       "Nintendo 64",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_N64)),
        "qrc:images/platform-icons/n64",
        "platform-n64",
        {{{"display_name", "A"},
@@ -238,7 +244,8 @@ PlatformListModel::PlatformListModel() {
 
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_NINTENDO_DS,
-       "Nintendo DS",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_NINTENDO_DS)),
        "qrc:images/platform-icons/ds",
        "platform-ds",
        {{{"display_name", "A"},
@@ -281,7 +288,8 @@ PlatformListModel::PlatformListModel() {
 
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_SEGA_MASTER_SYSTEM,
-       "Master System",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_SEGA_MASTER_SYSTEM)),
        "qrc:images/platform-icons/master-system",
        "platform-mastersystem",
        {{{"display_name", "1"},
@@ -309,7 +317,8 @@ PlatformListModel::PlatformListModel() {
 
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_SEGA_GENESIS,
-       "Genesis",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_SEGA_GENESIS)),
        "qrc:images/platform-icons/genesis",
        "platform-genesis",
        {{{"display_name", "A"},
@@ -352,7 +361,8 @@ PlatformListModel::PlatformListModel() {
 
   m_items.push_back(
       {PlatformMetadata::PLATFORM_ID_SEGA_GAMEGEAR,
-       "Game Gear",
+       QString::fromStdString(PlatformMetadata::getPlatformName(
+           PlatformMetadata::PLATFORM_ID_SEGA_GAMEGEAR)),
        "qrc:images/platform-icons/gamegear",
        "platform-gamegear",
        {{{"display_name", "1"},

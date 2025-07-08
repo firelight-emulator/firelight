@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23.5...3.31.6)
 project(firelight
-        VERSION 0.9.8
+        VERSION 0.10.0
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -182,6 +182,7 @@ add_library(firelight_lib
         src/app/library/gui/entry_sort_filter_list_model.cpp
         src/gui/filesystem_utils.cpp
         src/app/saves/gui/save_files_item.cpp
+        src/app/library/gui/content_directory_model.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -259,9 +260,9 @@ target_link_libraries(firelight PUBLIC
         discord
         firelight_lib)
 
-#if (CMAKE_BUILD_TYPE STREQUAL "Release")
-#    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
-#endif ()
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
+endif ()
 
 if (MINGW)
     find_program(MINGW_PATH gcc)
@@ -393,7 +394,7 @@ set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 9)
 set(CPACK_PACKAGE_VERSION_PATCH 5)
-set(CPACK_PACKAGE_VERSION "0.9.8")
+set(CPACK_PACKAGE_VERSION "0.10.0")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")

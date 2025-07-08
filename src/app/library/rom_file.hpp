@@ -18,6 +18,7 @@ public:
 
   bool isValid() const;
 
+  void setId(int id);
   int getId();
 
   QByteArray getContentBytes();

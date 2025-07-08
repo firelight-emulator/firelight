@@ -55,6 +55,7 @@ public:
   unsigned int m_saveSlotNumber;
   unsigned int m_platformId;
   QString m_contentPath;
+  QString m_iconSourceUrl1x1;
   bool m_gameReady;
 
   bool m_canUndoLoadSuspendPoint = false;

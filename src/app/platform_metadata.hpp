@@ -281,9 +281,9 @@ public:
     case PLATFORM_ID_GAMEBOY_ADVANCE:
       return "GameBoy Advance";
     case PLATFORM_ID_NES:
-      return "NES";
+      return "NES/Famicom";
     case PLATFORM_ID_SNES:
-      return "SNES";
+      return "SNES/Super Famicom";
     case PLATFORM_ID_N64:
       return "Nintendo 64";
     case PLATFORM_ID_NINTENDO_DS:
@@ -291,13 +291,13 @@ public:
     case PLATFORM_ID_SEGA_MASTER_SYSTEM:
       return "Sega Master System";
     case PLATFORM_ID_SEGA_GENESIS:
-      return "Sega Genesis";
+      return "Sega Genesis/Mega Drive";
     case PLATFORM_ID_SEGA_GAMEGEAR:
       return "Sega GameGear";
     case PLATFORM_ID_PLAYSTATION_PORTABLE:
       return "PlayStation Portable";
     case PLATFORM_ID_TURBOGRAFX16:
-      return "TurboGrafx-16";
+      return "PC Engine/TurboGrafx-16";
     case PLATFORM_ID_SUPERGRAFX:
       return "SuperGrafx";
     default:
@@ -346,6 +346,10 @@ public:
       return PLATFORM_ID_POKEMON_MINI;
     }
     return PLATFORM_ID_UNKNOWN;
+  }
+
+  static bool isPossibleRomFileExtension(const std::string &extension) {
+    return getIdFromFileExtension(extension) != PLATFORM_ID_UNKNOWN;
   }
 
   static std::string getDiscordLargeImageName(const int platformId) {

@@ -99,6 +99,7 @@ void LibraryFolderListModel::deleteFolder(const int folderId) {
       beginRemoveRows(QModelIndex(), i, i);
       m_items.erase(m_items.begin() + i);
       endRemoveRows();
+      emit folderDeleted(folderId);
       break;
     }
   }

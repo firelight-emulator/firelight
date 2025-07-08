@@ -3,6 +3,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QThread>
+#include <qfileinfo.h>
 #include <spdlog/spdlog.h>
 #include <utility>
 
@@ -100,9 +101,9 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
 
   QSqlQuery createDirectoriesTable(getDatabase());
   createDirectoriesTable.prepare(
-      "CREATE TABLE IF NOT EXISTS watched_directoriesv1("
+      "CREATE TABLE IF NOT EXISTS content_directoriesv1("
       "id INTEGER PRIMARY KEY,"
-      "path TEXT NOT NULL,"
+      "path TEXT UNIQUE NOT NULL,"
       "num_files INTEGER NOT NULL DEFAULT 0,"
       "num_content_files INTEGER NOT NULL DEFAULT 0,"
       "last_modified INTEGER DEFAULT 0,"
@@ -154,6 +155,62 @@ SqliteUserLibrary::SqliteUserLibrary(QString path, QString mainGameDirectory)
     spdlog::error("Table creation failed: {}",
                   createFolderEntriesTable.lastError().text().toStdString());
   }
+
+  QSqlQuery createRomFileUniqueIndex(getDatabase());
+  createRomFileUniqueIndex.prepare(
+      "CREATE UNIQUE INDEX IF NOT EXISTS pathIdx ON rom_files(file_path);");
+
+  if (!createRomFileUniqueIndex.exec()) {
+    spdlog::error("Query failed: {}",
+                  createRomFileUniqueIndex.lastError().text().toStdString());
+  }
+
+  if (!m_mainGameDirectory.isEmpty()) {
+    WatchedDirectory main{.path = m_mainGameDirectory};
+    create(main);
+    setMainGameDirectory("");
+  }
+
+  connect(
+      this, &SqliteUserLibrary::romFileAdded, this,
+      [&](const int id, const QString &romPath, const int platformId,
+          const QString &contentHash) {
+        createRomRunConfiguration(id, romPath, platformId, contentHash);
+      },
+      Qt::DirectConnection);
+
+  connect(
+      this, &SqliteUserLibrary::romRunConfigurationCreated, this,
+      [&](const int id, const QString &romPath, const int platformId,
+          const QString &contentHash) {
+        if (auto entry = getEntryWithContentHash(contentHash)) {
+          if (entry->hidden) {
+            entry->hidden = false;
+            update(*entry);
+          }
+        } else {
+          auto newEntry =
+              Entry{.displayName = romPath.split("/").last(),
+                    .contentHash = contentHash,
+                    .platformId = static_cast<unsigned>(platformId)};
+          createEntry(newEntry);
+        }
+      },
+      Qt::DirectConnection);
+
+  connect(
+      this, &SqliteUserLibrary::romRunConfigurationDeleted, this,
+      [&](const QString &contentHash) {
+        if (const auto runConfigs = getRunConfigurations(contentHash);
+            runConfigs.empty()) {
+          if (auto entry = getEntryWithContentHash(contentHash)) {
+            entry->hidden = true;
+            update(*entry);
+            emit entryHidden(entry->id);
+          }
+        }
+      },
+      Qt::DirectConnection);
 }
 
 SqliteUserLibrary::~SqliteUserLibrary() {
@@ -311,6 +368,7 @@ bool SqliteUserLibrary::deleteFolderEntry(FolderEntryInfo &info) {
 
   return true;
 }
+
 bool SqliteUserLibrary::update(Entry &entry) {
   QSqlQuery query(getDatabase());
   query.prepare("UPDATE entriesv1 SET "
@@ -350,11 +408,65 @@ void SqliteUserLibrary::setMainGameDirectory(const QString &directory) {
   emit mainGameDirectoryChanged(m_mainGameDirectory);
 }
 
+bool SqliteUserLibrary::deleteContentDirectory(int id) {
+  QSqlQuery selectQuery(getDatabase());
+  selectQuery.prepare("SELECT * FROM content_directoriesv1 WHERE id = :id;");
+  selectQuery.bindValue(":id", id);
+
+  if (!selectQuery.exec()) {
+    spdlog::error("Failed to get content directory with ID {}: {}", id,
+                  selectQuery.lastError().text().toStdString());
+    return false;
+  }
+
+  if (!selectQuery.next()) {
+    return true;
+  }
+
+  const auto path = selectQuery.value("path").toString();
+  selectQuery.finish();
+
+  QSqlQuery query(getDatabase());
+  query.prepare("DELETE FROM content_directoriesv1 WHERE id = :id;");
+
+  query.bindValue(":id", id);
+  if (!query.exec()) {
+    spdlog::error("Failed to delete content directory with ID {}: {}", id,
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  for (const auto &rom : getRomFiles()) {
+    auto romPath = QString::fromStdString(rom.m_filePath);
+    if (rom.m_inArchive) {
+      romPath = QString::fromStdString(rom.m_archivePathName);
+    }
+
+    if (romPath.startsWith(path)) {
+      auto found = false;
+      auto contentPaths = getWatchedDirectories();
+      for (const auto &contentPath : contentPaths) {
+        if (romPath.startsWith(contentPath.path)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        deleteRomFile(rom.m_id);
+      }
+    }
+  }
+
+  emit watchedDirectoryRemoved(id, path);
+  return true;
+}
+
 QString SqliteUserLibrary::getMainGameDirectory() {
   return m_mainGameDirectory;
 }
 
-void SqliteUserLibrary::create(RomFile &romFile) {
+bool SqliteUserLibrary::create(RomFileInfo &romFile) {
   const QString queryString = "INSERT INTO rom_files ("
                               "file_path, "
                               "file_size, "
@@ -370,74 +482,36 @@ void SqliteUserLibrary::create(RomFile &romFile) {
                               ":contentHash, :createdAt);";
   QSqlQuery query(getDatabase());
   query.prepare(queryString);
-  query.bindValue(":filePath", romFile.getFilePath());
-  query.bindValue(":fileSize", QVariant::fromValue(romFile.getFileSizeBytes()));
-  query.bindValue(":fileMd5", romFile.getFileMd5());
-  query.bindValue(":fileCrc32", romFile.getFileCrc32());
-  query.bindValue(":inArchive", romFile.inArchive());
-  query.bindValue(":archiveFilePath", romFile.getArchivePathName());
-  query.bindValue(":platformId", romFile.getPlatformId());
-  query.bindValue(":contentHash", romFile.getContentHash());
+  query.bindValue(":filePath", QString::fromStdString(romFile.m_filePath));
+  query.bindValue(":fileSize", QVariant::fromValue(romFile.m_fileSizeBytes));
+  query.bindValue(":fileMd5", QString::fromStdString(romFile.m_fileMd5));
+  query.bindValue(":fileCrc32", QString::fromStdString(romFile.m_fileCrc32));
+  query.bindValue(":inArchive", romFile.m_inArchive);
+  query.bindValue(":archiveFilePath",
+                  QString::fromStdString(romFile.m_archivePathName));
+  query.bindValue(":platformId", romFile.m_platformId);
+  query.bindValue(":contentHash",
+                  QString::fromStdString(romFile.m_contentHash));
   query.bindValue(":createdAt",
                   QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
                       std::chrono::system_clock::now().time_since_epoch())
                       .count()));
 
   if (!query.exec()) {
-    spdlog::error("Failed to add rom file with path {}: {}",
-                  romFile.getFilePath().toStdString(),
+    spdlog::error("Failed to add rom file with path {}: {}", romFile.m_filePath,
                   query.lastError().text().toStdString());
-    return;
+    return false;
   }
 
-  emit romFileAdded(query.lastInsertId().toInt(), romFile.getContentHash());
+  romFile.m_id = query.lastInsertId().toInt();
 
-  const QString getEntryQueryString =
-      "SELECT id FROM entriesv1 WHERE content_hash = :contentHash;";
-  QSqlQuery getEntryQuery(getDatabase());
-  getEntryQuery.prepare(getEntryQueryString);
-  getEntryQuery.bindValue(":contentHash", romFile.getContentHash());
-
-  if (!getEntryQuery.exec()) {
-    spdlog::error("Failed to get entry with content hash {}: {}",
-                  romFile.getContentHash().toStdString(),
-                  getEntryQuery.lastError().text().toStdString());
-    return;
-  }
-
-  if (!getEntryQuery.next()) {
-    const auto filename = romFile.getFilePath().split("/").last();
-
-    const QString entryQueryString =
-        "INSERT INTO entriesv1 ("
-        "display_name, "
-        "content_hash, "
-        "platform_id, "
-        "created_at) VALUES"
-        "(:displayName, :contentHash, :platformId, :createdAt);";
-    QSqlQuery entryQuery(getDatabase());
-    entryQuery.prepare(entryQueryString);
-    entryQuery.bindValue(":displayName", filename);
-    entryQuery.bindValue(":contentHash", romFile.getContentHash());
-    entryQuery.bindValue(":platformId", romFile.getPlatformId());
-    entryQuery.bindValue(
-        ":createdAt", QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
-                          std::chrono::system_clock::now().time_since_epoch())
-                          .count()));
-
-    if (!entryQuery.exec()) {
-      spdlog::error("Failed to add entry with content hash {}: {}",
-                    romFile.getContentHash().toStdString(),
-                    query.lastError().text().toStdString());
-      return;
-    }
-
-    emit entryCreated(entryQuery.lastInsertId().toInt(),
-                      romFile.getContentHash());
-  }
+  emit romFileAdded(romFile.m_id, QString::fromStdString(romFile.m_filePath),
+                    romFile.m_platformId,
+                    QString::fromStdString(romFile.m_contentHash));
+  return true;
 }
 
-std::optional<RomFile> SqliteUserLibrary::getRomFileWithPathAndSize(
+std::optional<RomFileInfo> SqliteUserLibrary::getRomFileWithPathAndSize(
     const QString &filePath, const size_t fileSizeBytes, const bool inArchive) {
   const QString queryString =
       "SELECT * FROM rom_files WHERE file_path = :filePath AND file_size = "
@@ -458,7 +532,62 @@ std::optional<RomFile> SqliteUserLibrary::getRomFileWithPathAndSize(
     return std::nullopt;
   }
 
-  return {RomFile(query)};
+  return {RomFileInfo{
+      .m_id = query.value("id").toInt(),
+      .m_fileSizeBytes =
+          static_cast<size_t>(query.value("file_size").toLongLong()),
+      .m_filePath = query.value("file_path").toString().toStdString(),
+      .m_fileMd5 = query.value("file_md5").toString().toStdString(),
+      .m_inArchive = query.value("in_archive").toBool(),
+      .m_archivePathName =
+          query.value("archive_file_path").toString().toStdString(),
+      .m_platformId = query.value("platform_id").toInt(),
+      .m_contentHash = query.value("content_hash").toString().toStdString(),
+  }};
+}
+bool SqliteUserLibrary::deleteRomFile(int id) {
+  QSqlQuery query(getDatabase());
+  query.prepare("SELECT * FROM rom_files WHERE id = :id;");
+  query.bindValue(":id", id);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get rom file with ID {}: {}", id,
+                  query.lastError().text().toStdString());
+    return false;
+  }
+
+  if (!query.next()) {
+    return true;
+  }
+
+  const auto contentHash = query.value("content_hash").toString();
+  query.finish();
+
+  QSqlQuery deleteQuery(getDatabase());
+  deleteQuery.prepare("DELETE FROM rom_files WHERE id = :id;");
+  deleteQuery.bindValue(":id", id);
+
+  if (!deleteQuery.exec()) {
+    spdlog::error("Failed to delete rom file with ID {}: {}", id,
+                  deleteQuery.lastError().text().toStdString());
+    return false;
+  }
+
+  // Also delete any run configurations associated with this rom file
+  QSqlQuery deleteRunConfigsQuery(getDatabase());
+  deleteRunConfigsQuery.prepare("DELETE FROM run_configurations WHERE type = "
+                                "\"rom\" AND rom_id = :romId;");
+  deleteRunConfigsQuery.bindValue(":romId", id);
+
+  if (!deleteRunConfigsQuery.exec()) {
+    spdlog::error("Failed to delete run configurations for rom file ID {}: {} ",
+                  id, deleteRunConfigsQuery.lastError().text().toStdString());
+    return false;
+  }
+
+  emit romRunConfigurationDeleted(contentHash);
+  emit romFileDeleted(id);
+  return true;
 }
 
 std::vector<Entry> SqliteUserLibrary::getEntries(int offset, int limit) {
@@ -508,8 +637,7 @@ std::vector<Entry> SqliteUserLibrary::getEntries(int offset, int limit) {
         .platformId = query.value("platform_id").toUInt(),
         .activeSaveSlot = query.value("active_save_slot").toUInt(),
         // TODO
-        // .hidden = query.value("hidden").toBool(),
-        .hidden = !query.value("has_rom").toBool(),
+        .hidden = query.value("hidden").toBool(),
         .icon1x1SourceUrl = query.value("icon_1x1_source_url").toString(),
         .boxartFrontSourceUrl =
             query.value("boxart_front_source_url").toString(),
@@ -566,7 +694,7 @@ std::optional<Entry> SqliteUserLibrary::getEntry(const int entryId) {
     return {};
   }
 
-  return {Entry{
+  auto entry = Entry{
       .id = query.value("id").toInt(),
       .displayName = query.value("display_name").toString(),
       .contentHash = query.value("content_hash").toString(),
@@ -584,7 +712,83 @@ std::optional<Entry> SqliteUserLibrary::getEntry(const int entryId) {
       .regionIds = query.value("region_ids").toString(),
       .retroachievementsSetId =
           query.value("retroachievements_set_id").toUInt(),
-      .createdAt = query.value("created_at").toUInt()}};
+      .createdAt = query.value("created_at").toUInt()};
+
+  query.finish();
+
+  QSqlQuery folderQuery(getDatabase());
+  folderQuery.prepare(
+      "SELECT folder_id FROM folder_entries WHERE entry_id = :entryId;");
+  folderQuery.bindValue(":entryId", entry.id);
+
+  if (folderQuery.exec()) {
+    while (folderQuery.next()) {
+      entry.folderIds.push_back(folderQuery.value("folder_id").toInt());
+    }
+  } else {
+    spdlog::error("Failed to get folder IDs for entry {}: {}", entry.id,
+                  folderQuery.lastError().text().toStdString());
+  }
+
+  return entry;
+}
+
+std::optional<Entry>
+SqliteUserLibrary::getEntryWithContentHash(const QString &contentHash) {
+  const QString queryString =
+      "SELECT * FROM entriesv1 WHERE content_hash = :contentHash LIMIT 1;";
+  QSqlQuery query(getDatabase());
+  query.prepare(queryString);
+  query.bindValue(":contentHash", contentHash);
+
+  if (!query.exec()) {
+    spdlog::error("Failed to get entry with content hash {}: {}",
+                  contentHash.toStdString(),
+                  query.lastError().text().toStdString());
+    return {};
+  }
+
+  if (!query.next()) {
+    return {};
+  }
+
+  auto entry = Entry{
+      .id = query.value("id").toInt(),
+      .displayName = query.value("display_name").toString(),
+      .contentHash = query.value("content_hash").toString(),
+      .platformId = query.value("platform_id").toUInt(),
+      .activeSaveSlot = query.value("active_save_slot").toUInt(),
+      .hidden = query.value("hidden").toBool(),
+      .icon1x1SourceUrl = query.value("icon_1x1_source_url").toString(),
+      .boxartFrontSourceUrl = query.value("boxart_front_source_url").toString(),
+      .boxartBackSourceUrl = query.value("boxart_back_source_url").toString(),
+      .description = query.value("description").toString(),
+      .releaseYear = query.value("release_year").toUInt(),
+      .developer = query.value("developer").toString(),
+      .publisher = query.value("publisher").toString(),
+      .genres = query.value("genres").toString(),
+      .regionIds = query.value("region_ids").toString(),
+      .retroachievementsSetId =
+          query.value("retroachievements_set_id").toUInt(),
+      .createdAt = query.value("created_at").toUInt()};
+
+  query.finish();
+
+  QSqlQuery folderQuery(getDatabase());
+  folderQuery.prepare(
+      "SELECT folder_id FROM folder_entries WHERE entry_id = :entryId;");
+  folderQuery.bindValue(":entryId", entry.id);
+
+  if (folderQuery.exec()) {
+    while (folderQuery.next()) {
+      entry.folderIds.push_back(folderQuery.value("folder_id").toInt());
+    }
+  } else {
+    spdlog::error("Failed to get folder IDs for entry {}: {}", entry.id,
+                  folderQuery.lastError().text().toStdString());
+  }
+
+  return entry;
 }
 
 std::vector<RunConfiguration>
@@ -623,28 +827,22 @@ void SqliteUserLibrary::doStuffWithRunConfigurations() {
 
   auto romFiles = getRomFiles();
   for (auto &romFile : romFiles) {
-    const QString insertQueryString =
-        "INSERT OR IGNORE INTO run_configurations "
-        "(type, content_hash, rom_id, created_at) "
-        "VALUES (:type, :contentHash, :romId, :createdAt);";
+    auto path =
+        romFile.m_inArchive ? romFile.m_archivePathName : romFile.m_filePath;
 
-    QSqlQuery query(getDatabase());
-    query.prepare(insertQueryString);
+    QFileInfo info(QString::fromStdString(path));
+    if (!info.exists()) {
 
-    query.bindValue(":type", QString::fromStdString("rom"));
-    query.bindValue(":contentHash", romFile.getContentHash());
-    query.bindValue(":romId", romFile.getId());
-    query.bindValue(":createdAt",
-                    QDateTime::currentSecsSinceEpoch()); // Current timestamp
-
-    if (!query.exec()) {
-      spdlog::error("Failed to create run configuration: {}",
-                    query.lastError().text().toStdString());
+      continue;
     }
+
+    createRomRunConfiguration(romFile.m_id, QString::fromStdString(path),
+                              romFile.m_platformId,
+                              QString::fromStdString(romFile.m_contentHash));
   }
 }
 
-std::vector<RomFile>
+std::vector<RomFileInfo>
 SqliteUserLibrary::getRomFilesWithContentHash(const QString &contentHash) {
   const QString queryString =
       "SELECT * FROM rom_files WHERE content_hash = :contentHash;";
@@ -658,16 +856,27 @@ SqliteUserLibrary::getRomFilesWithContentHash(const QString &contentHash) {
                   query.lastError().text().toStdString());
   }
 
-  std::vector<RomFile> romFiles;
+  std::vector<RomFileInfo> romFiles;
 
   while (query.next()) {
-    romFiles.emplace_back(query);
+    romFiles.emplace_back(RomFileInfo{
+        .m_id = query.value("id").toInt(),
+        .m_fileSizeBytes =
+            static_cast<size_t>(query.value("file_size").toLongLong()),
+        .m_filePath = query.value("file_path").toString().toStdString(),
+        .m_fileMd5 = query.value("file_md5").toString().toStdString(),
+        .m_inArchive = query.value("in_archive").toBool(),
+        .m_archivePathName =
+            query.value("archive_file_path").toString().toStdString(),
+        .m_platformId = query.value("platform_id").toInt(),
+        .m_contentHash = query.value("content_hash").toString().toStdString(),
+    });
   }
 
   return romFiles;
 }
 
-std::vector<RomFile> SqliteUserLibrary::getRomFiles() {
+std::vector<RomFileInfo> SqliteUserLibrary::getRomFiles() {
   const QString queryString = "SELECT * FROM rom_files;";
   QSqlQuery query(getDatabase());
   query.prepare(queryString);
@@ -677,16 +886,27 @@ std::vector<RomFile> SqliteUserLibrary::getRomFiles() {
                   query.lastError().text().toStdString());
   }
 
-  std::vector<RomFile> directories;
+  std::vector<RomFileInfo> romFiles;
 
   while (query.next()) {
-    directories.emplace_back(query);
+    romFiles.emplace_back(RomFileInfo{
+        .m_id = query.value("id").toInt(),
+        .m_fileSizeBytes =
+            static_cast<size_t>(query.value("file_size").toLongLong()),
+        .m_filePath = query.value("file_path").toString().toStdString(),
+        .m_fileMd5 = query.value("file_md5").toString().toStdString(),
+        .m_inArchive = query.value("in_archive").toBool(),
+        .m_archivePathName =
+            query.value("archive_file_path").toString().toStdString(),
+        .m_platformId = query.value("platform_id").toInt(),
+        .m_contentHash = query.value("content_hash").toString().toStdString(),
+    });
   }
 
-  return directories;
+  return romFiles;
 }
 
-std::optional<RomFile> SqliteUserLibrary::getRomFile(int id) {
+std::optional<RomFileInfo> SqliteUserLibrary::getRomFile(int id) {
   auto queryString = "SELECT * FROM rom_files WHERE id = :id LIMIT 1;";
   QSqlQuery query(getDatabase());
   query.prepare(queryString);
@@ -701,7 +921,18 @@ std::optional<RomFile> SqliteUserLibrary::getRomFile(int id) {
     return std::nullopt;
   }
 
-  return {RomFile(query)};
+  return RomFileInfo{
+      .m_id = query.value("id").toInt(),
+      .m_fileSizeBytes =
+          static_cast<size_t>(query.value("file_size").toLongLong()),
+      .m_filePath = query.value("file_path").toString().toStdString(),
+      .m_fileMd5 = query.value("file_md5").toString().toStdString(),
+      .m_inArchive = query.value("in_archive").toBool(),
+      .m_archivePathName =
+          query.value("archive_file_path").toString().toStdString(),
+      .m_platformId = query.value("platform_id").toInt(),
+      .m_contentHash = query.value("content_hash").toString().toStdString(),
+  };
 }
 std::optional<PatchFile> SqliteUserLibrary::getPatchFile(int id) {
   auto queryString = "SELECT * FROM patch_files WHERE id = :id LIMIT 1;";
@@ -772,7 +1003,7 @@ std::optional<PatchFile> SqliteUserLibrary::getPatchFileWithPathAndSize(
 std::vector<PatchFile> SqliteUserLibrary::getPatchFiles() {}
 
 std::vector<WatchedDirectory> SqliteUserLibrary::getWatchedDirectories() {
-  const QString queryString = "SELECT * FROM watched_directoriesv1;";
+  const QString queryString = "SELECT * FROM content_directoriesv1;";
   QSqlQuery query(getDatabase());
   query.prepare(queryString);
 
@@ -782,7 +1013,6 @@ std::vector<WatchedDirectory> SqliteUserLibrary::getWatchedDirectories() {
   }
 
   std::vector<WatchedDirectory> directories;
-  directories.emplace_back(WatchedDirectory{.path = m_mainGameDirectory});
 
   while (query.next()) {
     directories.emplace_back(WatchedDirectory{
@@ -799,8 +1029,8 @@ std::vector<WatchedDirectory> SqliteUserLibrary::getWatchedDirectories() {
   return directories;
 }
 
-bool SqliteUserLibrary::addWatchedDirectory(const WatchedDirectory &directory) {
-  const QString queryString = "INSERT INTO watched_directoriesv1 ("
+bool SqliteUserLibrary::create(WatchedDirectory &directory) {
+  const QString queryString = "INSERT OR IGNORE INTO content_directoriesv1 ("
                               "path, "
                               "created_at) VALUES"
                               "(:path, :createdAt);";
@@ -819,14 +1049,35 @@ bool SqliteUserLibrary::addWatchedDirectory(const WatchedDirectory &directory) {
     return false;
   }
 
-  emit watchedDirectoryAdded(query.lastInsertId().toInt(), directory.path);
+  if (query.numRowsAffected() == 0) {
+    return false;
+  }
+
+  directory.id = query.lastInsertId().toInt();
+  emit watchedDirectoryAdded(directory.id, directory.path);
   return true;
 }
 
-bool SqliteUserLibrary::updateWatchedDirectory(
-    const WatchedDirectory &directory) {
+bool SqliteUserLibrary::update(const WatchedDirectory &directory) {
+  QSqlQuery selectQuery(getDatabase());
+  selectQuery.prepare("SELECT * FROM content_directoriesv1 WHERE id = :id;");
+  selectQuery.bindValue(":id", directory.id);
+
+  if (!selectQuery.exec()) {
+    spdlog::error("Failed to get content directory with ID {}: {}",
+                  directory.id, selectQuery.lastError().text().toStdString());
+    return false;
+  }
+
+  if (!selectQuery.next()) {
+    return true;
+  }
+
+  const auto oldPath = selectQuery.value("path").toString();
+  selectQuery.finish();
+
   QSqlQuery q(getDatabase());
-  q.prepare("UPDATE watched_directoriesv1 SET path = :path WHERE id = :id");
+  q.prepare("UPDATE content_directoriesv1 SET path = :path WHERE id = :id");
   q.bindValue(":path", directory.path);
   q.bindValue(":id", directory.id);
 
@@ -836,6 +1087,100 @@ bool SqliteUserLibrary::updateWatchedDirectory(
     return false;
   }
 
+  emit watchedDirectoryUpdated(directory.id, oldPath, directory.path);
+  return true;
+}
+
+void SqliteUserLibrary::createRomRunConfiguration(const int romId,
+                                                  const QString &path,
+                                                  const int platformId,
+                                                  const QString &contentHash) {
+  const QString insertQueryString =
+      "INSERT OR IGNORE INTO run_configurations "
+      "(type, content_hash, rom_id, created_at) "
+      "VALUES (:type, :contentHash, :romId, :createdAt);";
+
+  QSqlQuery query(getDatabase());
+  query.prepare(insertQueryString);
+
+  query.bindValue(":type", "rom");
+  query.bindValue(":contentHash", contentHash);
+  query.bindValue(":romId", romId);
+  query.bindValue(":createdAt",
+                  QDateTime::currentSecsSinceEpoch()); // Current timestamp
+
+  if (!query.exec()) {
+    spdlog::error("Failed to create run configuration: {}",
+                  query.lastError().text().toStdString());
+  }
+
+  emit romRunConfigurationCreated(query.lastInsertId().toInt(), path,
+                                  platformId, contentHash);
+}
+
+bool SqliteUserLibrary::createEntry(Entry &entry) {
+  QSqlQuery selectQuery(getDatabase());
+  selectQuery.prepare(
+      "SELECT * FROM entriesv1 WHERE content_hash = :contentHash;");
+  selectQuery.bindValue(":contentHash", entry.contentHash);
+  if (!selectQuery.exec()) {
+    spdlog::error("Failed to check for existing entry with content hash {}: {}",
+                  entry.contentHash.toStdString(),
+                  selectQuery.lastError().text().toStdString());
+    return false;
+  }
+
+  if (selectQuery.next()) {
+    spdlog::debug(
+        "Entry with content hash {} already exists, skipping creation",
+        entry.contentHash.toStdString());
+
+    // const QString updateQueryString = "UPDATE entriesv1 SET "
+    //                                   "hidden = :hidden WHERE id = :id;";
+    // QSqlQuery updateQuery(getDatabase());
+    // updateQuery.prepare(updateQueryString);
+    // updateQuery.bindValue(":hidden", false);
+    //
+    // if (!updateQuery.exec()) {
+    //   spdlog::error("Failed to add entry with content hash {}: {}",
+    //                 entry.contentHash.toStdString(),
+    //                 updateQuery.lastError().text().toStdString());
+    //   return false;
+    // }
+
+    // entry.hidden = false;
+    // selectQuery.finish();
+    // update(entry);
+
+    return false;
+  }
+
+  const QString entryQueryString =
+      "INSERT INTO entriesv1 ("
+      "display_name, "
+      "content_hash, "
+      "platform_id, "
+      "created_at) VALUES"
+      "(:displayName, :contentHash, :platformId, :createdAt);";
+  QSqlQuery entryQuery(getDatabase());
+  entryQuery.prepare(entryQueryString);
+  entryQuery.bindValue(":displayName", entry.displayName);
+  entryQuery.bindValue(":contentHash", entry.contentHash);
+  entryQuery.bindValue(":platformId", entry.platformId);
+  entryQuery.bindValue(":createdAt",
+                       QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count()));
+
+  if (!entryQuery.exec()) {
+    spdlog::error("Failed to add entry with content hash {}: {}",
+                  entry.contentHash.toStdString(),
+                  entryQuery.lastError().text().toStdString());
+    return false;
+  }
+
+  entry.id = entryQuery.lastInsertId().toInt();
+  emit entryCreated(entryQuery.lastInsertId().toInt(), entry.contentHash);
   return true;
 }
 

@@ -182,16 +182,37 @@ FocusScope {
             height: 64
             width: ListView.view.width
             spacing: 8
-            Text {
-                text: libraryButtonGroup.checkedButton.sectionTitle
-                font.pixelSize: 24
-                font.family: Constants.regularFontFamily
-                font.weight: Font.DemiBold
-                color: "white"
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                // height: 64
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: libraryButtonGroup.checkedButton.sectionTitle
+                    font.pixelSize: 24
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                    color: "white"
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    // height: 64
+                }
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+                BusyIndicator {
+                    Layout.preferredHeight: 40
+                    running: LibraryScanner.scanning
+                    palette.dark: "white"
+                }
+                Text {
+                    text: LibraryScanner.scanning ? "Scanning..." : ""
+                    font.pixelSize: 18
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.Medium
+                    color: "white"
+                    Layout.rightMargin: 16
+                    horizontalAlignment: Text.AlignRight
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
             Rectangle {
