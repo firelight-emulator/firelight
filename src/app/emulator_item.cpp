@@ -334,8 +334,24 @@ void EmulatorItem::loadGame(int entryId) {
         return;
       }
 
+      auto filePath = QString::fromStdString(romInfo->m_filePath);
+      if (romInfo->m_inArchive) {
+        filePath = QString::fromStdString(romInfo->m_archivePathName);
+      }
+
+      auto file = QFile(filePath);
+      if (!file.exists()) {
+        spdlog::error("Content path doesn't exist: {}", filePath.toStdString());
+        return;
+      }
+
+      file.open(QIODevice::ReadOnly);
+      auto bytes = file.readAll();
+      file.close();
+
       auto rom = firelight::library::RomFile(
-          QString::fromStdString(romInfo->m_filePath));
+          QString::fromStdString(romInfo->m_filePath), bytes.data(),
+          bytes.size(), QString::fromStdString(romInfo->m_archivePathName));
 
       if (rom.inArchive() &&
           !std::filesystem::exists(rom.getArchivePathName().toStdString())) {
