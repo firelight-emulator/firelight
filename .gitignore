@@ -6,6 +6,7 @@ android-build
 cmake-build-debug-event-trace
 cmake-build-mingw
 artifact
+.qmlls.ini
 
 .vs
 .vscode

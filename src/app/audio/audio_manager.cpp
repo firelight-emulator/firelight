@@ -257,11 +257,11 @@ void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
 float AudioManager::getBufferLevel() const { return m_currentBufferLevel; }
 
 AudioManager::~AudioManager() {
-  if (m_audioSink) {
-    m_audioSink->stop();
-  }
   if (m_audioDevice) {
     m_audioDevice->close();
+  }
+  if (m_audioSink) {
+    m_audioSink->stop();
   }
   if (m_swrContext) {
     av_free(m_swrContext);
