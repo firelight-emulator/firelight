@@ -1,5 +1,7 @@
 #pragma once
 
+#include "input/platform_input_descriptor.hpp"
+
 #include <map>
 
 namespace firelight {
@@ -211,6 +213,18 @@ const static std::map<int, std::map<std::string, std::string>>
          {{"melonds_homebrew_sdcard", "disabled"},
           // {"melonds_render_mode", "opengl"},
           {"melonds_number_of_screen_layouts", "8"}}}};
+
+const static std::map<int, std::vector<input::PlatformInputDescriptor>>
+    inputDescriptors = {
+        {1,
+         {{"A", libretro::IRetroPad::Input::EastFace},
+          {"B", libretro::IRetroPad::Input::SouthFace},
+          {"Select", libretro::IRetroPad::Input::Select},
+          {"Start", libretro::IRetroPad::Input::Start},
+          {"D-Pad Up", libretro::IRetroPad::Input::DpadUp},
+          {"D-Pad Down", libretro::IRetroPad::Input::DpadDown},
+          {"D-Pad Left", libretro::IRetroPad::Input::DpadLeft},
+          {"D-Pad Right", libretro::IRetroPad::Input::DpadRight}}}};
 
 class PlatformMetadata {
 public:
@@ -456,6 +470,71 @@ public:
 
     const auto coreDllPath = corePath + coreName + coreExt;
     return coreDllPath;
+  }
+
+  static std::vector<input::PlatformInputDescriptor>
+  getInputsForPlatform(const int platformId) {
+    if (!inputDescriptors.contains(platformId)) {
+      return {};
+    }
+
+    return inputDescriptors.at(platformId);
+  }
+
+  static std::string getInputName(const libretro::IRetroPad::Input input) {
+    switch (input) {
+    case libretro::IRetroPad::Input::SouthFace:
+      return "South Face";
+    case libretro::IRetroPad::Input::EastFace:
+      return "East Face";
+    case libretro::IRetroPad::Input::WestFace:
+      return "West Face";
+    case libretro::IRetroPad::Input::NorthFace:
+      return "North Face";
+    case libretro::IRetroPad::Input::LeftBumper:
+      return "Left Bumper";
+    case libretro::IRetroPad::Input::RightBumper:
+      return "Right Bumper";
+    case libretro::IRetroPad::Input::LeftTrigger:
+      return "Left Trigger";
+    case libretro::IRetroPad::Input::RightTrigger:
+      return "Right Trigger";
+    case libretro::IRetroPad::Input::L3:
+      return "L3";
+    case libretro::IRetroPad::Input::R3:
+      return "R3";
+    case libretro::IRetroPad::Input::Start:
+      return "Start";
+    case libretro::IRetroPad::Input::Select:
+      return "Select";
+    case libretro::IRetroPad::Input::DpadUp:
+      return "D-Pad Up";
+    case libretro::IRetroPad::Input::DpadDown:
+      return "D-Pad Down";
+    case libretro::IRetroPad::Input::DpadLeft:
+      return "D-Pad Left";
+    case libretro::IRetroPad::Input::DpadRight:
+      return "D-Pad Right";
+    case libretro::IRetroPad::Input::LeftStickUp:
+      return "Left Stick Up";
+    case libretro::IRetroPad::Input::LeftStickDown:
+      return "Left Stick Down";
+    case libretro::IRetroPad::Input::LeftStickLeft:
+      return "Left Stick Left";
+    case libretro::IRetroPad::Input::LeftStickRight:
+      return "Left Stick Right";
+    case libretro::IRetroPad::Input::RightStickUp:
+      return "Right Stick Up";
+    case libretro::IRetroPad::Input::RightStickDown:
+      return "Right Stick Down";
+    case libretro::IRetroPad::Input::RightStickLeft:
+      return "Right Stick Left";
+    case libretro::IRetroPad::Input::RightStickRight:
+      return "Right Stick Right";
+    default:
+      return "Unknown";
+      return "South Face";
+    }
   }
 };
 } // namespace firelight

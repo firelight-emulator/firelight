@@ -439,6 +439,8 @@ QVariant PlatformListModel::data(const QModelIndex &index, int role) const {
     return item.displayName;
   case IconUrl:
     return item.iconUrl;
+  case IconName:
+    return item.iconName;
   case Buttons:
     return QVariant::fromValue(item.buttons);
   case Sticks:
@@ -453,6 +455,7 @@ QHash<int, QByteArray> PlatformListModel::roleNames() const {
   roles[PlatformId] = "platform_id";
   roles[DisplayName] = "display_name";
   roles[IconUrl] = "icon_url";
+  roles[IconName] = "icon_name";
   roles[Buttons] = "buttons";
   roles[Sticks] = "sticks";
   return roles;

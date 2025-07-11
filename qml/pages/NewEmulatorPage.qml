@@ -13,6 +13,20 @@ FocusScope {
 
     objectName: "emulatorPage"
 
+    Connections {
+        target: controller_manager
+
+        function onShortcutActivated(player, shortcut) {
+            if (root.parent.StackView.status !== StackView.Active) {
+                return
+            }
+
+            if (shortcut === 0) {
+                root.createRewindPoints()
+            }
+        }
+    }
+
     required property StackView stackView
     required property int entryId
     property GameSettings2 gameSettings: GameSettings2 {
@@ -107,6 +121,9 @@ FocusScope {
     }
 
     function createRewindPoints() {
+        if (!gameSettings.rewindEnabled) {
+            return
+        }
         emulator.createRewindPoints()
     }
 

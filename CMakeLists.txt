@@ -99,6 +99,7 @@ file(GLOB QML_FILES
         qml/components/rewind/*.qml
         qml/components/library/*.qml
         qml/components/settings/*.qml
+        qml/components/controllers/*.qml
         qml/**/*.qml
 )
 
@@ -183,6 +184,9 @@ add_library(firelight_lib
         src/gui/filesystem_utils.cpp
         src/app/saves/gui/save_files_item.cpp
         src/app/library/gui/content_directory_model.cpp
+        src/app/input/input_mapping_info.hpp
+        src/app/input/gui/input_mappings_model.cpp
+        src/app/input/platform_input_descriptor.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

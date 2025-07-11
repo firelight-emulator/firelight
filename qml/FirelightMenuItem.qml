@@ -17,19 +17,39 @@ Button {
 
     implicitHeight: 42
 
-    contentItem: Text {
-        id: buttonText
-        visible: control.width > 52
-        // anchors.fill: parent
+    contentItem: Item {
+        FLIcon {
+            id: icon
+            visible: control.labelIcon !== ""
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
 
-        text: control.labelText
+            icon: control.labelIcon ? control.labelIcon : "info"
+            width: parent.height - 8
+            height: parent.height - 8
+            size: parent.height - 8
+            fillMode: Image.PreserveAspectFit
+            color: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? "black" : "white") : "white" : "#aaaaaa"
+        }
 
-        font.pixelSize: 16
-        font.family: Constants.regularFontFamily
-        font.weight: Font.DemiBold
-        color: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? "black" : "white") : "white" : "#aaaaaa"
-        horizontalAlignment: alignRight ? Text.AlignRight : Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
+        Text {
+            id: buttonText
+            visible: control.width > 52
+            anchors.left: icon.visible ? icon.right : parent.left
+            anchors.leftMargin: icon.visible ? 16 : 0
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            // anchors.fill: parent
+
+            text: control.labelText
+
+            font.pixelSize: 16
+            font.family: Constants.regularFontFamily
+            font.weight: Font.DemiBold
+            color: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? "black" : "white") : "white" : "#aaaaaa"
+            horizontalAlignment: alignRight ? Text.AlignRight : Text.AlignLeft
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     background: Rectangle {

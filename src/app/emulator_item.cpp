@@ -241,36 +241,48 @@ float EmulatorItem::audioBufferLevel() const {
 }
 
 void EmulatorItem::resetGame() {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::ResetGame});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::ResetGame});
+    update();
+  }
 }
 
 void EmulatorItem::writeSuspendPoint(const int index) {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSuspendPoint,
-                             .suspendPointIndex = index});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSuspendPoint,
+                               .suspendPointIndex = index});
+    update();
+  }
 }
 
 void EmulatorItem::loadSuspendPoint(const int index) {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadSuspendPoint,
-                             .suspendPointIndex = index});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadSuspendPoint,
+                               .suspendPointIndex = index});
+    update();
+  }
 }
 void EmulatorItem::undoLastLoadSuspendPoint() {
-  m_renderer->submitCommand(
-      {.type = EmulatorItemRenderer::UndoLoadSuspendPoint});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand(
+        {.type = EmulatorItemRenderer::UndoLoadSuspendPoint});
+    update();
+  }
 }
 
 void EmulatorItem::createRewindPoints() {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::EmitRewindPoints});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::EmitRewindPoints});
+    update();
+  }
 }
 
 void EmulatorItem::loadRewindPoint(const int index) {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadRewindPoint,
-                             .rewindPointIndex = index});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadRewindPoint,
+                               .rewindPointIndex = index});
+    update();
+  }
 }
 
 void EmulatorItem::setPlaybackMultiplier(int playbackMultiplier) {
@@ -278,10 +290,12 @@ void EmulatorItem::setPlaybackMultiplier(int playbackMultiplier) {
     m_playbackMultiplier = playbackMultiplier;
     emit playbackMultiplierChanged();
 
-    m_renderer->submitCommand(
-        {.type = EmulatorItemRenderer::SetPlaybackMultiplier,
-         .playbackMultiplier = m_playbackMultiplier});
-    update();
+    if (m_renderer) {
+      m_renderer->submitCommand(
+          {.type = EmulatorItemRenderer::SetPlaybackMultiplier,
+           .playbackMultiplier = m_playbackMultiplier});
+      update();
+    }
   }
 }
 
