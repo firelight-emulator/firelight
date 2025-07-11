@@ -66,6 +66,7 @@
 #include "settings/sqlite_emulation_settings_manager.hpp"
 #include <discordpp.h>
 
+#include <input/gui/input_mappings_model.hpp>
 #include <saves/gui/save_files_item.hpp>
 #include <unistd.h>
 
@@ -301,6 +302,9 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<firelight::saves::SaveFilesItem>("Firelight", 1, 0,
                                                    "SaveDataInformation");
+
+  qmlRegisterType<firelight::input::InputMappingsModel>("Firelight", 1, 0,
+                                                        "InputMappingsModel");
 
   firelight::gui::Router router;
 

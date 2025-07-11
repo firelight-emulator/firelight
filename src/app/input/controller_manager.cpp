@@ -59,7 +59,13 @@ void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
     for (int i = 0; i < m_controllers.max_size(); ++i) {
       if (m_controllers[i] != nullptr &&
           m_controllers[i]->getInstanceId() == joystickInstanceId) {
+
         const auto button = event.cbutton.button;
+        for (const auto &shortcut :
+             m_controllers[i]->getToggledShortcuts(button)) {
+          emit shortcutActivated(i + 1, shortcut);
+        }
+
         libretro::IRetroPad::Input virtualInput =
             libretro::IRetroPad::Input::Unknown;
         switch (button) {
@@ -120,7 +126,12 @@ void ControllerManager::handleSDLControllerEvent(const SDL_Event &event) {
     for (int i = 0; i < m_controllers.max_size(); ++i) {
       if (m_controllers[i] != nullptr &&
           m_controllers[i]->getInstanceId() == joystickInstanceId) {
+
         const auto button = event.cbutton.button;
+        for (const auto &shortcut :
+             m_controllers[i]->getToggledShortcuts(button)) {
+          emit shortcutActivated(i + 1, shortcut);
+        }
         libretro::IRetroPad::Input virtualInput =
             libretro::IRetroPad::Input::Unknown;
         switch (button) {

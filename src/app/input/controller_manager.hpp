@@ -2,6 +2,7 @@
 
 #include "firelight/libretro/retropad_provider.hpp"
 #include "sdl_controller.hpp"
+#include "shortcuts.hpp"
 #include <QAbstractListModel>
 #include <QObject>
 #include <SDL_events.h>
@@ -84,6 +85,8 @@ signals:
   void blockGamepadInputChanged();
 
   void onlyPlayerOneCanNavigateMenusChanged();
+
+  void shortcutActivated(int playerNumber, int shortcut);
 
 private:
   std::unique_ptr<QSettings> m_settings;

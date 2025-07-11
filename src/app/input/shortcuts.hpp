@@ -1,0 +1,5 @@
+#pragma once
+
+namespace firelight::input {
+enum Shortcut { OpenRewindMenu };
+}
