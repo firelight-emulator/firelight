@@ -7,6 +7,7 @@
 #include <QQuickWindow>
 #include <QVideoFrame>
 #include <libretro/libretro_vulkan.h>
+#include <qgenericmatrix.h>
 #include <rhi/qrhi.h>
 #include <spdlog/spdlog.h>
 
@@ -160,6 +161,7 @@ uintptr_t EmulatorItemRenderer::getCurrentFramebufferId() {
 
 void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
   if (info) {
+    printf("Updating System AV info\n");
     m_coreBaseWidth = info->geometry.base_width;
     m_coreBaseHeight = info->geometry.base_height;
     m_coreMaxWidth = info->geometry.max_width;
@@ -190,6 +192,11 @@ void EmulatorItemRenderer::setPixelFormat(retro_pixel_format *format) {
     spdlog::debug("Pixel format: UNKNOWN\n");
     break;
   }
+}
+
+void EmulatorItemRenderer::setScreenRotation(unsigned rotation) {
+  m_screenRotation = rotation;
+  // printf("Screen rotation requested: %d\n", m_screenRotation);
 }
 
 void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
@@ -785,6 +792,12 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
           reinterpret_cast<const uchar *>(rbResult->data.constData());
       m_currentImage = QImage(p, rbResult->pixelSize.width(),
                               rbResult->pixelSize.height(), fmt);
+      if (m_screenRotation != 0) {
+          auto screenAngle = m_screenRotation * 90.0;
+          // printf("Screen angle: %f\n", screenAngle);
+          m_currentImage = m_currentImage.transformed(QTransform().rotate(screenAngle));
+          // printf("Width: %d Height: %d\n", m_currentImage.width(), m_currentImage.height());
+      }
 
       if (m_graphicsApi == QSGRendererInterface::OpenGL) {
         m_currentImage.mirror();

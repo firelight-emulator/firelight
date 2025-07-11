@@ -36,6 +36,8 @@ public:
 
   virtual void setPixelFormat(retro_pixel_format *format) = 0;
 
+  virtual void setScreenRotation(unsigned rotation) = 0;
+
   virtual void setHwRenderContextNegotiationInterface(
       retro_hw_render_context_negotiation_interface *iface) = 0;
 
