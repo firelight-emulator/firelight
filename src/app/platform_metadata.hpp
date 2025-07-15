@@ -398,9 +398,9 @@ public:
   static std::string getCoreDirectoryPath() {
     switch (OS_ID) {
     case OS_ID_WINDOWS:
-      return "./system/_cores/";
+      return "./system/_cores/windows/";
     case OS_ID_LINUX:
-      return "/usr/lib/libretro/";
+      return "./system/_cores/linux/";
     default:
     case OS_ID_MAC:
       return "";
