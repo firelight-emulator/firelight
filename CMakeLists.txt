@@ -221,7 +221,7 @@ target_link_libraries(firelight_lib PUBLIC
         patching
         rcheevos
         discord
-        discord_partner_sdk)
+        )
 
 # qt_import_plugins(firelight_lib
 #         INCLUDE QFFmpegMediaPlugin)
