@@ -9,6 +9,7 @@ Image {
     required property var size
     required property string icon
     property bool filled: true
+    smooth: false
 
     property color color: "#e8eaed"
 

@@ -184,7 +184,8 @@ FocusScope {
                 label: "Edit profile"
 
                 onClicked: function () {
-                    profileDialog.open()
+                    // profileDialog.open()
+                    root.StackView.view.pushItem(profilePage, {playerNumber: content.index + 1}, StackView.PushTransition)
                     // editProfileButtonClicked(model.model_name, content.index + 1)
                     // Router.doSomethingWith(editProfileButton, {playerNumber: content.index + 1})
                     // screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
@@ -437,38 +438,38 @@ FocusScope {
         }
     }
 
-    FirelightDialog {
-        id: profileDialog
-
-        width: Overlay.overlay.width * 0.9
-        height: Overlay.overlay.height * 0.9
-
-        headerText: "Edit controller profile"
-        acceptText: "Done"
-        showCancel: false
-        centerButtons: false
-
-        onAboutToShow: function() {
-            loader.active = true
-        }
-
-        onClosed: function() {
-            loader.active = false
-        }
-
-        contentItem: Loader {
-            id: loader
-            active: false
-            sourceComponent: profilePage
-        }
-
         Component {
             id: profilePage
             ControllerProfilePage {
                 playerNumber: 1
             }
         }
-    }
+
+    // FirelightDialog {
+    //     id: profileDialog
+    //
+    //     width: Overlay.overlay.width * 0.9
+    //     height: Overlay.overlay.height * 0.9
+    //
+    //     headerText: "Edit controller profile"
+    //     acceptText: "Done"
+    //     showCancel: false
+    //     centerButtons: false
+    //
+    //     onAboutToShow: function() {
+    //         loader.active = true
+    //     }
+    //
+    //     onClosed: function() {
+    //         loader.active = false
+    //     }
+    //
+    //     contentItem: Loader {
+    //         id: loader
+    //         active: false
+    //         sourceComponent: profilePage
+    //     }
+    // }
 
 
 }

@@ -24,24 +24,36 @@ FocusScope {
             // }
 
             ToggleOption {
+                id: prioritizeControllerToggle
                 Layout.fillWidth: true
                 focus: true
                 label: "Prioritize controllers over keyboard"
 
-                background: Rectangle {
-                    color: ColorPalette.neutral300
-                    radius: 6
-                    // border.color: ColorPalette.neutral700
-                    opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
 
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 100
-                            easing.type: Easing.InOutQuad
+
+        background: Item {
+                            property var radius: 2
+                            Rectangle {
+                                anchors.fill: parent
+                                color: ColorPalette.neutral300
+                                opacity: prioritizeControllerToggle.hovered || prioritizeControllerToggle.activeFocus ? 0.2 : 0
+                            }
+
+                            Rectangle {
+                                width: parent.width
+                                height: 1
+                                anchors.top: parent.bottom
+                                color: ColorPalette.neutral300
+                                opacity: 0.3
+                            }
+                            Rectangle {
+                                width: parent.width
+                                height: 1
+                                anchors.bottom: parent.top
+                                color: ColorPalette.neutral300
+                                opacity: 0.3
+                            }
                         }
-                    }
-
-                }
 
                 checked: controller_manager.prioritizeControllerOverKeyboard
 
@@ -64,23 +76,36 @@ FocusScope {
             }
 
             ToggleOption {
+                id: playerOneOnlyMenusToggle
                 Layout.fillWidth: true
                 focus: true
                 label: "Only allow player one to navigate menus"
+                KeyNavigation.up: prioritizeControllerToggle
 
-                background: Rectangle {
-                    color: ColorPalette.neutral300
-                    radius: 6
-                    // border.color: ColorPalette.neutral700
-                    opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
 
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 100
-                            easing.type: Easing.InOutQuad
-                        }
+
+                background: Item {
+                    property var radius: 2
+                    Rectangle {
+                        anchors.fill: parent
+                        color: ColorPalette.neutral300
+                        opacity: playerOneOnlyMenusToggle.hovered || playerOneOnlyMenusToggle.activeFocus ? 0.2 : 0
                     }
 
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        anchors.top: parent.bottom
+                        color: ColorPalette.neutral300
+                        opacity: 0.3
+                    }
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        anchors.bottom: parent.top
+                        color: ColorPalette.neutral300
+                        opacity: 0.3
+                    }
                 }
 
                 checked: controller_manager.onlyPlayerOneCanNavigateMenus

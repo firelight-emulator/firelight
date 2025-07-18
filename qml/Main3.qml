@@ -267,6 +267,12 @@ ApplicationWindow {
     FLFocusHighlight {
         target: window.activeFocusItem
         usingMouse: InputMethodManager.usingMouse
+
+        onParentChanged: {
+            if (parent) {
+                console.log("global coordinates: " + parent.mapToItem(window.contentItem, 0, parent.height));
+            }
+        }
     }
 
     LibraryPage {

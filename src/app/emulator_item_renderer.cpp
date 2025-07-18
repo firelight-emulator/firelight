@@ -839,7 +839,8 @@ void EmulatorItemRenderer::save(const bool waitForFinish) const {
   spdlog::debug("Saving game data");
   firelight::saves::Savefile saveData(
       m_core->getMemoryData(libretro::SAVE_RAM));
-  if (!m_currentImage.isNull()) {
+  if (!m_currentImage.isNull() && m_currentImage.width() > 0 &&
+      m_currentImage.height() > 0) {
     saveData.setImage(m_currentImage.copy());
   }
 
