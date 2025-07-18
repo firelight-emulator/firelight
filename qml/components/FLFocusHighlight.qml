@@ -16,7 +16,7 @@ Rectangle {
     visible: !usingMouse && parent !== null
 
     anchors.fill: parent
-    anchors.margins: -4
+    anchors.margins: -2
     border.color: borderColor
     border.width: borderWidth
     color: "transparent"

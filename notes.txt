@@ -1,3 +1,14 @@
+1. examining switch GUI elements
+
+a.
+
+
+
+
+
+
+
+
 pacman -S mingw-w64-clang-x86_64-toolchain
 mingw-w64-x86_64-clang-analyzer
 

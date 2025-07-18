@@ -30,135 +30,244 @@ FocusScope {
         }
     }
 
-    FirelightDialog {
+    InputPromptDialog {
         id: dialog
+        // imageSourceUrl: platformList.currentItem.model.icon_url
+        imageSourceUrl: "file:///C:/Users/alexs/Downloads/Full Color Controllers PNGs/PNGs/Nintendo/Nintendo Gameboy 600dpi.png"
+        platformName: platformMetadataModel.display_name
+    }
 
-        property variant buttons: []
-        property var currentIndex: 0
-        property bool canAcceptAxisInput: true
-        // title: "Assign all buttons"
-        // message: "Are you sure you want to assign all buttons to the default mappings?"
-        showButtons: false
-        closePolicy: Popup.NoAutoClose
+    ListView {
+        id: buttonList
+        anchors.fill: parent
+        anchors.rightMargin: 8
+        // clip: true
+        focus: true
 
-        onAboutToShow: {
-            controller_manager.blockGamepadInput = true
-            currentIndex = 0
-            frameAnimation.reset()
+
+        highlightFollowsCurrentItem: false
+        keyNavigationEnabled: true
+        highlightMoveDuration: 80
+        highlightMoveVelocity: -1
+        highlightRangeMode: InputMethodManager.usingMouse ? ListView.NoHighlightRange : ListView.ApplyRange
+        preferredHighlightBegin: 64
+        preferredHighlightEnd: height - 64
+
+        ScrollBar.vertical: ScrollBar {
         }
 
-        onOpened: function () {
-            // theBar.widthThing = parent.width
-            timer.start()
-        }
+        spacing: 4
 
-        onClosed: function () {
-            timer.stop()
-            controller_manager.blockGamepadInput = false
-            dialog.buttons = []
-        }
+        header: ColumnLayout {
+            id: theHeader
+            width: ListView.view.width
+            spacing: 16
+            // height: 200
 
-        Timer {
-            id: axisDebounceTimer
-            interval: 300
-            running: false
-            repeat: false
-        }
+            Image {
+                id: imagey
+                Layout.maximumHeight: 240
+                // Layout.preferredHeight: 420
+                // Layout.preferredWidth: 420
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                // source: root.platformMetadataModel.icon_url
+                source: "file:///C:/Users/alexs/Downloads/Full Color Controllers PNGs/PNGs/Nintendo/Nintendo Gameboy 600dpi.png"
+                sourceSize.height: 320
+                mipmap: true
+                fillMode: Image.PreserveAspectFit
+            }
 
-        Connections {
-            target: controller_manager
-
-            function onRetropadInputStateChanged(player, input, activated) {
-                if (!dialog.visible) {
-                    return
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 16
+                focus: true
+                Item {
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
                 }
-                if (activated && !axisDebounceTimer.running) {
-                    axisDebounceTimer.restart()
-                    inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, input)
-                    if (dialog.buttons.length > dialog.currentIndex + 1) {
-                        dialog.currentIndex++
-                        timer.stop()
-                        frameAnimation.reset()
-                        timer.restart()
 
-                    } else {
-                        dialog.accept()
-                        // dialog.close()
-                        // saveMapping()
+                FirelightButton {
+                    id: assignAllButton
+                    label: "Assign all"
+                    Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
+                    focus: true
+
+                    onClicked: function () {
+                        confirmDialog.open()
+                    }
+                }
+
+                FirelightButton {
+                    id: clearButton
+                    label: "Reset all to default"
+                    Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
+
+                    onClicked: function () {
+                        confirmDialog.open()
                     }
                 }
             }
+            Item {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 16
+            }
         }
 
-        contentItem: ColumnLayout {
-            spacing: 12
+        model: inputMappingsModel
+        delegate: Button {
+            id: myDelegate
+            required property var model
+            required property var index
+            property bool showGlobalCursor: true
+            height: 60
+            width: ListView.view.width
+            hoverEnabled: true
+            background: Rectangle {
+                color: ColorPalette.neutral300
+                radius: 8
+                border.color: ColorPalette.neutral500
+                opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.14 : 0
 
-            Keys.onPressed: function (event) {
-                event.accept = false
-            }
-
-            Keys.onReleased: function (event) {
-                event.accept = false
-            }
-
-            Image {
-                Layout.preferredHeight: 300
-                Layout.preferredWidth: 300
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-                source: platformMetadataModel.icon_url
-                sourceSize.height: 512
-                fillMode: Image.PreserveAspectFit
-            }
-            Text {
-                text: "Press a button on your controller to assign it to this " + platformMetadataModel.display_name + " input:"
-                wrapMode: Text.WordWrap
-                Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: parent.width * 5 / 6
-
-                color: "white"
-                font.family: Constants.regularFontFamily
-                font.weight: Font.Light
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 18
-            }
-
-            Text {
-                text: dialog.buttons.length > 0 && dialog.currentIndex < dialog.buttons.length ? dialog.buttons[dialog.currentIndex].display_name : "Nothing"
-                wrapMode: Text.WordWrap
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                color: ColorPalette.neutral200
-                font.pixelSize: 20
-                font.weight: Font.Bold
-                font.family: Constants.regularFontFamily
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            Timer {
-                id: timer
-                interval: 4000
-                running: false
-                repeat: false
-                onTriggered: {
-                    dialog.reject()
-                    // dialog.close()
-                    // saveMapping()
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 64
+                        easing.type: Easing.InOutQuad
+                    }
                 }
             }
-
-            FrameAnimation {
-                id: frameAnimation
-                running: timer.running
+            onClicked: function() {
+                ListView.view.currentIndex = index;
             }
+            onDoubleClicked: function() {
+                dialog.buttons = []
+                dialog.buttons = [{
+                    display_name: model.originalInputName,
+                    retropad_button: model.originalInput
+                }]
+                dialog.open()
+            }
+            contentItem: RowLayout {
+                spacing: 12
+                Item {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 16
+                }
+                Text {
+                    Layout.preferredWidth: 240
+                    Layout.maximumWidth: 240
+                    Layout.alignment: Qt.AlignLeft
+                    Layout.fillHeight: true
+                    text: model.originalInputName
+                    color: "white"
+                    font.pixelSize: 15
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                    verticalAlignment: Text.AlignVCenter
+                }
 
-            Rectangle {
-                id: theBar
-                property var widthThing: parent.width * ((timer.interval - frameAnimation.elapsedTime * 1000) / timer.interval)
-                Layout.preferredWidth: widthThing
-                Layout.topMargin: 8
-                Layout.preferredHeight: 10
-                color: "green"
+                Text {
+                    Layout.preferredWidth: 240
+                    Layout.maximumWidth: 240
+                    Layout.alignment: Qt.AlignLeft
+                    Layout.fillHeight: true
+                    // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
+                    // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
+                    font.pixelSize: 15
+                    color: model.hasConflict ? "yellow" : (model.isDefault ? ColorPalette.neutral400 : "white")
+                    text: model.mappedInputName + (model.isDefault ? " (default)" : "")
+
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                    verticalAlignment: Text.AlignVCenter
+                }
+                Item {
+                    Layout.preferredHeight: 32
+                    Layout.preferredWidth: 32
+                    Layout.alignment: Qt.AlignVCenter
+
+                    FLIcon {
+                        icon: "bar-chart"
+                        color: "yellow"
+                        anchors.fill: parent
+                        size: height
+                        visible: model.hasConflict
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                Item {
+                    Layout.preferredHeight: parent.height
+                    Layout.preferredWidth: parent.height
+                    Layout.alignment: Qt.AlignRight
+
+                    FirelightButton {
+                        id: dotsButton
+                        anchors.centerIn: parent
+                        circle: true
+                        flat: true
+                        iconCode: "\ue5d4"
+                        visible: myDelegate.hovered || (!InputMethodManager.usingMouse && myDelegate.activeFocus)
+
+                        onClicked: function () {
+                            console.log("hi")
+                        }
+                    }
+                }
+
+
+
+
+                // FirelightButton {
+                //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                //     focus: true
+                //     tooltipLabel: "Assign"
+                //     flat: true
+                //
+                //     KeyNavigation.right: resetButton
+                //
+                //     Layout.preferredHeight: 42
+                //     Layout.preferredWidth: height
+                //     Layout.maximumWidth: height
+                //
+                //     iconCode: "\ue3c9"
+                //
+                //     // onClicked: {
+                //     //     dialog.buttons = []
+                //     //     dialog.buttons = [{
+                //     //         display_name: modelData.display_name,
+                //     //         retropad_button: modelData.retropad_button
+                //     //     }]
+                //     //     dialog.open()
+                //     // }
+                // }
+                //
+                // FirelightButton {
+                //     id: resetButton
+                //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                //     tooltipLabel: "Reset to default"
+                //     flat: true
+                //
+                //     Layout.preferredHeight: 42
+                //     Layout.preferredWidth: height
+                //     Layout.maximumWidth: height
+                //
+                //     iconCode: "\ue5d5"
+                //
+                //     // onClicked: {
+                //     //     inputMapping.removeMapping(modelData.retropad_button)
+                //     //     // dialog.buttons = []
+                //     //     // dialog.buttons = [{
+                //     //     //     display_name: modelData.display_name,
+                //     //     //     retropad_button: modelData.retropad_button
+                //     //     // }]
+                //     //     // dialog.open()
+                //     // }
+                // }
             }
         }
     }
@@ -166,129 +275,61 @@ FocusScope {
     RowLayout {
         anchors.fill: parent
         spacing: 16
+        visible: false
+        //
+        // Item {
+        //     Layout.fillWidth: true
+        //     Layout.fillHeight: true
+        //     Layout.horizontalStretchFactor: 1
+        // }
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.horizontalStretchFactor: 1
-        }
+        // ColumnLayout {
+        //     Layout.fillHeight: true
+        //     Layout.leftMargin: 24
+        //     Layout.rightMargin: 24
+        //     Layout.preferredWidth: 300
+        //     Layout.preferredHeight: 300
+        //
+        //     Image {
+        //         id: imagey
+        //         Layout.fillWidth: true
+        //         // Layout.preferredHeight: 420
+        //         // Layout.preferredWidth: 420
+        //         Layout.alignment: Qt.AlignTop | Qt.AlignLeft
+        //         // source: root.platformMetadataModel.icon_url
+        //         source: "file:///C:/Users/alexs/Downloads/Full Color Controllers PNGs/PNGs/Nintendo/Nintendo NES Controller 600dpi.png"
+        //         sourceSize.height: 600
+        //         mipmap: true
+        //         fillMode: Image.PreserveAspectFit
+        //     }
+        //
+        //     FirelightButton {
+        //         id: assignAllButton
+        //         label: "Assign all"
+        //         Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
+        //
+        //         onClicked: function () {
+        //             confirmDialog.open()
+        //         }
+        //     }
+        //
+        //     FirelightButton {
+        //         id: clearButton
+        //         label: "Reset all to default"
+        //         Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
+        //
+        //         onClicked: function () {
+        //             confirmDialog.open()
+        //         }
+        //     }
+        // }
+        //
+        // Item {
+        //     Layout.fillWidth: true
+        //     Layout.fillHeight: true
+        //     Layout.horizontalStretchFactor: 1
+        // }
 
-        Image {
-            id: imagey
-            Layout.preferredHeight: 420
-            Layout.preferredWidth: 420
-            Layout.alignment: Qt.AlignVCenter  | Qt.AlignHCenter
-            // source: root.platformMetadataModel.icon_url
-            source: "file:///C:/Users/alexs/Downloads/Full Color Controllers PNGs/PNGs/Nintendo/Nintendo NES Controller 600dpi.png"
-            sourceSize.height: 420
-            mipmap: true
-            fillMode: Image.PreserveAspectFit
-        }
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.horizontalStretchFactor: 1
-        }
-
-        ListView {
-            id: buttonList
-            Layout.fillHeight: true
-            Layout.preferredWidth: 400
-            // clip: true
-            focus: true
-
-            keyNavigationEnabled: true
-
-            ScrollBar.vertical: ScrollBar {
-            }
-
-            spacing: 12
-
-            model: inputMappingsModel
-            delegate: FocusScope {
-                required property var model
-                height: 48
-                width: ListView.view.width
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 12
-                    Text {
-                        Layout.preferredWidth: buttonList.width / 3
-                        Layout.maximumWidth: buttonList.width / 3
-                        Layout.alignment: Qt.AlignLeft
-                        Layout.fillHeight: true
-                        text: model.originalInputName
-                        color: "white"
-                        font.pixelSize: 16
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Text {
-                        Layout.preferredWidth: buttonList.width / 3
-                        Layout.maximumWidth: buttonList.width / 3
-                        Layout.alignment: Qt.AlignLeft
-                        Layout.fillHeight: true
-                        // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
-                        // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-                        font.pixelSize: 16
-                        color: model.hasConflict ? "yellow" : (model.isDefault ? ColorPalette.neutral400 : "white")
-                        text: model.mappedInputName + (model.isDefault ? " (default)" : "")
-
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    // FirelightButton {
-                    //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                    //     focus: true
-                    //     tooltipLabel: "Assign"
-                    //     flat: true
-                    //
-                    //     KeyNavigation.right: resetButton
-                    //
-                    //     Layout.preferredHeight: 42
-                    //     Layout.preferredWidth: height
-                    //     Layout.maximumWidth: height
-                    //
-                    //     iconCode: "\ue3c9"
-                    //
-                    //     // onClicked: {
-                    //     //     dialog.buttons = []
-                    //     //     dialog.buttons = [{
-                    //     //         display_name: modelData.display_name,
-                    //     //         retropad_button: modelData.retropad_button
-                    //     //     }]
-                    //     //     dialog.open()
-                    //     // }
-                    // }
-                    //
-                    // FirelightButton {
-                    //     id: resetButton
-                    //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                    //     tooltipLabel: "Reset to default"
-                    //     flat: true
-                    //
-                    //     Layout.preferredHeight: 42
-                    //     Layout.preferredWidth: height
-                    //     Layout.maximumWidth: height
-                    //
-                    //     iconCode: "\ue5d5"
-                    //
-                    //     // onClicked: {
-                    //     //     inputMapping.removeMapping(modelData.retropad_button)
-                    //     //     // dialog.buttons = []
-                    //     //     // dialog.buttons = [{
-                    //     //     //     display_name: modelData.display_name,
-                    //     //     //     retropad_button: modelData.retropad_button
-                    //     //     // }]
-                    //     //     // dialog.open()
-                    //     // }
-                    // }
-                }
-            }
-        }
     }
 }

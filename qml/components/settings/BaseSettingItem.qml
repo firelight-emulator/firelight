@@ -25,17 +25,30 @@ FocusScope {
 
         property bool showGlobalCursor: true
 
-        background: Rectangle {
-            color: ColorPalette.neutral300
-            radius: 8
-            border.color: ColorPalette.neutral500
-            opacity: parent.hovered || (!InputMethodManager.usingMouse && root.activeFocus) ? 0.2 : 0.1
+        // background: Rectangle {
+        //     color: ColorPalette.neutral300
+        //     radius: 8
+        //     border.color: ColorPalette.neutral500
+        //     opacity: parent.hovered || (!InputMethodManager.usingMouse && root.activeFocus) ? 0.2 : 0.1
+        //
+        //     Behavior on opacity {
+        //         NumberAnimation {
+        //             duration: 100
+        //             easing.type: Easing.InOutQuad
+        //         }
+        //     }
+        // }
 
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 100
-                    easing.type: Easing.InOutQuad
-                }
+        background: Item {
+            Rectangle {
+                width: parent.width
+                anchors.bottom: parent.bottom
+                color: ColorPalette.neutral300
+            }
+            Rectangle {
+                width: parent.width
+                anchors.top: parent.top
+                color: ColorPalette.neutral300
             }
         }
 
