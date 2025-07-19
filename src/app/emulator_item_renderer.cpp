@@ -83,6 +83,10 @@ void EmulatorItemRenderer::receive(const void *data, unsigned width,
     }
     auto newImage =
         image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+    if (m_screenRotation != 0) {
+      auto screenAngle = m_screenRotation * 90.0;
+      newImage = newImage.transformed(QTransform().rotate(screenAngle));
+    }
     m_currentUpdateBatch->uploadTexture(colorTexture(), newImage);
   } else if (data == RETRO_HW_FRAME_BUFFER_VALID) {
     // QRhiTexture *texture = rhi()->newTexture(
@@ -196,7 +200,7 @@ void EmulatorItemRenderer::setPixelFormat(retro_pixel_format *format) {
 
 void EmulatorItemRenderer::setScreenRotation(unsigned rotation) {
   m_screenRotation = rotation;
-  // printf("Screen rotation requested: %d\n", m_screenRotation);
+  printf("Screen rotation requested: %d\n", m_screenRotation);
 }
 
 void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
@@ -792,12 +796,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
           reinterpret_cast<const uchar *>(rbResult->data.constData());
       m_currentImage = QImage(p, rbResult->pixelSize.width(),
                               rbResult->pixelSize.height(), fmt);
-      if (m_screenRotation != 0) {
-          auto screenAngle = m_screenRotation * 90.0;
-          // printf("Screen angle: %f\n", screenAngle);
-          m_currentImage = m_currentImage.transformed(QTransform().rotate(screenAngle));
-          // printf("Width: %d Height: %d\n", m_currentImage.width(), m_currentImage.height());
-      }
 
       if (m_graphicsApi == QSGRendererInterface::OpenGL) {
         m_currentImage.mirror();
