@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
   }
 
   QGuiApplication::setOrganizationDomain("firelight-emulator.com");
-  QGuiApplication::setDesktopFileName("firelight-emu");
+  QGuiApplication::setDesktopFileName("firelight");
   QGuiApplication::setApplicationName("Firelight");
 
   QSettings::setDefaultFormat(QSettings::Format::IniFormat);
