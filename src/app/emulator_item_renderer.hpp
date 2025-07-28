@@ -59,6 +59,8 @@ public:
 
   void setPixelFormat(retro_pixel_format *format) override;
 
+  void setScreenRotation(unsigned rotation) override;
+
   void setHwRenderContextNegotiationInterface(
       retro_hw_render_context_negotiation_interface *iface) override;
 
@@ -171,6 +173,9 @@ private:
 
   // Default according to libretro docs
   QImage::Format m_pixelFormat = QImage::Format_RGB16;
+
+  // Rotation is equal to value x 90 degrees
+  unsigned m_screenRotation = 0;
 
   bool m_paused = false;
 
