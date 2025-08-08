@@ -16,11 +16,6 @@
 #include <qstandardpaths.h>
 #include <spdlog/spdlog.h>
 
-#ifdef Q_OS_WIN
-#include <dwmapi.h>
-#include <windows.h>
-#endif
-
 #include "activity/gui/game_activity_item.hpp"
 #include "app/audio/SfxPlayer.hpp"
 #include "app/db/sqlite_content_database.hpp"
@@ -43,15 +38,10 @@
 #include "network_cache.hpp"
 
 #include <QtConcurrent>
-#include <archive.h>
-#include <archive_entry.h>
-#include <discord/discord.h>
 
-#include "app/PlatformMetadataItem.hpp"
 #include "app/activity/sqlite_activity_log.hpp"
 #include "app/emulator_item.hpp"
 #include "app/input/gui/gamepad_status_item.hpp"
-#include "app/input/gui/input_mapping_item.hpp"
 #include "app/input/gui/keyboard_mapping_item.hpp"
 #include "app/library/gui/entry_list_model.hpp"
 #include "app/library/gui/entry_sort_filter_list_model.hpp"
@@ -63,8 +53,8 @@
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
 #include "gui/filesystem_utils.hpp"
+#include "input2/sdl/sdl_input_service.hpp"
 #include "settings/sqlite_emulation_settings_manager.hpp"
-#include <discordpp.h>
 
 #include <input/gui/input_mappings_model.hpp>
 #include <saves/gui/save_files_item.hpp>
@@ -72,15 +62,6 @@
 
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
-
-  // discord::Core *core{};
-  // auto result = discord::Core::Create(
-  //     1208162396921929739, DiscordCreateFlags_NoRequireDiscord, &core);
-  // if (result == discord::Result::Ok) {
-  //   spdlog::info("Discord core created");
-  // } else {
-  //   spdlog::error("Discord core creation failed: {}", (int)result);
-  // }
 
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
@@ -137,7 +118,6 @@ int main(int argc, char *argv[]) {
 
   QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope,
                      defaultAppDataPathString);
-
   // TODO:
   //  Roms
 
@@ -164,11 +144,11 @@ int main(int argc, char *argv[]) {
   firelight::input::SqliteControllerRepository controllerRepository(
       baseDir.filePath("controllers.db"));
   firelight::input::ControllerManager controllerManager(controllerRepository);
-  firelight::input::InputManager inputManager;
-  firelight::ManagerAccessor::setInputManager(&inputManager);
 
-  firelight::ManagerAccessor::setControllerManager(&controllerManager);
-  firelight::ManagerAccessor::setControllerRepository(&controllerRepository);
+  firelight::input::SDLInputService inputService(controllerRepository);
+  firelight::input::InputService::setInstance(&inputService);
+
+  QtConcurrent::run([&] { inputService.run(); });
 
   controllerManager.refreshControllerList();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
@@ -241,8 +221,6 @@ int main(int argc, char *argv[]) {
   firelight::ManagerAccessor::setAchievementManager(&raClient);
 
   // Set up the models for QML ***********************************************
-  firelight::gui::ControllerListModel controllerListModel(controllerManager);
-
   firelight::library::EntryListModel entryListModel(userLibrary);
   firelight::library::EntrySortFilterListModel entrySearchModel;
   entrySearchModel.setSourceModel(&entryListModel);
@@ -286,10 +264,6 @@ int main(int argc, char *argv[]) {
                                                        "GamepadStatus");
   qmlRegisterType<firelight::input::KeyboardMappingItem>("Firelight", 1, 0,
                                                          "KeyboardMapping");
-  qmlRegisterType<firelight::input::InputMappingItem>("Firelight", 1, 0,
-                                                      "InputMapping");
-  qmlRegisterType<firelight::PlatformMetadataItem>("Firelight", 1, 0,
-                                                   "PlatformMetadata");
   qmlRegisterType<firelight::mods::ModInfoItem>("Firelight", 1, 0, "ModInfo");
   qmlRegisterType<firelight::achievements::AchievementSetItem>(
       "Firelight", 1, 0, "AchievementSet");
@@ -305,6 +279,8 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<firelight::input::InputMappingsModel>("Firelight", 1, 0,
                                                         "InputMappingsModel");
+  qmlRegisterType<firelight::gui::ControllerListModel>("Firelight", 1, 0,
+                                                       "GamepadListModel");
 
   firelight::gui::Router router;
 
@@ -363,8 +339,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("emulator_config_manager",
                                            emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
-  engine.rootContext()->setContextProperty("controller_model",
-                                           &controllerListModel);
   engine.rootContext()->setContextProperty("controller_manager",
                                            &controllerManager);
   engine.rootContext()->setContextProperty("platform_model",
@@ -412,9 +386,9 @@ int main(int argc, char *argv[]) {
 
   window->setIcon(QIcon("qrc:images/firelight-logo"));
 
-  firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
-  sdlEventLoop.moveToThread(&sdlEventLoop);
-  sdlEventLoop.start();
+  // firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
+  // sdlEventLoop.moveToThread(&sdlEventLoop);
+  // sdlEventLoop.start();
 
   engine.rootContext()->setContextProperty("sfx_player",
                                            new firelight::audio::SfxPlayer());
@@ -423,10 +397,10 @@ int main(int argc, char *argv[]) {
 
   spdlog::info("Exiting QGuiApplication");
 
-  sdlEventLoop.stopProcessing();
+  // sdlEventLoop.stopProcessing();
   //
-  sdlEventLoop.quit();
-  sdlEventLoop.wait();
+  // sdlEventLoop.quit();
+  // sdlEventLoop.wait();
 
   // engine.removeImageProvider("gameImages");
   // TODO: Let daemons finish

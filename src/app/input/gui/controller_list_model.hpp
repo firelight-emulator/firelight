@@ -1,36 +1,56 @@
 #pragma once
 
 #include "../controller_manager.hpp"
+#include "event_dispatcher.hpp"
+#include "input2/input_service.hpp"
+
 #include <QAbstractListModel>
 
 namespace firelight::gui {
-  class ControllerListModel : public QAbstractListModel {
-    Q_OBJECT
+class ControllerListModel : public QAbstractListModel {
+  Q_OBJECT
 
-  public:
-    explicit ControllerListModel(input::ControllerManager &controllerManager);
+public:
+  explicit ControllerListModel(QObject *parent = nullptr);
 
-    [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
+  [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
 
-    [[nodiscard]] QVariant data(const QModelIndex &index,
-                                int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index,
+                              int role) const override;
 
-    QHash<int, QByteArray> roleNames() const override;
+  QHash<int, QByteArray> roleNames() const override;
 
-  private:
-    struct Item {
-      int playerIndex;
-      QString modelName;
-      QString manufacturerName;
-      bool wired;
-      QString imageUrl;
-    };
+  Q_INVOKABLE void changeGamepadOrder(const QVariantMap &oldToNewIndex);
 
-    enum Roles { PlayerIndex = Qt::UserRole + 1, ModelName, ManufacturerName, Wired, ImageUrl };
+private:
+  ScopedConnection m_connectedHandler;
+  ScopedConnection m_disconnectedHandler;
+  ScopedConnection m_gamepadOrderChangedHandler;
 
-    input::ControllerManager &m_controllerManager;
-    std::vector<Item> m_items;
+  void onGamepadConnected(const input::GamepadConnectedEvent &event);
+  void onGamepadDisconnected(const input::GamepadDisconnectedEvent &event);
 
-    void refreshControllerList();
+  struct Item {
+    int playerIndex;
+    bool connected;
+    QString modelName;
+    QString manufacturerName;
+    bool wired;
+    QString imageUrl;
   };
+
+  enum Roles {
+    PlayerIndex = Qt::UserRole + 1,
+    Connected,
+    ModelName,
+    ManufacturerName,
+    Wired,
+    ImageUrl
+  };
+
+  input::InputService *m_inputService;
+  std::vector<Item> m_items;
+
+  void refreshControllerList();
+};
 } // namespace firelight::gui

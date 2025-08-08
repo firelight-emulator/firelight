@@ -1,7 +1,7 @@
 #pragma once
 
 #include "firelight/libretro/retropad_provider.hpp"
-#include "sdl_controller.hpp"
+#include "input2/sdl/sdl_controller.hpp"
 #include "shortcuts.hpp"
 #include <QAbstractListModel>
 #include <QObject>
@@ -45,7 +45,7 @@ public:
   getControllerForPlayerIndex(int t_player) const;
 
   std::optional<libretro::IRetroPad *>
-  getRetropadForPlayerIndex(int t_player, int platformId) override;
+  getRetropadForPlayerIndex(int t_player) override;
 
   Q_INVOKABLE void updateControllerOrder(const QVector<int> &order);
 

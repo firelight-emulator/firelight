@@ -118,7 +118,7 @@ add_library(firelight_lib
         src/app/libretro/core.cpp
         src/app/libretro/game.cpp
         src/app/db/sqlite_content_database.cpp
-        src/app/input/sdl_controller.cpp
+        src/app/input2/sdl/sdl_controller.cpp
         src/app/input/controller_manager.cpp
         src/app/input/sdl_event_loop.cpp
         src/app/manager_accessor.cpp
@@ -152,10 +152,7 @@ add_library(firelight_lib
         src/app/emulator_item.cpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/activity/sqlite_activity_log.cpp
-        src/app/PlatformMetadataItem.cpp
         src/app/input/sqlite_controller_repository.cpp
-        src/app/input/input_manager.cpp
-        src/app/input/gui/input_mapping_item.cpp
         src/app/library/gui/library_entry_item.cpp
         src/app/input/profiles/keyboard_mapping.cpp
         src/app/input/gui/keyboard_mapping_item.cpp
@@ -184,9 +181,26 @@ add_library(firelight_lib
         src/gui/filesystem_utils.cpp
         src/app/saves/gui/save_files_item.cpp
         src/app/library/gui/content_directory_model.cpp
-        src/app/input/input_mapping_info.hpp
         src/app/input/gui/input_mappings_model.cpp
         src/app/input/platform_input_descriptor.hpp
+        src/app/platforms/models/platform.hpp
+        src/app/platforms/models/controller_type.hpp
+        src/app/platforms/models/controller_input_descriptor.hpp
+        src/app/platforms/platform_service.cpp
+        src/app/platforms/platform_service.hpp
+        src/app/input/profiles/shortcut_mapping.cpp
+        src/app/input/profiles/shortcut_mapping.hpp
+        src/app/input/input_sequence.hpp
+        src/app/input/gamepad_input.hpp
+        src/app/input2/input_service.cpp
+        src/app/input2/input_service.hpp
+        src/app/input2/gamepad_profile.cpp
+        src/app/input2/gamepad_profile.hpp
+        src/app/input2/device_identifier.hpp
+        src/app/input2/sdl/sdl_input_service.cpp
+        src/app/input2/sdl/sdl_input_service.hpp
+        src/app/input2/device_info.hpp
+        src/app/event_dispatcher.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -340,6 +354,7 @@ add_executable(fl_test
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
+        tests/app/platforms/platform_service_test.cpp
 )
 
 file(GLOB QML_TEST_FILES

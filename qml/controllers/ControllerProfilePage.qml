@@ -15,17 +15,6 @@ FocusScope {
         playerNumber: root.playerNumber
     }
 
-    InputMapping {
-        id: inputMapping
-        profileId: gamepadStatus.profileId
-        platformId: platformList.currentItem.model.platform_id
-    }
-
-    PlatformMetadata {
-        id: platformMetadata
-        platformId: platformList.currentItem.model.platform_id
-    }
-
     FirelightDialog {
         id: confirmDialog
 
@@ -61,30 +50,13 @@ FocusScope {
 
         contentItem: ColumnLayout {
             FirelightMenuItem {
-                 focus: true
-
-                 labelText: "Details"
-                 property bool showGlobalCursor: true
-                 // labelIcon: "\ue40a"
-                 Layout.preferredHeight: 50
-                 Layout.fillWidth: true
-                 checked: true
-
-                 ButtonGroup.group: menuButtonGroup
-
-                 // onToggled: {
-                 //     if (checked) {
-                 //         ListView.view.currentIndex = index
-                 //         col.forceActiveFocus()
-                 //     }
-                 // }
-             }
-            FirelightMenuItem {
                  labelText: "Shortcuts"
                  property bool showGlobalCursor: true
                  // labelIcon: "\ue40a"
                  Layout.preferredHeight: 50
                  Layout.fillWidth: true
+                 focus: true
+                 checked: true
 
                  ButtonGroup.group: menuButtonGroup
 
@@ -113,7 +85,7 @@ FocusScope {
                  focus: true
                  clip: true
 
-                 KeyNavigation.right: buttonList
+                 KeyNavigation.right: theStack
 
                  Keys.onBackPressed: {
                      root.StackView.view.popCurrentItem(StackView.PopTransition)
@@ -149,7 +121,7 @@ FocusScope {
                      onToggled: {
                          if (checked) {
                              ListView.view.currentIndex = index
-                             col.forceActiveFocus()
+                             theStack.replaceCurrentItem(mappingView, {platformId: model.platform_id, profileId: gamepadStatus.profileId, platformMetadataModel: model, gamepad: gamepadStatus}, StackView.Immediate)
                          }
                      }
                  }
@@ -167,497 +139,23 @@ FocusScope {
         color: ColorPalette.neutral600
     }
 
-    ControllerInputMappingView {
-         inputMapping: inputMapping
-         platformMetadataModel: platformList.currentItem.model
+    StackView {
+        id: theStack
 
         anchors.left: verticalBar.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.leftMargin: 16
+
+        initialItem: shortcutsList
     }
 
+    Component {
+        id: mappingView
 
-
-    RowLayout {
-        anchors.left: menuPane.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.leftMargin: 40
-        anchors.rightMargin: 40
-        visible: false
-
-        // Item {
-        //     Layout.fillHeight: true
-        //     Layout.fillWidth: true
-        //     Layout.horizontalStretchFactor: 1
-        // }
-
-
-
-        Image {
-            id: imagey
-            Layout.preferredHeight: 500
-            Layout.preferredWidth: 500
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-            source: platformList.currentItem.model.icon_url
-            sourceSize.height: 500
-            mipmap: true                    // sourceSize.height: 512
-            // sourceClipRect: Qt.rect(0, 0, 1024, 1024)
-            fillMode: Image.PreserveAspectFit
-
-            Behavior on width {
-                NumberAnimation {
-                    duration: 100
-                    easing.type: Easing.InOutQuad
-                }
-            }
-            Behavior on height {
-                NumberAnimation {
-                    duration: 100
-                    easing.type: Easing.InOutQuad
-                }
-            }
-
-            // Rectangle {
-            //     color: "transparent"
-            //     anchors.fill: parent
-            //
-            //     radius: 4
-            //     border.color: "white"
-            //     border.width: 1
-            // }
-
-
-            FirelightButton {
-                id: assignAllButton
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.rightMargin: 12
-                anchors.bottomMargin: 12
-                label: "Assign all"
-
-                KeyNavigation.left: platformList
-
-                onClicked: function () {
-                    confirmDialog.open()
-                }
-            }
+        ControllerInputMappingView {
         }
-
-        ListView {
-            id: buttonList
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            // Layout.alignment: Qt.AlignHCenter
-            clip: true
-            focus: true
-
-            keyNavigationEnabled: true
-
-            KeyNavigation.up: assignAllButton
-
-            ScrollBar.vertical: ScrollBar {
-            }
-
-            visible: platformList.currentItem.model.buttons.length > 0
-
-            spacing: 12
-
-            header: ColumnLayout {
-                width: ListView.view.width
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.maximumHeight: 40
-
-                    Item {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        Layout.horizontalStretchFactor: 1
-                    }
-                    Text {
-                        Layout.preferredWidth: buttonList.width / 3
-                        Layout.maximumWidth: buttonList.width / 3
-                        Layout.alignment: Qt.AlignLeft
-                        Layout.fillHeight: true
-                        text: platformList.currentItem.model.display_name + " controls"
-                        color: ColorPalette.neutral200
-                        font.pixelSize: 16
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Text {
-                        id: dropdown
-                        Layout.preferredWidth: buttonList.width / 3
-                        Layout.maximumWidth: buttonList.width / 3
-                        Layout.alignment: Qt.AlignLeft
-                        Layout.fillHeight: true
-                        Layout.leftMargin: 12
-                        text: "Your controls"
-                        color: ColorPalette.neutral200
-                        font.pixelSize: 16
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Item {
-                        Layout.alignment: Qt.AlignLeft
-
-                        Layout.preferredHeight: 42
-                        Layout.preferredWidth: height * 2 + 12
-                        Layout.maximumWidth: height * 2 + 12
-                    }
-
-                    Item {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        Layout.horizontalStretchFactor: 1
-                    }
-                }
-                Rectangle {
-                    Layout.minimumHeight: 1
-                    Layout.maximumHeight: 1
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignHCenter
-                    color: ColorPalette.neutral600
-                }
-            }
-
-            footer: Item {
-                width: ListView.view.width
-                height: 24
-            }
-
-            model: platformList.currentItem.model.buttons
-            delegate: FocusScope {
-                height: 48
-                width: ListView.view.width
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 12
-
-                    Item {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        Layout.horizontalStretchFactor: 1
-                    }
-                    Text {
-                        Layout.preferredWidth: buttonList.width / 3
-                        Layout.maximumWidth: buttonList.width / 3
-                        Layout.alignment: Qt.AlignLeft
-                        Layout.fillHeight: true
-                        text: modelData.display_name
-                        color: "white"
-                        font.pixelSize: 16
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Text {
-                        Layout.preferredWidth: buttonList.width / 3
-                        Layout.maximumWidth: buttonList.width / 3
-                        Layout.alignment: Qt.AlignLeft
-                        Layout.fillHeight: true
-                        text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
-                        color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-                        font.pixelSize: 16
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    FirelightButton {
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                        focus: true
-                        tooltipLabel: "Assign"
-                        flat: true
-
-                        KeyNavigation.right: resetButton
-
-                        Layout.preferredHeight: 42
-                        Layout.preferredWidth: height
-                        Layout.maximumWidth: height
-
-                        iconCode: "\ue3c9"
-
-                        onClicked: {
-                            dialog.buttons = []
-                            dialog.buttons = [{
-                                display_name: modelData.display_name,
-                                retropad_button: modelData.retropad_button
-                            }]
-                            dialog.open()
-                        }
-                    }
-
-                    FirelightButton {
-                        id: resetButton
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                        tooltipLabel: "Reset to default"
-                        flat: true
-
-                        Layout.preferredHeight: 42
-                        Layout.preferredWidth: height
-                        Layout.maximumWidth: height
-
-                        iconCode: "\ue5d5"
-
-                        onClicked: {
-                            inputMapping.removeMapping(modelData.retropad_button)
-                            // dialog.buttons = []
-                            // dialog.buttons = [{
-                            //     display_name: modelData.display_name,
-                            //     retropad_button: modelData.retropad_button
-                            // }]
-                            // dialog.open()
-                        }
-                    }
-
-                    Item {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        Layout.horizontalStretchFactor: 1
-                    }
-
-                }
-            }
-
-        }
-
-        // RowLayout {
-        //     id: col
-        //     Layout.fillHeight: true
-        //     Layout.preferredWidth: height
-        //     Layout.alignment: Qt.AlignLeft
-        //     Layout.leftMargin: 12
-        //
-        //     Keys.onBackPressed: {
-        //         platformList.forceActiveFocus()
-        //     }
-        //
-        //     spacing: 8
-        //
-        //     // Image {
-        //     //     id: imagey
-        //     //     Layout.preferredHeight: 300
-        //     //     Layout.preferredWidth: 300
-        //     //     Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
-        //     //     source: platformList.currentItem.model.icon_url
-        //     //     sourceSize.height: 300
-        //     //     mipmap: true                    // sourceSize.height: 512
-        //     //     // sourceClipRect: Qt.rect(0, 0, 1024, 1024)
-        //     //     fillMode: Image.PreserveAspectFit
-        //     //
-        //     //     Behavior on width {
-        //     //         NumberAnimation {
-        //     //             duration: 100
-        //     //             easing.type: Easing.InOutQuad
-        //     //         }
-        //     //     }
-        //     //     Behavior on height {
-        //     //         NumberAnimation {
-        //     //             duration: 100
-        //     //             easing.type: Easing.InOutQuad
-        //     //         }
-        //     //     }
-        //     //
-        //     //     // Rectangle {
-        //     //     //     color: "transparent"
-        //     //     //     anchors.fill: parent
-        //     //     //
-        //     //     //     radius: 4
-        //     //     //     border.color: "white"
-        //     //     //     border.width: 1
-        //     //     // }
-        //     // }
-        //
-        //     FirelightButton {
-        //         id: assignAllButton
-        //         Layout.alignment: Qt.AlignRight
-        //         label: "Assign all"
-        //         Layout.bottomMargin: 8
-        //
-        //         KeyNavigation.left: platformList
-        //
-        //         onClicked: function () {
-        //             confirmDialog.open()
-        //         }
-        //     }
-        //
-        //     // RowLayout {
-        //     //     Layout.fillWidth: true
-        //     //     Layout.alignment: Qt.AlignLeft
-        //     //     Layout.maximumHeight: 40
-        //     //     Text {
-        //     //         Layout.preferredWidth: 240
-        //     //         Layout.maximumWidth: 240
-        //     //         Layout.alignment: Qt.AlignLeft
-        //     //         Layout.fillHeight: true
-        //     //         text: platformList.currentItem.model.display_name + " controls"
-        //     //         color: ColorPalette.neutral200
-        //     //         font.pixelSize: 16
-        //     //         font.family: Constants.regularFontFamily
-        //     //         font.weight: Font.DemiBold
-        //     //         verticalAlignment: Text.AlignVCenter
-        //     //     }
-        //     //     Text {
-        //     //         id: dropdown
-        //     //         Layout.preferredWidth: 240
-        //     //         Layout.maximumWidth: 240
-        //     //         Layout.alignment: Qt.AlignLeft
-        //     //         Layout.fillHeight: true
-        //     //         Layout.leftMargin: 12
-        //     //         text: "Your controls"
-        //     //         color: ColorPalette.neutral200
-        //     //         font.pixelSize: 16
-        //     //         font.family: Constants.regularFontFamily
-        //     //         font.weight: Font.DemiBold
-        //     //         verticalAlignment: Text.AlignVCenter
-        //     //     }
-        //     //     Item {
-        //     //         Layout.alignment: Qt.AlignLeft
-        //     //
-        //     //         Layout.preferredHeight: 42
-        //     //         Layout.preferredWidth: height
-        //     //         Layout.maximumWidth: height
-        //     //     }
-        //     // }
-        //     // Rectangle {
-        //     //     Layout.minimumHeight: 1
-        //     //     Layout.maximumHeight: 1
-        //     //     Layout.fillWidth: true
-        //     //     Layout.alignment: Qt.AlignHCenter
-        //     //     color: ColorPalette.neutral600
-        //     // }
-        //
-        //     Item {
-        //         Layout.fillHeight: true
-        //         Layout.fillWidth: true
-        //         visible: platformList.currentItem.model.buttons.length === 0
-        //     }
-        //
-        //     // ListView {
-        //     //     id: buttonList
-        //     //     Layout.fillHeight: true
-        //     //     Layout.fillWidth: true
-        //     //     Layout.alignment: Qt.AlignHCenter
-        //     //     clip: true
-        //     //     focus: true
-        //     //
-        //     //     keyNavigationEnabled: true
-        //     //
-        //     //     KeyNavigation.up: assignAllButton
-        //     //
-        //     //     ScrollBar.vertical: ScrollBar {
-        //     //     }
-        //     //
-        //     //     visible: platformList.currentItem.model.buttons.length > 0
-        //     //
-        //     //     spacing: 12
-        //     //
-        //     //     footer: Item {
-        //     //         width: ListView.view.width
-        //     //         height: 24
-        //     //     }
-        //     //
-        //     //     model: platformList.currentItem.model.buttons
-        //     //     delegate: FocusScope {
-        //     //         height: 48
-        //     //         width: ListView.view.width
-        //     //         RowLayout {
-        //     //             anchors.fill: parent
-        //     //             spacing: 12
-        //     //             Text {
-        //     //                 Layout.preferredWidth: 240
-        //     //                 Layout.maximumWidth: 240
-        //     //                 Layout.alignment: Qt.AlignLeft
-        //     //                 Layout.fillHeight: true
-        //     //                 text: modelData.display_name
-        //     //                 color: "white"
-        //     //                 font.pixelSize: 16
-        //     //                 font.family: Constants.regularFontFamily
-        //     //                 font.weight: Font.DemiBold
-        //     //                 verticalAlignment: Text.AlignVCenter
-        //     //             }
-        //     //
-        //     //             Text {
-        //     //                 Layout.preferredWidth: 240
-        //     //                 Layout.maximumWidth: 240
-        //     //                 Layout.alignment: Qt.AlignLeft
-        //     //                 Layout.fillHeight: true
-        //     //                 text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
-        //     //                 color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-        //     //                 font.pixelSize: 16
-        //     //                 font.family: Constants.regularFontFamily
-        //     //                 font.weight: Font.DemiBold
-        //     //                 verticalAlignment: Text.AlignVCenter
-        //     //             }
-        //     //             FirelightButton {
-        //     //                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-        //     //                 focus: true
-        //     //                 tooltipLabel: "Assign"
-        //     //                 flat: true
-        //     //
-        //     //                 KeyNavigation.right: resetButton
-        //     //
-        //     //                 Layout.preferredHeight: 42
-        //     //                 Layout.preferredWidth: height
-        //     //                 Layout.maximumWidth: height
-        //     //
-        //     //                 iconCode: "\ue3c9"
-        //     //
-        //     //                 onClicked: {
-        //     //                     dialog.buttons = []
-        //     //                     dialog.buttons = [{
-        //     //                         display_name: modelData.display_name,
-        //     //                         retropad_button: modelData.retropad_button
-        //     //                     }]
-        //     //                     dialog.open()
-        //     //                 }
-        //     //             }
-        //     //
-        //     //             FirelightButton {
-        //     //                 id: resetButton
-        //     //                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-        //     //                 tooltipLabel: "Reset to default"
-        //     //                 flat: true
-        //     //
-        //     //                 Layout.preferredHeight: 42
-        //     //                 Layout.preferredWidth: height
-        //     //                 Layout.maximumWidth: height
-        //     //
-        //     //                 iconCode: "\ue5d5"
-        //     //
-        //     //                 onClicked: {
-        //     //                     inputMapping.removeMapping(modelData.retropad_button)
-        //     //                     // dialog.buttons = []
-        //     //                     // dialog.buttons = [{
-        //     //                     //     display_name: modelData.display_name,
-        //     //                     //     retropad_button: modelData.retropad_button
-        //     //                     // }]
-        //     //                     // dialog.open()
-        //     //                 }
-        //     //             }
-        //     //
-        //     //             Item {
-        //     //                 Layout.fillHeight: true
-        //     //                 Layout.fillWidth: true
-        //     //             }
-        //     //
-        //     //         }
-        //     //     }
-        //     //
-        //     // }
-        // }
-
-        // Item {
-        //     Layout.fillHeight: true
-        //     Layout.fillWidth: true
-        //     Layout.horizontalStretchFactor: 1
-        // }
     }
 
     Component {

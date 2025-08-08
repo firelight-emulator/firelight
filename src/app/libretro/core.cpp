@@ -54,22 +54,25 @@ static int16_t inputStateCallback(unsigned port, unsigned device,
   // }
 
   if (device == RETRO_DEVICE_POINTER) {
+    return 0;
+    const auto pointerProvider = currentCore->getPointerInputProvider();
+    if (pointerProvider == nullptr) {
+      return 0;
+    }
+
     if (id == RETRO_DEVICE_ID_POINTER_X) {
-      return currentCore->getPointerInputProvider()->getPointerPosition().first;
+      return pointerProvider->getPointerPosition().first;
     }
     if (id == RETRO_DEVICE_ID_POINTER_Y) {
-      return currentCore->getPointerInputProvider()
-          ->getPointerPosition()
-          .second;
+      return pointerProvider->getPointerPosition().second;
     }
     if (id == RETRO_DEVICE_ID_POINTER_PRESSED) {
-      return currentCore->getPointerInputProvider()->isPressed();
+      return pointerProvider->isPressed();
     }
   }
 
   const auto controllerOpt =
-      currentCore->getRetropadProvider()->getRetropadForPlayerIndex(
-          port, currentCore->m_platformId);
+      currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
   if (!controllerOpt.has_value()) {
     return 0;
   }
@@ -79,22 +82,22 @@ static int16_t inputStateCallback(unsigned port, unsigned device,
   if (device == RETRO_DEVICE_ANALOG) {
     if (index == RETRO_DEVICE_INDEX_ANALOG_LEFT) {
       if (id == RETRO_DEVICE_ID_ANALOG_X) {
-        return controller->getLeftStickXPosition(currentCore->m_platformId);
+        return controller->getLeftStickXPosition(currentCore->m_platformId, 1);
       }
       if (id == RETRO_DEVICE_ID_ANALOG_Y) {
-        return controller->getLeftStickYPosition(currentCore->m_platformId);
+        return controller->getLeftStickYPosition(currentCore->m_platformId, 1);
       }
     } else if (index == RETRO_DEVICE_INDEX_ANALOG_RIGHT) {
       if (id == RETRO_DEVICE_ID_ANALOG_X) {
-        return controller->getRightStickXPosition(currentCore->m_platformId);
+        return controller->getRightStickXPosition(currentCore->m_platformId, 1);
       }
       if (id == RETRO_DEVICE_ID_ANALOG_Y) {
-        return controller->getRightStickYPosition(currentCore->m_platformId);
+        return controller->getRightStickYPosition(currentCore->m_platformId, 1);
       }
     }
   } else if (device == RETRO_DEVICE_JOYPAD) {
     return controller->isButtonPressed(
-        currentCore->m_platformId,
+        currentCore->m_platformId, 1,
         static_cast<firelight::libretro::IRetroPad::Input>(id));
   }
 
@@ -177,6 +180,10 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       if (descriptor.description == nullptr) {
         break;
       }
+
+      spdlog::info("Got input descriptor: port {}, device {}, index {}, id {}",
+                   descriptor.port, descriptor.device, descriptor.index,
+                   descriptor.id);
 
       inputDescriptors.emplace_back(descriptor);
 
@@ -300,8 +307,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
                                uint16_t strength) {
       const auto con =
-          currentCore->getRetropadProvider()->getRetropadForPlayerIndex(
-              port, currentCore->m_platformId);
+          currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
       if (!con.has_value()) {
         return true;
       }
