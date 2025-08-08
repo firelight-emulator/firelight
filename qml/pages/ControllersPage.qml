@@ -2,12 +2,15 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Shapes 1.8
 import QtQuick.Layouts
+import Firelight 1.0
 
 FocusScope {
     id: root
 
     property bool keyboardDragging: false
     property bool isDragging: false
+
+    property GamepadListModel gamepads: GamepadListModel {}
 
     signal editProfileButtonClicked(var name, var playerNumber)
 
@@ -39,17 +42,17 @@ FocusScope {
 
                         if (root.keyboardDragging) {
                             root.keyboardDragging = false
-                            let list = []
+                            let list = {}
                             for (let i = 0; i < visualModel.items.count; i++) {
                                 // console.log(visualModel.items.get(i).model.index)
-                                list.push(visualModel.items.get(i).model.index)
+                                list[i] = visualModel.items.get(i).model.index
                                 // visualModel.items.get(i).model.itemsIndex = i
                             }
 
                             // theAnimation.thingy = list
                             // theAnimation.start()
 
-                            controller_manager.updateControllerOrder(list)
+                            root.gamepads.changeGamepadOrder(list)
                             // visualModel.items.sort()
                         } else if (!root.keyboardDragging) {
                             root.keyboardDragging = true
@@ -153,7 +156,7 @@ FocusScope {
             Image {
                 id: controllerIcon
                 source: model.image_url
-                visible: model.model_name !== "Default"
+                visible: model.connected
                 fillMode: Image.PreserveAspectFit
                 width: 182
                 sourceSize.width: 182
@@ -168,7 +171,7 @@ FocusScope {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 font.family: Constants.regularFontFamily
-                visible: model.model_name === "Default"
+                visible: !model.connected
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -177,7 +180,7 @@ FocusScope {
                 id: editProfileButton
                 anchors.top: parent.bottom
                 anchors.topMargin: 16
-                visible: !root.keyboardDragging && !root.isDragging && model.model_name !== "Default"
+                visible: !root.keyboardDragging && !root.isDragging && model.connected
                 enabled: visible
                 focus: true
 
@@ -185,7 +188,7 @@ FocusScope {
 
                 onClicked: function () {
                     // profileDialog.open()
-                    root.StackView.view.pushItem(profilePage, {playerNumber: content.index + 1}, StackView.PushTransition)
+                    root.StackView.view.pushItem(profilePage, {playerNumber: content.index}, StackView.PushTransition)
                     // editProfileButtonClicked(model.model_name, content.index + 1)
                     // Router.doSomethingWith(editProfileButton, {playerNumber: content.index + 1})
                     // screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
@@ -234,17 +237,19 @@ FocusScope {
                     }
 
                     if (!dragArea.active) {
-                        let list = []
+                        let list = {}
                         for (let i = 0; i < visualModel.items.count; i++) {
                             // console.log(visualModel.items.get(i).model.index)
-                            list.push(visualModel.items.get(i).model.index)
+                            list[i] = visualModel.items.get(i).model.index
                             // visualModel.items.get(i).model.itemsIndex = i
                         }
+
+                        console.log(list)
 
                         // theAnimation.thingy = list
                         // theAnimation.start()
 
-                        controller_manager.updateControllerOrder(list)
+                        root.gamepads.changeGamepadOrder(list)
                         // visualModel.items.sort()
                     }
                 }
@@ -359,7 +364,7 @@ FocusScope {
     DelegateModel {
         id: visualModel
 
-        model: controller_model
+        model: root.gamepads
         delegate: dragDelegate
     }
 

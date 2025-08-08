@@ -1,5 +1,7 @@
 #pragma once
 
+#include "platforms/models/platform.hpp"
+
 #include <QAbstractListModel>
 #include <firelight/db/platform.hpp>
 
@@ -25,21 +27,12 @@ private:
   enum Roles {
     PlatformId = Qt::UserRole + 1,
     DisplayName,
-    IconUrl,
     IconName,
-    Buttons,
-    Sticks
+    NumControllerTypes,
+    ControllerTypeNames,
+    ControllerImages
   };
 
-  struct Item {
-    int platformId;
-    QString displayName;
-    QString iconUrl;
-    QString iconName;
-    QVector<QJsonObject> buttons;
-    QVector<QJsonObject> sticks;
-  };
-
-  QVector<Item> m_items;
+  QVector<platforms::Platform> m_items;
 };
 } // namespace firelight::gui

@@ -1,48 +1,56 @@
 #pragma once
+#include "input/gamepad_input.hpp"
+
 #include <functional>
 #include <map>
 #include <optional>
 #include <string>
-#include <firelight/libretro/retropad.hpp>
 
 namespace firelight::input {
-    class InputMapping {
-    public:
-        explicit InputMapping(std::function<void(InputMapping &)> syncCallback = nullptr);
+class InputMapping {
+public:
+  explicit InputMapping(
+      int id, int profileId, int platformId, int controllerType,
+      std::function<void(InputMapping &)> syncCallback = nullptr);
 
-        virtual ~InputMapping() = default;
+  virtual ~InputMapping() = default;
 
-        unsigned getId() const;
+  unsigned getId() const;
 
-        unsigned getControllerProfileId();
+  unsigned getControllerProfileId() const;
 
-        unsigned getPlatformId() const;
+  unsigned getPlatformId() const;
 
-        void setId(unsigned id);
+  unsigned getControllerType() const;
 
-        void setControllerProfileId(unsigned controllerProfileId);
+  void setId(unsigned id);
 
-        void setPlatformId(unsigned platformId);
+  void setControllerProfileId(unsigned controllerProfileId);
 
-        void addMapping(libretro::IRetroPad::Input input, libretro::IRetroPad::Input mappedInput);
+  void setPlatformId(unsigned platformId);
 
-        std::optional<libretro::IRetroPad::Input> getMappedInput(libretro::IRetroPad::Input input);
+  void setControllerType(int controllerType);
 
-        std::map<libretro::IRetroPad::Input, libretro::IRetroPad::Input> &getMappings();
+  void addMapping(GamepadInput input, GamepadInput mappedInput);
 
-        virtual void removeMapping(libretro::IRetroPad::Input input);
+  std::optional<GamepadInput> getMappedInput(GamepadInput input);
 
-        virtual std::string serialize();
+  std::map<GamepadInput, GamepadInput> &getMappings();
 
-        virtual void deserialize(const std::string &data);
+  virtual void removeMapping(GamepadInput input);
 
-        void sync();
+  virtual std::string serialize();
 
-    private:
-        std::function<void(InputMapping &)> m_syncCallback;
-        int m_id = 0;
-        int m_controllerProfileId = 0;
-        int m_platformId = 0;
-        std::map<libretro::IRetroPad::Input, libretro::IRetroPad::Input> m_mappings{};
-    };
-}
+  virtual void deserialize(const std::string &data);
+
+  void sync();
+
+private:
+  std::function<void(InputMapping &)> m_syncCallback;
+  int m_id = 0;
+  int m_controllerProfileId = 0;
+  int m_platformId = 0;
+  int m_controllerType = 0;
+  std::map<GamepadInput, GamepadInput> m_mappings{};
+};
+} // namespace firelight::input

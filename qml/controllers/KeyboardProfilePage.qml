@@ -23,11 +23,6 @@ FocusScope {
         platformId: platformList.currentItem.model.platform_id
     }
 
-    PlatformMetadata {
-        id: platformMetadata
-        platformId: platformList.currentItem.model.platform_id
-    }
-
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: 40

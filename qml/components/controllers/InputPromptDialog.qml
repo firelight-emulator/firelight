@@ -7,6 +7,8 @@ import Firelight 1.0
 FirelightDialog {
     id: root
 
+    required property GamepadStatus gamepad
+
     property var imageSourceUrl
     property var platformName
     property variant buttons: []
@@ -14,55 +16,76 @@ FirelightDialog {
     property int currentIndex: 0
     property bool canAcceptAxisInput: true
 
+    property int numButtons: 0
+
     showButtons: false
     closePolicy: Popup.NoAutoClose
 
+    signal mappingAdded(var original, var mapped)
+
     onAboutToShow: {
-        controller_manager.blockGamepadInput = true
         currentIndex = 0
+        numButtons = buttons.length
         frameAnimation.reset()
     }
 
     onOpened: function () {
         timer.start()
+        console.log(dialog.buttons.length)
+        console.log(dialog.currentIndex)
     }
 
     onClosed: function () {
         timer.stop()
-        controller_manager.blockGamepadInput = false
         dialog.buttons = []
     }
+
+    Connections {
+        target: gamepad
+        enabled: root.visible
+        function onInputChanged(input, activated) {
+            if (activated && root.canAcceptAxisInput) {
+                axisDebounceTimer.restart()
+                root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
+                if (root.buttons.length > root.currentIndex + 1) {
+                    root.currentIndex++
+                    timer.stop()
+                    frameAnimation.reset()
+                    timer.restart()
+                } else {
+                    root.accept()
+                }
+            }
+        }
+    }
+
+    // GamepadStatus {
+    //     id: thing
+    //     playerNumber: gamepad.playerNumber
+    //     onInputChanged: function(input, activated) {
+    //         if  (!root.visible) {
+    //             return
+    //         }
+    //         if (activated && root.canAcceptAxisInput) {
+    //             axisDebounceTimer.restart()
+    //             root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
+    //             if (root.buttons.length > root.currentIndex + 1) {
+    //                 root.currentIndex++
+    //                 timer.stop()
+    //                 frameAnimation.reset()
+    //                 timer.restart()
+    //             } else {
+    //                 root.accept()
+    //             }
+    //         }
+    //     }
+    // }
 
     Timer {
         id: axisDebounceTimer
         interval: 300
         running: false
         repeat: false
-    }
-
-    Connections {
-        target: controller_manager
-
-        function onRetropadInputStateChanged(player, input, activated) {
-            if (!dialog.visible) {
-                return
-            }
-            if (activated && !axisDebounceTimer.running) {
-                axisDebounceTimer.restart()
-                inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, input)
-                if (dialog.buttons.length > dialog.currentIndex + 1) {
-                    dialog.currentIndex++
-                    timer.stop()
-                    frameAnimation.reset()
-                    timer.restart()
-
-                } else {
-                    dialog.accept()
-                    // dialog.close()
-                    // saveMapping()
-                }
-            }
-        }
     }
 
     contentItem: ColumnLayout {
@@ -100,7 +123,7 @@ FirelightDialog {
         }
 
         Text {
-            text: dialog.buttons.length > 0 && dialog.currentIndex < dialog.buttons.length ? dialog.buttons[dialog.currentIndex].display_name : "Nothing"
+            text: root.numButtons > 0 && dialog.currentIndex < root.numButtons ? dialog.buttons[dialog.currentIndex].display_name : "Nothing"
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             color: ColorPalette.neutral200

@@ -23,8 +23,8 @@ ControllerManager::ControllerManager(
 void ControllerManager::setKeyboardRetropad(
     input::KeyboardInputHandler *keyboard) {
   m_controllers[0] = std::unique_ptr<SdlController>(keyboard);
-  m_controllers[0]->setControllerProfile(
-      m_controllerRepository.getControllerProfile("Keyboard", 0, 0, 0));
+  // m_controllers[0]->setControllerProfile(
+  // m_controllerRepository.getControllerProfile("Keyboard", 0, 0, 0));
   m_numControllers++;
   emit controllerConnected(1, "Keyboard",
                            ControllerIcons::sourceUrlFromType(KEYBOARD));
@@ -332,18 +332,11 @@ void ControllerManager::refreshControllerList() {
 }
 
 std::optional<libretro::IRetroPad *>
-ControllerManager::getRetropadForPlayerIndex(const int t_player,
-                                             const int platformId) {
+ControllerManager::getRetropadForPlayerIndex(const int t_player) {
   const auto controller = getControllerForPlayerIndex(t_player);
   // if (t_player == 0 && !controller && m_keyboard) {
   //   return m_keyboard;
   // }
-
-  if (controller) {
-    (*controller)
-        ->setActiveMapping(m_controllerRepository.getInputMapping(
-            (*controller)->getProfileId(), platformId));
-  }
 
   return controller;
 }
@@ -353,13 +346,6 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
   // InstanceID refers to a specific controller for the duration of its
   // session
 
-  for (int i = 0; i < m_controllers.max_size(); ++i) {
-    if (m_controllers[i] != nullptr &&
-        m_controllers[i]->getDeviceIndex() == t_deviceIndex) {
-      return;
-    }
-  }
-
   auto controller = SDL_GameControllerOpen(t_deviceIndex);
   if (controller == nullptr) {
     return;
@@ -368,27 +354,11 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
   // TODO: Check the repository for known controller types
   // Get the default profile for the controller type
   // If it doesn't exist, create a new one
-  const auto profile = m_controllerRepository.getControllerProfile(
-      SDL_GameControllerName(controller),
-      SDL_GameControllerGetVendor(controller),
-      SDL_GameControllerGetProduct(controller),
-      SDL_GameControllerGetProductVersion(controller));
-
-  // std::shared_ptr<input::ControllerProfile> profile;
-  // if (info) {
-  //   profile =
-  //   m_controllerRepository.getControllerProfile(info->defaultProfileId);
-  // } else {
-  //   auto newInfo = input::ControllerInfo{};
-  //   newInfo.name = SDL_GameControllerName(controller);
-  //   newInfo.vendorId = SDL_GameControllerGetVendor(controller);
-  //   newInfo.productId = SDL_GameControllerGetProduct(controller);
-  //   newInfo.productVersion = SDL_GameControllerGetProductVersion(controller);
-  //
-  //   m_controllerRepository.addControllerInfo(newInfo);
-  //   profile =
-  //   m_controllerRepository.getControllerProfile(newInfo.defaultProfileId);
-  // }
+  // const auto profile = m_controllerRepository.getControllerProfile(
+  //     SDL_GameControllerName(controller),
+  //     SDL_GameControllerGetVendor(controller),
+  //     SDL_GameControllerGetProduct(controller),
+  //     SDL_GameControllerGetProductVersion(controller));
 
   // TODO: Check if any controllers have the same joystick id.
 
@@ -409,45 +379,18 @@ void ControllerManager::openControllerWithDeviceIndex(int32_t t_deviceIndex) {
     if (m_controllers[i] == nullptr) {
       SDL_GameControllerSetPlayerIndex(controller, i);
       m_numControllers++;
-      m_controllers[i] =
-          std::make_unique<SdlController>(controller, t_deviceIndex);
-      m_controllers[i]->setControllerProfile(profile);
+      m_controllers[i] = std::make_unique<SdlController>(controller);
+      // m_controllers[i]->setControllerProfile(profile);
       const auto name = m_controllers[i]->getName();
       const auto type = m_controllers[i]->getType();
+
+      m_controllers[i]->setShortcutMapping(
+          std::make_shared<ShortcutMapping>(-1, -1));
 
       emit controllerConnected(i + 1, QString::fromStdString(name),
                                ControllerIcons::sourceUrlFromType(type));
       break;
     }
-
-    // if (m_controllers[i]->getType() == KEYBOARD) {
-    //   for (int j = i; j < m_controllers.max_size(); ++j) {
-    //     if (m_controllers[j] == nullptr) {
-    //       m_controllers[j] = std::move(m_controllers[i]);
-    //       m_controllers[j]->setPlayerIndex(j);
-    //     }
-    //   }
-    // }
-    // if (m_controllers[i] == nullptr) {
-    //   if (m_keyboardPlayerIndex == i) {
-    //     for (int j = 0; j < m_controllers.max_size(); ++j) {
-    //       if (m_controllers[j] == nullptr) {
-    //         m_keyboardPlayerIndex = j;
-    //       }
-    //     }
-    //   }
-    //   SDL_GameControllerSetPlayerIndex(controller, i);
-    //
-    //   m_numControllers++;
-    //   m_controllers[i] =
-    //       std::make_unique<SdlController>(controller, t_deviceIndex);
-    //   m_controllers[i]->setControllerProfile(profile);
-    //   const auto name = m_controllers[i]->getName();
-    //   const auto type = m_controllers[i]->getType();
-    //
-    //   emit controllerConnected(i + 1, QString::fromStdString(name),
-    //   ControllerIcons::sourceUrlFromType(type)); break;
-    // }
   }
 }
 

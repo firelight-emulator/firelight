@@ -7,11 +7,17 @@ import Firelight 1.0
 FocusScope {
     id: root
 
-    required property InputMapping inputMapping
+    required property GamepadStatus gamepad
+
+    required property var platformId
+    required property var profileId
+    property var controllerType: 1
+
     required property var platformMetadataModel
     property var inputMappingsModel: InputMappingsModel {
-        profileId: 2
-        platformId: 1
+        profileId: root.profileId
+        platformId: root.platformId
+        controllerTypeId: root.controllerType
     }
 
     FirelightDialog {
@@ -24,17 +30,40 @@ FocusScope {
         showButtons: true
 
         onAccepted: function () {
-            dialog.buttons = platformMetadataModel.buttons
+            dialog.buttons = []
+            for (var i = 0; i < buttonList.count; ++i) {
+                dialog.buttons.push({
+                    display_name: buttonList.model.index(i, 0).data(258),
+                    retropad_button: buttonList.model.index(i, 0).data(257)
+                })
+            }
+            // dialog.buttons = platformMetadataModel.buttons
             dialog.currentIndex = 0
             dialog.open()
         }
     }
 
+    FirelightDialog {
+            id: resetAllDialog
+
+            text: "You're about to walk through assigning an input on your controller to each " + platformMetadataModel.display_name + " input.\n\n Continue?"
+            showButtons: true
+
+            onAccepted: function () {
+                inputMappingsModel.resetAllToDefault()
+            }
+        }
+
     InputPromptDialog {
         id: dialog
         // imageSourceUrl: platformList.currentItem.model.icon_url
-        imageSourceUrl: "file:///C:/Users/alexs/Downloads/Full Color Controllers PNGs/PNGs/Nintendo/Nintendo Gameboy 600dpi.png"
+        imageSourceUrl: platformMetadataModel.controller_images[root.controllerType - 1]
         platformName: platformMetadataModel.display_name
+        gamepad: root.gamepad
+
+        onMappingAdded: function(original, mapped) {
+            inputMappingsModel.setMapping(original, mapped)
+        }
     }
 
     ListView {
@@ -45,7 +74,7 @@ FocusScope {
         focus: true
 
 
-        highlightFollowsCurrentItem: false
+        // highlightFollowsCurrentItem: true
         keyNavigationEnabled: true
         highlightMoveDuration: 80
         highlightMoveVelocity: -1
@@ -64,15 +93,85 @@ FocusScope {
             spacing: 16
             // height: 200
 
+            TabBar {
+                background: Rectangle {
+                    color: ColorPalette.neutral800
+                    opacity: 0.4
+                    radius: 8
+                    border.color: ColorPalette.neutral500
+                }
+                Layout.alignment: Qt.AlignHCenter
+                Repeater {
+                    model: root.platformMetadataModel.num_controller_types
+                    delegate: TabButton {
+                        required property var modelData
+
+                        background: Rectangle {
+                            color: root.controllerType === modelData + 1 ? ColorPalette.neutral700 : ColorPalette.neutral800
+                            opacity: 0.5
+                            topLeftRadius: modelData === 0 ? 8 : 0
+                            topRightRadius: modelData === root.platformMetadataModel.num_controller_types - 1 ? 8 : 0
+                            bottomLeftRadius: modelData === 0 ? 8 : 0
+                            bottomRightRadius: modelData === root.platformMetadataModel.num_controller_types - 1 ? 8 : 0
+                        }
+
+                        contentItem: Text {
+                            text: root.platformMetadataModel.controller_type_names[modelData]
+                            color: "white"
+                            font.pixelSize: 15
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: 16
+                            rightPadding: 16
+                            topPadding: 4
+                            bottomPadding: 4
+                        }
+
+                        onClicked: {
+                            root.controllerType = modelData + 1
+                        }
+                    }
+                }
+            }
+
+            // RowLayout {
+            //     Layout.fillHeight: true
+            //     spacing: 16
+            //     focus: true
+            //     Item {
+            //         Layout.fillHeight: true
+            //         Layout.fillWidth: true
+            //     }
+            //
+            //     Repeater {
+            //         model: root.platformMetadataModel.num_controller_types
+            //         delegate: FirelightButton {
+            //             id: controllerTypeButton
+            //             required property var modelData
+            //             label: modelData
+            //             onClicked: {
+            //                 root.controllerType = modelData + 1
+            //             }
+            //         }
+            //     }
+            //     Item {
+            //         Layout.fillHeight: true
+            //         Layout.fillWidth: true
+            //     }
+            // }
+
             Image {
                 id: imagey
-                Layout.maximumHeight: 240
+                Layout.maximumHeight: 360
+                Layout.maximumWidth: 360
                 // Layout.preferredHeight: 420
                 // Layout.preferredWidth: 420
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 // source: root.platformMetadataModel.icon_url
-                source: "file:///C:/Users/alexs/Downloads/Full Color Controllers PNGs/PNGs/Nintendo/Nintendo Gameboy 600dpi.png"
-                sourceSize.height: 320
+                source: platformMetadataModel.controller_images[root.controllerType - 1]
+                sourceSize.height: 360
                 mipmap: true
                 fillMode: Image.PreserveAspectFit
             }
@@ -104,7 +203,7 @@ FocusScope {
                     Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
 
                     onClicked: function () {
-                        confirmDialog.open()
+                        resetAllDialog.open()
                     }
                 }
             }
@@ -133,6 +232,35 @@ FocusScope {
                     NumberAnimation {
                         duration: 64
                         easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+            ContextMenu.menu: RightClickMenu {
+                RightClickMenuItem {
+                    text: "Assign"
+
+                    onTriggered: {
+                      dialog.buttons = []
+                      dialog.buttons = [{
+                          display_name: model.originalInputName,
+                          retropad_button: model.originalInput
+                      }]
+                      dialog.open()
+                    }
+                }
+
+                RightClickMenuItem {
+                    text: "Reset to default"
+
+                    onTriggered: {
+                      inputMappingsModel.resetToDefault(model.originalInput)
+                    }
+                }
+
+                RightClickMenuItem {
+                    text: "Clear mapping"
+                    onTriggered: {
+                          inputMappingsModel.clearMapping(model.originalInput)
                     }
                 }
             }
@@ -166,21 +294,38 @@ FocusScope {
                     verticalAlignment: Text.AlignVCenter
                 }
 
-                Text {
+                Row {
                     Layout.preferredWidth: 240
                     Layout.maximumWidth: 240
                     Layout.alignment: Qt.AlignLeft
                     Layout.fillHeight: true
-                    // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
-                    // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-                    font.pixelSize: 15
-                    color: model.hasConflict ? "yellow" : (model.isDefault ? ColorPalette.neutral400 : "white")
-                    text: model.mappedInputName + (model.isDefault ? " (default)" : "")
 
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.DemiBold
-                    verticalAlignment: Text.AlignVCenter
+                    Text {
+                        height: parent.height
+                        // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
+                        // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
+                        font.pixelSize: 15
+                        color: model.hasConflict ? "yellow" : (!model.hasMapping ? ColorPalette.neutral400 : "white")
+                        text: model.hasMapping ? model.mappedInputName : "(Not mapped)"
+
+                        font.family: Constants.regularFontFamily
+                        font.weight: !model.hasMapping ? Font.Medium : Font.DemiBold
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        height: parent.height
+                        visible: model.isDefault
+                        font.pixelSize: 15
+                        color: ColorPalette.neutral400
+                        text: " (Default)"
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.Medium
+                        verticalAlignment: Text.AlignVCenter
+                    }
                 }
+
+
                 Item {
                     Layout.preferredHeight: 32
                     Layout.preferredWidth: 32
@@ -200,24 +345,25 @@ FocusScope {
                     Layout.fillHeight: true
                 }
 
-                Item {
-                    Layout.preferredHeight: parent.height
-                    Layout.preferredWidth: parent.height
-                    Layout.alignment: Qt.AlignRight
-
-                    FirelightButton {
-                        id: dotsButton
-                        anchors.centerIn: parent
-                        circle: true
-                        flat: true
-                        iconCode: "\ue5d4"
-                        visible: myDelegate.hovered || (!InputMethodManager.usingMouse && myDelegate.activeFocus)
-
-                        onClicked: function () {
-                            console.log("hi")
-                        }
-                    }
-                }
+                // Item {
+                //     Layout.preferredHeight: parent.height
+                //     Layout.preferredWidth: parent.height
+                //     Layout.alignment: Qt.AlignRight
+                //
+                //     FirelightButton {
+                //         id: dotsButton
+                //         anchors.centerIn: parent
+                //         circle: true
+                //         flat: true
+                //         iconCode: "\ue5d4"
+                //         visible: myDelegate.hovered || (!InputMethodManager.usingMouse && myDelegate.activeFocus)
+                //
+                //         onClicked: function () {
+                //             myDelegate.ContextMenu.menu.popup(dotsButton, 0, 0)
+                //             console.log("hi")
+                //         }
+                //     }
+                // }
 
 
 
