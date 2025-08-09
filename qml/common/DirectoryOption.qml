@@ -16,12 +16,12 @@ Button {
 
     onValueChanged: function () {
         let folder = root.value
-        if (folder.startsWith("file:///")) {
+        if (folder.startsWith("file://")) {
             folderDialog.currentFolder = folder
             return
         }
 
-        folder = "file:///" + folder
+        folder = "file://" + folder
         folderDialog.currentFolder = folder
     }
 
@@ -78,7 +78,7 @@ Button {
         }
 
         Text {
-            text: root.value.startsWith("file:///") ? root.value.replace("file:///", "") : root.value
+            text: root.value.startsWith("file://") ? root.value.replace("file://", "") : root.value
             font.pixelSize: 16
             Layout.alignment: Qt.AlignRight
             font.family: Constants.regularFontFamily
