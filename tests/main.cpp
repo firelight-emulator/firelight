@@ -1,10 +1,10 @@
-#include <QGuiApplication>
+#include <QApplication>
 #include <gtest/gtest.h>
 #include <QtQuickTest>
 #include <QTest>
 
 int main(int argc, char **argv) {
-  QGuiApplication app(argc, argv);
+  QApplication app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
   auto result = RUN_ALL_TESTS();
   //
@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   // view.show();
 
   // Enter the Qt event loop to run QML tests
-  // QGuiApplication::exec();
+  // QApplication::exec();
   // QUICK_TEST_MAIN(example);
 
   return result;

@@ -10,9 +10,9 @@ class EventEmitter : public QObject {
 public:
   Q_INVOKABLE void emitKeyEvent(int key) {
     QMetaObject::invokeMethod(QApplication::instance(), [key]() {
-                QApplication::postEvent(QGuiApplication::focusWindow(),
+                QApplication::postEvent(QApplication::focusWindow(),
                   new QKeyEvent(QEvent::KeyPress, key, Qt::KeyboardModifier::NoModifier));
-                QApplication::postEvent(QGuiApplication::focusWindow(),
+                QApplication::postEvent(QApplication::focusWindow(),
                   new QKeyEvent(QEvent::KeyRelease, key, Qt::KeyboardModifier::NoModifier));
               }, Qt::QueuedConnection);
   }

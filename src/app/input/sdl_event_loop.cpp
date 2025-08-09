@@ -75,7 +75,7 @@ void SdlEventLoop::processEvents() const {
           break;
         }
 
-        if (QGuiApplication::focusWindow()) {
+        if (QApplication::focusWindow()) {
           Qt::Key key;
 
           auto button = ev.cbutton.button;
@@ -103,7 +103,7 @@ void SdlEventLoop::processEvents() const {
               QApplication::instance(),
               [key]() {
                 QApplication::postEvent(
-                    QGuiApplication::focusWindow(),
+                    QApplication::focusWindow(),
                     new QKeyEvent(QEvent::KeyRelease, key,
                                   Qt::KeyboardModifier::NoModifier));
               },
@@ -111,7 +111,7 @@ void SdlEventLoop::processEvents() const {
 
           // // TODO: I think it complains about this.
           // QApplication::postEvent(
-          //   QGuiApplication::focusWindow(),
+          //   QApplication::focusWindow(),
           //   new QKeyEvent(QEvent::KeyRelease, key,
           //   Qt::KeyboardModifier::NoModifier));
         }
@@ -131,7 +131,7 @@ void SdlEventLoop::processEvents() const {
           break;
         }
 
-        if (QGuiApplication::focusWindow()) {
+        if (QApplication::focusWindow()) {
           Qt::Key key;
 
           auto button = ev.cbutton.button;
@@ -159,14 +159,14 @@ void SdlEventLoop::processEvents() const {
               QApplication::instance(),
               [key]() {
                 QApplication::postEvent(
-                    QGuiApplication::focusWindow(),
+                    QApplication::focusWindow(),
                     new QKeyEvent(QEvent::KeyPress, key,
                                   Qt::KeyboardModifier::NoModifier));
               },
               Qt::QueuedConnection);
 
           // QApplication::postEvent(
-          //   QGuiApplication::focusWindow(), new QKeyEvent(QEvent::KeyPress,
+          //   QApplication::focusWindow(), new QKeyEvent(QEvent::KeyPress,
           //   key, Qt::KeyboardModifier::NoModifier));
         }
 

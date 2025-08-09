@@ -87,9 +87,9 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::info);
   }
 
-  QGuiApplication::setOrganizationDomain("firelight-emulator.com");
-  QGuiApplication::setDesktopFileName("firelight");
-  QGuiApplication::setApplicationName("Firelight");
+  QApplication::setOrganizationDomain("firelight-emulator.com");
+  QApplication::setDesktopFileName("firelight");
+  QApplication::setApplicationName("Firelight");
 
   QSettings::setDefaultFormat(QSettings::Format::IniFormat);
 
@@ -103,9 +103,9 @@ int main(int argc, char *argv[]) {
   format.setSwapInterval(0);
   QSurfaceFormat::setDefaultFormat(format);
 
-  QGuiApplication app(argc, argv);
+  QApplication app(argc, argv);
 
-  std::signal(SIGINT, [](int signal) { QGuiApplication::quit(); });
+  std::signal(SIGINT, [](int signal) { QApplication::quit(); });
 
   auto docsPath =
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
@@ -415,9 +415,9 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("sfx_player",
                                            new firelight::audio::SfxPlayer());
 
-  int exitCode = QGuiApplication::exec();
+  int exitCode = QApplication::exec();
 
-  spdlog::info("Exiting QGuiApplication");
+  spdlog::info("Exiting QApplication");
 
   sdlEventLoop.stopProcessing();
   //
