@@ -6,7 +6,6 @@
 #include "discord/discord_manager.hpp"
 #include "emulator_config_manager.hpp"
 #include "firelight/userdata_database.hpp"
-#include "input/controller_manager.hpp"
 #include "mods/mod_repository.hpp"
 #include "rcheevos/ra_client.hpp"
 #include "saves/save_manager.hpp"
@@ -71,7 +70,6 @@ public:
   static discord::DiscordManager *getDiscordManager();
 
 private:
-  static input::ControllerManager *m_controllerManager;
   static saves::SaveManager *m_saveManager;
   static db::IUserdataDatabase *m_userdataDatabase;
   static db::ILibraryDatabase *m_libraryDatabase;
@@ -80,7 +78,6 @@ private:
   static gui::GameImageProvider *m_gameImageProvider;
   static library::IUserLibrary *m_userLibrary;
   static activity::IActivityLog *m_activityLog;
-  static input::IControllerRepository *m_controllerRepository;
   static std::string m_coreSystemDirectory;
   static mods::IModRepository *m_modDatabase;
   static settings::IEmulationSettingsManager *m_emulationSettingsManager;

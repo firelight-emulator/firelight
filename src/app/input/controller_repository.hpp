@@ -2,7 +2,6 @@
 
 #include "input2/device_identifier.hpp"
 #include "input2/device_info.hpp"
-#include "profiles/controller_profile.hpp"
 #include "profiles/input_mapping.hpp"
 #include "profiles/keyboard_mapping.hpp"
 #include <input2/gamepad_profile.hpp>

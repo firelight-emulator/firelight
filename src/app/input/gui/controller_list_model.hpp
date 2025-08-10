@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../controller_manager.hpp"
 #include "event_dispatcher.hpp"
 #include "input2/input_service.hpp"
 
@@ -33,6 +32,7 @@ private:
   struct Item {
     int playerIndex;
     bool connected;
+    int profileId;
     QString modelName;
     QString manufacturerName;
     bool wired;
@@ -42,6 +42,7 @@ private:
   enum Roles {
     PlayerIndex = Qt::UserRole + 1,
     Connected,
+    ProfileId,
     ModelName,
     ManufacturerName,
     Wired,

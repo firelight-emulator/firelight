@@ -22,14 +22,25 @@ struct GamepadInputEvent {
   bool pressed;
 };
 
+struct ShortcutToggledEvent {
+  int playerIndex;
+  Shortcut shortcut;
+};
+
 class InputService : public libretro::IRetropadProvider {
 public:
+  static std::map<Shortcut, std::string> listShortcuts() {
+    return {{OpenRewindMenu, "Open rewind menu"},
+            {HoldFastForward, "Fast-forward (hold)"},
+            {HoldRewind, "Rewind (hold)"}};
+  }
+
   static void setInstance(InputService *instance) { s_instance = instance; }
   static InputService *instance() { return s_instance; }
 
   ~InputService() override = default;
   virtual std::vector<std::shared_ptr<IGamepad>> listGamepads() = 0;
-  virtual std::shared_ptr<IGamepad> getPlayerGamepad(int playerNumber) = 0;
+  virtual std::shared_ptr<IGamepad> getPlayerGamepad(int playerIndex) = 0;
 
   virtual std::shared_ptr<GamepadProfile> getProfile(int id) = 0;
 

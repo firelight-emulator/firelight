@@ -31,4 +31,12 @@ void GamepadProfile::addMapping(const std::shared_ptr<InputMapping> &mapping) {
   m_mappings.emplace_back(mapping);
 }
 
+void GamepadProfile::setShortcutMapping(
+    std::shared_ptr<ShortcutMapping> mapping) {
+  m_shortcutMapping = std::move(mapping);
+}
+std::shared_ptr<ShortcutMapping> GamepadProfile::getShortcutMapping() const {
+  return m_shortcutMapping;
+}
+
 } // namespace firelight::input

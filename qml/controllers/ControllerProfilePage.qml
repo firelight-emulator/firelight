@@ -9,25 +9,19 @@ FocusScope {
 
     // property alias controllerProfileId: gamepadProfile.profileId
     required property var playerNumber
+    required property var profileId
 
     GamepadStatus {
         id: gamepadStatus
         playerNumber: root.playerNumber
     }
 
-    FirelightDialog {
-        id: confirmDialog
+    GamepadProfile {
+        id: profile
+        profileId: root.profileId
 
-        property var buttonList: []
-        property var currentIndex: 0
-
-        text: "You're about to walk through assigning an input on your controller to each " + platformList.currentItem.model.display_name + " input.\n\n Continue?"
-        showButtons: true
-
-        onAccepted: function () {
-            dialog.buttons = platformList.currentItem.model.buttons
-            dialog.currentIndex = 0
-            dialog.open()
+        Component.onCompleted: {
+            console.log(profile.name)
         }
     }
 
@@ -60,12 +54,11 @@ FocusScope {
 
                  ButtonGroup.group: menuButtonGroup
 
-                 // onToggled: {
-                 //     if (checked) {
-                 //         ListView.view.currentIndex = index
-                 //         col.forceActiveFocus()
-                 //     }
-                 // }
+                 onToggled: {
+                     if (checked) {
+                         theStack.replaceCurrentItem(shortcutsList, {}, StackView.Immediate)
+                     }
+                 }
              }
             Rectangle {
                 Layout.fillWidth: true
@@ -161,24 +154,161 @@ FocusScope {
     Component {
         id: shortcutsList
         ListView {
-            model: ListModel {
-                ListElement { name: "A"; key: "A" }
-                ListElement { name: "B"; key: "B" }
-                ListElement { name: "X"; key: "X" }
-                ListElement { name: "Y"; key: "Y" }
-                ListElement { name: "Start"; key: "Start" }
-                ListElement { name: "Select"; key: "Select" }
-                ListElement { name: "Left Shoulder"; key: "LeftShoulder" }
-                ListElement { name: "Right Shoulder"; key: "RightShoulder" }
-                ListElement { name: "Left Stick"; key: "LeftStick" }
-                ListElement { name: "Right Stick"; key: "RightStick" }
+            id: shortcutsListView
+            ShortcutInputPromptDialog {
+                id: shortcutDialog
+                shortcutName: ""
+                shortcut: 0
+                gamepad: gamepadStatus
+
+                onMappingAdded: function(shortcut, modifiers, input) {
+                    shortcutsListView.model.setMapping(shortcut, modifiers, input);
+                }
             }
+            header: Text {
+                text: "Shortcuts"
+                color: "white"
+                font.pixelSize: 20
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                verticalAlignment: Text.AlignVCenter
+                padding: 16
+            }
+            model: profile.shortcutsModel
             delegate: Button {
-                required property var model
-                text: model.name
-                width: parent.width
-                height: 40
-            }
+              id: myDelegate
+              required property var model
+              required property var index
+              property bool showGlobalCursor: true
+              height: 60
+              width: ListView.view.width
+              hoverEnabled: true
+              background: Rectangle {
+                  color: ColorPalette.neutral300
+                  radius: 8
+                  border.color: ColorPalette.neutral500
+                  opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.14 : 0
+
+                  Behavior on opacity {
+                      NumberAnimation {
+                          duration: 64
+                          easing.type: Easing.InOutQuad
+                      }
+                  }
+              }
+              ContextMenu.menu: RightClickMenu {
+                  RightClickMenuItem {
+                      text: "Assign"
+
+                      onTriggered: {
+                          shortcutDialog.shortcut = model.shortcut
+                          shortcutDialog.shortcutName = model.name
+                          shortcutDialog.open()
+                        // dialog.buttons = []
+                        // dialog.buttons = [{
+                        //     display_name: model.originalInputName,
+                        //     retropad_button: model.originalInput
+                        // }]
+                        // dialog.open()
+                      }
+                  }
+
+                  // RightClickMenuItem {
+                  //     text: "Reset to default"
+                  //
+                  //     // onTriggered: {
+                  //     //   inputMappingsModel.resetToDefault(model.originalInput)
+                  //     // }
+                  // }
+
+                  RightClickMenuItem {
+                      text: "Clear mapping"
+                      onTriggered: {
+                            model.hasMapping = false
+                      }
+                  }
+              }
+              onClicked: function() {
+                  ListView.view.currentIndex = index;
+              }
+              onDoubleClicked: function() {
+                  shortcutDialog.shortcut = model.shortcut
+                  shortcutDialog.shortcutName = model.name
+                  shortcutDialog.open()
+              }
+              contentItem: RowLayout {
+                  spacing: 12
+                  Item {
+                      Layout.fillHeight: true
+                      Layout.preferredWidth: 16
+                  }
+                  Text {
+                      Layout.preferredWidth: 240
+                      Layout.maximumWidth: 240
+                      Layout.alignment: Qt.AlignLeft
+                      Layout.fillHeight: true
+                      text: model.name
+                      color: "white"
+                      font.pixelSize: 15
+                      font.family: Constants.regularFontFamily
+                      font.weight: Font.DemiBold
+                      verticalAlignment: Text.AlignVCenter
+                  }
+
+                  Row {
+                      Layout.preferredWidth: 240
+                      Layout.maximumWidth: 240
+                      Layout.alignment: Qt.AlignLeft
+                      Layout.fillHeight: true
+
+                      Repeater {
+                          model: myDelegate.model.modifierNames
+                          delegate: Text {
+                              height: parent.height
+                              text: modelData + " + "
+                              color: "white"
+                              font.pixelSize: 15
+                              font.family: Constants.regularFontFamily
+                              font.weight: Font.DemiBold
+                              verticalAlignment: Text.AlignVCenter
+                          }
+                      }
+
+                      Text {
+                          height: parent.height
+                          // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
+                          // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
+                          font.pixelSize: 15
+                          color: model.hasConflict ? "yellow" : (!model.hasMapping ? ColorPalette.neutral400 : "white")
+                          text: model.hasMapping ? model.inputName : "(Not mapped)"
+
+                          font.family: Constants.regularFontFamily
+                          font.weight: !model.hasMapping ? Font.Medium : Font.DemiBold
+                          verticalAlignment: Text.AlignVCenter
+                      }
+                  }
+
+
+                  Item {
+                      Layout.preferredHeight: 32
+                      Layout.preferredWidth: 32
+                      Layout.alignment: Qt.AlignVCenter
+
+                      FLIcon {
+                          icon: "bar-chart"
+                          color: "yellow"
+                          anchors.fill: parent
+                          size: height
+                          visible: model.hasConflict
+                      }
+                  }
+
+                  Item {
+                      Layout.fillWidth: true
+                      Layout.fillHeight: true
+                  }
+              }
+          }
         }
     }
 

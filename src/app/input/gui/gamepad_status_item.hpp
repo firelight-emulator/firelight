@@ -5,6 +5,8 @@
 
 #include "../../manager_accessor.hpp"
 
+#include <input2/gamepad.hpp>
+
 namespace firelight::input {
 class GamepadStatusItem : public QQuickItem, public ManagerAccessor {
   Q_OBJECT
@@ -35,6 +37,8 @@ public:
   QVariantMap getInputLabels() const;
 
   int getProfileId() const;
+
+  Q_INVOKABLE bool isButtonPressed(int input) const;
 
 signals:
   void playerNumberChanged();

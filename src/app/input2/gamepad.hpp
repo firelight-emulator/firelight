@@ -3,7 +3,6 @@
 #include <string>
 
 #include "input/gamepad_type.hpp"
-#include "input/profiles/controller_profile.hpp"
 #include "input/profiles/input_mapping.hpp"
 #include "input/shortcuts.hpp"
 #include "input2/gamepad_profile.hpp"
@@ -15,7 +14,9 @@ public:
 
   virtual void setProfile(const std::shared_ptr<GamepadProfile> &profile) = 0;
 
-  virtual std::vector<Shortcut> getToggledShortcuts(int button) = 0;
+  virtual std::vector<Shortcut> getToggledShortcuts(GamepadInput input) = 0;
+
+  virtual int16_t evaluateRawInput(const GamepadInput input) const = 0;
 
   virtual std::string getName() const = 0;
 

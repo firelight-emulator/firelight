@@ -134,5 +134,12 @@ int GamepadStatusItem::getProfileId() const {
   return 0;
   // return m_controller->getProfileId();
 }
+bool GamepadStatusItem::isButtonPressed(int input) const {
+  if (!m_controller) {
+    return false;
+  }
+
+  return m_controller->evaluateRawInput(static_cast<GamepadInput>(input));
+}
 } // namespace firelight::input
 // firelight

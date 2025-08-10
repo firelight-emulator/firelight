@@ -188,7 +188,7 @@ FocusScope {
 
                 onClicked: function () {
                     // profileDialog.open()
-                    root.StackView.view.pushItem(profilePage, {playerNumber: content.index}, StackView.PushTransition)
+                    root.StackView.view.pushItem(profilePage, {playerNumber: content.index, profileId: content.model.profile_id}, StackView.PushTransition)
                     // editProfileButtonClicked(model.model_name, content.index + 1)
                     // Router.doSomethingWith(editProfileButton, {playerNumber: content.index + 1})
                     // screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
@@ -446,7 +446,6 @@ FocusScope {
         Component {
             id: profilePage
             ControllerProfilePage {
-                playerNumber: 1
             }
         }
 

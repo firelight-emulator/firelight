@@ -366,6 +366,11 @@ void SDLInputService::run() {
                                ? sdlToGamepadInputs.at(ev.cbutton.button)
                                : None;
 
+        for (const auto shortcut : gamepad->getToggledShortcuts(input)) {
+          EventDispatcher::instance().publish(ShortcutToggledEvent{
+              .playerIndex = gamepad->getPlayerIndex(), .shortcut = shortcut});
+        }
+
         EventDispatcher::instance().publish(GamepadInputEvent{
             .playerIndex = gamepad->getPlayerIndex(),
             .input = input,

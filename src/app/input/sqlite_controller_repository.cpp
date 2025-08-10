@@ -1,6 +1,7 @@
 #include "sqlite_controller_repository.hpp"
 
 #include "platforms/platform_service.hpp"
+#include "profiles/shortcut_mapping.hpp"
 
 #include <QDateTime>
 #include <QSqlError>
@@ -40,6 +41,18 @@ SqliteControllerRepository::SqliteControllerRepository(QString dbFilePath)
   if (!createMappings2.exec()) {
     spdlog::error("Table creation failed: {}",
                   createMappings2.lastError().text().toStdString());
+  }
+
+  QSqlQuery createShortcuts(db);
+  createShortcuts.prepare("CREATE TABLE IF NOT EXISTS shortcutsv2("
+                          "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                          "profile_id INTEGER NOT NULL UNIQUE,"
+                          "mapping_data TEXT,"
+                          "created_at INTEGER NOT NULL);");
+
+  if (!createShortcuts.exec()) {
+    spdlog::error("Table creation failed: {}",
+                  createShortcuts.lastError().text().toStdString());
   }
 
   QSqlQuery deviceInfo(db);
@@ -219,50 +232,69 @@ SqliteControllerRepository::getProfile(const int id) {
     }
   }
 
-  // QSqlQuery mappingsQuery(getDatabase());
-  // mappingsQuery.prepare(
-  //     "SELECT * FROM mappingsv2 WHERE profile_id = :profileId");
-  // mappingsQuery.bindValue(":profileId", profile->getId());
-  //
-  // if (!mappingsQuery.exec()) {
-  //   spdlog::error("Failed to fetch mappings for profile ID {}: {}",
-  //                 profile->getId(),
-  //                 mappingsQuery.lastError().text().toStdString());
-  //   return nullptr;
-  // }
-  //
-  // while (mappingsQuery.next()) {
-  //   const auto mappingId = mappingsQuery.value("id").toInt();
-  //
-  //   // TODO: How to make sure we get mapping for every platform?
-  //
-  //   bool found = false;
-  //   for (const auto &m : m_inputMappings) {
-  //     if (m->getId() == mappingId) {
-  //       profile->addMapping(m);
-  //       found = true;
-  //       break;
-  //     }
-  //   }
-  //
-  //   if (found) {
-  //     continue;
-  //   }
-  //
-  //   auto mapping = std::make_shared<InputMapping>(
-  //       mappingsQuery.value("id").toInt(),
-  //       mappingsQuery.value("profile_id").toInt(),
-  //       mappingsQuery.value("platform_id").toInt(),
-  //       mappingsQuery.value("controller_type").toInt(),
-  //       [&](const InputMapping &m) {
-  //         // TODO
-  //       });
-  //
-  //   mapping->deserialize(
-  //       mappingsQuery.value("mapping_data").toString().toStdString());
-  //   profile->addMapping(mapping);
-  // }
-  // // Get mappings
+  QSqlQuery shortcutQuery(getDatabase());
+  shortcutQuery.prepare(
+      "SELECT * FROM shortcutsv2 WHERE profile_id = :profileId");
+  shortcutQuery.bindValue(":profileId", profile->getId());
+
+  if (shortcutQuery.exec() && shortcutQuery.next()) {
+    auto mappingData =
+        shortcutQuery.value("mapping_data").toString().toStdString();
+    auto shortcutMapping = std::make_shared<ShortcutMapping>(
+        [id, this](const ShortcutMapping &mapping) {
+          QSqlQuery updateQuery(getDatabase());
+          updateQuery.prepare(
+              "UPDATE shortcutsv2 SET mapping_data = :mappingData WHERE "
+              "profile_id = :profileId");
+          updateQuery.bindValue(":mappingData",
+                                QString::fromStdString(mapping.serialize()));
+          updateQuery.bindValue(":profileId", id);
+
+          if (!updateQuery.exec()) {
+            spdlog::error("Failed to update shortcuts: {}",
+                          updateQuery.lastError().text().toStdString());
+          }
+        });
+
+    shortcutMapping->deserialize(mappingData);
+    profile->setShortcutMapping(shortcutMapping);
+    spdlog::info("Loaded shortcuts for profile ID {}", profile->getId());
+  } else {
+    QSqlQuery createShortcutsQuery(getDatabase());
+    createShortcutsQuery.prepare(
+        "INSERT INTO shortcutsv2 (profile_id, mapping_data, created_at) "
+        "VALUES (:profileId, :mappingData, :createdAt)");
+    createShortcutsQuery.bindValue(":profileId", profile->getId());
+    createShortcutsQuery.bindValue(":mappingData", QString());
+    createShortcutsQuery.bindValue(":createdAt",
+                                   QDateTime::currentMSecsSinceEpoch());
+
+    if (!createShortcutsQuery.exec()) {
+      spdlog::error("Failed to create shortcuts for profile ID {}: {}",
+                    profile->getId(),
+                    createShortcutsQuery.lastError().text().toStdString());
+    } else {
+      spdlog::info("Created empty shortcuts for profile ID {}",
+                   profile->getId());
+    }
+
+    const auto shortcutMapping = std::make_shared<ShortcutMapping>(
+        [id, this](const ShortcutMapping &mapping) {
+          QSqlQuery updateQuery(getDatabase());
+          updateQuery.prepare(
+              "UPDATE shortcutsv2 SET mapping_data = :mappingData WHERE "
+              "profile_id = :profileId");
+          updateQuery.bindValue(":mappingData",
+                                QString::fromStdString(mapping.serialize()));
+          updateQuery.bindValue(":profileId", id);
+
+          if (!updateQuery.exec()) {
+            spdlog::error("Failed to update shortcuts: {}",
+                          updateQuery.lastError().text().toStdString());
+          }
+        });
+    profile->setShortcutMapping(shortcutMapping);
+  }
 
   m_profiles.emplace_back(profile);
   return profile;
@@ -448,81 +480,83 @@ SqliteControllerRepository::getProfile(const int id) {
 
 std::shared_ptr<KeyboardMapping>
 SqliteControllerRepository::getKeyboardMapping(int profileId, int platformId) {
-  std::shared_ptr<ControllerProfile> keyboardProfile;
-  // for (const auto &profile : m_profiles) {
-  //   if (profile->getId() == profileId &&
-  //       profile->getDisplayName() == "Keyboard") {
-  //     keyboardProfile = profile;
+  // std::shared_ptr<ControllerProfile> keyboardProfile;
+  // // for (const auto &profile : m_profiles) {
+  // //   if (profile->getId() == profileId &&
+  // //       profile->getDisplayName() == "Keyboard") {
+  // //     keyboardProfile = profile;
+  // //   }
+  // // }
+  //
+  // if (!keyboardProfile) {
+  //   spdlog::error("Failed to find keyboard mapping");
+  //   return nullptr;
+  // }
+  //
+  // for (const auto &mapping : m_inputMappings) {
+  //   if (mapping->getControllerProfileId() == profileId &&
+  //       mapping->getPlatformId() == platformId) {
+  //     return std::static_pointer_cast<KeyboardMapping>(mapping);
   //   }
   // }
-
-  if (!keyboardProfile) {
-    spdlog::error("Failed to find keyboard mapping");
-    return nullptr;
-  }
-
-  for (const auto &mapping : m_inputMappings) {
-    if (mapping->getControllerProfileId() == profileId &&
-        mapping->getPlatformId() == platformId) {
-      return std::static_pointer_cast<KeyboardMapping>(mapping);
-    }
-  }
-
-  QSqlQuery query(getDatabase());
-  query.prepare("SELECT * FROM mappingsv1 WHERE profile_id = :profileId "
-                "AND platform_id = :platformId");
-  query.bindValue(":profileId", profileId);
-  query.bindValue(":platformId", platformId);
-
-  if (!query.exec() || !query.next()) {
-    QSqlQuery insertQuery(getDatabase());
-    insertQuery.prepare(
-        "INSERT INTO mappingsv1 (profile_id, platform_id, created_at) "
-        "VALUES (:profileId, :platformId, :createdAt)");
-    insertQuery.bindValue(":profileId", profileId);
-    insertQuery.bindValue(":platformId", platformId);
-    insertQuery.bindValue(
-        ":createdAt",
-        QVariant::fromValue(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch())
-                .count()));
-
-    if (!insertQuery.exec()) {
-      spdlog::error("Insert failed: {}",
-                    insertQuery.lastError().text().toStdString());
-      return {};
-    }
-
-    query.exec();
-    query.next();
-  }
-
-  auto mapping =
-      std::make_shared<InputMapping>(0, 0, 0, 0, [this](InputMapping &m) {
-        QSqlQuery updateQuery(getDatabase());
-        updateQuery.prepare(
-            "UPDATE mappingsv1 SET mapping_data = :mappingData WHERE id = :id");
-        updateQuery.bindValue(":mappingData",
-                              QString::fromStdString(m.serialize()));
-        updateQuery.bindValue(":id", m.getId());
-
-        if (!updateQuery.exec()) {
-          spdlog::error("Update failed: {}",
-                        updateQuery.lastError().text().toStdString());
-        }
-      });
-  mapping->setId(query.value("id").toInt());
-  mapping->setControllerProfileId(profileId);
-  mapping->setPlatformId(platformId);
-
-  const auto data = query.value("mapping_data");
-  if (!data.isNull()) {
-    mapping->deserialize(data.toString().toStdString());
-  }
-
-  m_inputMappings.emplace_back(mapping);
-  return std::static_pointer_cast<KeyboardMapping>(mapping);
+  //
+  // QSqlQuery query(getDatabase());
+  // query.prepare("SELECT * FROM mappingsv1 WHERE profile_id = :profileId "
+  //               "AND platform_id = :platformId");
+  // query.bindValue(":profileId", profileId);
+  // query.bindValue(":platformId", platformId);
+  //
+  // if (!query.exec() || !query.next()) {
+  //   QSqlQuery insertQuery(getDatabase());
+  //   insertQuery.prepare(
+  //       "INSERT INTO mappingsv1 (profile_id, platform_id, created_at) "
+  //       "VALUES (:profileId, :platformId, :createdAt)");
+  //   insertQuery.bindValue(":profileId", profileId);
+  //   insertQuery.bindValue(":platformId", platformId);
+  //   insertQuery.bindValue(
+  //       ":createdAt",
+  //       QVariant::fromValue(
+  //           std::chrono::duration_cast<std::chrono::milliseconds>(
+  //               std::chrono::system_clock::now().time_since_epoch())
+  //               .count()));
+  //
+  //   if (!insertQuery.exec()) {
+  //     spdlog::error("Insert failed: {}",
+  //                   insertQuery.lastError().text().toStdString());
+  //     return {};
+  //   }
+  //
+  //   query.exec();
+  //   query.next();
+  // }
+  //
+  // auto mapping =
+  //     std::make_shared<InputMapping>(0, 0, 0, 0, [this](InputMapping &m) {
+  //       QSqlQuery updateQuery(getDatabase());
+  //       updateQuery.prepare(
+  //           "UPDATE mappingsv1 SET mapping_data = :mappingData WHERE id =
+  //           :id");
+  //       updateQuery.bindValue(":mappingData",
+  //                             QString::fromStdString(m.serialize()));
+  //       updateQuery.bindValue(":id", m.getId());
+  //
+  //       if (!updateQuery.exec()) {
+  //         spdlog::error("Update failed: {}",
+  //                       updateQuery.lastError().text().toStdString());
+  //       }
+  //     });
+  // mapping->setId(query.value("id").toInt());
+  // mapping->setControllerProfileId(profileId);
+  // mapping->setPlatformId(platformId);
+  //
+  // const auto data = query.value("mapping_data");
+  // if (!data.isNull()) {
+  //   mapping->deserialize(data.toString().toStdString());
+  // }
+  //
+  // m_inputMappings.emplace_back(mapping);
+  // return std::static_pointer_cast<KeyboardMapping>(mapping);
+  return {};
 }
 
 QSqlDatabase SqliteControllerRepository::getDatabase() const {

@@ -46,6 +46,8 @@ QVariant ControllerListModel::data(const QModelIndex &index, int role) const {
     return item.playerIndex;
   case Connected:
     return item.connected;
+  case ProfileId:
+    return item.profileId;
   case ModelName:
     return item.modelName;
   case Wired:
@@ -61,6 +63,7 @@ QHash<int, QByteArray> ControllerListModel::roleNames() const {
   QHash<int, QByteArray> roles;
   roles[PlayerIndex] = "player_index";
   roles[Connected] = "connected";
+  roles[ProfileId] = "profile_id";
   roles[ModelName] = "model_name";
   roles[Wired] = "wired";
   roles[ImageUrl] = "image_url";
@@ -87,6 +90,7 @@ void ControllerListModel::onGamepadConnected(
   m_items[playerIndex] = {
       playerIndex,
       true,
+      gamepad->getProfile()->getId(),
       QString::fromStdString(gamepad->getName()),
       "None",
       gamepad->isWired(),
@@ -103,7 +107,7 @@ void ControllerListModel::onGamepadDisconnected(
     return;
   }
 
-  m_items[playerIndex] = {playerIndex, false, "Default", "None", true};
+  m_items[playerIndex] = {playerIndex, false, -1, "Default", "None", true};
   emit dataChanged(createIndex(playerIndex, 0), createIndex(playerIndex, 0),
                    {});
 }
@@ -114,11 +118,12 @@ void ControllerListModel::refreshControllerList() {
   for (int i = 0; i < 4; i++) {
     auto con = m_inputService->getPlayerGamepad(i);
     if (con) {
-      m_items.push_back({i, true, QString::fromStdString(con->getName()),
-                         "None", con->isWired(),
+      m_items.push_back({i, true, con->getProfile()->getId(),
+                         QString::fromStdString(con->getName()), "None",
+                         con->isWired(),
                          ControllerIcons::sourceUrlFromType(con->getType())});
     } else {
-      m_items.push_back({i, false, "Default", "None", true});
+      m_items.push_back({i, false, -1, "Default", "None", true});
     }
   }
   emit endResetModel();

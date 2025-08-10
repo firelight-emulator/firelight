@@ -5,20 +5,20 @@
 namespace firelight::input {
 SdlController::~SdlController() = default;
 
+int16_t SdlController::evaluateRawInput(const GamepadInput input) const {
+  return evaluateMapping(input);
+}
+
 std::shared_ptr<GamepadProfile> SdlController::getProfile() const {
   return m_profile;
 }
 void SdlController::setProfile(const std::shared_ptr<GamepadProfile> &profile) {
   m_profile = profile;
 }
-void SdlController::setShortcutMapping(
-    const std::shared_ptr<ShortcutMapping> &mapping) {
-  m_shortcutMapping = mapping;
-}
 
-std::vector<Shortcut> SdlController::getToggledShortcuts(int button) {
+std::vector<Shortcut> SdlController::getToggledShortcuts(GamepadInput input) {
   std::vector<Shortcut> result;
-  for (const auto &seq : m_shortcutMapping->getMappings()) {
+  for (const auto &seq : m_profile->getShortcutMapping()->getMappings()) {
     auto modifiers = seq.second.modifiers;
 
     auto toggled = true;
@@ -28,7 +28,7 @@ std::vector<Shortcut> SdlController::getToggledShortcuts(int button) {
         break;
       }
     }
-    if (toggled && evaluateMapping(seq.second.input)) {
+    if (toggled && seq.second.input == input) {
       result.emplace_back(seq.first);
     }
   }

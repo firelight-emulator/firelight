@@ -20,9 +20,7 @@
 #include "app/audio/SfxPlayer.hpp"
 #include "app/db/sqlite_content_database.hpp"
 #include "app/db/sqlite_userdata_database.hpp"
-#include "app/input/controller_manager.hpp"
 #include "app/input/gui/controller_list_model.hpp"
-#include "app/input/sdl_event_loop.hpp"
 #include "app/input/sqlite_controller_repository.hpp"
 #include "app/library/gui/content_directory_model.hpp"
 #include "app/library/gui/playlist_item_model.hpp"
@@ -53,6 +51,8 @@
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
 #include "gui/filesystem_utils.hpp"
+#include "gui/gamepad_profile_item.hpp"
+#include "gui/qt_input_service_proxy.hpp"
 #include "input2/sdl/sdl_input_service.hpp"
 #include "settings/sqlite_emulation_settings_manager.hpp"
 
@@ -143,14 +143,12 @@ int main(int argc, char *argv[]) {
 
   firelight::input::SqliteControllerRepository controllerRepository(
       baseDir.filePath("controllers.db"));
-  firelight::input::ControllerManager controllerManager(controllerRepository);
 
   firelight::input::SDLInputService inputService(controllerRepository);
   firelight::input::InputService::setInstance(&inputService);
 
   QtConcurrent::run([&] { inputService.run(); });
 
-  controllerManager.refreshControllerList();
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
   firelight::db::SqliteUserdataDatabase userdata_database(
@@ -262,6 +260,8 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0,
                                                        "GamepadStatus");
+  qmlRegisterType<firelight::gui::GamepadProfileItem>("Firelight", 1, 0,
+                                                      "GamepadProfile");
   qmlRegisterType<firelight::input::KeyboardMappingItem>("Firelight", 1, 0,
                                                          "KeyboardMapping");
   qmlRegisterType<firelight::mods::ModInfoItem>("Firelight", 1, 0, "ModInfo");
@@ -339,8 +339,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("emulator_config_manager",
                                            emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
-  engine.rootContext()->setContextProperty("controller_manager",
-                                           &controllerManager);
   engine.rootContext()->setContextProperty("platform_model",
                                            &platformListModel);
   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
@@ -352,8 +350,9 @@ int main(int argc, char *argv[]) {
                                            &entryListModel);
   engine.rootContext()->setContextProperty("FilteredLibraryEntryModel",
                                            &entrySearchModel);
-  // engine.rootContext()->setContextProperty("SearchLibraryEntryModel",
-  //                                          &entrySearchModel);
+
+  engine.rootContext()->setContextProperty(
+      "InputService", new firelight::gui::QtInputServiceProxy());
 
   engine.rootContext()->setContextProperty("LibraryFolderModel",
                                            &libraryFolderListModel);
@@ -386,21 +385,12 @@ int main(int argc, char *argv[]) {
 
   window->setIcon(QIcon("qrc:images/firelight-logo"));
 
-  // firelight::SdlEventLoop sdlEventLoop(window, &controllerManager);
-  // sdlEventLoop.moveToThread(&sdlEventLoop);
-  // sdlEventLoop.start();
-
   engine.rootContext()->setContextProperty("sfx_player",
                                            new firelight::audio::SfxPlayer());
 
   int exitCode = QGuiApplication::exec();
 
   spdlog::info("Exiting QGuiApplication");
-
-  // sdlEventLoop.stopProcessing();
-  //
-  // sdlEventLoop.quit();
-  // sdlEventLoop.wait();
 
   // engine.removeImageProvider("gameImages");
   // TODO: Let daemons finish

@@ -21,11 +21,21 @@ void log(enum retro_log_level level, const char *fmt, ...) {
   msg[std::remove(msg, msg + strlen(msg), '\r') - msg] = 0;
 
   // mGBA likes to spam the logs... though I could probably check the level.
-  if (strncmp(msg, "GBA DMA", 7) == 0) {
-    return;
-  }
+  // if (strncmp(msg, "GBA DMA", 7) == 0) {
+  //   return;
+  // }
 
-  spdlog::info("[Core] {}", msg);
+  if (level == RETRO_LOG_INFO) {
+    spdlog::info("[Core] {}", msg);
+  } else if (level == RETRO_LOG_DEBUG) {
+    spdlog::debug("[Core] {}", msg);
+  } else if (level == RETRO_LOG_WARN) {
+    spdlog::warn("[Core] {}", msg);
+  } else if (level == RETRO_LOG_ERROR) {
+    spdlog::error("[Core] {}", msg);
+  } else {
+    spdlog::info("[Core] {}", msg); // Default to info for unknown levels.
+  }
 }
 
 // Only supports one core at a time for now, but, eh.

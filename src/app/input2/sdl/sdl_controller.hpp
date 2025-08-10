@@ -6,7 +6,6 @@
 #include <string>
 
 #include "input/gamepad_type.hpp"
-#include "input/profiles/controller_profile.hpp"
 #include "input/profiles/shortcut_mapping.hpp"
 #include "input2/device_identifier.hpp"
 #include "input2/gamepad.hpp"
@@ -20,13 +19,13 @@ public:
 
   ~SdlController() override;
 
+  int16_t evaluateRawInput(const GamepadInput input) const override;
+
   [[nodiscard]] std::shared_ptr<GamepadProfile> getProfile() const override;
 
   void setProfile(const std::shared_ptr<GamepadProfile> &profile) override;
 
-  void setShortcutMapping(const std::shared_ptr<ShortcutMapping> &mapping);
-
-  std::vector<Shortcut> getToggledShortcuts(int button) override;
+  std::vector<Shortcut> getToggledShortcuts(GamepadInput input) override;
 
   bool isButtonPressed(int platformId, int controllerTypeId,
                        Input t_button) override;
@@ -58,9 +57,6 @@ public:
   SDL_GameController *getSDLController() const;
 
   DeviceIdentifier getDeviceIdentifier() const;
-
-protected:
-  std::shared_ptr<ShortcutMapping> m_shortcutMapping = nullptr;
 
 private:
   [[nodiscard]] int16_t evaluateMapping(GamepadInput input) const;

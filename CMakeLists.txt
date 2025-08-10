@@ -119,8 +119,6 @@ add_library(firelight_lib
         src/app/libretro/game.cpp
         src/app/db/sqlite_content_database.cpp
         src/app/input2/sdl/sdl_controller.cpp
-        src/app/input/controller_manager.cpp
-        src/app/input/sdl_event_loop.cpp
         src/app/manager_accessor.cpp
         src/app/audio/audio_manager.cpp
         src/app/saves/save_manager.cpp
@@ -133,7 +131,6 @@ add_library(firelight_lib
         src/app/achievements/gui/achievement_list_model.cpp
         src/app/achievements/gui/achievement_list_sort_filter_model.cpp
         src/gui/router.cpp
-        src/app/input/profiles/controller_profile.cpp
         src/app/input/profiles/input_mapping.cpp
         src/gui/platform_list_model.cpp
         src/app/libretro/core_configuration.cpp
@@ -201,6 +198,12 @@ add_library(firelight_lib
         src/app/input2/sdl/sdl_input_service.hpp
         src/app/input2/device_info.hpp
         src/app/event_dispatcher.hpp
+        src/gui/shortcuts_model.cpp
+        src/gui/shortcuts_model.hpp
+        src/gui/gamepad_profile_item.cpp
+        src/gui/gamepad_profile_item.hpp
+        src/gui/qt_input_service_proxy.cpp
+        src/gui/qt_input_service_proxy.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

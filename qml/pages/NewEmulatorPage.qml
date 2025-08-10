@@ -14,9 +14,9 @@ FocusScope {
     objectName: "emulatorPage"
 
     Connections {
-        target: controller_manager
+        target: InputService
 
-        function onShortcutActivated(player, shortcut) {
+        function onShortcutToggled(player, shortcut) {
             if (root.parent.StackView.status !== StackView.Active) {
                 return
             }
