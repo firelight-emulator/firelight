@@ -40,9 +40,9 @@ FocusScope {
                         text: "Edit"
 
                         onTriggered: {
-                          folderDialog.currentFolder = "file://" + model.path
+                          folderDialog.currentFolder = FilesystemUtils.prependFileURI(model.path)
                           folderDialog.doOnAccepted = function (folder) {
-                              folderDelegate.model.path = folder.toString().replace("file://", "")
+                              folderDelegate.model.path = FilesystemUtils.removeFileURI(folder.toString())
                           }
                           folderDialog.open()
                         }
@@ -98,7 +98,7 @@ FocusScope {
             onClicked: {
               folderDialog.currentFolder = ""
               folderDialog.doOnAccepted = function (folder) {
-                  ContentDirectoryModel.addItem(folder.toString().replace("file://", ""))
+                  ContentDirectoryModel.addItem(FilesystemUtils.removeFileURI(folder.toString()))
               }
               folderDialog.open()
             }

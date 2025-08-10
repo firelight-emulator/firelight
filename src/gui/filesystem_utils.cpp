@@ -5,6 +5,30 @@
 
 namespace firelight::gui {
 
+QString FilesystemUtils::getFileURI() {
+  // See https://en.wikipedia.org/wiki/File_URI_scheme for a vague explanation
+#ifdef Q_OS_UNIX
+  return "file://";
+#elif Q_OS_WIN
+  return "file:///";
+#endif
+}
+
+bool FilesystemUtils::isFile(const QString &path) {
+  auto fileURI = getFileURI();
+  return path.startsWith(fileURI);
+}
+
+QString FilesystemUtils::prependFileURI(const QString &path) {
+  auto fileURI = getFileURI();
+  return fileURI + path;
+}
+
+QString FilesystemUtils::removeFileURI(const QString &path) {
+  auto fileURI = getFileURI();
+  return QString(path).replace(fileURI, "");
+}
+
 bool FilesystemUtils::showInFilesystem(const QString &path) {
   const QFileInfo fileInfo(path);
 #ifdef Q_OS_WIN

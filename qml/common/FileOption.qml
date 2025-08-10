@@ -16,12 +16,12 @@ Button {
 
     onValueChanged: function () {
         let file = root.value
-        if (file.startsWith("file://")) {
+        if (FilesystemUtils.isFile(file)) {
             fileDialog.selectedFile = file
             return
         }
 
-        file = "file://" + file
+        file = FilesystemUtils.prependFileURI(file)
         fileDialog.selectedFile = file
     }
 
@@ -79,7 +79,7 @@ Button {
         }
 
         Text {
-            text: root.value.startsWith("file://") ? root.value.replace("file://", "") : root.value
+            text: FilesystemUtils.isFile(root.value) ? FilesystemUtils.removeFileURI(root.value) : root.value
             maximumLineCount: 1
             elide: Text.ElideRight
             font.pixelSize: 16
