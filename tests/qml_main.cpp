@@ -3,7 +3,7 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
-#include <QGuiApplication>
+#include <QApplication>
 
 class Setup : public QObject {
     Q_OBJECT
@@ -14,7 +14,7 @@ public:
 
 public slots:
     void applicationAvailable() {
-        // Initialization that only requires the QGuiApplication object to be available
+        // Initialization that only requires the QApplication object to be available
         QQuickStyle::setStyle("Basic");
     }
 
