@@ -16,7 +16,7 @@ Button {
 
     onValueChanged: function () {
         let folder = root.value
-        if (FilesystemUtils.isFile()) {
+        if (FilesystemUtils.isFile(folder)) {
             folderDialog.currentFolder = folder
             return
         }
