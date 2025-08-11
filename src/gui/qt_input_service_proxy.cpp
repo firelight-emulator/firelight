@@ -25,6 +25,16 @@ static QMap<input::GamepadInput, Qt::Key> gamepadToQtKeyMap = {
     {input::EastFace, Qt::Key_Back}};
 
 QtInputServiceProxy::QtInputServiceProxy() {
+  m_inputService = input::InputService::instance();
+
+  m_inputService->setPreferGamepadOverKeyboard(
+      m_settings.value("controllers/prioritizeControllerOverKeyboard", true)
+          .toBool());
+
+  m_onlyPlayerOneCanNavigateMenus =
+      m_settings.value("controllers/onlyPlayerOneCanNavigateMenus", true)
+          .toBool();
+
   shortcutToggledConnection =
       EventDispatcher::instance().subscribe<input::ShortcutToggledEvent>(
           [this](const input::ShortcutToggledEvent &event) {
@@ -46,12 +56,46 @@ QtInputServiceProxy::QtInputServiceProxy() {
                   [key, event]() {
                     QApplication::postEvent(
                         QGuiApplication::focusWindow(),
-                        new QKeyEvent(event.pressed ? QEvent::KeyPress
-                                                    : QEvent::KeyRelease,
-                                      key, Qt::KeyboardModifier::NoModifier));
+                        new QKeyEvent(
+                            event.pressed ? QEvent::KeyPress
+                                          : QEvent::KeyRelease,
+                            key, Qt::KeyboardModifier::KeyboardModifierMask));
                   },
                   Qt::QueuedConnection);
             }
           });
+}
+void QtInputServiceProxy::setPrioritizeControllerOverKeyboard(
+    bool prioritizeControllerOverKeyboard) {
+  if (m_inputService->preferGamepadOverKeyboard() ==
+      prioritizeControllerOverKeyboard) {
+    return;
+  }
+
+  m_inputService->setPreferGamepadOverKeyboard(
+      prioritizeControllerOverKeyboard);
+  m_settings.setValue("controllers/prioritizeControllerOverKeyboard",
+                      prioritizeControllerOverKeyboard);
+  emit prioritizeControllerOverKeyboardChanged();
+}
+
+bool QtInputServiceProxy::prioritizeControllerOverKeyboard() const {
+  return m_inputService->preferGamepadOverKeyboard();
+}
+
+void QtInputServiceProxy::setOnlyPlayerOneCanNavigateMenus(
+    bool onlyPlayerOneCanNavigateMenus) {
+  if (m_onlyPlayerOneCanNavigateMenus == onlyPlayerOneCanNavigateMenus) {
+    return;
+  }
+
+  m_onlyPlayerOneCanNavigateMenus = onlyPlayerOneCanNavigateMenus;
+  m_settings.setValue("controllers/onlyPlayerOneCanNavigateMenus",
+                      onlyPlayerOneCanNavigateMenus);
+  emit onlyPlayerOneCanNavigateMenusChanged();
+}
+
+bool QtInputServiceProxy::getOnlyPlayerOneCanNavigateMenus() const {
+  return m_onlyPlayerOneCanNavigateMenus;
 }
 } // namespace firelight::gui

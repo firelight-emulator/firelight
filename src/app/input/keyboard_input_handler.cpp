@@ -4,55 +4,66 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::input {
-KeyboardInputHandler::KeyboardInputHandler() = default;
+QMap<GamepadInput, Qt::Key> KeyboardInputHandler::defaultKeys;
+
+KeyboardInputHandler::KeyboardInputHandler() {
+  defaultKeys[GamepadInput::DpadUp] = Qt::Key_Up;
+  defaultKeys[GamepadInput::DpadDown] = Qt::Key_Down;
+  defaultKeys[GamepadInput::DpadLeft] = Qt::Key_Left;
+  defaultKeys[GamepadInput::DpadRight] = Qt::Key_Right;
+  defaultKeys[GamepadInput::LeftStickUp] = Qt::Key_I;
+  defaultKeys[GamepadInput::LeftStickDown] = Qt::Key_K;
+  defaultKeys[GamepadInput::LeftStickLeft] = Qt::Key_J;
+  defaultKeys[GamepadInput::LeftStickRight] = Qt::Key_L;
+  defaultKeys[GamepadInput::RightStickUp] = Qt::Key_T;
+  defaultKeys[GamepadInput::RightStickDown] = Qt::Key_G;
+  defaultKeys[GamepadInput::RightStickLeft] = Qt::Key_F;
+  defaultKeys[GamepadInput::RightStickRight] = Qt::Key_H;
+  defaultKeys[GamepadInput::L3] = Qt::Key_M;
+  defaultKeys[GamepadInput::R3] = Qt::Key_B;
+  defaultKeys[GamepadInput::WestFace] = Qt::Key_A;
+  defaultKeys[GamepadInput::SouthFace] = Qt::Key_Z;
+  defaultKeys[GamepadInput::EastFace] = Qt::Key_X;
+  defaultKeys[GamepadInput::NorthFace] = Qt::Key_S;
+  defaultKeys[GamepadInput::LeftBumper] = Qt::Key_Q;
+  defaultKeys[GamepadInput::RightBumper] = Qt::Key_W;
+  defaultKeys[GamepadInput::LeftTrigger] = Qt::Key_E;
+  defaultKeys[GamepadInput::RightTrigger] = Qt::Key_R;
+  defaultKeys[GamepadInput::Start] = Qt::Key_Return;
+  defaultKeys[GamepadInput::Select] = Qt::Key_Shift;
+}
+
+Qt::Key KeyboardInputHandler::getDefaultKey(const GamepadInput input) {
+  return defaultKeys.contains(input) ? defaultKeys[input] : Qt::Key_unknown;
+}
+QString KeyboardInputHandler::getKeyLabel(const Qt::Key key) {
+  return QKeySequence(key).toString(QKeySequence::NativeText);
+}
 
 bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
                                            Input t_button) {
-  auto input = static_cast<GamepadInput>(t_button);
-  if (m_keyboardMapping) {
-    const auto mappedKey = m_keyboardMapping->getMappedKeyboardInput(input);
-    if (mappedKey.has_value()) {
-      return m_keyStates[static_cast<Qt::Key>(mappedKey.value())];
+  const auto input = static_cast<GamepadInput>(t_button);
+  if (m_profile) {
+    auto mapping = m_profile->getMappingForPlatformAndController(
+        platformId, controllerTypeId);
+    if (mapping) {
+      const auto mappedKey = mapping->getMappedInput(input);
+      if (mappedKey.has_value()) {
+        return m_keyStates[static_cast<Qt::Key>(mappedKey.value())];
+      }
     }
   }
 
-  switch (t_button) {
-  case RightBumper:
-    return m_keyStates[Qt::Key_W];
-  case LeftBumper:
-    return m_keyStates[Qt::Key_Q];
-  case LeftTrigger:
-    return m_keyStates[Qt::Key_E];
-  case RightTrigger:
-    return m_keyStates[Qt::Key_R];
-  case NorthFace:
-    return m_keyStates[Qt::Key_S];
-  case EastFace:
-    return m_keyStates[Qt::Key_X];
-  case WestFace:
-    return m_keyStates[Qt::Key_A];
-  case SouthFace:
-    return m_keyStates[Qt::Key_Z];
-  case DpadUp:
-    return m_keyStates[Qt::Key_I];
-  case DpadDown:
-    return m_keyStates[Qt::Key_K];
-  case DpadLeft:
-    return m_keyStates[Qt::Key_J];
-  case DpadRight:
-    return m_keyStates[Qt::Key_L];
-  case Start:
-    return m_keyStates[Qt::Key_Return];
-  case Select:
-    return m_keyStates[Qt::Key_Shift];
-  default:
+  if (!defaultKeys.contains(static_cast<GamepadInput>(t_button))) {
     return false;
   }
+
+  return m_keyStates[defaultKeys[static_cast<GamepadInput>(t_button)]];
 }
 
 int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
                                                     int controllerTypeId) {
-  if (!m_keyboardMapping) {
+  if (!m_profile) {
     if (m_keyStates[Qt::Key_Left]) {
       return -32767;
     }
@@ -61,10 +72,20 @@ int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
     }
   }
 
-  const auto mappedLeft =
-      m_keyboardMapping->getMappedKeyboardInput(GamepadInput::LeftStickLeft);
+  auto mapping = m_profile->getMappingForPlatformAndController(
+      platformId, controllerTypeId);
+  if (!mapping) {
+    if (m_keyStates[Qt::Key_Left]) {
+      return -32767;
+    }
+    if (m_keyStates[Qt::Key_Right]) {
+      return 32767;
+    }
+  }
+
+  const auto mappedLeft = mapping->getMappedInput(GamepadInput::LeftStickLeft);
   const auto mappedRight =
-      m_keyboardMapping->getMappedKeyboardInput(GamepadInput::LeftStickRight);
+      mapping->getMappedInput(GamepadInput::LeftStickRight);
 
   if (mappedLeft.has_value() && mappedRight.has_value()) {
     const auto valLeft = m_keyStates[static_cast<Qt::Key>(mappedLeft.value())];
@@ -108,19 +129,28 @@ int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
 
 int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId,
                                                     int controllerTypeId) {
-  if (!m_keyboardMapping) {
-    if (m_keyStates[Qt::Key_Up]) {
+  if (!m_profile) {
+    if (m_keyStates[Qt::Key_Left]) {
       return -32767;
     }
-    if (m_keyStates[Qt::Key_Down]) {
+    if (m_keyStates[Qt::Key_Right]) {
       return 32767;
     }
   }
 
-  const auto mappedUp =
-      m_keyboardMapping->getMappedKeyboardInput(GamepadInput::LeftStickUp);
-  const auto mappedDown =
-      m_keyboardMapping->getMappedKeyboardInput(GamepadInput::LeftStickDown);
+  auto mapping = m_profile->getMappingForPlatformAndController(
+      platformId, controllerTypeId);
+  if (!mapping) {
+    if (m_keyStates[Qt::Key_Left]) {
+      return -32767;
+    }
+    if (m_keyStates[Qt::Key_Right]) {
+      return 32767;
+    }
+  }
+
+  const auto mappedUp = mapping->getMappedInput(GamepadInput::LeftStickUp);
+  const auto mappedDown = mapping->getMappedInput(GamepadInput::LeftStickDown);
 
   if (mappedUp.has_value() && mappedDown.has_value()) {
     const auto valLeft = m_keyStates[static_cast<Qt::Key>(mappedUp.value())];
@@ -184,7 +214,7 @@ std::string KeyboardInputHandler::getName() const { return "Keyboard"; }
 
 int KeyboardInputHandler::getPlayerIndex() const { return m_playerIndex; }
 
-void KeyboardInputHandler::setPlayerIndex(int playerIndex) {
+void KeyboardInputHandler::setPlayerIndex(const int playerIndex) {
   m_playerIndex = playerIndex;
 }
 
@@ -195,17 +225,34 @@ GamepadType KeyboardInputHandler::getType() const { return KEYBOARD; }
 bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
   if (event->type() == QEvent::KeyPress) {
     const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
+    if (keyEvent->modifiers() == Qt::KeyboardModifier::KeyboardModifierMask) {
+      return false;
+    }
     m_keyStates[static_cast<Qt::Key>(keyEvent->key())] = true;
   } else if (event->type() == QEvent::KeyRelease) {
     const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
+    if (keyEvent->modifiers() == Qt::KeyboardModifier::KeyboardModifierMask) {
+      return false;
+    }
     m_keyStates[static_cast<Qt::Key>(keyEvent->key())] = false;
   }
 
   return QObject::eventFilter(obj, event);
 }
 std::shared_ptr<GamepadProfile> KeyboardInputHandler::getProfile() const {
-  return {};
+  return m_profile;
 }
 void KeyboardInputHandler::setProfile(
-    const std::shared_ptr<GamepadProfile> &profile) {}
+    const std::shared_ptr<GamepadProfile> &profile) {
+  m_profile = profile;
+}
+
+std::vector<Shortcut>
+KeyboardInputHandler::getToggledShortcuts(GamepadInput input) {
+  return {};
+}
+
+int16_t KeyboardInputHandler::evaluateRawInput(const GamepadInput input) const {
+  return 0;
+}
 } // namespace firelight::input

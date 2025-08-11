@@ -35,9 +35,6 @@ public:
   // [[nodiscard]] std::shared_ptr<InputMapping>
   // getInputMapping(int profileId, int platformId) override;
 
-  std::shared_ptr<KeyboardMapping> getKeyboardMapping(int profileId,
-                                                      int platformId) override;
-
 private:
   QString m_dbFilePath;
 

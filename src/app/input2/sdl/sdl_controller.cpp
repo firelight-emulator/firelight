@@ -60,7 +60,8 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
         if (mapped.value() == None) {
           return false;
         }
-        return std::abs(evaluateMapping(*mapped)) > 0;
+        return std::abs(evaluateMapping(
+                   static_cast<GamepadInput>(mapped.value()))) > 0;
       }
     }
 
@@ -126,236 +127,137 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
 
 int16_t SdlController::getLeftStickXPosition(const int platformId,
                                              int controllerTypeId) {
-  auto result =
+  auto rawX =
       SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
-  if (m_profile == nullptr) {
-    return result;
+  if (rawX > -8192 && rawX < 8192) {
+    rawX = 0;
   }
 
-  auto mapping = m_profile->getMappingForPlatformAndController(
+  if (!m_profile) {
+    return rawX;
+  }
+
+  const auto mapping = m_profile->getMappingForPlatformAndController(
       platformId, controllerTypeId);
-  if (mapping == nullptr) {
-    return result;
+  if (!mapping) {
+    return rawX;
   }
 
   const auto mappedLeft = mapping->getMappedInput(GamepadInput::LeftStickLeft);
   const auto mappedRight =
       mapping->getMappedInput(GamepadInput::LeftStickRight);
 
-  if (mappedLeft.has_value() && mappedLeft.value() == Unknown) {
-    return 0;
+  if (!mappedLeft && !mappedRight) {
+    return rawX;
   }
 
-  if (mappedRight.has_value() && mappedRight.value() == Unknown) {
-    return 0;
-  }
+  const auto valLeft =
+      mappedLeft ? evaluateMapping(static_cast<GamepadInput>(*mappedLeft)) : 0;
+  const auto valRight =
+      mappedRight ? evaluateMapping(static_cast<GamepadInput>(*mappedRight))
+                  : 0;
 
-  if (mappedLeft.has_value() && mappedRight.has_value()) {
-    const auto valUp = evaluateMapping(*mappedLeft);
-    const auto valDown = evaluateMapping(*mappedRight);
-
-    if (valUp != 0 && valDown == 0) {
-      return valUp * -1;
-    }
-    if (valUp == 0 && valDown != 0) {
-      return valDown;
-    }
-    return 0;
-  }
-
-  if (mappedLeft.has_value()) {
-    auto eval = evaluateMapping(*mappedLeft);
-    if (eval != 0) {
-      return eval * -1;
-    }
-
-    return std::clamp(static_cast<int>(result), 0, 32767);
-  }
-
-  if (mappedRight.has_value()) {
-    auto eval = evaluateMapping(*mappedRight);
-    if (eval != 0) {
-      return eval;
-    }
-
-    return std::clamp(static_cast<int>(result), -32767, 0);
-  }
-
-  return result;
+  return valRight - valLeft;
 }
 
 int16_t SdlController::getLeftStickYPosition(const int platformId,
                                              int controllerTypeId) {
-  auto result =
+  auto rawY =
       SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
-  if (m_profile == nullptr) {
-    return result;
+  if (rawY > -8192 && rawY < 8192) {
+    rawY = 0;
   }
 
-  auto mapping = m_profile->getMappingForPlatformAndController(
+  if (!m_profile) {
+    return rawY;
+  }
+
+  const auto mapping = m_profile->getMappingForPlatformAndController(
       platformId, controllerTypeId);
-  if (mapping == nullptr) {
-    return result;
+  if (!mapping) {
+    return rawY;
   }
 
   const auto mappedUp = mapping->getMappedInput(GamepadInput::LeftStickUp);
   const auto mappedDown = mapping->getMappedInput(GamepadInput::LeftStickDown);
 
-  if (mappedUp.has_value() && mappedUp.value() == None) {
-    return 0;
+  if (!mappedUp && !mappedDown) {
+    return rawY;
   }
 
-  if (mappedDown.has_value() && mappedDown.value() == None) {
-    return 0;
-  }
+  const auto valUp =
+      mappedUp ? evaluateMapping(static_cast<GamepadInput>(*mappedUp)) : 0;
+  const auto valDown =
+      mappedDown ? evaluateMapping(static_cast<GamepadInput>(*mappedDown)) : 0;
 
-  if (mappedUp.has_value() && mappedDown.has_value()) {
-    const auto valUp = evaluateMapping(*mappedUp);
-    const auto valDown = evaluateMapping(*mappedDown);
-
-    if (valUp != 0 && valDown == 0) {
-      return valUp * -1;
-    }
-    if (valUp == 0 && valDown != 0) {
-      return valDown;
-    }
-    return 0;
-  }
-
-  if (mappedUp.has_value()) {
-    auto eval = evaluateMapping(*mappedUp);
-    if (eval != 0) {
-      return eval * -1;
-    }
-    return std::clamp(static_cast<int>(result), 0, 32767);
-  }
-
-  if (mappedDown.has_value()) {
-    auto eval = evaluateMapping(*mappedDown);
-    if (eval != 0) {
-      return eval;
-    }
-    return std::clamp(static_cast<int>(result), -32767, 0);
-  }
-
-  return result;
+  return valDown - valUp;
 }
 
 int16_t SdlController::getRightStickXPosition(const int platformId,
                                               int controllerTypeId) {
-  auto result =
+  auto rawX =
       SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
-  if (m_profile == nullptr) {
-    return result;
+  if (rawX > -8192 && rawX < 8192) {
+    rawX = 0;
   }
 
-  auto mapping = m_profile->getMappingForPlatformAndController(
+  if (!m_profile) {
+    return rawX;
+  }
+
+  const auto mapping = m_profile->getMappingForPlatformAndController(
       platformId, controllerTypeId);
-  if (mapping == nullptr) {
-    return result;
+  if (!mapping) {
+    return rawX;
   }
 
   const auto mappedLeft = mapping->getMappedInput(GamepadInput::RightStickLeft);
   const auto mappedRight =
       mapping->getMappedInput(GamepadInput::RightStickRight);
 
-  if (mappedLeft.has_value() && mappedLeft.value() == None) {
-    return 0;
+  if (!mappedLeft && !mappedRight) {
+    return rawX;
   }
 
-  if (mappedRight.has_value() && mappedRight.value() == None) {
-    return 0;
-  }
+  const auto valLeft =
+      mappedLeft ? evaluateMapping(static_cast<GamepadInput>(*mappedLeft)) : 0;
+  const auto valRight =
+      mappedRight ? evaluateMapping(static_cast<GamepadInput>(*mappedRight))
+                  : 0;
 
-  if (mappedLeft.has_value() && mappedRight.has_value()) {
-    const auto valUp = evaluateMapping(*mappedLeft);
-    const auto valDown = evaluateMapping(*mappedRight);
-
-    if (valUp != 0 && valDown == 0) {
-      return valUp * -1;
-    }
-    if (valUp == 0 && valDown != 0) {
-      return valDown;
-    }
-    return 0;
-  }
-
-  if (mappedLeft.has_value()) {
-    auto eval = evaluateMapping(*mappedLeft);
-    if (eval != 0) {
-      return eval * -1;
-    }
-
-    return std::clamp(static_cast<int>(result), 0, 32767);
-  }
-
-  if (mappedRight.has_value()) {
-    auto eval = evaluateMapping(*mappedRight);
-    if (eval != 0) {
-      return eval;
-    }
-
-    return std::clamp(static_cast<int>(result), -32767, 0);
-  }
-
-  return result;
+  return valRight - valLeft;
 }
 
 int16_t SdlController::getRightStickYPosition(const int platformId,
                                               int controllerTypeId) {
-  auto result =
+  auto rawY =
       SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
-  if (m_profile == nullptr) {
-    return result;
+  if (rawY > -8192 && rawY < 8192) {
+    rawY = 0;
+  }
+  if (!m_profile) {
+    return rawY;
   }
 
-  auto mapping = m_profile->getMappingForPlatformAndController(
+  const auto mapping = m_profile->getMappingForPlatformAndController(
       platformId, controllerTypeId);
-  if (mapping == nullptr) {
-    return result;
+  if (!mapping) {
+    return rawY;
   }
 
   const auto mappedUp = mapping->getMappedInput(GamepadInput::RightStickUp);
   const auto mappedDown = mapping->getMappedInput(GamepadInput::RightStickDown);
 
-  if (mappedUp.has_value() && mappedUp.value() == None) {
-    return 0;
+  if (!mappedUp && !mappedDown) {
+    return rawY;
   }
 
-  if (mappedDown.has_value() && mappedDown.value() == None) {
-    return 0;
-  }
+  const auto valUp =
+      mappedUp ? evaluateMapping(static_cast<GamepadInput>(*mappedUp)) : 0;
+  const auto valDown =
+      mappedDown ? evaluateMapping(static_cast<GamepadInput>(*mappedDown)) : 0;
 
-  if (mappedUp.has_value() && mappedDown.has_value()) {
-    const auto valUp = evaluateMapping(*mappedUp);
-    const auto valDown = evaluateMapping(*mappedDown);
-
-    if (valUp != 0 && valDown == 0) {
-      return valUp * -1;
-    }
-    if (valUp == 0 && valDown != 0) {
-      return valDown;
-    }
-    return 0;
-  }
-
-  if (mappedUp.has_value()) {
-    auto eval = evaluateMapping(*mappedUp);
-    if (eval != 0) {
-      return eval * -1;
-    }
-    return std::clamp(static_cast<int>(result), 0, 32767);
-  }
-
-  if (mappedDown.has_value()) {
-    auto eval = evaluateMapping(*mappedDown);
-    if (eval != 0) {
-      return eval;
-    }
-    return std::clamp(static_cast<int>(result), -32767, 0);
-  }
-
-  return result;
+  return valDown - valUp;
 }
 
 int32_t SdlController::getInstanceId() const { return m_SDLJoystickInstanceId; }
@@ -503,7 +405,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
     const auto value =
         SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
     if (value < -8192) {
-      return -value;
+      return value;
     }
     return 0;
   }
@@ -519,7 +421,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
     const auto value =
         SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
     if (value < -8192) {
-      return -value;
+      return value;
     }
     return 0;
   }
@@ -535,7 +437,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
     const auto value =
         SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
     if (value < -8192) {
-      return -value;
+      return value;
     }
     return 0;
   }
@@ -551,7 +453,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
     const auto value =
         SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
     if (value < -8192) {
-      return -value;
+      return value;
     }
     return 0;
   }

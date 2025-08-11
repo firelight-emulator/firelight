@@ -3,7 +3,6 @@
 #include "input2/device_identifier.hpp"
 #include "input2/device_info.hpp"
 #include "profiles/input_mapping.hpp"
-#include "profiles/keyboard_mapping.hpp"
 #include <input2/gamepad_profile.hpp>
 #include <vector>
 
@@ -44,8 +43,5 @@ public:
   //
   // [[nodiscard]] virtual std::shared_ptr<InputMapping>
   // getInputMapping(int profileId, int platformId) = 0;
-
-  virtual std::shared_ptr<KeyboardMapping>
-  getKeyboardMapping(int profileId, int platformId) = 0;
 };
 } // namespace firelight::input

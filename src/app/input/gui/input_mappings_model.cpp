@@ -4,6 +4,7 @@
 #include "platforms/models/platform.hpp"
 #include "platforms/platform_service.hpp"
 
+#include <input/keyboard_input_handler.hpp>
 #include <platform_metadata.hpp>
 
 namespace firelight::input {
@@ -67,6 +68,7 @@ void InputMappingsModel::setProfileId(const int profileId) {
 
   m_profileId = profileId;
   m_currentProfile = m_inputService->getProfile(m_profileId);
+  m_isKeyboard = m_currentProfile->isKeyboardProfile();
   emit profileIdChanged();
   refreshMappings();
 }
@@ -96,30 +98,6 @@ void InputMappingsModel::setControllerTypeId(const int controllerTypeId) {
   refreshMappings();
 }
 
-bool InputMappingsModel::setData(const QModelIndex &index,
-                                 const QVariant &value, const int role) {
-  if (role < Qt::UserRole || index.row() >= m_items.size()) {
-    return false;
-  }
-  auto &item = m_items[index.row()];
-  switch (role) {
-  case MappedInput:
-    item.mappedInput = static_cast<GamepadInput>(value.toInt());
-    break;
-  default:
-    return false;
-  }
-
-  m_inputMapping->addMapping(item.originalInput, item.mappedInput);
-  m_inputMapping->sync();
-
-  return true;
-}
-
-Qt::ItemFlags InputMappingsModel::flags(const QModelIndex &index) const {
-  return QAbstractListModel::flags(index) | Qt::ItemIsEditable;
-}
-
 void InputMappingsModel::setMapping(const int originalInput, int mappedInput) {
   for (auto i = 0; i < m_items.size(); ++i) {
     auto &item = m_items[i];
@@ -127,16 +105,18 @@ void InputMappingsModel::setMapping(const int originalInput, int mappedInput) {
       continue;
     }
 
-    spdlog::info("Found item to update: {}",
-                 item.originalInputName.toStdString());
-    item.mappedInput = static_cast<GamepadInput>(mappedInput);
-    item.mappedInputName = QString::fromStdString(
-        PlatformMetadata::getInputName(item.mappedInput));
+    item.mappedInput = mappedInput;
 
-    spdlog::info("Updating item (index {}): {} -> {}", i,
-                 item.originalInputName.toStdString(),
-                 item.mappedInputName.toStdString());
-    item.isDefault = item.originalInput == item.mappedInput;
+    if (m_isKeyboard) {
+      item.mappedInputName =
+          "Keyboard key " + QString::number(item.mappedInput);
+      item.isDefault = false;
+    } else {
+      item.mappedInputName =
+          QString::fromStdString(PlatformMetadata::getInputName(
+              static_cast<GamepadInput>(item.mappedInput)));
+      item.isDefault = item.originalInput == item.mappedInput;
+    }
 
     m_inputMapping->addMapping(item.originalInput, item.mappedInput);
     m_inputMapping->sync();
@@ -237,7 +217,7 @@ void InputMappingsModel::clearMapping(int originalInput) {
     item.mappedInputName = "Not mapped";
     item.isDefault = false;
 
-    m_inputMapping->addMapping(item.originalInput, item.mappedInput);
+    m_inputMapping->removeMapping(item.originalInput);
     m_inputMapping->sync();
 
     checkForConflicts();
@@ -258,7 +238,7 @@ void InputMappingsModel::checkForConflicts() {
         continue;
       }
       if (item.mappedInput == otherItem.mappedInput) {
-        if (item.mappedInput == libretro::IRetroPad::Input::Unknown) {
+        if (!m_isKeyboard && item.mappedInput == None) {
           continue;
         }
         spdlog::info("Conflict found: {} <-> {}",
@@ -312,17 +292,25 @@ void InputMappingsModel::refreshMappings() {
     item.originalInputName = QString::fromStdString(input.name);
 
     auto mapped = m_inputMapping->getMappedInput(input.virtualInput);
-    if (mapped.has_value()) {
-      item.mappedInput = *mapped;
-      item.mappedInputName =
-          QString::fromStdString(PlatformMetadata::getInputName(*mapped));
-      item.isDefault = item.originalInput == item.mappedInput;
-    } else {
+    auto value = mapped.has_value() ? mapped.value()
+                 : m_isKeyboard
+                     ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
+                     : input.virtualInput;
+
+    if (!mapped.has_value()) {
       item.isDefault = true;
-      item.mappedInput = input.virtualInput;
-      item.mappedInputName = QString::fromStdString(
-          PlatformMetadata::getInputName(input.virtualInput));
     }
+
+    item.mappedInput = value;
+
+    if (m_isKeyboard) {
+      item.mappedInputName = KeyboardInputHandler::getKeyLabel(
+          static_cast<Qt::Key>(item.mappedInput));
+    } else {
+      item.mappedInputName = QString::fromStdString(
+          PlatformMetadata::getInputName(static_cast<GamepadInput>(value)));
+    }
+
     m_items.append(item);
   }
   checkForConflicts();

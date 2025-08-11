@@ -31,11 +31,11 @@ public:
 
   void setControllerType(int controllerType);
 
-  void addMapping(GamepadInput input, GamepadInput mappedInput);
+  void addMapping(GamepadInput input, int mappedInput);
 
-  std::optional<GamepadInput> getMappedInput(GamepadInput input);
+  std::optional<int> getMappedInput(GamepadInput input);
 
-  std::map<GamepadInput, GamepadInput> &getMappings();
+  std::map<GamepadInput, int> &getMappings();
 
   virtual void removeMapping(GamepadInput input);
 
@@ -51,6 +51,6 @@ private:
   int m_controllerProfileId = 0;
   int m_platformId = 0;
   int m_controllerType = 0;
-  std::map<GamepadInput, GamepadInput> m_mappings{};
+  std::map<GamepadInput, int> m_mappings{};
 };
 } // namespace firelight::input

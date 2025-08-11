@@ -6,6 +6,13 @@ GamepadProfile::GamepadProfile(const int id) : m_id(id) {}
 
 int GamepadProfile::getId() const { return m_id; }
 std::string GamepadProfile::getName() const { return m_name; }
+
+bool GamepadProfile::isKeyboardProfile() const { return m_isKeyboardProfile; }
+
+void GamepadProfile::setIsKeyboardProfile(const bool isKeyboardProfile) {
+  m_isKeyboardProfile = isKeyboardProfile;
+}
+
 void GamepadProfile::setName(const std::string &name) { m_name = name; }
 
 std::shared_ptr<InputMapping>

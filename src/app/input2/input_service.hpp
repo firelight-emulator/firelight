@@ -32,7 +32,9 @@ public:
   static std::map<Shortcut, std::string> listShortcuts() {
     return {{OpenRewindMenu, "Open rewind menu"},
             {HoldFastForward, "Fast-forward (hold)"},
-            {HoldRewind, "Rewind (hold)"}};
+            {HoldRewind, "Rewind (hold)"},
+            {SpeedUp, "Speed up"},
+            {SlowDown, "Slow down"}};
   }
 
   static void setInstance(InputService *instance) { s_instance = instance; }
@@ -45,6 +47,9 @@ public:
   virtual std::shared_ptr<GamepadProfile> getProfile(int id) = 0;
 
   virtual void changeGamepadOrder(const std::map<int, int> &oldToNewIndex) = 0;
+
+  virtual bool preferGamepadOverKeyboard() const = 0;
+  virtual void setPreferGamepadOverKeyboard(bool prefer) = 0;
 
 private:
   static InputService *s_instance;

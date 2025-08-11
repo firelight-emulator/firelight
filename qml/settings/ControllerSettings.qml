@@ -55,10 +55,10 @@ FocusScope {
                             }
                         }
 
-                checked: controller_manager.prioritizeControllerOverKeyboard
+                checked: InputService.prioritizeControllerOverKeyboard
 
                 onCheckedChanged: {
-                    controller_manager.prioritizeControllerOverKeyboard = checked
+                    InputService.prioritizeControllerOverKeyboard = checked
                 }
             }
 
@@ -108,10 +108,10 @@ FocusScope {
                     }
                 }
 
-                checked: controller_manager.onlyPlayerOneCanNavigateMenus
+                checked: InputService.onlyPlayerOneCanNavigateMenus
 
                 onCheckedChanged: {
-                    controller_manager.onlyPlayerOneCanNavigateMenus = checked
+                    InputService.onlyPlayerOneCanNavigateMenus = checked
                 }
             }
 

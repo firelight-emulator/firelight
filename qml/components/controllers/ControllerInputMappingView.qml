@@ -93,48 +93,48 @@ FocusScope {
             spacing: 16
             // height: 200
 
-            TabBar {
-                background: Rectangle {
-                    color: ColorPalette.neutral800
-                    opacity: 0.4
-                    radius: 8
-                    border.color: ColorPalette.neutral500
-                }
-                Layout.alignment: Qt.AlignHCenter
-                Repeater {
-                    model: root.platformMetadataModel.num_controller_types
-                    delegate: TabButton {
-                        required property var modelData
-
-                        background: Rectangle {
-                            color: root.controllerType === modelData + 1 ? ColorPalette.neutral700 : ColorPalette.neutral800
-                            opacity: 0.5
-                            topLeftRadius: modelData === 0 ? 8 : 0
-                            topRightRadius: modelData === root.platformMetadataModel.num_controller_types - 1 ? 8 : 0
-                            bottomLeftRadius: modelData === 0 ? 8 : 0
-                            bottomRightRadius: modelData === root.platformMetadataModel.num_controller_types - 1 ? 8 : 0
-                        }
-
-                        contentItem: Text {
-                            text: root.platformMetadataModel.controller_type_names[modelData]
-                            color: "white"
-                            font.pixelSize: 15
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.DemiBold
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            leftPadding: 16
-                            rightPadding: 16
-                            topPadding: 4
-                            bottomPadding: 4
-                        }
-
-                        onClicked: {
-                            root.controllerType = modelData + 1
-                        }
-                    }
-                }
-            }
+            // TabBar {
+            //     background: Rectangle {
+            //         color: ColorPalette.neutral800
+            //         opacity: 0.4
+            //         radius: 8
+            //         border.color: ColorPalette.neutral500
+            //     }
+            //     Layout.alignment: Qt.AlignHCenter
+            //     Repeater {
+            //         model: root.platformMetadataModel.num_controller_types
+            //         delegate: TabButton {
+            //             required property var modelData
+            //
+            //             background: Rectangle {
+            //                 color: root.controllerType === modelData + 1 ? ColorPalette.neutral700 : ColorPalette.neutral800
+            //                 opacity: 0.5
+            //                 topLeftRadius: modelData === 0 ? 8 : 0
+            //                 topRightRadius: modelData === root.platformMetadataModel.num_controller_types - 1 ? 8 : 0
+            //                 bottomLeftRadius: modelData === 0 ? 8 : 0
+            //                 bottomRightRadius: modelData === root.platformMetadataModel.num_controller_types - 1 ? 8 : 0
+            //             }
+            //
+            //             contentItem: Text {
+            //                 text: root.platformMetadataModel.controller_type_names[modelData]
+            //                 color: "white"
+            //                 font.pixelSize: 15
+            //                 font.family: Constants.regularFontFamily
+            //                 font.weight: Font.DemiBold
+            //                 horizontalAlignment: Text.AlignHCenter
+            //                 verticalAlignment: Text.AlignVCenter
+            //                 leftPadding: 16
+            //                 rightPadding: 16
+            //                 topPadding: 4
+            //                 bottomPadding: 4
+            //             }
+            //
+            //             onClicked: {
+            //                 root.controllerType = modelData + 1
+            //             }
+            //         }
+            //     }
+            // }
 
             // RowLayout {
             //     Layout.fillHeight: true

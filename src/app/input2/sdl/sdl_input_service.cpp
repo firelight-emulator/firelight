@@ -19,12 +19,9 @@ SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
 }
 
 SDLInputService::~SDLInputService() {
-  m_running = false;
-  SDL_Event quitEvent;
-  quitEvent.type = SDL_QUIT;
-  SDL_PushEvent(&quitEvent);
-  SDL_QuitSubSystem(m_sdlServices);
-  SDL_Quit();
+  if (m_running) {
+    stop();
+  }
 }
 
 std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
@@ -389,6 +386,9 @@ void SDLInputService::run() {
         spdlog::debug("Ignoring event type: {}", ev.type);
         break;
       case SDL_QUIT:
+        spdlog::info("Quitting SDL Input Service");
+        SDL_QuitSubSystem(m_sdlServices);
+        SDL_Quit();
         return;
       default:
         spdlog::debug("Got an unhandled SDL event {}", ev.type);
@@ -396,12 +396,22 @@ void SDLInputService::run() {
       }
     }
   }
+
+  SDL_QuitSubSystem(m_sdlServices);
+  SDL_Quit();
+
   spdlog::info("Stopping SDL Input Service...");
+}
+void SDLInputService::stop() {
+  m_running = false;
+  SDL_Event quitEvent;
+  quitEvent.type = SDL_QUIT;
+  SDL_PushEvent(&quitEvent);
 }
 
 void SDLInputService::changeGamepadOrder(
     const std::map<int, int> &oldToNewIndex) {
-  std::map<int, std::shared_ptr<SdlController>> newPlayerSlots;
+  std::map<int, std::shared_ptr<IGamepad>> newPlayerSlots;
 
   for (const auto &[oldIndex, newIndex] : oldToNewIndex) {
     if (m_playerSlots.contains(oldIndex)) {
@@ -425,6 +435,56 @@ void SDLInputService::changeGamepadOrder(
   }
 
   EventDispatcher::instance().publish(GamepadOrderChangedEvent{});
+}
+
+bool SDLInputService::preferGamepadOverKeyboard() const {
+  return m_preferGamepadOverKeyboard;
+}
+
+void SDLInputService::setPreferGamepadOverKeyboard(const bool prefer) {
+  m_preferGamepadOverKeyboard = prefer;
+}
+
+void SDLInputService::setKeyboard(std::shared_ptr<IGamepad> keyboard) {
+  m_keyboard = std::move(keyboard);
+
+  auto keyboardDeviceIdentifier = DeviceIdentifier{
+      .deviceName = "Keyboard",
+      .vendorId = -1,
+      .productId = -1,
+      .productVersion = -1,
+  };
+
+  const auto info = m_gamepadRepository.getDeviceInfo(keyboardDeviceIdentifier);
+  if (!info) {
+    const auto name = "Default Keyboard Profile";
+    const auto profile = m_gamepadRepository.createProfile(name);
+    const auto deviceInfo = DeviceInfo{"Keyboard", profile->getId()};
+    profile->setIsKeyboardProfile(true);
+
+    m_gamepadRepository.updateDeviceInfo(keyboardDeviceIdentifier, deviceInfo);
+
+    m_keyboard->setProfile(profile);
+  } else {
+    const auto profile = m_gamepadRepository.getProfile(info->profileId);
+    profile->setIsKeyboardProfile(true);
+    m_keyboard->setProfile(profile);
+  }
+
+  for (int i = 0; i < MAX_PLAYERS; ++i) {
+    if (!m_playerSlots.contains(i) || m_playerSlots[i] == nullptr) {
+      m_playerSlots[i] = m_keyboard;
+      m_keyboard->setPlayerIndex(i);
+      spdlog::info("Assigned {} to player number {}", m_keyboard->getName(),
+                   i + 1);
+
+      EventDispatcher::instance().publish(GamepadConnectedEvent{m_keyboard});
+      return;
+    }
+  }
+
+  m_keyboard->setPlayerIndex(-1);
+  EventDispatcher::instance().publish(GamepadConnectedEvent{m_keyboard});
 }
 
 void SDLInputService::addGamepad(const int deviceIndex) {
@@ -466,8 +526,29 @@ void SDLInputService::addGamepad(const int deviceIndex) {
   }
 
   m_gamepads.emplace_back(controller);
+  auto nextSlot = getNextAvailablePlayerIndex();
+  if (nextSlot == -1) {
+    controller->setPlayerIndex(-1);
+    EventDispatcher::instance().publish(GamepadConnectedEvent{controller});
+    return;
+  }
+
+  if (!m_preferGamepadOverKeyboard || m_keyboard == nullptr) {
+    m_playerSlots[nextSlot] = controller;
+    controller->setPlayerIndex(nextSlot);
+    spdlog::info("Assigned {} to player number {}", controller->getName(),
+                 nextSlot + 1);
+
+    EventDispatcher::instance().publish(GamepadConnectedEvent{controller});
+    return;
+  }
+
+  // Find the keyboard and move it to next available slot
   for (int i = 0; i < MAX_PLAYERS; ++i) {
-    if (!m_playerSlots.contains(i) || m_playerSlots[i] == nullptr) {
+    if (m_playerSlots.contains(i) && m_playerSlots[i] == m_keyboard) {
+      moveGamepadToPlayerIndex(i, nextSlot);
+      EventDispatcher::instance().publish(GamepadOrderChangedEvent{});
+
       m_playerSlots[i] = controller;
       controller->setPlayerIndex(i);
       spdlog::info("Assigned {} to player number {}", controller->getName(),
@@ -477,11 +558,6 @@ void SDLInputService::addGamepad(const int deviceIndex) {
       return;
     }
   }
-
-  controller->setPlayerIndex(-1);
-  EventDispatcher::instance().publish(GamepadConnectedEvent{controller});
-
-  spdlog::info("Player slots full; not assigning gamepad to player slot");
 }
 
 void SDLInputService::removeGamepad(int joystickInstanceId) {
@@ -489,8 +565,7 @@ void SDLInputService::removeGamepad(int joystickInstanceId) {
     if (*it && (*it)->getInstanceId() == joystickInstanceId) {
       spdlog::info("Removing gamepad: {}", joystickInstanceId);
       for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (m_playerSlots.contains(i) &&
-            m_playerSlots[i]->getInstanceId() == joystickInstanceId) {
+        if (m_playerSlots.contains(i) && m_playerSlots[i] == *it) {
           m_playerSlots.erase(i);
           spdlog::info("Removed player slot for player {}", i + 1);
         }
@@ -499,11 +574,39 @@ void SDLInputService::removeGamepad(int joystickInstanceId) {
       EventDispatcher::instance().publish(GamepadDisconnectedEvent{*it});
 
       SDL_GameControllerClose((*it)->getSDLController());
-      it->reset();
       m_gamepads.erase(it);
+      it->reset();
       return;
     }
   }
+}
+
+int SDLInputService::getNextAvailablePlayerIndex() const {
+  for (int i = 0; i < MAX_PLAYERS; ++i) {
+    if (!m_playerSlots.contains(i) || m_playerSlots.at(i) == nullptr) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+bool SDLInputService::moveGamepadToPlayerIndex(int oldIndex, int newIndex) {
+  if (oldIndex == newIndex || !m_playerSlots.contains(oldIndex) ||
+      (m_playerSlots.contains(newIndex) &&
+       m_playerSlots[newIndex] != nullptr)) {
+    spdlog::warn("Cannot move gamepad from {} "
+                 "to {}: invalid indices",
+                 oldIndex, newIndex);
+    return false;
+  }
+
+  m_playerSlots[newIndex] = m_playerSlots[oldIndex];
+  m_playerSlots.erase(oldIndex);
+
+  spdlog::info("Moved {} from player slot {} to {}",
+               m_playerSlots[newIndex]->getName(), oldIndex + 1, newIndex + 1);
+  return true;
 }
 
 } // namespace firelight::input

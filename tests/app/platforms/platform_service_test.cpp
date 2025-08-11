@@ -48,7 +48,7 @@ TEST_F(PlatformServiceTest, PlatformGameboyIsCorrect) {
       .fileAssociations = {"gb"},
       .controllerTypes = {
           {.id = 1,
-           .name = "Game Boy",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/gb",
            .inputs = {
                {"A", firelight::input::GamepadInput::EastFace},
@@ -79,7 +79,7 @@ TEST_F(PlatformServiceTest, PlatformGameboyColorIsCorrect) {
       .fileAssociations = {"gbc"},
       .controllerTypes = {
           {.id = 1,
-           .name = "Game Boy Color",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/gbc",
            .inputs = {
                {"A", firelight::input::GamepadInput::EastFace},
@@ -110,20 +110,25 @@ TEST_F(PlatformServiceTest, PlatformGameboyAdvanceIsCorrect) {
       .fileAssociations = {"gba"},
       .controllerTypes = {
           {.id = 1,
-           .name = "Game Boy Advance",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/gba",
            .inputs = {
                {"A", firelight::input::GamepadInput::EastFace},
                {"B", firelight::input::GamepadInput::SouthFace},
+               {"A (turbo)", firelight::input::GamepadInput::NorthFace},
+               {"B (turbo)", firelight::input::GamepadInput::WestFace},
                {"L", firelight::input::GamepadInput::LeftBumper},
                {"R", firelight::input::GamepadInput::RightBumper},
+               {"L (turbo)", firelight::input::GamepadInput::LeftTrigger},
+               {"R (turbo)", firelight::input::GamepadInput::RightTrigger},
                {"Start", firelight::input::GamepadInput::Start},
                {"Select", firelight::input::GamepadInput::Select},
                {"D-Pad Up", firelight::input::GamepadInput::DpadUp},
                {"D-Pad Down", firelight::input::GamepadInput::DpadDown},
                {"D-Pad Left", firelight::input::GamepadInput::DpadLeft},
                {"D-Pad Right", firelight::input::GamepadInput::DpadRight},
-           }}}};
+               {"Darken solar sensor", firelight::input::GamepadInput::L3},
+               {"Lighten solar sensor", firelight::input::GamepadInput::R3}}}}};
   const auto &service = firelight::platforms::PlatformService::getInstance();
   const auto actual = service.getPlatform(
       firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE);
@@ -140,7 +145,7 @@ TEST_F(PlatformServiceTest, PlatformNESIsCorrect) {
       .fileAssociations = {"nes"},
       .controllerTypes = {
           {.id = 1,
-           .name = "NES Controller",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/nes",
            .inputs = {
                {"A", firelight::input::GamepadInput::EastFace},
@@ -168,7 +173,7 @@ TEST_F(PlatformServiceTest, PlatformSnesIsCorrect) {
       .fileAssociations = {"sfc", "smc"},
       .controllerTypes = {
           {.id = 1,
-           .name = "SNES Controller",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/snes",
            .inputs = {
                {"A", firelight::input::GamepadInput::EastFace},
@@ -200,7 +205,7 @@ TEST_F(PlatformServiceTest, PlatformN64IsCorrect) {
       .fileAssociations = {"n64", "z64", "v64"},
       .controllerTypes = {
           {.id = 1,
-           .name = "N64 Controller",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/n64",
            .inputs = {
                {"A", firelight::input::GamepadInput::SouthFace},
@@ -242,7 +247,7 @@ TEST_F(PlatformServiceTest, PlatformNintendoDSIsCorrect) {
       .fileAssociations = {"nds"},
       .controllerTypes = {
           {.id = 1,
-           .name = "Nintendo DS",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/nds",
            .inputs = {
                {"A", firelight::input::GamepadInput::EastFace},
@@ -288,7 +293,7 @@ TEST_F(PlatformServiceTest, PlatformSegaMasterSystemIsCorrect) {
       .fileAssociations = {"sms"},
       .controllerTypes = {
           {.id = 1,
-           .name = "Master System Controller",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/sms",
            .inputs = {
                {"1", firelight::input::GamepadInput::SouthFace},
@@ -315,23 +320,8 @@ TEST_F(PlatformServiceTest, PlatformSegaGenesisIsCorrect) {
       .fileAssociations = {"md", "gen"},
       .controllerTypes = {
           {.id = 1,
-           .name = "3-button Control Pad",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/gen-threebutton",
-           .inputs =
-               {
-                   {"A", firelight::input::GamepadInput::WestFace},
-                   {"B", firelight::input::GamepadInput::SouthFace},
-                   {"C", firelight::input::GamepadInput::EastFace},
-                   {"Start", firelight::input::GamepadInput::Start},
-                   {"Mode", firelight::input::GamepadInput::Select},
-                   {"D-Pad Up", firelight::input::GamepadInput::DpadUp},
-                   {"D-Pad Down", firelight::input::GamepadInput::DpadDown},
-                   {"D-Pad Left", firelight::input::GamepadInput::DpadLeft},
-                   {"D-Pad Right", firelight::input::GamepadInput::DpadRight},
-               }},
-          {.id = 2,
-           .name = "6-button Control Pad",
-           .imageUrl = "qrc:/images/controllers/gen-sixbutton",
            .inputs = {
                {"A", firelight::input::GamepadInput::WestFace},
                {"B", firelight::input::GamepadInput::SouthFace},
@@ -362,7 +352,7 @@ TEST_F(PlatformServiceTest, PlatformSegaGameGearIsCorrect) {
       .fileAssociations = {"gg"},
       .controllerTypes = {
           {.id = 1,
-           .name = "Game Gear",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/gg",
            .inputs = {
                {"1", firelight::input::GamepadInput::SouthFace},
@@ -389,33 +379,20 @@ TEST_F(PlatformServiceTest, PlatformTurboGrafx16IsCorrect) {
       .fileAssociations = {"pce"},
       .controllerTypes = {
           {.id = 1,
-           .name = "2-button joypad",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/tgx-twobutton",
-           .inputs =
-               {
-                   {"I", firelight::input::GamepadInput::EastFace},
-                   {"II", firelight::input::GamepadInput::SouthFace},
-                   {"Switch to 6-button mode",
-                    firelight::input::GamepadInput::LeftTrigger},
-                   {"Run", firelight::input::GamepadInput::Start},
-                   {"Select", firelight::input::GamepadInput::Select},
-                   {"D-Pad Up", firelight::input::GamepadInput::DpadUp},
-                   {"D-Pad Down", firelight::input::GamepadInput::DpadDown},
-                   {"D-Pad Left", firelight::input::GamepadInput::DpadLeft},
-                   {"D-Pad Right", firelight::input::GamepadInput::DpadRight},
-               }},
-          {.id = 2,
-           .name = "6-button joypad",
-           .imageUrl = "qrc:/images/controllers/tgx-sixbutton",
            .inputs = {
                {"I", firelight::input::GamepadInput::EastFace},
                {"II", firelight::input::GamepadInput::SouthFace},
-               {"III", firelight::input::GamepadInput::WestFace},
-               {"IV", firelight::input::GamepadInput::NorthFace},
-               {"V", firelight::input::GamepadInput::LeftBumper},
-               {"VI", firelight::input::GamepadInput::RightBumper},
-               {"Switch to 2-button mode",
-                firelight::input::GamepadInput::LeftTrigger},
+               {"III (six-button mode)",
+                firelight::input::GamepadInput::WestFace},
+               {"IV (six-button mode)",
+                firelight::input::GamepadInput::NorthFace},
+               {"V (six-button mode)",
+                firelight::input::GamepadInput::LeftBumper},
+               {"VI (six-button mode)",
+                firelight::input::GamepadInput::RightBumper},
+               {"Toggle mode", firelight::input::GamepadInput::LeftTrigger},
                {"Run", firelight::input::GamepadInput::Start},
                {"Select", firelight::input::GamepadInput::Select},
                {"D-Pad Up", firelight::input::GamepadInput::DpadUp},
@@ -439,33 +416,20 @@ TEST_F(PlatformServiceTest, PlatformSuperGrafxIsCorrect) {
       .fileAssociations = {"sgx"},
       .controllerTypes = {
           {.id = 1,
-           .name = "2-button joypad",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/tgx-twobutton",
-           .inputs =
-               {
-                   {"I", firelight::input::GamepadInput::EastFace},
-                   {"II", firelight::input::GamepadInput::SouthFace},
-                   {"Switch to 6-button mode",
-                    firelight::input::GamepadInput::LeftTrigger},
-                   {"Run", firelight::input::GamepadInput::Start},
-                   {"Select", firelight::input::GamepadInput::Select},
-                   {"D-Pad Up", firelight::input::GamepadInput::DpadUp},
-                   {"D-Pad Down", firelight::input::GamepadInput::DpadDown},
-                   {"D-Pad Left", firelight::input::GamepadInput::DpadLeft},
-                   {"D-Pad Right", firelight::input::GamepadInput::DpadRight},
-               }},
-          {.id = 2,
-           .name = "6-button joypad",
-           .imageUrl = "qrc:/images/controllers/tgx-sixbutton",
            .inputs = {
                {"I", firelight::input::GamepadInput::EastFace},
                {"II", firelight::input::GamepadInput::SouthFace},
-               {"III", firelight::input::GamepadInput::WestFace},
-               {"IV", firelight::input::GamepadInput::NorthFace},
-               {"V", firelight::input::GamepadInput::LeftBumper},
-               {"VI", firelight::input::GamepadInput::RightBumper},
-               {"Switch to 2-button mode",
-                firelight::input::GamepadInput::LeftTrigger},
+               {"III (six-button mode)",
+                firelight::input::GamepadInput::WestFace},
+               {"IV (six-button mode)",
+                firelight::input::GamepadInput::NorthFace},
+               {"V (six-button mode)",
+                firelight::input::GamepadInput::LeftBumper},
+               {"VI (six-button mode)",
+                firelight::input::GamepadInput::RightBumper},
+               {"Toggle mode", firelight::input::GamepadInput::LeftTrigger},
                {"Run", firelight::input::GamepadInput::Start},
                {"Select", firelight::input::GamepadInput::Select},
                {"D-Pad Up", firelight::input::GamepadInput::DpadUp},
@@ -489,34 +453,25 @@ TEST_F(PlatformServiceTest, PlatformWonderSwanIsCorrect) {
       .fileAssociations = {"ws", "wsc"},
       .controllerTypes = {
           {.id = 1,
-           .name = "Horizontal",
+           .name = "Retropad",
            .imageUrl = "qrc:/images/controllers/ws-horizontal",
-           .inputs =
-               {
-                   {"X1", firelight::input::GamepadInput::DpadUp},
-                   {"X2", firelight::input::GamepadInput::DpadRight},
-                   {"X3", firelight::input::GamepadInput::DpadDown},
-                   {"X4", firelight::input::GamepadInput::DpadLeft},
-                   {"A", firelight::input::GamepadInput::EastFace},
-                   {"B", firelight::input::GamepadInput::SouthFace},
-                   {"Start", firelight::input::GamepadInput::Start},
-                   {"Switch to vertical",
-                    firelight::input::GamepadInput::Select},
-               }},
-          {.id = 2,
-           .name = "Vertical",
-           .imageUrl = "qrc:/images/controllers/ws-vertical",
            .inputs = {
-               {"Y1", firelight::input::GamepadInput::DpadLeft},
-               {"Y2", firelight::input::GamepadInput::DpadUp},
-               {"Y3", firelight::input::GamepadInput::DpadRight},
-               {"Y4", firelight::input::GamepadInput::DpadDown},
-               {"X1", firelight::input::GamepadInput::WestFace},
-               {"X2", firelight::input::GamepadInput::NorthFace},
-               {"X3", firelight::input::GamepadInput::EastFace},
-               {"X4", firelight::input::GamepadInput::SouthFace},
+               {"X1 (Horizontal), Y2 (Vertical)",
+                firelight::input::GamepadInput::DpadUp},
+               {"X2 (Horizontal), Y3 (Vertical)",
+                firelight::input::GamepadInput::DpadRight},
+               {"X3 (Horizontal), Y4 (Vertical)",
+                firelight::input::GamepadInput::DpadDown},
+               {"X4 (Horizontal), Y1 (Vertical)",
+                firelight::input::GamepadInput::DpadLeft},
+               {"A (Horizontal), X3 (Vertical)",
+                firelight::input::GamepadInput::EastFace},
+               {"B (Horizontal), X4 (Vertical)",
+                firelight::input::GamepadInput::SouthFace},
+               {"X1 (Horizontal)", firelight::input::GamepadInput::WestFace},
+               {"X2 (Horizontal)", firelight::input::GamepadInput::NorthFace},
                {"Start", firelight::input::GamepadInput::Start},
-               {"Switch to horizontal", firelight::input::GamepadInput::Select},
+               {"Switch orientation", firelight::input::GamepadInput::Select},
            }}}};
   const auto &service = firelight::platforms::PlatformService::getInstance();
   const auto actual = service.getPlatform(

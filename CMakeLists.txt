@@ -151,8 +151,6 @@ add_library(firelight_lib
         src/app/activity/sqlite_activity_log.cpp
         src/app/input/sqlite_controller_repository.cpp
         src/app/library/gui/library_entry_item.cpp
-        src/app/input/profiles/keyboard_mapping.cpp
-        src/app/input/gui/keyboard_mapping_item.cpp
         src/later/video_encoder.cpp
         src/later/video_encoder.h
         src/later/video_decoder.cpp

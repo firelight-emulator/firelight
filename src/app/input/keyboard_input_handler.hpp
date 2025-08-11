@@ -8,16 +8,22 @@
 #include "firelight/libretro/retropad.hpp"
 #include "input2/gamepad.hpp"
 #include "input2/sdl/sdl_controller.hpp"
-#include "profiles/keyboard_mapping.hpp"
 
 namespace firelight::input {
-class KeyboardInputHandler final : public QObject, public SdlController {
+class KeyboardInputHandler final : public QObject, public IGamepad {
   Q_OBJECT
 
 public:
   KeyboardInputHandler();
-  std::shared_ptr<GamepadProfile> getProfile() const override;
+
+  static Qt::Key getDefaultKey(GamepadInput input);
+  static QString getKeyLabel(Qt::Key key);
+
+  [[nodiscard]] std::shared_ptr<GamepadProfile> getProfile() const override;
   void setProfile(const std::shared_ptr<GamepadProfile> &profile) override;
+
+  std::vector<Shortcut> getToggledShortcuts(GamepadInput input) override;
+  [[nodiscard]] int16_t evaluateRawInput(GamepadInput input) const override;
 
   bool isButtonPressed(int platformId, int controllerTypeId,
                        Input t_button) override;
@@ -48,11 +54,13 @@ protected:
   bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
+  static QMap<GamepadInput, Qt::Key> defaultKeys;
+
   QMap<Input, bool> m_buttonStates;
   QMap<Qt::Key, bool> m_keyStates;
 
-  std::shared_ptr<KeyboardMapping> m_keyboardMapping;
+  std::shared_ptr<GamepadProfile> m_profile;
 
-  int m_playerIndex;
+  int m_playerIndex = -1;
 };
 } // namespace firelight::input

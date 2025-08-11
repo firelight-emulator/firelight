@@ -40,7 +40,6 @@
 #include "app/activity/sqlite_activity_log.hpp"
 #include "app/emulator_item.hpp"
 #include "app/input/gui/gamepad_status_item.hpp"
-#include "app/input/gui/keyboard_mapping_item.hpp"
 #include "app/library/gui/entry_list_model.hpp"
 #include "app/library/gui/entry_sort_filter_list_model.hpp"
 #include "app/library/gui/library_entry_item.hpp"
@@ -57,6 +56,7 @@
 #include "settings/sqlite_emulation_settings_manager.hpp"
 
 #include <input/gui/input_mappings_model.hpp>
+#include <input/keyboard_input_handler.hpp>
 #include <saves/gui/save_files_item.hpp>
 #include <unistd.h>
 
@@ -146,8 +146,6 @@ int main(int argc, char *argv[]) {
 
   firelight::input::SDLInputService inputService(controllerRepository);
   firelight::input::InputService::setInstance(&inputService);
-
-  QtConcurrent::run([&] { inputService.run(); });
 
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
@@ -262,8 +260,6 @@ int main(int argc, char *argv[]) {
                                                        "GamepadStatus");
   qmlRegisterType<firelight::gui::GamepadProfileItem>("Firelight", 1, 0,
                                                       "GamepadProfile");
-  qmlRegisterType<firelight::input::KeyboardMappingItem>("Firelight", 1, 0,
-                                                         "KeyboardMapping");
   qmlRegisterType<firelight::mods::ModInfoItem>("Firelight", 1, 0, "ModInfo");
   qmlRegisterType<firelight::achievements::AchievementSetItem>(
       "Firelight", 1, 0, "AchievementSet");
@@ -376,6 +372,14 @@ int main(int argc, char *argv[]) {
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
 
+  firelight::input::KeyboardInputHandler keyboardHandler;
+  window->installEventFilter(&keyboardHandler);
+
+  inputService.setKeyboard(
+      std::shared_ptr<firelight::input::IGamepad>(&keyboardHandler));
+
+  auto inputLoopFuture = QtConcurrent::run([&] { inputService.run(); });
+
   firelight::discord::DiscordManager discordManager;
   discordManager.initialize();
   firelight::ManagerAccessor::setDiscordManager(&discordManager);
@@ -391,6 +395,9 @@ int main(int argc, char *argv[]) {
   int exitCode = QGuiApplication::exec();
 
   spdlog::info("Exiting QGuiApplication");
+
+  inputService.stop();
+  inputLoopFuture.waitForFinished();
 
   // engine.removeImageProvider("gameImages");
   // TODO: Let daemons finish

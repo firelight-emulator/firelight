@@ -34,10 +34,6 @@ public:
   int getControllerTypeId() const;
   void setControllerTypeId(int controllerTypeId);
 
-  bool setData(const QModelIndex &index, const QVariant &value,
-               int role) override;
-  [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
-
   Q_INVOKABLE void setMapping(int originalInput, int mappedInput);
   Q_INVOKABLE void resetToDefault(int originalInput);
   Q_INVOKABLE void resetAllToDefault();
@@ -64,7 +60,7 @@ private:
     bool isDefault = false;
     GamepadInput originalInput;
     QString originalInputName;
-    GamepadInput mappedInput;
+    int mappedInput;
     QString mappedInputName;
     bool hasConflict = false;
     QStringList conflictingInputNames;
@@ -82,6 +78,8 @@ private:
   int m_profileId = -1;
   int m_platformId = -1;
   int m_controllerTypeId = -1;
+
+  bool m_isKeyboard = false;
 };
 
 } // namespace firelight::input

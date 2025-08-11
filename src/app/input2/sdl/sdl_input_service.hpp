@@ -39,24 +39,35 @@ public:
   getRetropadForPlayerIndex(int t_player) override;
 
   void run();
+  void stop();
 
   void changeGamepadOrder(const std::map<int, int> &oldToNewIndex) override;
+
+  bool preferGamepadOverKeyboard() const override;
+  void setPreferGamepadOverKeyboard(bool prefer) override;
+
+  void setKeyboard(std::shared_ptr<IGamepad> keyboard);
 
 private:
   static constexpr int MAX_PLAYERS = 16;
 
   void addGamepad(int deviceIndex);
   void removeGamepad(int joystickInstanceId);
+  int getNextAvailablePlayerIndex() const;
+  bool moveGamepadToPlayerIndex(int oldIndex, int newIndex);
 
   IControllerRepository &m_gamepadRepository;
   std::vector<std::shared_ptr<SdlController>> m_gamepads;
-  std::map<int, std::shared_ptr<SdlController>> m_playerSlots;
+  std::map<int, std::shared_ptr<IGamepad>> m_playerSlots;
+
+  std::shared_ptr<IGamepad> m_keyboard;
 
   std::map<int, std::map<GamepadInput, bool>> m_gamepadLastStates;
 
-private:
   int m_sdlServices = SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC;
   bool m_running = true;
+
+  bool m_preferGamepadOverKeyboard = true;
 };
 
 } // namespace firelight::input

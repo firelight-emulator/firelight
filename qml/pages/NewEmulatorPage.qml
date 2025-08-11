@@ -23,6 +23,10 @@ FocusScope {
 
             if (shortcut === 0) {
                 root.createRewindPoints()
+            } else if (shortcut === 3) {
+                emulator.incrementPlaybackMultiplier()
+            } else if (shortcut === 4) {
+                emulator.decrementPlaybackMultiplier()
             }
         }
     }

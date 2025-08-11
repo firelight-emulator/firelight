@@ -14,6 +14,9 @@ public:
   [[nodiscard]] int getId() const;
   [[nodiscard]] std::string getName() const;
 
+  bool isKeyboardProfile() const;
+  void setIsKeyboardProfile(bool isKeyboardProfile);
+
   void setName(const std::string &name);
 
   [[nodiscard]] std::shared_ptr<InputMapping>
@@ -31,6 +34,8 @@ private:
 
   std::vector<std::shared_ptr<InputMapping>> m_mappings;
   std::shared_ptr<ShortcutMapping> m_shortcutMapping;
+
+  bool m_isKeyboardProfile = false;
 };
 
 } // namespace firelight::input

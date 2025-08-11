@@ -10,22 +10,19 @@ InputMapping::InputMapping(const int id, const int profileId, int platformId,
       m_controllerProfileId(profileId), m_platformId(platformId),
       m_controllerType(controllerType) {}
 
-void InputMapping::addMapping(GamepadInput input, GamepadInput mappedInput) {
+void InputMapping::addMapping(GamepadInput input, int mappedInput) {
   m_mappings.erase(input);
   m_mappings.emplace(input, mappedInput);
 }
 
-std::optional<GamepadInput>
-InputMapping::getMappedInput(const GamepadInput input) {
+std::optional<int> InputMapping::getMappedInput(const GamepadInput input) {
   if (!m_mappings.contains(input)) {
     return std::nullopt;
   }
   return {m_mappings[input]};
 }
 
-std::map<GamepadInput, GamepadInput> &InputMapping::getMappings() {
-  return m_mappings;
-}
+std::map<GamepadInput, int> &InputMapping::getMappings() { return m_mappings; }
 
 void InputMapping::removeMapping(const GamepadInput input) {
   m_mappings.erase(input);
