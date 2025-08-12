@@ -453,6 +453,9 @@ public:
     case PLATFORM_ID_SUPERGRAFX:
       coreName = "mednafen_supergrafx_libretro";
       break;
+    case PLATFORM_ID_POKEMON_MINI:
+      coreName = "pokemini_libretro";
+      break;
     default:
       coreName = "";
       break;
