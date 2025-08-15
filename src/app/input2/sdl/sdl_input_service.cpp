@@ -24,15 +24,122 @@ SDLInputService::~SDLInputService() {
   }
 }
 
-std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
-  std::vector<std::shared_ptr<IGamepad>> gamepads(m_gamepads.size());
-  for (const auto &gamepad : m_gamepads) {
-    if (gamepad) {
-      gamepads.emplace_back(gamepad);
+int SDLInputService::addGamepad(std::shared_ptr<IGamepad> gamepad) {
+  const auto info =
+      m_gamepadRepository.getDeviceInfo(gamepad->getDeviceIdentifier());
+  if (!info) {
+    const auto name = "Default " + gamepad->getName() + " Profile";
+    const auto profile = m_gamepadRepository.createProfile(name);
+    const auto deviceInfo = DeviceInfo{gamepad->getName(), profile->getId()};
+
+    m_gamepadRepository.updateDeviceInfo(gamepad->getDeviceIdentifier(),
+                                         deviceInfo);
+
+    gamepad->setProfile(profile);
+  } else {
+    const auto profile = m_gamepadRepository.getProfile(info->profileId);
+    gamepad->setProfile(profile);
+  }
+
+  m_gamepads.emplace_back(gamepad);
+  auto nextSlot = getNextAvailablePlayerIndex();
+  if (nextSlot == -1) {
+    gamepad->setPlayerIndex(-1);
+    EventDispatcher::instance().publish(GamepadConnectedEvent{gamepad});
+    return -1;
+  }
+
+  if (!m_preferGamepadOverKeyboard || m_keyboard == nullptr) {
+    m_playerSlots[nextSlot] = gamepad;
+    gamepad->setPlayerIndex(nextSlot);
+    spdlog::info("Assigned {} to player number {}", gamepad->getName(),
+                 nextSlot + 1);
+
+    EventDispatcher::instance().publish(GamepadConnectedEvent{gamepad});
+    return gamepad->getPlayerIndex();
+  }
+
+  // Find the keyboard and move it to next available slot
+  for (int i = 0; i < MAX_PLAYERS; ++i) {
+    if (!m_playerSlots.contains(i) || m_playerSlots[i] == nullptr) {
+      m_playerSlots[i] = gamepad;
+      gamepad->setPlayerIndex(i);
+      spdlog::info("Assigned {} to player number {}", gamepad->getName(),
+                   i + 1);
+
+      EventDispatcher::instance().publish(GamepadConnectedEvent{gamepad});
+      return gamepad->getPlayerIndex();
+    }
+
+    if (m_playerSlots.contains(i) && m_playerSlots[i] == m_keyboard) {
+      moveGamepadToPlayerIndex(i, nextSlot);
+
+      m_playerSlots[i] = gamepad;
+      gamepad->setPlayerIndex(i);
+      spdlog::info("Assigned {} to player number {}", gamepad->getName(),
+                   i + 1);
+
+      EventDispatcher::instance().publish(GamepadConnectedEvent{gamepad});
+      return gamepad->getPlayerIndex();
     }
   }
 
-  return gamepads;
+  return -1;
+}
+
+bool SDLInputService::removeGamepadByInstanceId(int instanceId) {
+  for (auto it = m_gamepads.begin(); it != m_gamepads.end(); ++it) {
+    if (*it && (*it)->getInstanceId() == instanceId) {
+      spdlog::info("Removing gamepad: {}", instanceId);
+      for (int i = 0; i < MAX_PLAYERS; ++i) {
+        if (m_playerSlots.contains(i) && m_playerSlots[i] == *it) {
+          m_playerSlots.erase(i);
+          spdlog::info("Removed player slot for player {}", i + 1);
+        }
+      }
+
+      EventDispatcher::instance().publish(
+          GamepadDisconnectedEvent{(*it)->getPlayerIndex()});
+
+      (*it)->setPlayerIndex(-1);
+      (*it)->disconnect();
+      m_gamepads.erase(it);
+      it->reset();
+      return true;
+    }
+  }
+
+  return true;
+}
+
+bool SDLInputService::removeGamepadByPlayerIndex(int playerIndex) {
+  if (!m_playerSlots.contains(playerIndex) ||
+      m_playerSlots[playerIndex] == nullptr) {
+    return true;
+  }
+
+  auto gamepad = m_playerSlots[playerIndex];
+  m_playerSlots.erase(playerIndex);
+
+  for (auto it = m_gamepads.begin(); it != m_gamepads.end(); ++it) {
+    if (*it == gamepad) {
+      spdlog::info("Removing gamepad: {}", gamepad->getInstanceId());
+      EventDispatcher::instance().publish(
+          GamepadDisconnectedEvent{gamepad->getPlayerIndex()});
+
+      (*it)->setPlayerIndex(-1);
+      (*it)->disconnect();
+      m_gamepads.erase(it);
+      it->reset();
+      return true;
+    }
+  }
+
+  return true;
+}
+
+std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
+  return m_gamepads;
 }
 
 std::shared_ptr<IGamepad>
@@ -63,16 +170,16 @@ void SDLInputService::run() {
     while (SDL_WaitEvent(&ev)) {
       switch (ev.type) {
       case SDL_CONTROLLERDEVICEADDED:
-        addGamepad(ev.cdevice.which);
+        openSdlGamepad(ev.cdevice.which);
         break;
       case SDL_CONTROLLERDEVICEREMOVED:
-        removeGamepad(ev.cdevice.which);
+        removeGamepadByInstanceId(ev.cdevice.which);
         break;
       case SDL_CONTROLLERAXISMOTION: {
         const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<SdlController> gamepad;
+        std::shared_ptr<IGamepad> gamepad;
         for (const auto &g : m_gamepads) {
-          if (g->getInstanceId() == joystickInstanceId) {
+          if (g && g->getInstanceId() == joystickInstanceId) {
             gamepad = g;
             break;
           }
@@ -321,9 +428,9 @@ void SDLInputService::run() {
       }
       case SDL_CONTROLLERBUTTONUP: {
         const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<SdlController> gamepad;
+        std::shared_ptr<IGamepad> gamepad;
         for (const auto &g : m_gamepads) {
-          if (g->getInstanceId() == joystickInstanceId) {
+          if (g && g->getInstanceId() == joystickInstanceId) {
             gamepad = g;
             break;
           }
@@ -347,9 +454,9 @@ void SDLInputService::run() {
       }
       case SDL_CONTROLLERBUTTONDOWN: {
         const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<SdlController> gamepad;
+        std::shared_ptr<IGamepad> gamepad;
         for (const auto &g : m_gamepads) {
-          if (g->getInstanceId() == joystickInstanceId) {
+          if (g && g->getInstanceId() == joystickInstanceId) {
             gamepad = g;
             break;
           }
@@ -426,11 +533,12 @@ void SDLInputService::changeGamepadOrder(
     }
   }
 
-  for (const auto &[newIndex, gamepad] : newPlayerSlots) {
+  for (auto i = 0; i < MAX_PLAYERS; ++i) {
+    auto gamepad = newPlayerSlots.contains(i) ? newPlayerSlots[i] : nullptr;
     if (gamepad) {
-      m_playerSlots[newIndex] = gamepad;
+      m_playerSlots[i] = gamepad;
     } else {
-      m_playerSlots.erase(newIndex);
+      m_playerSlots.erase(i);
     }
   }
 
@@ -487,7 +595,7 @@ void SDLInputService::setKeyboard(std::shared_ptr<IGamepad> keyboard) {
   EventDispatcher::instance().publish(GamepadConnectedEvent{m_keyboard});
 }
 
-void SDLInputService::addGamepad(const int deviceIndex) {
+void SDLInputService::openSdlGamepad(const int deviceIndex) {
   const auto gameController = SDL_GameControllerOpen(deviceIndex);
 
   if (!gameController) {
@@ -506,79 +614,9 @@ void SDLInputService::addGamepad(const int deviceIndex) {
     }
   }
 
-  auto controller = std::make_shared<SdlController>(gameController);
+  addGamepad(std::make_shared<SdlController>(gameController));
 
   // Retrieve the gamepad profile and assign it to the gamepad
-  const auto info =
-      m_gamepadRepository.getDeviceInfo(controller->getDeviceIdentifier());
-  if (!info) {
-    const auto name = "Default " + controller->getName() + " Profile";
-    const auto profile = m_gamepadRepository.createProfile(name);
-    const auto deviceInfo = DeviceInfo{controller->getName(), profile->getId()};
-
-    m_gamepadRepository.updateDeviceInfo(controller->getDeviceIdentifier(),
-                                         deviceInfo);
-
-    controller->setProfile(profile);
-  } else {
-    const auto profile = m_gamepadRepository.getProfile(info->profileId);
-    controller->setProfile(profile);
-  }
-
-  m_gamepads.emplace_back(controller);
-  auto nextSlot = getNextAvailablePlayerIndex();
-  if (nextSlot == -1) {
-    controller->setPlayerIndex(-1);
-    EventDispatcher::instance().publish(GamepadConnectedEvent{controller});
-    return;
-  }
-
-  if (!m_preferGamepadOverKeyboard || m_keyboard == nullptr) {
-    m_playerSlots[nextSlot] = controller;
-    controller->setPlayerIndex(nextSlot);
-    spdlog::info("Assigned {} to player number {}", controller->getName(),
-                 nextSlot + 1);
-
-    EventDispatcher::instance().publish(GamepadConnectedEvent{controller});
-    return;
-  }
-
-  // Find the keyboard and move it to next available slot
-  for (int i = 0; i < MAX_PLAYERS; ++i) {
-    if (m_playerSlots.contains(i) && m_playerSlots[i] == m_keyboard) {
-      moveGamepadToPlayerIndex(i, nextSlot);
-      EventDispatcher::instance().publish(GamepadOrderChangedEvent{});
-
-      m_playerSlots[i] = controller;
-      controller->setPlayerIndex(i);
-      spdlog::info("Assigned {} to player number {}", controller->getName(),
-                   i + 1);
-
-      EventDispatcher::instance().publish(GamepadConnectedEvent{controller});
-      return;
-    }
-  }
-}
-
-void SDLInputService::removeGamepad(int joystickInstanceId) {
-  for (auto it = m_gamepads.begin(); it != m_gamepads.end(); ++it) {
-    if (*it && (*it)->getInstanceId() == joystickInstanceId) {
-      spdlog::info("Removing gamepad: {}", joystickInstanceId);
-      for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (m_playerSlots.contains(i) && m_playerSlots[i] == *it) {
-          m_playerSlots.erase(i);
-          spdlog::info("Removed player slot for player {}", i + 1);
-        }
-      }
-
-      EventDispatcher::instance().publish(GamepadDisconnectedEvent{*it});
-
-      SDL_GameControllerClose((*it)->getSDLController());
-      m_gamepads.erase(it);
-      it->reset();
-      return;
-    }
-  }
 }
 
 int SDLInputService::getNextAvailablePlayerIndex() const {
@@ -602,6 +640,7 @@ bool SDLInputService::moveGamepadToPlayerIndex(int oldIndex, int newIndex) {
   }
 
   m_playerSlots[newIndex] = m_playerSlots[oldIndex];
+  m_playerSlots[newIndex]->setPlayerIndex(newIndex);
   m_playerSlots.erase(oldIndex);
 
   spdlog::info("Moved {} from player slot {} to {}",

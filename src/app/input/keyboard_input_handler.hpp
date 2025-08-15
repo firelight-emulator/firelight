@@ -50,6 +50,10 @@ public:
 
   [[nodiscard]] GamepadType getType() const override;
 
+  int getInstanceId() const override;
+  bool disconnect() override;
+  [[nodiscard]] DeviceIdentifier getDeviceIdentifier() const override;
+
 protected:
   bool eventFilter(QObject *obj, QEvent *event) override;
 

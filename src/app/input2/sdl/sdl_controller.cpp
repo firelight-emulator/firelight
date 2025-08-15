@@ -327,12 +327,14 @@ GamepadType SdlController::getType() const {
     return UNKNOWN;
   }
 }
-SDL_GameController *SdlController::getSDLController() const {
-  return m_SDLController;
-}
+
 DeviceIdentifier SdlController::getDeviceIdentifier() const {
   return DeviceIdentifier{m_deviceName, m_vendorId, m_productId,
                           m_productVersion};
+}
+bool SdlController::disconnect() {
+  SDL_GameControllerClose(m_SDLController);
+  return true;
 }
 
 int16_t SdlController::evaluateMapping(const GamepadInput input) const {

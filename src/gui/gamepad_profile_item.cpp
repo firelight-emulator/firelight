@@ -11,12 +11,14 @@ void GamepadProfileItem::setId(const int id) {
 
     m_profile = input::InputService::instance()->getProfile(m_id);
     emit profileIdChanged(m_id);
+    emit nameChanged(name());
+    emit isKeyboardProfileChanged();
   }
 }
 
 QString GamepadProfileItem::name() const {
   if (!m_profile) {
-    return QString();
+    return {};
   }
 
   return QString::fromStdString(m_profile->getName());
@@ -40,5 +42,12 @@ QAbstractListModel *GamepadProfileItem::getShortcutsModel() const {
   }
 
   return new ShortcutsModel(m_profile->getShortcutMapping());
+}
+bool GamepadProfileItem::isKeyboardProfile() const {
+  if (!m_profile) {
+    return false;
+  }
+
+  return m_profile->isKeyboardProfile();
 }
 } // namespace firelight::gui

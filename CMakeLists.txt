@@ -356,6 +356,9 @@ add_executable(fl_test
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
         tests/app/platforms/platform_service_test.cpp
+        tests/app/input/input_service_impl_test.cpp
+        tests/app/input/test_gamepad.cpp
+        tests/app/input/test_gamepad.hpp
 )
 
 file(GLOB QML_TEST_FILES

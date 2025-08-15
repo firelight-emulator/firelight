@@ -30,6 +30,10 @@ class SDLInputService final : public InputService {
 public:
   explicit SDLInputService(IControllerRepository &gamepadRepository);
   ~SDLInputService() override;
+
+  int addGamepad(std::shared_ptr<IGamepad> gamepad) override;
+  bool removeGamepadByInstanceId(int instanceId) override;
+  bool removeGamepadByPlayerIndex(int playerIndex) override;
   std::vector<std::shared_ptr<IGamepad>> listGamepads() override;
   std::shared_ptr<IGamepad> getPlayerGamepad(int playerIndex) override;
 
@@ -51,13 +55,12 @@ public:
 private:
   static constexpr int MAX_PLAYERS = 16;
 
-  void addGamepad(int deviceIndex);
-  void removeGamepad(int joystickInstanceId);
+  void openSdlGamepad(int deviceIndex);
   int getNextAvailablePlayerIndex() const;
   bool moveGamepadToPlayerIndex(int oldIndex, int newIndex);
 
   IControllerRepository &m_gamepadRepository;
-  std::vector<std::shared_ptr<SdlController>> m_gamepads;
+  std::vector<std::shared_ptr<IGamepad>> m_gamepads;
   std::map<int, std::shared_ptr<IGamepad>> m_playerSlots;
 
   std::shared_ptr<IGamepad> m_keyboard;

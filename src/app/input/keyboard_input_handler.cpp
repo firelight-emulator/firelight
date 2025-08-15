@@ -222,6 +222,22 @@ bool KeyboardInputHandler::isWired() const { return true; }
 
 GamepadType KeyboardInputHandler::getType() const { return KEYBOARD; }
 
+int KeyboardInputHandler::getInstanceId() const { return -2; }
+
+bool KeyboardInputHandler::disconnect() {
+  // Intentionally do nothing.
+  return true;
+}
+
+DeviceIdentifier KeyboardInputHandler::getDeviceIdentifier() const {
+  return DeviceIdentifier{
+      .deviceName = "Keyboard",
+      .vendorId = -1,
+      .productId = -1,
+      .productVersion = -1,
+  };
+}
+
 bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
   if (event->type() == QEvent::KeyPress) {
     const auto keyEvent = dynamic_cast<QKeyEvent *>(event);

@@ -1,4 +1,6 @@
 #pragma once
+#include "device_identifier.hpp"
+
 #include <firelight/libretro/retropad.hpp>
 #include <string>
 
@@ -24,8 +26,14 @@ public:
 
   virtual void setPlayerIndex(int playerIndex) = 0;
 
+  virtual int getInstanceId() const = 0;
+
   virtual bool isWired() const = 0;
 
   virtual GamepadType getType() const = 0;
+
+  virtual bool disconnect() = 0;
+
+  virtual DeviceIdentifier getDeviceIdentifier() const = 0;
 };
 } // namespace firelight::input

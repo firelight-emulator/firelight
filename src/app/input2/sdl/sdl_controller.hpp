@@ -38,7 +38,7 @@ public:
 
   int16_t getRightStickYPosition(int platformId, int controllerTypeId) override;
 
-  [[nodiscard]] int32_t getInstanceId() const;
+  [[nodiscard]] int32_t getInstanceId() const override;
 
   [[nodiscard]] std::string getName() const override;
 
@@ -54,9 +54,9 @@ public:
 
   [[nodiscard]] GamepadType getType() const override;
 
-  SDL_GameController *getSDLController() const;
+  [[nodiscard]] DeviceIdentifier getDeviceIdentifier() const override;
 
-  DeviceIdentifier getDeviceIdentifier() const;
+  bool disconnect() override;
 
 private:
   [[nodiscard]] int16_t evaluateMapping(GamepadInput input) const;

@@ -11,7 +11,7 @@ struct GamepadConnectedEvent {
 };
 
 struct GamepadDisconnectedEvent {
-  std::shared_ptr<IGamepad> gamepad;
+  int playerIndex;
 };
 
 struct GamepadOrderChangedEvent {};
@@ -41,6 +41,11 @@ public:
   static InputService *instance() { return s_instance; }
 
   ~InputService() override = default;
+  virtual int addGamepad(std::shared_ptr<IGamepad> gamepad) = 0;
+
+  virtual bool removeGamepadByInstanceId(int instanceId) = 0;
+  virtual bool removeGamepadByPlayerIndex(int playerIndex) = 0;
+
   virtual std::vector<std::shared_ptr<IGamepad>> listGamepads() = 0;
   virtual std::shared_ptr<IGamepad> getPlayerGamepad(int playerIndex) = 0;
 

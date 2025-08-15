@@ -13,6 +13,8 @@ class GamepadProfileItem : public QQuickItem {
   Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
   Q_PROPERTY(QAbstractListModel *shortcutsModel READ getShortcutsModel NOTIFY
                  profileIdChanged)
+  Q_PROPERTY(
+      bool isKeyboardProfile READ isKeyboardProfile NOTIFY profileIdChanged)
 
 public:
   int id() const;
@@ -20,6 +22,7 @@ public:
   QString name() const;
   void setName(const QString &name);
   QAbstractListModel *getShortcutsModel() const;
+  bool isKeyboardProfile() const;
 
   Q_INVOKABLE QAbstractListModel *
   getInputMappings(const int platformId, const int controllerTypeId) const {
@@ -34,6 +37,7 @@ public:
 signals:
   void profileIdChanged(int id);
   void nameChanged(const QString &name);
+  void isKeyboardProfileChanged();
 
 private:
   int m_id = -1;

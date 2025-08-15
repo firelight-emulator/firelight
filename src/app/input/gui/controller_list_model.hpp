@@ -28,6 +28,7 @@ private:
 
   void onGamepadConnected(const input::GamepadConnectedEvent &event);
   void onGamepadDisconnected(const input::GamepadDisconnectedEvent &event);
+  void validateAll();
 
   struct Item {
     int playerIndex;

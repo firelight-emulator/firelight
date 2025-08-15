@@ -12,13 +12,13 @@ ControllerListModel::ControllerListModel(QObject *parent)
   m_connectedHandler =
       EventDispatcher::instance().subscribe<input::GamepadConnectedEvent>(
           [this](const input::GamepadConnectedEvent &event) {
-            this->onGamepadConnected(event);
+            this->refreshControllerList();
           });
 
   m_disconnectedHandler =
       EventDispatcher::instance().subscribe<input::GamepadDisconnectedEvent>(
           [this](const input::GamepadDisconnectedEvent &event) {
-            this->onGamepadDisconnected(event);
+            this->refreshControllerList();
           });
 
   m_gamepadOrderChangedHandler =
@@ -101,8 +101,7 @@ void ControllerListModel::onGamepadConnected(
 
 void ControllerListModel::onGamepadDisconnected(
     const input::GamepadDisconnectedEvent &event) {
-  const auto gamepad = event.gamepad;
-  const auto playerIndex = gamepad->getPlayerIndex();
+  const auto playerIndex = event.playerIndex;
   if (playerIndex > 3 || playerIndex < 0) {
     return;
   }
@@ -111,18 +110,30 @@ void ControllerListModel::onGamepadDisconnected(
   emit dataChanged(createIndex(playerIndex, 0), createIndex(playerIndex, 0),
                    {});
 }
+void ControllerListModel::validateAll() {
+  for (int i = 0; i < 4; i++) {
+    const auto con = m_inputService->getPlayerGamepad(i);
+    if (!con || m_items[i].playerIndex != i) {
+      refreshControllerList();
+      break;
+    }
+  }
+}
 
 void ControllerListModel::refreshControllerList() {
   emit beginResetModel();
   m_items.clear();
+
   for (int i = 0; i < 4; i++) {
     auto con = m_inputService->getPlayerGamepad(i);
     if (con) {
+      spdlog::info(" Adding controller {}: {}", i, con->getName());
       m_items.push_back({i, true, con->getProfile()->getId(),
                          QString::fromStdString(con->getName()), "None",
                          con->isWired(),
                          ControllerIcons::sourceUrlFromType(con->getType())});
     } else {
+      spdlog::info("Got no controller for {}", i);
       m_items.push_back({i, false, -1, "Default", "None", true});
     }
   }
