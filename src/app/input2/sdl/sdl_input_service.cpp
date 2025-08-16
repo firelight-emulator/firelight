@@ -144,7 +144,10 @@ std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
     connectedGamepads.emplace_back(gamepad);
   }
 
-  connectedGamepads.emplace_back(m_keyboard);
+  if (m_keyboard) {
+    connectedGamepads.emplace_back(m_keyboard);
+  }
+
   return connectedGamepads;
 }
 
