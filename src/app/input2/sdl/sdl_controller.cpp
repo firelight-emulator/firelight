@@ -23,7 +23,7 @@ std::vector<Shortcut> SdlController::getToggledShortcuts(GamepadInput input) {
 
     auto toggled = true;
     for (const auto &mod : modifiers) {
-      if (!evaluateMapping(mod)) {
+      if (!evaluateMapping(static_cast<GamepadInput>(mod))) {
         toggled = false;
         break;
       }

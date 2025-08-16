@@ -31,8 +31,6 @@ class InputService : public libretro::IRetropadProvider {
 public:
   static std::map<Shortcut, std::string> listShortcuts() {
     return {{OpenRewindMenu, "Open rewind menu"},
-            {HoldFastForward, "Fast-forward (hold)"},
-            {HoldRewind, "Rewind (hold)"},
             {SpeedUp, "Speed up"},
             {SlowDown, "Slow down"}};
   }

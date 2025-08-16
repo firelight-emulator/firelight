@@ -11,6 +11,7 @@ FocusScope {
 
     required property var platformId
     required property var profileId
+    required property bool isKeyboard
     property var controllerType: 1
 
     required property var platformMetadataModel
@@ -22,11 +23,14 @@ FocusScope {
 
     FirelightDialog {
         id: confirmDialog
+        text: {
+            if (!root.isKeyboard) {
+                return "You're about to walk through assigning an input on your controller to each " + platformMetadataModel.display_name + " input.\n\n Continue?"
+            } else {
+                return "You're about to walk through assigning a key on your keyboard to each " + platformMetadataModel.display_name + " input.\n\n Continue?"
+            }
+        }
 
-        property var buttonList: []
-        property var currentIndex: 0
-
-        text: "You're about to walk through assigning an input on your controller to each " + platformMetadataModel.display_name + " input.\n\n Continue?"
         showButtons: true
 
         onAccepted: function () {
@@ -46,7 +50,7 @@ FocusScope {
     FirelightDialog {
             id: resetAllDialog
 
-            text: "You're about to walk through assigning an input on your controller to each " + platformMetadataModel.display_name + " input.\n\n Continue?"
+            text: "Reset all mappings to default?"
             showButtons: true
 
             onAccepted: function () {
@@ -60,6 +64,7 @@ FocusScope {
         imageSourceUrl: platformMetadataModel.controller_images[root.controllerType - 1]
         platformName: platformMetadataModel.display_name
         gamepad: root.gamepad
+        isKeyboard: root.isKeyboard
 
         onMappingAdded: function(original, mapped) {
             inputMappingsModel.setMapping(original, mapped)

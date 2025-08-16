@@ -236,7 +236,16 @@ void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
     m_rewindPointTimer.stop();
   }
 }
+bool EmulatorItem::isMuted() const { return m_audioManager->isMuted(); }
 
+void EmulatorItem::setMuted(bool muted) {
+  if (m_audioManager->isMuted() == muted) {
+    return;
+  }
+
+  m_audioManager->setMuted(muted);
+  emit mutedChanged();
+}
 float EmulatorItem::audioBufferLevel() const {
   return m_audioManager ? m_audioManager->getBufferLevel() : 0.0f;
 }
@@ -286,10 +295,20 @@ void EmulatorItem::loadRewindPoint(const int index) {
   }
 }
 
-void EmulatorItem::setPlaybackMultiplier(int playbackMultiplier) {
+void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
+  if (playbackMultiplier < 0.1f) {
+    return;
+  }
+
   if (m_playbackMultiplier != playbackMultiplier) {
     m_playbackMultiplier = playbackMultiplier;
     emit playbackMultiplierChanged();
+
+    if (m_playbackMultiplier != 1.0f) {
+      setMuted(true);
+    } else {
+      setMuted(false);
+    }
 
     if (m_renderer) {
       m_renderer->submitCommand(

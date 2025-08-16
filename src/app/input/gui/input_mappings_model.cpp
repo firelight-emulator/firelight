@@ -108,8 +108,8 @@ void InputMappingsModel::setMapping(const int originalInput, int mappedInput) {
     item.mappedInput = mappedInput;
 
     if (m_isKeyboard) {
-      item.mappedInputName =
-          "Keyboard key " + QString::number(item.mappedInput);
+      item.mappedInputName = KeyboardInputHandler::getKeyLabel(
+          static_cast<Qt::Key>(item.mappedInput));
       item.isDefault = false;
     } else {
       item.mappedInputName =
@@ -158,9 +158,19 @@ void InputMappingsModel::resetToDefault(int originalInput) {
     if (item.originalInput == originalInput) {
       for (const auto &input : inputs) {
         if (input.virtualInput == originalInput) {
-          item.mappedInput = input.virtualInput;
-          item.mappedInputName = QString::fromStdString(
-              PlatformMetadata::getInputName(input.virtualInput));
+          item.mappedInput =
+              m_isKeyboard
+                  ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
+                  : input.virtualInput;
+
+          if (m_isKeyboard) {
+            item.mappedInputName = KeyboardInputHandler::getKeyLabel(
+                static_cast<Qt::Key>(item.mappedInput));
+          } else {
+            item.mappedInputName =
+                QString::fromStdString(PlatformMetadata::getInputName(
+                    static_cast<GamepadInput>(item.mappedInput)));
+          }
           item.isDefault = true;
 
           m_inputMapping->removeMapping(

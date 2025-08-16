@@ -19,10 +19,6 @@ FocusScope {
     GamepadProfile {
         id: profile
         profileId: root.profileId
-
-        Component.onCompleted: {
-            console.log(profile.name)
-        }
     }
 
     ButtonGroup {
@@ -114,7 +110,7 @@ FocusScope {
                      onToggled: {
                          if (checked) {
                              ListView.view.currentIndex = index
-                             theStack.replaceCurrentItem(mappingView, {platformId: model.platform_id, profileId: gamepadStatus.profileId, platformMetadataModel: model, gamepad: gamepadStatus}, StackView.Immediate)
+                             theStack.replaceCurrentItem(mappingView, {platformId: model.platform_id, profileId: gamepadStatus.profileId, platformMetadataModel: model, gamepad: gamepadStatus, isKeyboard: profile.isKeyboardProfile}, StackView.Immediate)
                          }
                      }
                  }
@@ -160,6 +156,7 @@ FocusScope {
                 shortcutName: ""
                 shortcut: 0
                 gamepad: gamepadStatus
+                isKeyboard: profile.isKeyboardProfile
 
                 onMappingAdded: function(shortcut, modifiers, input) {
                     shortcutsListView.model.setMapping(shortcut, modifiers, input);

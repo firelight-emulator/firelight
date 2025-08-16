@@ -5,8 +5,8 @@
 namespace firelight::input {
 
 struct InputSequence {
-  std::vector<GamepadInput> modifiers;
-  GamepadInput input;
+  std::vector<int> modifiers;
+  int input;
 };
 
 } // namespace firelight::input

@@ -12,6 +12,7 @@ FirelightDialog {
     property var imageSourceUrl
     property var platformName
     property variant buttons: []
+    property bool isKeyboard: false
 
     property int currentIndex: 0
     property bool canAcceptAxisInput: true
@@ -42,7 +43,7 @@ FirelightDialog {
 
     Connections {
         target: gamepad
-        enabled: root.visible
+        enabled: root.visible && !root.isKeyboard
         function onInputChanged(input, activated) {
             if (activated && root.canAcceptAxisInput) {
                 axisDebounceTimer.restart()
@@ -59,28 +60,6 @@ FirelightDialog {
         }
     }
 
-    // GamepadStatus {
-    //     id: thing
-    //     playerNumber: gamepad.playerNumber
-    //     onInputChanged: function(input, activated) {
-    //         if  (!root.visible) {
-    //             return
-    //         }
-    //         if (activated && root.canAcceptAxisInput) {
-    //             axisDebounceTimer.restart()
-    //             root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
-    //             if (root.buttons.length > root.currentIndex + 1) {
-    //                 root.currentIndex++
-    //                 timer.stop()
-    //                 frameAnimation.reset()
-    //                 timer.restart()
-    //             } else {
-    //                 root.accept()
-    //             }
-    //         }
-    //     }
-    // }
-
     Timer {
         id: axisDebounceTimer
         interval: 300
@@ -90,9 +69,23 @@ FirelightDialog {
 
     contentItem: ColumnLayout {
         spacing: 12
+        focus: true
 
         Keys.onPressed: function (event) {
-            event.accept = false
+            if (!root.visible || !root.isKeyboard || event.isAutoRepeat) {
+                event.accept = false
+                return
+            }
+
+            root.mappingAdded(root.buttons[root.currentIndex].retropad_button, event.key)
+            if (root.buttons.length > root.currentIndex + 1) {
+                root.currentIndex++
+                timer.stop()
+                frameAnimation.reset()
+                timer.restart()
+            } else {
+                root.accept()
+            }
         }
 
         Keys.onReleased: function (event) {
@@ -109,21 +102,27 @@ FirelightDialog {
             fillMode: Image.PreserveAspectFit
         }
         Text {
-            text: "Press a button on your controller to assign it to this " + platformList.currentItem.model.display_name + " input:"
+            text: {
+                if (!root.isKeyboard) {
+                    return "Press a button on your controller to assign it to this " + platformList.currentItem.model.display_name + " input:"
+                } else {
+                    return "Press a key on your keyboard to assign it to this " + platformList.currentItem.model.display_name + " input:"
+                }
+            }
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: parent.width * 5 / 6
 
             color: "white"
             font.family: Constants.regularFontFamily
-            font.weight: Font.Light
+            font.weight: Font.Normal
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             font.pixelSize: 18
         }
 
         Text {
-            text: root.numButtons > 0 && dialog.currentIndex < root.numButtons ? dialog.buttons[dialog.currentIndex].display_name : "Nothing"
+            text: root.visible ? root.numButtons > 0 && dialog.currentIndex < root.numButtons ? dialog.buttons[dialog.currentIndex].display_name : "Nothing" : "Nothing"
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             color: ColorPalette.neutral200

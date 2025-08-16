@@ -10,6 +10,7 @@ FirelightDialog {
     required property GamepadStatus gamepad
     required property var shortcut
     required property string shortcutName
+    required property bool isKeyboard
 
     showButtons: false
     closePolicy: Popup.NoAutoClose
@@ -30,16 +31,13 @@ FirelightDialog {
 
     Connections {
         target: gamepad
-        enabled: root.visible
+        enabled: root.visible && !root.isKeyboard
         function onInputChanged(input, activated) {
             if (input === 12 || input === 13) { // GamepadInput enum
                 // Ignore Left Trigger and Right Trigger
                 return;
             }
             if (activated) {
-                console.log("Left Trigger down? " + gamepad.isButtonPressed(12))
-                console.log("Right Trigger down? " + gamepad.isButtonPressed(13))
-
                 let modifiers = [];
                 if (gamepad.isButtonPressed(12)) {
                     modifiers.push(12);
@@ -67,8 +65,64 @@ FirelightDialog {
     contentItem: ColumnLayout {
         spacing: 12
 
+        focus: true
+
         Keys.onPressed: function (event) {
-            event.accept = false
+            if (!root.visible || !root.isKeyboard || event.isAutoRepeat) {
+                event.accept = false
+                return
+            }
+
+            if (event.key === Qt.Key_Escape || event.key === Qt.Key_Alt || event.key === Qt.Key_Control || event.key === Qt.Key_Shift || event.key === Qt.Key_Meta) {
+                // Ignore modifier keys alone, and ignore escape
+                return;
+            }
+
+            let modifiers = [];
+            if (event.modifiers & Qt.ShiftModifier) {
+                modifiers.push(Qt.Key_Shift);
+            }
+
+            if (event.modifiers & Qt.ControlModifier) {
+                modifiers.push(Qt.Key_Control);
+            }
+
+            if (event.modifiers & Qt.AltModifier) {
+                modifiers.push(Qt.Key_Alt);
+            }
+
+            console.log("Modifiers: " + modifiers)
+            mappingAdded(root.shortcut, modifiers, event.key);
+            root.accept()
+
+            // if (input === 12 || input === 13) { // GamepadInput enum
+            //     // Ignore Left Trigger and Right Trigger
+            //     return;
+            // }
+            // if (activated) {
+            //     let modifiers = [];
+            //     if (gamepad.isButtonPressed(12)) {
+            //         modifiers.push(12);
+            //     }
+            //     if (gamepad.isButtonPressed(13)) {
+            //         modifiers.push(13);
+            //     }
+            //
+            //     console.log("Modifiers: " + modifiers)
+            //     mappingAdded(root.shortcut, modifiers, input);
+            //     root.accept()
+            //     // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
+            //     // if (root.buttons.length > root.currentIndex + 1) {
+            //     //     root.currentIndex++
+            //     //     timer.stop()
+            //     //     frameAnimation.reset()
+            //     //     timer.restart()
+            //     // } else {
+            //     //     root.accept()
+            //     // }
+            // }
+
+            // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, event.key)
         }
 
         Keys.onReleased: function (event) {
@@ -76,14 +130,19 @@ FirelightDialog {
         }
 
         Text {
-            text: "Press a button while holding Left Trigger and/or Right Trigger (optional) to assign it to:"
+            text: {
+                if (!root.isKeyboard) {
+                    "Press a button while holding Left Trigger and/or Right Trigger (optional) to assign it to:"
+                } else {
+                    "Press a key while holding Shift, Control, Alt, or Windows (optional) to assign it to:"
+                }
+            }
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: parent.width * 5 / 6
 
             color: "white"
             font.family: Constants.regularFontFamily
-            font.weight: Font.Light
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             font.pixelSize: 18

@@ -1,5 +1,8 @@
 #include "keyboard_input_handler.hpp"
 
+#include "event_dispatcher.hpp"
+#include "input2/input_service.hpp"
+
 #include <qevent.h>
 #include <spdlog/spdlog.h>
 
@@ -243,6 +246,40 @@ bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
     const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
     if (keyEvent->modifiers() == Qt::KeyboardModifier::KeyboardModifierMask) {
       return false;
+    }
+    for (auto &thing : m_profile->getShortcutMapping()->getMappings()) {
+      auto pressed = true;
+      auto ctrlPressed = keyEvent->modifiers() & Qt::ControlModifier;
+      auto altPressed = keyEvent->modifiers() & Qt::AltModifier;
+      auto shiftPressed = keyEvent->modifiers() & Qt::ShiftModifier;
+
+      for (auto mod : thing.second.modifiers) {
+        if (mod == Qt::Key_Control && !ctrlPressed) {
+          pressed = false;
+          break;
+        }
+
+        if (mod == Qt::Key_Alt && !altPressed) {
+          pressed = false;
+          break;
+        }
+
+        if (mod == Qt::Key_Shift && !shiftPressed) {
+          pressed = false;
+          break;
+        }
+      }
+
+      if (!pressed) {
+        continue;
+      }
+
+      if (thing.second.input == keyEvent->key()) {
+        spdlog::info("Shortcut {} triggered", static_cast<int>(thing.first));
+        EventDispatcher::instance().publish(
+            ShortcutToggledEvent{.shortcut = thing.first});
+        return true;
+      }
     }
     m_keyStates[static_cast<Qt::Key>(keyEvent->key())] = true;
   } else if (event->type() == QEvent::KeyRelease) {

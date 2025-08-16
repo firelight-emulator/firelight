@@ -41,7 +41,8 @@ QAbstractListModel *GamepadProfileItem::getShortcutsModel() const {
     return nullptr;
   }
 
-  return new ShortcutsModel(m_profile->getShortcutMapping());
+  return new ShortcutsModel(m_profile->isKeyboardProfile(),
+                            m_profile->getShortcutMapping());
 }
 bool GamepadProfileItem::isKeyboardProfile() const {
   if (!m_profile) {

@@ -10,6 +10,7 @@ class ShortcutsModel : public QAbstractListModel {
 
 public:
   explicit ShortcutsModel(
+      bool isKeyboard,
       const std::shared_ptr<input::ShortcutMapping> &shortcutMapping);
   int rowCount(const QModelIndex &parent) const override;
   QVariant data(const QModelIndex &index, int role) const override;
@@ -37,15 +38,16 @@ private:
     QString shortcutName;
     bool hasMapping = false;
     bool hasConflict = false;
-    QList<input::GamepadInput> modifiers;
+    QList<int> modifiers;
     QStringList modifierNames;
-    input::GamepadInput gamepadInput;
-    QString gamepadInputName;
+    int input;
+    QString inputName;
   };
 
   input::InputService *m_inputService;
   std::shared_ptr<input::ShortcutMapping> m_shortcutMapping;
   int m_profileId = -1;
+  bool m_isKeyboard;
 
   QList<Item> m_items;
 };

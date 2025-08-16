@@ -1,11 +1,14 @@
 #include "shortcuts_model.hpp"
 
+#include <input/keyboard_input_handler.hpp>
 #include <platform_metadata.hpp>
 
 namespace firelight::gui {
 ShortcutsModel::ShortcutsModel(
+    const bool isKeyboard,
     const std::shared_ptr<input::ShortcutMapping> &shortcutMapping)
-    : QAbstractListModel(nullptr), m_shortcutMapping(shortcutMapping) {
+    : QAbstractListModel(nullptr), m_shortcutMapping(shortcutMapping),
+      m_isKeyboard(isKeyboard) {
   m_inputService = input::InputService::instance();
 
   beginResetModel();
@@ -23,19 +26,29 @@ ShortcutsModel::ShortcutsModel(
       for (const auto &input :
            m_shortcutMapping->getMappings().at(shortcut.first).modifiers) {
         item.modifiers.append(input);
-        item.modifierNames.append(
-            QString::fromStdString(PlatformMetadata::getInputName(input)));
+        if (m_isKeyboard) {
+          item.modifierNames.append(input::KeyboardInputHandler::getKeyLabel(
+              static_cast<Qt::Key>(input)));
+        } else {
+          item.modifierNames.append(
+              QString::fromStdString(PlatformMetadata::getInputName(
+                  static_cast<input::GamepadInput>(input))));
+        }
       }
 
-      item.gamepadInput = m_shortcutMapping->getMappings()
-                              .at(shortcut.first)
-                              .input; // Assuming input is GamepadInput
-      item.gamepadInputName = QString::fromStdString(
-          PlatformMetadata::getInputName(item.gamepadInput));
+      item.input = m_shortcutMapping->getMappings()
+                       .at(shortcut.first)
+                       .input; // Assuming input is GamepadInput
+      if (m_isKeyboard) {
+        item.inputName = input::KeyboardInputHandler::getKeyLabel(
+            static_cast<Qt::Key>(item.input));
+      } else {
+        item.inputName = QString::fromStdString(PlatformMetadata::getInputName(
+            static_cast<input::GamepadInput>(item.input)));
+      }
     } else {
-      item.gamepadInput =
-          input::GamepadInput::None; // Default value if not mapped
-      item.gamepadInputName = "Not mapped";
+      item.input = input::GamepadInput::None; // Default value if not mapped
+      item.inputName = "Not mapped";
     }
 
     m_items.emplace_back(item);
@@ -66,9 +79,9 @@ QVariant ShortcutsModel::data(const QModelIndex &index, const int role) const {
   case ModifierNames:
     return item.modifierNames;
   case Input:
-    return item.gamepadInput;
+    return item.input;
   case InputName:
-    return item.gamepadInputName;
+    return item.inputName;
   default:
     return {};
   }
@@ -101,9 +114,8 @@ bool ShortcutsModel::setData(const QModelIndex &index, const QVariant &value,
   switch (role) {
   case HasMapping:
     item.hasMapping = false;
-    item.gamepadInput =
-        input::GamepadInput::None; // Default value if not mapped
-    item.gamepadInputName = "Not mapped";
+    item.input = input::GamepadInput::None; // Default value if not mapped
+    item.inputName = "Not mapped";
     item.hasConflict = false;
 
     item.modifiers.clear();
@@ -133,27 +145,36 @@ void ShortcutsModel::setMapping(int shortcut, QList<int> modifiers, int input) {
     item.modifierNames.clear();
 
     for (const auto &modifier : modifiers) {
-      item.modifiers.append(static_cast<input::GamepadInput>(modifier));
-      item.modifierNames.append(
-          QString::fromStdString(PlatformMetadata::getInputName(
-              static_cast<input::GamepadInput>(modifier))));
+      item.modifiers.append(modifier);
+      if (m_isKeyboard) {
+        item.modifierNames.append(input::KeyboardInputHandler::getKeyLabel(
+            static_cast<Qt::Key>(modifier)));
+      } else {
+        item.modifierNames.append(
+            QString::fromStdString(PlatformMetadata::getInputName(
+                static_cast<input::GamepadInput>(modifier))));
+      }
     }
 
-    item.gamepadInput = static_cast<input::GamepadInput>(input);
-    item.gamepadInputName = QString::fromStdString(
-        PlatformMetadata::getInputName(item.gamepadInput));
+    item.input = static_cast<input::GamepadInput>(input);
+    if (m_isKeyboard) {
+      item.inputName = input::KeyboardInputHandler::getKeyLabel(
+          static_cast<Qt::Key>(item.input));
+    } else {
+      item.inputName = QString::fromStdString(PlatformMetadata::getInputName(
+          static_cast<input::GamepadInput>(item.input)));
+    }
 
     // TODO: Check for conflicts
     item.hasConflict = false;
     item.hasMapping = true;
 
-    std::vector<input::GamepadInput> modifierList;
+    std::vector<int> modifierList;
     for (const auto &mod : item.modifiers) {
       modifierList.push_back(mod);
     }
 
-    m_shortcutMapping->setMapping(item.shortcut,
-                                  {modifierList, item.gamepadInput});
+    m_shortcutMapping->setMapping(item.shortcut, {modifierList, item.input});
     m_shortcutMapping->sync();
 
     emit dataChanged(index(i), index(i));

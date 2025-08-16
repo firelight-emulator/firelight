@@ -203,6 +203,29 @@ FocusScope {
         }
     }
 
+    Pane {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins:16
+        width: 100
+        height: 40
+        visible: emulator.playbackMultiplier !== 1
+        padding: 12
+        background: Rectangle {
+            color: ColorPalette.neutral900
+        }
+
+        contentItem: Text {
+            text: emulator.playbackMultiplier + "x"
+            color: "white"
+            font.pixelSize: 20
+            font.family: Constants.regularFontFamily
+            anchors.centerIn: parent
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+        }
+    }
+
     Rectangle {
         id: redThing
         color: "red"
