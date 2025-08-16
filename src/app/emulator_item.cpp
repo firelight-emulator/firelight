@@ -4,6 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include "emulator_item_renderer.hpp"
+#include "input2/input_service.hpp"
 #include "platform_metadata.hpp"
 
 #include <library/rom_file.hpp>
@@ -17,7 +18,7 @@ void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
   const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
   const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
-  getInputManager()->updateMouseState(x, y, m_mousePressed);
+  // getInputManager()->updateMouseState(x, y, m_mousePressed);
 }
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
@@ -235,53 +236,86 @@ void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
     m_rewindPointTimer.stop();
   }
 }
+bool EmulatorItem::isMuted() const { return m_audioManager->isMuted(); }
 
+void EmulatorItem::setMuted(bool muted) {
+  if (m_audioManager->isMuted() == muted) {
+    return;
+  }
+
+  m_audioManager->setMuted(muted);
+  emit mutedChanged();
+}
 float EmulatorItem::audioBufferLevel() const {
   return m_audioManager ? m_audioManager->getBufferLevel() : 0.0f;
 }
 
 void EmulatorItem::resetGame() {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::ResetGame});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::ResetGame});
+    update();
+  }
 }
 
 void EmulatorItem::writeSuspendPoint(const int index) {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSuspendPoint,
-                             .suspendPointIndex = index});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSuspendPoint,
+                               .suspendPointIndex = index});
+    update();
+  }
 }
 
 void EmulatorItem::loadSuspendPoint(const int index) {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadSuspendPoint,
-                             .suspendPointIndex = index});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadSuspendPoint,
+                               .suspendPointIndex = index});
+    update();
+  }
 }
 void EmulatorItem::undoLastLoadSuspendPoint() {
-  m_renderer->submitCommand(
-      {.type = EmulatorItemRenderer::UndoLoadSuspendPoint});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand(
+        {.type = EmulatorItemRenderer::UndoLoadSuspendPoint});
+    update();
+  }
 }
 
 void EmulatorItem::createRewindPoints() {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::EmitRewindPoints});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::EmitRewindPoints});
+    update();
+  }
 }
 
 void EmulatorItem::loadRewindPoint(const int index) {
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadRewindPoint,
-                             .rewindPointIndex = index});
-  update();
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadRewindPoint,
+                               .rewindPointIndex = index});
+    update();
+  }
 }
 
-void EmulatorItem::setPlaybackMultiplier(int playbackMultiplier) {
+void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
+  if (playbackMultiplier < 0.1f) {
+    return;
+  }
+
   if (m_playbackMultiplier != playbackMultiplier) {
     m_playbackMultiplier = playbackMultiplier;
     emit playbackMultiplierChanged();
 
-    m_renderer->submitCommand(
-        {.type = EmulatorItemRenderer::SetPlaybackMultiplier,
-         .playbackMultiplier = m_playbackMultiplier});
-    update();
+    if (m_playbackMultiplier != 1.0f) {
+      setMuted(true);
+    } else {
+      setMuted(false);
+    }
+
+    if (m_renderer) {
+      m_renderer->submitCommand(
+          {.type = EmulatorItemRenderer::SetPlaybackMultiplier,
+           .playbackMultiplier = m_playbackMultiplier});
+      update();
+    }
   }
 }
 
@@ -292,17 +326,17 @@ void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
   const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
   const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
-  getInputManager()->updateMouseState(x, y, m_mousePressed);
+  // getInputManager()->updateMouseState(x, y, m_mousePressed);
 }
 
 void EmulatorItem::mousePressEvent(QMouseEvent *event) {
   m_mousePressed = true;
-  getInputManager()->updateMousePressed(m_mousePressed);
+  // getInputManager()->updateMousePressed(m_mousePressed);
 }
 
 void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
   m_mousePressed = false;
-  getInputManager()->updateMousePressed(m_mousePressed);
+  // getInputManager()->updateMousePressed(m_mousePressed);
 }
 void EmulatorItem::loadGame(int entryId) {
   m_threadPool.start([this, entryId] {
@@ -479,8 +513,8 @@ void EmulatorItem::startGame() {
     m_audioManager = std::make_shared<AudioManager>(
         [this] { emit audioBufferLevelChanged(); });
     m_core->setAudioReceiver(m_audioManager);
-    m_core->setRetropadProvider(getControllerManager());
-    m_core->setPointerInputProvider(getInputManager());
+    m_core->setRetropadProvider(firelight::input::InputService::instance());
+    // m_core->setPointerInputProvider(getInputManager());
     m_core->setSystemDirectory(getCoreSystemDirectory());
 
     // Qt owns the renderer, so it will destroy it.

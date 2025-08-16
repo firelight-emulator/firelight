@@ -6,8 +6,6 @@
 #include "discord/discord_manager.hpp"
 #include "emulator_config_manager.hpp"
 #include "firelight/userdata_database.hpp"
-#include "input/controller_manager.hpp"
-#include "input/input_manager.hpp"
 #include "mods/mod_repository.hpp"
 #include "rcheevos/ra_client.hpp"
 #include "saves/save_manager.hpp"
@@ -20,8 +18,6 @@ class GameImageProvider;
 
 class ManagerAccessor {
 public:
-  static void setControllerManager(input::ControllerManager *t_manager);
-
   static void setSaveManager(saves::SaveManager *t_manager);
 
   static void setUserdataManager(db::IUserdataDatabase *t_userdataManager);
@@ -40,11 +36,6 @@ public:
 
   static void setActivityLog(activity::IActivityLog *t_activityLog);
 
-  static void setInputManager(input::InputManager *t_inputManager);
-
-  static void
-  setControllerRepository(input::IControllerRepository *t_controllerRepository);
-
   static void setCoreSystemDirectory(const std::string &t_coreSystemDirectory);
 
   static void setModRepository(mods::IModRepository *t_modDatabase);
@@ -53,8 +44,6 @@ public:
       settings::IEmulationSettingsManager *t_emulationSettingsManager);
 
   static void setDiscordManager(discord::DiscordManager *t_discordManager);
-
-  static input::ControllerManager *getControllerManager();
 
   static saves::SaveManager *getSaveManager();
 
@@ -72,10 +61,6 @@ public:
 
   static activity::IActivityLog *getActivityLog();
 
-  static input::InputManager *getInputManager();
-
-  static input::IControllerRepository *getControllerRepository();
-
   static std::string getCoreSystemDirectory();
 
   static mods::IModRepository *getModRepository();
@@ -85,7 +70,6 @@ public:
   static discord::DiscordManager *getDiscordManager();
 
 private:
-  static input::ControllerManager *m_controllerManager;
   static saves::SaveManager *m_saveManager;
   static db::IUserdataDatabase *m_userdataDatabase;
   static db::ILibraryDatabase *m_libraryDatabase;
@@ -94,8 +78,6 @@ private:
   static gui::GameImageProvider *m_gameImageProvider;
   static library::IUserLibrary *m_userLibrary;
   static activity::IActivityLog *m_activityLog;
-  static input::InputManager *m_inputManager;
-  static input::IControllerRepository *m_controllerRepository;
   static std::string m_coreSystemDirectory;
   static mods::IModRepository *m_modDatabase;
   static settings::IEmulationSettingsManager *m_emulationSettingsManager;
