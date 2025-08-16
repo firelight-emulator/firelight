@@ -139,7 +139,13 @@ bool SDLInputService::removeGamepadByPlayerIndex(int playerIndex) {
 }
 
 std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
-  return m_gamepads;
+  std::vector<std::shared_ptr<IGamepad>> connectedGamepads;
+  for (const auto &gamepad : m_gamepads) {
+    connectedGamepads.emplace_back(gamepad);
+  }
+
+  connectedGamepads.emplace_back(m_keyboard);
+  return connectedGamepads;
 }
 
 std::shared_ptr<IGamepad>
