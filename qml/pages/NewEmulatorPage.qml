@@ -13,6 +13,24 @@ FocusScope {
 
     objectName: "emulatorPage"
 
+    Connections {
+        target: InputService
+
+        function onShortcutToggled(player, shortcut) {
+            if (root.parent.StackView.status !== StackView.Active) {
+                return
+            }
+
+            if (shortcut === 0) {
+                root.createRewindPoints()
+            } else if (shortcut === 3) {
+                emulator.incrementPlaybackMultiplier()
+            } else if (shortcut === 4) {
+                emulator.decrementPlaybackMultiplier()
+            }
+        }
+    }
+
     required property StackView stackView
     required property int entryId
     property GameSettings2 gameSettings: GameSettings2 {
@@ -107,6 +125,9 @@ FocusScope {
     }
 
     function createRewindPoints() {
+        if (!gameSettings.rewindEnabled) {
+            return
+        }
         emulator.createRewindPoints()
     }
 
@@ -179,6 +200,29 @@ FocusScope {
                 aspectRatio: emulator.videoAspectRatio
             }, StackView.Immediate)
             // root.rewindPointsReady(points)
+        }
+    }
+
+    Pane {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins:16
+        width: 100
+        height: 40
+        visible: emulator.playbackMultiplier !== 1
+        padding: 12
+        background: Rectangle {
+            color: ColorPalette.neutral900
+        }
+
+        contentItem: Text {
+            text: emulator.playbackMultiplier + "x"
+            color: "white"
+            font.pixelSize: 20
+            font.family: Constants.regularFontFamily
+            anchors.centerIn: parent
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
         }
     }
 

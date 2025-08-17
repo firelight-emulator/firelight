@@ -1,5 +1,7 @@
 #include "entry_list_model.hpp"
 
+#include "platforms/platform_service.hpp"
+
 #include <spdlog/spdlog.h>
 
 namespace firelight::library {
@@ -19,6 +21,7 @@ QHash<int, QByteArray> EntryListModel::roleNames() const {
   roles[DisplayName] = "displayName";
   roles[ContentHash] = "contentHash";
   roles[PlatformId] = "platformId";
+  roles[PlatformIconName] = "platformIconName";
   roles[ActiveSaveSlot] = "activeSaveSlot";
   roles[Hidden] = "hidden";
   roles[Icon1x1SourceUrl] = "icon1x1SourceUrl";
@@ -55,6 +58,15 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return item.contentHash;
   case PlatformId:
     return item.platformId;
+  case PlatformIconName: {
+    auto platform =
+        platforms::PlatformService::getInstance().getPlatform(item.platformId);
+    if (!platform.has_value()) {
+      return {};
+    }
+
+    return QString::fromStdString(platform.value().slug);
+  }
   case ActiveSaveSlot:
     return item.activeSaveSlot;
   case Hidden:

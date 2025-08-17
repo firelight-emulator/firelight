@@ -683,6 +683,16 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       spdlog::info("Setting playback multiplier to {}",
                    command.playbackMultiplier);
       m_playbackMultiplier = command.playbackMultiplier;
+
+      if (m_playbackMultiplier < 1) {
+        m_waitFrames = 1.0 / m_playbackMultiplier;
+        m_currentWaitFrames = m_waitFrames;
+
+        spdlog::info("Set wait frames to {}", m_waitFrames);
+      } else if (m_playbackMultiplier == 1) {
+        m_waitFrames = 0;
+        m_currentWaitFrames = m_waitFrames;
+      }
       break;
     }
   }
@@ -715,8 +725,10 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
-  if (m_core && m_coreInitialized && m_currentWaitFrames > 0) {
+  if (m_core && m_coreInitialized && m_shouldRunFrame &&
+      m_currentWaitFrames > 0) {
     m_currentWaitFrames--;
+    spdlog::info("Waiting for {} frames", m_currentWaitFrames);
     // update();
     return;
   }
@@ -775,7 +787,12 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = resourceUpdates;
 
     cb->beginExternal();
-    for (int i = 0; i < m_playbackMultiplier; i++) {
+    if (m_playbackMultiplier >= 1) {
+      for (int i = 0; i < m_playbackMultiplier; i++) {
+        m_core->run(0);
+        getAchievementManager()->doFrame(m_core.get());
+      }
+    } else {
       m_core->run(0);
       getAchievementManager()->doFrame(m_core.get());
     }
@@ -850,7 +867,8 @@ void EmulatorItemRenderer::save(const bool waitForFinish) const {
   spdlog::debug("Saving game data");
   firelight::saves::Savefile saveData(
       m_core->getMemoryData(libretro::SAVE_RAM));
-  if (!m_currentImage.isNull()) {
+  if (!m_currentImage.isNull() && m_currentImage.width() > 0 &&
+      m_currentImage.height() > 0) {
     saveData.setImage(m_currentImage.copy());
   }
 

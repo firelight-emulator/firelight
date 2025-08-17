@@ -1,3 +1,30 @@
+1. examining switch GUI elements
+
+a.
+
+
+
+2.
+GET /platforms
+GET /platforms/{id}
+GET /platforms/{id}/input-devices
+
+GET /input/devices
+GET /input/profiles
+GET /input/profiles/{id}
+GET /input/mappings
+GET /input/mappings/{id}
+
+GET /library/entries
+GET /library/entries/{id}
+
+GET /library/run-configurations
+GET /library/run-configurations/{id}
+
+GET /library/rom-files
+GET /library/rom-files/{id}
+GET /library/patch-files
+
 pacman -S mingw-w64-clang-x86_64-toolchain
 mingw-w64-x86_64-clang-analyzer
 

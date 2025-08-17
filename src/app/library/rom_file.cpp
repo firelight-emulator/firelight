@@ -329,6 +329,9 @@ void RomFile::generateContentBytesAndHash(const QByteArray &fileBytes) {
     case PlatformMetadata::PLATFORM_ID_TURBOGRAFX16:
       rcConsoleId = RC_CONSOLE_PC_ENGINE;
       break;
+    case PlatformMetadata::PLATFORM_ID_POKEMON_MINI:
+      rcConsoleId = RC_CONSOLE_POKEMON_MINI;
+      break;
     case PlatformMetadata::PLATFORM_ID_WONDERSWAN:
       rcConsoleId = RC_CONSOLE_WONDERSWAN;
       break;

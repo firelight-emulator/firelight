@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23.5...3.31.6)
 project(firelight
-        VERSION 0.10.0
+        VERSION 0.10.1
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -99,6 +99,7 @@ file(GLOB QML_FILES
         qml/components/rewind/*.qml
         qml/components/library/*.qml
         qml/components/settings/*.qml
+        qml/components/controllers/*.qml
         qml/**/*.qml
 )
 
@@ -117,9 +118,7 @@ add_library(firelight_lib
         src/app/libretro/core.cpp
         src/app/libretro/game.cpp
         src/app/db/sqlite_content_database.cpp
-        src/app/input/sdl_controller.cpp
-        src/app/input/controller_manager.cpp
-        src/app/input/sdl_event_loop.cpp
+        src/app/input2/sdl/sdl_controller.cpp
         src/app/manager_accessor.cpp
         src/app/audio/audio_manager.cpp
         src/app/saves/save_manager.cpp
@@ -132,7 +131,6 @@ add_library(firelight_lib
         src/app/achievements/gui/achievement_list_model.cpp
         src/app/achievements/gui/achievement_list_sort_filter_model.cpp
         src/gui/router.cpp
-        src/app/input/profiles/controller_profile.cpp
         src/app/input/profiles/input_mapping.cpp
         src/gui/platform_list_model.cpp
         src/app/libretro/core_configuration.cpp
@@ -151,13 +149,8 @@ add_library(firelight_lib
         src/app/emulator_item.cpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/activity/sqlite_activity_log.cpp
-        src/app/PlatformMetadataItem.cpp
         src/app/input/sqlite_controller_repository.cpp
-        src/app/input/input_manager.cpp
-        src/app/input/gui/input_mapping_item.cpp
         src/app/library/gui/library_entry_item.cpp
-        src/app/input/profiles/keyboard_mapping.cpp
-        src/app/input/gui/keyboard_mapping_item.cpp
         src/later/video_encoder.cpp
         src/later/video_encoder.h
         src/later/video_decoder.cpp
@@ -183,6 +176,32 @@ add_library(firelight_lib
         src/gui/filesystem_utils.cpp
         src/app/saves/gui/save_files_item.cpp
         src/app/library/gui/content_directory_model.cpp
+        src/app/input/gui/input_mappings_model.cpp
+        src/app/input/platform_input_descriptor.hpp
+        src/app/platforms/models/platform.hpp
+        src/app/platforms/models/controller_type.hpp
+        src/app/platforms/models/controller_input_descriptor.hpp
+        src/app/platforms/platform_service.cpp
+        src/app/platforms/platform_service.hpp
+        src/app/input/profiles/shortcut_mapping.cpp
+        src/app/input/profiles/shortcut_mapping.hpp
+        src/app/input/input_sequence.hpp
+        src/app/input/gamepad_input.hpp
+        src/app/input2/input_service.cpp
+        src/app/input2/input_service.hpp
+        src/app/input2/gamepad_profile.cpp
+        src/app/input2/gamepad_profile.hpp
+        src/app/input2/device_identifier.hpp
+        src/app/input2/sdl/sdl_input_service.cpp
+        src/app/input2/sdl/sdl_input_service.hpp
+        src/app/input2/device_info.hpp
+        src/app/event_dispatcher.hpp
+        src/gui/shortcuts_model.cpp
+        src/gui/shortcuts_model.hpp
+        src/gui/gamepad_profile_item.cpp
+        src/gui/gamepad_profile_item.hpp
+        src/gui/qt_input_service_proxy.cpp
+        src/gui/qt_input_service_proxy.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -221,7 +240,7 @@ target_link_libraries(firelight_lib PUBLIC
         patching
         rcheevos
         discord
-        )
+)
 
 # qt_import_plugins(firelight_lib
 #         INCLUDE QFFmpegMediaPlugin)
@@ -336,6 +355,10 @@ add_executable(fl_test
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
+        tests/app/platforms/platform_service_test.cpp
+        tests/app/input/input_service_impl_test.cpp
+        tests/app/input/test_gamepad.cpp
+        tests/app/input/test_gamepad.hpp
 )
 
 file(GLOB QML_TEST_FILES
@@ -394,7 +417,7 @@ set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 9)
 set(CPACK_PACKAGE_VERSION_PATCH 5)
-set(CPACK_PACKAGE_VERSION "0.10.0")
+set(CPACK_PACKAGE_VERSION "0.10.1")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")

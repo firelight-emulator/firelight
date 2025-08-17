@@ -29,6 +29,29 @@
         <file alias="retroachievements-banner">assets/img/retroachievements_banner.png</file>
         <file alias="firelight-logo">assets/img/firelight_logo1 (1).svg</file>
     </qresource>
+    <qresource prefix="/images/controllers">
+        <file alias="gb">assets/img/controllers/gb.png</file>
+        <file alias="gbc">assets/img/controllers/gbc.png</file>
+        <file alias="gba">assets/img/controllers/gba.png</file>
+        <file alias="nes">assets/img/controllers/nes.png</file>
+        <file alias="snes">assets/img/controllers/snes.png</file>
+        <file alias="n64">assets/img/controllers/n64.png</file>
+        <file alias="nds">assets/img/controllers/nds.png</file>
+        <file alias="sms">assets/img/controllers/sms.png</file>
+        <file alias="gen-threebutton">assets/img/controllers/gen-threebutton.png</file>
+        <file alias="gen-sixbutton">assets/img/controllers/gen-sixbutton.png</file>
+        <file alias="gg">assets/img/controllers/gg.png</file>
+        <file alias="pkmn-mini">assets/img/controllers/pkmn.png</file>
+        <file alias="tgx-twobutton">assets/img/controllers/tgx-twobutton.png</file>
+        <file alias="tgx-sixbutton">assets/img/controllers/tgx-sixbutton.png</file>
+        <file alias="ws-horizontal">assets/img/controllers/ws-horizontal.png</file>
+        <file alias="ws-vertical">assets/img/controllers/ws-vertical.png</file>
+        <file alias="switch-pro">assets/img/SwitchPro.svg</file>
+        <file alias="xbox">assets/img/Xbox.svg</file>
+        <file alias="dualshock4">assets/img/Dualshock4.svg</file>
+        <file alias="dualsense">assets/img/DualSense.svg</file>
+        <file alias="keyboard">assets/img/keyboard.svg</file>
+    </qresource>
     <qresource prefix="/icons">
         <file alias="add">assets/img/icons/filled-rounded/add.svg</file>
         <file alias="add-circle">assets/img/icons/filled-rounded/add-circle.svg</file>
@@ -55,21 +78,23 @@
         <file alias="star-shine">assets/img/icons/filled-rounded/star-shine.svg</file>
         <file alias="trophy">assets/img/icons/filled-rounded/trophy.svg</file>
         <file alias="undo">assets/img/icons/filled-rounded/undo.svg</file>
-        <file alias="platform-gba">assets/img/platform-icons/gbaicon.svg</file>
-        <file alias="platform-gbc">assets/img/platform-icons/gbcicon.svg</file>
-        <file alias="platform-gb">assets/img/platform-icons/gbicon.svg</file>
-        <file alias="platform-ds">assets/img/platform-icons/dsicon.svg</file>
-        <file alias="platform-genesis">assets/img/platform-icons/genesisicon.svg</file>
-        <file alias="platform-gamegear">assets/img/platform-icons/gamegearicon.svg</file>
-        <file alias="platform-mastersystem">assets/img/platform-icons/mastersystemicon.svg</file>
-        <file alias="platform-n64">assets/img/platform-icons/n64icon.svg</file>
-        <file alias="platform-nes">assets/img/platform-icons/nesicon.svg</file>
-        <file alias="platform-snes">assets/img/platform-icons/snesicon.svg</file>
-        <file alias="platform-psp">assets/img/platform-icons/pspicon.svg</file>
-        <file alias="platform-turbografx16">assets/img/platform-icons/turbografx16icon.svg</file>
-        <file alias="platform-supergrafx">assets/img/platform-icons/supergrafxicon.svg</file>
+        <file alias="gba">assets/img/platform-icons/gbaicon.svg</file>
+        <file alias="gbc">assets/img/platform-icons/gbcicon.svg</file>
+        <file alias="gb">assets/img/platform-icons/gbicon.svg</file>
+        <file alias="nds">assets/img/platform-icons/dsicon.svg</file>
+        <file alias="gen">assets/img/platform-icons/genesisicon.svg</file>
+        <file alias="gg">assets/img/platform-icons/gamegearicon.svg</file>
+        <file alias="sms">assets/img/platform-icons/mastersystemicon.svg</file>
+        <file alias="n64">assets/img/platform-icons/n64icon.svg</file>
+        <file alias="nes">assets/img/platform-icons/nesicon.svg</file>
+        <file alias="snes">assets/img/platform-icons/snesicon.svg</file>
+        <file alias="pkmn">assets/img/platform-icons/pkmnicon.svg</file>
+        <file alias="psp">assets/img/platform-icons/pspicon.svg</file>
+        <file alias="pce">assets/img/platform-icons/turbografx16icon.svg</file>
+        <file alias="sgx">assets/img/platform-icons/supergrafxicon.svg</file>
         <file alias="play-circle">assets/img/icons/filled-rounded/play-circle.svg</file>
         <file alias="power">assets/img/icons/filled-rounded/power.svg</file>
+        <file alias="ws">assets/img/platform-icons/wonderswanicon.svg</file>
     </qresource>
     <qresource prefix="/icons/empty">
         <file alias="bar-chart">assets/img/icons/notfilled-rounded/bar-chart-notfilled.svg</file>
@@ -98,16 +123,16 @@
         <file alias="genesis">assets/img/genesis.svg</file>
         <file alias="gamegear">assets/img/gamegear.svg</file>
     </qresource>
-    <qresource prefix="/images/controllers">
-        <file alias="switch-pro">assets/img/SwitchPro.svg</file>
-        <file alias="xbox">assets/img/Xbox.svg</file>
-        <file alias="dualshock4">assets/img/Dualshock4.svg</file>
-        <file alias="dualsense">assets/img/DualSense.svg</file>
-        <file alias="keyboard">assets/img/keyboard.svg</file>
-        <file alias="n64">assets/img/N64.svg</file>
-        <file alias="snes">assets/img/SNES.svg</file>
-        <file alias="genesis">assets/img/genesis.svg</file>
-    </qresource>
+<!--    <qresource prefix="/images/controllers">-->
+<!--        <file alias="switch-pro">assets/img/SwitchPro.svg</file>-->
+<!--        <file alias="xbox">assets/img/Xbox.svg</file>-->
+<!--        <file alias="dualshock4">assets/img/Dualshock4.svg</file>-->
+<!--        <file alias="dualsense">assets/img/DualSense.svg</file>-->
+<!--        <file alias="keyboard">assets/img/keyboard.svg</file>-->
+<!--        <file alias="n64">assets/img/N64.svg</file>-->
+<!--        <file alias="snes">assets/img/SNES.svg</file>-->
+<!--        <file alias="genesis">assets/img/genesis.svg</file>-->
+<!--    </qresource>-->
     <qresource prefix="/images/mods/cursedmirror">
         <file alias="pic1">assets/img/mods/cursedmirror/cursedmirror1.png</file>
         <file alias="pic2">assets/img/mods/cursedmirror/cursedmirror2.png</file>

@@ -29,8 +29,9 @@ private:
   Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
   Q_PROPERTY(float audioBufferLevel READ audioBufferLevel NOTIFY
                  audioBufferLevelChanged)
-  Q_PROPERTY(int playbackMultiplier READ playbackMultiplier WRITE
+  Q_PROPERTY(float playbackMultiplier READ playbackMultiplier WRITE
                  setPlaybackMultiplier NOTIFY playbackMultiplierChanged)
+  Q_PROPERTY(bool muted READ isMuted WRITE setMuted NOTIFY mutedChanged)
   Q_PROPERTY(bool rewindEnabled READ isRewindEnabled WRITE setRewindEnabled
                  NOTIFY rewindEnabledChanged)
 
@@ -39,7 +40,7 @@ public:
 
   ~EmulatorItem() override;
 
-  int m_playbackMultiplier = 1;
+  float m_playbackMultiplier = 1;
 
   bool m_startAfterLoading = true;
   bool m_loaded = false;
@@ -82,6 +83,10 @@ public:
 
   void setRewindEnabled(bool rewindEnabled);
 
+  bool isMuted() const;
+
+  void setMuted(bool muted);
+
   [[nodiscard]] float audioBufferLevel() const;
 
   Q_INVOKABLE void resetGame();
@@ -96,15 +101,25 @@ public:
 
   Q_INVOKABLE void loadRewindPoint(int index);
 
-  int playbackMultiplier() const { return m_playbackMultiplier; }
-  void setPlaybackMultiplier(int playbackMultiplier);
+  [[nodiscard]] float playbackMultiplier() const {
+    return m_playbackMultiplier;
+  }
+  void setPlaybackMultiplier(float playbackMultiplier);
 
   Q_INVOKABLE void incrementPlaybackMultiplier() {
-    setPlaybackMultiplier(m_playbackMultiplier + 1);
+    if (m_playbackMultiplier >= 1) {
+      setPlaybackMultiplier(m_playbackMultiplier + 1);
+    } else {
+      setPlaybackMultiplier(m_playbackMultiplier * 2);
+    }
   }
 
   Q_INVOKABLE void decrementPlaybackMultiplier() {
-    setPlaybackMultiplier(m_playbackMultiplier - 1);
+    if (m_playbackMultiplier > 1) {
+      setPlaybackMultiplier(m_playbackMultiplier - 1);
+    } else if (!getAchievementManager()->hardcoreModeActive()) {
+      setPlaybackMultiplier(m_playbackMultiplier / 2);
+    }
   }
 
 protected:
@@ -152,6 +167,8 @@ signals:
   void canUndoLoadSuspendPointChanged();
 
   void rewindEnabledChanged();
+
+  void mutedChanged();
 
 protected:
   QQuickRhiItemRenderer *createRenderer() override;

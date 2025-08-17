@@ -17,6 +17,7 @@ public:
     DisplayName,
     ContentHash,
     PlatformId,
+    PlatformIconName,
     ActiveSaveSlot,
     Hidden,
     Icon1x1SourceUrl,
