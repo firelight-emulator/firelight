@@ -31,7 +31,7 @@ QVariant PlatformListModel::data(const QModelIndex &index, int role) const {
   case DisplayName:
     return QString::fromStdString(item.name);
   case NumControllerTypes:
-    return item.controllerTypes.size();
+    return QVariant::fromValue(item.controllerTypes.size());
   case ControllerTypeNames: {
     QStringList controllerTypeNames;
     for (const auto &controllerType : item.controllerTypes) {
