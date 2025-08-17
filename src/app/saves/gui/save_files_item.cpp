@@ -1,4 +1,3 @@
-#pragma once
 #include "save_files_item.hpp"
 
 namespace firelight::saves {

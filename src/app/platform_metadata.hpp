@@ -1,5 +1,9 @@
 #pragma once
 
+#include "input/gamepad_input.hpp"
+#include "input/platform_input_descriptor.hpp"
+
+#include <firelight/libretro/retropad.hpp>
 #include <map>
 
 namespace firelight {
@@ -449,6 +453,9 @@ public:
     case PLATFORM_ID_SUPERGRAFX:
       coreName = "mednafen_supergrafx_libretro";
       break;
+    case PLATFORM_ID_POKEMON_MINI:
+      coreName = "pokemini_libretro";
+      break;
     default:
       coreName = "";
       break;
@@ -456,6 +463,62 @@ public:
 
     const auto coreDllPath = corePath + coreName + coreExt;
     return coreDllPath;
+  }
+
+  static std::string getInputName(const input::GamepadInput input) {
+    switch (input) {
+    case libretro::IRetroPad::Input::SouthFace:
+      return "South Face";
+    case libretro::IRetroPad::Input::EastFace:
+      return "East Face";
+    case libretro::IRetroPad::Input::WestFace:
+      return "West Face";
+    case libretro::IRetroPad::Input::NorthFace:
+      return "North Face";
+    case libretro::IRetroPad::Input::LeftBumper:
+      return "Left Bumper";
+    case libretro::IRetroPad::Input::RightBumper:
+      return "Right Bumper";
+    case libretro::IRetroPad::Input::LeftTrigger:
+      return "Left Trigger";
+    case libretro::IRetroPad::Input::RightTrigger:
+      return "Right Trigger";
+    case libretro::IRetroPad::Input::L3:
+      return "L3";
+    case libretro::IRetroPad::Input::R3:
+      return "R3";
+    case libretro::IRetroPad::Input::Start:
+      return "Start";
+    case libretro::IRetroPad::Input::Select:
+      return "Select";
+    case libretro::IRetroPad::Input::DpadUp:
+      return "D-Pad Up";
+    case libretro::IRetroPad::Input::DpadDown:
+      return "D-Pad Down";
+    case libretro::IRetroPad::Input::DpadLeft:
+      return "D-Pad Left";
+    case libretro::IRetroPad::Input::DpadRight:
+      return "D-Pad Right";
+    case libretro::IRetroPad::Input::LeftStickUp:
+      return "Left Stick Up";
+    case libretro::IRetroPad::Input::LeftStickDown:
+      return "Left Stick Down";
+    case libretro::IRetroPad::Input::LeftStickLeft:
+      return "Left Stick Left";
+    case libretro::IRetroPad::Input::LeftStickRight:
+      return "Left Stick Right";
+    case libretro::IRetroPad::Input::RightStickUp:
+      return "Right Stick Up";
+    case libretro::IRetroPad::Input::RightStickDown:
+      return "Right Stick Down";
+    case libretro::IRetroPad::Input::RightStickLeft:
+      return "Right Stick Left";
+    case libretro::IRetroPad::Input::RightStickRight:
+      return "Right Stick Right";
+    default:
+      return "Unknown";
+      return "South Face";
+    }
   }
 };
 } // namespace firelight

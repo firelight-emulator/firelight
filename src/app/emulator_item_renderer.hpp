@@ -72,7 +72,7 @@ public:
   int m_platformId;
   QString m_contentPath;
   bool m_gameReady;
-  int m_playbackMultiplier = 1;
+  float m_playbackMultiplier = 1;
 
   enum EmulatorCommandType {
     ResetGame,
@@ -91,7 +91,7 @@ public:
     EmulatorCommandType type;
     int suspendPointIndex;
     int rewindPointIndex;
-    int playbackMultiplier;
+    float playbackMultiplier;
   };
 
   void submitCommand(EmulatorCommand command);

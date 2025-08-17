@@ -253,6 +253,7 @@ void AudioManager::initialize(const double new_freq) {
 }
 
 void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
+bool AudioManager::isMuted() const { return m_isMuted; }
 
 float AudioManager::getBufferLevel() const { return m_currentBufferLevel; }
 

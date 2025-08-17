@@ -27,6 +27,8 @@ public:
 
   void setMuted(bool muted);
 
+  bool isMuted() const;
+
   float getBufferLevel() const;
 
   ~AudioManager() override;

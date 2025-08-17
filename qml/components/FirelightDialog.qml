@@ -26,6 +26,12 @@ Dialog {
     focus: true
     padding: 24
 
+    Component.onCompleted: {
+        if (contentItem) {
+            contentItem.clip = true
+        }
+    }
+
     property var doOnAccepted
 
     function openAndDoOnAccepted(doOnAccepted) {
