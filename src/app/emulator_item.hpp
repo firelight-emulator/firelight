@@ -117,7 +117,7 @@ public:
   Q_INVOKABLE void decrementPlaybackMultiplier() {
     if (m_playbackMultiplier > 1) {
       setPlaybackMultiplier(m_playbackMultiplier - 1);
-    } else {
+    } else if (!getAchievementManager()->hardcoreModeActive()) {
       setPlaybackMultiplier(m_playbackMultiplier / 2);
     }
   }

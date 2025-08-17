@@ -41,6 +41,7 @@
         <file alias="gen-threebutton">assets/img/controllers/gen-threebutton.png</file>
         <file alias="gen-sixbutton">assets/img/controllers/gen-sixbutton.png</file>
         <file alias="gg">assets/img/controllers/gg.png</file>
+        <file alias="pkmn-mini">assets/img/controllers/pkmn.png</file>
         <file alias="tgx-twobutton">assets/img/controllers/tgx-twobutton.png</file>
         <file alias="tgx-sixbutton">assets/img/controllers/tgx-sixbutton.png</file>
         <file alias="ws-horizontal">assets/img/controllers/ws-horizontal.png</file>
@@ -87,6 +88,7 @@
         <file alias="n64">assets/img/platform-icons/n64icon.svg</file>
         <file alias="nes">assets/img/platform-icons/nesicon.svg</file>
         <file alias="snes">assets/img/platform-icons/snesicon.svg</file>
+        <file alias="pkmn">assets/img/platform-icons/pkmnicon.svg</file>
         <file alias="psp">assets/img/platform-icons/pspicon.svg</file>
         <file alias="pce">assets/img/platform-icons/turbografx16icon.svg</file>
         <file alias="sgx">assets/img/platform-icons/supergrafxicon.svg</file>
