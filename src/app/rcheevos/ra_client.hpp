@@ -91,6 +91,8 @@ public:
 
   std::optional<User> getCurrentUser() const;
 
+  bool hardcoreModeActive() const { return m_defaultToHardcore; }
+
   // bool gameLoaded() const;
 
 signals:

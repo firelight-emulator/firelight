@@ -70,7 +70,7 @@ Button {
             implicitHeight: 48
 
             FLIcon {
-                icon: platform_model.getPlatformIconName(root.model.platformId)
+                icon: root.model.platformIconName
                 color: "#595959"
                 anchors.centerIn: parent
                 height: parent.height - 16

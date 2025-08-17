@@ -36,7 +36,7 @@ protected:
 
 TEST_F(PlatformServiceTest, AllPlatformsPresent) {
   const auto &service = firelight::platforms::PlatformService::getInstance();
-  EXPECT_EQ(13, service.listPlatforms().size());
+  EXPECT_EQ(14, service.listPlatforms().size());
 }
 
 TEST_F(PlatformServiceTest, PlatformGameboyIsCorrect) {
@@ -440,6 +440,35 @@ TEST_F(PlatformServiceTest, PlatformSuperGrafxIsCorrect) {
   const auto &service = firelight::platforms::PlatformService::getInstance();
   const auto actual = service.getPlatform(
       firelight::platforms::PlatformService::PLATFORM_ID_SUPERGRAFX);
+  EXPECT_TRUE(actual.has_value());
+  assertPlatformsEqual(actual.value(), expected);
+}
+
+TEST_F(PlatformServiceTest, PlatformPokemonMiniIsCorrect) {
+  const auto expected = firelight::platforms::Platform{
+      .id = firelight::platforms::PlatformService::PLATFORM_ID_POKEMON_MINI,
+      .name = "Pokémon Mini",
+      .abbreviation = "Pokémon Mini",
+      .slug = "pkmn",
+      .fileAssociations = {"min"},
+      .controllerTypes = {
+          {.id = 1,
+           .name = "Retropad",
+           .imageUrl = "qrc:/images/controllers/pkmn-mini",
+           .inputs = {
+               {"A", firelight::input::GamepadInput::EastFace},
+               {"B", firelight::input::GamepadInput::SouthFace},
+               {"C", firelight::input::GamepadInput::RightBumper},
+               {"D-Pad Up", firelight::input::GamepadInput::DpadUp},
+               {"D-Pad Down", firelight::input::GamepadInput::DpadDown},
+               {"D-Pad Left", firelight::input::GamepadInput::DpadLeft},
+               {"D-Pad Right", firelight::input::GamepadInput::DpadRight},
+               {"Shake", firelight::input::GamepadInput::LeftBumper},
+               {"Power", firelight::input::GamepadInput::Select},
+           }}}};
+  const auto &service = firelight::platforms::PlatformService::getInstance();
+  const auto actual = service.getPlatform(
+      firelight::platforms::PlatformService::PLATFORM_ID_POKEMON_MINI);
   EXPECT_TRUE(actual.has_value());
   assertPlatformsEqual(actual.value(), expected);
 }

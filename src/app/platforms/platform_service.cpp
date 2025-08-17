@@ -285,27 +285,26 @@ PlatformService::PlatformService() {
                {"D-Pad Left", input::GamepadInput::DpadLeft},
                {"D-Pad Right", input::GamepadInput::DpadRight},
            }}}});
-  // m_platforms.emplace_back(
-  //     Platform{.id = PLATFORM_ID_POKEMON_MINI,
-  //              .name = "Pokémon Mini",
-  //              .abbreviation = "Pokémon Mini",
-  //              .slug = "pkmn",
-  //              .fileAssociations = {"min"},
-  //              .controllerTypes = {
-  //                  {.id = 1,
-  //                   .name = "Pokémon Mini",
-  //                   .inputs = {
-  //                       {"A", input::GamepadInput::EastFace},
-  //                       {"B", input::GamepadInput::SouthFace},
-  //                       {"C", input::GamepadInput::RightBumper},
-  //                       {"D-Pad Up", input::GamepadInput::DpadUp},
-  //                       {"D-Pad Down", input::GamepadInput::DpadDown},
-  //                       {"D-Pad Left", input::GamepadInput::DpadLeft},
-  //                       {"D-Pad Right",
-  //                       input::GamepadInput::DpadRight},
-  //                       {"Shake", input::GamepadInput::LeftBumper},
-  //                       {"Power", input::GamepadInput::Select},
-  //                   }}}});
+  m_platforms.emplace_back(Platform{
+      .id = PLATFORM_ID_POKEMON_MINI,
+      .name = "Pokémon Mini",
+      .abbreviation = "Pokémon Mini",
+      .slug = "pkmn",
+      .fileAssociations = {"min"},
+      .controllerTypes = {{.id = 1,
+                           .name = "Retropad",
+                           .imageUrl = "qrc:/images/controllers/pkmn-mini",
+                           .inputs = {
+                               {"A", input::GamepadInput::EastFace},
+                               {"B", input::GamepadInput::SouthFace},
+                               {"C", input::GamepadInput::RightBumper},
+                               {"D-Pad Up", input::GamepadInput::DpadUp},
+                               {"D-Pad Down", input::GamepadInput::DpadDown},
+                               {"D-Pad Left", input::GamepadInput::DpadLeft},
+                               {"D-Pad Right", input::GamepadInput::DpadRight},
+                               {"Shake", input::GamepadInput::LeftBumper},
+                               {"Power", input::GamepadInput::Select},
+                           }}}});
   m_platforms.emplace_back(Platform{
       .id = PLATFORM_ID_WONDERSWAN,
       .name = "WonderSwan",
