@@ -192,7 +192,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
       } else if (bufferDeviation > -0.6) { // 20%-35%
         delta = 1;
       } else { // <20%
-        delta = 2;
+        delta = 0;
       }
       // spdlog::debug("Resampling allowed. BufferDev: {:.2f}, Delta: {}",
       // bufferDeviation, delta);
