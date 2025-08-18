@@ -1,5 +1,6 @@
 #include "audio_manager.hpp"
 
+#include <QMediaDevices>
 #include <spdlog/spdlog.h>
 
 extern "C" {
@@ -39,12 +40,34 @@ void AudioManager::initializeResampler(int64_t in_channel_layout,
 AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
     : m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
   m_elapsedTimer.start();
+  QIODevice::open(ReadOnly);
 }
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   // TODO: REALLY BAD SOLUTION for mupen sometimes sending very small number of
   // frames
   if (numFrames < 30) {
+    const size_t bytesToProcess = numFrames * 2;
+
+    m_mutex.lock();
+    size_t writeIndex = m_bufferWritePos % m_audioBuffer.size();
+
+    if (writeIndex + bytesToProcess > m_audioBuffer.size()) {
+      size_t firstPartSize = m_audioBuffer.size() - writeIndex;
+
+      memcpy(&m_audioBuffer[writeIndex], data, firstPartSize);
+
+      size_t secondPartSize = bytesToProcess - firstPartSize;
+      memcpy(&m_audioBuffer[0], data + firstPartSize, secondPartSize);
+    } else {
+      memcpy(&m_audioBuffer[writeIndex], data, bytesToProcess);
+    }
+
+    m_bufferWritePos += bytesToProcess;
+    m_mutex.unlock();
+
+    emit bytesWritten(bytesToProcess);
+    emit readyRead(); // Notify that new data is available
     return numFrames;
   }
 
@@ -54,12 +77,9 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     m_numSamples = 0;
   }
 
-  if (!m_isMuted && m_audioDevice && m_audioSink) { // Added m_audioSink check
-    const auto bufferTotalCapacity = m_audioSink->bufferSize();
-    if (bufferTotalCapacity == 0)
-      return numFrames; // Avoid division by zero
-
-    const auto usedBytes = bufferTotalCapacity - m_audioSink->bytesFree();
+  if (!m_isMuted && m_audioSink) { // Added m_audioSink check
+    constexpr auto bufferTotalCapacity = 8192 * 2;
+    const auto usedBytes = bytesAvailable();
     m_currentBufferLevel = static_cast<float>(usedBytes) / bufferTotalCapacity;
     if (m_onAudioBufferLevelChanged) {
       m_onAudioBufferLevelChanged();
@@ -221,8 +241,28 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
 
     if (output_samples > 0) {
-      m_audioDevice->write(reinterpret_cast<char *>(outputBuffer[0]),
-                           output_samples * 2 * sizeof(int16_t)); // stereo, s16
+      const size_t bytesToProcess = output_samples * 2 * sizeof(int16_t);
+
+      m_mutex.lock();
+      size_t writeIndex = m_bufferWritePos % m_audioBuffer.size();
+
+      if (writeIndex + bytesToProcess > m_audioBuffer.size()) {
+        size_t firstPartSize = m_audioBuffer.size() - writeIndex;
+
+        memcpy(&m_audioBuffer[writeIndex], outputBuffer[0], firstPartSize);
+
+        size_t secondPartSize = bytesToProcess - firstPartSize;
+        memcpy(&m_audioBuffer[0], outputBuffer[0] + firstPartSize,
+               secondPartSize);
+      } else {
+        memcpy(&m_audioBuffer[writeIndex], outputBuffer[0], bytesToProcess);
+      }
+
+      m_bufferWritePos += bytesToProcess;
+      m_mutex.unlock();
+
+      emit bytesWritten(bytesToProcess);
+      emit readyRead(); // Notify that new data is available
     }
 
     av_freep(&outputBuffer[0]); // Frees the entire buffer allocated by
@@ -242,14 +282,9 @@ void AudioManager::initialize(const double new_freq) {
   format.setSampleFormat(QAudioFormat::Int16);
   format.setSampleRate(m_sampleRate);
 
-  m_audioSink = new QAudioSink(format);
-
-  auto mult = 2;
-  if (m_sampleRate > 44000) {
-    mult = 4;
-  }
-  m_audioSink->setBufferSize(8192 * mult);
-  m_audioDevice = m_audioSink->start();
+  QAudioDevice info(QMediaDevices::defaultAudioOutput());
+  m_audioSink = new QAudioSink(info, format);
+  m_audioSink->start(this);
 }
 
 void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
@@ -258,9 +293,6 @@ bool AudioManager::isMuted() const { return m_isMuted; }
 float AudioManager::getBufferLevel() const { return m_currentBufferLevel; }
 
 AudioManager::~AudioManager() {
-  if (m_audioDevice) {
-    m_audioDevice->close();
-  }
   if (m_audioSink) {
     m_audioSink->stop();
   }
@@ -268,3 +300,33 @@ AudioManager::~AudioManager() {
     av_free(m_swrContext);
   }
 }
+
+qint64 AudioManager::size() const { return bytesAvailable(); }
+qint64 AudioManager::bytesAvailable() const {
+  return m_bufferWritePos - m_bufferReadPos;
+}
+
+qint64 AudioManager::readData(char *data, qint64 maxlen) {
+  m_mutex.lock();
+  auto numBytes = std::min(bytesAvailable(), maxlen);
+
+  size_t readIndex = m_bufferReadPos % m_audioBuffer.size();
+  if (readIndex + numBytes > m_audioBuffer.size()) {
+    // Read wraps around the end of the buffer. Copy in two parts.
+    size_t firstPartSize = m_audioBuffer.size() - readIndex;
+    memcpy(data, &m_audioBuffer[readIndex], firstPartSize);
+
+    size_t secondPartSize = numBytes - firstPartSize;
+    memcpy(data + firstPartSize, &m_audioBuffer[0], secondPartSize);
+  } else {
+    // No wrap needed. A single copy is enough.
+    memcpy(data, &m_audioBuffer[readIndex], numBytes);
+  }
+  // Advance the read position *after* the copy is complete.
+  m_bufferReadPos += numBytes;
+
+  m_mutex.unlock();
+  return numBytes;
+}
+
+qint64 AudioManager::writeData(const char *data, qint64 len) {}

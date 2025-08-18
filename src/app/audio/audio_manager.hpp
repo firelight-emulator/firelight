@@ -5,6 +5,7 @@
 #include <array>
 #include <qelapsedtimer.h>
 #include <queue>
+#include <shared_mutex>
 
 extern "C" {
 #include <libavutil/opt.h>
@@ -16,7 +17,7 @@ extern "C" {
 #include <SDL_audio.h>
 #include <vector>
 
-class AudioManager : public IAudioDataReceiver {
+class AudioManager : public QIODevice, public IAudioDataReceiver {
 public:
   explicit AudioManager(
       std::function<void()> onAudioBufferLevelChanged = nullptr);
@@ -33,7 +34,18 @@ public:
 
   ~AudioManager() override;
 
+  qint64 size() const override;
+  qint64 bytesAvailable() const override;
+
+  qint64 readData(char *data, qint64 maxlen) override;
+  qint64 writeData(const char *data, qint64 len) override;
+
 private:
+  std::shared_mutex m_mutex;
+  std::array<char, 8192 * 2> m_audioBuffer;
+  size_t m_bufferWritePos = 0;
+  size_t m_bufferReadPos = 0;
+
   std::function<void()> m_onAudioBufferLevelChanged;
 
   float m_currentBufferLevel = 0.0f;
@@ -44,7 +56,6 @@ private:
   int m_frameNumber = 0;
   SwrContext *m_swrContext = nullptr;
   QAudioSink *m_audioSink = nullptr;
-  QIODevice *m_audioDevice = nullptr;
 
   double m_changeThing = 0.0;
   uint64_t m_deltaFrames = 0;
