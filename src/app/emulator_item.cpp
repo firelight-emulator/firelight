@@ -559,7 +559,7 @@ void EmulatorItem::updateGeometry(unsigned int width, unsigned int height,
   m_coreAspectRatio = aspectRatio;
   m_calculatedAspectRatio = static_cast<float>(m_coreBaseWidth) /
                             static_cast<float>(m_coreBaseHeight);
-  if (m_coreAspectRatio != m_calculatedAspectRatio) {
+  if (m_coreAspectRatio == 1 / m_calculatedAspectRatio) {
       m_coreBaseWidth = height;
       m_coreBaseHeight = width;
   }

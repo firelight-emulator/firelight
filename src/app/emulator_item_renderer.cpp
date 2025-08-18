@@ -165,7 +165,7 @@ uintptr_t EmulatorItemRenderer::getCurrentFramebufferId() {
 
 void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
   if (info) {
-    printf("Updating System AV info\n");
+    spdlog::debug("Updating System AV info\n");
     m_coreBaseWidth = info->geometry.base_width;
     m_coreBaseHeight = info->geometry.base_height;
     m_coreMaxWidth = info->geometry.max_width;
@@ -200,7 +200,7 @@ void EmulatorItemRenderer::setPixelFormat(retro_pixel_format *format) {
 
 void EmulatorItemRenderer::setScreenRotation(unsigned rotation) {
   m_screenRotation = rotation;
-  printf("Screen rotation requested: %d\n", m_screenRotation);
+  spdlog::debug("Screen rotation requested: %d\n", m_screenRotation);
 }
 
 void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
