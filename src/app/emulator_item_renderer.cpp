@@ -7,6 +7,7 @@
 #include <QQuickWindow>
 #include <QVideoFrame>
 #include <libretro/libretro_vulkan.h>
+#include <qgenericmatrix.h>
 #include <rhi/qrhi.h>
 #include <spdlog/spdlog.h>
 
@@ -82,6 +83,10 @@ void EmulatorItemRenderer::receive(const void *data, unsigned width,
     }
     auto newImage =
         image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+    if (m_screenRotation != 0) {
+      auto screenAngle = m_screenRotation * 90.0;
+      newImage = newImage.transformed(QTransform().rotate(screenAngle));
+    }
     m_currentUpdateBatch->uploadTexture(colorTexture(), newImage);
   } else if (data == RETRO_HW_FRAME_BUFFER_VALID) {
     // QRhiTexture *texture = rhi()->newTexture(
@@ -160,6 +165,7 @@ uintptr_t EmulatorItemRenderer::getCurrentFramebufferId() {
 
 void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
   if (info) {
+    spdlog::debug("Updating System AV info\n");
     m_coreBaseWidth = info->geometry.base_width;
     m_coreBaseHeight = info->geometry.base_height;
     m_coreMaxWidth = info->geometry.max_width;
@@ -190,6 +196,11 @@ void EmulatorItemRenderer::setPixelFormat(retro_pixel_format *format) {
     spdlog::debug("Pixel format: UNKNOWN\n");
     break;
   }
+}
+
+void EmulatorItemRenderer::setScreenRotation(unsigned rotation) {
+  m_screenRotation = rotation;
+  spdlog::debug("Screen rotation requested: %d\n", m_screenRotation);
 }
 
 void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(

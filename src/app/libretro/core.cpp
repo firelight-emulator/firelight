@@ -125,10 +125,12 @@ static bool envCallback(unsigned cmd, void *data) {
 
 bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   switch (cmd) {
-  case RETRO_ENVIRONMENT_SET_ROTATION:
+  case RETRO_ENVIRONMENT_SET_ROTATION: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_ROTATION");
-    //    video->setRotation(*(unsigned *)data);
+    auto rotation = *static_cast<unsigned *>(data);
+    videoReceiver->setScreenRotation(rotation);
     return true;
+  }
   case (3 | 0x800000): {
     environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB");

@@ -238,6 +238,7 @@ public:
   static constexpr int PLATFORM_ID_TURBOGRAFX16 = 21;
   static constexpr int PLATFORM_ID_SUPERGRAFX = 22;
   static constexpr int PLATFORM_ID_POKEMON_MINI = 23;
+  static constexpr int PLATFORM_ID_WONDERSWAN = 24;
 
   static constexpr int OS_ID_UNKNOWN = -1;
   static constexpr int OS_ID_WINDOWS = 0;
@@ -304,6 +305,8 @@ public:
       return "PC Engine/TurboGrafx-16";
     case PLATFORM_ID_SUPERGRAFX:
       return "SuperGrafx";
+    case PLATFORM_ID_WONDERSWAN:
+      return "WonderSwan";
     default:
       return "Unknown";
     }
@@ -349,6 +352,9 @@ public:
     if (extension == "min") {
       return PLATFORM_ID_POKEMON_MINI;
     }
+    if (extension == "ws" || extension == "wsc") {
+      return PLATFORM_ID_WONDERSWAN;
+    }
     return PLATFORM_ID_UNKNOWN;
   }
 
@@ -384,6 +390,8 @@ public:
       return "pce";
     case PLATFORM_ID_SUPERGRAFX:
       return "sgx";
+    case PLATFORM_ID_WONDERSWAN:
+      return "ws";
     case PLATFORM_ID_POKEMON_MINI:
       return "pkmn";
     default:
@@ -455,6 +463,9 @@ public:
       break;
     case PLATFORM_ID_POKEMON_MINI:
       coreName = "pokemini_libretro";
+        break;
+    case PLATFORM_ID_WONDERSWAN:
+      coreName = "mednafen_wswan_libretro";
       break;
     default:
       coreName = "";
