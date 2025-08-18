@@ -42,6 +42,11 @@ public:
   std::optional<libretro::IRetroPad *>
   getRetropadForPlayerIndex(int t_player) override;
 
+  [[nodiscard]] std::pair<int16_t, int16_t> getPointerPosition() const override;
+  [[nodiscard]] bool isPressed() const override;
+  void updateMouseState(double x, double y, bool mousePressed) override;
+  void updateMousePressed(bool mousePressed) override;
+
   void run();
   void stop();
 
@@ -71,6 +76,10 @@ private:
   bool m_running = true;
 
   bool m_preferGamepadOverKeyboard = true;
+
+  int16_t m_mouseX;
+  int16_t m_mouseY;
+  bool m_mousePressed = false;
 };
 
 } // namespace firelight::input

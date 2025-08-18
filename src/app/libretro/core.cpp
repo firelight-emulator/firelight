@@ -64,7 +64,6 @@ static int16_t inputStateCallback(unsigned port, unsigned device,
   // }
 
   if (device == RETRO_DEVICE_POINTER) {
-    return 0;
     const auto pointerProvider = currentCore->getPointerInputProvider();
     if (pointerProvider == nullptr) {
       return 0;

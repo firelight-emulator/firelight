@@ -201,16 +201,44 @@ FocusScope {
             }, StackView.Immediate)
             // root.rewindPointsReady(points)
         }
+
+        onPlaybackMultiplierChanged: function() {
+            if (emulator.playbackMultiplier === 1) {
+                timer.running = true
+            } else {
+                speedIndicator.opacity = 1
+            }
+        }
     }
 
     Pane {
+        id: speedIndicator
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins:16
         width: 100
         height: 40
-        visible: emulator.playbackMultiplier !== 1
         padding: 12
+
+        opacity: 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                easing.type: Easing.InOutQuad
+                duration: 200
+            }
+        }
+
+        Timer {
+            id: timer
+            interval: 1200
+            running: false
+            repeat: false
+            onTriggered: {
+                speedIndicator.opacity = 0
+            }
+        }
+
         background: Rectangle {
             color: ColorPalette.neutral900
         }
