@@ -36,7 +36,7 @@ protected:
 
 TEST_F(PlatformServiceTest, AllPlatformsPresent) {
   const auto &service = firelight::platforms::PlatformService::getInstance();
-  EXPECT_EQ(15, service.listPlatforms().size());
+  EXPECT_EQ(16, service.listPlatforms().size());
 }
 
 // TEST_F(PlatformServiceTest, PlatformGameboyIsCorrect) {

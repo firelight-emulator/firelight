@@ -28,6 +28,7 @@ public:
   static constexpr int PLATFORM_ID_POKEMON_MINI = 23;
   static constexpr int PLATFORM_ID_WONDERSWAN = 24;
   static constexpr int PLATFORM_ID_SG1000 = 25;
+  static constexpr int PLATFORM_ID_NEOGEO_POCKET = 27;
 
   static PlatformService &getInstance() {
     static PlatformService instance;

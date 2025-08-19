@@ -338,6 +338,9 @@ void RomFile::generateContentBytesAndHash(const QByteArray &fileBytes) {
     case PlatformMetadata::PLATFORM_ID_SG1000:
       rcConsoleId = RC_CONSOLE_SG1000;
       break;
+    case PlatformMetadata::PLATFORM_ID_NEOGEO_POCKET:
+      rcConsoleId = RC_CONSOLE_NEOGEO_POCKET;
+      break;
     default:
       rcConsoleId = RC_CONSOLE_UNKNOWN;
     }

@@ -38,6 +38,7 @@
         <file alias="snes">assets/img/controllers/snes.png</file>
         <file alias="n64">assets/img/controllers/n64.png</file>
         <file alias="nds">assets/img/controllers/nds.png</file>
+        <file alias="ngp">assets/img/controllers/ngp.png</file>
         <file alias="sms">assets/img/controllers/sms.png</file>
         <file alias="gen-threebutton">assets/img/controllers/gen-threebutton.png</file>
         <file alias="gen-sixbutton">assets/img/controllers/gen-sixbutton.png</file>
@@ -85,6 +86,7 @@
         <file alias="nds">assets/img/platform-icons/dsicon.svg</file>
         <file alias="gen">assets/img/platform-icons/genesisicon.svg</file>
         <file alias="gg">assets/img/platform-icons/gamegearicon.svg</file>
+        <file alias="ngp">assets/img/platform-icons/neogeopocketicon.svg</file>
         <file alias="sg">assets/img/platform-icons/sg1000icon.svg</file>
         <file alias="sms">assets/img/platform-icons/mastersystemicon.svg</file>
         <file alias="n64">assets/img/platform-icons/n64icon.svg</file>
