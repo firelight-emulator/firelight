@@ -335,6 +335,9 @@ void RomFile::generateContentBytesAndHash(const QByteArray &fileBytes) {
     case PlatformMetadata::PLATFORM_ID_WONDERSWAN:
       rcConsoleId = RC_CONSOLE_WONDERSWAN;
       break;
+    case PlatformMetadata::PLATFORM_ID_SG1000:
+      rcConsoleId = RC_CONSOLE_SG1000;
+      break;
     default:
       rcConsoleId = RC_CONSOLE_UNKNOWN;
     }
