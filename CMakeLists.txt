@@ -202,6 +202,13 @@ add_library(firelight_lib
         src/gui/gamepad_profile_item.hpp
         src/gui/qt_input_service_proxy.cpp
         src/gui/qt_input_service_proxy.hpp
+        src/gui/emulator_settings_model.cpp
+        src/gui/emulator_settings_model.hpp
+        src/app/platforms/models/platform_setting.hpp
+        src/app/emulation/emulation_service.cpp
+        src/app/emulation/emulation_service.hpp
+        src/app/emulation/emulator.cpp
+        src/app/emulation/emulator.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

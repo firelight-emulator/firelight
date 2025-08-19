@@ -49,6 +49,7 @@
 #include "app/mods/gui/ModInfoItem.hpp"
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
+#include "gui/emulator_settings_model.hpp"
 #include "gui/filesystem_utils.hpp"
 #include "gui/gamepad_profile_item.hpp"
 #include "gui/qt_input_service_proxy.hpp"
@@ -270,6 +271,9 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::activity::GameActivityItem>("Firelight", 1, 0,
                                                          "GameActivity");
 
+  qmlRegisterType<firelight::settings::EmulatorSettingsModel>(
+      "Firelight", 1, 0, "EmulatorSettingsModel");
+
   qmlRegisterType<firelight::saves::SaveFilesItem>("Firelight", 1, 0,
                                                    "SaveDataInformation");
 
@@ -365,7 +369,7 @@ int main(int argc, char *argv[]) {
   QObject::connect(
       &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
       []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-  engine.loadFromModule("QMLFirelight", "Main3");
+  engine.loadFromModule("QMLFirelight", "Main5");
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);

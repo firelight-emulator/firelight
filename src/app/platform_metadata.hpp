@@ -276,7 +276,6 @@ public:
 
     return defaultPlatformValues.at(platformId).at(key);
   }
-
   static std::string getPlatformName(const int platformId) {
     switch (platformId) {
     case PLATFORM_ID_GAMEBOY:
@@ -463,7 +462,7 @@ public:
       break;
     case PLATFORM_ID_POKEMON_MINI:
       coreName = "pokemini_libretro";
-        break;
+      break;
     case PLATFORM_ID_WONDERSWAN:
       coreName = "mednafen_wswan_libretro";
       break;

@@ -7,6 +7,7 @@ FocusScope {
     id: root
 
     required property string label
+    required property Component controlComponent
     // required property Component control
     property string description: ""
 
@@ -64,6 +65,13 @@ FocusScope {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
+            }
+
+            Loader {
+                sourceComponent: root.controlComponent
+                active: true
+                Layout.fillHeight: true
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
             }
         }
     }
