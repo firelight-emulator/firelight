@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23.5...3.31.6)
 project(firelight
-        VERSION 0.10.2
+        VERSION 0.10.3
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -417,7 +417,7 @@ set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 9)
 set(CPACK_PACKAGE_VERSION_PATCH 5)
-set(CPACK_PACKAGE_VERSION "0.10.2")
+set(CPACK_PACKAGE_VERSION "0.10.3")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")
