@@ -176,6 +176,25 @@ PlatformService::PlatformService() {
            }}}});
 
   m_platforms.emplace_back(Platform{
+      .id = PLATFORM_ID_SG1000,
+      .name = "SG-1000",
+      .abbreviation = "SG-1000",
+      .slug = "sg",
+      .fileAssociations = {"sg"},
+      .controllerTypes = {{.id = 1,
+                           .name = "Retropad",
+                           .imageUrl = "qrc:/images/controllers/placeholder",
+                           .inputs = {
+                               {"1", input::GamepadInput::SouthFace},
+                               {"2", input::GamepadInput::EastFace},
+                               {"Start", input::GamepadInput::Start},
+                               {"D-Pad Up", input::GamepadInput::DpadUp},
+                               {"D-Pad Down", input::GamepadInput::DpadDown},
+                               {"D-Pad Left", input::GamepadInput::DpadLeft},
+                               {"D-Pad Right", input::GamepadInput::DpadRight},
+                           }}}});
+
+  m_platforms.emplace_back(Platform{
       .id = PLATFORM_ID_SEGA_MASTER_SYSTEM,
       .name = "Master System",
       .abbreviation = "Master System",
