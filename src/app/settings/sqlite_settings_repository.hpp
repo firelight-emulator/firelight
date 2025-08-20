@@ -1,21 +1,20 @@
 #pragma once
 
-#include "emulation_settings_manager.hpp"
+#include "settings_repository.hpp"
 
 #include <QSqlDatabase>
 
 namespace firelight::settings {
-class SqliteEmulationSettingsManager : public QObject,
-                                       public IEmulationSettingsManager {
+class SqliteSettingsRepository : public QObject,
+                                       public ISettingsRepository {
   Q_OBJECT
 public:
   enum SettingsLevel { Global, Platform, Game };
   Q_ENUM(SettingsLevel)
 
-  explicit SqliteEmulationSettingsManager(const QString &databaseFile);
-  ~SqliteEmulationSettingsManager() override;
+  explicit SqliteSettingsRepository(const QString &databaseFile);
+  ~SqliteSettingsRepository() override;
 
-  std::optional<std::string> getGlobalValue(const std::string &key) override;
   std::optional<std::string> getPlatformValue(int platformId,
                                               const std::string &key) override;
   std::optional<std::string> getGameValue(const std::string &contentHash,
@@ -24,14 +23,11 @@ public:
   std::string getEffectiveValue(const std::string &contentHash, int platformId,
                                 const std::string &key,
                                 const std::string &defaultValue) override;
-  void setGlobalValue(const std::string &key,
-                      const std::string &value) override;
   void setPlatformValue(int platformId, const std::string &key,
                         const std::string &value) override;
   void setGameValue(const std::string &contentHash, int platformId,
                     const std::string &key, const std::string &value) override;
 
-  void resetGlobalValue(const std::string &key) override;
   void resetPlatformValue(int platformId, const std::string &key) override;
   void resetGameValue(const std::string &contentHash, int platformId,
                       const std::string &key) override;

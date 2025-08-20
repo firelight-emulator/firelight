@@ -152,24 +152,15 @@ add_library(firelight_lib
         src/app/input/sqlite_controller_repository.cpp
         src/app/library/gui/library_entry_item.cpp
         src/later/video_encoder.cpp
-        src/later/video_encoder.h
         src/later/video_decoder.cpp
-        src/later/video_decoder.h
         src/app/achievements/gui/AchievementSetItem.cpp
         src/app/mods/gui/ModInfoItem.cpp
         src/app/mods/SqliteModRepository.cpp
-        src/app/mods/SqliteModRepository.h
-        src/gui/EventEmitter.h
         src/app/saves/gui/suspend_points_item.cpp
         src/app/activity/gui/game_activity_item.cpp
         src/app/activity/gui/play_session_list_model.cpp
-        src/app/achievements/retroachievements_service.hpp
-        src/app/achievements/retroachievements_backend.hpp
         src/app/achievements/retroachievements_backend.cpp
-        src/app/achievements/user_achievement_status.hpp
-        src/app/settings/sqlite_emulation_settings_manager.cpp
-        src/app/settings/sqlite_emulation_settings_manager.hpp
-        src/app/discord/discord_manager.hpp
+        src/app/settings/sqlite_settings_repository.cpp
         src/app/discord/discord_manager.cpp
         src/app/library/gui/playlist_item_model.cpp
         src/app/library/gui/entry_sort_filter_list_model.cpp
@@ -177,31 +168,16 @@ add_library(firelight_lib
         src/app/saves/gui/save_files_item.cpp
         src/app/library/gui/content_directory_model.cpp
         src/app/input/gui/input_mappings_model.cpp
-        src/app/input/platform_input_descriptor.hpp
-        src/app/platforms/models/platform.hpp
-        src/app/platforms/models/controller_type.hpp
-        src/app/platforms/models/controller_input_descriptor.hpp
         src/app/platforms/platform_service.cpp
-        src/app/platforms/platform_service.hpp
         src/app/input/profiles/shortcut_mapping.cpp
-        src/app/input/profiles/shortcut_mapping.hpp
-        src/app/input/input_sequence.hpp
-        src/app/input/gamepad_input.hpp
         src/app/input2/input_service.cpp
-        src/app/input2/input_service.hpp
         src/app/input2/gamepad_profile.cpp
-        src/app/input2/gamepad_profile.hpp
-        src/app/input2/device_identifier.hpp
         src/app/input2/sdl/sdl_input_service.cpp
-        src/app/input2/sdl/sdl_input_service.hpp
-        src/app/input2/device_info.hpp
-        src/app/event_dispatcher.hpp
         src/gui/shortcuts_model.cpp
-        src/gui/shortcuts_model.hpp
         src/gui/gamepad_profile_item.cpp
-        src/gui/gamepad_profile_item.hpp
         src/gui/qt_input_service_proxy.cpp
-        src/gui/qt_input_service_proxy.hpp
+        src/app/settings/settings_service.cpp
+        src/gui/EventEmitter.h
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

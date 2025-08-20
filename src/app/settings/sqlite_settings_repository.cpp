@@ -1,4 +1,4 @@
-#include "sqlite_emulation_settings_manager.hpp"
+#include "sqlite_settings_repository.hpp"
 
 #include <QSqlError>
 #include <QSqlQuery>
@@ -9,16 +9,10 @@ constexpr auto EMULATION_SETTINGS_DATABASE_PREFIX = "emulation_settings_";
 
 namespace firelight {
 namespace achievements {} // namespace achievements
-settings::SqliteEmulationSettingsManager::SqliteEmulationSettingsManager(
+settings::SqliteSettingsRepository::SqliteSettingsRepository(
     const QString &databaseFile)
     : m_databaseFile(databaseFile) {
   std::string setupQueryString = R"(
-            CREATE TABLE IF NOT EXISTS global_settings (
-                key TEXT NOT NULL,
-                value TEXT NOT NULL,
-                PRIMARY KEY (key)
-            );
-
             CREATE TABLE IF NOT EXISTS platform_settings (
                 platform_id INTEGER NOT NULL,
                 key TEXT NOT NULL,
@@ -48,32 +42,11 @@ settings::SqliteEmulationSettingsManager::SqliteEmulationSettingsManager(
     }
   }
 }
-settings::SqliteEmulationSettingsManager::~SqliteEmulationSettingsManager() {}
+settings::SqliteSettingsRepository::~SqliteSettingsRepository() = default;
 
 std::optional<std::string>
-settings::SqliteEmulationSettingsManager::getGlobalValue(
-    const std::string &key) {
-  QSqlQuery query(getDatabase());
-  query.prepare("SELECT value FROM global_settings WHERE key = :key");
-
-  query.bindValue(":key", QString::fromStdString(key));
-
-  if (!query.exec()) {
-    spdlog::error("Failed to get global value: {}",
-                  query.lastError().text().toStdString());
-    return std::nullopt;
-  }
-
-  if (!query.next()) {
-    return std::nullopt;
-  }
-
-  return query.value("value").toString().toStdString();
-}
-
-std::optional<std::string>
-settings::SqliteEmulationSettingsManager::getPlatformValue(
-    int platformId, const std::string &key) {
+settings::SqliteSettingsRepository::getPlatformValue(int platformId,
+                                                     const std::string &key) {
   QSqlQuery query(getDatabase());
   query.prepare("SELECT value FROM platform_settings WHERE platform_id = "
                 ":platformId AND key = :key");
@@ -94,9 +67,9 @@ settings::SqliteEmulationSettingsManager::getPlatformValue(
 }
 
 std::optional<std::string>
-settings::SqliteEmulationSettingsManager::getGameValue(
-    const std::string &contentHash, const int platformId,
-    const std::string &key) {
+settings::SqliteSettingsRepository::getGameValue(const std::string &contentHash,
+                                                 const int platformId,
+                                                 const std::string &key) {
   QSqlQuery query(getDatabase());
   query.prepare(
       "SELECT value FROM game_settings WHERE content_hash = :contentHash "
@@ -119,7 +92,7 @@ settings::SqliteEmulationSettingsManager::getGameValue(
   return query.value("value").toString().toStdString();
 }
 
-std::string settings::SqliteEmulationSettingsManager::getEffectiveValue(
+std::string settings::SqliteSettingsRepository::getEffectiveValue(
     const std::string &contentHash, int platformId, const std::string &key,
     const std::string &defaultValue) {
   if (auto v = getGameValue(contentHash, platformId, key)) {
@@ -130,31 +103,10 @@ std::string settings::SqliteEmulationSettingsManager::getEffectiveValue(
     return *v;
   }
 
-  if (auto v = getGlobalValue(key)) {
-    return *v;
-  }
-
   return defaultValue;
 }
 
-void settings::SqliteEmulationSettingsManager::setGlobalValue(
-    const std::string &key, const std::string &value) {
-  QSqlQuery query(getDatabase());
-  query.prepare("INSERT OR REPLACE INTO global_settings (key, value) "
-                "VALUES (:key, :value)");
-  query.bindValue(":key", QString::fromStdString(key));
-  query.bindValue(":value", QString::fromStdString(value));
-
-  if (!query.exec()) {
-    spdlog::error("Failed to set global value: {}",
-                  query.lastError().text().toStdString());
-  }
-
-  emit globalValueChanged(QString::fromStdString(key),
-                          QString::fromStdString(value));
-}
-
-void settings::SqliteEmulationSettingsManager::setPlatformValue(
+void settings::SqliteSettingsRepository::setPlatformValue(
     const int platformId, const std::string &key, const std::string &value) {
   QSqlQuery query(getDatabase());
   query.prepare("INSERT OR REPLACE INTO platform_settings (platform_id, key, "
@@ -172,7 +124,7 @@ void settings::SqliteEmulationSettingsManager::setPlatformValue(
                             QString::fromStdString(value));
 }
 
-void settings::SqliteEmulationSettingsManager::setGameValue(
+void settings::SqliteSettingsRepository::setGameValue(
     const std::string &contentHash, int platformId, const std::string &key,
     const std::string &value) {
   QSqlQuery query(getDatabase());
@@ -195,21 +147,7 @@ void settings::SqliteEmulationSettingsManager::setGameValue(
                         QString::fromStdString(value));
 }
 
-void settings::SqliteEmulationSettingsManager::resetGlobalValue(
-    const std::string &key) {
-  QSqlQuery query(getDatabase());
-  query.prepare("DELETE FROM global_settings WHERE key = :key");
-  query.bindValue(":key", QString::fromStdString(key));
-
-  if (!query.exec()) {
-    spdlog::error("Failed to reset global value: {}",
-                  query.lastError().text().toStdString());
-  }
-
-  emit globalValueReset(QString::fromStdString(key));
-}
-
-void settings::SqliteEmulationSettingsManager::resetPlatformValue(
+void settings::SqliteSettingsRepository::resetPlatformValue(
     int platformId, const std::string &key) {
   QSqlQuery query(getDatabase());
   query.prepare("DELETE FROM platform_settings WHERE platform_id = "
@@ -226,7 +164,7 @@ void settings::SqliteEmulationSettingsManager::resetPlatformValue(
   emit platformValueReset(platformId, QString::fromStdString(key));
 }
 
-void settings::SqliteEmulationSettingsManager::resetGameValue(
+void settings::SqliteSettingsRepository::resetGameValue(
     const std::string &contentHash, int platformId, const std::string &key) {
   QSqlQuery query(getDatabase());
   query.prepare("DELETE FROM game_settings WHERE content_hash = :contentHash "
@@ -245,7 +183,7 @@ void settings::SqliteEmulationSettingsManager::resetGameValue(
                       QString::fromStdString(key));
 }
 
-QSqlDatabase settings::SqliteEmulationSettingsManager::getDatabase() const {
+QSqlDatabase settings::SqliteSettingsRepository::getDatabase() const {
   const auto name =
       EMULATION_SETTINGS_DATABASE_PREFIX +
       QString::number(reinterpret_cast<quint64>(QThread::currentThread()), 16);

@@ -53,7 +53,7 @@
 #include "gui/gamepad_profile_item.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "input2/sdl/sdl_input_service.hpp"
-#include "settings/sqlite_emulation_settings_manager.hpp"
+#include "settings/sqlite_settings_repository.hpp"
 
 #include <input/gui/input_mappings_model.hpp>
 #include <input/keyboard_input_handler.hpp>
@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
   firelight::mods::SqliteModRepository modRepository;
   firelight::ManagerAccessor::setModRepository(&modRepository);
 
-  firelight::settings::SqliteEmulationSettingsManager emulationSettingsManager(
+  firelight::settings::SqliteSettingsRepository emulationSettingsManager(
       defaultAppDataPathString + "/settings.db");
   firelight::ManagerAccessor::setEmulationSettingsManager(
       &emulationSettingsManager);

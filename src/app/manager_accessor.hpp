@@ -9,7 +9,7 @@
 #include "mods/mod_repository.hpp"
 #include "rcheevos/ra_client.hpp"
 #include "saves/save_manager.hpp"
-#include "settings/emulation_settings_manager.hpp"
+#include "settings/settings_repository.hpp"
 
 namespace firelight {
 namespace gui {
@@ -41,7 +41,7 @@ public:
   static void setModRepository(mods::IModRepository *t_modDatabase);
 
   static void setEmulationSettingsManager(
-      settings::IEmulationSettingsManager *t_emulationSettingsManager);
+      settings::ISettingsRepository *t_emulationSettingsManager);
 
   static void setDiscordManager(discord::DiscordManager *t_discordManager);
 
@@ -65,7 +65,7 @@ public:
 
   static mods::IModRepository *getModRepository();
 
-  static settings::IEmulationSettingsManager *getEmulationSettingsManager();
+  static settings::ISettingsRepository *getEmulationSettingsManager();
 
   static discord::DiscordManager *getDiscordManager();
 
@@ -80,7 +80,7 @@ private:
   static activity::IActivityLog *m_activityLog;
   static std::string m_coreSystemDirectory;
   static mods::IModRepository *m_modDatabase;
-  static settings::IEmulationSettingsManager *m_emulationSettingsManager;
+  static settings::ISettingsRepository *m_emulationSettingsManager;
   static discord::DiscordManager *m_discordManager;
 };
 } // namespace firelight
