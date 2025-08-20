@@ -150,36 +150,45 @@ FocusScope {
     Rectangle {
         id: background
         color: "black"
-        anchors.fill: parent
+        anchors.fill: root
     }
 
     EmulatorItem {
         id: emulator
         focus: true
-        anchors.centerIn: parent
+        anchors.centerIn: root
 
         layer.enabled: true
 
         property string pictureMode: gameSettings.pictureMode
+        property real aspectRatio: {
+            let mode = gameSettings.aspectRatioMode
+
+             if (mode === "core-corrected") {
+                 return emulator.videoAspectRatio
+             } else {
+                 return emulator.trueAspectRatio
+             }
+        }
 
         width: {
             if (emulator.pictureMode === "stretch") {
-                return parent.width
+                return root.width
             } else if (emulator.pictureMode === "aspect-ratio-fill") {
-                return height * videoAspectRatio
+                return height * aspectRatio
             } else if (emulator.pictureMode === "integer-scale") {
-                return height * videoAspectRatio
+                return height * aspectRatio
             }
 
             return emulator.videoWidth
         }
         height: {
             if (emulator.pictureMode === "stretch") {
-                return parent.height
+                return root.height
             } else if (emulator.pictureMode === "aspect-ratio-fill") {
-                return parent.height
+                return root.height
             } else if (emulator.pictureMode === "integer-scale"){
-                let num = parent.height / emulator.videoHeight
+                let num = root.height / emulator.videoHeight
                 return Math.floor(num) * emulator.videoHeight
             }
 
@@ -197,7 +206,7 @@ FocusScope {
         onRewindPointsReady: function (points) {
             root.stackView.pushItem(rewindPage, {
                 model: points,
-                aspectRatio: emulator.videoAspectRatio
+                aspectRatio: emulator.aspectRatio
             }, StackView.Immediate)
             // root.rewindPointsReady(points)
         }

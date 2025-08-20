@@ -99,6 +99,7 @@ ApplicationWindow {
         id: emulatorLoader
         // visible: status === Loader.Ready
         focus: true
+        anchors.fill: parent
 
         StackView.visible: true
 

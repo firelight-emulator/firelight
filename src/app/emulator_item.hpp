@@ -24,6 +24,8 @@ private:
   Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
   Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY
                  videoAspectRatioChanged)
+  Q_PROPERTY(float trueAspectRatio MEMBER m_calculatedAspectRatio NOTIFY
+                 videoAspectRatioChanged)
   Q_PROPERTY(float canUndoLoadSuspendPoint MEMBER m_canUndoLoadSuspendPoint
                  NOTIFY canUndoLoadSuspendPointChanged)
   Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)

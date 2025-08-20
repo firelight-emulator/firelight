@@ -78,7 +78,7 @@ FocusScope {
             Layout.fillWidth: true
             label: "Picture mode"
 
-            KeyNavigation.down: enableRewindOption
+            KeyNavigation.down: aspectRatioModeOption
 
             background: Rectangle {
                 color: ColorPalette.neutral300
@@ -130,6 +130,69 @@ FocusScope {
             font.weight: Font.Medium
             color: ColorPalette.neutral100
             text: "Determines how the game image fills the screen."
+            leftPadding: 12
+            Layout.bottomMargin: 20
+        }
+
+        ComboBoxOption2 {
+            id: aspectRatioModeOption
+            Layout.fillWidth: true
+            label: "Aspect ratio"
+
+            KeyNavigation.down: enableRewindOption
+
+            background: Rectangle {
+                color: ColorPalette.neutral300
+                radius: 6
+                // border.color: ColorPalette.neutral700
+                opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+            }
+
+            property bool initialized: false
+
+            model: [
+                {text: "Pixel-perfect", value: "pixel-perfect"},
+                {text: "Emulator-corrected", value: "core-corrected"}
+            ]
+
+            Component.onCompleted: {
+                let val = gameSettings.getGameValue("aspect-ratio")
+                for (let i = 0; i < aspectRatioModeOption.model.length; i++) {
+                    if (aspectRatioModeOption.model[i].value === val) {
+                        aspectRatioModeOption.currentIndex = i
+                        initialized = true;
+                        return
+                    }
+                }
+
+                initialized = true;
+            }
+
+            onCurrentValueChanged: {
+                if (!initialized) {
+                    return
+                }
+                gameSettings.setGameValue("aspect-ratio", aspectRatioModeOption.currentValue)
+            }
+        }
+
+        Text {
+            font.pixelSize: 15
+            font.family: Constants.regularFontFamily
+            font.weight: Font.Medium
+            color: ColorPalette.neutral100
+            text: "Some platforms rendered at a different resolution than the one at which they were displayed on CRTs. This option lets you control which aspect ratio is used.\n\nPixel-perfect: Uses square pixels; ignores the emulator's preferred aspect ratio\nEmulator-corrected: Uses the aspect ratio preferred by the emulator"
+            wrapMode: Text.WordWrap
+
+            Layout.fillWidth: true
             leftPadding: 12
             Layout.bottomMargin: 20
         }
