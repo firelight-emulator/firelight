@@ -17,6 +17,7 @@ public:
   bool isGameRunning() const;
 
   Q_INVOKABLE void loadEntry(int entryId);
+  Q_INVOKABLE void stopEmulation();
 
 signals:
   void gameLoaded();

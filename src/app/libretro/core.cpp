@@ -1149,6 +1149,7 @@ Core::Core(
 }
 
 Core::~Core() {
+  spdlog::info("[Core] Unloading core");
   if (m_destroyContextFunction) {
     m_destroyContextFunction();
   }

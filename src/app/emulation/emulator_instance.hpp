@@ -1,4 +1,5 @@
 #pragma once
+#include <audio/audio_manager.hpp>
 #include <future>
 #include <libretro/core.hpp>
 #include <manager_accessor.hpp>
@@ -23,9 +24,13 @@ public:
   std::string getContentHash() const;
   int getPlatformId() const;
 
+  // Must be called from the render thread (with active graphics context)
   void runFrame();
   void reset();
   std::future<bool> save();
+
+  void setMuted(bool muted);
+  bool isMuted() const;
 
   std::vector<uint8_t> serializeState();
   void deserializeState(const std::vector<uint8_t> &state);
@@ -36,6 +41,7 @@ private:
   bool m_initialized = false;
 
   std::unique_ptr<::libretro::Core> m_core;
+  std::shared_ptr<AudioManager> m_audioManager;
   std::vector<uint8_t> m_gameData;
   std::vector<uint8_t> m_saveData;
 

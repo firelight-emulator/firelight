@@ -20,8 +20,8 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
           });
 
   m_emulationStoppedConnection =
-      EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
-          [this](emulation::EmulationStartedEvent) {
+      EventDispatcher::instance().subscribe<emulation::EmulationStoppedEvent>(
+          [this](emulation::EmulationStoppedEvent) {
             emit gameRunningChanged(false);
           });
 }
@@ -33,5 +33,8 @@ bool QtEmulationServiceProxy::isGameRunning() const {
 
 void QtEmulationServiceProxy::loadEntry(const int entryId) {
   m_emulationService.loadEntry(entryId);
+}
+void QtEmulationServiceProxy::stopEmulation() {
+  m_emulationService.stopEmulation();
 }
 } // namespace firelight::gui

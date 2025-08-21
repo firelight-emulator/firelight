@@ -34,22 +34,18 @@ ApplicationWindow {
         GeneralSettings.mainWindowY = y
     }
 
-    property string runningGameName: ""
-    property int runningGameEntryId: -1
-    property int runningGameSaveSlotNumber: -1
-
-    onActiveFocusItemChanged: {
-        console.log("Active focus item changed to: " + window.activeFocusItem)
-        let item = window.activeFocusItem
-        let level = 0
-        while (item) {
-            let spaces = " ".repeat(level * 2)
-
-            console.log(spaces + item)
-            item = item.parent
-            level++
-        }
-    }
+    // onActiveFocusItemChanged: {
+    //     console.log("Active focus item changed to: " + window.activeFocusItem)
+    //     let item = window.activeFocusItem
+    //     let level = 0
+    //     while (item) {
+    //         let spaces = " ".repeat(level * 2)
+    //
+    //         console.log(spaces + item)
+    //         item = item.parent
+    //         level++
+    //     }
+    // }
 
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
@@ -79,6 +75,8 @@ ApplicationWindow {
     function startGame(entryId) {
         if (EmulationService.isGameRunning) {
             closeGameDialog.openAndDoOnAccepted(function () {
+                EmulationService.stopEmulation()
+                emulatorLoader.setSource("")
                 startGameAnimation.entryId = entryId
                 startGameAnimation.start()
             })
@@ -100,7 +98,6 @@ ApplicationWindow {
         id: emulatorLoader
         // visible: status === Loader.Ready
         focus: true
-        anchors.fill: parent
 
         StackView.visible: true
 
@@ -112,7 +109,9 @@ ApplicationWindow {
             State {
                 name: "inactive"
                 when: emulatorLoader.status != Loader.Ready
-                PropertyChanges { blurAmount: 0 }
+                PropertyChanges {
+                    emulatorLoader.blurAmount: 0
+                }
             },
             State {
                 name: "unfocused"
@@ -291,8 +290,9 @@ ApplicationWindow {
         ScriptAction {
             script: {
                 mainContentStack.popCurrentItem(StackView.Immediate)
-                EmulationService.loadEntry(startGameAnimation.entryId)
                 emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: mainContentStack})
+                emulatorLoader.blurAmount = 0
+                EmulationService.loadEntry(startGameAnimation.entryId)
             }
         }
     }
@@ -332,6 +332,7 @@ ApplicationWindow {
 
             onCloseGame: {
                 Router.navigateTo("/library")
+                EmulationService.stopEmulation()
                 emulatorLoader.source = ""
             }
 

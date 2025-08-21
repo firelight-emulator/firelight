@@ -62,7 +62,6 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
   m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
   getActivityLog()->createPlaySession(m_playSession);
 
-  m_emulatorInstance->save().wait();
   getAchievementManager()->unloadGame();
 
   for (auto &url : m_rewindImageUrls) {
@@ -468,33 +467,11 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
 
 void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   const auto emulatorItem = dynamic_cast<EmulatorItem *>(item);
-
   if (emulatorItem == nullptr) {
     return;
   }
 
   m_emulatorItem = emulatorItem;
-  // spdlog::error(
-  //     "Synchronizing: {}",
-  //     std::chrono::high_resolution_clock::now().time_since_epoch().count());
-
-  // if (emulatorItem->window() != nullptr) {
-  //   if (emulatorItem->window()->screen() != nullptr) {
-  //     auto refreshRate = emulatorItem->window()->screen()->refreshRate();
-  //     auto floor = std::floor(refreshRate);
-  //     auto ceil = std::ceil(refreshRate);
-  //
-  //     if (floor == 120 || ceil == 120) {
-  //       m_waitFrames = 1;
-  //     } else if ((floor < 182 && floor > 172) || (ceil < 182 && ceil > 172))
-  //     {
-  //       // TODO: Do something here to indicate that the timing is gonna be a
-  //       bit
-  //       // off
-  //       m_waitFrames = 2;
-  //     }
-  //   }
-  // }
 
   if (m_paused && !emulatorItem->paused()) {
     if (m_playSessionTimer.isValid()) {
@@ -512,14 +489,8 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
   m_paused = emulatorItem->paused();
 
-  m_gameData = emulatorItem->m_gameData;
-  m_saveData = emulatorItem->m_saveData;
-  m_corePath = emulatorItem->m_corePath;
   m_contentHash = emulatorItem->m_contentHash;
-  m_saveSlotNumber = emulatorItem->m_saveSlotNumber;
   m_platformId = emulatorItem->m_platformId;
-  m_contentPath = emulatorItem->m_contentPath;
-  m_gameReady = emulatorItem->m_gameReady;
 
   while (!m_commandQueue.isEmpty()) {
     switch (const auto command = m_commandQueue.dequeue(); command.type) {
@@ -728,7 +699,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   if (m_emulatorInstance && m_emulatorInstance->isInitialized() &&
       m_shouldRunFrame && m_currentWaitFrames > 0) {
     m_currentWaitFrames--;
-    spdlog::info("Waiting for {} frames", m_currentWaitFrames);
     // update();
     return;
   }
@@ -777,7 +747,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = resourceUpdates;
 
     cb->beginExternal();
-    if (m_playbackMultiplier >= 1) {
+    if (m_playbackMultiplier > 1) {
       for (int i = 0; i < m_playbackMultiplier; i++) {
         m_emulatorInstance->runFrame();
         getAchievementManager()->doFrame(m_emulatorInstance->getCore());

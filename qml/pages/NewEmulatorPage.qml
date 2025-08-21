@@ -147,6 +147,8 @@ FocusScope {
         focus: true
         anchors.centerIn: root
 
+        muted: paused || playbackMultiplier != 1
+
         layer.enabled: true
 
         property string pictureMode: gameSettings.pictureMode

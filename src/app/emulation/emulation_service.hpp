@@ -23,9 +23,12 @@ public:
   }
 
   std::future<EmulatorInstance *> loadEntry(int entryId);
+  void stopEmulation();
   EmulatorInstance *getCurrentEmulatorInstance();
 
   [[nodiscard]] bool isGameRunning() const;
+  bool isMuted() const;
+  void setMuted(bool muted);
 
   // Information about the currently running game, if any
   [[nodiscard]] std::optional<std::string> getCurrentGameName() const;

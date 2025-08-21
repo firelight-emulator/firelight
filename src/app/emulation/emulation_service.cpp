@@ -14,7 +14,7 @@ namespace firelight::emulation {
 std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
   return std::async(std::launch::async, [entryId, this] -> EmulatorInstance * {
     if (m_emulatorInstance) {
-      m_emulatorInstance.reset();
+      stopEmulation();
     }
 
     spdlog::info("[EmulationService] Loading entry with id {}", entryId);
@@ -110,11 +110,6 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
           m_currentEntry.platformId, corePath, configProvider,
           getCoreSystemDirectory());
 
-      m_core->setAudioReceiver(std::make_shared<AudioManager>([this] {}));
-      m_core->setRetropadProvider(input::InputService::instance());
-      m_core->setPointerInputProvider(input::InputService::instance());
-      m_core->setSystemDirectory(getCoreSystemDirectory());
-
       auto contentBytes = rom.getContentBytes();
 
       m_emulatorInstance = std::make_unique<EmulatorInstance>(
@@ -193,11 +188,31 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
     }
   });
 }
+void EmulationService::stopEmulation() {
+  m_emulatorInstance.reset();
+  EventDispatcher::instance().publish(EmulationStoppedEvent{});
+}
 EmulatorInstance *EmulationService::getCurrentEmulatorInstance() {
   return m_emulatorInstance.get();
 }
 
-bool EmulationService::isGameRunning() const { return m_gameRunning; }
+bool EmulationService::isGameRunning() const {
+  return m_emulatorInstance != nullptr;
+}
+bool EmulationService::isMuted() const {
+  if (!m_emulatorInstance) {
+    return false;
+  }
+
+  return m_emulatorInstance->isMuted();
+}
+void EmulationService::setMuted(const bool muted) {
+  if (!m_emulatorInstance) {
+    return;
+  }
+
+  m_emulatorInstance->setMuted(muted);
+}
 
 std::optional<std::string> EmulationService::getCurrentGameName() const {
   return {};

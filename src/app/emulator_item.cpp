@@ -216,9 +216,6 @@ bool EmulatorItem::paused() const { return m_paused; }
 void EmulatorItem::setPaused(const bool paused) {
   if (m_paused != paused) {
     m_paused = paused;
-    if (m_audioManager) {
-      m_audioManager->setMuted(m_paused);
-    }
     emit pausedChanged();
     update();
   }
@@ -241,11 +238,12 @@ void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
 bool EmulatorItem::isMuted() const { return m_audioManager->isMuted(); }
 
 void EmulatorItem::setMuted(bool muted) {
-  if (m_audioManager->isMuted() == muted) {
+  if (firelight::emulation::EmulationService::getInstance().isMuted() ==
+      muted) {
     return;
   }
 
-  m_audioManager->setMuted(muted);
+  firelight::emulation::EmulationService::getInstance().setMuted(muted);
   emit mutedChanged();
 }
 float EmulatorItem::audioBufferLevel() const {
@@ -298,6 +296,7 @@ void EmulatorItem::loadRewindPoint(const int index) {
 }
 
 void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
+  spdlog::info("Setting playback multiplier {}", playbackMultiplier);
   if (playbackMultiplier < 0.1f) {
     return;
   }
@@ -306,13 +305,8 @@ void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
     m_playbackMultiplier = playbackMultiplier;
     emit playbackMultiplierChanged();
 
-    if (m_playbackMultiplier != 1.0f) {
-      setMuted(true);
-    } else {
-      setMuted(false);
-    }
-
     if (m_renderer) {
+      spdlog::info("Submitting command");
       m_renderer->submitCommand(
           {.type = EmulatorItemRenderer::SetPlaybackMultiplier,
            .playbackMultiplier = m_playbackMultiplier});

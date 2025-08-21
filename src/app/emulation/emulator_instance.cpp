@@ -1,7 +1,12 @@
 #include "emulator_instance.hpp"
 
+#include "emulation_service.hpp"
+#include "event_dispatcher.hpp"
+#include "input2/input_service.hpp"
+
 #include <spdlog/spdlog.h>
 
+#include <audio/audio_manager.hpp>
 #include <utility>
 
 namespace firelight::emulation {
@@ -16,11 +21,18 @@ EmulatorInstance::EmulatorInstance(
 
 EmulatorInstance::~EmulatorInstance() {
   spdlog::info("[EmulatorInstance] Shutting down");
+  save().wait();
 }
 
 bool EmulatorInstance::initialize(
     libretro::IVideoDataReceiver *videoDataReceiver) {
+  m_audioManager = std::make_unique<AudioManager>([] {});
+
   m_core->setVideoReceiver(videoDataReceiver);
+  m_core->setAudioReceiver(m_audioManager);
+  m_core->setRetropadProvider(input::InputService::instance());
+  m_core->setPointerInputProvider(input::InputService::instance());
+  m_core->setSystemDirectory(getCoreSystemDirectory());
   m_core->init();
 
   ::libretro::Game game(m_contentPath, m_gameData);
@@ -33,6 +45,8 @@ bool EmulatorInstance::initialize(
   }
 
   m_initialized = true;
+
+  EventDispatcher::instance().publish(EmulationStartedEvent{});
   return true;
 }
 bool EmulatorInstance::isInitialized() { return m_initialized; }
@@ -55,6 +69,20 @@ std::future<bool> EmulatorInstance::save() {
     return true;
   });
 }
+
+void EmulatorInstance::setMuted(const bool muted) {
+  if (!m_audioManager) {
+    return;
+  }
+  m_audioManager->setMuted(muted);
+}
+bool EmulatorInstance::isMuted() const {
+  if (!m_audioManager) {
+    return false;
+  }
+  return m_audioManager->isMuted();
+}
+
 std::vector<uint8_t> EmulatorInstance::serializeState() {
   return m_core->serializeState();
 }
