@@ -202,6 +202,8 @@ add_library(firelight_lib
         src/gui/gamepad_profile_item.hpp
         src/gui/qt_input_service_proxy.cpp
         src/gui/qt_input_service_proxy.hpp
+        src/gui/qt_emulation_service_proxy.cpp
+        src/gui/qt_emulation_service_proxy.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -254,6 +256,10 @@ qt6_add_executable(firelight
         src/main.cpp
         src/image_cache.cpp
         src/image_cache.h
+        src/app/emulation/emulation_service.cpp
+        src/app/emulation/emulation_service.hpp
+        src/app/emulation/emulator_instance.cpp
+        src/app/emulation/emulator_instance.hpp
 )
 
 

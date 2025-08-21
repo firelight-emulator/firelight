@@ -51,6 +51,7 @@
 #include "gui/EventEmitter.h"
 #include "gui/filesystem_utils.hpp"
 #include "gui/gamepad_profile_item.hpp"
+#include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "input2/sdl/sdl_input_service.hpp"
 #include "settings/sqlite_emulation_settings_manager.hpp"
@@ -349,6 +350,8 @@ int main(int argc, char *argv[]) {
 
   engine.rootContext()->setContextProperty(
       "InputService", new firelight::gui::QtInputServiceProxy());
+  engine.rootContext()->setContextProperty(
+      "EmulationService", new firelight::gui::QtEmulationServiceProxy());
 
   engine.rootContext()->setContextProperty("LibraryFolderModel",
                                            &libraryFolderListModel);

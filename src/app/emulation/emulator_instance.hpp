@@ -1,0 +1,50 @@
+#pragma once
+#include <future>
+#include <libretro/core.hpp>
+#include <manager_accessor.hpp>
+#include <memory>
+#include <saves/suspend_point.hpp>
+#include <string>
+
+namespace firelight::emulation {
+
+class EmulatorInstance : public ManagerAccessor {
+public:
+  EmulatorInstance(std::unique_ptr<::libretro::Core>, std::string contentPath,
+                   std::string contentHash, int platformId, int saveSlotNumber,
+                   std::vector<uint8_t> gameData,
+                   std::vector<uint8_t> saveData);
+  ~EmulatorInstance();
+
+  // Must be called from the render thread (with active graphics context)
+  bool initialize(libretro::IVideoDataReceiver *videoDataReceiver);
+  bool isInitialized();
+
+  std::string getContentHash() const;
+  int getPlatformId() const;
+
+  void runFrame();
+  void reset();
+  std::future<bool> save();
+
+  std::vector<uint8_t> serializeState();
+  void deserializeState(const std::vector<uint8_t> &state);
+
+  ::libretro::Core *getCore();
+
+private:
+  bool m_initialized = false;
+
+  std::unique_ptr<::libretro::Core> m_core;
+  std::vector<uint8_t> m_gameData;
+  std::vector<uint8_t> m_saveData;
+
+  std::vector<SuspendPoint> m_rewindSuspendPoints;
+
+  std::string m_contentPath;
+  std::string m_contentHash;
+  int m_platformId;
+  int m_saveSlotNumber;
+};
+
+} // namespace firelight::emulation

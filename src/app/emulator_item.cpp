@@ -3,6 +3,7 @@
 #include <rhi/qrhi_platform.h>
 #include <spdlog/spdlog.h>
 
+#include "emulation/emulation_service.hpp"
 #include "emulator_item_renderer.hpp"
 #include "input2/input_service.hpp"
 #include "platform_metadata.hpp"
@@ -503,28 +504,28 @@ void EmulatorItem::loadGame(int entryId) {
   });
 }
 void EmulatorItem::startGame() {
-  if (!m_loaded) {
-    m_startAfterLoading = true;
-  }
-
   QThreadPool::globalInstance()->start([this] {
-    auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(
-        m_platformId, m_contentHash);
-    auto m_core = std::make_unique<libretro::Core>(
-        m_platformId, m_corePath.toStdString(), configProvider,
-        getCoreSystemDirectory());
+    const auto emuInstance =
+        firelight::emulation::EmulationService::getInstance()
+            .getCurrentEmulatorInstance();
 
-    m_audioManager = std::make_shared<AudioManager>(
-        [this] { emit audioBufferLevelChanged(); });
-    m_core->setAudioReceiver(m_audioManager);
-    m_core->setRetropadProvider(firelight::input::InputService::instance());
-    m_core->setPointerInputProvider(firelight::input::InputService::instance());
-    m_core->setSystemDirectory(getCoreSystemDirectory());
+    auto entry =
+        firelight::emulation::EmulationService::getInstance().getCurrentEntry();
+    if (!entry) {
+      spdlog::info("No entry :)");
+      return;
+    }
+
+    m_entryId = entry->id;
+    m_gameName = entry->displayName;
+    m_contentHash = entry->contentHash;
+    m_saveSlotNumber = entry->activeSaveSlot;
+    m_platformId = entry->platformId;
+    m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
 
     // Qt owns the renderer, so it will destroy it.
-    m_renderer =
-        new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(),
-                                 std::move(m_core), window());
+    m_renderer = new EmulatorItemRenderer(
+        window()->rendererInterface()->graphicsApi(), window(), emuInstance);
 
     m_renderer->onGeometryChanged([this](unsigned int width,
                                          unsigned int height, float aspectRatio,
@@ -538,8 +539,8 @@ void EmulatorItem::startGame() {
     // initialized.
     m_coreBaseWidth = 1;
     m_coreBaseHeight = 1;
-    m_calculatedAspectRatio = 0.000001;
-    m_coreAspectRatio = 0.000001;
+    m_calculatedAspectRatio = 1;
+    m_coreAspectRatio = 1;
 
     emit videoWidthChanged();
     emit videoHeightChanged();

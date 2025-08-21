@@ -149,7 +149,8 @@ std::optional<Savefile> SaveManager::readSaveData(const QString &contentHash,
   const auto saveFile =
       std::filesystem::path((dir + "/savefile.srm").toStdString());
 
-  spdlog::info("Reading from save file: {}", saveFile.string());
+  spdlog::info("[SaveDataService] Reading from save file: {}",
+               saveFile.string());
 
   if (!exists(saveFile)) {
     return std::nullopt;

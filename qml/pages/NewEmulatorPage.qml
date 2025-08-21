@@ -32,7 +32,6 @@ FocusScope {
     }
 
     required property StackView stackView
-    required property int entryId
     property GameSettings2 gameSettings: GameSettings2 {
         platformId: root.platformId
         contentHash: root.contentHash
@@ -40,10 +39,6 @@ FocusScope {
 
     property bool blurEnabled: false
     property alias audioBufferLevel: emulator.audioBufferLevel
-
-    Component.onCompleted: {
-        emulator.loadGame(entryId)
-    }
 
     property alias paused: emulator.paused
 
@@ -106,14 +101,8 @@ FocusScope {
     property alias saveSlotNumber: emulator.saveSlotNumber
     property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
-    function loadGame(entryId) {
-        emulator.loadGame(entryId)
-    }
-
     function startGame() {
-        if (!emulator.started) {
-            emulator.startGame()
-        }
+        emulator.startGame()
     }
 
     signal rewindPointsReady(var points)
