@@ -12,7 +12,15 @@ struct GameLoadStarted {};
 struct GameLoadedEvent {};
 struct GameLoadFailedEvent {};
 
-struct EmulationStartedEvent {};
+struct GamePausedChangedEvent {
+  bool paused;
+};
+
+struct EmulationStartedEvent {
+  std::string contentHash;
+  int saveSlotNumber;
+};
+
 struct EmulationStoppedEvent {};
 
 class EmulationService : public ManagerAccessor {

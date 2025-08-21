@@ -490,6 +490,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   m_paused = emulatorItem->paused();
 
   m_contentHash = emulatorItem->m_contentHash;
+  m_saveSlotNumber = emulatorItem->m_saveSlotNumber;
   m_platformId = emulatorItem->m_platformId;
 
   while (!m_commandQueue.isEmpty()) {
@@ -651,8 +652,6 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       // Handle undo load suspend point
       break;
     case SetPlaybackMultiplier:
-      spdlog::info("Setting playback multiplier to {}",
-                   command.playbackMultiplier);
       m_playbackMultiplier = command.playbackMultiplier;
 
       if (m_playbackMultiplier < 1) {

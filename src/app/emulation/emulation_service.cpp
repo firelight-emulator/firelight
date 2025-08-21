@@ -159,8 +159,8 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
                                    saveData->getSaveRamData().size());
       }
 
-      spdlog::info("[EmulationService] Loaded content {} successfully",
-                   m_currentContentHash);
+      // spdlog::info("[EmulationService] Loaded content {} successfully",
+      //              m_currentContentHash);
 
       return {};
 

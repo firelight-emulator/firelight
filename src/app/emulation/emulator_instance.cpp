@@ -20,7 +20,7 @@ EmulatorInstance::EmulatorInstance(
       m_saveSlotNumber(saveSlotNumber) {}
 
 EmulatorInstance::~EmulatorInstance() {
-  spdlog::info("[EmulatorInstance] Shutting down");
+  // spdlog::info("[EmulatorInstance] Shutting down");
   save().wait();
 }
 
@@ -46,7 +46,8 @@ bool EmulatorInstance::initialize(
 
   m_initialized = true;
 
-  EventDispatcher::instance().publish(EmulationStartedEvent{});
+  EventDispatcher::instance().publish(EmulationStartedEvent{
+      .contentHash = m_contentHash, .saveSlotNumber = m_saveSlotNumber});
   return true;
 }
 bool EmulatorInstance::isInitialized() { return m_initialized; }

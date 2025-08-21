@@ -128,9 +128,9 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
     if (achievedFrameDurationNs <= 0 ||
         achievedFrameDurationNs > (actualTargetNs * 5)) {
-      spdlog::warn(
-          "Anomalous achieved frame duration: {} ns. Skipping this sample.",
-          achievedFrameDurationNs);
+      // spdlog::warn(
+      //     "Anomalous achieved frame duration: {} ns. Skipping this sample.",
+      //     achievedFrameDurationNs);
       // TODO: Consider resetting timingCorrectionNs if this happens often, or
       // if the pause was very long timingCorrectionNs = 0;
       return;
@@ -296,7 +296,6 @@ void EmulatorItem::loadRewindPoint(const int index) {
 }
 
 void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
-  spdlog::info("Setting playback multiplier {}", playbackMultiplier);
   if (playbackMultiplier < 0.1f) {
     return;
   }
@@ -306,7 +305,6 @@ void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
     emit playbackMultiplierChanged();
 
     if (m_renderer) {
-      spdlog::info("Submitting command");
       m_renderer->submitCommand(
           {.type = EmulatorItemRenderer::SetPlaybackMultiplier,
            .playbackMultiplier = m_playbackMultiplier});
@@ -337,166 +335,7 @@ void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
   firelight::input::InputService::instance()->updateMousePressed(
       m_mousePressed);
 }
-void EmulatorItem::loadGame(int entryId) {
-  m_threadPool.start([this, entryId] {
-    spdlog::info("Loading entry with id {}", entryId);
 
-    auto entry = getUserLibrary()->getEntry(entryId);
-
-    if (!entry.has_value()) {
-      spdlog::warn("Entry with id {} does not exist...", entryId);
-    }
-
-    auto runConfigurations =
-        getUserLibrary()->getRunConfigurations(entry->contentHash);
-
-    if (runConfigurations.empty()) {
-      spdlog::warn("No run configuration found for entry with id {}", entryId);
-      return;
-    }
-
-    auto runConfig = runConfigurations[0];
-    spdlog::info("Got run configuration for entry with contentHash {}: {}",
-                 entry->contentHash.toStdString(), runConfig.id);
-
-    if (runConfig.type == firelight::library::RunConfiguration::TYPE_ROM) {
-      auto romId = runConfig.romId;
-      auto romInfo = getUserLibrary()->getRomFile(romId);
-
-      if (!romInfo.has_value()) {
-        return;
-      }
-
-      auto filePath = QString::fromStdString(romInfo->m_filePath);
-      if (romInfo->m_inArchive) {
-        filePath = QString::fromStdString(romInfo->m_archivePathName);
-      }
-
-      auto file = QFile(filePath);
-      if (!file.exists()) {
-        spdlog::error("Content path doesn't exist: {}", filePath.toStdString());
-        return;
-      }
-
-      file.open(QIODevice::ReadOnly);
-      auto bytes = file.readAll();
-      file.close();
-
-      auto rom = firelight::library::RomFile(
-          QString::fromStdString(romInfo->m_filePath), bytes.data(),
-          bytes.size(), QString::fromStdString(romInfo->m_archivePathName));
-
-      if (rom.inArchive() &&
-          !std::filesystem::exists(rom.getArchivePathName().toStdString())) {
-        spdlog::error("Content path doesn't exist: {}",
-                      rom.getArchivePathName().toStdString());
-        return;
-      }
-
-      if (!rom.inArchive() &&
-          !std::filesystem::exists(rom.getFilePath().toStdString())) {
-        spdlog::error("Content path doesn't exist: {}",
-                      rom.getFilePath().toStdString());
-        return;
-      }
-
-      rom.load();
-
-      std::string corePath =
-          firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
-      //
-      QByteArray saveDataBytes;
-      const auto saveData = getSaveManager()->readSaveData(
-          rom.getContentHash(), entry->activeSaveSlot);
-      if (saveData.has_value()) {
-        saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                   saveData->getSaveRamData().size());
-      }
-
-      m_entryId = entryId;
-      m_gameName = entry->displayName;
-      m_gameData = rom.getContentBytes();
-      m_saveData = saveDataBytes;
-      m_corePath = QString::fromStdString(corePath);
-      m_contentHash = rom.getContentHash();
-      m_saveSlotNumber = entry->activeSaveSlot;
-      m_platformId = entry->platformId;
-      m_contentPath = rom.getFilePath();
-      m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
-
-      emit entryIdChanged();
-      emit gameNameChanged();
-      emit contentHashChanged();
-      emit platformIdChanged();
-      emit saveSlotNumberChanged();
-
-      m_loaded = true;
-      if (m_startAfterLoading && !m_stopping) {
-        startGame();
-      }
-    } else if (runConfig.type ==
-               firelight::library::RunConfiguration::TYPE_PATCH) {
-      auto romId = runConfig.romId;
-      auto romInfo = getUserLibrary()->getRomFile(romId);
-
-      if (!romInfo.has_value()) {
-        return;
-      }
-
-      auto rom = firelight::library::RomFile(
-          QString::fromStdString(romInfo->m_filePath));
-
-      rom.load();
-
-      if (!rom.isValid()) {
-        return;
-      }
-
-      auto patchId = runConfig.patchId;
-      auto patch = getUserLibrary()->getPatchFile(patchId);
-
-      if (!patch.has_value()) {
-        return;
-      }
-
-      patch->load();
-      rom.applyPatchToContentBytes(*patch);
-
-      std::string corePath =
-          firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
-
-      QByteArray saveDataBytes;
-      const auto saveData = getSaveManager()->readSaveData(
-          rom.getContentHash(), entry->activeSaveSlot);
-      if (saveData.has_value()) {
-        saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                   saveData->getSaveRamData().size());
-      }
-
-      m_entryId = entryId;
-      m_gameName = entry->displayName;
-      m_gameData = rom.getContentBytes();
-      m_saveData = saveDataBytes;
-      m_corePath = QString::fromStdString(corePath);
-      m_contentHash = rom.getContentHash();
-      m_saveSlotNumber = entry->activeSaveSlot;
-      m_platformId = entry->platformId;
-      m_contentPath = rom.getFilePath();
-      m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
-
-      emit entryIdChanged();
-      emit gameNameChanged();
-      emit contentHashChanged();
-      emit saveSlotNumberChanged();
-      emit platformIdChanged();
-
-      m_loaded = true;
-      if (m_startAfterLoading && !m_stopping) {
-        startGame();
-      }
-    }
-  });
-}
 void EmulatorItem::startGame() {
   QThreadPool::globalInstance()->start([this] {
     const auto emuInstance =
@@ -506,7 +345,6 @@ void EmulatorItem::startGame() {
     auto entry =
         firelight::emulation::EmulationService::getInstance().getCurrentEntry();
     if (!entry) {
-      spdlog::info("No entry :)");
       return;
     }
 

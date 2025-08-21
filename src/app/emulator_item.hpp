@@ -132,7 +132,6 @@ protected:
   void mouseReleaseEvent(QMouseEvent *event) override;
 
 public slots:
-  void loadGame(int entryId);
   void startGame();
 
 signals:
