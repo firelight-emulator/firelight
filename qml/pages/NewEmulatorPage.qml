@@ -37,15 +37,13 @@ FocusScope {
         contentHash: root.contentHash
     }
 
-    property bool blurEnabled: false
     property alias audioBufferLevel: emulator.audioBufferLevel
 
-    property alias paused: emulator.paused
+    property bool paused
 
     signal closing()
     signal aboutToRunFrame()
 
-    clip: true
     focus: true
 
     Timer {
@@ -93,6 +91,17 @@ FocusScope {
     //         ctrlTimer.stop()
     //     }
     // }
+    property bool windowResizing
+    Connections {
+        target: window_resize_handler
+
+        function onWindowResizeStarted() {
+            root.windowResizing = true
+        }
+        function onWindowResizeFinished() {
+            root.windowResizing = false
+        }
+    }
 
     property alias videoAspectRatio: emulator.videoAspectRatio
     property alias contentHash: emulator.contentHash
@@ -147,7 +156,8 @@ FocusScope {
         focus: true
         anchors.centerIn: root
 
-        muted: paused || playbackMultiplier != 1
+        paused: root.paused || root.windowResizing
+        muted: paused || playbackMultiplier !== 1
 
         layer.enabled: true
 
