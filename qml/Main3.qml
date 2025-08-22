@@ -213,8 +213,10 @@ ApplicationWindow {
         id: mainContentStack
         focus: true
         anchors.fill: parent
+        initialItem: emulatorLoader
+
         Component.onCompleted: {
-            pushItems([emulatorLoader, content], StackView.Immediate)
+            pushItem(content, {}, StackView.Immediate)
         }
 
         onActiveFocusChanged: {

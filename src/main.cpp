@@ -374,11 +374,11 @@ int main(int argc, char *argv[]) {
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
 
-  firelight::input::KeyboardInputHandler keyboardHandler;
-  window->installEventFilter(&keyboardHandler);
+  auto keyboardHandler = new firelight::input::KeyboardInputHandler();
+  window->installEventFilter(keyboardHandler);
 
   inputService.setKeyboard(
-      std::shared_ptr<firelight::input::IGamepad>(&keyboardHandler));
+      std::shared_ptr<firelight::input::IGamepad>(keyboardHandler));
 
   auto inputLoopFuture = QtConcurrent::run([&] { inputService.run(); });
 
