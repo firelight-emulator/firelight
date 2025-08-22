@@ -308,6 +308,9 @@ int main(int argc, char *argv[]) {
   // diskCache->setCacheDirectory(directory);
   // manager->setCache(diskCache);
 
+  firelight::emulation::EmulationService emuService(userLibrary);
+  firelight::emulation::EmulationService::setInstance(&emuService);
+
   firelight::gui::LibraryFolderListModel libraryFolderListModel;
 
   QObject::connect(&libraryFolderListModel,
@@ -318,7 +321,6 @@ int main(int argc, char *argv[]) {
   auto cache = new CachingNetworkAccessManagerFactory();
 
   QQmlApplicationEngine engine;
-  firelight::gui::Router router(&app);
   engine.setNetworkAccessManagerFactory(cache);
   // engine.networkAccessManager()->setCache(diskCache);
 
@@ -331,7 +333,8 @@ int main(int argc, char *argv[]) {
       "FilesystemUtils", new firelight::gui::FilesystemUtils());
   engine.rootContext()->setContextProperty("EventEmitter",
                                            new firelight::gui::EventEmitter());
-  engine.rootContext()->setContextProperty("Router", &router);
+  engine.rootContext()->setContextProperty("Router",
+                                           new firelight::gui::Router());
   engine.rootContext()->setContextProperty("emulator_config_manager",
                                            emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);

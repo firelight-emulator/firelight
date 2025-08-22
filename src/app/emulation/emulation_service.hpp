@@ -30,6 +30,7 @@ public:
     s_emuServiceInstance = service;
   }
 
+  EmulationService(library::IUserLibrary &library);
   ~EmulationService();
 
   std::future<EmulatorInstance *> loadEntry(int entryId);
@@ -37,8 +38,6 @@ public:
   EmulatorInstance *getCurrentEmulatorInstance();
 
   [[nodiscard]] bool isGameRunning() const;
-  bool isMuted() const;
-  void setMuted(bool muted);
 
   // Information about the currently running game, if any
   [[nodiscard]] std::optional<std::string> getCurrentGameName() const;
@@ -47,6 +46,9 @@ public:
 
 private:
   static EmulationService *s_emuServiceInstance;
+
+  library::IUserLibrary &m_library;
+
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;
 
   library::Entry m_currentEntry;

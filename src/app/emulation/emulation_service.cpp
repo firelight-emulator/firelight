@@ -14,27 +14,30 @@ firelight::emulation::EmulationService
     *firelight::emulation::EmulationService::s_emuServiceInstance = nullptr;
 
 namespace firelight::emulation {
+EmulationService::EmulationService(library::IUserLibrary &library)
+    : m_library(library) {}
 EmulationService::~EmulationService() {
-  spdlog::info("[EmulationService] Stopping emulation");
-  stopEmulation();
+  spdlog::info("[EmulationService] Stopping EmulationService");
 }
 std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
-
   if (m_emulatorInstance) {
     stopEmulation();
   }
 
   spdlog::info("[EmulationService] Loading entry with id {}", entryId);
 
-  auto entry = getUserLibrary()->getEntry(entryId);
+  auto entry = m_library.getEntry(entryId);
 
   if (!entry.has_value()) {
     spdlog::warn("[EmulationService] Entry with id {} does not exist", entryId);
-    return {};
+    EventDispatcher::instance().publish(GameLoadFailedEvent{});
+
+    std::promise<EmulatorInstance *> promise;
+    promise.set_value(nullptr);
+    return promise.get_future();
   }
 
-  auto runConfigurations =
-      getUserLibrary()->getRunConfigurations(entry->contentHash);
+  auto runConfigurations = m_library.getRunConfigurations(entry->contentHash);
 
   if (runConfigurations.empty()) {
     spdlog::warn("[EmulationService] No run configuration found for "
@@ -50,7 +53,7 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
 
   if (runConfig.type == library::RunConfiguration::TYPE_ROM) {
     auto romId = runConfig.romId;
-    auto romInfo = getUserLibrary()->getRomFile(romId);
+    auto romInfo = m_library.getRomFile(romId);
 
     if (!romInfo.has_value()) {
       return {};
@@ -128,70 +131,47 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
     // return m_emulatorInstance.get();
   }
 
-  if (runConfig.type == library::RunConfiguration::TYPE_PATCH) {
-    auto romId = runConfig.romId;
-    auto romInfo = getUserLibrary()->getRomFile(romId);
+  // if (runConfig.type == library::RunConfiguration::TYPE_PATCH) {
+  //   auto romId = runConfig.romId;
+  //   auto romInfo = m_library.getRomFile(romId);
+  //
+  //   if (!romInfo.has_value()) {
+  //     return {};
+  //   }
+  //
+  //   auto rom = library::RomFile(QString::fromStdString(romInfo->m_filePath));
+  //
+  //   rom.load();
+  //
+  //   if (!rom.isValid()) {
+  //     return {};
+  //   }
+  //
+  //   auto patchId = runConfig.patchId;
+  //   auto patch = m_library.getPatchFile(patchId);
+  //
+  //   if (!patch.has_value()) {
+  //     return {};
+  //   }
+  //
+  //   patch->load();
+  //   rom.applyPatchToContentBytes(*patch);
+  //
+  //   std::string corePath =
+  //   PlatformMetadata::getCoreDllPath(entry->platformId);
+  //
+  //   QByteArray saveDataBytes;
+  //   const auto saveData =
+  //   getSaveManager()->readSaveData(rom.getContentHash(),
+  //                                                        entry->activeSaveSlot);
+  //   if (saveData.has_value()) {
+  //     saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
+  //                                saveData->getSaveRamData().size());
+  //   }
+  //
+  //   return {};
+  // }
 
-    if (!romInfo.has_value()) {
-      return {};
-    }
-
-    auto rom = library::RomFile(QString::fromStdString(romInfo->m_filePath));
-
-    rom.load();
-
-    if (!rom.isValid()) {
-      return {};
-    }
-
-    auto patchId = runConfig.patchId;
-    auto patch = getUserLibrary()->getPatchFile(patchId);
-
-    if (!patch.has_value()) {
-      return {};
-    }
-
-    patch->load();
-    rom.applyPatchToContentBytes(*patch);
-
-    std::string corePath = PlatformMetadata::getCoreDllPath(entry->platformId);
-
-    QByteArray saveDataBytes;
-    const auto saveData = getSaveManager()->readSaveData(rom.getContentHash(),
-                                                         entry->activeSaveSlot);
-    if (saveData.has_value()) {
-      saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                 saveData->getSaveRamData().size());
-    }
-
-    // spdlog::info("[EmulationService] Loaded content {} successfully",
-    //              m_currentContentHash);
-
-    return {};
-
-    // m_entryId = entryId;
-    // m_gameName = entry->displayName;
-    // m_gameData = rom.getContentBytes();
-    // m_saveData = saveDataBytes;
-    // m_corePath = QString::fromStdString(corePath);
-    // m_contentHash = rom.getContentHash();
-    // m_saveSlotNumber = entry->activeSaveSlot;
-    // m_platformId = entry->platformId;
-    // m_contentPath = rom.getFilePath();
-    // m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
-    //
-    // emit entryIdChanged();
-    // emit gameNameChanged();
-    // emit contentHashChanged();
-    // emit saveSlotNumberChanged();
-    // emit platformIdChanged();
-    //
-    // m_loaded = true;
-    // if (m_startAfterLoading && !m_stopping) {
-    //   startGame();
-    // }
-  }
-  // });
   return std::async(std::launch::async, [entryId, this] -> EmulatorInstance * {
     return m_emulatorInstance.get();
   });
@@ -206,20 +186,6 @@ EmulatorInstance *EmulationService::getCurrentEmulatorInstance() {
 
 bool EmulationService::isGameRunning() const {
   return m_emulatorInstance != nullptr;
-}
-bool EmulationService::isMuted() const {
-  if (!m_emulatorInstance) {
-    return false;
-  }
-
-  return m_emulatorInstance->isMuted();
-}
-void EmulationService::setMuted(const bool muted) {
-  if (!m_emulatorInstance) {
-    return;
-  }
-
-  m_emulatorInstance->setMuted(muted);
 }
 
 std::optional<std::string> EmulationService::getCurrentGameName() const {

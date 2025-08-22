@@ -9,7 +9,7 @@ class Router : public QObject {
   Q_PROPERTY(int historySize READ historySize NOTIFY historySizeChanged)
 
 public:
-  Router(QObject *parent);
+  Router(QObject *parent = nullptr);
   Q_INVOKABLE void navigateTo(const QString &route);
   Q_INVOKABLE void goBack();
 

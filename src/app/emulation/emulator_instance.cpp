@@ -24,7 +24,6 @@ EmulatorInstance::EmulatorInstance(
 EmulatorInstance::~EmulatorInstance() {
   spdlog::info("[EmulatorInstance] Shutting down");
   save().wait();
-  spdlog::info("Supposedly saved data");
 }
 
 bool EmulatorInstance::initialize(
@@ -46,6 +45,9 @@ bool EmulatorInstance::initialize(
         ::libretro::SAVE_RAM,
         std::vector<char>(m_saveData.begin(), m_saveData.end()));
   }
+
+  getAchievementManager()->loadGame(m_platformId,
+                                    QString::fromStdString(m_contentHash));
 
   m_initialized = true;
 
@@ -70,10 +72,14 @@ void EmulatorInstance::runFrame() {
   }
 
   m_core->run(0);
+  getAchievementManager()->doFrame(m_core.get());
 }
 void EmulatorInstance::reset() { m_core->reset(); }
 
 std::future<bool> EmulatorInstance::save() {
+  if (!m_initialized) {
+    return std::async(std::launch::deferred, [] { return false; });
+  }
   saves::Savefile saveData(m_core->getMemoryData(::libretro::SAVE_RAM));
   // if (!m_currentImage.isNull() && m_currentImage.width() > 0 &&
   //     m_currentImage.height() > 0) {

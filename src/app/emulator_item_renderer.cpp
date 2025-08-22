@@ -709,7 +709,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     cb->beginExternal();
 
     m_emulatorInstance->initialize(this);
-    getAchievementManager()->loadGame(m_platformId, m_contentHash);
 
     // m_encoder = new firelight::av::VideoEncoder(640, 480, 60);
     // m_decoder = new firelight::av::VideoDecoder();
@@ -741,11 +740,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     if (m_playbackMultiplier > 1) {
       for (int i = 0; i < m_playbackMultiplier; i++) {
         m_emulatorInstance->runFrame();
-        getAchievementManager()->doFrame(m_emulatorInstance->getCore());
       }
     } else {
       m_emulatorInstance->runFrame();
-      getAchievementManager()->doFrame(m_emulatorInstance->getCore());
     }
 
     auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(

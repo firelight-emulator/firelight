@@ -96,14 +96,9 @@ ApplicationWindow {
 
     Loader {
         id: emulatorLoader
-        // visible: status === Loader.Ready
         focus: true
 
         StackView.visible: true
-
-        onStateChanged: {
-            console.log("NEW STATE: " + state)
-        }
 
         states: [
             State {

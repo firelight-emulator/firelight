@@ -223,15 +223,28 @@ void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
     m_rewindPointTimer.stop();
   }
 }
-bool EmulatorItem::isMuted() const { return m_audioManager->isMuted(); }
+bool EmulatorItem::isMuted() const {
+  const auto emulator = firelight::emulation::EmulationService::getInstance()
+                            ->getCurrentEmulatorInstance();
+  if (!emulator) {
+    return false;
+  }
 
-void EmulatorItem::setMuted(bool muted) {
-  if (firelight::emulation::EmulationService::getInstance()->isMuted() ==
-      muted) {
+  return emulator->isMuted();
+}
+
+void EmulatorItem::setMuted(const bool muted) {
+  const auto emulator = firelight::emulation::EmulationService::getInstance()
+                            ->getCurrentEmulatorInstance();
+  if (!emulator) {
     return;
   }
 
-  firelight::emulation::EmulationService::getInstance()->setMuted(muted);
+  if (emulator->isMuted() == muted) {
+    return;
+  }
+
+  emulator->setMuted(muted);
   emit mutedChanged();
 }
 float EmulatorItem::audioBufferLevel() const {
@@ -330,8 +343,8 @@ void EmulatorItem::startGame() {
         firelight::emulation::EmulationService::getInstance()
             ->getCurrentEmulatorInstance();
 
-    auto entry =
-        firelight::emulation::EmulationService::getInstance()->getCurrentEntry();
+    auto entry = firelight::emulation::EmulationService::getInstance()
+                     ->getCurrentEntry();
     if (!entry) {
       return;
     }

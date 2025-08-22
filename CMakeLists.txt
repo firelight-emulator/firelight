@@ -365,6 +365,8 @@ add_executable(fl_test
         tests/app/input/input_service_impl_test.cpp
         tests/app/input/test_gamepad.cpp
         tests/app/input/test_gamepad.hpp
+        tests/app/emulation/emulation_service_test.cpp
+        tests/mocks/mock_library.hpp
 )
 
 file(GLOB QML_TEST_FILES

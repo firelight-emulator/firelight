@@ -115,6 +115,9 @@ static int16_t inputStateCallback(unsigned port, unsigned device,
 
 static void videoCallback(const void *data, unsigned width, unsigned height,
                           size_t pitch) {
+  if (!currentCore->videoReceiver) {
+    return;
+  }
   currentCore->videoReceiver->receive(data, width, height, pitch);
 }
 
@@ -178,6 +181,10 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT");
+    if (!videoReceiver) {
+      spdlog::warn("No video receiver set; cannot set pixel format");
+      return false;
+    }
     auto ptr = static_cast<retro_pixel_format *>(data);
     videoReceiver->setPixelFormat(ptr);
     break;
@@ -228,6 +235,10 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_HW_RENDER: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
+    if (!videoReceiver) {
+      spdlog::warn("No video receiver set; cannot set HW render interface");
+      return false;
+    }
     auto *renderCallback = static_cast<retro_hw_render_callback *>(data);
     videoReceiver->setHwRenderInterface(renderCallback);
     m_destroyContextFunction = renderCallback->context_destroy;
@@ -470,6 +481,10 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO");
+    if (!videoReceiver) {
+      spdlog::warn("No video receiver set; cannot set system AV info");
+      return false;
+    }
     videoReceiver->setSystemAVInfo(static_cast<retro_system_av_info *>(data));
     return true;
   }
@@ -543,6 +558,10 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_SET_GEOMETRY: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_GEOMETRY");
+    if (!videoReceiver) {
+      spdlog::warn("No video receiver set; cannot set geometry");
+      return false;
+    }
     retroSystemAVInfo->geometry = *static_cast<retro_game_geometry *>(data);
     videoReceiver->setSystemAVInfo(retroSystemAVInfo);
     //    video->setGameGeometry(&retroSystemAVInfo->geometry);
@@ -567,6 +586,10 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
     break;
   case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE: {
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE");
+    if (!videoReceiver) {
+      spdlog::warn("No video receiver set; cannot get HW render interface");
+      return false;
+    }
 
     auto ptr = static_cast<retro_hw_render_interface **>(data);
     // *ptr = new retro_hw_render_interface_vulkan;
@@ -589,6 +612,11 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE: {
     environmentCalls.emplace_back(
         "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE");
+    if (!videoReceiver) {
+      spdlog::warn("No video receiver set; cannot set HW render context "
+                   "negotiation interface");
+      return false;
+    }
     auto ptr =
         static_cast<retro_hw_render_context_negotiation_interface *>(data);
     currentCore->videoReceiver->setHwRenderContextNegotiationInterface(ptr);
@@ -780,6 +808,10 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   }
   case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
     environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
+    if (!videoReceiver) {
+      spdlog::warn("No video receiver set; cannot get preferred HW render");
+      return false;
+    }
     *static_cast<unsigned *>(data) =
         currentCore->videoReceiver->getPreferredHwRender();
     return true;
@@ -1153,10 +1185,12 @@ Core::~Core() {
   if (m_destroyContextFunction) {
     m_destroyContextFunction();
   }
-  unloadGame();
-  deinit();
-  coreLib->unload();
-  currentCore = nullptr;
+  if (currentCore != nullptr && coreLib != nullptr) {
+    unloadGame();
+    deinit();
+    coreLib->unload();
+    currentCore = nullptr;
+  }
 }
 
 bool Core::loadGame(Game *game) {
@@ -1177,7 +1211,9 @@ bool Core::loadGame(Game *game) {
   auto result = symRetroLoadGame(&info);
 
   symRetroGetSystemAVInfo(retroSystemAVInfo);
-  videoReceiver->setSystemAVInfo(retroSystemAVInfo);
+  if (videoReceiver) {
+    videoReceiver->setSystemAVInfo(retroSystemAVInfo);
+  }
   //  video->setGameGeometry(&retroSystemAVInfo->geometry);
 
   audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
