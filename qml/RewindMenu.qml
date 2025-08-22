@@ -115,7 +115,7 @@ FocusScope {
             target: theList
             property: "currentIndex"
             to: 0
-            duration: (theList.currentIndex * 40)
+            duration: Math.min(Math.max(theList.currentIndex * 40, 0), 300)
             easing.type: Easing.OutQuad
         }
         PauseAnimation {

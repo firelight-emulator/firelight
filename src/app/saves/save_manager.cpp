@@ -62,10 +62,11 @@ SaveManager::getSaveFileInfoList(const QString &contentHash) const {
   return result;
 }
 
-QFuture<bool> SaveManager::writeSaveData(const QString &contentHash,
-                                         int saveSlotNumber,
-                                         const Savefile &saveData) {
-  return QtConcurrent::run([this, contentHash, saveSlotNumber, saveData] {
+std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
+                                             int saveSlotNumber,
+                                             const Savefile &saveData) {
+  return std::async(std::launch::async, [this, contentHash, saveSlotNumber,
+                                         saveData] {
     // TODO: Add some verification that the metadata is correct
     // TODO: Save file could have been deleted, etc
 

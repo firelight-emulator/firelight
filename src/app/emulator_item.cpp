@@ -31,17 +31,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
   m_threadPool.setMaxThreadCount(1);
 
-  m_autosaveTimer.setInterval(10000);
-  m_autosaveTimer.setSingleShot(false);
-  connect(&m_autosaveTimer, &QTimer::timeout, [this] {
-    if (m_renderer) {
-      m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSaveFile});
-      update();
-    }
-  });
-
-  m_autosaveTimer.start();
-
   m_rewindPointTimer.setInterval(3000);
   m_rewindPointTimer.setSingleShot(false);
   connect(&m_rewindPointTimer, &QTimer::timeout, [this] {
@@ -202,7 +191,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 EmulatorItem::~EmulatorItem() {
   m_stopping = true;
   getDiscordManager()->clearActivity();
-  m_autosaveTimer.stop();
   // QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::QueuedConnection);
   m_emulationThread.quit();
   m_emulationThread.exit();
@@ -238,12 +226,12 @@ void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
 bool EmulatorItem::isMuted() const { return m_audioManager->isMuted(); }
 
 void EmulatorItem::setMuted(bool muted) {
-  if (firelight::emulation::EmulationService::getInstance().isMuted() ==
+  if (firelight::emulation::EmulationService::getInstance()->isMuted() ==
       muted) {
     return;
   }
 
-  firelight::emulation::EmulationService::getInstance().setMuted(muted);
+  firelight::emulation::EmulationService::getInstance()->setMuted(muted);
   emit mutedChanged();
 }
 float EmulatorItem::audioBufferLevel() const {
@@ -340,10 +328,10 @@ void EmulatorItem::startGame() {
   QThreadPool::globalInstance()->start([this] {
     const auto emuInstance =
         firelight::emulation::EmulationService::getInstance()
-            .getCurrentEmulatorInstance();
+            ->getCurrentEmulatorInstance();
 
     auto entry =
-        firelight::emulation::EmulationService::getInstance().getCurrentEntry();
+        firelight::emulation::EmulationService::getInstance()->getCurrentEntry();
     if (!entry) {
       return;
     }

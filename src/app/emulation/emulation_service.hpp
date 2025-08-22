@@ -25,10 +25,12 @@ struct EmulationStoppedEvent {};
 
 class EmulationService : public ManagerAccessor {
 public:
-  static EmulationService &getInstance() {
-    static EmulationService instance;
-    return instance;
+  static EmulationService *getInstance() { return s_emuServiceInstance; }
+  static void setInstance(EmulationService *service) {
+    s_emuServiceInstance = service;
   }
+
+  ~EmulationService();
 
   std::future<EmulatorInstance *> loadEntry(int entryId);
   void stopEmulation();
@@ -44,6 +46,7 @@ public:
   [[nodiscard]] std::optional<platforms::Platform> getCurrentPlatform() const;
 
 private:
+  static EmulationService *s_emuServiceInstance;
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;
 
   library::Entry m_currentEntry;

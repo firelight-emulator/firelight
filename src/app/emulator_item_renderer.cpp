@@ -44,7 +44,7 @@ void EmulatorItemRenderer::setHwRenderInterface(
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
-  if (m_quitting) {
+  if (!m_emulatorInstance || m_quitting) {
     return;
   }
   m_commandQueue.enqueue(command);
@@ -502,9 +502,6 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       m_emulatorInstance->reset();
       getAchievementManager()->reset();
       break;
-    case WriteSaveFile:
-      m_shouldSave = true;
-      break;
     case WriteRewindPoint: {
       if (m_paused) {
         return;
@@ -733,11 +730,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
              m_emulatorInstance->isInitialized() && m_shouldRunFrame) {
     m_shouldRunFrame = false;
     // m_frameNumber++;
-
-    if (m_shouldSave) {
-      m_emulatorInstance->save();
-      m_shouldSave = false;
-    }
 
     const QColor clearColor = QColor::fromRgbF(0.0f, 0.0f, 0.0f, 1.0f);
     QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();

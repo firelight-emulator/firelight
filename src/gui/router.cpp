@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::gui {
+Router::Router(QObject *parent) : QObject(parent) {}
 void Router::navigateTo(const QString &route) {
 
   // auto url = QUrl(route);

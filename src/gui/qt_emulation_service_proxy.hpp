@@ -24,7 +24,7 @@ signals:
   void gameRunningChanged(bool isGameRunning);
 
 private:
-  emulation::EmulationService &m_emulationService;
+  emulation::EmulationService *m_emulationService;
 
   ScopedConnection m_gameLoadedConnection;
   ScopedConnection m_emulationStartedConnection;

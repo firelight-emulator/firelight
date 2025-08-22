@@ -279,8 +279,6 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::gui::ControllerListModel>("Firelight", 1, 0,
                                                        "GamepadListModel");
 
-  firelight::gui::Router router;
-
   QNetworkInformation::loadDefaultBackend();
   if (QNetworkInformation::instance()->reachability() ==
       QNetworkInformation::Reachability::Online) {
@@ -320,6 +318,7 @@ int main(int argc, char *argv[]) {
   auto cache = new CachingNetworkAccessManagerFactory();
 
   QQmlApplicationEngine engine;
+  firelight::gui::Router router(&app);
   engine.setNetworkAccessManagerFactory(cache);
   // engine.networkAccessManager()->setCache(diskCache);
 

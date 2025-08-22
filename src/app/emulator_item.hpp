@@ -177,7 +177,6 @@ protected:
 private:
   bool m_stopping = false;
   QThreadPool m_threadPool;
-  QTimer m_autosaveTimer;
   QTimer m_rewindPointTimer;
   EmulatorItemRenderer *m_renderer = nullptr;
 

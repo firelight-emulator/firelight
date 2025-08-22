@@ -17,11 +17,14 @@ EmulatorInstance::EmulatorInstance(
     : m_core(std::move(core)), m_gameData(std::move(gameData)),
       m_saveData(std::move(saveData)), m_contentPath(std::move(contentPath)),
       m_contentHash(std::move(contentHash)), m_platformId(platformId),
-      m_saveSlotNumber(saveSlotNumber) {}
+      m_saveSlotNumber(saveSlotNumber) {
+  m_lastSaveTime = std::chrono::steady_clock::now();
+}
 
 EmulatorInstance::~EmulatorInstance() {
-  // spdlog::info("[EmulatorInstance] Shutting down");
+  spdlog::info("[EmulatorInstance] Shutting down");
   save().wait();
+  spdlog::info("Supposedly saved data");
 }
 
 bool EmulatorInstance::initialize(
@@ -53,22 +56,31 @@ bool EmulatorInstance::initialize(
 bool EmulatorInstance::isInitialized() { return m_initialized; }
 std::string EmulatorInstance::getContentHash() const { return m_contentHash; }
 int EmulatorInstance::getPlatformId() const { return m_platformId; }
-void EmulatorInstance::runFrame() { m_core->run(0); }
+void EmulatorInstance::runFrame() {
+  const auto now = std::chrono::steady_clock::now();
+  // spdlog::info("Comparing {} and {}: {}", now.time_since_epoch().count(),
+  //              m_lastSaveTime.time_since_epoch().count(),
+  //              (now - std::chrono::seconds(m_saveIntervalSeconds))
+  //                  .time_since_epoch()
+  //                  .count());
+  if (now - std::chrono::seconds(m_saveIntervalSeconds) > m_lastSaveTime) {
+    spdlog::info("Save timer triggered");
+    m_lastSaveTime = now;
+    save();
+  }
+
+  m_core->run(0);
+}
 void EmulatorInstance::reset() { m_core->reset(); }
 
 std::future<bool> EmulatorInstance::save() {
-  return std::async(std::launch::async, [this]() -> bool {
-    saves::Savefile saveData(m_core->getMemoryData(::libretro::SAVE_RAM));
-    // if (!m_currentImage.isNull() && m_currentImage.width() > 0 &&
-    //     m_currentImage.height() > 0) {
-    //   saveData.setImage(m_currentImage.copy());
-    // }
-
-    QFuture<bool> result = getSaveManager()->writeSaveData(
-        m_contentHash.data(), m_saveSlotNumber, saveData);
-
-    return true;
-  });
+  saves::Savefile saveData(m_core->getMemoryData(::libretro::SAVE_RAM));
+  // if (!m_currentImage.isNull() && m_currentImage.width() > 0 &&
+  //     m_currentImage.height() > 0) {
+  //   saveData.setImage(m_currentImage.copy());
+  // }
+  return getSaveManager()->writeSaveData(m_contentHash.data(), m_saveSlotNumber,
+                                         saveData);
 }
 
 void EmulatorInstance::setMuted(const bool muted) {

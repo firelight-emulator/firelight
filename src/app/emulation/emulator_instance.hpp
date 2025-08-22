@@ -46,6 +46,8 @@ private:
   std::vector<uint8_t> m_saveData;
 
   std::vector<SuspendPoint> m_rewindSuspendPoints;
+  std::chrono::time_point<std::chrono::steady_clock> m_lastSaveTime;
+  int m_saveIntervalSeconds = 10;
 
   std::string m_contentPath;
   std::string m_contentHash;

@@ -2,6 +2,7 @@
 
 #include "emulation/emulation_service.hpp"
 
+#include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
 
 namespace firelight::gui {
@@ -28,13 +29,14 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
 QtEmulationServiceProxy::~QtEmulationServiceProxy() {}
 
 bool QtEmulationServiceProxy::isGameRunning() const {
-  return m_emulationService.isGameRunning();
+  return m_emulationService->isGameRunning();
 }
 
 void QtEmulationServiceProxy::loadEntry(const int entryId) {
-  m_emulationService.loadEntry(entryId);
+  QThreadPool::globalInstance()->start(
+      [this, entryId] { m_emulationService->loadEntry(entryId); });
 }
 void QtEmulationServiceProxy::stopEmulation() {
-  m_emulationService.stopEmulation();
+  m_emulationService->stopEmulation();
 }
 } // namespace firelight::gui
