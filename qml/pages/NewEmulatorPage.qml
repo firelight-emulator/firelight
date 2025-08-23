@@ -32,25 +32,18 @@ FocusScope {
     }
 
     required property StackView stackView
-    required property int entryId
     property GameSettings2 gameSettings: GameSettings2 {
         platformId: root.platformId
         contentHash: root.contentHash
     }
 
-    property bool blurEnabled: false
     property alias audioBufferLevel: emulator.audioBufferLevel
 
-    Component.onCompleted: {
-        emulator.loadGame(entryId)
-    }
-
-    property alias paused: emulator.paused
+    property bool paused
 
     signal closing()
     signal aboutToRunFrame()
 
-    clip: true
     focus: true
 
     Timer {
@@ -98,6 +91,17 @@ FocusScope {
     //         ctrlTimer.stop()
     //     }
     // }
+    property bool windowResizing
+    Connections {
+        target: window_resize_handler
+
+        function onWindowResizeStarted() {
+            root.windowResizing = true
+        }
+        function onWindowResizeFinished() {
+            root.windowResizing = false
+        }
+    }
 
     property alias videoAspectRatio: emulator.videoAspectRatio
     property alias contentHash: emulator.contentHash
@@ -106,14 +110,8 @@ FocusScope {
     property alias saveSlotNumber: emulator.saveSlotNumber
     property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
-    function loadGame(entryId) {
-        emulator.loadGame(entryId)
-    }
-
     function startGame() {
-        if (!emulator.started) {
-            emulator.startGame()
-        }
+        emulator.startGame()
     }
 
     signal rewindPointsReady(var points)
@@ -157,6 +155,9 @@ FocusScope {
         id: emulator
         focus: true
         anchors.centerIn: root
+
+        paused: root.paused || root.windowResizing
+        muted: paused || playbackMultiplier !== 1
 
         layer.enabled: true
 

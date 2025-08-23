@@ -62,10 +62,11 @@ SaveManager::getSaveFileInfoList(const QString &contentHash) const {
   return result;
 }
 
-QFuture<bool> SaveManager::writeSaveData(const QString &contentHash,
-                                         int saveSlotNumber,
-                                         const Savefile &saveData) {
-  return QtConcurrent::run([this, contentHash, saveSlotNumber, saveData] {
+std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
+                                             int saveSlotNumber,
+                                             const Savefile &saveData) {
+  return std::async(std::launch::async, [this, contentHash, saveSlotNumber,
+                                         saveData] {
     // TODO: Add some verification that the metadata is correct
     // TODO: Save file could have been deleted, etc
 
@@ -149,7 +150,8 @@ std::optional<Savefile> SaveManager::readSaveData(const QString &contentHash,
   const auto saveFile =
       std::filesystem::path((dir + "/savefile.srm").toStdString());
 
-  spdlog::info("Reading from save file: {}", saveFile.string());
+  spdlog::info("[SaveDataService] Reading from save file: {}",
+               saveFile.string());
 
   if (!exists(saveFile)) {
     return std::nullopt;

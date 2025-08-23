@@ -26,6 +26,8 @@ list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+#add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
+#add_link_options(-fsanitize=address -fno-omit-frame-pointer)
 
 #option(ENABLE_ASAN "Enable Address Sanitizer" ON)
 #if(ENABLE_ASAN)
@@ -202,6 +204,11 @@ add_library(firelight_lib
         src/gui/gamepad_profile_item.hpp
         src/gui/qt_input_service_proxy.cpp
         src/gui/qt_input_service_proxy.hpp
+        src/gui/qt_emulation_service_proxy.cpp
+        src/gui/qt_emulation_service_proxy.hpp
+        src/image_cache.cpp
+        src/app/emulation/emulation_service.cpp
+        src/app/emulation/emulator_instance.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -252,8 +259,6 @@ qt6_add_executable(firelight
         resources.qrc
         app_resources.rc
         src/main.cpp
-        src/image_cache.cpp
-        src/image_cache.h
 )
 
 
@@ -333,6 +338,7 @@ if (WIN32)
     file(COPY ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/bin/release/discord_partner_sdk.dll DESTINATION ${CMAKE_BINARY_DIR})
 endif ()
 
+
 enable_testing()
 include(GoogleTest)
 
@@ -359,6 +365,8 @@ add_executable(fl_test
         tests/app/input/input_service_impl_test.cpp
         tests/app/input/test_gamepad.cpp
         tests/app/input/test_gamepad.hpp
+        tests/app/emulation/emulation_service_test.cpp
+        tests/mocks/mock_library.hpp
 )
 
 file(GLOB QML_TEST_FILES

@@ -22,10 +22,10 @@ static QRhi *globalRhi = nullptr;
 static QRhiCommandBuffer *globalCb = nullptr;
 
 EmulatorItemRenderer::EmulatorItemRenderer(
-    const QSGRendererInterface::GraphicsApi api,
-    std::unique_ptr<libretro::Core> core, QWindow *window)
-    : m_graphicsApi(api), m_core(std::move(core)), m_window(window) {
-  m_core->setVideoReceiver(this);
+    const QSGRendererInterface::GraphicsApi api, QWindow *window,
+    firelight::emulation::EmulatorInstance *emulatorInstance)
+    : m_window(window), m_graphicsApi(api),
+      m_emulatorInstance(emulatorInstance) {
   globalRenderer = this;
 }
 void EmulatorItemRenderer::setHwRenderInterface(
@@ -44,7 +44,7 @@ void EmulatorItemRenderer::setHwRenderInterface(
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
-  if (m_quitting) {
+  if (!m_emulatorInstance || m_quitting) {
     return;
   }
   m_commandQueue.enqueue(command);
@@ -62,7 +62,6 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
   m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
   getActivityLog()->createPlaySession(m_playSession);
 
-  save(true);
   getAchievementManager()->unloadGame();
 
   for (auto &url : m_rewindImageUrls) {
@@ -468,33 +467,11 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
 
 void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   const auto emulatorItem = dynamic_cast<EmulatorItem *>(item);
-
   if (emulatorItem == nullptr) {
     return;
   }
 
   m_emulatorItem = emulatorItem;
-  // spdlog::error(
-  //     "Synchronizing: {}",
-  //     std::chrono::high_resolution_clock::now().time_since_epoch().count());
-
-  // if (emulatorItem->window() != nullptr) {
-  //   if (emulatorItem->window()->screen() != nullptr) {
-  //     auto refreshRate = emulatorItem->window()->screen()->refreshRate();
-  //     auto floor = std::floor(refreshRate);
-  //     auto ceil = std::ceil(refreshRate);
-  //
-  //     if (floor == 120 || ceil == 120) {
-  //       m_waitFrames = 1;
-  //     } else if ((floor < 182 && floor > 172) || (ceil < 182 && ceil > 172))
-  //     {
-  //       // TODO: Do something here to indicate that the timing is gonna be a
-  //       bit
-  //       // off
-  //       m_waitFrames = 2;
-  //     }
-  //   }
-  // }
 
   if (m_paused && !emulatorItem->paused()) {
     if (m_playSessionTimer.isValid()) {
@@ -512,14 +489,9 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
   m_paused = emulatorItem->paused();
 
-  m_gameData = emulatorItem->m_gameData;
-  m_saveData = emulatorItem->m_saveData;
-  m_corePath = emulatorItem->m_corePath;
   m_contentHash = emulatorItem->m_contentHash;
   m_saveSlotNumber = emulatorItem->m_saveSlotNumber;
   m_platformId = emulatorItem->m_platformId;
-  m_contentPath = emulatorItem->m_contentPath;
-  m_gameReady = emulatorItem->m_gameReady;
 
   while (!m_commandQueue.isEmpty()) {
     switch (const auto command = m_commandQueue.dequeue(); command.type) {
@@ -527,18 +499,15 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       m_shouldRunFrame = true;
       break;
     case ResetGame:
-      m_core->reset();
+      m_emulatorInstance->reset();
       getAchievementManager()->reset();
-      break;
-    case WriteSaveFile:
-      m_shouldSave = true;
       break;
     case WriteRewindPoint: {
       if (m_paused) {
         return;
       }
       SuspendPoint suspendPoint;
-      suspendPoint.state = m_core->serializeState();
+      suspendPoint.state = m_emulatorInstance->serializeState();
       suspendPoint.image = m_currentImage;
       suspendPoint.timestamp = QDateTime::currentMSecsSinceEpoch();
       suspendPoint.retroachievementsState =
@@ -587,7 +556,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     } break;
     case LoadRewindPoint: {
       auto point = m_rewindPoints.at(command.rewindPointIndex - 1);
-      m_core->deserializeState(point.state);
+      m_emulatorInstance->deserializeState(point.state);
       if (!point.retroachievementsState.empty()) {
         getAchievementManager()->deserializeState(point.retroachievementsState);
       }
@@ -605,7 +574,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     } break;
     case WriteSuspendPoint: {
       SuspendPoint suspendPoint;
-      suspendPoint.state = m_core->serializeState();
+      suspendPoint.state = m_emulatorInstance->serializeState();
       suspendPoint.retroachievementsState =
           getAchievementManager()->serializeState();
       suspendPoint.image = m_currentImage;
@@ -621,7 +590,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
           m_contentHash, m_saveSlotNumber, command.suspendPointIndex);
       if (point.has_value()) {
         SuspendPoint suspendPoint;
-        suspendPoint.state = m_core->serializeState();
+        suspendPoint.state = m_emulatorInstance->serializeState();
         suspendPoint.retroachievementsState =
             getAchievementManager()->serializeState();
         suspendPoint.image = m_currentImage;
@@ -631,7 +600,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         emulatorItem->m_canUndoLoadSuspendPoint = true;
         emulatorItem->canUndoLoadSuspendPointChanged();
 
-        m_core->deserializeState(point->state);
+        m_emulatorInstance->deserializeState(point->state);
         if (!point->retroachievementsState.empty()) {
           getAchievementManager()->deserializeState(
               point->retroachievementsState);
@@ -657,7 +626,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         break;
       }
 
-      m_core->deserializeState(m_beforeLastLoadSuspendPoint.state);
+      m_emulatorInstance->deserializeState(m_beforeLastLoadSuspendPoint.state);
       if (!m_beforeLastLoadSuspendPoint.retroachievementsState.empty()) {
         getAchievementManager()->deserializeState(
             m_beforeLastLoadSuspendPoint.retroachievementsState);
@@ -680,8 +649,6 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       // Handle undo load suspend point
       break;
     case SetPlaybackMultiplier:
-      spdlog::info("Setting playback multiplier to {}",
-                   command.playbackMultiplier);
       m_playbackMultiplier = command.playbackMultiplier;
 
       if (m_playbackMultiplier < 1) {
@@ -725,35 +692,23 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
-  if (m_core && m_coreInitialized && m_shouldRunFrame &&
-      m_currentWaitFrames > 0) {
+  if (m_emulatorInstance && m_emulatorInstance->isInitialized() &&
+      m_shouldRunFrame && m_currentWaitFrames > 0) {
     m_currentWaitFrames--;
-    spdlog::info("Waiting for {} frames", m_currentWaitFrames);
     // update();
     return;
   }
 
   m_currentWaitFrames = m_waitFrames;
 
-  if (m_core && !m_coreInitialized) {
+  if (m_emulatorInstance && !m_emulatorInstance->isInitialized()) {
     const QColor clearColor = QColor::fromRgbF(0.0f, 0.0f, 0.0f, 1.0f);
     QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
     cb->beginPass(renderTarget(), clearColor, {1.0f, 0}, resourceUpdates,
                   QRhiCommandBuffer::ExternalContent);
     cb->beginExternal();
-    m_core->init();
 
-    libretro::Game game(
-        m_contentPath.toStdString(),
-        vector<unsigned char>(m_gameData.begin(), m_gameData.end()));
-    m_core->loadGame(&game);
-
-    if (m_saveData.size() > 0) {
-      m_core->writeMemoryData(libretro::SAVE_RAM,
-                              vector(m_saveData.begin(), m_saveData.end()));
-    }
-
-    getAchievementManager()->loadGame(m_platformId, m_contentHash);
+    m_emulatorInstance->initialize(this);
 
     // m_encoder = new firelight::av::VideoEncoder(640, 480, 60);
     // m_decoder = new firelight::av::VideoDecoder();
@@ -761,7 +716,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     cb->endExternal();
     cb->endPass(resourceUpdates);
 
-    m_coreInitialized = true;
     m_playSession.contentHash = m_contentHash.toStdString();
     m_playSession.startTime = QDateTime::currentMSecsSinceEpoch();
     m_playSession.slotNumber = m_saveSlotNumber;
@@ -771,14 +725,10 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     }
 
     update();
-  } else if (!m_paused && m_core && m_coreInitialized && m_shouldRunFrame) {
+  } else if (!m_paused && m_emulatorInstance &&
+             m_emulatorInstance->isInitialized() && m_shouldRunFrame) {
     m_shouldRunFrame = false;
     // m_frameNumber++;
-
-    if (m_shouldSave) {
-      save(false);
-      m_shouldSave = false;
-    }
 
     const QColor clearColor = QColor::fromRgbF(0.0f, 0.0f, 0.0f, 1.0f);
     QRhiResourceUpdateBatch *resourceUpdates = rhi()->nextResourceUpdateBatch();
@@ -787,14 +737,12 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = resourceUpdates;
 
     cb->beginExternal();
-    if (m_playbackMultiplier >= 1) {
+    if (m_playbackMultiplier > 1) {
       for (int i = 0; i < m_playbackMultiplier; i++) {
-        m_core->run(0);
-        getAchievementManager()->doFrame(m_core.get());
+        m_emulatorInstance->runFrame();
       }
     } else {
-      m_core->run(0);
-      getAchievementManager()->doFrame(m_core.get());
+      m_emulatorInstance->runFrame();
     }
 
     auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(
@@ -860,22 +808,5 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
     m_currentUpdateBatch = nullptr;
     cb->endPass(resourceUpdates);
-  }
-}
-
-void EmulatorItemRenderer::save(const bool waitForFinish) const {
-  spdlog::debug("Saving game data");
-  firelight::saves::Savefile saveData(
-      m_core->getMemoryData(libretro::SAVE_RAM));
-  if (!m_currentImage.isNull() && m_currentImage.width() > 0 &&
-      m_currentImage.height() > 0) {
-    saveData.setImage(m_currentImage.copy());
-  }
-
-  QFuture<bool> result = getSaveManager()->writeSaveData(
-      m_contentHash, m_saveSlotNumber, saveData);
-
-  if (waitForFinish) {
-    result.waitForFinished();
   }
 }
