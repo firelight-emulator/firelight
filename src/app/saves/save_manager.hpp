@@ -34,8 +34,8 @@ public:
   [[nodiscard]] std::vector<SavefileInfo>
   getSaveFileInfoList(const QString &contentHash) const;
 
-  QFuture<bool> writeSaveData(const QString &contentHash, int saveSlotNumber,
-                              const Savefile &saveData);
+  std::future<bool> writeSaveData(const QString &contentHash,
+                                  int saveSlotNumber, const Savefile &saveData);
 
   [[nodiscard]] std::optional<Savefile> readSaveData(const QString &contentHash,
                                                      int saveSlotNumber) const;

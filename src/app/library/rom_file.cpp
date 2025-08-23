@@ -332,6 +332,15 @@ void RomFile::generateContentBytesAndHash(const QByteArray &fileBytes) {
     case PlatformMetadata::PLATFORM_ID_POKEMON_MINI:
       rcConsoleId = RC_CONSOLE_POKEMON_MINI;
       break;
+    case PlatformMetadata::PLATFORM_ID_WONDERSWAN:
+      rcConsoleId = RC_CONSOLE_WONDERSWAN;
+      break;
+    case PlatformMetadata::PLATFORM_ID_SG1000:
+      rcConsoleId = RC_CONSOLE_SG1000;
+      break;
+    case PlatformMetadata::PLATFORM_ID_NEOGEO_POCKET:
+      rcConsoleId = RC_CONSOLE_NEOGEO_POCKET;
+      break;
     default:
       rcConsoleId = RC_CONSOLE_UNKNOWN;
     }

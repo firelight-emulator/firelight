@@ -172,6 +172,19 @@ SDLInputService::getRetropadForPlayerIndex(const int t_player) {
              : std::nullopt;
 }
 
+std::pair<int16_t, int16_t> SDLInputService::getPointerPosition() const {
+  return {m_mouseX, m_mouseY};
+}
+bool SDLInputService::isPressed() const { return m_mousePressed; }
+void SDLInputService::updateMouseState(double x, double y, bool mousePressed) {
+  m_mouseX = x * 32767;
+  m_mouseY = y * 32767;
+  m_mousePressed = mousePressed;
+}
+void SDLInputService::updateMousePressed(bool mousePressed) {
+  m_mousePressed = mousePressed;
+}
+
 void SDLInputService::run() {
   spdlog::info("Starting SDL Input Service...");
   while (m_running) {

@@ -90,6 +90,8 @@ Pane {
             label: "Library"
             iconName: "book"
 
+            focus: true
+
             KeyNavigation.down: shopButton
 
             Layout.fillWidth: true
@@ -162,6 +164,8 @@ Pane {
             id: settingsButton
             label: "Settings"
             iconName: "settings"
+
+            KeyNavigation.down: powerButton
 
             Layout.fillWidth: true
 

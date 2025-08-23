@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gamepad.hpp"
+#include <firelight/libretro/pointer_input_provider.hpp>
 #include <firelight/libretro/retropad_provider.hpp>
 #include <memory>
 
@@ -27,7 +28,8 @@ struct ShortcutToggledEvent {
   Shortcut shortcut;
 };
 
-class InputService : public libretro::IRetropadProvider {
+class InputService : public libretro::IRetropadProvider,
+                     public libretro::IPointerInputProvider {
 public:
   static std::map<Shortcut, std::string> listShortcuts() {
     return {{OpenRewindMenu, "Open rewind menu"},
@@ -53,6 +55,9 @@ public:
 
   virtual bool preferGamepadOverKeyboard() const = 0;
   virtual void setPreferGamepadOverKeyboard(bool prefer) = 0;
+
+  virtual void updateMouseState(double x, double y, bool mousePressed) = 0;
+  virtual void updateMousePressed(bool mousePressed) = 0;
 
 private:
   static InputService *s_instance;

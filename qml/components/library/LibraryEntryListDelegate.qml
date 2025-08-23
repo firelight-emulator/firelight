@@ -13,17 +13,23 @@ Button {
 
     signal startGameClicked(int entryId)
 
-    TapHandler {
-        acceptedButtons: Qt.LeftButton
-        onDoubleTapped: {
-            startGameClicked(root.model.entryId)
-        }
+    // TapHandler {
+    //     acceptedButtons: Qt.LeftButton
+    //     // onDoubleTapped: {
+    //     //     startGameClicked(root.model.entryId)
+    //     // }
+    //
+    //     onSingleTapped: function(event, button) {
+    //
+    //     }
+    // }
 
-        onSingleTapped: function(event, button) {
-            if (root.ListView.view.currentIndex !== root.index) {
-                // theList.highlightRangeMode = ListView.NoHighlightRange
-                root.ListView.view.currentIndex = root.index
-            }
+    onClicked: function() {
+        if (root.ListView.view.currentIndex !== root.index) {
+            // theList.highlightRangeMode = ListView.NoHighlightRange
+            root.ListView.view.currentIndex = root.index
+        } else {
+            startGameClicked(root.model.entryId)
         }
     }
 
@@ -39,8 +45,8 @@ Button {
     background: Rectangle {
         color: "white"
         radius: 2
-        opacity: root.ListView.isCurrentItem ? 1 : gameItemHover.hovered ? 0.1 : 1
-        visible: root.ListView.isCurrentItem || gameItemHover.hovered
+        opacity: (root.activeFocus && root.ListView.isCurrentItem) ? 1 : gameItemHover.hovered ? 0.1 : 1
+        visible: (root.activeFocus && root.ListView.isCurrentItem) || gameItemHover.hovered
     }
 
     contentItem: RowLayout {
@@ -95,7 +101,7 @@ Button {
             font.pixelSize: 17
             font.weight: Font.DemiBold
             font.family: Constants.regularFontFamily
-            color: root.ListView.isCurrentItem ? "black" : "white"
+            color: (root.activeFocus && root.ListView.isCurrentItem) ? "black" : "white"
             Layout.fillHeight: true
             Layout.preferredWidth: 600
             elide: Text.ElideRight
@@ -108,7 +114,7 @@ Button {
             font.pixelSize: 17
             font.weight: Font.Medium
             font.family: Constants.regularFontFamily
-            color: root.ListView.isCurrentItem ? "#2A2A2A" : "#d3d3d3"
+            color: (root.activeFocus && root.ListView.isCurrentItem) ? "#2A2A2A" : "#d3d3d3"
             Layout.fillHeight: true
             Layout.preferredWidth: 300
             elide: Text.ElideRight

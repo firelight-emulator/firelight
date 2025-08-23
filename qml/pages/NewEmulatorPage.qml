@@ -32,25 +32,18 @@ FocusScope {
     }
 
     required property StackView stackView
-    required property int entryId
     property GameSettings2 gameSettings: GameSettings2 {
         platformId: root.platformId
         contentHash: root.contentHash
     }
 
-    property bool blurEnabled: false
     property alias audioBufferLevel: emulator.audioBufferLevel
 
-    Component.onCompleted: {
-        emulator.loadGame(entryId)
-    }
-
-    property alias paused: emulator.paused
+    property bool paused
 
     signal closing()
     signal aboutToRunFrame()
 
-    clip: true
     focus: true
 
     Timer {
@@ -98,6 +91,17 @@ FocusScope {
     //         ctrlTimer.stop()
     //     }
     // }
+    property bool windowResizing
+    Connections {
+        target: window_resize_handler
+
+        function onWindowResizeStarted() {
+            root.windowResizing = true
+        }
+        function onWindowResizeFinished() {
+            root.windowResizing = false
+        }
+    }
 
     property alias videoAspectRatio: emulator.videoAspectRatio
     property alias contentHash: emulator.contentHash
@@ -106,14 +110,8 @@ FocusScope {
     property alias saveSlotNumber: emulator.saveSlotNumber
     property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
-    function loadGame(entryId) {
-        emulator.loadGame(entryId)
-    }
-
     function startGame() {
-        if (!emulator.started) {
-            emulator.startGame()
-        }
+        emulator.startGame()
     }
 
     signal rewindPointsReady(var points)
@@ -150,36 +148,48 @@ FocusScope {
     Rectangle {
         id: background
         color: "black"
-        anchors.fill: parent
+        anchors.fill: root
     }
 
     EmulatorItem {
         id: emulator
         focus: true
-        anchors.centerIn: parent
+        anchors.centerIn: root
+
+        paused: root.paused || root.windowResizing
+        muted: paused || playbackMultiplier !== 1
 
         layer.enabled: true
 
         property string pictureMode: gameSettings.pictureMode
+        property real aspectRatio: {
+            let mode = gameSettings.aspectRatioMode
+
+             if (mode === "core-corrected") {
+                 return emulator.videoAspectRatio
+             } else {
+                 return emulator.trueAspectRatio
+             }
+        }
 
         width: {
             if (emulator.pictureMode === "stretch") {
-                return parent.width
+                return root.width
             } else if (emulator.pictureMode === "aspect-ratio-fill") {
-                return height * videoAspectRatio
+                return height * aspectRatio
             } else if (emulator.pictureMode === "integer-scale") {
-                return height * videoAspectRatio
+                return height * aspectRatio
             }
 
             return emulator.videoWidth
         }
         height: {
             if (emulator.pictureMode === "stretch") {
-                return parent.height
+                return root.height
             } else if (emulator.pictureMode === "aspect-ratio-fill") {
-                return parent.height
+                return root.height
             } else if (emulator.pictureMode === "integer-scale"){
-                let num = parent.height / emulator.videoHeight
+                let num = root.height / emulator.videoHeight
                 return Math.floor(num) * emulator.videoHeight
             }
 
@@ -197,20 +207,48 @@ FocusScope {
         onRewindPointsReady: function (points) {
             root.stackView.pushItem(rewindPage, {
                 model: points,
-                aspectRatio: emulator.videoAspectRatio
+                aspectRatio: emulator.aspectRatio
             }, StackView.Immediate)
             // root.rewindPointsReady(points)
+        }
+
+        onPlaybackMultiplierChanged: function() {
+            if (emulator.playbackMultiplier === 1) {
+                timer.running = true
+            } else {
+                speedIndicator.opacity = 1
+            }
         }
     }
 
     Pane {
+        id: speedIndicator
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins:16
         width: 100
         height: 40
-        visible: emulator.playbackMultiplier !== 1
         padding: 12
+
+        opacity: 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                easing.type: Easing.InOutQuad
+                duration: 200
+            }
+        }
+
+        Timer {
+            id: timer
+            interval: 1200
+            running: false
+            repeat: false
+            onTriggered: {
+                speedIndicator.opacity = 0
+            }
+        }
+
         background: Rectangle {
             color: ColorPalette.neutral900
         }

@@ -34,24 +34,18 @@ ApplicationWindow {
         GeneralSettings.mainWindowY = y
     }
 
-    property string runningGameName: emulatorLoader.item ? emulatorLoader.item.gameName : ""
-    property int runningGameEntryId: emulatorLoader.item ? emulatorLoader.item.entryId : -1
-    property int runningGameSaveSlotNumber: emulatorLoader.item ? emulatorLoader.item.saveSlotNumber : -1
+    onActiveFocusItemChanged: {
+        console.log("Active focus item changed to: " + window.activeFocusItem)
+        let item = window.activeFocusItem
+        let level = 0
+        while (item) {
+            let spaces = " ".repeat(level * 2)
 
-    // onActiveFocusItemChanged: {
-    //     console.log("Active focus item changed to: " + window.activeFocusItem)
-    //     let item = window.activeFocusItem
-    //     let level = 0
-    //     while (item) {
-    //         let spaces = " ".repeat(level * 2)
-    //
-    //         console.log(spaces + item)
-    //         item = item.parent
-    //         level++
-    //     }
-    // }
-
-    // flags: Qt.NoTitleBarBackgroundHint
+            console.log(spaces + item)
+            item = item.parent
+            level++
+        }
+    }
 
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
@@ -69,17 +63,22 @@ ApplicationWindow {
         backgroundFile: AppearanceSettings.backgroundFile
     }
 
-    function startGame(entryId) {
-        if (emulatorLoader.status === Loader.Ready) {
-            closeGameDialog.openAndDoOnAccepted(function () {
-                emulatorLoader.source = ""
+    Connections {
+        target: EmulationService
 
+        function onGameLoaded() {
+            overlay.opacity = 0
+            emulatorLoader.startGame()
+        }
+    }
+
+    function startGame(entryId) {
+        if (EmulationService.isGameRunning) {
+            closeGameDialog.openAndDoOnAccepted(function () {
+                EmulationService.stopEmulation()
+                emulatorLoader.setSource("")
                 startGameAnimation.entryId = entryId
                 startGameAnimation.start()
-
-                // emulatorLoader.entryId = entryId
-                // emulatorLoader.active = true
-                // libPage.playLaunchAnimation()
             })
         } else {
             startGameAnimation.entryId = entryId
@@ -97,19 +96,52 @@ ApplicationWindow {
 
     Loader {
         id: emulatorLoader
-        // visible: status === Loader.Ready
-        focus: true
 
         StackView.visible: true
 
-        property real blurAmount: 0
+        states: [
+            State {
+                name: "inactive"
+                when: emulatorLoader.status != Loader.Ready
+                PropertyChanges {
+                    emulatorLoader.blurAmount: 0
+                }
+            },
+            State {
+                name: "unfocused"
+                when: emulatorLoader.status == Loader.Ready && mainContentStack.currentItem != emulatorLoader
+                PropertyChanges {
+                    emulatorLoader.blurAmount: 1
+                }
+            },
+             State {
+                 name: "focused"
+                 when: mainContentStack.currentItem == emulatorLoader
+                 PropertyChanges {
+                     emulatorLoader.blurAmount: 0
+                 }
+             }
+        ]
 
-        Behavior on blurAmount {
-            NumberAnimation {
-                easing.type: Easing.InOutQuad
-                duration: 250
+        transitions: [
+            Transition {
+                from: "focused"
+                to: "unfocused"
+                reversible: true
+                NumberAnimation {
+                    target: emulatorLoader
+                    property: "blurAmount"
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
             }
+        ]
+
+        function startGame() {
+            item.startGame()
         }
+
+        property real blurAmount: 0
 
         layer.enabled: blurAmount !== 0
         layer.effect: MultiEffect {
@@ -138,10 +170,6 @@ ApplicationWindow {
             mainContentStack.pushItem(content, {}, StackView.PushTransition)
         }
 
-        StackView.onActivating: {
-            emulatorLoader.blurAmount = 0
-        }
-
         StackView.onActivated: {
             if (emulatorLoader.item) {
                 emulatorLoader.item.paused = false
@@ -149,7 +177,6 @@ ApplicationWindow {
         }
 
         StackView.onDeactivating: {
-            emulatorLoader.blurAmount = 1
             if (emulatorLoader.item) {
                 emulatorLoader.item.paused = true
             }
@@ -164,7 +191,7 @@ ApplicationWindow {
             quitDialog.open()
         }
 
-        gameRunning: emulatorLoader.status === Loader.Ready
+        gameRunning: EmulationService.isGameRunning
 
         Keys.onEscapePressed: function(event) {
             if (Router.currentRoute !== "/quick-menu") {
@@ -180,8 +207,10 @@ ApplicationWindow {
         id: mainContentStack
         focus: true
         anchors.fill: parent
+        initialItem: emulatorLoader
+
         Component.onCompleted: {
-            pushItems([emulatorLoader, content], StackView.Immediate)
+            pushItem(content, {}, StackView.Immediate)
         }
 
         onActiveFocusChanged: {
@@ -257,9 +286,9 @@ ApplicationWindow {
         ScriptAction {
             script: {
                 mainContentStack.popCurrentItem(StackView.Immediate)
-                emulatorLoader.setSource("NewEmulatorPage.qml", {entryId: startGameAnimation.entryId, stackView: mainContentStack})
-                overlay.opacity = 0
-
+                emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: mainContentStack})
+                emulatorLoader.blurAmount = 0
+                EmulationService.loadEntry(startGameAnimation.entryId)
             }
         }
     }
@@ -299,6 +328,7 @@ ApplicationWindow {
 
             onCloseGame: {
                 Router.navigateTo("/library")
+                EmulationService.stopEmulation()
                 emulatorLoader.source = ""
             }
 
@@ -333,7 +363,7 @@ ApplicationWindow {
         id: settingsScreen
 
         SettingsScreen {
-            gameRunning: emulatorLoader.status === Loader.Ready
+            gameRunning: EmulationService.isGameRunning
         }
     }
 

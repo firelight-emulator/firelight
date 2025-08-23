@@ -238,6 +238,9 @@ public:
   static constexpr int PLATFORM_ID_TURBOGRAFX16 = 21;
   static constexpr int PLATFORM_ID_SUPERGRAFX = 22;
   static constexpr int PLATFORM_ID_POKEMON_MINI = 23;
+  static constexpr int PLATFORM_ID_WONDERSWAN = 24;
+  static constexpr int PLATFORM_ID_SG1000 = 25;
+  static constexpr int PLATFORM_ID_NEOGEO_POCKET = 27;
 
   static constexpr int OS_ID_UNKNOWN = -1;
   static constexpr int OS_ID_WINDOWS = 0;
@@ -304,6 +307,12 @@ public:
       return "PC Engine/TurboGrafx-16";
     case PLATFORM_ID_SUPERGRAFX:
       return "SuperGrafx";
+    case PLATFORM_ID_WONDERSWAN:
+      return "WonderSwan";
+    case PLATFORM_ID_SG1000:
+      return "SG-1000";
+    case PLATFORM_ID_NEOGEO_POCKET:
+      return "NeoGeo Pocket";
     default:
       return "Unknown";
     }
@@ -349,6 +358,15 @@ public:
     if (extension == "min") {
       return PLATFORM_ID_POKEMON_MINI;
     }
+    if (extension == "ws" || extension == "wsc") {
+      return PLATFORM_ID_WONDERSWAN;
+    }
+    if (extension == "sg") {
+      return PLATFORM_ID_SG1000;
+    }
+    if (extension == "ngp" || extension == "ngc") {
+      return PLATFORM_ID_NEOGEO_POCKET;
+    }
     return PLATFORM_ID_UNKNOWN;
   }
 
@@ -384,8 +402,14 @@ public:
       return "pce";
     case PLATFORM_ID_SUPERGRAFX:
       return "sgx";
+    case PLATFORM_ID_WONDERSWAN:
+      return "ws";
     case PLATFORM_ID_POKEMON_MINI:
       return "pkmn";
+    case PLATFORM_ID_SG1000:
+      return "sg";
+    case PLATFORM_ID_NEOGEO_POCKET:
+      return "ngp";
     default:
       return "firelight-logo-white";
     }
@@ -441,6 +465,7 @@ public:
     case PLATFORM_ID_NINTENDO_DS:
       coreName = "melondsds_libretro";
       break;
+    case PLATFORM_ID_SG1000:
     case PLATFORM_ID_SEGA_GENESIS:
     case PLATFORM_ID_SEGA_GAMEGEAR:
     case PLATFORM_ID_SEGA_MASTER_SYSTEM:
@@ -455,6 +480,12 @@ public:
       break;
     case PLATFORM_ID_POKEMON_MINI:
       coreName = "pokemini_libretro";
+      break;
+    case PLATFORM_ID_WONDERSWAN:
+      coreName = "mednafen_wswan_libretro";
+      break;
+    case PLATFORM_ID_NEOGEO_POCKET:
+      coreName = "mednafen_ngp_libretro";
       break;
     default:
       coreName = "";

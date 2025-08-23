@@ -34,41 +34,43 @@ FocusScope {
     ManageSaveDataDialog {
         id: manageSaveDataDialog
     }
-    ColumnLayout {
-            id: libraryNavList
-            focus: true
+    FocusScope {
+        id: libraryNavFocusScope
         anchors.left: parent.left
         anchors.topMargin: 64
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 240
-        FirelightMenuItem {
-          id: allGamesButton
-          focus: true
+        ColumnLayout {
+            id: libraryNavList
+            anchors.fill: parent
+            FirelightMenuItem {
+                id: allGamesButton
+                focus: true
 
-          property string sectionTitle: "All games"
+                property string sectionTitle: "All games"
 
-          labelText: "All games"
-          property bool showGlobalCursor: true
-          // labelIcon: "\ue40a"
-          Layout.preferredHeight: 48
-          Layout.fillWidth: true
-          checked: true
-          ButtonGroup.group: libraryButtonGroup
+                labelText: "All games"
+                property bool showGlobalCursor: true
+                // labelIcon: "\ue40a"
+                Layout.preferredHeight: 48
+                Layout.fillWidth: true
+                checked: true
+                ButtonGroup.group: libraryButtonGroup
 
-          onToggled: {
-              if (checked) {
-                  FilteredLibraryEntryModel.folderId = -1
-                    theList.currentIndex = 0
-              }
-          }
-      }
-      Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: "#4B4B4B"
-      }
-      RowLayout {
+                onToggled: {
+                    if (checked) {
+                      FilteredLibraryEntryModel.folderId = -1
+                        theList.currentIndex = 0
+                    }
+                }
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: "#4B4B4B"
+            }
+            RowLayout {
                 Layout.fillWidth: true
                 Text {
                     text: "Folders"
@@ -81,7 +83,7 @@ FocusScope {
                     verticalAlignment: Text.AlignVCenter
                     Layout.fillWidth: true
                 }
-          FirelightButton {
+                FirelightButton {
                     iconCode: "\ue2cc"
                     tooltipLabel: "New folder"
                     flat: true
@@ -89,9 +91,9 @@ FocusScope {
                     onClicked: {
                         createFolderDialog.open()
                     }
-          }
-      }
-      Text {
+                }
+            }
+            Text {
                 Layout.topMargin: 8
                 text: "No folders"
                 visible: folderList.count === 0
@@ -103,67 +105,69 @@ FocusScope {
                 verticalAlignment: Text.AlignVCenter
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-      }
-      Item {
+            }
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: folderList.count === 0
-      }
-        ListView {
-            id: folderList
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            spacing: 4
-
-            interactive: contentHeight > height
-
-            currentIndex: 0
-
-            onCurrentIndexChanged: {
-                theList.currentIndex = 0
             }
+            ListView {
+                id: folderList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 4
 
-            model: LibraryFolderModel
-            delegate: LibraryFolderListDelegate {
-                id: folderDelegate
-                ButtonGroup.group: libraryButtonGroup
+                interactive: contentHeight > height
 
-                ContextMenu.menu: RightClickMenu {
-                    RightClickMenuItem {
-                        text: "Rename"
+                currentIndex: 0
 
-                        onTriggered: {
-                          editClicked(folderDelegate.model.playlist_id, folderDelegate.model.display_name)
-                        }
-                    }
-
-                    RightClickMenuItem {
-                        text: "Delete"
-                        dangerous: true
-
-                        onTriggered: {
-                              LibraryFolderModel.deleteFolder(folderDelegate.model.playlist_id)
-                              if (folderDelegate.ListView.isCurrentItem) {
-                                  FilteredLibraryEntryModel.folderId = -1
-                                  allGamesButton.toggle()
-                              }
-                        }
-                    }
+                onCurrentIndexChanged: {
+                    theList.currentIndex = 0
                 }
 
-                onEditClicked: function(folderId, folderName) {
-                    updateFolderDialog.folderName = folderName
-                    updateFolderDialog.openAndDoOnAccepted(function() {
-                        folderDelegate.model.display_name = updateFolderDialog.folderName
-                    });
+                model: LibraryFolderModel
+                delegate: LibraryFolderListDelegate {
+                    id: folderDelegate
+                    ButtonGroup.group: libraryButtonGroup
+
+                    ContextMenu.menu: RightClickMenu {
+                        RightClickMenuItem {
+                            text: "Rename"
+
+                            onTriggered: {
+                              editClicked(folderDelegate.model.playlist_id, folderDelegate.model.display_name)
+                            }
+                        }
+
+                        RightClickMenuItem {
+                            text: "Delete"
+                            dangerous: true
+
+                            onTriggered: {
+                                  LibraryFolderModel.deleteFolder(folderDelegate.model.playlist_id)
+                                  if (folderDelegate.ListView.isCurrentItem) {
+                                      FilteredLibraryEntryModel.folderId = -1
+                                      allGamesButton.toggle()
+                                  }
+                            }
+                        }
+                    }
+
+                    onEditClicked: function(folderId, folderName) {
+                        updateFolderDialog.folderName = folderName
+                        updateFolderDialog.openAndDoOnAccepted(function() {
+                            folderDelegate.model.display_name = updateFolderDialog.folderName
+                        });
+                    }
                 }
             }
         }
     }
 
+
     ListView {
         id: theList
-        anchors.left: libraryNavList.right
+        anchors.left: libraryNavFocusScope.right
         anchors.leftMargin: 16
         anchors.top: parent.top
         anchors.bottom: parent.bottom
@@ -175,6 +179,9 @@ FocusScope {
         preferredHighlightEnd: height - 64
         model: FilteredLibraryEntryModel
         ScrollBar.vertical: ScrollBar { }
+        focus: true
+
+        KeyNavigation.left: libraryNavFocusScope
 
         // headerPositioning: ListView.PullBackHeader
 

@@ -3,6 +3,7 @@
 #include <rhi/qrhi_platform.h>
 #include <spdlog/spdlog.h>
 
+#include "emulation/emulation_service.hpp"
 #include "emulator_item_renderer.hpp"
 #include "input2/input_service.hpp"
 #include "platform_metadata.hpp"
@@ -18,7 +19,8 @@ void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
   const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
   const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
-  // getInputManager()->updateMouseState(x, y, m_mousePressed);
+  firelight::input::InputService::instance()->updateMouseState(x, y,
+                                                               m_mousePressed);
 }
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
@@ -28,17 +30,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   setAcceptedMouseButtons(Qt::LeftButton);
 
   m_threadPool.setMaxThreadCount(1);
-
-  m_autosaveTimer.setInterval(10000);
-  m_autosaveTimer.setSingleShot(false);
-  connect(&m_autosaveTimer, &QTimer::timeout, [this] {
-    if (m_renderer) {
-      m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSaveFile});
-      update();
-    }
-  });
-
-  m_autosaveTimer.start();
 
   m_rewindPointTimer.setInterval(3000);
   m_rewindPointTimer.setSingleShot(false);
@@ -126,9 +117,9 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
     if (achievedFrameDurationNs <= 0 ||
         achievedFrameDurationNs > (actualTargetNs * 5)) {
-      spdlog::warn(
-          "Anomalous achieved frame duration: {} ns. Skipping this sample.",
-          achievedFrameDurationNs);
+      // spdlog::warn(
+      //     "Anomalous achieved frame duration: {} ns. Skipping this sample.",
+      //     achievedFrameDurationNs);
       // TODO: Consider resetting timingCorrectionNs if this happens often, or
       // if the pause was very long timingCorrectionNs = 0;
       return;
@@ -200,7 +191,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 EmulatorItem::~EmulatorItem() {
   m_stopping = true;
   getDiscordManager()->clearActivity();
-  m_autosaveTimer.stop();
   // QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::QueuedConnection);
   m_emulationThread.quit();
   m_emulationThread.exit();
@@ -214,9 +204,6 @@ bool EmulatorItem::paused() const { return m_paused; }
 void EmulatorItem::setPaused(const bool paused) {
   if (m_paused != paused) {
     m_paused = paused;
-    if (m_audioManager) {
-      m_audioManager->setMuted(m_paused);
-    }
     emit pausedChanged();
     update();
   }
@@ -236,14 +223,28 @@ void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
     m_rewindPointTimer.stop();
   }
 }
-bool EmulatorItem::isMuted() const { return m_audioManager->isMuted(); }
+bool EmulatorItem::isMuted() const {
+  const auto emulator = firelight::emulation::EmulationService::getInstance()
+                            ->getCurrentEmulatorInstance();
+  if (!emulator) {
+    return false;
+  }
 
-void EmulatorItem::setMuted(bool muted) {
-  if (m_audioManager->isMuted() == muted) {
+  return emulator->isMuted();
+}
+
+void EmulatorItem::setMuted(const bool muted) {
+  const auto emulator = firelight::emulation::EmulationService::getInstance()
+                            ->getCurrentEmulatorInstance();
+  if (!emulator) {
     return;
   }
 
-  m_audioManager->setMuted(muted);
+  if (emulator->isMuted() == muted) {
+    return;
+  }
+
+  emulator->setMuted(muted);
   emit mutedChanged();
 }
 float EmulatorItem::audioBufferLevel() const {
@@ -304,12 +305,6 @@ void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
     m_playbackMultiplier = playbackMultiplier;
     emit playbackMultiplierChanged();
 
-    if (m_playbackMultiplier != 1.0f) {
-      setMuted(true);
-    } else {
-      setMuted(false);
-    }
-
     if (m_renderer) {
       m_renderer->submitCommand(
           {.type = EmulatorItemRenderer::SetPlaybackMultiplier,
@@ -326,201 +321,44 @@ void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
   const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
   const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
-  // getInputManager()->updateMouseState(x, y, m_mousePressed);
+  firelight::input::InputService::instance()->updateMouseState(x, y,
+                                                               m_mousePressed);
 }
 
 void EmulatorItem::mousePressEvent(QMouseEvent *event) {
   m_mousePressed = true;
-  // getInputManager()->updateMousePressed(m_mousePressed);
+  firelight::input::InputService::instance()->updateMousePressed(
+      m_mousePressed);
 }
 
 void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
   m_mousePressed = false;
-  // getInputManager()->updateMousePressed(m_mousePressed);
+  firelight::input::InputService::instance()->updateMousePressed(
+      m_mousePressed);
 }
-void EmulatorItem::loadGame(int entryId) {
-  m_threadPool.start([this, entryId] {
-    spdlog::info("Loading entry with id {}", entryId);
 
-    auto entry = getUserLibrary()->getEntry(entryId);
+void EmulatorItem::startGame() {
+  QThreadPool::globalInstance()->start([this] {
+    const auto emuInstance =
+        firelight::emulation::EmulationService::getInstance()
+            ->getCurrentEmulatorInstance();
 
-    if (!entry.has_value()) {
-      spdlog::warn("Entry with id {} does not exist...", entryId);
-    }
-
-    auto runConfigurations =
-        getUserLibrary()->getRunConfigurations(entry->contentHash);
-
-    if (runConfigurations.empty()) {
-      spdlog::warn("No run configuration found for entry with id {}", entryId);
+    auto entry = firelight::emulation::EmulationService::getInstance()
+                     ->getCurrentEntry();
+    if (!entry) {
       return;
     }
 
-    auto runConfig = runConfigurations[0];
-    spdlog::info("Got run configuration for entry with contentHash {}: {}",
-                 entry->contentHash.toStdString(), runConfig.id);
-
-    if (runConfig.type == firelight::library::RunConfiguration::TYPE_ROM) {
-      auto romId = runConfig.romId;
-      auto romInfo = getUserLibrary()->getRomFile(romId);
-
-      if (!romInfo.has_value()) {
-        return;
-      }
-
-      auto filePath = QString::fromStdString(romInfo->m_filePath);
-      if (romInfo->m_inArchive) {
-        filePath = QString::fromStdString(romInfo->m_archivePathName);
-      }
-
-      auto file = QFile(filePath);
-      if (!file.exists()) {
-        spdlog::error("Content path doesn't exist: {}", filePath.toStdString());
-        return;
-      }
-
-      file.open(QIODevice::ReadOnly);
-      auto bytes = file.readAll();
-      file.close();
-
-      auto rom = firelight::library::RomFile(
-          QString::fromStdString(romInfo->m_filePath), bytes.data(),
-          bytes.size(), QString::fromStdString(romInfo->m_archivePathName));
-
-      if (rom.inArchive() &&
-          !std::filesystem::exists(rom.getArchivePathName().toStdString())) {
-        spdlog::error("Content path doesn't exist: {}",
-                      rom.getArchivePathName().toStdString());
-        return;
-      }
-
-      if (!rom.inArchive() &&
-          !std::filesystem::exists(rom.getFilePath().toStdString())) {
-        spdlog::error("Content path doesn't exist: {}",
-                      rom.getFilePath().toStdString());
-        return;
-      }
-
-      rom.load();
-
-      std::string corePath =
-          firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
-      //
-      QByteArray saveDataBytes;
-      const auto saveData = getSaveManager()->readSaveData(
-          rom.getContentHash(), entry->activeSaveSlot);
-      if (saveData.has_value()) {
-        saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                   saveData->getSaveRamData().size());
-      }
-
-      m_entryId = entryId;
-      m_gameName = entry->displayName;
-      m_gameData = rom.getContentBytes();
-      m_saveData = saveDataBytes;
-      m_corePath = QString::fromStdString(corePath);
-      m_contentHash = rom.getContentHash();
-      m_saveSlotNumber = entry->activeSaveSlot;
-      m_platformId = entry->platformId;
-      m_contentPath = rom.getFilePath();
-      m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
-
-      emit entryIdChanged();
-      emit gameNameChanged();
-      emit contentHashChanged();
-      emit platformIdChanged();
-      emit saveSlotNumberChanged();
-
-      m_loaded = true;
-      if (m_startAfterLoading && !m_stopping) {
-        startGame();
-      }
-    } else if (runConfig.type ==
-               firelight::library::RunConfiguration::TYPE_PATCH) {
-      auto romId = runConfig.romId;
-      auto romInfo = getUserLibrary()->getRomFile(romId);
-
-      if (!romInfo.has_value()) {
-        return;
-      }
-
-      auto rom = firelight::library::RomFile(
-          QString::fromStdString(romInfo->m_filePath));
-
-      rom.load();
-
-      if (!rom.isValid()) {
-        return;
-      }
-
-      auto patchId = runConfig.patchId;
-      auto patch = getUserLibrary()->getPatchFile(patchId);
-
-      if (!patch.has_value()) {
-        return;
-      }
-
-      patch->load();
-      rom.applyPatchToContentBytes(*patch);
-
-      std::string corePath =
-          firelight::PlatformMetadata::getCoreDllPath(entry->platformId);
-
-      QByteArray saveDataBytes;
-      const auto saveData = getSaveManager()->readSaveData(
-          rom.getContentHash(), entry->activeSaveSlot);
-      if (saveData.has_value()) {
-        saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                   saveData->getSaveRamData().size());
-      }
-
-      m_entryId = entryId;
-      m_gameName = entry->displayName;
-      m_gameData = rom.getContentBytes();
-      m_saveData = saveDataBytes;
-      m_corePath = QString::fromStdString(corePath);
-      m_contentHash = rom.getContentHash();
-      m_saveSlotNumber = entry->activeSaveSlot;
-      m_platformId = entry->platformId;
-      m_contentPath = rom.getFilePath();
-      m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
-
-      emit entryIdChanged();
-      emit gameNameChanged();
-      emit contentHashChanged();
-      emit saveSlotNumberChanged();
-      emit platformIdChanged();
-
-      m_loaded = true;
-      if (m_startAfterLoading && !m_stopping) {
-        startGame();
-      }
-    }
-  });
-}
-void EmulatorItem::startGame() {
-  if (!m_loaded) {
-    m_startAfterLoading = true;
-  }
-
-  QThreadPool::globalInstance()->start([this] {
-    auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(
-        m_platformId, m_contentHash);
-    auto m_core = std::make_unique<libretro::Core>(
-        m_platformId, m_corePath.toStdString(), configProvider,
-        getCoreSystemDirectory());
-
-    m_audioManager = std::make_shared<AudioManager>(
-        [this] { emit audioBufferLevelChanged(); });
-    m_core->setAudioReceiver(m_audioManager);
-    m_core->setRetropadProvider(firelight::input::InputService::instance());
-    // m_core->setPointerInputProvider(getInputManager());
-    m_core->setSystemDirectory(getCoreSystemDirectory());
+    m_entryId = entry->id;
+    m_gameName = entry->displayName;
+    m_contentHash = entry->contentHash;
+    m_saveSlotNumber = entry->activeSaveSlot;
+    m_platformId = entry->platformId;
+    m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
 
     // Qt owns the renderer, so it will destroy it.
-    m_renderer =
-        new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(),
-                                 std::move(m_core), window());
+    m_renderer = new EmulatorItemRenderer(
+        window()->rendererInterface()->graphicsApi(), window(), emuInstance);
 
     m_renderer->onGeometryChanged([this](unsigned int width,
                                          unsigned int height, float aspectRatio,
@@ -534,8 +372,8 @@ void EmulatorItem::startGame() {
     // initialized.
     m_coreBaseWidth = 1;
     m_coreBaseHeight = 1;
-    m_calculatedAspectRatio = 0.000001;
-    m_coreAspectRatio = 0.000001;
+    m_calculatedAspectRatio = 1;
+    m_coreAspectRatio = 1;
 
     emit videoWidthChanged();
     emit videoHeightChanged();
@@ -559,6 +397,10 @@ void EmulatorItem::updateGeometry(unsigned int width, unsigned int height,
   m_coreAspectRatio = aspectRatio;
   m_calculatedAspectRatio = static_cast<float>(m_coreBaseWidth) /
                             static_cast<float>(m_coreBaseHeight);
+  if (m_coreAspectRatio == 1 / m_calculatedAspectRatio) {
+    m_coreBaseWidth = height;
+    m_coreBaseHeight = width;
+  }
 
   spdlog::info(
       "width: {}, height: {}, aspectRatio: {}, calculatedAspectRatio: {}",

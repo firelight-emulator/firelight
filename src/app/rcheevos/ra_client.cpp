@@ -353,7 +353,7 @@ std::vector<uint8_t> RAClient::serializeState() {
   auto result =
       rc_client_serialize_progress_sized(m_client, state.data(), size);
   if (result != RC_OK) {
-    spdlog::warn("Failed to serialize state: {}", result);
+    spdlog::warn("[RetroAchievements] Failed to serialize state: {}", result);
   }
 
   return state;
