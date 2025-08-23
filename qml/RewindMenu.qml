@@ -176,6 +176,7 @@ FocusScope {
         contentItem: RewindList {
             id: theList
             model: root.model
+            focus: true
             aspectRatio: root.aspectRatio
 
             onItemSelected: function (index) {

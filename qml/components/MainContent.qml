@@ -49,6 +49,8 @@ FocusScope {
     function goToContent(title, page, args, transition) {
         content.title = title
         contentStack.replaceCurrentItem(page, args, transition)
+        content.forceActiveFocus()
+
     }
 
     LeftNavigationBar {
@@ -71,6 +73,10 @@ FocusScope {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
+
+        KeyNavigation.left: navigationBar
+
+        focus: true
 
         property string title: "Firelight"
 
@@ -135,6 +141,8 @@ FocusScope {
                 id: contentStack
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+
+                focus: true
 
                 Component.onCompleted: {
                     Router.navigateTo("/library")
