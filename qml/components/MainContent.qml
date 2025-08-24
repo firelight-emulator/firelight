@@ -49,7 +49,6 @@ FocusScope {
     function goToContent(title, page, args, transition) {
         content.title = title
         contentStack.replaceCurrentItem(page, args, transition)
-        content.forceActiveFocus()
 
     }
 
