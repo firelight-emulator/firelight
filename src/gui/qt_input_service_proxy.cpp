@@ -7,7 +7,7 @@
 #include "EventEmitter.h"
 #include "input2/input_service.hpp"
 
-#include <QGuiApplication>
+#include <QApplication>
 
 namespace firelight::gui {
 
@@ -44,7 +44,7 @@ QtInputServiceProxy::QtInputServiceProxy() {
   gamepadInputConnection =
       EventDispatcher::instance().subscribe<input::GamepadInputEvent>(
           [this](const input::GamepadInputEvent &event) {
-            if (QGuiApplication::focusWindow()) {
+            if (QApplication::focusWindow()) {
               if (!gamepadToQtKeyMap.contains(event.input)) {
                 return;
               }
@@ -55,7 +55,7 @@ QtInputServiceProxy::QtInputServiceProxy() {
                   QApplication::instance(),
                   [key, event]() {
                     QApplication::postEvent(
-                        QGuiApplication::focusWindow(),
+                        QApplication::focusWindow(),
                         new QKeyEvent(
                             event.pressed ? QEvent::KeyPress
                                           : QEvent::KeyRelease,
