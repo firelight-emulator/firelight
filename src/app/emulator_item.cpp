@@ -356,6 +356,12 @@ void EmulatorItem::startGame() {
     m_platformId = entry->platformId;
     m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
 
+    emit contentHashChanged();
+    emit platformIdChanged();
+    emit entryIdChanged();
+    emit saveSlotNumberChanged();
+    emit gameNameChanged();
+
     // Qt owns the renderer, so it will destroy it.
     m_renderer = new EmulatorItemRenderer(
         window()->rendererInterface()->graphicsApi(), window(), emuInstance);

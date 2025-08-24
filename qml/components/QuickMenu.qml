@@ -187,7 +187,6 @@ Pane {
             SuspendPoints {
                 id: suspendData
                 contentHash: emulatorLoader.item ? emulatorLoader.item.contentHash : ""
-                // contentHash: "8e2c29a1e65111fe2078359e685e7943"
                 saveSlotNumber: root.saveSlotNumber
             }
 

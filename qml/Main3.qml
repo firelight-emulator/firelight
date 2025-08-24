@@ -34,18 +34,18 @@ ApplicationWindow {
         GeneralSettings.mainWindowY = y
     }
 
-    onActiveFocusItemChanged: {
-        console.log("Active focus item changed to: " + window.activeFocusItem)
-        let item = window.activeFocusItem
-        let level = 0
-        while (item) {
-            let spaces = " ".repeat(level * 2)
-
-            console.log(spaces + item)
-            item = item.parent
-            level++
-        }
-    }
+    // onActiveFocusItemChanged: {
+    //     console.log("Active focus item changed to: " + window.activeFocusItem)
+    //     let item = window.activeFocusItem
+    //     let level = 0
+    //     while (item) {
+    //         let spaces = " ".repeat(level * 2)
+    //
+    //         console.log(spaces + item)
+    //         item = item.parent
+    //         level++
+    //     }
+    // }
 
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
@@ -452,7 +452,7 @@ ApplicationWindow {
                         content.goToContent("Not found", lol, {}, StackView.PushTransition)
                     }
                 } else if (route === "/quick-menu") {
-                    content.goToContent("Quick Menu", quickMenuPage, {gameSettings: emulatorLoader.item.gameSettings}, StackView.ReplaceTransition)
+                    content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber, gameSettings: emulatorLoader.item.gameSettings}, StackView.ReplaceTransition)
                 } else {
                         content.goToContent("Not found", lol, {}, StackView.ReplaceTransition)
                 }
