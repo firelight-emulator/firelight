@@ -251,13 +251,6 @@ float EmulatorItem::audioBufferLevel() const {
   return m_audioManager ? m_audioManager->getBufferLevel() : 0.0f;
 }
 
-void EmulatorItem::resetGame() {
-  if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::ResetGame});
-    update();
-  }
-}
-
 void EmulatorItem::writeSuspendPoint(const int index) {
   if (m_renderer) {
     m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSuspendPoint,

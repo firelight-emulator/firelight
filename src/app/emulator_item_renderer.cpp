@@ -12,6 +12,8 @@
 #include <spdlog/spdlog.h>
 
 #include "emulator_item.hpp"
+#include "media/image.hpp"
+
 #include <QVulkanDeviceFunctions>
 #include <QVulkanFunctions>
 
@@ -498,10 +500,6 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     case RunFrame:
       m_shouldRunFrame = true;
       break;
-    case ResetGame:
-      m_emulatorInstance->reset();
-      getAchievementManager()->reset();
-      break;
     case WriteRewindPoint: {
       if (m_paused) {
         return;
@@ -759,11 +757,16 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
           QImage::Format_RGBA8888_Premultiplied; // fits QRhiTexture::RGBA8
       const auto *p =
           reinterpret_cast<const uchar *>(rbResult->data.constData());
+
+      m_currentCoolImage = new firelight::media::Image(
+          p, rbResult->pixelSize.width(), rbResult->pixelSize.height(), 4);
+
       m_currentImage = QImage(p, rbResult->pixelSize.width(),
                               rbResult->pixelSize.height(), fmt);
 
       if (m_graphicsApi == QSGRendererInterface::OpenGL) {
         m_currentImage.mirror();
+        m_currentCoolImage->flipVertical();
       }
 
       // m_currentImage.convertToFormat(QImage::Format)

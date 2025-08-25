@@ -189,10 +189,10 @@ bool EmulationService::isGameRunning() const {
 }
 
 std::optional<std::string> EmulationService::getCurrentGameName() const {
-  return {};
+  return isGameRunning() ? m_currentEntry.displayName.toStdString() : "";
 }
 std::optional<library::Entry> EmulationService::getCurrentEntry() {
-  return m_currentEntry;
+  return isGameRunning() ? std::optional(m_currentEntry) : std::nullopt;
 }
 
 std::optional<platforms::Platform>

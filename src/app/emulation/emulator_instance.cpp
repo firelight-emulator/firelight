@@ -74,7 +74,10 @@ void EmulatorInstance::runFrame() {
   m_core->run(0);
   getAchievementManager()->doFrame(m_core.get());
 }
-void EmulatorInstance::reset() { m_core->reset(); }
+void EmulatorInstance::reset() {
+  m_core->reset();
+  getAchievementManager()->reset();
+}
 
 std::future<bool> EmulatorInstance::save() {
   if (!m_initialized) {

@@ -101,6 +101,7 @@ file(GLOB QML_FILES
         qml/components/rewind/*.qml
         qml/components/library/*.qml
         qml/components/settings/*.qml
+        qml/components/emulation/*.qml
         qml/components/controllers/*.qml
         qml/**/*.qml
 )
