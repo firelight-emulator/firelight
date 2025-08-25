@@ -210,6 +210,10 @@ add_library(firelight_lib
         src/image_cache.cpp
         src/app/emulation/emulation_service.cpp
         src/app/emulation/emulator_instance.cpp
+        src/app/media/image_service.hpp
+        src/app/media/image.cpp
+        src/app/gallery/gallery_service.cpp
+        src/app/gallery/gallery_service.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -260,6 +264,7 @@ qt6_add_executable(firelight
         resources.qrc
         app_resources.rc
         src/main.cpp
+        src/app/media/Image.hpp
 )
 
 

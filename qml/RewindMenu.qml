@@ -104,7 +104,9 @@ FocusScope {
         }
         ScriptAction {
             script: {
-                root.StackView.view.popCurrentItem(StackView.Immediate)
+                if (root.StackView.status === StackView.Active) {
+                    root.StackView.view.popCurrentItem(StackView.Immediate)
+                }
             }
         }
     }
@@ -141,7 +143,9 @@ FocusScope {
         }
         ScriptAction {
             script: {
-                root.StackView.view.popCurrentItem(StackView.Immediate)
+                if (root.StackView.status === StackView.Active) {
+                    root.StackView.view.popCurrentItem(StackView.Immediate)
+                }
             }
         }
     }
