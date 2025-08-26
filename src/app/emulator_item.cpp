@@ -251,13 +251,6 @@ float EmulatorItem::audioBufferLevel() const {
   return m_audioManager ? m_audioManager->getBufferLevel() : 0.0f;
 }
 
-void EmulatorItem::resetGame() {
-  if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::ResetGame});
-    update();
-  }
-}
-
 void EmulatorItem::writeSuspendPoint(const int index) {
   if (m_renderer) {
     m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSuspendPoint,
@@ -355,6 +348,12 @@ void EmulatorItem::startGame() {
     m_saveSlotNumber = entry->activeSaveSlot;
     m_platformId = entry->platformId;
     m_iconSourceUrl1x1 = entry->icon1x1SourceUrl;
+
+    emit contentHashChanged();
+    emit platformIdChanged();
+    emit entryIdChanged();
+    emit saveSlotNumberChanged();
+    emit gameNameChanged();
 
     // Qt owns the renderer, so it will destroy it.
     m_renderer = new EmulatorItemRenderer(

@@ -78,8 +78,6 @@ public:
   float m_playbackMultiplier = 1;
 
   enum EmulatorCommandType {
-    ResetGame,
-    WriteSaveFile,
     WriteRewindPoint,
     EmitRewindPoints,
     LoadRewindPoint,
@@ -160,6 +158,8 @@ private:
 
   std::function<void(int, int, float, double)> m_geometryChangedCallback =
       nullptr;
+
+  // firelight::media::Image *m_currentCoolImage;
 
   // HW rendering members
   bool m_openGlInitialized = false;

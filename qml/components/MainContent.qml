@@ -11,8 +11,6 @@ FocusScope {
     property bool showNavigationBar: true
     property bool gameRunning: false
 
-    signal powerButtonPressed()
-
     states: [
         State {
             name: "hidden"
@@ -49,7 +47,6 @@ FocusScope {
     function goToContent(title, page, args, transition) {
         content.title = title
         contentStack.replaceCurrentItem(page, args, transition)
-        content.forceActiveFocus()
 
     }
 
@@ -62,7 +59,7 @@ FocusScope {
 
         showQuickMenuButton: root.gameRunning
         onPowerButtonClicked: {
-            root.powerButtonPressed()
+            quitDialog.open()
         }
     }
 
@@ -214,6 +211,14 @@ FocusScope {
                         easing.type: Easing.InOutQuad
                     }}
             }
+        }
+    }
+
+    FirelightDialog {
+        id: quitDialog
+        text: "Are you sure you want to quit Firelight?"
+        onAccepted: {
+            Qt.quit()
         }
     }
 

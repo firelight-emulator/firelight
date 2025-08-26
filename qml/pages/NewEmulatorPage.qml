@@ -21,7 +21,7 @@ FocusScope {
                 return
             }
 
-            if (shortcut === 0) {
+            if (shortcut === 0 && !achievement_manager.inHardcoreMode) {
                 root.createRewindPoints()
             } else if (shortcut === 3) {
                 emulator.incrementPlaybackMultiplier()
@@ -161,6 +161,7 @@ FocusScope {
 
         layer.enabled: true
 
+
         property string pictureMode: gameSettings.pictureMode
         property real aspectRatio: {
             let mode = gameSettings.aspectRatioMode
@@ -172,13 +173,45 @@ FocusScope {
              }
         }
 
+        property real fitScale: {
+            if (!emulator.videoWidth || !emulator.videoHeight) {
+                return 1.0 // Avoid division by zero
+            }
+
+            // Calculate the ratio of the container itself
+            const containerRatio = root.width / root.height
+
+            // If the container is wider than the target aspect ratio, fit to height.
+            // Otherwise, fit to width.
+            if (containerRatio > aspectRatio) {
+                return root.height / (emulator.videoWidth / aspectRatio)
+            } else {
+                return root.width / emulator.videoWidth
+            }
+        }
+
+        property real sourceHeight: emulator.videoHeight
+        property real sourceWidth: sourceHeight * aspectRatio
+
+        property int integerScale: {
+            if (!sourceWidth || !sourceHeight) {
+                return 1 // Avoid division by zero
+            }
+            // Find how many times our correct shape fits into the container
+            const widthScale = root.width / sourceWidth
+            const heightScale = root.height / sourceHeight
+
+            // Take the smaller of the two, and floor it to get the largest whole number scale
+            return Math.floor(Math.min(widthScale, heightScale))
+        }
+
         width: {
             if (emulator.pictureMode === "stretch") {
                 return root.width
             } else if (emulator.pictureMode === "aspect-ratio-fill") {
-                return height * aspectRatio
+                return emulator.videoWidth * fitScale
             } else if (emulator.pictureMode === "integer-scale") {
-                return height * aspectRatio
+                return sourceWidth * integerScale
             }
 
             return emulator.videoWidth
@@ -187,10 +220,9 @@ FocusScope {
             if (emulator.pictureMode === "stretch") {
                 return root.height
             } else if (emulator.pictureMode === "aspect-ratio-fill") {
-                return root.height
+                return (emulator.videoWidth * fitScale) / aspectRatio
             } else if (emulator.pictureMode === "integer-scale"){
-                let num = root.height / emulator.videoHeight
-                return Math.floor(num) * emulator.videoHeight
+                return sourceHeight * integerScale
             }
 
             return emulator.videoHeight

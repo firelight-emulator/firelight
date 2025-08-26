@@ -21,9 +21,8 @@ Dialog {
     property string rejectText: "Cancel"
 
     modal: true
-    // parent: Overlay.overlay
-    anchors.centerIn: Overlay.overlay
-    focus: true
+    parent: Overlay.overlay
+    anchors.centerIn: parent
     padding: 24
 
     Component.onCompleted: {

@@ -12,24 +12,41 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
 
   m_gameLoadedConnection =
       EventDispatcher::instance().subscribe<emulation::GameLoadedEvent>(
-          [this](emulation::GameLoadedEvent) { emit gameLoaded(); });
+          [this](emulation::GameLoadedEvent) {
+            emit gameLoaded();
+            emit currentGameNameChanged();
+          });
 
   m_emulationStartedConnection =
       EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
-          [this](emulation::EmulationStartedEvent) {
+          [this](const emulation::EmulationStartedEvent &) {
             emit gameRunningChanged(true);
           });
 
   m_emulationStoppedConnection =
       EventDispatcher::instance().subscribe<emulation::EmulationStoppedEvent>(
           [this](emulation::EmulationStoppedEvent) {
+            emit emulationStopped();
             emit gameRunningChanged(false);
+            emit currentGameNameChanged();
           });
 }
-QtEmulationServiceProxy::~QtEmulationServiceProxy() {}
+QtEmulationServiceProxy::~QtEmulationServiceProxy() = default;
 
 bool QtEmulationServiceProxy::isGameRunning() const {
   return m_emulationService->isGameRunning();
+}
+QString QtEmulationServiceProxy::getCurrentGameName() const {
+  return QString::fromStdString(
+      m_emulationService->getCurrentGameName().value_or(""));
+}
+int QtEmulationServiceProxy::getCurrentEntryId() const {
+  const auto entry = m_emulationService->getCurrentEntry();
+  if (entry.has_value()) {
+    return entry->id;
+  }
+
+  return -1;
 }
 
 void QtEmulationServiceProxy::loadEntry(const int entryId) {
@@ -38,5 +55,11 @@ void QtEmulationServiceProxy::loadEntry(const int entryId) {
 }
 void QtEmulationServiceProxy::stopEmulation() {
   m_emulationService->stopEmulation();
+}
+void QtEmulationServiceProxy::resetGame() {
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
+  if (instance) {
+    instance->reset();
+  }
 }
 } // namespace firelight::gui

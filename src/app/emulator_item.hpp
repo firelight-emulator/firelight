@@ -91,8 +91,6 @@ public:
 
   [[nodiscard]] float audioBufferLevel() const;
 
-  Q_INVOKABLE void resetGame();
-
   Q_INVOKABLE void writeSuspendPoint(int index);
 
   Q_INVOKABLE void loadSuspendPoint(int index);

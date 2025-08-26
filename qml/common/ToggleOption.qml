@@ -12,13 +12,13 @@ Button {
     horizontalPadding: 12
     verticalPadding: 12
 
-    onClicked: {
-        if (root.checked) {
-            sfx_player.play("switchon")
-        } else {
-            sfx_player.play("switchoff")
-        }
-    }
+    // onClicked: {
+    //     if (root.checked) {
+    //         sfx_player.play("switchon")
+    //     } else {
+    //         sfx_player.play("switchoff")
+    //     }
+    // }
 
     // implicitHeight: Math.max(72, theColumn.)
     hoverEnabled: true
