@@ -116,6 +116,9 @@ signals:
   void gameLoadSucceeded(QString imageUrl, QString title, int numEarned,
                          int numTotal);
 
+  void gameMastered(QString imageUrl, QString title, QString description);
+  void gameBeaten(QString imageUrl, QString title, QString description);
+
   void gameLoadFailed();
 
   void gameUnloaded();

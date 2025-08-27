@@ -312,20 +312,6 @@ FocusScope {
         }
     }
 
-    AchievementUnlockIndicator {
-        id: achievementUnlockIndicator
-
-        Connections {
-            target: achievement_manager
-
-            function onAchievementUnlocked(imageUrl, name, description) {
-                if (achievement_manager.unlockNotificationsEnabled) {
-                    achievementUnlockIndicator.openWith(imageUrl, name, description)
-                }
-            }
-        }
-    }
-
     GameLaunchPopup {
         objectName: "Game Launch Popup"
         id: gameLaunchPopup
@@ -336,6 +322,102 @@ FocusScope {
             function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
                 gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore)
             }
+        }
+    }
+
+    Item {
+        id: achievementPopupQueue
+
+        property var popups: []
+        property bool isPopupVisible: false
+
+        function add(popup) {
+            popups.push(popup)
+            if (!isPopupVisible) {
+                displayNext()
+            }
+        }
+
+        function displayNext() {
+            if (isPopupVisible || popups.length === 0) {
+                return
+            }
+            isPopupVisible = true
+            const popup = popups[0]
+            popup.onClosed.connect(onPopupClosed)
+            popup.open()
+        }
+
+        function onPopupClosed() {
+            const closedPopup = popups.shift()
+            if (closedPopup) {
+                closedPopup.onClosed.disconnect(onPopupClosed)
+                closedPopup.destroy()
+            }
+            isPopupVisible = false
+            if (popups.length > 0) {
+                displayNext()
+            }
+        }
+
+        Connections {
+            target: achievement_manager
+
+            function onAchievementUnlocked(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description
+                });
+
+                achievementPopupQueue.add(popup)
+            }
+
+            function onGameBeaten(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description,
+                    splashText: "All achievements unlocked!"
+                });
+
+                achievementPopupQueue.add(popup)
+            }
+
+            function onGameMastered(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description,
+                    splashText: "Game mastered!"
+                });
+
+                achievementPopupQueue.add(popup)
+            }
+        }
+    }
+
+    Component {
+        id: achievementUnlockIndicatorComponent
+        AchievementUnlockIndicator {
         }
     }
 

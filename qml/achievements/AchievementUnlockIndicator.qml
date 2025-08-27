@@ -8,6 +8,7 @@ Popup {
     property string url: ""
     property string title: "dev messed up"
     property string description: "dev messed up"
+    property string splashText: "Achievement Unlocked!"
 
     function openWith(imageUrl, title, description) {
         if (!achievement_manager.unlockNotificationsEnabled) {
@@ -182,7 +183,7 @@ Popup {
                 id: unlockedText
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                text: "Achievement Unlocked!"
+                text: popup.splashText
                 font.pointSize: 11
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold

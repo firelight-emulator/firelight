@@ -72,7 +72,7 @@ ApplicationWindow {
         }
 
         function onEmulationStopped() {
-            Router.navigateTo("/library")
+            content.goToContent("Library", allGamesPage, {}, StackView.Immediate)
             mainContentStack.pushItems([emulatorLoader, content], StackView.Immediate)
             emulatorLoader.source = ""
             content.forceActiveFocus()
@@ -166,7 +166,8 @@ ApplicationWindow {
             id: emulatorLoader
 
             onSuspended: {
-                Router.navigateTo("/quick-menu")
+                content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber, gameSettings: emulatorLoader.item.gameSettings}, StackView.Immediate)
+                // Router.navigateTo("/quick-menu")
                 mainContentStack.pushItems([emulatorLoader, content], StackView.PushTransition)
             }
         }
