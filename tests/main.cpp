@@ -1,6 +1,6 @@
 #include "settings/sqlite_emulation_settings_manager.hpp"
 
-#include <QGuiApplication>
+#include <QApplication>
 #include <QTest>
 #include <QtQuickTest>
 #include <db/sqlite_userdata_database.hpp>
@@ -8,7 +8,7 @@
 #include <manager_accessor.hpp>
 
 int main(int argc, char **argv) {
-  QGuiApplication app(argc, argv);
+  QApplication app(argc, argv);
 
   firelight::db::SqliteUserdataDatabase userdata(":memory:");
   firelight::gui::GameImageProvider gameImageProvider;
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
   // view.show();
 
   // Enter the Qt event loop to run QML tests
-  // QGuiApplication::exec();
+  // QApplication::exec();
   // QUICK_TEST_MAIN(example);
 
   return result;
