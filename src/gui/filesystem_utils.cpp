@@ -7,9 +7,9 @@ namespace firelight::gui {
 
 QString FilesystemUtils::getFileURI() {
   // See https://en.wikipedia.org/wiki/File_URI_scheme for a vague explanation
-#ifdef Q_OS_UNIX
+#ifdef __linux__
   return "file://";
-#elif Q_OS_WIN
+#elif _WIN32
   return "file:///";
 #endif
 }
@@ -31,7 +31,7 @@ QString FilesystemUtils::removeFileURI(const QString &path) {
 
 bool FilesystemUtils::showInFilesystem(const QString &path) {
   const QFileInfo fileInfo(path);
-#ifdef Q_OS_WIN
+#ifdef _WIN32
   QStringList param;
   if (!fileInfo.isDir()) {
     param += QLatin1String("/select,");
@@ -41,7 +41,7 @@ bool FilesystemUtils::showInFilesystem(const QString &path) {
   QProcess::startDetached("explorer.exe", param);
 #endif
 
-#ifdef Q_OS_MACOS
+#ifdef __APPLE__
   QStringList scriptArgs;
   scriptArgs << QLatin1String("-e")
              << QString::fromLatin1(
