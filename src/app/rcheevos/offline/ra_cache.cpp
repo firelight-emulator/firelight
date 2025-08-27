@@ -107,7 +107,8 @@ void RetroAchievementsCache::updateUserAchievementStatus(
   query.bindValue(":earned", status.achieved);
   query.bindValue(":earnedHardcore", status.achievedHardcore);
   query.bindValue(":when", QVariant::fromValue(status.timestamp));
-  query.bindValue(":whenHardcore", QVariant::fromValue(status.timestampHardcore));
+  query.bindValue(":whenHardcore",
+                  QVariant::fromValue(status.timestampHardcore));
   query.bindValue(":username", QString::fromStdString(username));
   query.bindValue(":achievementId", achievementId);
 
@@ -597,7 +598,8 @@ int RetroAchievementsCache::getUserScore(const std::string &username,
     return 0;
   }
 
-  return query.value(0).toInt();
+  const auto result = query.value(0).toInt();
+  return result;
 }
 
 std::optional<PatchResponse>
