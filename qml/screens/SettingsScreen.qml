@@ -26,8 +26,14 @@ Pane {
         // anchors.rightMargin: 40
         // anchors.top: headerBar.bottom
         anchors.fill: parent
-        menuItems: ["Appearance", "Directories", "Controllers", "Achievements", "Audio / Video", "Platforms"]
-        pages: [appearanceSettings, directorySettings, controllerSettings, retroAchievementSettings, videoSettings, platformSettings]
+        menuItems: ["Appearance", "Directories", "Controllers", "Achievements", "Audio / Video", "Platforms", "About"]
+        pages: [appearanceSettings, directorySettings, controllerSettings, retroAchievementSettings, videoSettings, platformSettings, about]
+    }
+
+    Component {
+        id: about
+
+        AboutPage {}
     }
 
 

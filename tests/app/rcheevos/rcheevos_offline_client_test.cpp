@@ -2857,6 +2857,18 @@ TEST_F(RetroAchievementsOfflineClientTest,
   ASSERT_TRUE(startSession.ServerNow > 0);
 }
 
+TEST_F(RetroAchievementsOfflineClientTest,
+       AwardAchievementOfflineAfterUserResetsProgress) {
+  auto cache = RetroAchievementsCache(":memory:");
+  RetroAchievementsOfflineClient offlineClient(cache);
+
+  // TODO: IMPLEMENT
+  // Scenario is that in DB it's marked as unlocked but gets RE-locked
+  // Then try to earn offline - currently failing because it gets unlocked but
+  // appears to already be synced Currently then gets re-locked again when
+  // starting session
+}
+
 /**
  *
  *Based on my analysis of rcheevos_offline_client.cpp and the existing tests
@@ -2871,7 +2883,6 @@ Awarding an achievement that doesn't exist.
 Awarding an achievement to a user who doesn't have a status for it.
 Awarding an achievement that is already unlocked (both in softcore and
 hardcore).
-Successfully awarding a softcore achievement.
 Awarding a hardcore achievement during a hardcore session and verifying it's
 added to the session's achievements.
 
