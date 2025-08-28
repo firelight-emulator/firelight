@@ -18,12 +18,15 @@ Item {
 
     property bool rewindEnabled: EmulationSettingsManager.getEffectiveValue(root.contentHash, root.platformId, "rewind-enabled", "true") === "true";
     property string pictureMode: EmulationSettingsManager.getEffectiveValue(root.contentHash, root.platformId, "picture-mode", "aspect-ratio-fill");
+    property string aspectRatioMode: EmulationSettingsManager.getEffectiveValue(root.contentHash, root.platformId, "aspect-ratio", "core-corrected");
 
     function refreshValue(name) {
         if (name === "rewind-enabled") {
             root.rewindEnabled = EmulationSettingsManager.getEffectiveValue(root.contentHash, root.platformId, "rewind-enabled", "true") === "true";
         } else if (name === "picture-mode") {
             root.pictureMode = EmulationSettingsManager.getEffectiveValue(root.contentHash, root.platformId, "picture-mode", "aspect-ratio-fill");
+        } else if (name === "aspect-ratio") {
+            root.aspectRatioMode = EmulationSettingsManager.getEffectiveValue(root.contentHash, root.platformId, "aspect-ratio", "core-corrected");
         }
     }
 

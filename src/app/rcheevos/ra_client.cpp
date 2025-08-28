@@ -90,9 +90,23 @@ static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
     // Intentionally ignored as we dynamically update the same popup and set our
     // own duration.
     break;
-  case RC_CLIENT_EVENT_GAME_COMPLETED:
-    printf("game completed: %d\n", event->type);
+  case RC_CLIENT_EVENT_GAME_COMPLETED: {
+    auto gameInfo = rc_client_get_game_info(client);
+
+    char urlBuffer[256];
+    auto imageUrlResult =
+        rc_client_game_get_image_url(gameInfo, urlBuffer, 256);
+
+    if (raClient->hardcoreModeActive()) {
+      emit raClient->gameMastered(
+          urlBuffer, QString(gameInfo->title),
+          "You got all the achievements in hardcore mode!");
+    } else {
+      emit raClient->gameBeaten(urlBuffer, QString(gameInfo->title),
+                                "You got all the achievements in the game!");
+    }
     break;
+  }
   case RC_CLIENT_EVENT_LEADERBOARD_STARTED:
   case RC_CLIENT_EVENT_LEADERBOARD_FAILED:
   case RC_CLIENT_EVENT_LEADERBOARD_SUBMITTED:
@@ -353,7 +367,7 @@ std::vector<uint8_t> RAClient::serializeState() {
   auto result =
       rc_client_serialize_progress_sized(m_client, state.data(), size);
   if (result != RC_OK) {
-    spdlog::warn("Failed to serialize state: {}", result);
+    spdlog::warn("[RetroAchievements] Failed to serialize state: {}", result);
   }
 
   return state;

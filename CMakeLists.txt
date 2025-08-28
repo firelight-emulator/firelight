@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23.5...3.31.6)
 project(firelight
-        VERSION 0.10.4
+        VERSION 0.10.8
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -99,6 +99,7 @@ file(GLOB QML_FILES
         qml/components/rewind/*.qml
         qml/components/library/*.qml
         qml/components/settings/*.qml
+        qml/components/emulation/*.qml
         qml/components/controllers/*.qml
         qml/**/*.qml
 )
@@ -178,6 +179,12 @@ add_library(firelight_lib
         src/gui/qt_input_service_proxy.cpp
         src/app/settings/settings_service.cpp
         src/gui/EventEmitter.h
+        src/gui/qt_input_service_proxy.hpp
+        src/gui/qt_emulation_service_proxy.cpp
+        src/gui/qt_emulation_service_proxy.hpp
+        src/image_cache.cpp
+        src/app/emulation/emulation_service.cpp
+        src/app/emulation/emulator_instance.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -228,8 +235,6 @@ qt6_add_executable(firelight
         resources.qrc
         app_resources.rc
         src/main.cpp
-        src/image_cache.cpp
-        src/image_cache.h
 )
 
 
@@ -335,6 +340,8 @@ add_executable(fl_test
         tests/app/input/input_service_impl_test.cpp
         tests/app/input/test_gamepad.cpp
         tests/app/input/test_gamepad.hpp
+        tests/app/emulation/emulation_service_test.cpp
+        tests/mocks/mock_library.hpp
 )
 
 file(GLOB QML_TEST_FILES
@@ -393,7 +400,7 @@ set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 9)
 set(CPACK_PACKAGE_VERSION_PATCH 5)
-set(CPACK_PACKAGE_VERSION "0.10.4")
+set(CPACK_PACKAGE_VERSION "0.10.8")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")

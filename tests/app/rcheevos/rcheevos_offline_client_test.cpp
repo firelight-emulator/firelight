@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <rcheevos/award_achievement_response.hpp>
 #include <rcheevos/gameid_response.hpp>
 
 #include <rcheevos/offline/ra_cache.hpp>
@@ -2514,7 +2515,12 @@ TEST_F(RetroAchievementsOfflineClientTest, GameIdReturnsSuccess) {
   auto cache = RetroAchievementsCache(":memory:");
   RetroAchievementsOfflineClient offlineClient(cache);
 
-  cache.createGameHashRecord("testhash", 100);
+  // Create game id response
+  auto gameIdResponse = nlohmann::json::object();
+  gameIdResponse["Success"] = true;
+  gameIdResponse["GameID"] = 100;
+
+  offlineClient.processResponse("r=gameid&m=testhash", gameIdResponse.dump());
 
   const auto response =
       offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
@@ -2729,4 +2735,196 @@ TEST_F(RetroAchievementsOfflineClientTest,
     ASSERT_TRUE(unlock.has_value());
   }
 }
+
+TEST_F(RetroAchievementsOfflineClientTest,
+       StartSessionWorksAfterOfflineAchievementUnlocks) {
+  auto cache = RetroAchievementsCache(":memory:");
+  RetroAchievementsOfflineClient offlineClient(cache);
+
+  offlineClient.processResponse("r=patch&g=228&u=testuser", patchData);
+
+  // User is offline: start session request is handled, online: response handled
+  cache.setUserScore("testuser", 102, true);
+  cache.setUserScore("testuser", 80, false);
+
+  // Do unlock achievement request hardcore
+  auto response = offlineClient.handleRequest(
+      "https://retroachievements.com/dorequest.php",
+      "r=awardachievement&u=testuser&t=testtoken&a=2251&h=1",
+      "application/json");
+
+  ASSERT_NE(nullptr, response.body);
+  ASSERT_TRUE(response.body_length > 0);
+  ASSERT_EQ(response.http_status_code, 200);
+
+  const auto json = nlohmann::json::parse(response.body);
+  const auto awardAchievementResponse = json.get<AwardAchievementResponse>();
+
+  ASSERT_EQ(2251, awardAchievementResponse.AchievementID);
+  ASSERT_EQ(84, awardAchievementResponse.AchievementsRemaining);
+  ASSERT_EQ(104, awardAchievementResponse.Score);
+  ASSERT_EQ(80, awardAchievementResponse.SoftcoreScore);
+  ASSERT_TRUE(awardAchievementResponse.Success);
+
+  auto response2 = offlineClient.handleRequest(
+      "https://retroachievements.com/dorequest.php",
+      "r=awardachievement&u=testuser&t=testtoken&a=45994&h=1",
+      "application/json");
+
+  ASSERT_NE(nullptr, response2.body);
+  ASSERT_TRUE(response2.body_length > 0);
+  ASSERT_EQ(response2.http_status_code, 200);
+
+  const auto json2 = nlohmann::json::parse(response2.body);
+  const auto awardAchievementResponse2 = json2.get<AwardAchievementResponse>();
+
+  ASSERT_EQ(45994, awardAchievementResponse2.AchievementID);
+  ASSERT_EQ(83, awardAchievementResponse2.AchievementsRemaining);
+  ASSERT_EQ(129, awardAchievementResponse2.Score);
+  ASSERT_EQ(80, awardAchievementResponse2.SoftcoreScore);
+  ASSERT_TRUE(awardAchievementResponse2.Success);
+
+  auto response3 = offlineClient.handleRequest(
+      "https://retroachievements.com/dorequest.php",
+      "r=awardachievement&u=testuser&t=testtoken&a=2305&h=0",
+      "application/json");
+
+  ASSERT_NE(nullptr, response3.body);
+  ASSERT_TRUE(response3.body_length > 0);
+  ASSERT_EQ(response3.http_status_code, 200);
+
+  const auto json3 = nlohmann::json::parse(response3.body);
+  const auto awardAchievementResponse3 = json3.get<AwardAchievementResponse>();
+
+  ASSERT_EQ(2305, awardAchievementResponse3.AchievementID);
+  ASSERT_EQ(84, awardAchievementResponse3.AchievementsRemaining);
+  ASSERT_EQ(129, awardAchievementResponse3.Score);
+  ASSERT_EQ(81, awardAchievementResponse3.SoftcoreScore);
+  ASSERT_TRUE(awardAchievementResponse3.Success);
+
+  auto startSessionResponse = offlineClient.handleRequest(
+      "https://retroachievements.com/dorequest.php",
+      "r=startsession&u=testuser&t=testtoken&g=228&h=1", "application/json");
+
+  const auto json4 = nlohmann::json::parse(startSessionResponse.body);
+  const auto startSession = json4.get<StartSessionResponse>();
+
+  ASSERT_TRUE(startSession.Success);
+  ASSERT_EQ(2, startSession.HardcoreUnlocks.size());
+  ASSERT_EQ(1, startSession.Unlocks.size());
+  ASSERT_TRUE(startSession.ServerNow > 0);
+
+  auto seen2251 = false;
+  auto seen45994 = false;
+  for (auto unlock : startSession.HardcoreUnlocks) {
+    if (unlock.ID == 2251) {
+      seen2251 = true;
+    } else if (unlock.ID == 45994) {
+      seen45994 = true;
+    }
+  }
+
+  ASSERT_TRUE(seen2251 && seen45994);
+
+  auto seen2305 = false;
+  for (auto unlock : startSession.Unlocks) {
+    if (unlock.ID == 2305) {
+      seen2305 = true;
+    }
+  }
+
+  ASSERT_TRUE(seen2305);
+
+  // TODO: VERIFY THAT SYNCING WORKS
+}
+
+TEST_F(RetroAchievementsOfflineClientTest,
+       StartSessionWhenNoAchievementsUnlocked) {
+  auto cache = RetroAchievementsCache(":memory:");
+  RetroAchievementsOfflineClient offlineClient(cache);
+
+  offlineClient.processResponse("r=patch&g=228&u=testuser", patchData);
+  auto startSessionResponse = offlineClient.handleRequest(
+      "https://retroachievements.com/dorequest.php",
+      "r=startsession&u=testuser&t=testtoken&g=228&h=1", "application/json");
+
+  const auto json = nlohmann::json::parse(startSessionResponse.body);
+  const auto startSession = json.get<StartSessionResponse>();
+
+  ASSERT_TRUE(startSession.Success);
+  ASSERT_EQ(0, startSession.HardcoreUnlocks.size());
+  ASSERT_EQ(0, startSession.Unlocks.size());
+  ASSERT_TRUE(startSession.ServerNow > 0);
+}
+
+TEST_F(RetroAchievementsOfflineClientTest,
+       AwardAchievementOfflineAfterUserResetsProgress) {
+  auto cache = RetroAchievementsCache(":memory:");
+  RetroAchievementsOfflineClient offlineClient(cache);
+
+  // TODO: IMPLEMENT
+  // Scenario is that in DB it's marked as unlocked but gets RE-locked
+  // Then try to earn offline - currently failing because it gets unlocked but
+  // appears to already be synced Currently then gets re-locked again when
+  // starting session
+}
+
+/**
+ *
+ *Based on my analysis of rcheevos_offline_client.cpp and the existing tests
+in rcheevos_offline_client_test.cpp, here are the areas where test coverage is
+missing or could be improved:
+
+Request Handling (handleRequest)
+
+awardachievement: This is a critical and complex function that lacks
+tests. You need to test:
+Awarding an achievement that doesn't exist.
+Awarding an achievement to a user who doesn't have a status for it.
+Awarding an achievement that is already unlocked (both in softcore and
+hardcore).
+Awarding a hardcore achievement during a hardcore session and verifying it's
+added to the session's achievements.
+
+submitlbentry: A simple test to confirm it returns
+GENERIC_SUCCESS as it's currently a stub.
+Invalid Request: A test for an unknown request type (or parameter) to ensure
+it returns a GENERIC_SERVER_ERROR.
+
+Response Processing (processResponse)
+
+login2: There are no tests for
+processLogin2Response. You should test that a successful login response
+correctly adds a user and updates their scores in the cache, and that a failed
+response does nothing.
+
+gameid: No tests for processGameIdResponse. A test should
+confirm that the game ID is correctly cached.
+
+startsession:
+processStartSessionResponse is untested. You should test:
+Correctly marking achievements as unlocked from the response.
+Correctly re-locking achievements that are present in the cache but not in the
+response.
+Handling of the special UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID.
+
+awardachievement: processAwardAchievementResponse is untested. It needs tests
+to verify that scores are updated and achievements are marked as unlocked.
+
+Other Functionality
+syncOfflineAchievements: This function has significant logic for syncing
+offline achievements with the server and is completely untested. Testing this
+would likely require mocking network requests (e.g., using a mock for the cpr
+library) to simulate different server responses (success, failure, "already
+unlocked" errors, etc.).
+
+You should also test the logic for demoting hardcore achievements
+earned offline.
+
+Session Management: clearSessionAchievements and
+startOnlineHardcoreSession are not tested. While simple, their effect on
+handleAwardAchievementRequest should be tested as part of that function's
+tests.
+ *
+ **/
 } // namespace firelight::achievements

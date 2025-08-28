@@ -14,6 +14,7 @@
 #include <rhi/qrhi.h>
 
 #include "audio/audio_manager.hpp"
+#include "emulation/emulator_instance.hpp"
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"
 #include "manager_accessor.hpp"
@@ -29,9 +30,9 @@ class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public firelight::libretro::IVideoDataReceiver,
                              public firelight::ManagerAccessor {
 public:
-  explicit EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api,
-                                std::unique_ptr<libretro::Core> core,
-                                QWindow *window);
+  explicit EmulatorItemRenderer(
+      QSGRendererInterface::GraphicsApi api, QWindow *window,
+      firelight::emulation::EmulatorInstance *emulatorInstance);
   void setHwRenderInterface(retro_hw_render_callback *iface) override;
 
   void onGeometryChanged(
@@ -77,8 +78,6 @@ public:
   float m_playbackMultiplier = 1;
 
   enum EmulatorCommandType {
-    ResetGame,
-    WriteSaveFile,
     WriteRewindPoint,
     EmitRewindPoints,
     LoadRewindPoint,
@@ -98,8 +97,6 @@ public:
 
   void submitCommand(EmulatorCommand command);
 
-  void save(bool waitForFinish) const;
-
 protected:
   ~EmulatorItemRenderer() override;
 
@@ -115,6 +112,8 @@ private:
   // firelight::av::VideoEncoder *m_encoder = nullptr;
   // firelight::av::VideoDecoder *m_decoder = nullptr;
   const QSGRendererInterface::GraphicsApi m_graphicsApi;
+
+  firelight::emulation::EmulatorInstance *m_emulatorInstance;
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
 
@@ -157,11 +156,10 @@ private:
 
   QList<SuspendPoint> m_rewindPoints;
 
-  std::unique_ptr<libretro::Core> m_core = nullptr;
-  bool m_coreInitialized = false;
-
   std::function<void(int, int, float, double)> m_geometryChangedCallback =
       nullptr;
+
+  // firelight::media::Image *m_currentCoolImage;
 
   // HW rendering members
   bool m_openGlInitialized = false;

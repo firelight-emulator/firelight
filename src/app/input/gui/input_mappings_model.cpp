@@ -227,7 +227,8 @@ void InputMappingsModel::clearMapping(int originalInput) {
     item.mappedInputName = "Not mapped";
     item.isDefault = false;
 
-    m_inputMapping->removeMapping(item.originalInput);
+    m_inputMapping->addMapping(item.originalInput, item.mappedInput);
+    // m_inputMapping->removeMapping(item.originalInput);
     m_inputMapping->sync();
 
     checkForConflicts();

@@ -24,6 +24,8 @@ private:
   Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
   Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY
                  videoAspectRatioChanged)
+  Q_PROPERTY(float trueAspectRatio MEMBER m_calculatedAspectRatio NOTIFY
+                 videoAspectRatioChanged)
   Q_PROPERTY(float canUndoLoadSuspendPoint MEMBER m_canUndoLoadSuspendPoint
                  NOTIFY canUndoLoadSuspendPointChanged)
   Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
@@ -89,8 +91,6 @@ public:
 
   [[nodiscard]] float audioBufferLevel() const;
 
-  Q_INVOKABLE void resetGame();
-
   Q_INVOKABLE void writeSuspendPoint(int index);
 
   Q_INVOKABLE void loadSuspendPoint(int index);
@@ -130,7 +130,6 @@ protected:
   void mouseReleaseEvent(QMouseEvent *event) override;
 
 public slots:
-  void loadGame(int entryId);
   void startGame();
 
 signals:
@@ -176,7 +175,6 @@ protected:
 private:
   bool m_stopping = false;
   QThreadPool m_threadPool;
-  QTimer m_autosaveTimer;
   QTimer m_rewindPointTimer;
   EmulatorItemRenderer *m_renderer = nullptr;
 

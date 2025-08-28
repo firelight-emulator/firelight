@@ -34,10 +34,6 @@ ApplicationWindow {
         GeneralSettings.mainWindowY = y
     }
 
-    property string runningGameName: emulatorLoader.item ? emulatorLoader.item.gameName : ""
-    property int runningGameEntryId: emulatorLoader.item ? emulatorLoader.item.entryId : -1
-    property int runningGameSaveSlotNumber: emulatorLoader.item ? emulatorLoader.item.saveSlotNumber : -1
-
     // onActiveFocusItemChanged: {
     //     console.log("Active focus item changed to: " + window.activeFocusItem)
     //     let item = window.activeFocusItem
@@ -50,8 +46,6 @@ ApplicationWindow {
     //         level++
     //     }
     // }
-
-    // flags: Qt.NoTitleBarBackgroundHint
 
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
@@ -69,17 +63,29 @@ ApplicationWindow {
         backgroundFile: AppearanceSettings.backgroundFile
     }
 
-    function startGame(entryId) {
-        if (emulatorLoader.status === Loader.Ready) {
-            closeGameDialog.openAndDoOnAccepted(function () {
-                emulatorLoader.source = ""
+    Connections {
+        target: EmulationService
 
+        function onGameLoaded() {
+            overlay.opacity = 0
+            emulatorLoader.startGame()
+        }
+
+        function onEmulationStopped() {
+            content.goToContent("Library", allGamesPage, {}, StackView.Immediate)
+            mainContentStack.pushItems([emulatorLoader, content], StackView.Immediate)
+            emulatorLoader.source = ""
+            content.forceActiveFocus()
+        }
+    }
+
+    function startGame(entryId) {
+        if (EmulationService.isGameRunning) {
+            closeGameDialog.openAndDoOnAccepted(function () {
+                EmulationService.stopEmulation()
+                emulatorLoader.setSource("")
                 startGameAnimation.entryId = entryId
                 startGameAnimation.start()
-
-                // emulatorLoader.entryId = entryId
-                // emulatorLoader.active = true
-                // libPage.playLaunchAnimation()
             })
         } else {
             startGameAnimation.entryId = entryId
@@ -87,150 +93,103 @@ ApplicationWindow {
         }
     }
 
-    FirelightDialog {
-        id: quitDialog
-        text: "Are you sure you want to quit Firelight?"
-        onAccepted: {
-            Qt.quit()
-        }
-    }
-
-    Loader {
-        id: emulatorLoader
-        // visible: status === Loader.Ready
-        focus: true
-
-        StackView.visible: true
-
-        property real blurAmount: 0
-
-        Behavior on blurAmount {
-            NumberAnimation {
-                easing.type: Easing.InOutQuad
-                duration: 250
-            }
-        }
-
-        layer.enabled: blurAmount !== 0
-        layer.effect: MultiEffect {
-            // enabled: root.blurAmount !== 0
-            source: emulatorLoader
-            anchors.fill: emulatorLoader
-            blurEnabled: true
-            blurMultiplier: 2
-            blurMax: 64
-            autoPaddingEnabled: false
-            blur: emulatorLoader.blurAmount
-        }
-
-        Rectangle {
-            id: dimmer
-            color: "black"
-            visible: emulatorLoader.status === Loader.Ready
-            opacity: emulatorLoader.blurAmount * 0.55
-            anchors.fill: parent
-
-            z: 10
-        }
-
-        Keys.onEscapePressed: function(event) {
-            Router.navigateTo("/quick-menu")
-            mainContentStack.pushItem(content, {}, StackView.PushTransition)
-        }
-
-        StackView.onActivating: {
-            emulatorLoader.blurAmount = 0
-        }
-
-        StackView.onActivated: {
-            if (emulatorLoader.item) {
-                emulatorLoader.item.paused = false
-            }
-        }
-
-        StackView.onDeactivating: {
-            emulatorLoader.blurAmount = 1
-            if (emulatorLoader.item) {
-                emulatorLoader.item.paused = true
-            }
-        }
-    }
-
-    MainContent {
-        id: content
-        visible: false
-
-        onPowerButtonPressed: {
-            quitDialog.open()
-        }
-
-        gameRunning: emulatorLoader.status === Loader.Ready
-
-        Keys.onEscapePressed: function(event) {
-            if (Router.currentRoute !== "/quick-menu") {
-                Router.navigateTo("/quick-menu")
-                return
-            }
-
-            mainContentStack.popCurrentItem()
-        }
-    }
-
     StackView {
-        id: mainContentStack
-        focus: true
-        anchors.fill: parent
-        Component.onCompleted: {
-            pushItems([emulatorLoader, content], StackView.Immediate)
+         id: mainContentStack
+         focus: true
+         anchors.fill: parent
+
+         Component.onCompleted: {
+             pushItems([emulatorLoader, content], StackView.Immediate)
+         }
+
+         onDepthChanged: {
+             console.log("New depth: " + depth)
+         }
+
+         Keys.onEscapePressed: function(event) {
+             if (EmulationService.isGameRunning && depth > 1) {
+                 popCurrentItem()
+             }
+         }
+
+         // onCurrentItemChanged: {
+         //     currentItem.focus = true
+         // }
+
+         pushEnter: Transition {
+             ParallelAnimation {
+                 PropertyAnimation {
+                     property: "opacity"
+                     from: 0
+                     to: 1
+                     duration: 250
+                     easing.type: Easing.InOutQuad
+                 }
+                 PropertyAnimation {
+                     property: "scale"
+                     from: 1.02
+                     to: 1
+                     duration: 250
+                     easing.type: Easing.InOutQuad
+                 }
+             }
+         }
+         pushExit: Transition {}
+         popEnter: Transition {}
+         popExit: Transition {
+             ParallelAnimation {
+                 PropertyAnimation {
+                     property: "opacity"
+                     from: 1
+                     to: 0
+                     duration: 250
+                     easing.type: Easing.InOutQuad
+                 }
+                 PropertyAnimation {
+                     property: "scale"
+                     from: 1
+                     to: 1.02
+                     duration: 250
+                     easing.type: Easing.InOutQuad
+                 }
+             }
+         }
+         replaceEnter: Transition {
+         }
+         replaceExit: Transition {
+         }
+     }
+
+    Item {
+        focus: false
+        EmulatorLoader {
+            id: emulatorLoader
+
+            onSuspended: {
+                content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber, gameSettings: emulatorLoader.item.gameSettings}, StackView.Immediate)
+                // Router.navigateTo("/quick-menu")
+                mainContentStack.pushItems([emulatorLoader, content], StackView.PushTransition)
+            }
         }
 
-        onActiveFocusChanged: {
-            if (activeFocus && depth > 0) {
-                mainContentStack.currentItem.forceActiveFocus()
+        MainContent {
+            id: content
+            gameRunning: EmulationService.isGameRunning
+        }
+
+        LibraryPage {
+            id: allGamesPage
+            visible: false
+            currentEntryId: EmulationService.currentEntryId
+            onStartGame: function (entryId) {
+                window.startGame(entryId)
             }
         }
 
-        pushEnter: Transition {
-            ParallelAnimation {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-                PropertyAnimation {
-                    property: "x"
-                    from: -20
-                    to: 0
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-        pushExit: Transition {}
-        popEnter: Transition {}
-        popExit: Transition {
-            ParallelAnimation {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-                PropertyAnimation {
-                    property: "x"
-                    from: 0
-                    to: -20
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-        replaceEnter: Transition {
-        }
-        replaceExit: Transition {
+        FirelightDialog {
+            id: closeGameDialog
+            text: "You're currently playing:\n\n" + EmulationService.currentGameName  + "\n\nDo you want to close it?"
+
         }
     }
 
@@ -257,9 +216,9 @@ ApplicationWindow {
         ScriptAction {
             script: {
                 mainContentStack.popCurrentItem(StackView.Immediate)
-                emulatorLoader.setSource("NewEmulatorPage.qml", {entryId: startGameAnimation.entryId, stackView: mainContentStack})
-                overlay.opacity = 0
-
+                emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: mainContentStack})
+                emulatorLoader.blurAmount = 0
+                EmulationService.loadEntry(startGameAnimation.entryId)
             }
         }
     }
@@ -269,37 +228,24 @@ ApplicationWindow {
         usingMouse: InputMethodManager.usingMouse
     }
 
-    LibraryPage {
-        id: allGamesPage
-        visible: false
-        currentEntryId: window.runningGameEntryId
-        onStartGame: function (entryId) {
-            window.startGame(entryId)
-        }
-    }
-
-    FirelightDialog {
-        id: closeGameDialog
-        text: "You're currently playing:\n\n" + window.runningGameName  + "\n\nDo you want to close it?"
-
-    }
-
     Component {
         id: quickMenuPage
         QuickMenu {
             saveSlotNumber: window.runningGameSaveSlotNumber
+
             onResumeGame: {
                 mainContentStack.popCurrentItem()
             }
 
             onResetGame: {
-                emulatorLoader.item.resetGame()
+                EmulationService.resetGame()
                 mainContentStack.popCurrentItem()
+                emulatorLoader.forceActiveFocus()
+                // mainContentStack.pop(emulatorLoader)
             }
 
             onCloseGame: {
-                Router.navigateTo("/library")
-                emulatorLoader.source = ""
+                EmulationService.stopEmulation()
             }
 
             onRewindPressed: {
@@ -333,7 +279,7 @@ ApplicationWindow {
         id: settingsScreen
 
         SettingsScreen {
-            gameRunning: emulatorLoader.status === Loader.Ready
+            gameRunning: EmulationService.isGameRunning
         }
     }
 
@@ -422,7 +368,7 @@ ApplicationWindow {
                         content.goToContent("Not found", lol, {}, StackView.PushTransition)
                     }
                 } else if (route === "/quick-menu") {
-                    content.goToContent("Quick Menu", quickMenuPage, {gameSettings: emulatorLoader.item.gameSettings}, StackView.ReplaceTransition)
+                    content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber, gameSettings: emulatorLoader.item.gameSettings}, StackView.ReplaceTransition)
                 } else {
                         content.goToContent("Not found", lol, {}, StackView.ReplaceTransition)
                 }

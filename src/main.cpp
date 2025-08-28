@@ -51,6 +51,7 @@
 #include "gui/EventEmitter.h"
 #include "gui/filesystem_utils.hpp"
 #include "gui/gamepad_profile_item.hpp"
+#include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "input2/sdl/sdl_input_service.hpp"
 #include "settings/sqlite_settings_repository.hpp"
@@ -69,9 +70,9 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::info);
   }
 
-  QGuiApplication::setOrganizationDomain("firelight-emulator.com");
-  QGuiApplication::setDesktopFileName("firelight");
-  QGuiApplication::setApplicationName("Firelight");
+  QApplication::setOrganizationDomain("firelight-emulator.com");
+  QApplication::setDesktopFileName("firelight");
+  QApplication::setApplicationName("Firelight");
 
   QSettings::setDefaultFormat(QSettings::Format::IniFormat);
 
@@ -85,9 +86,9 @@ int main(int argc, char *argv[]) {
   format.setSwapInterval(0);
   QSurfaceFormat::setDefaultFormat(format);
 
-  QGuiApplication app(argc, argv);
+  QApplication app(argc, argv);
 
-  std::signal(SIGINT, [](int signal) { QGuiApplication::quit(); });
+  std::signal(SIGINT, [](int signal) { QApplication::quit(); });
 
   auto docsPath =
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
@@ -278,8 +279,6 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::gui::ControllerListModel>("Firelight", 1, 0,
                                                        "GamepadListModel");
 
-  firelight::gui::Router router;
-
   QNetworkInformation::loadDefaultBackend();
   if (QNetworkInformation::instance()->reachability() ==
       QNetworkInformation::Reachability::Online) {
@@ -309,6 +308,9 @@ int main(int argc, char *argv[]) {
   // diskCache->setCacheDirectory(directory);
   // manager->setCache(diskCache);
 
+  firelight::emulation::EmulationService emuService(userLibrary);
+  firelight::emulation::EmulationService::setInstance(&emuService);
+
   firelight::gui::LibraryFolderListModel libraryFolderListModel;
 
   QObject::connect(&libraryFolderListModel,
@@ -331,7 +333,8 @@ int main(int argc, char *argv[]) {
       "FilesystemUtils", new firelight::gui::FilesystemUtils());
   engine.rootContext()->setContextProperty("EventEmitter",
                                            new firelight::gui::EventEmitter());
-  engine.rootContext()->setContextProperty("Router", &router);
+  engine.rootContext()->setContextProperty("Router",
+                                           new firelight::gui::Router());
   engine.rootContext()->setContextProperty("emulator_config_manager",
                                            emulatorConfigManager.get());
   engine.rootContext()->setContextProperty("achievement_manager", &raClient);
@@ -349,6 +352,8 @@ int main(int argc, char *argv[]) {
 
   engine.rootContext()->setContextProperty(
       "InputService", new firelight::gui::QtInputServiceProxy());
+  engine.rootContext()->setContextProperty(
+      "EmulationService", new firelight::gui::QtEmulationServiceProxy());
 
   engine.rootContext()->setContextProperty("LibraryFolderModel",
                                            &libraryFolderListModel);
@@ -372,11 +377,11 @@ int main(int argc, char *argv[]) {
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
 
-  firelight::input::KeyboardInputHandler keyboardHandler;
-  window->installEventFilter(&keyboardHandler);
+  auto keyboardHandler = new firelight::input::KeyboardInputHandler();
+  window->installEventFilter(keyboardHandler);
 
   inputService.setKeyboard(
-      std::shared_ptr<firelight::input::IGamepad>(&keyboardHandler));
+      std::shared_ptr<firelight::input::IGamepad>(keyboardHandler));
 
   auto inputLoopFuture = QtConcurrent::run([&] { inputService.run(); });
 
@@ -392,9 +397,9 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("sfx_player",
                                            new firelight::audio::SfxPlayer());
 
-  int exitCode = QGuiApplication::exec();
+  int exitCode = QApplication::exec();
 
-  spdlog::info("Exiting QGuiApplication");
+  spdlog::info("Exiting QApplication");
 
   inputService.stop();
   inputLoopFuture.waitForFinished();

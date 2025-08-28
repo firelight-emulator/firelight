@@ -1,4 +1,5 @@
 #include "sqlite_user_library.hpp"
+#include "../../gui/filesystem_utils.hpp"
 
 #include <QSqlError>
 #include <QSqlQuery>
@@ -392,11 +393,8 @@ bool SqliteUserLibrary::update(Entry &entry) {
 void SqliteUserLibrary::setMainGameDirectory(const QString &directory) {
   auto temp = directory;
 
-  if (temp.startsWith("file://")) {
-    temp = temp.remove(0, 7);
-  }
-  if (temp.startsWith("/")) {
-    temp = temp.remove(0, 1);
+  if (gui::FilesystemUtils::isFile(temp)) {
+    temp = gui::FilesystemUtils::removeFileURI(temp);
   }
 
   if (temp == m_mainGameDirectory) {

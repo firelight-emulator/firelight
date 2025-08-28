@@ -21,7 +21,7 @@ FocusScope {
                 return
             }
 
-            if (shortcut === 0) {
+            if (shortcut === 0 && !achievement_manager.inHardcoreMode) {
                 root.createRewindPoints()
             } else if (shortcut === 3) {
                 emulator.incrementPlaybackMultiplier()
@@ -32,25 +32,18 @@ FocusScope {
     }
 
     required property StackView stackView
-    required property int entryId
     property GameSettings2 gameSettings: GameSettings2 {
         platformId: root.platformId
         contentHash: root.contentHash
     }
 
-    property bool blurEnabled: false
     property alias audioBufferLevel: emulator.audioBufferLevel
 
-    Component.onCompleted: {
-        emulator.loadGame(entryId)
-    }
-
-    property alias paused: emulator.paused
+    property bool paused
 
     signal closing()
     signal aboutToRunFrame()
 
-    clip: true
     focus: true
 
     Timer {
@@ -98,6 +91,17 @@ FocusScope {
     //         ctrlTimer.stop()
     //     }
     // }
+    property bool windowResizing
+    Connections {
+        target: window_resize_handler
+
+        function onWindowResizeStarted() {
+            root.windowResizing = true
+        }
+        function onWindowResizeFinished() {
+            root.windowResizing = false
+        }
+    }
 
     property alias videoAspectRatio: emulator.videoAspectRatio
     property alias contentHash: emulator.contentHash
@@ -106,14 +110,8 @@ FocusScope {
     property alias saveSlotNumber: emulator.saveSlotNumber
     property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
-    function loadGame(entryId) {
-        emulator.loadGame(entryId)
-    }
-
     function startGame() {
-        if (!emulator.started) {
-            emulator.startGame()
-        }
+        emulator.startGame()
     }
 
     signal rewindPointsReady(var points)
@@ -150,37 +148,81 @@ FocusScope {
     Rectangle {
         id: background
         color: "black"
-        anchors.fill: parent
+        anchors.fill: root
     }
 
     EmulatorItem {
         id: emulator
         focus: true
-        anchors.centerIn: parent
+        anchors.centerIn: root
+
+        paused: root.paused || root.windowResizing
+        muted: paused || playbackMultiplier !== 1
 
         layer.enabled: true
 
+
         property string pictureMode: gameSettings.pictureMode
+        property real aspectRatio: {
+            let mode = gameSettings.aspectRatioMode
+
+             if (mode === "core-corrected") {
+                 return emulator.videoAspectRatio
+             } else {
+                 return emulator.trueAspectRatio
+             }
+        }
+
+        property real fitScale: {
+            if (!emulator.videoWidth || !emulator.videoHeight) {
+                return 1.0 // Avoid division by zero
+            }
+
+            // Calculate the ratio of the container itself
+            const containerRatio = root.width / root.height
+
+            // If the container is wider than the target aspect ratio, fit to height.
+            // Otherwise, fit to width.
+            if (containerRatio > aspectRatio) {
+                return root.height / (emulator.videoWidth / aspectRatio)
+            } else {
+                return root.width / emulator.videoWidth
+            }
+        }
+
+        property real sourceHeight: emulator.videoHeight
+        property real sourceWidth: sourceHeight * aspectRatio
+
+        property int integerScale: {
+            if (!sourceWidth || !sourceHeight) {
+                return 1 // Avoid division by zero
+            }
+            // Find how many times our correct shape fits into the container
+            const widthScale = root.width / sourceWidth
+            const heightScale = root.height / sourceHeight
+
+            // Take the smaller of the two, and floor it to get the largest whole number scale
+            return Math.floor(Math.min(widthScale, heightScale))
+        }
 
         width: {
             if (emulator.pictureMode === "stretch") {
-                return parent.width
+                return root.width
             } else if (emulator.pictureMode === "aspect-ratio-fill") {
-                return height * videoAspectRatio
+                return emulator.videoWidth * fitScale
             } else if (emulator.pictureMode === "integer-scale") {
-                return height * videoAspectRatio
+                return sourceWidth * integerScale
             }
 
             return emulator.videoWidth
         }
         height: {
             if (emulator.pictureMode === "stretch") {
-                return parent.height
+                return root.height
             } else if (emulator.pictureMode === "aspect-ratio-fill") {
-                return parent.height
+                return (emulator.videoWidth * fitScale) / aspectRatio
             } else if (emulator.pictureMode === "integer-scale"){
-                let num = parent.height / emulator.videoHeight
-                return Math.floor(num) * emulator.videoHeight
+                return sourceHeight * integerScale
             }
 
             return emulator.videoHeight
@@ -197,7 +239,7 @@ FocusScope {
         onRewindPointsReady: function (points) {
             root.stackView.pushItem(rewindPage, {
                 model: points,
-                aspectRatio: emulator.videoAspectRatio
+                aspectRatio: emulator.aspectRatio
             }, StackView.Immediate)
             // root.rewindPointsReady(points)
         }
@@ -270,20 +312,6 @@ FocusScope {
         }
     }
 
-    AchievementUnlockIndicator {
-        id: achievementUnlockIndicator
-
-        Connections {
-            target: achievement_manager
-
-            function onAchievementUnlocked(imageUrl, name, description) {
-                if (achievement_manager.unlockNotificationsEnabled) {
-                    achievementUnlockIndicator.openWith(imageUrl, name, description)
-                }
-            }
-        }
-    }
-
     GameLaunchPopup {
         objectName: "Game Launch Popup"
         id: gameLaunchPopup
@@ -294,6 +322,102 @@ FocusScope {
             function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
                 gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore)
             }
+        }
+    }
+
+    Item {
+        id: achievementPopupQueue
+
+        property var popups: []
+        property bool isPopupVisible: false
+
+        function add(popup) {
+            popups.push(popup)
+            if (!isPopupVisible) {
+                displayNext()
+            }
+        }
+
+        function displayNext() {
+            if (isPopupVisible || popups.length === 0) {
+                return
+            }
+            isPopupVisible = true
+            const popup = popups[0]
+            popup.onClosed.connect(onPopupClosed)
+            popup.open()
+        }
+
+        function onPopupClosed() {
+            const closedPopup = popups.shift()
+            if (closedPopup) {
+                closedPopup.onClosed.disconnect(onPopupClosed)
+                closedPopup.destroy()
+            }
+            isPopupVisible = false
+            if (popups.length > 0) {
+                displayNext()
+            }
+        }
+
+        Connections {
+            target: achievement_manager
+
+            function onAchievementUnlocked(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description
+                });
+
+                achievementPopupQueue.add(popup)
+            }
+
+            function onGameBeaten(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description,
+                    splashText: "All achievements unlocked!"
+                });
+
+                achievementPopupQueue.add(popup)
+            }
+
+            function onGameMastered(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description,
+                    splashText: "Game mastered!"
+                });
+
+                achievementPopupQueue.add(popup)
+            }
+        }
+    }
+
+    Component {
+        id: achievementUnlockIndicatorComponent
+        AchievementUnlockIndicator {
         }
     }
 
