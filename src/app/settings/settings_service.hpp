@@ -1,3 +1,8 @@
+/**
+ * @file settings_service.hpp
+ * @brief Settings service providing high-level configuration management
+ */
+
 #pragma once
 #include "settings_repository.hpp"
 
@@ -6,59 +11,145 @@
 
 namespace firelight::settings {
 
+/**
+ * @struct SettingsLevelChangedEvent
+ * @brief Event data for settings level changes
+ */
 struct SettingsLevelChangedEvent {
-  std::string contentHash;
-  SettingsLevel level;
+  std::string contentHash; ///< The content hash identifier
+  SettingsLevel level;     ///< The new settings level
 };
 
+/**
+ * @struct GameSettingChangedEvent
+ * @brief Event data for game setting value changes
+ */
 struct GameSettingChangedEvent {
-  std::string contentHash;
-  std::string key;
-  std::string value;
+  std::string contentHash; ///< The game's content hash
+  std::string key;         ///< The setting key
+  std::string value;       ///< The new setting value
 };
 
+/**
+ * @struct GameSettingResetEvent
+ * @brief Event data for game setting resets
+ */
 struct GameSettingResetEvent {
-  std::string contentHash;
-  std::string key;
+  std::string contentHash; ///< The game's content hash
+  std::string key;         ///< The setting key that was reset
 };
 
+/**
+ * @struct PlatformSettingChangedEvent
+ * @brief Event data for platform setting value changes
+ */
 struct PlatformSettingChangedEvent {
-  int platformId;
-  std::string key;
-  std::string value;
+  int platformId;    ///< The platform identifier
+  std::string key;   ///< The setting key
+  std::string value; ///< The new setting value
 };
 
+/**
+ * @struct PlatformSettingResetEvent
+ * @brief Event data for platform setting resets
+ */
 struct PlatformSettingResetEvent {
-  int platformId;
-  std::string key;
+  int platformId;  ///< The platform identifier
+  std::string key; ///< The setting key that was reset
 };
 
+/**
+ * @class SettingsService
+ * @brief High-level service for managing application settings
+ *
+ * Provides a service layer over the settings repository, handling both
+ * platform-specific and game-specific configuration management with
+ * hierarchical setting resolution.
+ */
 class SettingsService {
 public:
+  /**
+   * @brief Constructs a settings service with the given repository
+   * @param settingsRepo Reference to the settings repository implementation
+   */
   explicit SettingsService(ISettingsRepository &settingsRepo);
+
+  /**
+   * @brief Default destructor
+   */
   ~SettingsService() = default;
 
+  /**
+   * @brief Get the settings level for a given content hash
+   * @param contentHash The content hash identifier
+   * @return The settings level (Game or Platform)
+   */
   SettingsLevel getSettingsLevel(std::string contentHash);
+
+  /**
+   * @brief Set the settings level for a given content hash
+   * @param contentHash The content hash identifier
+   * @param level The settings level to set
+   * @return True if successful, false otherwise
+   */
   bool setSettingsLevel(std::string contentHash, SettingsLevel level);
 
+  /**
+   * @brief Get a platform-specific setting value
+   * @param platformId The platform identifier
+   * @param key The setting key
+   * @return Optional string value if the setting exists
+   */
   std::optional<std::string> getPlatformValue(int platformId,
                                               const std::string &key);
 
+  /**
+   * @brief Set a platform-specific setting value
+   * @param platformId The platform identifier
+   * @param key The setting key
+   * @param value The setting value
+   * @return True if successful, false otherwise
+   */
   bool setPlatformValue(int platformId, const std::string &key,
                         const std::string &value);
 
+  /**
+   * @brief Reset a platform-specific setting to default
+   * @param platformId The platform identifier
+   * @param key The setting key
+   * @return True if successful, false otherwise
+   */
   bool resetPlatformValue(int platformId, const std::string &key);
 
+  /**
+   * @brief Get a game-specific setting value
+   * @param contentHash The game's content hash
+   * @param key The setting key
+   * @return Optional string value if the setting exists
+   */
   std::optional<std::string> getGameValue(const std::string &contentHash,
                                           const std::string &key);
 
+  /**
+   * @brief Set a game-specific setting value
+   * @param contentHash The game's content hash
+   * @param key The setting key
+   * @param value The setting value
+   * @return True if successful, false otherwise
+   */
   bool setGameValue(const std::string &contentHash, const std::string &key,
                     const std::string &value);
 
+  /**
+   * @brief Reset a game-specific setting to default
+   * @param contentHash The game's content hash
+   * @param key The setting key
+   * @return True if successful, false otherwise
+   */
   bool resetGameValue(const std::string &contentHash, const std::string &key);
 
 private:
-  ISettingsRepository &m_settingsRepo;
+  ISettingsRepository &m_settingsRepo; ///< Reference to the settings repository
 };
 
 } // namespace firelight::settings

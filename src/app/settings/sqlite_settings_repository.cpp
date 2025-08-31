@@ -38,8 +38,8 @@ settings::SqliteSettingsRepository::SqliteSettingsRepository(
   m_database->exec(setupQueryString);
 }
 settings::SqliteSettingsRepository::~SqliteSettingsRepository() = default;
-settings::SettingsLevel
-settings::SqliteSettingsRepository::getSettingsLevel(std::string contentHash) {
+settings::SettingsLevel settings::SqliteSettingsRepository::getSettingsLevel(
+    const std::string contentHash) {
   try {
     SQLite::Statement query(*m_database,
                             "SELECT level FROM game_setting_levels WHERE "
@@ -76,7 +76,7 @@ bool settings::SqliteSettingsRepository::setSettingsLevel(
 }
 
 std::optional<std::string>
-settings::SqliteSettingsRepository::getPlatformValue(int platformId,
+settings::SqliteSettingsRepository::getPlatformValue(const int platformId,
                                                      const std::string &key) {
   try {
     SQLite::Statement query(*m_database,
@@ -98,8 +98,8 @@ settings::SqliteSettingsRepository::getPlatformValue(int platformId,
 }
 
 std::string settings::SqliteSettingsRepository::getEffectiveValue(
-    const std::string &contentHash, int platformId, const std::string &key,
-    const std::string &defaultValue) {
+    const std::string &contentHash, const int platformId,
+    const std::string &key, const std::string &defaultValue) {
   if (auto v = getGameValue(contentHash, key)) {
     return *v;
   }

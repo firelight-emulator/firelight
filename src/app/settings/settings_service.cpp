@@ -16,7 +16,7 @@ SettingsLevel SettingsService::getSettingsLevel(std::string contentHash) {
 bool SettingsService::setSettingsLevel(std::string contentHash,
                                        const SettingsLevel level) {
   const auto result =
-      m_settingsRepo.setSettingsLevel(std::move(contentHash), level);
+      m_settingsRepo.setSettingsLevel(contentHash, level);
   if (result) {
     EventDispatcher::instance().publish(
         SettingsLevelChangedEvent{.contentHash = contentHash, .level = level});

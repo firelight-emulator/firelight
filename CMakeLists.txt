@@ -342,6 +342,7 @@ add_executable(fl_test
         tests/app/rcheevos/ra_cache_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
         tests/app/settings/sqlite_settings_repository_test.cpp
+        tests/app/settings/settings_service_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
