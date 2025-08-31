@@ -1,7 +1,6 @@
 #include "../../mocks/mock_library.hpp"
 #include "event_dispatcher.hpp"
 #include "library/sqlite_user_library.hpp"
-#include "settings/sqlite_emulation_settings_manager.hpp"
 
 #include <db/sqlite_userdata_database.hpp>
 #include <emulation/emulation_service.hpp>

@@ -6,8 +6,6 @@
 
 namespace firelight::settings {
 
-enum SettingsLevel { Game, Platform };
-
 struct SettingsLevelChangedEvent {
   std::string contentHash;
   SettingsLevel level;
@@ -19,34 +17,45 @@ struct GameSettingChangedEvent {
   std::string value;
 };
 
+struct GameSettingResetEvent {
+  std::string contentHash;
+  std::string key;
+};
+
 struct PlatformSettingChangedEvent {
   int platformId;
   std::string key;
   std::string value;
 };
 
+struct PlatformSettingResetEvent {
+  int platformId;
+  std::string key;
+};
+
 class SettingsService {
 public:
   explicit SettingsService(ISettingsRepository &settingsRepo);
   ~SettingsService() = default;
+
   SettingsLevel getSettingsLevel(std::string contentHash);
-  void setSettingsLevel(std::string contentHash, SettingsLevel level);
+  bool setSettingsLevel(std::string contentHash, SettingsLevel level);
 
   std::optional<std::string> getPlatformValue(int platformId,
                                               const std::string &key);
 
-  void setPlatformValue(int platformId, const std::string &key,
+  bool setPlatformValue(int platformId, const std::string &key,
                         const std::string &value);
 
-  void resetPlatformValue(int platformId, const std::string &key);
+  bool resetPlatformValue(int platformId, const std::string &key);
 
   std::optional<std::string> getGameValue(const std::string &contentHash,
                                           const std::string &key);
 
-  void setGameValue(const std::string &contentHash, const std::string &key,
+  bool setGameValue(const std::string &contentHash, const std::string &key,
                     const std::string &value);
 
-  void resetGameValue(const std::string &contentHash, const std::string &key);
+  bool resetGameValue(const std::string &contentHash, const std::string &key);
 
 private:
   ISettingsRepository &m_settingsRepo;

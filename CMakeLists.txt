@@ -59,6 +59,7 @@ set(CMAKE_AUTOUIC ON)
 
 # set(QT6_DIR "C:/Qt/Qt-6.9.0")
 
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
 pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
@@ -91,6 +92,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(/opt/homebrew/include)
 add_subdirectory(src/app)
 add_subdirectory(libs/discord)
+add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
 file(GLOB QML_FILES
         qml/*.qml
@@ -185,6 +187,7 @@ add_library(firelight_lib
         src/image_cache.cpp
         src/app/emulation/emulation_service.cpp
         src/app/emulation/emulator_instance.cpp
+        src/app/settings/emulation_setting.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -198,6 +201,8 @@ target_link_libraries(firelight_lib PUBLIC
         SDL2::SDL2
         z
         nlohmann_json::nlohmann_json
+        SQLiteCpp
+        sqlite3
         Qt6::Gui
         Qt6::Quick
         Qt6::OpenGL
@@ -235,6 +240,8 @@ qt6_add_executable(firelight
         resources.qrc
         app_resources.rc
         src/main.cpp
+        src/gui/models/emulation_settings_model.cpp
+        src/gui/models/emulation_settings_model.hpp
 )
 
 
@@ -322,6 +329,7 @@ add_executable(fl_test
         tests/app/patching/ips_patch_test.cpp
         tests/app/patching/ups_patch_test.cpp
         tests/app/patching/bps_patch_test.cpp
+        tests/app/patching/util_test.cpp
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
         tests/app/saves/save_manager_test.cpp
@@ -333,6 +341,7 @@ add_executable(fl_test
         tests/app/db/sqlite_content_database_test.cpp
         tests/app/rcheevos/ra_cache_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
+        tests/app/settings/sqlite_settings_repository_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp

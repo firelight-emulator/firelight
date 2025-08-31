@@ -1,36 +1,40 @@
 #pragma once
 
+#include "SQLiteCpp/Database.h"
 #include "settings_repository.hpp"
 
-#include <QSqlDatabase>
+#include <QObject>
 
 namespace firelight::settings {
-class SqliteSettingsRepository : public QObject,
-                                       public ISettingsRepository {
+class SqliteSettingsRepository : public QObject, public ISettingsRepository {
   Q_OBJECT
 public:
-  enum SettingsLevel { Global, Platform, Game };
-  Q_ENUM(SettingsLevel)
-
-  explicit SqliteSettingsRepository(const QString &databaseFile);
+  explicit SqliteSettingsRepository(std::string databaseFile);
   ~SqliteSettingsRepository() override;
 
+  /** Settings level **/
+  SettingsLevel getSettingsLevel(std::string contentHash) override;
+  bool setSettingsLevel(std::string contentHash, SettingsLevel level) override;
+
+  /** Platform values **/
   std::optional<std::string> getPlatformValue(int platformId,
                                               const std::string &key) override;
+  bool setPlatformValue(int platformId, const std::string &key,
+                        const std::string &value) override;
+  bool resetPlatformValue(int platformId, const std::string &key) override;
+
+  /** Game values **/
   std::optional<std::string> getGameValue(const std::string &contentHash,
-                                          int platformId,
                                           const std::string &key) override;
+  bool setGameValue(const std::string &contentHash, const std::string &key,
+                    const std::string &value) override;
+  bool resetGameValue(const std::string &contentHash,
+                      const std::string &key) override;
+
+  /** Remove **/
   std::string getEffectiveValue(const std::string &contentHash, int platformId,
                                 const std::string &key,
                                 const std::string &defaultValue) override;
-  void setPlatformValue(int platformId, const std::string &key,
-                        const std::string &value) override;
-  void setGameValue(const std::string &contentHash, int platformId,
-                    const std::string &key, const std::string &value) override;
-
-  void resetPlatformValue(int platformId, const std::string &key) override;
-  void resetGameValue(const std::string &contentHash, int platformId,
-                      const std::string &key) override;
 
   Q_INVOKABLE QString getEffectiveValue(const QString &contentHash,
                                         int platformId, const QString &key,
@@ -43,14 +47,13 @@ public:
   Q_INVOKABLE void setGameValue(const QString &contentHash,
                                 const int platformId, const QString &key,
                                 const QString &value) {
-    setGameValue(contentHash.toStdString(), platformId, key.toStdString(),
+    setGameValue(contentHash.toStdString(), key.toStdString(),
                  value.toStdString());
   }
 
   Q_INVOKABLE QString getGameValue(const QString &contentHash,
                                    const int platformId, const QString &key) {
-    auto value =
-        getGameValue(contentHash.toStdString(), platformId, key.toStdString());
+    auto value = getGameValue(contentHash.toStdString(), key.toStdString());
     return value ? QString::fromStdString(*value) : QString();
   }
 signals:
@@ -66,8 +69,8 @@ signals:
                       const QString &key);
 
 private:
-  QString m_databaseFile;
-  [[nodiscard]] QSqlDatabase getDatabase() const;
+  std::string m_databaseFile;
+  std::unique_ptr<SQLite::Database> m_database;
 };
 
 } // namespace firelight::settings
