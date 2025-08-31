@@ -87,35 +87,6 @@ FocusScope {
                 Layout.minimumHeight: 42
 
                 spacing: 12
-
-                Button {
-                    background: Rectangle {
-                        color: "white"
-                        opacity: parent.pressed ? 0.16 : 0.1
-                        radius: 4
-                        visible: theHoverHandler.hovered && parent.enabled
-                    }
-                    HoverHandler {
-                        id: theHoverHandler
-                        cursorShape: Qt.PointingHandCursor
-                    }
-                    padding: 4
-                    Layout.fillHeight: true
-                    Layout.preferredWidth: parent.height
-                    contentItem: FLIcon {
-                        icon: "arrow-back"
-                        size: height
-                        color: parent.enabled ? "white" : "#727272"
-                    }
-
-                    enabled: Router.historySize > 1
-
-                    onClicked: {
-                        Router.goBack()
-                        // contentStack.popCurrentItem()
-                    }
-                }
-
                 Text {
                     text: content.title
                     // Layout.fillWidth: true

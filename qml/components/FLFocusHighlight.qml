@@ -8,12 +8,15 @@ Rectangle {
     property color borderColor: "#ff9f38"
     property real borderWidth: 2
     property real bounceAmplitude: 16
+    property real defaultAnchorMargins: -4
+    z: 1000
     // property MediaPlayer bumpSfx: undefined
 
     required property Item target
     required property bool usingMouse
 
     visible: !usingMouse && parent !== null
+
 
     anchors.fill: parent
     anchors.margins: -4
@@ -47,6 +50,13 @@ Rectangle {
             } else {
                 activeFocusHighlight.parent = target
             }
+
+            if (activeFocusHighlight.parent.hasOwnProperty('globalCursorSpacing')) {
+                anchors.margins = -activeFocusHighlight.parent.globalCursorSpacing
+            } else {
+                anchors.margins = activeFocusHighlight.defaultAnchorMargins
+            }
+
             return
         }
 

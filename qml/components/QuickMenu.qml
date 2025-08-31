@@ -19,6 +19,8 @@ Pane {
     contentItem: RowLayout {
         spacing: 32
          ColumnLayout {
+            id: menuColumn
+            KeyNavigation.right: quickMenuStack
              Layout.maximumWidth: 400
              Layout.alignment: Qt.AlignCenter
              FirelightMenuItem {
@@ -85,7 +87,8 @@ Pane {
                  alignRight: true
                  // enabled: false
                  onClicked: {
-                     quickMenuStack.pushItem(suspendPointMenu, {}, StackView.Immediate)
+                     quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate)
+                     quickMenuStack.forceActiveFocus()
                  }
              }
              FirelightMenuItem {
@@ -100,7 +103,8 @@ Pane {
                  alignRight: true
                  // enabled: false
                  onClicked: {
-                     quickMenuStack.pushItem(gameSettingsView, {gameSettings: root.gameSettings}, StackView.Immediate)
+                     quickMenuStack.replaceCurrentItem(gameSettingsView, {gameSettings: root.gameSettings}, StackView.Immediate)
+                     quickMenuStack.forceActiveFocus()
                  }
              }
              // Rectangle {
@@ -155,6 +159,15 @@ Pane {
              id: quickMenuStack
              Layout.fillWidth: true
              Layout.fillHeight: true
+
+             KeyNavigation.left: resumeGameButton
+
+             Keys.onBackPressed: {
+                if (quickMenuStack.depth >= 1) {
+                    quickMenuStack.pop()
+                    resumeGameButton.forceActiveFocus()
+                }
+             }
          }
 
      }
