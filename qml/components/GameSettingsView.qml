@@ -10,12 +10,13 @@ FocusScope {
     required property var level
     required property var contentHash
     required property var platformId
+    required property var platformName
 
     property var model: EmulationSettingsModel {
-                                    contentHash: root.contentHash
-                                    platformId: root.platformId
-                                    level: root.level
-                                }
+            contentHash: root.contentHash
+            platformId: root.platformId
+            level: root.level
+        }
 
     // property var level: GameSettings.Game
 
@@ -36,6 +37,45 @@ FocusScope {
             required property var section
             sectionName: section
             showTopPadding: section !== "Video"
+        }
+
+        header: ColumnLayout {
+            spacing: 8
+            width: ListView.view.width
+            TabBar {
+                Layout.alignment: Qt.AlignCenter
+                currentIndex: root.level
+                onCurrentIndexChanged: {
+                    console.log("Changing level to", currentIndex)
+                    if (root.level !== currentIndex) {
+                        root.level = currentIndex
+                    }
+                }
+
+                TabButton {
+                    width: 120
+                    text: "Game"
+                }
+                TabButton {
+                    width: 120
+                    text: "Platform"
+                }
+            }
+
+            Text {
+                Layout.alignment: Qt.AlignCenter
+                font.pixelSize: 15
+                font.family: Constants.regularFontFamily
+                font.weight: Font.Medium
+                color: ColorPalette.neutral100
+                text: root.level === 0 ? "Settings are applied only to the current game" : "Settings are applied to all " + root.platformName + " games"
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                Layout.preferredWidth: parent.width * 0.75
+                lineHeight: 1.2
+
+            }
+
         }
 
         model: root.model
@@ -64,21 +104,22 @@ FocusScope {
 
             property bool initialized: false
 
+             checked: model.value
+
             onClicked: function() {
                 ListView.view.currentIndex = index
-                checked = !checked
+                model.value = !checked
             }
 
-            Component.onCompleted: {
-                 checked = model.value
-                 initialized = true
-            }
+            // Component.onCompleted: {
+            //      checked = model.value
+            //      initialized = true
+            // }
 
             onCheckedChanged: {
-                if (!initialized) {
-                    return
-                }
-                model.value = checked
+                // if (!initialized) {
+                //     return
+                // }
             }
         }
     }
@@ -99,25 +140,22 @@ FocusScope {
                  comboSettingItem.popup.forceActiveFocus()
             }
 
-            Component.onCompleted: {
-                 for (let i = 0; i < model.options.length; i++) {
-                     console.log("Checking option:", model.options[i].value, "against", model.value)
-                     if (model.options[i].value === model.value) {
-                         console.log("Setting current index to", i)
-                         comboSettingItem.currentIndex = i
-                        initialized = true
-                         return
-                     }
-                 }
-
-                 initialized = true
+            currentIndex: {
+                for (let i = 0; i < model.options.length; i++) {
+                    if (model.options[i].value === model.value) {
+                        return i
+                    }
+                }
+                return -1
             }
 
             onCurrentValueChanged: {
-                if (!initialized) {
-                    return
+                // if (!initialized) {
+                //     return
+                // }
+                if (model.value !== currentValue) {
+                    model.value = currentValue
                 }
-                model.value = currentValue
             }
 
             label: model.label

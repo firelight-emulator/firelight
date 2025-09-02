@@ -104,12 +104,18 @@ void EmulationSettingsModel::setPlatformId(const int platformId) {
 int EmulationSettingsModel::getLevel() const { return m_level; }
 
 void EmulationSettingsModel::setLevel(int level) {
+  if (m_contentHash.isEmpty()) {
+    return;
+  }
+
   if (level == static_cast<int>(m_level)) {
     return;
   }
 
   m_level = static_cast<SettingsLevel>(level);
   emit levelChanged();
+
+  m_settingsService->setSettingsLevel(m_contentHash.toStdString(), m_level);
 
   refreshValues();
 }

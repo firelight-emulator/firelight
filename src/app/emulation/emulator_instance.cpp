@@ -21,10 +21,10 @@ EmulatorInstance::EmulatorInstance(
       m_saveSlotNumber(saveSlotNumber) {
   m_lastSaveTime = std::chrono::steady_clock::now();
 
-  // m_currentSettingsLevel =
-  //     settings::SettingsService::instance()->getSettingsLevel(m_contentHash);
+  m_currentSettingsLevel =
+      settings::SettingsService::instance()->getSettingsLevel(m_contentHash);
 
-  m_currentSettingsLevel = settings::SettingsLevel::Game;
+  // m_currentSettingsLevel = settings::SettingsLevel::Game;
 
   m_platformSettingChangedConnection =
       EventDispatcher::instance()

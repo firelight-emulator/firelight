@@ -15,6 +15,9 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
           [this](emulation::GameLoadedEvent) {
             emit gameLoaded();
             emit currentGameNameChanged();
+            emit rewindEnabledChanged();
+            emit pictureModeChanged();
+            emit aspectRatioModeChanged();
           });
 
   m_emulationStartedConnection =
@@ -44,6 +47,8 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
                 } else if (e.key == "aspect-ratio") {
                   emit aspectRatioModeChanged();
                 }
+
+                emit currentSettingsLevelChanged();
               });
 }
 QtEmulationServiceProxy::~QtEmulationServiceProxy() = default;
@@ -63,6 +68,12 @@ QString QtEmulationServiceProxy::getCurrentContentHash() const {
 
   return "";
 }
+int QtEmulationServiceProxy::getCurrentSettingsLevel() const {
+  const auto contentHash = getCurrentContentHash();
+
+  return settings::SettingsService::instance()->getSettingsLevel(
+      contentHash.toStdString());
+}
 
 int QtEmulationServiceProxy::getCurrentEntryId() const {
   const auto entry = m_emulationService->getCurrentEntry();
@@ -79,6 +90,14 @@ int QtEmulationServiceProxy::getCurrentPlatformId() const {
   }
 
   return -1;
+}
+QString QtEmulationServiceProxy::getCurrentPlatformName() const {
+  const auto platform = m_emulationService->getCurrentPlatform();
+  if (platform.has_value()) {
+    return QString::fromStdString(platform->name);
+  }
+
+  return {};
 }
 bool QtEmulationServiceProxy::isRewindEnabled() const {
   auto instance = m_emulationService->getCurrentEmulatorInstance();

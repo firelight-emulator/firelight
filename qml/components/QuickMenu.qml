@@ -192,7 +192,8 @@ Pane {
         GameSettingsView {
             contentHash: EmulationService.currentContentHash
             platformId: EmulationService.currentPlatformId
-            level: 0
+            level: EmulationService.currentSettingsLevel
+            platformName: EmulationService.currentPlatformName
         }
     }
 

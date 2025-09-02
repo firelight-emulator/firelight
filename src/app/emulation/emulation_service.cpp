@@ -197,6 +197,6 @@ std::optional<library::Entry> EmulationService::getCurrentEntry() {
 
 std::optional<platforms::Platform>
 EmulationService::getCurrentPlatform() const {
-  return {};
+  return m_currentPlatform;
 }
 } // namespace firelight::emulation
