@@ -27,3 +27,5 @@ vcpkg_installed
 .obsidian
 
 .DS_Store
+
+.claude
