@@ -5,12 +5,55 @@
 namespace firelight::settings {
 EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
     : QAbstractListModel(parent) {
+
+  m_platformSettingChangedConnection =
+      EventDispatcher::instance().subscribe<PlatformSettingChangedEvent>(
+          [this](const PlatformSettingChangedEvent &e) {
+            if (m_level != Platform) {
+              return;
+            }
+
+            if (e.platformId != m_platformId) {
+              return;
+            }
+
+            for (int i = 0; i < m_items.size(); ++i) {
+              if (m_items[i].key == QString::fromStdString(e.key)) {
+                auto &item = m_items[i];
+                setItemValue(i, item, e.value);
+                break;
+              }
+            }
+          });
+
+  m_gameSettingChangedConnection =
+      EventDispatcher::instance().subscribe<GameSettingChangedEvent>(
+          [this](const GameSettingChangedEvent &e) {
+            if (m_level != Game) {
+              return;
+            }
+
+            if (m_contentHash.isEmpty() ||
+                m_contentHash.toStdString() != e.contentHash) {
+              return;
+            }
+
+            for (int i = 0; i < m_items.size(); ++i) {
+              if (m_items[i].key == QString::fromStdString(e.key)) {
+                auto &item = m_items[i];
+                setItemValue(i, item, e.value);
+                break;
+              }
+            }
+          });
+
   m_items.emplace_back(Item{
       .label = "Picture mode",
       .key = "picture-mode",
       .section = "Video",
       .description = "Determines how the game image fills the screen.",
       .type = "combobox",
+      .defaultValue = "aspect-ratio-fill",
       .options = {
           QVariantHash{{"label", "Aspect Ratio Fill"},
                        {"value", "aspect-ratio-fill"}},
@@ -28,6 +71,7 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
           "ignores the emulator's preferred aspect ratio\nEmulator-corrected: "
           "Uses the aspect ratio preferred by the emulator",
       .type = "combobox",
+      .defaultValue = "emulator-corrected",
       .options = {
           QVariantHash{{"label", "Pixel-perfect"}, {"value", "pixel-perfect"}},
           QVariantHash{{"label", "Emulator-corrected"},
@@ -36,6 +80,7 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
   m_items.emplace_back(Item{.label = "Enable rewind",
                             .key = "rewind-enabled",
                             .section = "Rewind",
+                            .defaultValue = "true",
                             .description =
                                 "Note: Rewind is always disabled when using "
                                 "RetroAchievements in Hardcore mode.",
@@ -52,6 +97,8 @@ void EmulationSettingsModel::setPlatformId(const int platformId) {
   // TODO: do stuff
   m_platformId = platformId;
   emit platformIdChanged();
+
+  refreshValues();
 }
 
 int EmulationSettingsModel::getLevel() const { return m_level; }
@@ -63,6 +110,20 @@ void EmulationSettingsModel::setLevel(int level) {
 
   m_level = static_cast<SettingsLevel>(level);
   emit levelChanged();
+
+  refreshValues();
+}
+
+QString EmulationSettingsModel::getContentHash() const { return m_contentHash; }
+void EmulationSettingsModel::setContentHash(const QString &contentHash) {
+  if (contentHash == m_contentHash) {
+    return;
+  }
+
+  m_contentHash = contentHash;
+  emit contentHashChanged();
+
+  refreshValues();
 }
 
 int EmulationSettingsModel::rowCount(const QModelIndex &parent) const {
@@ -127,22 +188,78 @@ bool EmulationSettingsModel::setData(const QModelIndex &index,
   }
 
   auto &item = m_items[index.row()];
-  switch (role) {
-  case ValueRole: {
+  if (role == ValueRole) {
     if (item.type == "combobox" && value.canConvert<QString>()) {
-      spdlog::info("Setting combobox value to {}",
-                   value.toString().toStdString());
       item.stringValue = value.toString();
+
+      m_settingsService->setValue(m_level, m_contentHash.toStdString(),
+                                  m_platformId, item.key.toStdString(),
+                                  item.stringValue.toStdString());
       emit dataChanged(index, index, {ValueRole});
       return true;
     }
     if (item.type == "toggle" && value.canConvert<bool>()) {
       spdlog::info("Setting toggle value to {}", value.toBool());
       item.boolValue = value.toBool();
+      auto strValue = item.boolValue ? item.trueValue : item.falseValue;
+
+      m_settingsService->setValue(m_level, m_contentHash.toStdString(),
+                                  m_platformId, item.key.toStdString(),
+                                  strValue.toStdString());
+
       emit dataChanged(index, index, {ValueRole});
       return true;
     }
   }
+
+  return {};
+}
+
+void EmulationSettingsModel::refreshValues() {
+  if (m_level == Unknown) {
+    return;
   }
+
+  if ((m_level == Game && m_contentHash.isEmpty()) ||
+      (m_level == Platform && m_platformId == -1)) {
+    return;
+  }
+
+  for (auto i = 0; i < m_items.size(); ++i) {
+    auto &item = m_items[i];
+    auto valueString = item.defaultValue;
+    auto val =
+        m_settingsService->getValue(m_level, m_contentHash.toStdString(),
+                                    m_platformId, item.key.toStdString());
+    if (val) {
+      valueString = QString::fromStdString(*val);
+    }
+
+    setItemValue(i, item, valueString.toStdString());
+  }
+}
+void EmulationSettingsModel::setItemValue(int itemIndex, Item &item,
+                                          const std::string &value) {
+  if (item.type == "toggle") {
+    if (value == item.trueValue.toStdString()) {
+      item.boolValue = true;
+    } else if (value == item.falseValue.toStdString()) {
+      item.boolValue = false;
+    } else {
+      spdlog::warn("Unknown toggle value '{}' for key '{}', defaulting to "
+                   "false",
+                   value, item.key.toStdString());
+      item.boolValue = false;
+    }
+  } else if (item.type == "combobox" && !item.options.isEmpty()) {
+    for (const auto &option : item.options) {
+      if (option.value("value").toString().toStdString() == value) {
+        item.stringValue = option.value("value").toString();
+        break;
+      }
+    }
+  }
+
+  emit dataChanged(index(itemIndex), index(itemIndex), {ValueRole});
 }
 } // namespace firelight::settings

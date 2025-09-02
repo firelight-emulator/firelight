@@ -14,7 +14,7 @@ namespace firelight::settings {
  * @enum SettingsLevel
  * @brief Defines the hierarchy level for settings
  */
-enum SettingsLevel { Game, Platform };
+enum SettingsLevel { Game, Platform, Unknown };
 
 /**
  * @class ISettingsRepository

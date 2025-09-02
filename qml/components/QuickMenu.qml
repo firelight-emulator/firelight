@@ -6,7 +6,6 @@ import Firelight 1.0
 Pane {
     id: root
 
-    required property GameSettings2 gameSettings
     required property int saveSlotNumber
 
     signal resumeGame()
@@ -61,7 +60,7 @@ Pane {
                  Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                  Layout.preferredHeight: 40
                  checkable: false
-                 enabled: (!achievement_manager.loggedIn || !achievement_manager.inHardcoreMode) && gameSettings ? gameSettings.rewindEnabled : true
+                 enabled: EmulationService.rewindEnabled
                  alignRight: true
                  onClicked: {
                      root.rewindPressed()
@@ -103,7 +102,7 @@ Pane {
                  alignRight: true
                  // enabled: false
                  onClicked: {
-                     quickMenuStack.replaceCurrentItem(gameSettingsView, {gameSettings: root.gameSettings}, StackView.Immediate)
+                     quickMenuStack.replaceCurrentItem(gameSettingsView, {}, StackView.Immediate)
                      quickMenuStack.forceActiveFocus()
                  }
              }
@@ -191,6 +190,9 @@ Pane {
     Component {
         id: gameSettingsView
         GameSettingsView {
+            contentHash: EmulationService.currentContentHash
+            platformId: EmulationService.currentPlatformId
+            level: 0
         }
     }
 

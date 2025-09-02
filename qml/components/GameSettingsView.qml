@@ -6,7 +6,16 @@ import Firelight 1.0
 
 FocusScope {
     id: root
-    required property GameSettings2 gameSettings
+
+    required property var level
+    required property var contentHash
+    required property var platformId
+
+    property var model: EmulationSettingsModel {
+                                    contentHash: root.contentHash
+                                    platformId: root.platformId
+                                    level: root.level
+                                }
 
     // property var level: GameSettings.Game
 
@@ -27,13 +36,10 @@ FocusScope {
             required property var section
             sectionName: section
             showTopPadding: section !== "Video"
-
         }
 
-        model: EmulationSettingsModel {
-            platformId: 1
-            level: 0
-        }
+        model: root.model
+
         delegate: DelegateChooser {
             id: chooser
             role: "type"
@@ -56,6 +62,8 @@ FocusScope {
             width: ListView.view.width
             description: model.description
 
+            property bool initialized: false
+
             onClicked: function() {
                 ListView.view.currentIndex = index
                 checked = !checked
@@ -63,9 +71,13 @@ FocusScope {
 
             Component.onCompleted: {
                  checked = model.value
+                 initialized = true
             }
 
             onCheckedChanged: {
+                if (!initialized) {
+                    return
+                }
                 model.value = checked
             }
         }
@@ -80,9 +92,32 @@ FocusScope {
             focus: true
             width: ListView.view.width
 
+            property bool initialized: false
+
             onClicked: function() {
                  comboSettingItem.popup.open()
                  comboSettingItem.popup.forceActiveFocus()
+            }
+
+            Component.onCompleted: {
+                 for (let i = 0; i < model.options.length; i++) {
+                     console.log("Checking option:", model.options[i].value, "against", model.value)
+                     if (model.options[i].value === model.value) {
+                         console.log("Setting current index to", i)
+                         comboSettingItem.currentIndex = i
+                        initialized = true
+                         return
+                     }
+                 }
+
+                 initialized = true
+            }
+
+            onCurrentValueChanged: {
+                if (!initialized) {
+                    return
+                }
+                model.value = currentValue
             }
 
             label: model.label

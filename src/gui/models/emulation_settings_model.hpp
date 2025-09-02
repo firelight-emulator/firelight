@@ -1,5 +1,6 @@
 #pragma once
 #include <QAbstractListModel>
+#include <event_dispatcher.hpp>
 #include <settings/settings_service.hpp>
 
 namespace firelight::settings {
@@ -9,6 +10,8 @@ class EmulationSettingsModel : public QAbstractListModel {
   Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY
                  platformIdChanged)
   Q_PROPERTY(int level READ getLevel WRITE setLevel NOTIFY levelChanged)
+  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
+                 contentHashChanged)
 public:
   explicit EmulationSettingsModel(QObject *parent = nullptr);
 
@@ -17,6 +20,9 @@ public:
 
   int getLevel() const;
   void setLevel(int level);
+
+  QString getContentHash() const;
+  void setContentHash(const QString &contentHash);
 
   int rowCount(const QModelIndex &parent) const override;
   QVariant data(const QModelIndex &index, int role) const override;
@@ -28,6 +34,7 @@ public:
 signals:
   void platformIdChanged();
   void levelChanged();
+  void contentHashChanged();
 
 private:
   enum Roles {
@@ -55,14 +62,26 @@ private:
 
     // Toggle
     bool boolValue = true;
+    QString trueValue = "true";
+    QString falseValue = "false";
+
+    QString defaultValue;
 
     // Combo-box specific
     QVector<QVariantHash> options;
     bool requiresRestart = false;
   };
 
+  void refreshValues();
+  void setItemValue(int itemIndex, Item &item, const std::string &value);
+
+  SettingsService *m_settingsService = SettingsService::instance();
+  ScopedConnection m_platformSettingChangedConnection;
+  ScopedConnection m_gameSettingChangedConnection;
+
+  QString m_contentHash;
   int m_platformId = -1;
-  SettingsLevel m_level = Platform;
+  SettingsLevel m_level = Unknown;
 
   QVector<Item> m_items;
 };

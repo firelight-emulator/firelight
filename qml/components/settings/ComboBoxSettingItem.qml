@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Firelight 1.0
 
 BaseSettingItem {
+    property alias currentIndex: comboBox.currentIndex
     property alias currentValue: comboBox.currentValue
     property alias comboBoxModel: comboBox.model
     property alias popup: comboBox.popup

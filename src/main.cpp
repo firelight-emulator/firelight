@@ -257,6 +257,11 @@ int main(int argc, char *argv[]) {
 
   //   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
+  firelight::settings::SettingsService settingsService(
+      emulationSettingsManager);
+
+  firelight::settings::SettingsService::setInstance(&settingsService);
+
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0,
                                                        "GamepadStatus");

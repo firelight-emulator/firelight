@@ -59,6 +59,16 @@ struct PlatformSettingResetEvent {
 };
 
 /**
+ * @struct EmulationSettingChangedEvent
+ * @brief Event data for emulation setting changes. Occurs when a setting
+ * affecting a running emulation instance is changed.
+ */
+struct EmulationSettingChangedEvent {
+  std::string contentHash;
+  std::string key;
+};
+
+/**
  * @class SettingsService
  * @brief High-level service for managing application settings
  *
@@ -78,6 +88,9 @@ public:
    * @brief Default destructor
    */
   ~SettingsService() = default;
+
+  static void setInstance(SettingsService *instance) { s_instance = instance; }
+  static SettingsService *instance() { return s_instance; }
 
   /**
    * @brief Get the settings level for a given content hash
@@ -148,7 +161,33 @@ public:
    */
   bool resetGameValue(const std::string &contentHash, const std::string &key);
 
+  /**
+   * @brief Set a setting value based on the content hash's settings level
+   * @param level The settings level to use (Game or Platform)
+   * @param contentHash The content hash identifier
+   * @param platformId The platform identifier
+   * @param key The setting key
+   * @param value The setting value
+   * @return True if successful, false otherwise
+   */
+  bool setValue(SettingsLevel level, const std::string &contentHash,
+                int platformId, const std::string &key,
+                const std::string &value);
+
+  /**
+   * @brief Get a setting value based on the content hash's settings level
+   * @param level The settings level to use (Game or Platform)
+   * @param contentHash The content hash identifier
+   * @param platformId The platform identifier
+   * @param key The setting key
+   * @return Optional string value if the setting exists
+   */
+  std::optional<std::string> getValue(SettingsLevel level,
+                                      const std::string &contentHash,
+                                      int platformId, const std::string &key);
+
 private:
+  static SettingsService *s_instance;
   ISettingsRepository &m_settingsRepo; ///< Reference to the settings repository
 };
 

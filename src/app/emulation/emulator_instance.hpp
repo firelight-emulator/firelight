@@ -1,5 +1,6 @@
 #pragma once
 #include <audio/audio_manager.hpp>
+#include <event_dispatcher.hpp>
 #include <future>
 #include <libretro/core.hpp>
 #include <manager_accessor.hpp>
@@ -32,6 +33,15 @@ public:
   void setMuted(bool muted);
   bool isMuted() const;
 
+  void setRewindEnabled(bool enabled);
+  bool isRewindEnabled() const;
+
+  void setPictureMode(const std::string &pictureMode);
+  std::string getPictureMode() const;
+
+  void setAspectRatioMode(const std::string &aspectRatioMode);
+  std::string getAspectRatioMode() const;
+
   std::vector<uint8_t> serializeState();
   void deserializeState(const std::vector<uint8_t> &state);
 
@@ -53,6 +63,18 @@ private:
   std::string m_contentHash;
   int m_platformId;
   int m_saveSlotNumber;
+
+  bool m_isRewindEnabled = true;
+  std::string m_pictureMode = "aspect-ratio-fill";
+  std::string m_aspectRatioMode = "emulator-corrected";
+
+  // Settings
+  settings::SettingsLevel m_currentSettingsLevel;
+  void refreshAllSettings();
+
+  ScopedConnection m_platformSettingChangedConnection;
+  ScopedConnection m_gameSettingChangedConnection;
+  ScopedConnection m_settingsLevelChangedConnection;
 };
 
 } // namespace firelight::emulation

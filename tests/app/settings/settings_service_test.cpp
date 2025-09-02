@@ -272,7 +272,7 @@ TEST_F(SettingsServiceTest, MixedOperations_PublishesCorrectEvents) {
   const std::string value = "setting_value";
 
   // Perform mixed operations
-  service->setSettingsLevel(contentHash, SettingsLevel::Game);
+  service->setSettingsLevel(contentHash, Game);
   service->setPlatformValue(platformId, key, value);
   service->setGameValue(contentHash, key, value);
   service->resetPlatformValue(platformId, key);
@@ -332,6 +332,122 @@ TEST_F(SettingsServiceTest, EventsIsolatedBetweenDifferentKeysAndIds) {
             platformSettingChangedEvents[1].platformId);
   EXPECT_NE(platformSettingChangedEvents[0].key,
             platformSettingChangedEvents[1].key);
+}
+
+// Delegating setValue Tests
+TEST_F(SettingsServiceTest, SetValue_GameLevel_DelegatesToGameValue) {
+  const std::string contentHash = "test_content_hash";
+  const int platformId = 1;
+  const std::string key = "test_key";
+  const std::string value = "test_value";
+
+  bool success = service->setValue(Game, contentHash, platformId, key, value);
+
+  EXPECT_TRUE(success);
+
+  auto retrievedValue = service->getGameValue(contentHash, key);
+  ASSERT_TRUE(retrievedValue.has_value());
+  EXPECT_EQ(retrievedValue.value(), value);
+
+  ASSERT_EQ(gameSettingChangedEvents.size(), 1);
+  EXPECT_EQ(gameSettingChangedEvents[0].contentHash, contentHash);
+  EXPECT_EQ(gameSettingChangedEvents[0].key, key);
+  EXPECT_EQ(gameSettingChangedEvents[0].value, value);
+
+  EXPECT_EQ(platformSettingChangedEvents.size(), 0);
+}
+
+TEST_F(SettingsServiceTest, SetValue_PlatformLevel_DelegatesToPlatformValue) {
+  const std::string contentHash = "test_content_hash";
+  const int platformId = 1;
+  const std::string key = "test_key";
+  const std::string value = "test_value";
+
+  bool success =
+      service->setValue(Platform, contentHash, platformId, key, value);
+
+  EXPECT_TRUE(success);
+
+  auto retrievedValue = service->getPlatformValue(platformId, key);
+  ASSERT_TRUE(retrievedValue.has_value());
+  EXPECT_EQ(retrievedValue.value(), value);
+
+  ASSERT_EQ(platformSettingChangedEvents.size(), 1);
+  EXPECT_EQ(platformSettingChangedEvents[0].platformId, platformId);
+  EXPECT_EQ(platformSettingChangedEvents[0].key, key);
+  EXPECT_EQ(platformSettingChangedEvents[0].value, value);
+
+  EXPECT_EQ(gameSettingChangedEvents.size(), 0);
+}
+
+// Delegating getValue Tests
+TEST_F(SettingsServiceTest, GetValue_GameLevel_DelegatesToGameValue) {
+  const std::string contentHash = "test_content_hash";
+  const int platformId = 1;
+  const std::string key = "test_key";
+  const std::string value = "test_value";
+
+  service->setGameValue(contentHash, key, value);
+
+  auto retrievedValue = service->getValue(Game, contentHash, platformId, key);
+
+  ASSERT_TRUE(retrievedValue.has_value());
+  EXPECT_EQ(retrievedValue.value(), value);
+}
+
+TEST_F(SettingsServiceTest, GetValue_PlatformLevel_DelegatesToPlatformValue) {
+  const std::string contentHash = "test_content_hash";
+  const int platformId = 1;
+  const std::string key = "test_key";
+  const std::string value = "test_value";
+
+  service->setPlatformValue(platformId, key, value);
+
+  auto retrievedValue =
+      service->getValue(Platform, contentHash, platformId, key);
+
+  ASSERT_TRUE(retrievedValue.has_value());
+  EXPECT_EQ(retrievedValue.value(), value);
+}
+
+TEST_F(SettingsServiceTest, GetValue_NonExistent_ReturnsNullopt) {
+  const std::string contentHash = "test_content_hash";
+  const int platformId = 1;
+  const std::string key = "non_existent_key";
+
+  auto gameValue = service->getValue(Game, contentHash, platformId, key);
+  EXPECT_FALSE(gameValue.has_value());
+
+  auto platformValue =
+      service->getValue(Platform, contentHash, platformId, key);
+  EXPECT_FALSE(platformValue.has_value());
+}
+
+TEST_F(SettingsServiceTest,
+       GetValue_GameLevelWithPlatformValue_ReturnsNullopt) {
+  const std::string contentHash = "test_content_hash";
+  const int platformId = 1;
+  const std::string key = "test_key";
+  const std::string value = "test_value";
+
+  service->setPlatformValue(platformId, key, value);
+
+  auto retrievedValue = service->getValue(Game, contentHash, platformId, key);
+  EXPECT_FALSE(retrievedValue.has_value());
+}
+
+TEST_F(SettingsServiceTest,
+       GetValue_PlatformLevelWithGameValue_ReturnsNullopt) {
+  const std::string contentHash = "test_content_hash";
+  const int platformId = 1;
+  const std::string key = "test_key";
+  const std::string value = "test_value";
+
+  service->setGameValue(contentHash, key, value);
+
+  auto retrievedValue =
+      service->getValue(Platform, contentHash, platformId, key);
+  EXPECT_FALSE(retrievedValue.has_value());
 }
 
 } // namespace firelight::settings

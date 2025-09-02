@@ -4,6 +4,7 @@
 #include <utility>
 
 namespace firelight::settings {
+SettingsService *SettingsService::s_instance = nullptr;
 
 SettingsService::SettingsService(ISettingsRepository &settingsRepo)
     : m_settingsRepo(settingsRepo) {}
@@ -15,8 +16,7 @@ SettingsLevel SettingsService::getSettingsLevel(std::string contentHash) {
 
 bool SettingsService::setSettingsLevel(std::string contentHash,
                                        const SettingsLevel level) {
-  const auto result =
-      m_settingsRepo.setSettingsLevel(contentHash, level);
+  const auto result = m_settingsRepo.setSettingsLevel(contentHash, level);
   if (result) {
     EventDispatcher::instance().publish(
         SettingsLevelChangedEvent{.contentHash = contentHash, .level = level});
@@ -89,5 +89,27 @@ bool SettingsService::resetGameValue(const std::string &contentHash,
   }
 
   return result;
+}
+
+/** Delegating methods **/
+bool SettingsService::setValue(SettingsLevel level,
+                               const std::string &contentHash, int platformId,
+                               const std::string &key,
+                               const std::string &value) {
+  if (level == Game) {
+    return setGameValue(contentHash, key, value);
+  }
+
+  return setPlatformValue(platformId, key, value);
+}
+
+std::optional<std::string>
+SettingsService::getValue(SettingsLevel level, const std::string &contentHash,
+                          int platformId, const std::string &key) {
+  if (level == Game) {
+    return getGameValue(contentHash, key);
+  }
+
+  return getPlatformValue(platformId, key);
 }
 } // namespace firelight::settings
