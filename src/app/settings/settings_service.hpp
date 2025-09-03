@@ -97,7 +97,7 @@ public:
    * @param contentHash The content hash identifier
    * @return The settings level (Game or Platform)
    */
-  SettingsLevel getSettingsLevel(std::string contentHash);
+  SettingsLevel getSettingsLevel(const std::string &contentHash) const;
 
   /**
    * @brief Set the settings level for a given content hash
@@ -105,7 +105,7 @@ public:
    * @param level The settings level to set
    * @return True if successful, false otherwise
    */
-  bool setSettingsLevel(std::string contentHash, SettingsLevel level);
+  bool setSettingsLevel(const std::string &contentHash, SettingsLevel level);
 
   /**
    * @brief Get a platform-specific setting value

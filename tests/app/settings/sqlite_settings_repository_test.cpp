@@ -4,6 +4,13 @@
 
 namespace firelight::settings {
 
+/**
+ * @brief Test fixture for SqliteSettingsRepository functionality
+ * 
+ * Comprehensive test suite for the SQLite-based settings repository implementation,
+ * covering settings levels, platform-specific values, game-specific values,
+ * and data persistence operations.
+ */
 class SqliteSettingsRepositoryTest : public testing::Test {
 protected:
   std::unique_ptr<SqliteSettingsRepository> repository;
@@ -17,6 +24,12 @@ protected:
   }
 };
 
+/**
+ * @brief Test that settings level defaults to Platform for new content
+ * 
+ * Verifies that when no explicit settings level is stored for a content hash,
+ * the repository returns Platform as the default settings level.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetSettingsLevel_DefaultsToPlatform) {
   const std::string contentHash = "test_content_hash";
   
@@ -25,6 +38,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetSettingsLevel_DefaultsToPlatform) {
   EXPECT_EQ(level, SettingsLevel::Platform);
 }
 
+/**
+ * @brief Test setting and retrieving Platform settings level
+ * 
+ * Verifies that Platform settings level can be set and correctly retrieved
+ * from the SQLite database.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetAndGetSettingsLevel_Platform) {
   const std::string contentHash = "test_content_hash";
   
@@ -35,6 +54,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetAndGetSettingsLevel_Platform) {
   EXPECT_EQ(level, SettingsLevel::Platform);
 }
 
+/**
+ * @brief Test setting and retrieving Game settings level
+ * 
+ * Verifies that Game settings level can be set and correctly retrieved
+ * from the SQLite database.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetAndGetSettingsLevel_Game) {
   const std::string contentHash = "test_content_hash";
   
@@ -45,6 +70,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetAndGetSettingsLevel_Game) {
   EXPECT_EQ(level, SettingsLevel::Game);
 }
 
+/**
+ * @brief Test that settings level updates overwrite existing values
+ * 
+ * Verifies that updating the settings level for an existing content hash
+ * correctly overwrites the previous value in the database.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetSettingsLevel_UpdatesExisting) {
   const std::string contentHash = "test_content_hash";
   
@@ -61,6 +92,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetSettingsLevel_UpdatesExisting) {
   EXPECT_EQ(repository->getSettingsLevel(contentHash), SettingsLevel::Platform);
 }
 
+/**
+ * @brief Test settings level isolation between different content hashes
+ * 
+ * Verifies that settings levels are properly isolated between different
+ * content hashes and don't interfere with each other.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SettingsLevel_MultipleDifferentContentHashes) {
   const std::string contentHash1 = "content_hash_1";
   const std::string contentHash2 = "content_hash_2";
@@ -76,6 +113,12 @@ TEST_F(SqliteSettingsRepositoryTest, SettingsLevel_MultipleDifferentContentHashe
   EXPECT_EQ(repository->getSettingsLevel(contentHash3), SettingsLevel::Platform); // Should default
 }
 
+/**
+ * @brief Test settings level handling with empty content hash
+ * 
+ * Verifies that the repository can handle empty content hash strings
+ * without errors and store/retrieve settings levels correctly.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SettingsLevel_EmptyContentHash) {
   const std::string emptyContentHash = "";
   
@@ -85,6 +128,12 @@ TEST_F(SqliteSettingsRepositoryTest, SettingsLevel_EmptyContentHash) {
   EXPECT_EQ(level, SettingsLevel::Game);
 }
 
+/**
+ * @brief Test that getting non-existent platform value returns nullopt
+ * 
+ * Verifies that attempting to retrieve a platform setting that doesn't exist
+ * in the database returns std::nullopt.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_NonExistentReturnsNullopt) {
   const int platformId = 1;
   const std::string key = "test_key";
@@ -94,6 +143,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_NonExistentReturnsNullopt)
   EXPECT_FALSE(value.has_value());
 }
 
+/**
+ * @brief Test retrieving platform value after setting it
+ * 
+ * Verifies that a platform setting can be set and then successfully
+ * retrieved with the correct value.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_AfterSet) {
   const int platformId = 1;
   const std::string key = "test_key";
@@ -107,6 +162,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_AfterSet) {
   EXPECT_EQ(value.value(), expectedValue);
 }
 
+/**
+ * @brief Test platform value isolation between different platforms
+ * 
+ * Verifies that platform settings are properly isolated between different
+ * platform IDs and don't interfere with each other.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_DifferentPlatforms) {
   const int platformId1 = 1;
   const int platformId2 = 2;
@@ -126,6 +187,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_DifferentPlatforms) {
   EXPECT_EQ(retrievedValue2.value(), value2);
 }
 
+/**
+ * @brief Test platform value isolation between different keys
+ * 
+ * Verifies that different setting keys for the same platform are properly
+ * isolated and can store different values.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_DifferentKeys) {
   const int platformId = 1;
   const std::string key1 = "key1";
@@ -145,6 +212,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_DifferentKeys) {
   EXPECT_EQ(retrievedValue2.value(), value2);
 }
 
+/**
+ * @brief Test updating existing platform values
+ * 
+ * Verifies that updating an existing platform setting overwrites the
+ * previous value correctly.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_UpdateExisting) {
   const int platformId = 1;
   const std::string key = "test_key";
@@ -163,6 +236,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_UpdateExisting) {
   EXPECT_EQ(value2.value(), updatedValue);
 }
 
+/**
+ * @brief Test storing and retrieving empty platform values
+ * 
+ * Verifies that empty string values can be stored and retrieved correctly
+ * for platform settings.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_EmptyValue) {
   const int platformId = 1;
   const std::string key = "test_key";
@@ -175,6 +254,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetPlatformValue_EmptyValue) {
   EXPECT_EQ(value.value(), emptyValue);
 }
 
+/**
+ * @brief Test that setPlatformValue creates new database records
+ * 
+ * Verifies that setting a platform value for a new key creates a new
+ * record in the database and can be retrieved.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetPlatformValue_CreatesNewRecord) {
   const int platformId = 1;
   const std::string key = "new_key";
@@ -190,6 +275,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetPlatformValue_CreatesNewRecord) {
   EXPECT_EQ(retrievedValue.value(), value);
 }
 
+/**
+ * @brief Test that setPlatformValue updates existing database records
+ * 
+ * Verifies that setting a platform value for an existing key updates
+ * the existing record rather than creating a duplicate.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetPlatformValue_UpdatesExistingRecord) {
   const int platformId = 1;
   const std::string key = "existing_key";
@@ -204,6 +295,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetPlatformValue_UpdatesExistingRecord) {
   EXPECT_EQ(retrievedValue.value(), updatedValue);
 }
 
+/**
+ * @brief Test setting multiple platform values across platforms and keys
+ * 
+ * Verifies that multiple platform settings can be stored simultaneously
+ * across different platform IDs and setting keys without conflicts.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetPlatformValue_MultiplePlatformsAndKeys) {
   const int platformId1 = 1;
   const int platformId2 = 2;
@@ -225,6 +322,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetPlatformValue_MultiplePlatformsAndKeys) 
   EXPECT_EQ(repository->getPlatformValue(platformId2, key2).value(), value4);
 }
 
+/**
+ * @brief Test platform values with special characters
+ * 
+ * Verifies that platform setting values containing special characters,
+ * spaces, and symbols are stored and retrieved correctly.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetPlatformValue_WithSpecialCharacters) {
   const int platformId = 1;
   const std::string key = "special_key";
@@ -237,6 +340,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetPlatformValue_WithSpecialCharacters) {
   EXPECT_EQ(retrievedValue.value(), value);
 }
 
+/**
+ * @brief Test that resetPlatformValue removes existing values
+ * 
+ * Verifies that resetting a platform setting removes the value from
+ * the database and subsequent queries return nullopt.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_RemovesExistingValue) {
   const int platformId = 1;
   const std::string key = "test_key";
@@ -253,6 +362,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_RemovesExistingValue) {
   EXPECT_FALSE(retrievedValue.has_value());
 }
 
+/**
+ * @brief Test that resetting non-existent platform values doesn't error
+ * 
+ * Verifies that attempting to reset a platform setting that doesn't exist
+ * doesn't cause errors or exceptions.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_NonExistentKeyNoError) {
   const int platformId = 1;
   const std::string key = "non_existent_key";
@@ -264,6 +379,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_NonExistentKeyNoError) {
   EXPECT_FALSE(retrievedValue.has_value());
 }
 
+/**
+ * @brief Test that resetPlatformValue only removes the specific key
+ * 
+ * Verifies that resetting one platform setting key doesn't affect other
+ * setting keys for the same platform.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_OnlyRemovesSpecificKey) {
   const int platformId = 1;
   const std::string key1 = "key1";
@@ -281,6 +402,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_OnlyRemovesSpecificKey) 
   EXPECT_EQ(repository->getPlatformValue(platformId, key2).value(), value2);
 }
 
+/**
+ * @brief Test that resetPlatformValue only removes the specific platform
+ * 
+ * Verifies that resetting a platform setting only affects that platform
+ * and doesn't remove the same key from other platforms.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_OnlyRemovesSpecificPlatform) {
   const int platformId1 = 1;
   const int platformId2 = 2;
@@ -298,6 +425,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_OnlyRemovesSpecificPlatf
   EXPECT_EQ(repository->getPlatformValue(platformId2, key).value(), value2);
 }
 
+/**
+ * @brief Test that platform values can be set after being reset
+ * 
+ * Verifies that after resetting a platform setting, a new value can be
+ * set for the same key and retrieved correctly.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_CanSetAfterReset) {
   const int platformId = 1;
   const std::string key = "test_key";
@@ -313,6 +446,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetPlatformValue_CanSetAfterReset) {
   EXPECT_EQ(retrievedValue.value(), newValue);
 }
 
+/**
+ * @brief Test that getting non-existent game value returns nullopt
+ * 
+ * Verifies that attempting to retrieve a game setting that doesn't exist
+ * in the database returns std::nullopt.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetGameValue_NonExistentReturnsNullopt) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "test_key";
@@ -322,6 +461,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetGameValue_NonExistentReturnsNullopt) {
   EXPECT_FALSE(value.has_value());
 }
 
+/**
+ * @brief Test retrieving game value after setting it
+ * 
+ * Verifies that a game setting can be set and then successfully
+ * retrieved with the correct value.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetGameValue_AfterSet) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "test_key";
@@ -335,6 +480,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetGameValue_AfterSet) {
   EXPECT_EQ(value.value(), expectedValue);
 }
 
+/**
+ * @brief Test game value isolation between different content hashes
+ * 
+ * Verifies that game settings are properly isolated between different
+ * content hashes and don't interfere with each other.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetGameValue_DifferentContentHashes) {
   const std::string contentHash1 = "content_hash_1";
   const std::string contentHash2 = "content_hash_2";
@@ -354,6 +505,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetGameValue_DifferentContentHashes) {
   EXPECT_EQ(retrievedValue2.value(), value2);
 }
 
+/**
+ * @brief Test game value isolation between different keys
+ * 
+ * Verifies that different setting keys for the same content hash are
+ * properly isolated and can store different values.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetGameValue_DifferentKeys) {
   const std::string contentHash = "test_content_hash";
   const std::string key1 = "key1";
@@ -373,6 +530,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetGameValue_DifferentKeys) {
   EXPECT_EQ(retrievedValue2.value(), value2);
 }
 
+/**
+ * @brief Test updating existing game values
+ * 
+ * Verifies that updating an existing game setting overwrites the
+ * previous value correctly.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetGameValue_UpdateExisting) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "test_key";
@@ -391,6 +554,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetGameValue_UpdateExisting) {
   EXPECT_EQ(value2.value(), updatedValue);
 }
 
+/**
+ * @brief Test storing and retrieving empty game values
+ * 
+ * Verifies that empty string values can be stored and retrieved correctly
+ * for game settings.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GetGameValue_EmptyValue) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "test_key";
@@ -403,6 +572,12 @@ TEST_F(SqliteSettingsRepositoryTest, GetGameValue_EmptyValue) {
   EXPECT_EQ(value.value(), emptyValue);
 }
 
+/**
+ * @brief Test that setGameValue creates new database records
+ * 
+ * Verifies that setting a game value for a new key creates a new
+ * record in the database and can be retrieved.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetGameValue_CreatesNewRecord) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "new_key";
@@ -418,6 +593,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetGameValue_CreatesNewRecord) {
   EXPECT_EQ(retrievedValue.value(), value);
 }
 
+/**
+ * @brief Test that setGameValue updates existing database records
+ * 
+ * Verifies that setting a game value for an existing key updates
+ * the existing record rather than creating a duplicate.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetGameValue_UpdatesExistingRecord) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "existing_key";
@@ -432,6 +613,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetGameValue_UpdatesExistingRecord) {
   EXPECT_EQ(retrievedValue.value(), updatedValue);
 }
 
+/**
+ * @brief Test setting multiple game values across content hashes and keys
+ * 
+ * Verifies that multiple game settings can be stored simultaneously
+ * across different content hashes and setting keys without conflicts.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetGameValue_MultipleContentHashesAndKeys) {
   const std::string contentHash1 = "hash1";
   const std::string contentHash2 = "hash2";
@@ -453,6 +640,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetGameValue_MultipleContentHashesAndKeys) 
   EXPECT_EQ(repository->getGameValue(contentHash2, key2).value(), value4);
 }
 
+/**
+ * @brief Test game values with special characters
+ * 
+ * Verifies that game setting values containing special characters,
+ * spaces, and symbols are stored and retrieved correctly.
+ */
 TEST_F(SqliteSettingsRepositoryTest, SetGameValue_WithSpecialCharacters) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "special_key";
@@ -465,6 +658,12 @@ TEST_F(SqliteSettingsRepositoryTest, SetGameValue_WithSpecialCharacters) {
   EXPECT_EQ(retrievedValue.value(), value);
 }
 
+/**
+ * @brief Test that resetGameValue removes existing values
+ * 
+ * Verifies that resetting a game setting removes the value from
+ * the database and subsequent queries return nullopt.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_RemovesExistingValue) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "test_key";
@@ -481,6 +680,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_RemovesExistingValue) {
   EXPECT_FALSE(retrievedValue.has_value());
 }
 
+/**
+ * @brief Test that resetting non-existent game values doesn't error
+ * 
+ * Verifies that attempting to reset a game setting that doesn't exist
+ * doesn't cause errors or exceptions.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_NonExistentKeyNoError) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "non_existent_key";
@@ -492,6 +697,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_NonExistentKeyNoError) {
   EXPECT_FALSE(retrievedValue.has_value());
 }
 
+/**
+ * @brief Test that resetGameValue only removes the specific key
+ * 
+ * Verifies that resetting one game setting key doesn't affect other
+ * setting keys for the same content hash.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_OnlyRemovesSpecificKey) {
   const std::string contentHash = "test_content_hash";
   const std::string key1 = "key1";
@@ -509,6 +720,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_OnlyRemovesSpecificKey) {
   EXPECT_EQ(repository->getGameValue(contentHash, key2).value(), value2);
 }
 
+/**
+ * @brief Test that resetGameValue only removes the specific content hash
+ * 
+ * Verifies that resetting a game setting only affects that content hash
+ * and doesn't remove the same key from other content hashes.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_OnlyRemovesSpecificContentHash) {
   const std::string contentHash1 = "hash1";
   const std::string contentHash2 = "hash2";
@@ -526,6 +743,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_OnlyRemovesSpecificContentHa
   EXPECT_EQ(repository->getGameValue(contentHash2, key).value(), value2);
 }
 
+/**
+ * @brief Test that game values can be set after being reset
+ * 
+ * Verifies that after resetting a game setting, a new value can be
+ * set for the same key and retrieved correctly.
+ */
 TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_CanSetAfterReset) {
   const std::string contentHash = "test_content_hash";
   const std::string key = "test_key";
@@ -541,6 +764,12 @@ TEST_F(SqliteSettingsRepositoryTest, ResetGameValue_CanSetAfterReset) {
   EXPECT_EQ(retrievedValue.value(), newValue);
 }
 
+/**
+ * @brief Test that game values are isolated from platform values
+ * 
+ * Verifies that game settings and platform settings are completely isolated
+ * and don't interfere with each other, even when using the same keys.
+ */
 TEST_F(SqliteSettingsRepositoryTest, GameValue_IsolatedFromPlatformValue) {
   const std::string contentHash = "test_content_hash";
   const int platformId = 1;

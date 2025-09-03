@@ -10,11 +10,12 @@ SettingsService::SettingsService(ISettingsRepository &settingsRepo)
     : m_settingsRepo(settingsRepo) {}
 
 /** Settings level **/
-SettingsLevel SettingsService::getSettingsLevel(std::string contentHash) {
-  return m_settingsRepo.getSettingsLevel(std::move(contentHash));
+SettingsLevel
+SettingsService::getSettingsLevel(const std::string &contentHash) const {
+  return m_settingsRepo.getSettingsLevel(contentHash);
 }
 
-bool SettingsService::setSettingsLevel(std::string contentHash,
+bool SettingsService::setSettingsLevel(const std::string &contentHash,
                                        const SettingsLevel level) {
   const auto result = m_settingsRepo.setSettingsLevel(contentHash, level);
   if (result) {

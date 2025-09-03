@@ -6,6 +6,7 @@
 #include <db/sqlite_userdata_database.hpp>
 #include <gtest/gtest.h>
 #include <manager_accessor.hpp>
+#include <settings/settings_service.hpp>
 #include <settings/sqlite_settings_repository.hpp>
 
 int main(int argc, char **argv) {
@@ -18,6 +19,10 @@ int main(int argc, char **argv) {
       userdata, gameImageProvider));
 
   firelight::settings::SqliteSettingsRepository settings(":memory:");
+  auto settingsService =
+      std::make_shared<firelight::settings::SettingsService>(settings);
+  firelight::settings::SettingsService::setInstance(settingsService.get());
+
   auto emulatorConfigManager =
       std::make_shared<EmulatorConfigManager>(userdata);
   firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);

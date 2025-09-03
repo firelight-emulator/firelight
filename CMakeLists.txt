@@ -351,6 +351,7 @@ add_executable(fl_test
         tests/app/input/test_gamepad.cpp
         tests/app/input/test_gamepad.hpp
         tests/app/emulation/emulation_service_test.cpp
+        tests/app/emulation/emulator_instance_test.cpp
         tests/mocks/mock_library.hpp
 )
 
