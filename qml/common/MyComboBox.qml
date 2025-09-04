@@ -55,11 +55,16 @@ ComboBox {
         required property var model
         required property int index
 
+        property var showGlobalCursor: true
+        property var globalCursorSpacing: 1
+
+        // focus: index === control.currentIndex
+
         background: Rectangle {
             color: control.highlightedIndex === index ? ColorPalette.neutral800 : ColorPalette.neutral900
         }
 
-        width: control.width - 4
+        width: control.width
         contentItem: RowLayout {
             Text {
                 Layout.fillWidth: true
@@ -90,22 +95,24 @@ ComboBox {
         implicitHeight: contentItem.implicitHeight + padding * 2
         padding: 4
 
+        focus: true
+
 
         contentItem: ListView {
             id: theList
             property real scrollMultiplier: 4.0
             // property int maxHeight: delegate ? 8 * (delegate.height + 1) : 0
             property int maxHeight: 398
+            focus: true
 
             boundsBehavior: Flickable.StopAtBounds
             clip: true
-            implicitHeight: contentHeight > maxHeight ? maxHeight : contentHeight
+            implicitHeight: Math.min(contentHeight, maxHeight)
             model: control.popup.visible ? control.delegateModel : null
 
-            highlightFollowsCurrentItem: false
-
-            highlight: Item {
-            }
+            highlightMoveDuration: 80
+            highlightMoveVelocity: -1
+            highlightRangeMode: InputMethodManager.usingMouse ? ListView.NoHighlightRange : ListView.ApplyRange
 
 
             // MouseArea {

@@ -50,6 +50,8 @@ FocusScope {
 
                 property string sectionTitle: "All games"
 
+                KeyNavigation.down: createFolderButton
+
                 labelText: "All games"
                 property bool showGlobalCursor: true
                 // labelIcon: "\ue40a"
@@ -84,6 +86,9 @@ FocusScope {
                     Layout.fillWidth: true
                 }
                 FirelightButton {
+                    id: createFolderButton
+                    KeyNavigation.down: folderList.count > 0 ? folderList : null
+
                     iconCode: "\ue2cc"
                     tooltipLabel: "New folder"
                     flat: true
@@ -117,8 +122,9 @@ FocusScope {
                 Layout.fillHeight: true
                 spacing: 4
 
-                interactive: contentHeight > height
+                // interactive: contentHeight > height
 
+                boundsBehavior: Flickable.StopAtBounds
                 currentIndex: 0
 
                 onCurrentIndexChanged: {

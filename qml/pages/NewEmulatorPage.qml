@@ -32,10 +32,6 @@ FocusScope {
     }
 
     required property StackView stackView
-    property GameSettings2 gameSettings: GameSettings2 {
-        platformId: root.platformId
-        contentHash: root.contentHash
-    }
 
     property alias audioBufferLevel: emulator.audioBufferLevel
 
@@ -62,16 +58,6 @@ FocusScope {
 
     Keys.onDigit8Pressed: {
         emulator.decrementPlaybackMultiplier()
-    }
-
-    Keys.onDigit7Pressed: {
-        if (gameSettings.pictureMode === "stretch") {
-            gameSettings.pictureMode = "aspect-ratio-fill"
-        } else if (gameSettings.pictureMode === "aspect-ratio-fill") {
-            gameSettings.pictureMode = "integer-scale"
-        } else if (gameSettings.pictureMode === "integer-scale") {
-            gameSettings.pictureMode = "stretch"
-        }
     }
 
     // Keys.onPressed: function(event) {
@@ -123,7 +109,7 @@ FocusScope {
     }
 
     function createRewindPoints() {
-        if (!gameSettings.rewindEnabled) {
+        if (!EmulationService.rewindEnabled) {
             return
         }
         emulator.createRewindPoints()
@@ -162,11 +148,9 @@ FocusScope {
         layer.enabled: true
 
 
-        property string pictureMode: gameSettings.pictureMode
         property real aspectRatio: {
-            let mode = gameSettings.aspectRatioMode
-
-             if (mode === "core-corrected") {
+            let mode = EmulationService.aspectRatioMode
+             if (mode === "emulator-corrected") {
                  return emulator.videoAspectRatio
              } else {
                  return emulator.trueAspectRatio
@@ -206,29 +190,29 @@ FocusScope {
         }
 
         width: {
-            if (emulator.pictureMode === "stretch") {
+            if (EmulationService.pictureMode === "stretch") {
                 return root.width
-            } else if (emulator.pictureMode === "aspect-ratio-fill") {
+            } else if (EmulationService.pictureMode === "aspect-ratio-fill") {
                 return emulator.videoWidth * fitScale
-            } else if (emulator.pictureMode === "integer-scale") {
+            } else if (EmulationService.pictureMode === "integer-scale") {
                 return sourceWidth * integerScale
             }
 
             return emulator.videoWidth
         }
         height: {
-            if (emulator.pictureMode === "stretch") {
+            if (EmulationService.pictureMode === "stretch") {
                 return root.height
-            } else if (emulator.pictureMode === "aspect-ratio-fill") {
+            } else if (EmulationService.pictureMode === "aspect-ratio-fill") {
                 return (emulator.videoWidth * fitScale) / aspectRatio
-            } else if (emulator.pictureMode === "integer-scale"){
+            } else if (EmulationService.pictureMode === "integer-scale"){
                 return sourceHeight * integerScale
             }
 
             return emulator.videoHeight
         }
 
-        rewindEnabled: root.gameSettings.rewindEnabled
+        rewindEnabled: EmulationService.rewindEnabled
 
         smooth: false
 

@@ -51,10 +51,11 @@
 #include "gui/EventEmitter.h"
 #include "gui/filesystem_utils.hpp"
 #include "gui/gamepad_profile_item.hpp"
+#include "gui/models/emulation_settings_model.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "input2/sdl/sdl_input_service.hpp"
-#include "settings/sqlite_emulation_settings_manager.hpp"
+#include "settings/sqlite_settings_repository.hpp"
 
 #include <input/gui/input_mappings_model.hpp>
 #include <input/keyboard_input_handler.hpp>
@@ -239,8 +240,8 @@ int main(int argc, char *argv[]) {
   firelight::mods::SqliteModRepository modRepository;
   firelight::ManagerAccessor::setModRepository(&modRepository);
 
-  firelight::settings::SqliteEmulationSettingsManager emulationSettingsManager(
-      defaultAppDataPathString + "/settings.db");
+  firelight::settings::SqliteSettingsRepository emulationSettingsManager(
+      (defaultAppDataPathString + "/settings.db").toStdString());
   firelight::ManagerAccessor::setEmulationSettingsManager(
       &emulationSettingsManager);
   //   QObject::connect(
@@ -255,6 +256,11 @@ int main(int argc, char *argv[]) {
   //   libraryManager.startScan();
 
   //   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
+
+  firelight::settings::SettingsService settingsService(
+      emulationSettingsManager);
+
+  firelight::settings::SettingsService::setInstance(&settingsService);
 
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0,
@@ -278,6 +284,8 @@ int main(int argc, char *argv[]) {
                                                         "InputMappingsModel");
   qmlRegisterType<firelight::gui::ControllerListModel>("Firelight", 1, 0,
                                                        "GamepadListModel");
+  qmlRegisterType<firelight::settings::EmulationSettingsModel>(
+      "Firelight", 1, 0, "EmulationSettingsModel");
 
   QNetworkInformation::loadDefaultBackend();
   if (QNetworkInformation::instance()->reachability() ==

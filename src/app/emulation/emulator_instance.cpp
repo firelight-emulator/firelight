@@ -7,6 +7,7 @@
 #include <spdlog/spdlog.h>
 
 #include <audio/audio_manager.hpp>
+#include <settings/settings_service.hpp>
 #include <utility>
 
 namespace firelight::emulation {
@@ -19,6 +20,58 @@ EmulatorInstance::EmulatorInstance(
       m_contentHash(std::move(contentHash)), m_platformId(platformId),
       m_saveSlotNumber(saveSlotNumber) {
   m_lastSaveTime = std::chrono::steady_clock::now();
+
+  m_currentSettingsLevel =
+      settings::SettingsService::instance()->getSettingsLevel(m_contentHash);
+
+  // m_currentSettingsLevel = settings::SettingsLevel::Game;
+
+  m_platformSettingChangedConnection =
+      EventDispatcher::instance()
+          .subscribe<settings::PlatformSettingChangedEvent>(
+              [this](const settings::PlatformSettingChangedEvent &e) {
+                if (e.platformId != m_platformId) {
+                  return;
+                }
+
+                if (m_currentSettingsLevel !=
+                    settings::SettingsLevel::Platform) {
+                  return;
+                }
+
+                refreshAllSettings();
+              });
+
+  m_gameSettingChangedConnection =
+      EventDispatcher::instance().subscribe<settings::GameSettingChangedEvent>(
+          [this](const settings::GameSettingChangedEvent &e) {
+            spdlog::info("Game setting changed event for {} (current {})",
+                         e.contentHash, m_contentHash);
+            if (e.contentHash != m_contentHash) {
+              return;
+            }
+
+            if (m_currentSettingsLevel != settings::SettingsLevel::Game) {
+              return;
+            }
+
+            refreshAllSettings();
+          });
+
+  m_settingsLevelChangedConnection =
+      EventDispatcher::instance()
+          .subscribe<settings::SettingsLevelChangedEvent>(
+              [this](const settings::SettingsLevelChangedEvent &e) {
+                if (e.contentHash != m_contentHash) {
+                  return;
+                }
+
+                m_currentSettingsLevel = e.level;
+
+                refreshAllSettings();
+              });
+
+  refreshAllSettings();
 }
 
 EmulatorInstance::~EmulatorInstance() {
@@ -66,7 +119,6 @@ void EmulatorInstance::runFrame() {
   //                  .time_since_epoch()
   //                  .count());
   if (now - std::chrono::seconds(m_saveIntervalSeconds) > m_lastSaveTime) {
-    spdlog::info("Save timer triggered");
     m_lastSaveTime = now;
     save();
   }
@@ -104,6 +156,32 @@ bool EmulatorInstance::isMuted() const {
   }
   return m_audioManager->isMuted();
 }
+void EmulatorInstance::setRewindEnabled(const bool enabled) {
+  m_isRewindEnabled = enabled;
+}
+
+bool EmulatorInstance::isRewindEnabled() const {
+  if (!m_isRewindEnabled) {
+    return false;
+  }
+
+  if (getAchievementManager()->loggedIn() &&
+      getAchievementManager()->hardcoreModeActive()) {
+    return false;
+  }
+
+  return true;
+}
+void EmulatorInstance::setPictureMode(const std::string &pictureMode) {
+  m_pictureMode = pictureMode;
+}
+std::string EmulatorInstance::getPictureMode() const { return m_pictureMode; }
+void EmulatorInstance::setAspectRatioMode(const std::string &aspectRatioMode) {
+  m_aspectRatioMode = aspectRatioMode;
+}
+std::string EmulatorInstance::getAspectRatioMode() const {
+  return m_aspectRatioMode;
+}
 
 std::vector<uint8_t> EmulatorInstance::serializeState() {
   return m_core->serializeState();
@@ -112,4 +190,34 @@ void EmulatorInstance::deserializeState(const std::vector<uint8_t> &state) {
   m_core->deserializeState(state);
 }
 ::libretro::Core *EmulatorInstance::getCore() { return m_core.get(); }
+
+void EmulatorInstance::refreshAllSettings() {
+
+  // Rewind enabled
+  setRewindEnabled(settings::SettingsService::instance()
+                       ->getValue(m_currentSettingsLevel, m_contentHash,
+                                  m_platformId, "rewind-enabled")
+                       .value_or("true") == "true");
+
+  EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
+      .contentHash = m_contentHash, .key = "rewind-enabled"});
+
+  // Picture mode
+  setPictureMode(settings::SettingsService::instance()
+                     ->getValue(m_currentSettingsLevel, m_contentHash,
+                                m_platformId, "picture-mode")
+                     .value_or("aspect-ratio-fill"));
+
+  EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
+      .contentHash = m_contentHash, .key = "picture-mode"});
+
+  // Aspect ratio mode
+  setAspectRatioMode(settings::SettingsService::instance()
+                         ->getValue(m_currentSettingsLevel, m_contentHash,
+                                    m_platformId, "aspect-ratio")
+                         .value_or("emulator-corrected"));
+
+  EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
+      .contentHash = m_contentHash, .key = "aspect-ratio"});
+}
 } // namespace firelight::emulation

@@ -13,23 +13,25 @@ Button {
 
     signal startGameClicked(int entryId)
 
-    // TapHandler {
-    //     acceptedButtons: Qt.LeftButton
-    //     // onDoubleTapped: {
-    //     //     startGameClicked(root.model.entryId)
-    //     // }
-    //
-    //     onSingleTapped: function(event, button) {
-    //
-    //     }
-    // }
+    Keys.onSpacePressed: {
+        startGameClicked(root.model.entryId)
+    }
 
-    onClicked: function() {
-        if (root.ListView.view.currentIndex !== root.index) {
-            // theList.highlightRangeMode = ListView.NoHighlightRange
-            root.ListView.view.currentIndex = root.index
-        } else {
+    Keys.onSelectPressed: {
+        startGameClicked(root.model.entryId)
+    }
+
+    TapHandler {
+        acceptedButtons: Qt.LeftButton
+        onDoubleTapped: {
             startGameClicked(root.model.entryId)
+        }
+
+        onSingleTapped: function(event, button) {
+            if (root.ListView.view.currentIndex !== root.index) {
+                // theList.highlightRangeMode = ListView.NoHighlightRange
+                root.ListView.view.currentIndex = root.index
+            }
         }
     }
 

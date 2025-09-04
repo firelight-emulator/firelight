@@ -7,81 +7,109 @@ FocusScope {
     id: root
 
     required property string label
-    // required property Component control
+    required property Item control
     property string description: ""
 
-    implicitHeight: button.implicitHeight + descriptionText.implicitHeight + 4
+    property var onClicked: null
+
+    implicitHeight: button.implicitHeight
     implicitWidth: button.implicitWidth
 
     Button {
         id: button
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.left: parent.left
-        height: 68
-        padding: 12
+        anchors.fill: parent
 
-        focus: true
+        background: Item {}
 
-        property bool showGlobalCursor: true
-
-        // background: Rectangle {
-        //     color: ColorPalette.neutral300
-        //     radius: 8
-        //     border.color: ColorPalette.neutral500
-        //     opacity: parent.hovered || (!InputMethodManager.usingMouse && root.activeFocus) ? 0.2 : 0.1
-        //
-        //     Behavior on opacity {
-        //         NumberAnimation {
-        //             duration: 100
-        //             easing.type: Easing.InOutQuad
-        //         }
-        //     }
-        // }
-
-        background: Item {
+        contentItem: ColumnLayout {
+            spacing: 0
             Rectangle {
-                width: parent.width
-                anchors.bottom: parent.bottom
-                color: ColorPalette.neutral300
-            }
-            Rectangle {
-                width: parent.width
-                anchors.top: parent.top
-                color: ColorPalette.neutral300
-            }
-        }
-
-        contentItem: RowLayout {
-            Text {
-                id: labelText
                 Layout.fillWidth: true
-                // Layout.preferredHeight: 48
-                text: root.label
-                color: ColorPalette.neutral100
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 16
-                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                font.family: Constants.regularFontFamily
-                font.weight: Font.DemiBold
+                Layout.maximumHeight: 1
+                Layout.preferredHeight: 1
+                color: ColorPalette.neutral300
+                opacity: 0.25
             }
+            Button {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 60
+                padding: 8
+
+                focus: true
+
+                property bool showGlobalCursor: true
+                property var globalCursorSpacing: 1
+
+                 HoverHandler {
+                     cursorShape: Qt.PointingHandCursor
+                 }
+
+
+                onClicked: {
+                    if (root.onClicked) {
+                        root.onClicked()
+                    }
+                }
+
+                background: Rectangle {
+                    color: ColorPalette.neutral300
+                    opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 100
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+                }
+
+                contentItem: RowLayout {
+                    height: 48
+                    Text {
+                        id: labelText
+                        Layout.fillWidth: true
+                        text: root.label
+                        color: ColorPalette.neutral100
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 16
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        font.family: Constants.regularFontFamily
+                        font.weight: Font.DemiBold
+                    }
+                    Pane {
+                        id: controlItem
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenters
+                        background: Item{}
+                        padding: 0
+                        contentItem: root.control
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.maximumHeight: 1
+                Layout.preferredHeight: 1
+                color: ColorPalette.neutral300
+                opacity: 0.25
+            }
+
+            Text {
+                id: descriptionText
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                visible: root.description !== ""
+
+                font.pixelSize: 15
+                font.family: Constants.regularFontFamily
+                font.weight: Font.Medium
+                lineHeight: 1.2
+                color: ColorPalette.neutral100
+                text: root.description
+                wrapMode: Text.WordWrap
+            }
+
+
         }
-    }
-
-    Text {
-        id: descriptionText
-        anchors.top: button.bottom
-        anchors.topMargin: 4
-        anchors.left: parent.left
-        anchors.leftMargin: button.leftPadding
-        visible: root.description !== ""
-
-        font.pixelSize: 15
-        font.family: Constants.regularFontFamily
-        font.weight: Font.Medium
-        lineHeight: 1.2
-        color: ColorPalette.neutral100
-        text: root.description
-        wrapMode: Text.WordWrap
     }
 }

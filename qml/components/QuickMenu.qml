@@ -6,7 +6,6 @@ import Firelight 1.0
 Pane {
     id: root
 
-    required property GameSettings2 gameSettings
     required property int saveSlotNumber
 
     signal resumeGame()
@@ -19,6 +18,8 @@ Pane {
     contentItem: RowLayout {
         spacing: 32
          ColumnLayout {
+            id: menuColumn
+            KeyNavigation.right: quickMenuStack
              Layout.maximumWidth: 400
              Layout.alignment: Qt.AlignCenter
              FirelightMenuItem {
@@ -59,7 +60,7 @@ Pane {
                  Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                  Layout.preferredHeight: 40
                  checkable: false
-                 enabled: (!achievement_manager.loggedIn || !achievement_manager.inHardcoreMode) && gameSettings ? gameSettings.rewindEnabled : true
+                 enabled: EmulationService.rewindEnabled
                  alignRight: true
                  onClicked: {
                      root.rewindPressed()
@@ -85,7 +86,8 @@ Pane {
                  alignRight: true
                  // enabled: false
                  onClicked: {
-                     quickMenuStack.pushItem(suspendPointMenu, {}, StackView.Immediate)
+                     quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate)
+                     quickMenuStack.forceActiveFocus()
                  }
              }
              FirelightMenuItem {
@@ -100,7 +102,8 @@ Pane {
                  alignRight: true
                  // enabled: false
                  onClicked: {
-                     quickMenuStack.pushItem(gameSettingsView, {gameSettings: root.gameSettings}, StackView.Immediate)
+                     quickMenuStack.replaceCurrentItem(gameSettingsView, {}, StackView.Immediate)
+                     quickMenuStack.forceActiveFocus()
                  }
              }
              // Rectangle {
@@ -155,6 +158,15 @@ Pane {
              id: quickMenuStack
              Layout.fillWidth: true
              Layout.fillHeight: true
+
+             KeyNavigation.left: resumeGameButton
+
+             Keys.onBackPressed: {
+                if (quickMenuStack.depth >= 1) {
+                    quickMenuStack.pop()
+                    resumeGameButton.forceActiveFocus()
+                }
+             }
          }
 
      }
@@ -178,6 +190,10 @@ Pane {
     Component {
         id: gameSettingsView
         GameSettingsView {
+            contentHash: EmulationService.currentContentHash
+            platformId: EmulationService.currentPlatformId
+            level: EmulationService.currentSettingsLevel
+            platformName: EmulationService.currentPlatformName
         }
     }
 

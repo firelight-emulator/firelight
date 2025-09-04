@@ -16,118 +16,68 @@ FirelightDialog {
         usernameTextInput.text = ""
     }
 
-    contentItem: RowLayout {
-        spacing: 16
-        // Rectangle {
-        //     implicitHeight: 128
-        //     implicitWidth: 128
-        //     Layout.alignment: Qt.AlignTop
-        //     color: "red"
-        // }
+    contentItem: FocusScope {
+        focus: true
         ColumnLayout {
+            anchors.fill: parent
+        Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
-            Pane {
-                 id: thePane
-                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                 Layout.fillWidth: true
-                 Layout.preferredHeight: 48
-                 background: Rectangle {
-                     color: ColorPalette.neutral800
-                     radius: 4
-                 }
+        }
+        Pane {
+          id: thePane
+          Layout.fillWidth: true
+          implicitHeight: 48
+          property var globalCursorSpacing: 0
 
-                 focus: true
+          background: Rectangle {
+              color: ColorPalette.neutral800
+              radius: 4
+          }
 
-                 HoverHandler {
-                     acceptedDevices: PointerDevice.Mouse
-                     cursorShape: Qt.IBeamCursor
-                 }
+          HoverHandler {
+              acceptedDevices: PointerDevice.Mouse
+              cursorShape: Qt.IBeamCursor
+          }
 
-                 contentItem: Item {
-                     Text {
-                         anchors.fill: parent
-                          font.pixelSize: 16
-                         font.family: Constants.regularFontFamily
-                         color: ColorPalette.neutral500
-                         text: "Folder name"
-                         verticalAlignment: Text.AlignVCenter
-                         visible: usernameTextInput.length === 0
-                     }
-                     TextInput {
-                         id: usernameTextInput
-                         anchors.fill: parent
-                         activeFocusOnTab: true
-                         // KeyNavigation.down: passwordTextInput
-                         property bool showGlobalCursor: true
-                         property var globalCursorProxy: thePane
-                         font.family: Constants.regularFontFamily
-                         focus: true
-                          font.pixelSize: 16
-                         color: "white"
-                         verticalAlignment: Text.AlignVCenter
+          focus: true
 
-                         // onAccepted: {
-                         //     if (submitButton.enabled) {
-                         //         submitButton.clicked()
-                         //     }
-                         // }
-                     }
-                 }
-             }
-             // Pane {
-             //      id: descriptionPane
-             //      Layout.alignment: Qt.AlignHCenter
-             //      Layout.fillWidth: true
-             //      Layout.fillHeight: true
-             //      background: Rectangle {
-             //          color: ColorPalette.neutral800
-             //          radius: 4
-             //      }
-             //
-             //      focus: true
-             //
-             //      HoverHandler {
-             //          acceptedDevices: PointerDevice.Mouse
-             //          cursorShape: Qt.IBeamCursor
-             //      }
-             //
-             //      contentItem: Item {
-             //          Text {
-             //              anchors.fill: parent
-             //              font.pixelSize: 16
-             //              font.family: Constants.regularFontFamily
-             //              color: ColorPalette.neutral500
-             //              text: "Description"
-             //              // verticalAlignment: Text.AlignVCenter
-             //              visible: descriptionTextInput.length === 0
-             //          }
-             //          TextEdit {
-             //              id: descriptionTextInput
-             //              anchors.fill: parent
-             //              activeFocusOnTab: true
-             //              // KeyNavigation.down: passwordTextInput
-             //              property bool showGlobalCursor: true
-             //              property var globalCursorProxy: descriptionPane
-             //              font.family: Constants.regularFontFamily
-             //              focus: true
-             //              font.pixelSize: 16
-             //              color: "white"
-             //              wrapMode: TextEdit.WordWrap
-             //              // verticalAlignment: Text.AlignVCenter
-             //
-             //              // onAccepted: {
-             //              //     if (submitButton.enabled) {
-             //              //         submitButton.clicked()
-             //              //     }
-             //              // }
-             //          }
-             //      }
-             //  }
-             // Item {
-             //    Layout.fillWidth: true
-             //    Layout.fillHeight: true
-             // }
-         }
-     }
+          contentItem: FocusScope {
+              focus: true
+              Text {
+                  anchors.fill: parent
+                   font.pixelSize: 16
+                  font.family: Constants.regularFontFamily
+                  color: ColorPalette.neutral500
+                  text: "Folder name"
+                  verticalAlignment: Text.AlignVCenter
+                  visible: usernameTextInput.length === 0
+              }
+              TextInput {
+                  id: usernameTextInput
+                  anchors.fill: parent
+                  activeFocusOnTab: true
+                  // KeyNavigation.down: passwordTextInput
+                  property bool showGlobalCursor: true
+                  property var globalCursorProxy: thePane
+                  font.family: Constants.regularFontFamily
+                  focus: true
+                   font.pixelSize: 16
+                  color: "white"
+                  verticalAlignment: Text.AlignVCenter
+
+                  // onAccepted: {
+                  //     if (submitButton.enabled) {
+                  //         submitButton.clicked()
+                  //     }
+                  // }
+              }
+          }
+      }
+        Item {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+        }
+  }
+  }
 }

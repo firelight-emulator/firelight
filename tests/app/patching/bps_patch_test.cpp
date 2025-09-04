@@ -5,8 +5,23 @@
 #include <gtest/gtest.h>
 //
 #include <zlib.h>
+
+/**
+ * @brief Test fixture for BPS (Binary Patch System) patch functionality
+ * 
+ * Tests the BPS patch format implementation, including patch parsing, metadata
+ * extraction, CRC32 validation, and ROM patching operations. BPS is a more
+ * advanced binary patch format with built-in error detection and metadata support.
+ */
 class BPSPatchTest : public testing::Test {};
 
+/**
+ * @brief Test BPS patch constructor and metadata parsing
+ * 
+ * Verifies that a BPS patch file is correctly parsed, extracting input/output
+ * file sizes, metadata, patch actions, and CRC32 checksums. Tests against a
+ * well-formatted BPS file with expected file sizes and 122,728 patch actions.
+ */
 TEST_F(BPSPatchTest, ConstructorTest) {
   const firelight::patching::BPSPatch patch("test_resources/wellformatted.bps");
   ASSERT_TRUE(patch.isValid());
@@ -20,6 +35,13 @@ TEST_F(BPSPatchTest, ConstructorTest) {
   ASSERT_EQ(patch.getPatchFileCRC32Checksum(), 0x5EB8D13F);
 }
 
+/**
+ * @brief Test BPS patch application and CRC32 validation
+ * 
+ * Verifies that a BPS patch can be successfully applied to ROM data and that
+ * the resulting patched data matches the expected CRC32 checksum. Tests both
+ * the patching functionality and integrity validation using a test ROM file.
+ */
 TEST_F(BPSPatchTest, PatchRomTest) {
   const firelight::patching::BPSPatch patch("test_resources/wellformatted.bps");
 

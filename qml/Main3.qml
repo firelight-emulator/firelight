@@ -102,10 +102,6 @@ ApplicationWindow {
              pushItems([emulatorLoader, content], StackView.Immediate)
          }
 
-         onDepthChanged: {
-             console.log("New depth: " + depth)
-         }
-
          Keys.onEscapePressed: function(event) {
              if (EmulationService.isGameRunning && depth > 1) {
                  popCurrentItem()
@@ -166,7 +162,7 @@ ApplicationWindow {
             id: emulatorLoader
 
             onSuspended: {
-                content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber, gameSettings: emulatorLoader.item.gameSettings}, StackView.Immediate)
+                content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber}, StackView.Immediate)
                 // Router.navigateTo("/quick-menu")
                 mainContentStack.pushItems([emulatorLoader, content], StackView.PushTransition)
             }
@@ -226,6 +222,7 @@ ApplicationWindow {
     FLFocusHighlight {
         target: window.activeFocusItem
         usingMouse: InputMethodManager.usingMouse
+        z: 1000
     }
 
     Component {
@@ -368,7 +365,7 @@ ApplicationWindow {
                         content.goToContent("Not found", lol, {}, StackView.PushTransition)
                     }
                 } else if (route === "/quick-menu") {
-                    content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber, gameSettings: emulatorLoader.item.gameSettings}, StackView.ReplaceTransition)
+                    content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber}, StackView.ReplaceTransition)
                 } else {
                         content.goToContent("Not found", lol, {}, StackView.ReplaceTransition)
                 }

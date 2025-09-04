@@ -4,8 +4,23 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
+
+/**
+ * @brief Test fixture for IPS (International Patching System) patch functionality
+ * 
+ * Tests the IPS patch format implementation, including patch parsing, validation,
+ * and ROM patching operations. IPS is a binary patch format commonly used for
+ * ROM hacking and game modifications.
+ */
 class IPSPatchTest : public testing::Test {};
 
+/**
+ * @brief Test IPS patch constructor and record parsing
+ * 
+ * Verifies that an IPS patch file is correctly parsed, with all patch records
+ * extracted with proper offset, data size, and repeat count values. Tests against
+ * a well-formatted IPS file with 163 expected patch records.
+ */
 TEST_F(IPSPatchTest, ConstructorTest) {
   // Each one is offset, size, repeat
   const std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> expectedValues = {
@@ -80,6 +95,13 @@ TEST_F(IPSPatchTest, ConstructorTest) {
   }
 }
 
+/**
+ * @brief Test IPS patch application to ROM data
+ * 
+ * Verifies that an IPS patch can be successfully applied to ROM data,
+ * producing a non-empty patched ROM. Tests the core patching functionality
+ * using a 4MB test ROM and a well-formatted IPS patch file.
+ */
 TEST_F(IPSPatchTest, PatchRomTest) {
   const std::vector<uint8_t> romData(4000000);
 

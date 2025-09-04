@@ -61,6 +61,8 @@ public:
 
   bool expectToBeLoggedIn() const;
 
+  bool loggedIn() const { return m_loggedIn; }
+
   void doFrame(::libretro::Core *core);
 
   std::vector<uint8_t> serializeState();

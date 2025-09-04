@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23.5...3.31.6)
 project(firelight
-        VERSION 0.10.8
+        VERSION 0.11.0
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -26,8 +26,6 @@ list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-#add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
-#add_link_options(-fsanitize=address -fno-omit-frame-pointer)
 
 #option(ENABLE_ASAN "Enable Address Sanitizer" ON)
 #if(ENABLE_ASAN)
@@ -61,6 +59,7 @@ set(CMAKE_AUTOUIC ON)
 
 # set(QT6_DIR "C:/Qt/Qt-6.9.0")
 
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
 pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
@@ -93,6 +92,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(/opt/homebrew/include)
 add_subdirectory(src/app)
 add_subdirectory(libs/discord)
+add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
 file(GLOB QML_FILES
         qml/*.qml
@@ -155,24 +155,15 @@ add_library(firelight_lib
         src/app/input/sqlite_controller_repository.cpp
         src/app/library/gui/library_entry_item.cpp
         src/later/video_encoder.cpp
-        src/later/video_encoder.h
         src/later/video_decoder.cpp
-        src/later/video_decoder.h
         src/app/achievements/gui/AchievementSetItem.cpp
         src/app/mods/gui/ModInfoItem.cpp
         src/app/mods/SqliteModRepository.cpp
-        src/app/mods/SqliteModRepository.h
-        src/gui/EventEmitter.h
         src/app/saves/gui/suspend_points_item.cpp
         src/app/activity/gui/game_activity_item.cpp
         src/app/activity/gui/play_session_list_model.cpp
-        src/app/achievements/retroachievements_service.hpp
-        src/app/achievements/retroachievements_backend.hpp
         src/app/achievements/retroachievements_backend.cpp
-        src/app/achievements/user_achievement_status.hpp
-        src/app/settings/sqlite_emulation_settings_manager.cpp
-        src/app/settings/sqlite_emulation_settings_manager.hpp
-        src/app/discord/discord_manager.hpp
+        src/app/settings/sqlite_settings_repository.cpp
         src/app/discord/discord_manager.cpp
         src/app/library/gui/playlist_item_model.cpp
         src/app/library/gui/entry_sort_filter_list_model.cpp
@@ -180,36 +171,23 @@ add_library(firelight_lib
         src/app/saves/gui/save_files_item.cpp
         src/app/library/gui/content_directory_model.cpp
         src/app/input/gui/input_mappings_model.cpp
-        src/app/input/platform_input_descriptor.hpp
-        src/app/platforms/models/platform.hpp
-        src/app/platforms/models/controller_type.hpp
-        src/app/platforms/models/controller_input_descriptor.hpp
         src/app/platforms/platform_service.cpp
-        src/app/platforms/platform_service.hpp
         src/app/input/profiles/shortcut_mapping.cpp
-        src/app/input/profiles/shortcut_mapping.hpp
-        src/app/input/input_sequence.hpp
-        src/app/input/gamepad_input.hpp
         src/app/input2/input_service.cpp
-        src/app/input2/input_service.hpp
         src/app/input2/gamepad_profile.cpp
-        src/app/input2/gamepad_profile.hpp
-        src/app/input2/device_identifier.hpp
         src/app/input2/sdl/sdl_input_service.cpp
-        src/app/input2/sdl/sdl_input_service.hpp
-        src/app/input2/device_info.hpp
-        src/app/event_dispatcher.hpp
         src/gui/shortcuts_model.cpp
-        src/gui/shortcuts_model.hpp
         src/gui/gamepad_profile_item.cpp
-        src/gui/gamepad_profile_item.hpp
         src/gui/qt_input_service_proxy.cpp
+        src/app/settings/settings_service.cpp
+        src/gui/EventEmitter.h
         src/gui/qt_input_service_proxy.hpp
         src/gui/qt_emulation_service_proxy.cpp
         src/gui/qt_emulation_service_proxy.hpp
         src/image_cache.cpp
         src/app/emulation/emulation_service.cpp
         src/app/emulation/emulator_instance.cpp
+        src/app/settings/emulation_setting.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -223,6 +201,8 @@ target_link_libraries(firelight_lib PUBLIC
         SDL2::SDL2
         z
         nlohmann_json::nlohmann_json
+        SQLiteCpp
+        sqlite3
         Qt6::Gui
         Qt6::Quick
         Qt6::OpenGL
@@ -260,6 +240,8 @@ qt6_add_executable(firelight
         resources.qrc
         app_resources.rc
         src/main.cpp
+        src/gui/models/emulation_settings_model.cpp
+        src/gui/models/emulation_settings_model.hpp
 )
 
 
@@ -339,7 +321,6 @@ if (WIN32)
     file(COPY ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/bin/release/discord_partner_sdk.dll DESTINATION ${CMAKE_BINARY_DIR})
 endif ()
 
-
 enable_testing()
 include(GoogleTest)
 
@@ -348,6 +329,7 @@ add_executable(fl_test
         tests/app/patching/ips_patch_test.cpp
         tests/app/patching/ups_patch_test.cpp
         tests/app/patching/bps_patch_test.cpp
+        tests/app/patching/util_test.cpp
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
         tests/app/saves/save_manager_test.cpp
@@ -359,6 +341,8 @@ add_executable(fl_test
         tests/app/db/sqlite_content_database_test.cpp
         tests/app/rcheevos/ra_cache_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
+        tests/app/settings/sqlite_settings_repository_test.cpp
+        tests/app/settings/settings_service_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
@@ -367,6 +351,7 @@ add_executable(fl_test
         tests/app/input/test_gamepad.cpp
         tests/app/input/test_gamepad.hpp
         tests/app/emulation/emulation_service_test.cpp
+        tests/app/emulation/emulator_instance_test.cpp
         tests/mocks/mock_library.hpp
 )
 
@@ -426,7 +411,7 @@ set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 9)
 set(CPACK_PACKAGE_VERSION_PATCH 5)
-set(CPACK_PACKAGE_VERSION "0.10.8")
+set(CPACK_PACKAGE_VERSION "0.11.0")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")

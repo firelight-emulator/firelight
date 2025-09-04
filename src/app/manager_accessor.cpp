@@ -13,7 +13,7 @@ library::IUserLibrary *ManagerAccessor::m_userLibrary;
 activity::IActivityLog *ManagerAccessor::m_activityLog;
 std::string ManagerAccessor::m_coreSystemDirectory;
 mods::IModRepository *ManagerAccessor::m_modDatabase;
-settings::IEmulationSettingsManager
+settings::ISettingsRepository
     *ManagerAccessor::m_emulationSettingsManager;
 discord::DiscordManager *ManagerAccessor::m_discordManager;
 
@@ -61,7 +61,7 @@ void ManagerAccessor::setModRepository(mods::IModRepository *t_modDatabase) {
   m_modDatabase = t_modDatabase;
 }
 void ManagerAccessor::setEmulationSettingsManager(
-    settings::IEmulationSettingsManager *t_emulationSettingsManager) {
+    settings::ISettingsRepository *t_emulationSettingsManager) {
   m_emulationSettingsManager = t_emulationSettingsManager;
 }
 void ManagerAccessor::setDiscordManager(
@@ -106,7 +106,7 @@ std::string ManagerAccessor::getCoreSystemDirectory() {
 mods::IModRepository *ManagerAccessor::getModRepository() {
   return m_modDatabase;
 }
-settings::IEmulationSettingsManager *
+settings::ISettingsRepository *
 ManagerAccessor::getEmulationSettingsManager() {
   return m_emulationSettingsManager;
 }
