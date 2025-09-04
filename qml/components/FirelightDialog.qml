@@ -87,7 +87,8 @@ Dialog {
     footer: FocusScope {
         height: 66
         visible: control.showButtons
-        focus: control.showButtons
+        focus: control.showButtons && !control.contentItem.focus
+        KeyNavigation.up: control.contentItem
         RowLayout {
             spacing: 12
             anchors.fill: parent

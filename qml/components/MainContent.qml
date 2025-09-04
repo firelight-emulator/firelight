@@ -11,39 +11,6 @@ FocusScope {
     property bool showNavigationBar: true
     property bool gameRunning: false
 
-    states: [
-        State {
-            name: "hidden"
-            when: !root.showNavigationBar
-            PropertyChanges {
-                target: navigationBar
-                anchors.leftMargin: -navigationBar.implicitWidth
-            }
-        },
-        State {
-            name: "visible"
-            when: root.showNavigationBar
-            PropertyChanges {
-                target: navigationBar
-                anchors.leftMargin: 0
-            }
-        }
-    ]
-
-    transitions: [
-        Transition {
-            from: "hidden"
-            to: "visible"
-            reversible: true
-            NumberAnimation {
-                target: navigationBar
-                property: "anchors.leftMargin"
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-        }
-    ]
-
     function goToContent(title, page, args, transition) {
         content.title = title
         contentStack.replaceCurrentItem(page, args, transition)

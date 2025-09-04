@@ -102,10 +102,6 @@ ApplicationWindow {
              pushItems([emulatorLoader, content], StackView.Immediate)
          }
 
-         onDepthChanged: {
-             console.log("New depth: " + depth)
-         }
-
          Keys.onEscapePressed: function(event) {
              if (EmulationService.isGameRunning && depth > 1) {
                  popCurrentItem()
@@ -226,6 +222,7 @@ ApplicationWindow {
     FLFocusHighlight {
         target: window.activeFocusItem
         usingMouse: InputMethodManager.usingMouse
+        z: 1000
     }
 
     Component {
