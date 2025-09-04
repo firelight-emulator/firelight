@@ -28,6 +28,8 @@ settings::SqliteSettingsRepository::SqliteSettingsRepository(
                 PRIMARY KEY (content_hash, platform_id, key)
             );
 
+            UPDATE game_settings SET platform_id = -1 WHERE platform_id != -1;
+
             CREATE TABLE IF NOT EXISTS game_setting_levels (
                 content_hash TEXT NOT NULL,
                 level INTEGER NOT NULL,

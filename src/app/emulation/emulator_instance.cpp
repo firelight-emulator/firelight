@@ -215,7 +215,7 @@ void EmulatorInstance::refreshAllSettings() {
   setAspectRatioMode(settings::SettingsService::instance()
                          ->getValue(m_currentSettingsLevel, m_contentHash,
                                     m_platformId, "aspect-ratio")
-                         .value_or("emulator-corrected"));
+                         .value_or("core-corrected"));
 
   EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
       .contentHash = m_contentHash, .key = "aspect-ratio"});

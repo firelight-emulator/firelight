@@ -150,7 +150,7 @@ FocusScope {
 
         property real aspectRatio: {
             let mode = EmulationService.aspectRatioMode
-             if (mode === "emulator-corrected") {
+             if (mode === "core-corrected") {
                  return emulator.videoAspectRatio
              } else {
                  return emulator.trueAspectRatio

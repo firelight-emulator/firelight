@@ -71,11 +71,11 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
           "ignores the emulator's preferred aspect ratio\nEmulator-corrected: "
           "Uses the aspect ratio preferred by the emulator",
       .type = "combobox",
-      .defaultValue = "emulator-corrected",
+      .defaultValue = "core-corrected",
       .options = {
           QVariantHash{{"label", "Pixel-perfect"}, {"value", "pixel-perfect"}},
           QVariantHash{{"label", "Emulator-corrected"},
-                       {"value", "emulator-corrected"}}}});
+                       {"value", "core-corrected"}}}});
 
   m_items.emplace_back(Item{.label = "Enable rewind",
                             .key = "rewind-enabled",

@@ -86,7 +86,7 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
  *
  * Verifies that when platform-specific settings are changed, the
  * EmulatorInstance receives the updates when configured to use platform-level
- * settings. Tests aspect-ratio setting change from emulator-corrected to
+ * settings. Tests aspect-ratio setting change from core-corrected to
  * pixel-perfect.
  */
 TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
@@ -114,7 +114,7 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
                                       settings::SettingsLevel::Platform);
 
   // Check initial aspect ratio mode value
-  EXPECT_EQ("emulator-corrected", instance->getAspectRatioMode());
+  EXPECT_EQ("core-corrected", instance->getAspectRatioMode());
 
   // Change platform setting
   m_settingsService->setSettingsLevel(m_testContentHash,
@@ -332,13 +332,13 @@ TEST_F(EmulatorInstanceTest, WrongPlatformIdIgnoresPlatformSettings) {
                                       settings::SettingsLevel::Platform);
 
   // Check initial aspect ratio mode
-  EXPECT_EQ("emulator-corrected", instance->getAspectRatioMode());
+  EXPECT_EQ("core-corrected", instance->getAspectRatioMode());
 
   // Try to change setting for different platform ID
   m_settingsService->setPlatformValue(999, "aspect-ratio", "pixel-perfect");
 
   // Instance should not be affected
-  EXPECT_EQ("emulator-corrected", instance->getAspectRatioMode());
+  EXPECT_EQ("core-corrected", instance->getAspectRatioMode());
 }
 
 } // namespace firelight::emulation

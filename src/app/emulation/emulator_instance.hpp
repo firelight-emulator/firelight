@@ -66,7 +66,7 @@ private:
 
   bool m_isRewindEnabled = true;
   std::string m_pictureMode = "aspect-ratio-fill";
-  std::string m_aspectRatioMode = "emulator-corrected";
+  std::string m_aspectRatioMode = "core-corrected";
 
   // Settings
   settings::SettingsLevel m_currentSettingsLevel;
