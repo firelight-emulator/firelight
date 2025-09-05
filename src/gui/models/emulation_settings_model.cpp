@@ -80,11 +80,11 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
   m_items.emplace_back(Item{.label = "Enable rewind",
                             .key = "rewind-enabled",
                             .section = "Rewind",
-                            .defaultValue = "true",
                             .description =
                                 "Note: Rewind is always disabled when using "
                                 "RetroAchievements in Hardcore mode.",
-                            .type = "toggle"});
+                            .type = "toggle",
+                            .defaultValue = "true"});
 }
 
 int EmulationSettingsModel::getPlatformId() const { return m_platformId; }
