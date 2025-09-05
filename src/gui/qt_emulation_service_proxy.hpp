@@ -21,6 +21,8 @@ class QtEmulationServiceProxy final : public QObject {
       int currentPlatformId READ getCurrentPlatformId NOTIFY gameRunningChanged)
   Q_PROPERTY(QString currentPlatformName READ getCurrentPlatformName NOTIFY
                  gameRunningChanged)
+  Q_PROPERTY(int currentSaveSlotNumber READ getCurrentSaveSlotNumber NOTIFY
+                 gameRunningChanged)
   Q_PROPERTY(
       bool rewindEnabled READ isRewindEnabled NOTIFY rewindEnabledChanged)
   Q_PROPERTY(QString pictureMode READ getPictureMode NOTIFY pictureModeChanged)
@@ -38,6 +40,7 @@ public:
   int getCurrentEntryId() const;
   int getCurrentPlatformId() const;
   QString getCurrentPlatformName() const;
+  int getCurrentSaveSlotNumber() const;
 
   bool isRewindEnabled() const;
   QString getPictureMode() const;

@@ -17,5 +17,7 @@ public:
   getLatestPlaySession(std::string contentHash) = 0;
 
   virtual std::vector<PlaySession> getPlaySessions(std::string contentHash) = 0;
+
+  virtual std::vector<PlaySession> getPlaySessions() = 0;
 };
 } // namespace firelight::activity

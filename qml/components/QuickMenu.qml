@@ -6,8 +6,6 @@ import Firelight 1.0
 Pane {
     id: root
 
-    required property int saveSlotNumber
-
     signal resumeGame()
     signal resetGame()
     signal rewindPressed()
@@ -203,7 +201,7 @@ Pane {
             SuspendPoints {
                 id: suspendData
                 contentHash: emulatorLoader.item ? emulatorLoader.item.contentHash : ""
-                saveSlotNumber: root.saveSlotNumber
+                saveSlotNumber: EmulationService.currentSaveSlotNumber
             }
 
             FirelightDialog {

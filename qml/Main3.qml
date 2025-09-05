@@ -68,6 +68,7 @@ ApplicationWindow {
 
         function onGameLoaded() {
             overlay.opacity = 0
+            content.goToContent("Quick Menu", quickMenuPage, {}, StackView.Immediate)
             emulatorLoader.startGame()
         }
 
@@ -162,8 +163,8 @@ ApplicationWindow {
             id: emulatorLoader
 
             onSuspended: {
-                content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber}, StackView.Immediate)
-                // Router.navigateTo("/quick-menu")
+                // content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber}, StackView.Immediate)
+                Router.navigateTo("/quick-menu")
                 mainContentStack.pushItems([emulatorLoader, content], StackView.PushTransition)
             }
         }
@@ -228,8 +229,6 @@ ApplicationWindow {
     Component {
         id: quickMenuPage
         QuickMenu {
-            saveSlotNumber: window.runningGameSaveSlotNumber
-
             onResumeGame: {
                 mainContentStack.popCurrentItem()
             }
@@ -314,6 +313,11 @@ ApplicationWindow {
     }
 
     Component {
+        id: activityPage
+        ActivityPage {}
+    }
+
+    Component {
         id: lol
         Text {
             text: "How did you even get here"
@@ -365,7 +369,9 @@ ApplicationWindow {
                         content.goToContent("Not found", lol, {}, StackView.PushTransition)
                     }
                 } else if (route === "/quick-menu") {
-                    content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber}, StackView.ReplaceTransition)
+                    content.goToContent("Quick Menu", quickMenuPage, {}, StackView.ReplaceTransition)
+                } else if (route === "/activity") {
+                    content.goToContent("Activity", activityPage, {}, StackView.ReplaceTransition)
                 } else {
                         content.goToContent("Not found", lol, {}, StackView.ReplaceTransition)
                 }
