@@ -79,7 +79,7 @@ void EmulatorItemRenderer::receive(const void *data, unsigned width,
       pitch > 0) {
     QImage image((uchar *)data, width, height, pitch, m_pixelFormat);
     if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-      image.mirror();
+      image.flip(Qt::Vertical);
     }
     auto newImage =
         image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
@@ -559,13 +559,13 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       }
       if (m_paused) {
         m_overlayImage = point.image;
-        m_overlayImage.mirror();
+        m_overlayImage.flip(Qt::Vertical);
         m_overlayImage = m_overlayImage.convertToFormat(
             QImage::Format_RGBA8888_Premultiplied);
 
         m_currentImage = m_overlayImage;
         if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-          m_currentImage.mirror();
+          m_currentImage.flip(Qt::Vertical);
         }
       }
     } break;
@@ -605,13 +605,13 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
         if (m_paused) {
           m_overlayImage = point->image;
-          m_overlayImage.mirror();
+          m_overlayImage.flip(Qt::Vertical);
           m_overlayImage = m_overlayImage.convertToFormat(
               QImage::Format_RGBA8888_Premultiplied);
 
           m_currentImage = m_overlayImage;
           if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-            m_currentImage.mirror();
+            m_currentImage.flip(Qt::Vertical);
           }
         }
       }
@@ -631,13 +631,13 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
       if (m_paused) {
         m_overlayImage = m_beforeLastLoadSuspendPoint.image;
-        m_overlayImage.mirror();
+        m_overlayImage.flip(Qt::Vertical);
         m_overlayImage = m_overlayImage.convertToFormat(
             QImage::Format_RGBA8888_Premultiplied);
 
         m_currentImage = m_overlayImage;
         if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-          m_currentImage.mirror();
+          m_currentImage.flip(Qt::Vertical);
         }
       }
 
@@ -764,7 +764,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
                               rbResult->pixelSize.height(), fmt);
 
       if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-        m_currentImage.mirror();
+        m_currentImage.flip(Qt::Vertical);
         // m_currentCoolImage->flipVertical();
       }
 
