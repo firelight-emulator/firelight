@@ -995,10 +995,10 @@ void SqliteUserLibrary::create(PatchFile &file) {
   }
 }
 
-std::optional<PatchFile> SqliteUserLibrary::getPatchFileWithPathAndSize(
-    const QString &filePath, size_t fileSizeBytes, bool inArchive) {}
+// std::optional<PatchFile> SqliteUserLibrary::getPatchFileWithPathAndSize(
+//     const QString &filePath, size_t fileSizeBytes, bool inArchive) {}
 
-std::vector<PatchFile> SqliteUserLibrary::getPatchFiles() {}
+// std::vector<PatchFile> SqliteUserLibrary::getPatchFiles() {}
 
 std::vector<WatchedDirectory> SqliteUserLibrary::getWatchedDirectories() {
   const QString queryString = "SELECT * FROM content_directoriesv1;";
