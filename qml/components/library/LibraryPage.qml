@@ -170,12 +170,123 @@ FocusScope {
         }
     }
 
+    ColumnLayout {
+        id: listHeader
+        anchors.left: libraryNavFocusScope.right
+        anchors.leftMargin: 16
+        anchors.top: parent.top
+        anchors.right: parent.right
+        height: 64
+        spacing: 8
+        RowLayout {
+            Layout.fillWidth: true
+            Text {
+                text: libraryButtonGroup.checkedButton.sectionTitle
+                font.pixelSize: 24
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                color: "white"
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                // height: 64
+            }
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            Text {
+                text: "Sort by:"
+                font.pixelSize: 16
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                color: "white"
+                verticalAlignment: Text.AlignVCenter
+                Layout.rightMargin: 8
+             }
+
+            MyComboBox {
+               id: comboBox
+               model: [
+                   { text: "A-Z", sortRole: "alphabetical" },
+                   { text: "Recently played", sortRole: "recent" },
+                   { text: "Newest first", sortRole: "newest"}
+               ]
+
+               property bool initialized: false
+
+               currentIndex: {
+                  for (var i = 0; i < comboBox.count; i++) {
+                    if (comboBox.valueAt(i) === GeneralSettings.librarySortMethod) {
+                         return i
+                    }
+                  }
+                  return 0
+               }
+
+               onCurrentIndexChanged: {
+                    let val = comboBox.valueAt(currentIndex)
+                    FilteredLibraryEntryModel.sortMethod = val
+                    GeneralSettings.librarySortMethod = val
+               }
+
+                // Component.onCompleted: {
+                //     // Set the initial sort method
+                //     for (var i = 0; i < comboBox.count; i++) {
+                //         if (comboBox.valueAt(i) === GeneralSettings.librarySortMethod) {
+                //             comboBox.currentIndex = i
+                //             break
+                //         }
+                //     }
+                //     initialized = true
+                //     FilteredLibraryEntryModel.sortMethod = GeneralSettings.librarySortMethod
+                //     console.log("initialized")
+                //
+                // }
+               //
+               //
+               // onCurrentValueChanged: {
+               //     if (!initialized) {
+               //          console.log("not initialized")
+               //         return
+               //     };
+               //     FilteredLibraryEntryModel.sortMethod = currentValue
+               //     GeneralSettings.librarySortMethod = currentValue
+               // }
+
+               textRole: "text"
+               valueRole: "sortRole"
+           }
+            // BusyIndicator {
+            //     Layout.preferredHeight: 40
+            //     running: LibraryScanner.scanning
+            //     palette.dark: "white"
+            // }
+            // Text {
+            //     text: LibraryScanner.scanning ? "Scanning..." : ""
+            //     font.pixelSize: 18
+            //     font.family: Constants.regularFontFamily
+            //     font.weight: Font.Medium
+            //     color: "white"
+            //     Layout.rightMargin: 16
+            //     horizontalAlignment: Text.AlignRight
+            //     verticalAlignment: Text.AlignVCenter
+            // }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: "#4B4B4B"
+        }
+    }
+
 
     ListView {
         id: theList
         anchors.left: libraryNavFocusScope.right
         anchors.leftMargin: 16
-        anchors.top: parent.top
+        anchors.top: listHeader.bottom
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         highlightMoveDuration: 80
@@ -188,57 +299,6 @@ FocusScope {
         focus: true
 
         KeyNavigation.left: libraryNavFocusScope
-
-        // headerPositioning: ListView.PullBackHeader
-
-        header: ColumnLayout {
-            height: 64
-            width: ListView.view.width
-            spacing: 8
-            RowLayout {
-                Layout.fillWidth: true
-                Text {
-                    text: libraryButtonGroup.checkedButton.sectionTitle
-                    font.pixelSize: 24
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.DemiBold
-                    color: "white"
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                    // height: 64
-                }
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-                BusyIndicator {
-                    Layout.preferredHeight: 40
-                    running: LibraryScanner.scanning
-                    palette.dark: "white"
-                }
-                Text {
-                    text: LibraryScanner.scanning ? "Scanning..." : ""
-                    font.pixelSize: 18
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.Medium
-                    color: "white"
-                    Layout.rightMargin: 16
-                    horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#4B4B4B"
-            }
-
-            Item {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-            }
-        }
 
         clip: true
 
