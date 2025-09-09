@@ -3,22 +3,14 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Firelight 1.0
 
-RoundButton {
+IconButton {
     id: control
-
     property var currentIndex: 0
     property var hoveredIndex: 0
     property var model: []
     property string currentText: ""
-
-    property bool showGlobalCursor: true
-    property int globalCursorSpacing: 1
-
-    flat: true
     
     signal selectionChanged(int index, string value, string text)
-
-    text: "\u2713"
     
     onClicked: popup.open()
 
@@ -145,8 +137,8 @@ RoundButton {
                             leftPadding: 8
                             rightPadding: radioDelegate.indicator.width + 16
                             text: model.label || model.text || model
-                            font.family: Constants.regularFontFamily
-                            font.pixelSize: 14
+                            font.family: Constants.lightFontFamily
+                            font.pixelSize: 16
                             color: radioDelegate.checked ? ColorPalette.neutral100 : ColorPalette.neutral300
                             verticalAlignment: Text.AlignVCenter
                         }
