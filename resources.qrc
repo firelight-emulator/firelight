@@ -76,6 +76,7 @@
         <file alias="search">assets/img/icons/filled-rounded/search.svg</file>
         <file alias="settings">assets/img/icons/filled-rounded/settings.svg</file>
         <file alias="shopping-bag">assets/img/icons/filled-rounded/shopping-bag.svg</file>
+        <file alias="sort">assets/img/icons/filled-rounded/sort.svg</file>
         <file alias="star">assets/img/icons/filled-rounded/star.svg</file>
         <file alias="star-shine">assets/img/icons/filled-rounded/star-shine.svg</file>
         <file alias="trophy">assets/img/icons/filled-rounded/trophy.svg</file>
