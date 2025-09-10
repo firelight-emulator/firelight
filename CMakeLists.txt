@@ -362,8 +362,10 @@ file(GLOB QML_TEST_FILES
         qml/ColorPalette.qml
         qml/Constants.qml
         qml/AppStyle.qml
+        #        qml/components/IconButton.qml
         qml/components/FLFocusHighlight.qml
         qml_tests/components/tst_FLFocusHighlight.qml
+        #        qml_tests/components/tst_IconButton.qml
 )
 
 foreach (QML_FILE ${QML_TEST_FILES})
