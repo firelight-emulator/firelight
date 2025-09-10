@@ -2,16 +2,26 @@
 
 #include "platforms/platform_service.hpp"
 
+#include <emulation/emulation_service.hpp>
 #include <spdlog/spdlog.h>
 
 namespace firelight::library {
 EntryListModel::EntryListModel(IUserLibrary &userLibrary, QObject *parent)
     : QAbstractListModel(parent), m_userLibrary(userLibrary) {
-  for (const auto &entry : m_userLibrary.getEntries(0, 0)) {
-    if (!entry.hidden) {
-      m_items.emplace_back(entry);
-    }
-  }
+  m_gamePlayedConnection =
+      EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
+          [this](const emulation::EmulationStartedEvent &event) {
+            for (auto i = 0; i < m_items.size(); ++i) {
+              auto &item = m_items[i];
+              if (item.entry.contentHash == event.contentHash) {
+                item.lastPlayedEpochMillis =
+                    QDateTime::currentMSecsSinceEpoch();
+                emit dataChanged(createIndex(i, 0), createIndex(i, 0),
+                                 {LastPlayedAt});
+              }
+            }
+          });
+  reset();
 }
 
 QHash<int, QByteArray> EntryListModel::roleNames() const {
@@ -35,6 +45,7 @@ QHash<int, QByteArray> EntryListModel::roleNames() const {
   roles[RegionIds] = "regionIds";
   roles[FolderIds] = "folderIds";
   roles[CreatedAt] = "createdAt";
+  roles[LastPlayedAt] = "lastPlayedAt";
   return roles;
 }
 
@@ -51,16 +62,16 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
 
   switch (role) {
   case Id:
-    return item.id;
+    return item.entry.id;
   case DisplayName:
-    return item.displayName;
+    return item.entry.displayName;
   case ContentHash:
-    return item.contentHash;
+    return item.entry.contentHash;
   case PlatformId:
-    return item.platformId;
+    return item.entry.platformId;
   case PlatformIconName: {
-    auto platform =
-        platforms::PlatformService::getInstance().getPlatform(item.platformId);
+    auto platform = platforms::PlatformService::getInstance().getPlatform(
+        item.entry.platformId);
     if (!platform.has_value()) {
       return {};
     }
@@ -68,31 +79,33 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return QString::fromStdString(platform.value().slug);
   }
   case ActiveSaveSlot:
-    return item.activeSaveSlot;
+    return item.entry.activeSaveSlot;
   case Hidden:
-    return item.hidden;
+    return item.entry.hidden;
   case Icon1x1SourceUrl:
-    return item.icon1x1SourceUrl;
+    return item.entry.icon1x1SourceUrl;
   case BoxartFrontSourceUrl:
-    return item.boxartFrontSourceUrl;
+    return item.entry.boxartFrontSourceUrl;
   case BoxartBackSourceUrl:
-    return item.boxartBackSourceUrl;
+    return item.entry.boxartBackSourceUrl;
   case Description:
-    return item.description;
+    return item.entry.description;
   case ReleaseYear:
-    return item.releaseYear;
+    return item.entry.releaseYear;
   case Developer:
-    return item.developer;
+    return item.entry.developer;
   case Publisher:
-    return item.publisher;
+    return item.entry.publisher;
   case Genres:
-    return item.genres;
+    return item.entry.genres;
   case RegionIds:
-    return item.regionIds;
+    return item.entry.regionIds;
   case CreatedAt:
-    return item.createdAt;
+    return item.entry.createdAt;
   case FolderIds:
-    return QVariant::fromValue(item.folderIds);
+    return QVariant::fromValue(item.entry.folderIds);
+  case LastPlayedAt:
+    return item.lastPlayedEpochMillis;
   default:
     return QVariant{};
   }
@@ -107,13 +120,13 @@ bool EntryListModel::setData(const QModelIndex &index, const QVariant &value,
 
   switch (role) {
   case DisplayName:
-    item.displayName = value.toString();
+    item.entry.displayName = value.toString();
     break;
   default:
     return false;
   }
 
-  m_userLibrary.update(item);
+  m_userLibrary.update(item.entry);
 
   return true;
 }
@@ -131,14 +144,15 @@ void EntryListModel::addEntryToFolder(int entryId, int folderId) {
   }
 
   for (auto &item : m_items) {
-    if (item.id == entryId) {
-      if (std::ranges::find(item.folderIds, folderId) != item.folderIds.end()) {
+    if (item.entry.id == entryId) {
+      if (std::ranges::find(item.entry.folderIds, folderId) !=
+          item.entry.folderIds.end()) {
         spdlog::warn("Entry {} is already in folder {}", entryId, folderId);
         return;
       }
 
       beginResetModel();
-      item.folderIds.push_back(folderId);
+      item.entry.folderIds.push_back(folderId);
       endResetModel();
       break;
     }
@@ -155,11 +169,11 @@ void EntryListModel::removeEntryFromFolder(int entryId, int folderId) {
   }
 
   for (auto &item : m_items) {
-    if (item.id == entryId) {
-      auto it = std::ranges::find(item.folderIds, folderId);
-      if (it != item.folderIds.end()) {
+    if (item.entry.id == entryId) {
+      auto it = std::ranges::find(item.entry.folderIds, folderId);
+      if (it != item.entry.folderIds.end()) {
         beginResetModel();
-        item.folderIds.erase(it);
+        item.entry.folderIds.erase(it);
         endResetModel();
         break;
       }
@@ -173,9 +187,18 @@ void EntryListModel::removeEntryFromFolder(int entryId, int folderId) {
 void EntryListModel::reset() {
   emit beginResetModel();
   m_items.clear();
+  auto activityLog = getActivityLog();
   for (const auto &entry : m_userLibrary.getEntries(0, 0)) {
     if (!entry.hidden) {
-      m_items.emplace_back(entry);
+      auto item = Item{.entry = entry};
+
+      auto session =
+          activityLog->getLatestPlaySession(entry.contentHash.toStdString());
+      if (session) {
+        item.lastPlayedEpochMillis = session->endTime;
+      }
+
+      m_items.emplace_back(item);
     }
   }
   emit endResetModel();
@@ -184,9 +207,9 @@ void EntryListModel::reset() {
 void EntryListModel::removeFolderId(int folderId) {
   beginResetModel();
   for (auto &item : m_items) {
-    auto it = std::ranges::find(item.folderIds, folderId);
-    if (it != item.folderIds.end()) {
-      item.folderIds.erase(it);
+    auto it = std::ranges::find(item.entry.folderIds, folderId);
+    if (it != item.entry.folderIds.end()) {
+      item.entry.folderIds.erase(it);
     }
   }
   endResetModel();

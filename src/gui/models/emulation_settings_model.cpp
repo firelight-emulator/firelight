@@ -77,14 +77,16 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
           QVariantHash{{"label", "Emulator-corrected"},
                        {"value", "emulator-corrected"}}}});
 
-  m_items.emplace_back(Item{.label = "Enable rewind",
-                            .key = "rewind-enabled",
-                            .section = "Rewind",
-                            .defaultValue = "true",
-                            .description =
-                                "Note: Rewind is always disabled when using "
-                                "RetroAchievements in Hardcore mode.",
-                            .type = "toggle"});
+  m_items.emplace_back(Item{
+      .label = "Enable rewind",
+      .key = "rewind-enabled",
+      .section = "Rewind",
+      .defaultValue = "true",
+      .description = "Disabling rewind can reduce memory usage and improve "
+                     "frame pacing for more demanding platforms.\n\nNote: "
+                     "Rewind is always disabled when using "
+                     "RetroAchievements in Hardcore mode.",
+      .type = "toggle"});
 }
 
 int EmulationSettingsModel::getPlatformId() const { return m_platformId; }
