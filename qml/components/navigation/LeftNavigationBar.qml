@@ -112,7 +112,7 @@ Pane {
             label: "Controllers"
             iconName: "controller"
 
-            KeyNavigation.down: settingsButton
+            KeyNavigation.down: activityButton
 
             Layout.fillWidth: true
 
@@ -120,6 +120,23 @@ Pane {
             onToggled: {
                 if (toggled) {
                     Router.navigateTo("/controllers")
+                }
+            }
+        }
+
+        LeftNavigationItem {
+            id: activityButton
+            label: "Activity"
+            iconName: "bar-chart"
+
+            KeyNavigation.down: settingsButton
+
+            Layout.fillWidth: true
+
+            checked: Router.currentRoute.startsWith("/activity")
+            onToggled: {
+                if (toggled) {
+                    Router.navigateTo("/activity")
                 }
             }
         }

@@ -55,7 +55,7 @@ Item {
 
     readonly property string symbolFontFamily: symbols.name
     readonly property string regularFontFamily: "Segoe UI"
-    readonly property string lightFontFamily: lexendLight.name
+    readonly property string lightFontFamily: localFont.name
     readonly property string strongFontFamily: lexendBlack.name
     readonly property string semiboldFontFamily: semibold.name
 

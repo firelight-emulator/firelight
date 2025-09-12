@@ -76,6 +76,7 @@
         <file alias="search">assets/img/icons/filled-rounded/search.svg</file>
         <file alias="settings">assets/img/icons/filled-rounded/settings.svg</file>
         <file alias="shopping-bag">assets/img/icons/filled-rounded/shopping-bag.svg</file>
+        <file alias="sort">assets/img/icons/filled-rounded/sort.svg</file>
         <file alias="star">assets/img/icons/filled-rounded/star.svg</file>
         <file alias="star-shine">assets/img/icons/filled-rounded/star-shine.svg</file>
         <file alias="trophy">assets/img/icons/filled-rounded/trophy.svg</file>
@@ -99,6 +100,7 @@
         <file alias="play-circle">assets/img/icons/filled-rounded/play-circle.svg</file>
         <file alias="power">assets/img/icons/filled-rounded/power.svg</file>
         <file alias="ws">assets/img/platform-icons/wonderswanicon.svg</file>
+        <file alias="unknown">assets/img/platform-icons/unknown.svg</file>
     </qresource>
     <qresource prefix="/icons/empty">
         <file alias="bar-chart">assets/img/icons/notfilled-rounded/bar-chart-notfilled.svg</file>

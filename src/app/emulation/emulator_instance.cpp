@@ -111,6 +111,7 @@ bool EmulatorInstance::initialize(
 bool EmulatorInstance::isInitialized() { return m_initialized; }
 std::string EmulatorInstance::getContentHash() const { return m_contentHash; }
 int EmulatorInstance::getPlatformId() const { return m_platformId; }
+int EmulatorInstance::getSaveSlotNumber() const { return m_saveSlotNumber; }
 void EmulatorInstance::runFrame() {
   const auto now = std::chrono::steady_clock::now();
   // spdlog::info("Comparing {} and {}: {}", now.time_since_epoch().count(),

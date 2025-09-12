@@ -23,6 +23,8 @@ public:
 
   void refreshItems(std::vector<PlaySession> &playSessions);
 
+  QVector<PlaySession> getItems() const;
+
 private:
   QVector<PlaySession> m_items{};
 };

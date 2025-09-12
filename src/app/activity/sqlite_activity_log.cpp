@@ -73,6 +73,32 @@ bool SqliteActivityLog::createPlaySession(PlaySession &session) {
 
 std::optional<PlaySession>
 SqliteActivityLog::getLatestPlaySession(std::string contentHash) {
+  const QString queryString = "SELECT * FROM play_sessions WHERE content_hash "
+                              "= :contentHash ORDER BY start_time DESC LIMIT 1;";
+
+  auto query = QSqlQuery(getDatabase());
+  query.prepare(queryString);
+
+  query.bindValue(":contentHash", QString::fromStdString(contentHash));
+
+  if (!query.exec()) {
+    spdlog::warn("Query failed: {}", query.lastError().text().toStdString());
+    return std::nullopt;
+  }
+
+  if (query.next()) {
+    PlaySession session;
+    session.id = query.value("id").toInt();
+    session.contentHash = contentHash;
+    session.slotNumber = query.value("savefile_slot_number").toInt();
+    session.startTime = query.value("start_time").toULongLong();
+    session.endTime = query.value("end_time").toULongLong();
+    session.unpausedDurationMillis =
+        query.value("unpaused_duration_seconds").toULongLong() * 1000;
+
+    return session;
+  }
+
   return std::nullopt;
 }
 
@@ -97,6 +123,35 @@ SqliteActivityLog::getPlaySessions(const std::string contentHash) {
     // Create a PlaySession object from the query result
     PlaySession session;
     session.contentHash = contentHash;
+    session.slotNumber = query.value("savefile_slot_number").toInt();
+    session.startTime = query.value("start_time").toULongLong();
+    session.endTime = query.value("end_time").toULongLong();
+    session.unpausedDurationMillis =
+        query.value("unpaused_duration_seconds").toULongLong() * 1000;
+    session.slotNumber = query.value("savefile_slot_number").toInt();
+
+    playSessions.push_back(session);
+  }
+
+  return playSessions;
+}
+std::vector<PlaySession> SqliteActivityLog::getPlaySessions() {
+  const QString queryString =
+      "SELECT * FROM play_sessions ORDER BY start_time DESC;";
+
+  auto query = QSqlQuery(getDatabase());
+  query.prepare(queryString);
+
+  if (!query.exec()) {
+    spdlog::warn("Query failed: {}", query.lastError().text().toStdString());
+    return {};
+  }
+
+  std::vector<PlaySession> playSessions;
+  while (query.next()) {
+    // Create a PlaySession object from the query result
+    PlaySession session;
+    session.contentHash = query.value("content_hash").toString().toStdString();
     session.slotNumber = query.value("savefile_slot_number").toInt();
     session.startTime = query.value("start_time").toULongLong();
     session.endTime = query.value("end_time").toULongLong();

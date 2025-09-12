@@ -99,6 +99,15 @@ QString QtEmulationServiceProxy::getCurrentPlatformName() const {
 
   return {};
 }
+int QtEmulationServiceProxy::getCurrentSaveSlotNumber() const {
+  auto instance = m_emulationService->getCurrentEmulatorInstance();
+  if (!instance) {
+    return -1;
+  }
+
+  return instance->getSaveSlotNumber();
+}
+
 bool QtEmulationServiceProxy::isRewindEnabled() const {
   auto instance = m_emulationService->getCurrentEmulatorInstance();
   if (!instance) {

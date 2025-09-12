@@ -22,6 +22,6 @@ struct Entry {
   unsigned retroachievementsSetId = 0;
 
   std::vector<int> folderIds{};
-  unsigned createdAt = 0;
+  uint64_t createdAt = 0;
 };
 } // namespace firelight::library

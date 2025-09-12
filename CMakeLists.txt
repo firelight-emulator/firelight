@@ -96,6 +96,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
 file(GLOB QML_FILES
         qml/*.qml
+        qml/components/activity/*.qml
         qml/components/navigation/*.qml
         qml/components/transitions/*.qml
         qml/components/rewind/*.qml
@@ -188,6 +189,8 @@ add_library(firelight_lib
         src/app/emulation/emulation_service.cpp
         src/app/emulation/emulator_instance.cpp
         src/app/settings/emulation_setting.hpp
+        src/gui/models/game_activity_list_model.cpp
+        src/gui/models/game_activity_list_model.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -359,8 +362,10 @@ file(GLOB QML_TEST_FILES
         qml/ColorPalette.qml
         qml/Constants.qml
         qml/AppStyle.qml
+        #        qml/components/IconButton.qml
         qml/components/FLFocusHighlight.qml
         qml_tests/components/tst_FLFocusHighlight.qml
+        #        qml_tests/components/tst_IconButton.qml
 )
 
 foreach (QML_FILE ${QML_TEST_FILES})

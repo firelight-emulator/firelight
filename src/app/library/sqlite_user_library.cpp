@@ -491,9 +491,10 @@ bool SqliteUserLibrary::create(RomFileInfo &romFile) {
   query.bindValue(":contentHash",
                   QString::fromStdString(romFile.m_contentHash));
   query.bindValue(":createdAt",
-                  QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
-                      std::chrono::system_clock::now().time_since_epoch())
-                      .count()));
+                  QVariant::fromValue(
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::system_clock::now().time_since_epoch())
+                          .count()));
 
   if (!query.exec()) {
     spdlog::error("Failed to add rom file with path {}: {}", romFile.m_filePath,
@@ -648,7 +649,7 @@ std::vector<Entry> SqliteUserLibrary::getEntries(int offset, int limit) {
         .regionIds = query.value("region_ids").toString(),
         .retroachievementsSetId =
             query.value("retroachievements_set_id").toUInt(),
-        .createdAt = query.value("created_at").toUInt()});
+        .createdAt = query.value("created_at").toULongLong()});
   }
 
   query.finish();
@@ -985,9 +986,10 @@ void SqliteUserLibrary::create(PatchFile &file) {
   query.bindValue(":archiveFilePath",
                   QString::fromStdString(file.m_archiveFilePath));
   query.bindValue(":createdAt",
-                  QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
-                      std::chrono::system_clock::now().time_since_epoch())
-                      .count()));
+                  QVariant::fromValue(
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::system_clock::now().time_since_epoch())
+                          .count()));
 
   if (!query.exec()) {
     spdlog::error("Failed to add patch file with path {}: {}", file.m_filePath,
@@ -1036,9 +1038,10 @@ bool SqliteUserLibrary::create(WatchedDirectory &directory) {
   query.prepare(queryString);
   query.bindValue(":path", directory.path);
   query.bindValue(":createdAt",
-                  QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
-                      std::chrono::system_clock::now().time_since_epoch())
-                      .count()));
+                  QVariant::fromValue(
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::system_clock::now().time_since_epoch())
+                          .count()));
 
   if (!query.exec()) {
     spdlog::error("Failed to add directory with path {}: {}",
@@ -1165,10 +1168,11 @@ bool SqliteUserLibrary::createEntry(Entry &entry) {
   entryQuery.bindValue(":displayName", entry.displayName);
   entryQuery.bindValue(":contentHash", entry.contentHash);
   entryQuery.bindValue(":platformId", entry.platformId);
-  entryQuery.bindValue(":createdAt",
-                       QVariant::fromValue(std::chrono::duration_cast<std::chrono::milliseconds>(
-                           std::chrono::system_clock::now().time_since_epoch())
-                           .count()));
+  entryQuery.bindValue(
+      ":createdAt", QVariant::fromValue(
+                        std::chrono::duration_cast<std::chrono::milliseconds>(
+                            std::chrono::system_clock::now().time_since_epoch())
+                            .count()));
 
   if (!entryQuery.exec()) {
     spdlog::error("Failed to add entry with content hash {}: {}",

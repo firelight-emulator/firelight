@@ -47,4 +47,6 @@ void PlaySessionListModel::refreshItems(
   emit endResetModel();
 }
 
+QVector<PlaySession> PlaySessionListModel::getItems() const { return m_items; }
+
 } // namespace firelight::activity

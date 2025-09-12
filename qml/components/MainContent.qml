@@ -46,108 +46,90 @@ FocusScope {
 
         padding: 16
         background: Item {}
-        contentItem: ColumnLayout {
-            spacing: 16
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.maximumHeight: 42
-                Layout.minimumHeight: 42
+        contentItem: StackView {
+            id: contentStack
 
-                spacing: 12
-                Text {
-                    text: content.title
-                    // Layout.fillWidth: true
-                    // Layout.fillHeight: true
-                    color: "white"
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.DemiBold
-                    font.pixelSize: 24
-                    verticalAlignment: Qt.AlignVCenter
-                }
+            focus: true
 
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.horizontalStretchFactor: 1
-                }
+            initialItem: Text {
+                text: "Loading..."
+                anchors.fill: parent
+                font.pixelSize: 22
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                color: "#FFFFFF"
             }
 
-            StackView {
-                id: contentStack
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+            Component.onCompleted: {
+                Router.navigateTo("/library")
+            }
 
-                focus: true
-
-                Component.onCompleted: {
-                    Router.navigateTo("/library")
+            pushEnter: Transition {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 200
+                    easing.type: Easing.InOutQuad
                 }
-
-                pushEnter: Transition {
-                    NumberAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        property: "scale"
-                        from: 1.03
-                        to: 1
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }
+                NumberAnimation {
+                    property: "scale"
+                    from: 1.03
+                    to: 1
+                    duration: 200
+                    easing.type: Easing.InOutQuad
                 }
-                pushExit: Transition {
-                    NumberAnimation {
-                        property: "opacity"
-                        from: 1
-                        to: 0
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        property: "scale"
-                        from: 1
-                        to: 0.97
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }
+            }
+            pushExit: Transition {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 200
+                    easing.type: Easing.InOutQuad
                 }
-                popEnter: Transition {}
-                popExit: Transition {}
-                replaceEnter: Transition {
-                    NumberAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        property: "x"
-                        from: -20
-                        to: 0
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }
+                NumberAnimation {
+                    property: "scale"
+                    from: 1
+                    to: 0.97
+                    duration: 200
+                    easing.type: Easing.InOutQuad
                 }
-                replaceExit: Transition {
-                    NumberAnimation {
-                        property: "opacity"
-                        from: 1
-                        to: 0
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        property: "x"
-                        from: 0
-                        to: -20
-                        duration: 200
-                        easing.type: Easing.InOutQuad
-                    }}
+            }
+            popEnter: Transition {}
+            popExit: Transition {}
+            replaceEnter: Transition {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    property: "x"
+                    from: -20
+                    to: 0
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
+            }
+            replaceExit: Transition {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    property: "x"
+                    from: 0
+                    to: -20
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
             }
         }
     }

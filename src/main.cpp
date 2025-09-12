@@ -52,6 +52,7 @@
 #include "gui/filesystem_utils.hpp"
 #include "gui/gamepad_profile_item.hpp"
 #include "gui/models/emulation_settings_model.hpp"
+#include "gui/models/game_activity_list_model.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "input2/sdl/sdl_input_service.hpp"
@@ -286,6 +287,8 @@ int main(int argc, char *argv[]) {
                                                        "GamepadListModel");
   qmlRegisterType<firelight::settings::EmulationSettingsModel>(
       "Firelight", 1, 0, "EmulationSettingsModel");
+  qmlRegisterType<firelight::activity::GameActivityListModel>(
+      "Firelight", 1, 0, "GameActivityModel");
 
   QNetworkInformation::loadDefaultBackend();
   if (QNetworkInformation::instance()->reachability() ==

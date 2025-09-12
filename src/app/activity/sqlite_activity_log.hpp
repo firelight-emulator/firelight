@@ -17,6 +17,7 @@ public:
   [[nodiscard]] QSqlDatabase getDatabase() const;
 
   std::vector<PlaySession> getPlaySessions(std::string contentHash) override;
+  std::vector<PlaySession> getPlaySessions() override;
 
 private:
   QString databasePath;

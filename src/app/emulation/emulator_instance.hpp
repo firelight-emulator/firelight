@@ -24,6 +24,7 @@ public:
 
   std::string getContentHash() const;
   int getPlatformId() const;
+  int getSaveSlotNumber() const;
 
   // Must be called from the render thread (with active graphics context)
   void runFrame();

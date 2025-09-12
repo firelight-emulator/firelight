@@ -2,9 +2,11 @@
 #include "../entry.hpp"
 #include "../user_library.hpp"
 #include <QAbstractListModel>
+#include <event_dispatcher.hpp>
+#include <manager_accessor.hpp>
 
 namespace firelight::library {
-class EntryListModel : public QAbstractListModel {
+class EntryListModel : public QAbstractListModel, public ManagerAccessor {
   Q_OBJECT
 
 public:
@@ -30,7 +32,15 @@ public:
     Genres,
     RegionIds,
     FolderIds,
-    CreatedAt
+    CreatedAt,
+    LastPlayedAt,
+    NumSecondsPlayed
+  };
+
+  struct Item {
+    Entry entry;
+    uint64_t numSecondsPlayed{};
+    uint64_t lastPlayedEpochMillis{};
   };
 
   explicit EntryListModel(IUserLibrary &userLibrary, QObject *parent = nullptr);
@@ -57,6 +67,8 @@ public slots:
 
 private:
   IUserLibrary &m_userLibrary;
-  QList<Entry> m_items{};
+  QList<Item> m_items{};
+
+  ScopedConnection m_gamePlayedConnection;
 };
 } // namespace firelight::library
