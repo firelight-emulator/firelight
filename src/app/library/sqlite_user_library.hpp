@@ -60,13 +60,13 @@ public:
 
   std::optional<PatchFile> getPatchFile(int id) override;
 
-  void create(PatchFile &file);
+  void create(PatchFile &file) override;
 
-  std::optional<PatchFile> getPatchFileWithPathAndSize(const QString &filePath,
-                                                       size_t fileSizeBytes,
-                                                       bool inArchive);
+  // std::optional<PatchFile> getPatchFileWithPathAndSize(const QString &filePath,
+  //                                                      size_t fileSizeBytes,
+  //                                                      bool inArchive) override;
 
-  std::vector<PatchFile> getPatchFiles();
+  // std::vector<PatchFile> getPatchFiles() override;
 
   std::vector<WatchedDirectory> getWatchedDirectories() override;
 

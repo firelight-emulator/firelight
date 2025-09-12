@@ -37,15 +37,15 @@ public:
               (override));
   MOCK_METHOD(bool, deleteRomFile, (int), (override));
 
-  MOCK_METHOD(std::optional<firelight::library::PatchFile>,
-              getPatchFileWithPathAndSize, (const QString &, size_t, bool),
-              (override));
+  // MOCK_METHOD(std::optional<firelight::library::PatchFile>,
+  //             getPatchFileWithPathAndSize, (const QString &, size_t, bool),
+  //             (override));
 
   MOCK_METHOD(std::optional<firelight::library::PatchFile>, getPatchFile, (int),
               (override));
 
-  MOCK_METHOD(std::vector<firelight::library::PatchFile>, getPatchFiles, (),
-              (override));
+  // MOCK_METHOD(std::vector<firelight::library::PatchFile>, getPatchFiles, (),
+  //             (override));
 
   MOCK_METHOD(std::vector<firelight::library::Entry>, getEntries, (int, int),
               (override));

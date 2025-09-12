@@ -50,12 +50,12 @@ protected:
  * setting change from default to integer-scale.
  */
 TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
-  library::RomFileInfo info{.m_contentHash = m_testContentHash,
+  library::RomFileInfo info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = m_testContentHash,
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 16777216};
+                            .m_contentHash = m_testContentHash};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -90,12 +90,12 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
  * pixel-perfect.
  */
 TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 16777216};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -174,12 +174,12 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
  * from game-level to platform-level settings and back.
  */
 TEST_F(EmulatorInstanceTest, SettingsLevelChangeTriggersRefresh) {
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 16777216};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -227,12 +227,12 @@ TEST_F(EmulatorInstanceTest, SettingsLevelChangeTriggersRefresh) {
  * together.
  */
 TEST_F(EmulatorInstanceTest, MultipleSettingsChangeSimultaneously) {
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 16777216};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -270,12 +270,12 @@ TEST_F(EmulatorInstanceTest, MultipleSettingsChangeSimultaneously) {
  * different games.
  */
 TEST_F(EmulatorInstanceTest, WrongContentHashIgnoresGameSettings) {
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 16777216};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -308,12 +308,12 @@ TEST_F(EmulatorInstanceTest, WrongContentHashIgnoresGameSettings) {
  * different platforms.
  */
 TEST_F(EmulatorInstanceTest, WrongPlatformIdIgnoresPlatformSettings) {
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 16777216};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);

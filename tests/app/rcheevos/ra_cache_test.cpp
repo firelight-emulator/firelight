@@ -58,11 +58,11 @@ TEST_F(RetroAchievementsCacheTest, CreateAchievementSuccess) {
       .id = 1,
       .name = "Test Achievement",
       .description = "This is a test achievement",
-      .points = 10,
-      .setId = 4,
       .imageUrl = "",
+      .points = 10,
       .type = "test",
       .displayOrder = 1,
+      .setId = 4,
       .flags = 4,
   };
 

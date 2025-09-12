@@ -160,8 +160,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithNoEntryTest) {
       &library, &library::SqliteUserLibrary::romRunConfigurationCreated);
   QSignalSpy entryCreated(&library, &library::SqliteUserLibrary::entryCreated);
 
-  library::RomFileInfo romInfo{.m_filePath = "test.rom",
-                               .m_fileSizeBytes = 123456,
+  library::RomFileInfo romInfo{.m_fileSizeBytes = 123456,
+                               .m_filePath = "test.rom",
                                .m_fileMd5 = "d41d8cd98f00b204e9800998ecf8427e",
                                .m_fileCrc32 = "12345678",
                                .m_inArchive = false,
@@ -192,8 +192,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithNoEntryTest) {
 TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
   auto library = library::SqliteUserLibrary(":memory:", "file.txt");
 
-  library::RomFileInfo romInfo{.m_filePath = "test.rom",
-                               .m_fileSizeBytes = 123456,
+  library::RomFileInfo romInfo{.m_fileSizeBytes = 123456,
+                               .m_filePath = "test.rom",
                                .m_fileMd5 = "d41d8cd98f00b204e9800998ecf8427e",
                                .m_fileCrc32 = "12345678",
                                .m_inArchive = false,
@@ -217,8 +217,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
   QSignalSpy entryCreated(&library, &library::SqliteUserLibrary::entryCreated);
 
   // Create with SAME content hash as existing entry
-  library::RomFileInfo romInfo2{.m_filePath = "testNumberTwoBaby.rom",
-                                .m_fileSizeBytes = 1234567,
+  library::RomFileInfo romInfo2{.m_fileSizeBytes = 1234567,
+                                .m_filePath = "testNumberTwoBaby.rom",
                                 .m_fileMd5 = "123456789abcdef0123456789abcdef",
                                 .m_fileCrc32 = "12345678",
                                 .m_inArchive = false,
@@ -249,8 +249,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
 TEST_F(SqliteUserLibraryTest, AddRomWithDuplicatePathTest) {
   auto library = library::SqliteUserLibrary(":memory:", "file.txt");
 
-  library::RomFileInfo romInfo{.m_filePath = "test.rom",
-                               .m_fileSizeBytes = 123456,
+  library::RomFileInfo romInfo{.m_fileSizeBytes = 123456,
+                               .m_filePath = "test.rom",
                                .m_fileMd5 = "d41d8cd98f00b204e9800998ecf8427e",
                                .m_fileCrc32 = "12345678",
                                .m_inArchive = false,
@@ -266,8 +266,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithDuplicatePathTest) {
       &library, &library::SqliteUserLibrary::romRunConfigurationCreated);
   QSignalSpy entryCreated(&library, &library::SqliteUserLibrary::entryCreated);
 
-  library::RomFileInfo newRomInfo{.m_filePath = "test.rom",
-                                  .m_fileSizeBytes = 123456,
+  library::RomFileInfo newRomInfo{.m_fileSizeBytes = 123456,
+                                  .m_filePath = "test.rom",
                                   .m_fileMd5 = "12344",
                                   .m_fileCrc32 = "12345678",
                                   .m_inArchive = false,
@@ -284,8 +284,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithDuplicatePathTest) {
 TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
   auto library = library::SqliteUserLibrary(":memory:", "file.txt");
 
-  library::RomFileInfo romInfo{.m_filePath = "test.rom",
-                               .m_fileSizeBytes = 123456,
+  library::RomFileInfo romInfo{.m_fileSizeBytes = 123456,
+                               .m_filePath = "test.rom",
                                .m_fileMd5 = "d41d8cd98f00b204e9800998ecf8427e",
                                .m_fileCrc32 = "12345678",
                                .m_inArchive = false,
@@ -302,8 +302,8 @@ TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
   ASSERT_FALSE(entry->hidden);
 
   // Create with SAME content hash as existing entry
-  library::RomFileInfo romInfo2{.m_filePath = "testNumberTwoBaby.rom",
-                                .m_fileSizeBytes = 1234567,
+  library::RomFileInfo romInfo2{.m_fileSizeBytes = 1234567,
+                                .m_filePath = "testNumberTwoBaby.rom",
                                 .m_fileMd5 = "123456789abcdef0123456789abcdef",
                                 .m_fileCrc32 = "12345678",
                                 .m_inArchive = false,
@@ -342,8 +342,8 @@ TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
 TEST_F(SqliteUserLibraryTest, DeleteRomHidesEntryTest) {
   auto library = library::SqliteUserLibrary(":memory:", "file.txt");
 
-  library::RomFileInfo romInfo{.m_filePath = "test.rom",
-                               .m_fileSizeBytes = 123456,
+  library::RomFileInfo romInfo{.m_fileSizeBytes = 123456,
+                               .m_filePath = "test.rom",
                                .m_fileMd5 = "d41d8cd98f00b204e9800998ecf8427e",
                                .m_fileCrc32 = "12345678",
                                .m_inArchive = false,
@@ -375,8 +375,8 @@ TEST_F(SqliteUserLibraryTest, DeleteRomHidesEntryTest) {
 TEST_F(SqliteUserLibraryTest, AddingRomAfterDeletingUnhidesEntryTest) {
   auto library = library::SqliteUserLibrary(":memory:", "file.txt");
 
-  library::RomFileInfo romInfo{.m_filePath = "test.rom",
-                               .m_fileSizeBytes = 123456,
+  library::RomFileInfo romInfo{.m_fileSizeBytes = 123456,
+                               .m_filePath = "test.rom",
                                .m_fileMd5 = "d41d8cd98f00b204e9800998ecf8427e",
                                .m_fileCrc32 = "12345678",
                                .m_inArchive = false,
@@ -419,8 +419,8 @@ TEST_F(SqliteUserLibraryTest, RomsRemovedWhenContentDirectoryDeletedTest) {
   ASSERT_TRUE(library.create(main));
 
   // Add a rom file to the content directory
-  library::RomFileInfo romInfo{.m_filePath = "test_content_directory/test.rom",
-                               .m_fileSizeBytes = 123456,
+  library::RomFileInfo romInfo{.m_fileSizeBytes = 123456,
+                               .m_filePath = "test_content_directory/test.rom",
                                .m_fileMd5 = "d41d8cd98f00b204e9800998ecf8427e",
                                .m_fileCrc32 = "12345678",
                                .m_inArchive = false,

@@ -37,7 +37,7 @@ bool PatchFile::load() {
 }
 
 PatchFile::PatchType PatchFile::getType() const { return m_patchType; }
-bool PatchFile::isValid() {}
+// bool PatchFile::isValid() {}
 
 std::vector<uint8_t> PatchFile::patch(const std::vector<uint8_t> &data) const {
   if (!m_patch) {

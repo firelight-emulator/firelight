@@ -193,8 +193,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
 
             if (romFile.isValid()) {
               auto romInfo = RomFileInfo{
-                  .m_filePath = romFile.getFilePath().toStdString(),
                   .m_fileSizeBytes = romFile.getFileSizeBytes(),
+                  .m_filePath = romFile.getFilePath().toStdString(),
                   .m_fileMd5 = romFile.getFileMd5().toStdString(),
                   .m_fileCrc32 = ":)",
                   .m_inArchive = romFile.inArchive(),
@@ -268,8 +268,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       auto romFile = RomFile(fileInfo.filePath());
       if (romFile.isValid()) {
         auto romInfo = RomFileInfo{
-            .m_filePath = romFile.getFilePath().toStdString(),
             .m_fileSizeBytes = romFile.getFileSizeBytes(),
+            .m_filePath = romFile.getFilePath().toStdString(),
             .m_fileMd5 = romFile.getFileMd5().toStdString(),
             .m_fileCrc32 = ":)",
             .m_inArchive = romFile.inArchive(),
