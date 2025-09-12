@@ -101,11 +101,11 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
   case RegionIds:
     return item.entry.regionIds;
   case CreatedAt:
-    return item.entry.createdAt;
+    return QVariant::fromValue(item.entry.createdAt);
   case FolderIds:
     return QVariant::fromValue(item.entry.folderIds);
   case LastPlayedAt:
-    return item.lastPlayedEpochMillis;
+    return QVariant::fromValue(item.lastPlayedEpochMillis);
   default:
     return QVariant{};
   }
