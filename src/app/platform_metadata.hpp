@@ -498,53 +498,53 @@ public:
 
   static std::string getInputName(const input::GamepadInput input) {
     switch (input) {
-    case libretro::IRetroPad::Input::SouthFace:
+    case input::GamepadInput::SouthFace:
       return "South Face";
-    case libretro::IRetroPad::Input::EastFace:
+    case input::GamepadInput::EastFace:
       return "East Face";
-    case libretro::IRetroPad::Input::WestFace:
+    case input::GamepadInput::WestFace:
       return "West Face";
-    case libretro::IRetroPad::Input::NorthFace:
+    case input::GamepadInput::NorthFace:
       return "North Face";
-    case libretro::IRetroPad::Input::LeftBumper:
+    case input::GamepadInput::LeftBumper:
       return "Left Bumper";
-    case libretro::IRetroPad::Input::RightBumper:
+    case input::GamepadInput::RightBumper:
       return "Right Bumper";
-    case libretro::IRetroPad::Input::LeftTrigger:
+    case input::GamepadInput::LeftTrigger:
       return "Left Trigger";
-    case libretro::IRetroPad::Input::RightTrigger:
+    case input::GamepadInput::RightTrigger:
       return "Right Trigger";
-    case libretro::IRetroPad::Input::L3:
+    case input::GamepadInput::L3:
       return "L3";
-    case libretro::IRetroPad::Input::R3:
+    case input::GamepadInput::R3:
       return "R3";
-    case libretro::IRetroPad::Input::Start:
+    case input::GamepadInput::Start:
       return "Start";
-    case libretro::IRetroPad::Input::Select:
+    case input::GamepadInput::Select:
       return "Select";
-    case libretro::IRetroPad::Input::DpadUp:
+    case input::GamepadInput::DpadUp:
       return "D-Pad Up";
-    case libretro::IRetroPad::Input::DpadDown:
+    case input::GamepadInput::DpadDown:
       return "D-Pad Down";
-    case libretro::IRetroPad::Input::DpadLeft:
+    case input::GamepadInput::DpadLeft:
       return "D-Pad Left";
-    case libretro::IRetroPad::Input::DpadRight:
+    case input::GamepadInput::DpadRight:
       return "D-Pad Right";
-    case libretro::IRetroPad::Input::LeftStickUp:
+    case input::GamepadInput::LeftStickUp:
       return "Left Stick Up";
-    case libretro::IRetroPad::Input::LeftStickDown:
+    case input::GamepadInput::LeftStickDown:
       return "Left Stick Down";
-    case libretro::IRetroPad::Input::LeftStickLeft:
+    case input::GamepadInput::LeftStickLeft:
       return "Left Stick Left";
-    case libretro::IRetroPad::Input::LeftStickRight:
+    case input::GamepadInput::LeftStickRight:
       return "Left Stick Right";
-    case libretro::IRetroPad::Input::RightStickUp:
+    case input::GamepadInput::RightStickUp:
       return "Right Stick Up";
-    case libretro::IRetroPad::Input::RightStickDown:
+    case input::GamepadInput::RightStickDown:
       return "Right Stick Down";
-    case libretro::IRetroPad::Input::RightStickLeft:
+    case input::GamepadInput::RightStickLeft:
       return "Right Stick Left";
-    case libretro::IRetroPad::Input::RightStickRight:
+    case input::GamepadInput::RightStickRight:
       return "Right Stick Right";
     default:
       return "Unknown";

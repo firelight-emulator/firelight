@@ -77,12 +77,12 @@ TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 16777216};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -117,14 +117,14 @@ TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 0,
                             .m_filePath = "testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = true,
                             .m_archivePathName =
                                 "test_resources/testrom.gba.zip",
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 0};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -159,14 +159,14 @@ TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 0,
                             .m_filePath = "testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = true,
                             .m_archivePathName =
                                 "test_resources/testrom.gba.7z",
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 0};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -201,14 +201,14 @@ TEST_F(EmulationServiceTest, LoadValidRomInTarSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{.m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd",
+  library::RomFileInfo info{.m_fileSizeBytes = 0,
                             .m_filePath = "testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = true,
                             .m_archivePathName =
                                 "test_resources/testrom.gba.tar",
                             .m_platformId = 3,
-                            .m_fileSizeBytes = 0};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);

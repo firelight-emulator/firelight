@@ -30,7 +30,7 @@ public:
 
   [[nodiscard]] PatchType getType() const;
 
-  bool isValid();
+  // bool isValid();
   [[nodiscard]] std::vector<uint8_t>
   patch(const std::vector<uint8_t> &data) const;
 
