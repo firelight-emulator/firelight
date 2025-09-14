@@ -1,5 +1,6 @@
 #include "emulation_settings_model.hpp"
 
+#include <platforms/platform_service.hpp>
 #include <spdlog/spdlog.h>
 
 namespace firelight::settings {
@@ -99,6 +100,46 @@ void EmulationSettingsModel::setPlatformId(const int platformId) {
   // TODO: do stuff
   m_platformId = platformId;
   emit platformIdChanged();
+
+  auto platform = getPlatformService()->getPlatform(m_platformId);
+  if (!platform) {
+    return;
+  }
+
+  for (const auto &opt : platform->emulationSettings) {
+    bool found = false;
+    for (auto &item : m_items) {
+      if (item.key == QString::fromStdString(opt.key)) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      Item item;
+      item.label = QString::fromStdString(opt.label);
+      item.key = QString::fromStdString(opt.key);
+      item.section = QString::fromStdString(opt.category);
+      item.description = QString::fromStdString(opt.description);
+      item.defaultValue = QString::fromStdString(opt.defaultValue);
+      item.type = opt.type == BOOLEAN ? "toggle" : "combobox";
+      item.requiresRestart = opt.requiresRestart;
+
+      if (opt.type == BOOLEAN) {
+        item.trueValue = QString::fromStdString(opt.trueStringValue);
+        item.falseValue = QString::fromStdString(opt.falseStringValue);
+        item.boolValue = item.defaultValue == item.trueValue;
+      } else if (opt.type == OPTIONS) {
+        for (const auto &option : opt.options) {
+          item.options.emplace_back(
+              QVariantHash{{"label", QString::fromStdString(option.label)},
+                           {"value", QString::fromStdString(option.value)}});
+        }
+      }
+
+      m_items.emplace_back(std::move(item));
+    }
+  }
 
   refreshValues();
 }

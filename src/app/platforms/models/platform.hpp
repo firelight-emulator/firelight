@@ -1,5 +1,6 @@
 #pragma once
 #include "controller_type.hpp"
+#include "settings/emulation_setting.hpp"
 
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
@@ -15,6 +16,7 @@ struct Platform {
   std::string slug;
   std::vector<std::string> fileAssociations;
   std::vector<ControllerType> controllerTypes;
+  std::vector<settings::EmulationSetting> emulationSettings;
 };
 
 inline void from_json(const nlohmann::json &j, Platform &p) {

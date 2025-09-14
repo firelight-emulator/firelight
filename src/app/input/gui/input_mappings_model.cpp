@@ -10,7 +10,7 @@
 namespace firelight::input {
 InputMappingsModel::InputMappingsModel(QObject *parent)
     : QAbstractListModel(parent) {
-  m_inputService = InputService::instance();
+  m_inputService = getInputService();
   refreshMappings();
 }
 

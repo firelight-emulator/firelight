@@ -9,7 +9,7 @@ void GamepadProfileItem::setId(const int id) {
   if (m_id != id) {
     m_id = id;
 
-    m_profile = input::InputService::instance()->getProfile(m_id);
+    m_profile = getInputService()->getProfile(m_id);
     emit profileIdChanged(m_id);
     emit nameChanged(name());
     emit isKeyboardProfileChanged();

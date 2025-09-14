@@ -1,0 +1,17 @@
+gambatte_up_down_allowed:
+- Allow Opposing Directions
+- Enabling this will allow pressing / quickly alternating / holding both left and right (or up and down) directions at the same time. This may cause movement-based glitches.
+- enabled, disabled
+- default: disabled
+
+gambatte_mix_frames:
+- Interframe Blending
+- Simulates LCD ghosting effects. 'Simple' performs a 50:50 mix of the current and previous frames. 'LCD Ghosting' mimics natural LCD response times by combining multiple buffered frames. 'Simple' blending is required when playing games that rely on LCD ghosting for transparency effects (Wave Race, Ballistic, Chikyuu Kaihou Gun ZAS...).
+- disabled, mix, mix_fast, lcd_ghosting, lcd_ghosting_fast
+- default: disabled
+
+gambatte_dark_filter_level:
+- Dark Filter Level (percent)
+- Enable luminosity-based brightness reduction. May be used to avoid glare/eye strain when playing games with white backgrounds, which are intended for display on a non-backlit Game Boy Color and can therefore appear uncomfortably bright when viewed on a modern backlit screen.
+- 0 to 50, step size 5
+- default: 0

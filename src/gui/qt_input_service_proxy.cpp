@@ -25,7 +25,7 @@ static QMap<input::GamepadInput, Qt::Key> gamepadToQtKeyMap = {
     {input::EastFace, Qt::Key_Back}};
 
 QtInputServiceProxy::QtInputServiceProxy() {
-  m_inputService = input::InputService::instance();
+  m_inputService = getInputService();
 
   m_inputService->setPreferGamepadOverKeyboard(
       m_settings.value("controllers/prioritizeControllerOverKeyboard", true)

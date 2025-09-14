@@ -1,4 +1,6 @@
 #pragma once
+#include "service_accessor.hpp"
+
 #include <audio/audio_manager.hpp>
 #include <event_dispatcher.hpp>
 #include <future>
@@ -10,7 +12,7 @@
 
 namespace firelight::emulation {
 
-class EmulatorInstance : public ManagerAccessor {
+class EmulatorInstance : public ManagerAccessor, public ServiceAccessor {
 public:
   EmulatorInstance(std::unique_ptr<::libretro::Core>, std::string contentPath,
                    std::string contentHash, int platformId, int saveSlotNumber,

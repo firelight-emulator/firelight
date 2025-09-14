@@ -4,13 +4,14 @@ import QtQuick.Controls
 
 Menu {
     id: control
+    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
 
-    padding: 4
-    horizontalPadding: 8
+    padding: 8
+    // horizontalPadding: 8
 
     implicitWidth: 300
     implicitHeight: {
-        var height = 8
+        var height = 16
 
         for (var i = 0; i < count; i++) {
             height += itemAt(i).implicitHeight
@@ -55,10 +56,10 @@ Menu {
     // // implicitContentHeight: control.count * Constants.rightClickMenuItem_DefaultHeight
 
     background: Rectangle {
-        color: "#1D1D1D"
-        // opacity: 0.9
-        radius: 4
-        border.color: "#4B4B4B"
+        color: ColorPalette.neutral900
+        radius: 8
+        border.color: ColorPalette.neutral700
+        border.width: 1
     }
 
     delegate: RightClickMenuItem {

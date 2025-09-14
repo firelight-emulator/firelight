@@ -19,8 +19,7 @@ void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
   const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
   const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
-  firelight::input::InputService::instance()->updateMouseState(x, y,
-                                                               m_mousePressed);
+  getInputService()->updateMouseState(x, y, m_mousePressed);
 }
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
@@ -314,20 +313,17 @@ void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
   const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
   const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
 
-  firelight::input::InputService::instance()->updateMouseState(x, y,
-                                                               m_mousePressed);
+  getInputService()->updateMouseState(x, y, m_mousePressed);
 }
 
 void EmulatorItem::mousePressEvent(QMouseEvent *event) {
   m_mousePressed = true;
-  firelight::input::InputService::instance()->updateMousePressed(
-      m_mousePressed);
+  getInputService()->updateMousePressed(m_mousePressed);
 }
 
 void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
   m_mousePressed = false;
-  firelight::input::InputService::instance()->updateMousePressed(
-      m_mousePressed);
+  getInputService()->updateMousePressed(m_mousePressed);
 }
 
 void EmulatorItem::startGame() {

@@ -66,7 +66,7 @@ void GamepadStatusItem::setPlayerNumber(const int playerNumber) {
   }
 
   m_playerNumber = playerNumber;
-  m_controller = InputService::instance()->getPlayerGamepad(playerNumber).get();
+  m_controller = getInputService()->getPlayerGamepad(playerNumber).get();
   if (m_controller != nullptr) {
     if (!m_isConnected) {
       m_isConnected = true;

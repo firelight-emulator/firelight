@@ -7,7 +7,7 @@
 
 namespace firelight::gui {
 
-class GamepadProfileItem : public QQuickItem {
+class GamepadProfileItem : public QQuickItem, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int profileId READ id WRITE setId NOTIFY profileIdChanged)
   Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)

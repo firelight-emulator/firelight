@@ -1,6 +1,7 @@
 #pragma once
 
 #include "input2/input_service.hpp"
+#include "service_accessor.hpp"
 
 #include <QAbstractListModel>
 #include <firelight/libretro/retropad.hpp>
@@ -9,7 +10,9 @@
 
 namespace firelight::input {
 
-class InputMappingsModel : public QAbstractListModel, public ManagerAccessor {
+class InputMappingsModel : public QAbstractListModel,
+                           public ManagerAccessor,
+                           public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int profileId READ getProfileId WRITE setProfileId NOTIFY
                  profileIdChanged)

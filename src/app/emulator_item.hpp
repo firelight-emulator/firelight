@@ -7,7 +7,9 @@
 
 #include <qchronotimer.h>
 
-class EmulatorItem : public QQuickRhiItem, public firelight::ManagerAccessor {
+class EmulatorItem : public QQuickRhiItem,
+                     public firelight::ManagerAccessor,
+                     public firelight::ServiceAccessor {
 protected:
   void mouseMoveEvent(QMouseEvent *event) override;
 

@@ -23,13 +23,13 @@ FocusScope {
 
         contentItem: ColumnLayout {
             spacing: 0
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.maximumHeight: 1
-                Layout.preferredHeight: 1
-                color: ColorPalette.neutral300
-                opacity: 0.25
-            }
+            // Rectangle {
+            //     Layout.fillWidth: true
+            //     Layout.maximumHeight: 1
+            //     Layout.preferredHeight: 1
+            //     color: ColorPalette.neutral300
+            //     opacity: 0.25
+            // }
             Button {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
@@ -53,7 +53,7 @@ FocusScope {
 
                 background: Rectangle {
                     color: ColorPalette.neutral300
-                    opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0
+                    opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.08
 
                     Behavior on opacity {
                         NumberAnimation {
@@ -61,6 +61,7 @@ FocusScope {
                             easing.type: Easing.InOutQuad
                         }
                     }
+                    radius: 8
                 }
 
                 contentItem: RowLayout {
@@ -86,18 +87,20 @@ FocusScope {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.maximumHeight: 1
-                Layout.preferredHeight: 1
-                color: ColorPalette.neutral300
-                opacity: 0.25
-            }
+            // Rectangle {
+            //     Layout.fillWidth: true
+            //     Layout.maximumHeight: 1
+            //     Layout.preferredHeight: 1
+            //     color: ColorPalette.neutral300
+            //     opacity: 0.25
+            // }
 
             Text {
                 id: descriptionText
                 Layout.fillWidth: true
                 Layout.topMargin: 4
+                leftPadding: 8
+                rightPadding: 8
                 visible: root.description !== ""
 
                 font.pixelSize: 15

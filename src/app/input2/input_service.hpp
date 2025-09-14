@@ -37,9 +37,6 @@ public:
             {SlowDown, "Slow down"}};
   }
 
-  static void setInstance(InputService *instance) { s_instance = instance; }
-  static InputService *instance() { return s_instance; }
-
   ~InputService() override = default;
   virtual int addGamepad(std::shared_ptr<IGamepad> gamepad) = 0;
 

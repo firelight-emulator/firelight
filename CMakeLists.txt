@@ -191,6 +191,8 @@ add_library(firelight_lib
         src/app/settings/emulation_setting.hpp
         src/gui/models/game_activity_list_model.cpp
         src/gui/models/game_activity_list_model.hpp
+        src/app/service_accessor.cpp
+        src/app/service_accessor.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

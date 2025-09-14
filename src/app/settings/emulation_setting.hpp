@@ -16,6 +16,8 @@ struct EmulationSetting {
   std::string key;
   std::string description;
 
+  std::string defaultValue;
+
   EmulationSettingType type;
 
   bool requiresRestart = false;

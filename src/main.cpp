@@ -60,6 +60,7 @@
 
 #include <input/gui/input_mappings_model.hpp>
 #include <input/keyboard_input_handler.hpp>
+#include <platforms/platform_service.hpp>
 #include <saves/gui/save_files_item.hpp>
 #include <unistd.h>
 
@@ -83,6 +84,9 @@ int main(int argc, char *argv[]) {
   // format.setProfile(QSurfaceFormat::OpenGLContextProfile::CompatibilityProfile);
   // format.setVersion(4, 1);
   // QSurfaceFormat::setDefaultFormat(format);
+
+  firelight::ServiceAccessor::setPlatformService(
+      &firelight::platforms::PlatformService::getInstance());
 
   QSurfaceFormat format;
   format.setSwapInterval(0);
@@ -148,7 +152,7 @@ int main(int argc, char *argv[]) {
       baseDir.filePath("controllers.db"));
 
   firelight::input::SDLInputService inputService(controllerRepository);
-  firelight::input::InputService::setInstance(&inputService);
+  firelight::ServiceAccessor::setInputService(&inputService);
 
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 

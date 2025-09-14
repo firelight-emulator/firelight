@@ -2,11 +2,12 @@
 
 #include "event_dispatcher.hpp"
 #include "input2/input_service.hpp"
+#include "service_accessor.hpp"
 
 #include <QAbstractListModel>
 
 namespace firelight::gui {
-class ControllerListModel : public QAbstractListModel {
+class ControllerListModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
 
 public:

@@ -1,5 +1,6 @@
 #pragma once
 #include "event_dispatcher.hpp"
+#include "service_accessor.hpp"
 
 #include <QQuickItem>
 
@@ -8,7 +9,9 @@
 #include <input2/gamepad.hpp>
 
 namespace firelight::input {
-class GamepadStatusItem : public QQuickItem, public ManagerAccessor {
+class GamepadStatusItem : public QQuickItem,
+                          public ManagerAccessor,
+                          public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int playerNumber READ getPlayerNumber WRITE setPlayerNumber NOTIFY
                  playerNumberChanged)

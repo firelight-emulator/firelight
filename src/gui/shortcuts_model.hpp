@@ -1,11 +1,12 @@
 #pragma once
 #include "input2/input_service.hpp"
+#include "service_accessor.hpp"
 
 #include <QAbstractListModel>
 
 namespace firelight::gui {
 
-class ShortcutsModel : public QAbstractListModel {
+class ShortcutsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
 
 public:

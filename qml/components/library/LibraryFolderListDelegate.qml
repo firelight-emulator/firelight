@@ -18,7 +18,7 @@ FirelightMenuItem {
       signal editClicked(int folderId, string folderName)
 
       // labelIcon: "\ue40a"
-      height: 42
+      height: 48
       width: ListView.view.width
 
       onToggled: {

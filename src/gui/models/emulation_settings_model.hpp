@@ -1,11 +1,14 @@
 #pragma once
+#include "service_accessor.hpp"
+
 #include <QAbstractListModel>
 #include <event_dispatcher.hpp>
 #include <settings/settings_service.hpp>
 
 namespace firelight::settings {
 
-class EmulationSettingsModel : public QAbstractListModel {
+class EmulationSettingsModel : public QAbstractListModel,
+                               public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY
                  platformIdChanged)

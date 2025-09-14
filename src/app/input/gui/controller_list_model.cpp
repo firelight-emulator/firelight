@@ -7,7 +7,7 @@
 namespace firelight::gui {
 ControllerListModel::ControllerListModel(QObject *parent)
     : QAbstractListModel(parent) {
-  m_inputService = input::InputService::instance();
+  m_inputService = getInputService();
 
   m_connectedHandler =
       EventDispatcher::instance().subscribe<input::GamepadConnectedEvent>(

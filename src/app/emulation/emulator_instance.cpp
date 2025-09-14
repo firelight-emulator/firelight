@@ -85,8 +85,8 @@ bool EmulatorInstance::initialize(
 
   m_core->setVideoReceiver(videoDataReceiver);
   m_core->setAudioReceiver(m_audioManager);
-  m_core->setRetropadProvider(input::InputService::instance());
-  m_core->setPointerInputProvider(input::InputService::instance());
+  m_core->setRetropadProvider(getInputService());
+  m_core->setPointerInputProvider(getInputService());
   m_core->setSystemDirectory(getCoreSystemDirectory());
   m_core->init();
 

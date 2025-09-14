@@ -9,7 +9,7 @@ ShortcutsModel::ShortcutsModel(
     const std::shared_ptr<input::ShortcutMapping> &shortcutMapping)
     : QAbstractListModel(nullptr), m_shortcutMapping(shortcutMapping),
       m_isKeyboard(isKeyboard) {
-  m_inputService = input::InputService::instance();
+  m_inputService = getInputService();
 
   beginResetModel();
   for (const auto &shortcut : input::InputService::listShortcuts()) {
