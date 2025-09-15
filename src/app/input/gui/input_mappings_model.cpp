@@ -161,7 +161,7 @@ void InputMappingsModel::resetToDefault(int originalInput) {
           item.mappedInput =
               m_isKeyboard
                   ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
-                  : input.virtualInput;
+                  : static_cast<int>(input.virtualInput);
 
           if (m_isKeyboard) {
             item.mappedInputName = KeyboardInputHandler::getKeyLabel(
@@ -306,7 +306,7 @@ void InputMappingsModel::refreshMappings() {
     auto value = mapped.has_value() ? mapped.value()
                  : m_isKeyboard
                      ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
-                     : input.virtualInput;
+                     : static_cast<int>(input.virtualInput);
 
     if (!mapped.has_value()) {
       item.isDefault = true;

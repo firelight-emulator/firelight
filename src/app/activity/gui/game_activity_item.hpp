@@ -16,13 +16,13 @@ class GameActivityItem : public QObject, public ManagerAccessor {
                  playSessionsChanged)
 
 public:
-  QString getContentHash() const;
+  [[nodiscard]] QString getContentHash() const;
   void setContentHash(const QString &contentHash);
 
-  int getTimesPlayed() const { return m_timesPlayed; }
-  int getTotalSecondsPlayed() const;
+  [[nodiscard]] int getTimesPlayed() const { return m_timesPlayed; }
+  [[nodiscard]] uint64_t getTotalSecondsPlayed() const;
 
-  QAbstractListModel *getPlaySessions() const;
+  [[nodiscard]] QAbstractListModel *getPlaySessions() const;
 
 signals:
   void contentHashChanged();
@@ -33,7 +33,7 @@ signals:
 private:
   QString m_contentHash;
   int m_timesPlayed = 0;
-  int m_totalSecondsPlayed = 0;
+  uint64_t m_totalSecondsPlayed = 0;
 
   PlaySessionListModel *m_playSessions = new PlaySessionListModel();
 };

@@ -113,6 +113,7 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
     if (platform) {
       m_currentPlatform = platform.value();
     }
+
     auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(
         m_currentPlatform.id, m_currentEntry.contentHash);
     auto m_core = std::make_unique<::libretro::Core>(m_currentEntry.platformId,
@@ -172,7 +173,7 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
   //   return {};
   // }
 
-  return std::async(std::launch::async, [entryId, this] -> EmulatorInstance * {
+  return std::async(std::launch::async, [this]() -> EmulatorInstance * {
     return m_emulatorInstance.get();
   });
 }
