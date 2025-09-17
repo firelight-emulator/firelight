@@ -35,6 +35,11 @@ QtInputServiceProxy::QtInputServiceProxy() {
       m_settings.value("controllers/onlyPlayerOneCanNavigateMenus", true)
           .toBool();
 
+  // Initialize auto-repeat timer
+  m_autoRepeatTimer = new QTimer(this);
+  connect(m_autoRepeatTimer, &QTimer::timeout, this, &QtInputServiceProxy::processAutoRepeat);
+  m_autoRepeatTimer->start(16); // ~60 FPS processing
+
   shortcutToggledConnection =
       EventDispatcher::instance().subscribe<input::ShortcutToggledEvent>(
           [this](const input::ShortcutToggledEvent &event) {
@@ -44,6 +49,15 @@ QtInputServiceProxy::QtInputServiceProxy() {
   gamepadInputConnection =
       EventDispatcher::instance().subscribe<input::GamepadInputEvent>(
           [this](const input::GamepadInputEvent &event) {
+            // Handle auto-repeat logic
+            if (event.pressed && !event.autoRepeat) {
+              // Button press - start auto-repeat
+              startAutoRepeat(event.playerIndex, event.input);
+            } else if (!event.pressed) {
+              // Button release - stop auto-repeat
+              stopAutoRepeat(event.playerIndex, event.input);
+            }
+
             if (QApplication::focusWindow()) {
               if (!gamepadToQtKeyMap.contains(event.input)) {
                 return;
@@ -59,7 +73,8 @@ QtInputServiceProxy::QtInputServiceProxy() {
                         new QKeyEvent(
                             event.pressed ? QEvent::KeyPress
                                           : QEvent::KeyRelease,
-                            key, Qt::KeyboardModifier::KeyboardModifierMask));
+                            key, Qt::KeyboardModifier::KeyboardModifierMask,
+                            QString(), event.autoRepeat));
                   },
                   Qt::QueuedConnection);
             }
@@ -98,4 +113,61 @@ void QtInputServiceProxy::setOnlyPlayerOneCanNavigateMenus(
 bool QtInputServiceProxy::getOnlyPlayerOneCanNavigateMenus() const {
   return m_onlyPlayerOneCanNavigateMenus;
 }
+
+void QtInputServiceProxy::startAutoRepeat(int playerIndex, input::GamepadInput input) {
+  if (input == input::None) return;
+
+  auto key = std::make_pair(playerIndex, input);
+  auto now = std::chrono::steady_clock::now();
+  m_autoRepeatStates[key] = AutoRepeatState{
+    .pressTime = now,
+    .lastRepeatTime = now,
+    .isRepeating = false,
+    .playerIndex = playerIndex,
+    .input = input
+  };
+}
+
+void QtInputServiceProxy::stopAutoRepeat(int playerIndex, input::GamepadInput input) {
+  if (input == input::None) return;
+
+  auto key = std::make_pair(playerIndex, input);
+  m_autoRepeatStates.erase(key);
+}
+
+void QtInputServiceProxy::processAutoRepeat() {
+  auto now = std::chrono::steady_clock::now();
+
+  for (auto& [key, state] : m_autoRepeatStates) {
+    auto timeSincePress = now - state.pressTime;
+    auto timeSinceLastRepeat = now - state.lastRepeatTime;
+
+    // Check if we should start repeating (after initial delay)
+    if (!state.isRepeating && timeSincePress >= AUTO_REPEAT_INITIAL_DELAY) {
+      state.isRepeating = true;
+      state.lastRepeatTime = now;
+
+      // Send repeat event
+      EventDispatcher::instance().publish(input::GamepadInputEvent{
+        .playerIndex = state.playerIndex,
+        .input = state.input,
+        .pressed = true,
+        .autoRepeat = true
+      });
+    }
+    // Check if we should send another repeat event
+    else if (state.isRepeating && timeSinceLastRepeat >= AUTO_REPEAT_INTERVAL) {
+      state.lastRepeatTime = now;
+
+      // Send repeat event
+      EventDispatcher::instance().publish(input::GamepadInputEvent{
+        .playerIndex = state.playerIndex,
+        .input = state.input,
+        .pressed = true,
+        .autoRepeat = true
+      });
+    }
+  }
+}
+
 } // namespace firelight::gui

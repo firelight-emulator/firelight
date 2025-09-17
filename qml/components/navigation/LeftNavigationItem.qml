@@ -5,10 +5,10 @@ import Firelight 1.0
 
 Button {
     id: root
-    verticalPadding: 12
-    horizontalPadding: 12
+    verticalPadding: 6
+    horizontalPadding: 6
 
-    implicitHeight: 50
+    implicitHeight: 38
 
     autoExclusive: true
     property bool showGlobalCursor: true
@@ -29,12 +29,21 @@ Button {
         cursorShape: Qt.PointingHandCursor
     }
 
+    FLToolTip {
+        id: tooltip
+        text: root.label
+        visible: hoverHandler.hovered && parent.width <= 38
+        delay: 0
+        y: parent.height / 2 - tooltip.height / 2
+        x: parent.width + 8
+    }
+
     contentItem: Item {
         FLIcon {
             id: icon
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            size: 28
+            size: 26
             icon: root.iconName
             filled: root.checked
             color: root.checked ? "#FFFFFF" : "#c3c3c3"
@@ -47,11 +56,11 @@ Button {
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
 
-            // opacity: parent.width >  ? 0 : 1
+            opacity: parent.width > 38 ? 1 : 0
 
             elide: Text.ElideRight
             text: root.label
-            font.pixelSize: 18
+            font.pixelSize: 16
             font.weight: Font.DemiBold
             font.family: Constants.regularFontFamily
             color: root.checked ? "#FFFFFF" : "#c3c3c3"

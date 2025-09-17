@@ -21,6 +21,7 @@ struct GamepadInputEvent {
   int playerIndex;
   GamepadInput input;
   bool pressed;
+  bool autoRepeat = false;
 };
 
 struct ShortcutToggledEvent {

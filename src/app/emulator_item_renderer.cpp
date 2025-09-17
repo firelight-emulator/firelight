@@ -427,39 +427,39 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
     m_resetContextFunction();
     m_resetContextFunction = nullptr;
 
-    if (m_vulkanCreateDeviceFunc) {
-      static const char *vulkan_device_extensions[] = {
-          "VK_KHR_swapchain",
-      };
-      auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(
-          rhi()->nativeHandles());
-
-      VkPhysicalDeviceFeatures deviceFeatures[] = {
-          VkPhysicalDeviceFeatures{.geometryShader = VK_TRUE}};
-
-      auto layers = handles->inst->supportedLayers();
-      const char *layersArray[layers.size()];
-
-      int i = 0;
-      for (const auto &layer : layers) {
-        layersArray[i++] = layer.name.toStdString().c_str();
-      }
-
-      retro_vulkan_context ctx{};
-      m_vulkanCreateDeviceFunc(
-          &ctx, handles->inst->vkInstance(), handles->physDev,
-          QVulkanInstance::surfaceForWindow(m_window),
-          [](VkInstance instance, const char *pName) {
-            spdlog::info("Getting instance proc addr: {}", pName);
-            auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(
-                globalRhi->nativeHandles());
-            return handles->inst->getInstanceProcAddr(pName);
-          },
-          vulkan_device_extensions, 1, layersArray, i, deviceFeatures);
-
-      m_vulkanCreateDeviceFunc = nullptr;
-      spdlog::info("Initialized Vulkan device");
-    }
+    // if (m_vulkanCreateDeviceFunc) {
+    //   static const char *vulkan_device_extensions[] = {
+    //       "VK_KHR_swapchain",
+    //   };
+    //   auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(
+    //       rhi()->nativeHandles());
+    //
+    //   VkPhysicalDeviceFeatures deviceFeatures[] = {
+    //       VkPhysicalDeviceFeatures{.geometryShader = VK_TRUE}};
+    //
+    //   auto layers = handles->inst->supportedLayers();
+    //   const char *layersArray[layers.size()];
+    //
+    //   int i = 0;
+    //   for (const auto &layer : layers) {
+    //     layersArray[i++] = layer.name.toStdString().c_str();
+    //   }
+    //
+    //   retro_vulkan_context ctx{};
+    //   m_vulkanCreateDeviceFunc(
+    //       &ctx, handles->inst->vkInstance(), handles->physDev,
+    //       QVulkanInstance::surfaceForWindow(m_window),
+    //       [](VkInstance instance, const char *pName) {
+    //         spdlog::info("Getting instance proc addr: {}", pName);
+    //         auto handles = reinterpret_cast<const QRhiVulkanNativeHandles *>(
+    //             globalRhi->nativeHandles());
+    //         return handles->inst->getInstanceProcAddr(pName);
+    //       },
+    //       vulkan_device_extensions, 1, layersArray, i, deviceFeatures);
+    //
+    //   m_vulkanCreateDeviceFunc = nullptr;
+    //   spdlog::info("Initialized Vulkan device");
+    // }
 
     cb->endExternal();
     cb->endPass(resourceUpdates);
@@ -752,8 +752,16 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     auto *rbResult = new QRhiReadbackResult;
     rbResult->completed = [this, rbResult] {
       // {
-      const QImage::Format fmt =
-          QImage::Format_RGBA8888_Premultiplied; // fits QRhiTexture::RGBA8
+
+      printf("Format: %d\n", static_cast<int>(colorTexture()->format()));
+
+      // Use appropriate format based on graphics API and texture format
+      QImage::Format fmt;
+      if (m_graphicsApi == QSGRendererInterface::Vulkan) {
+        fmt = QImage::Format_RGBA8888_Premultiplied;
+      } else {
+        fmt = QImage::Format_RGBA8888_Premultiplied;
+      }
       const auto *p =
           reinterpret_cast<const uchar *>(rbResult->data.constData());
 

@@ -20,7 +20,7 @@ Pane {
             when: !root.expanded
             PropertyChanges {
                 target: root
-                implicitWidth: 50 + (padding * 2)
+                implicitWidth: 38 + (padding * 2)
             }
         },
         State {
@@ -28,7 +28,7 @@ Pane {
             when: root.expanded
             PropertyChanges {
                 target: root
-                implicitWidth: 280
+                implicitWidth: 200
                 // y: parent.height
             }
         }
@@ -46,11 +46,26 @@ Pane {
     }
 
     contentItem: ColumnLayout {
-        spacing: 10
+        spacing: 8
+
+        LeftNavigationItem {
+            id: expandButton
+            label: root.expanded ? "Collapse menu" : "Expand menu"
+            iconName: root.expanded ? "left-panel-close" : "left-panel-open"
+            checkable: false
+
+            KeyNavigation.down: quickMenuButton
+
+            Layout.fillWidth: true
+
+            onClicked: {
+                root.expanded = !root.expanded
+            }
+        }
 
         Item {
-            implicitWidth: 50
-            implicitHeight: 50
+            implicitWidth: 38
+            implicitHeight: 38
         }
 
         LeftNavigationItem {
@@ -180,13 +195,6 @@ Pane {
             onClicked: {
                 root.powerButtonClicked()
             }
-        }
-    }
-
-    TapHandler {
-        id: handler
-        onTapped: function(event, button) {
-            root.expanded = !root.expanded
         }
     }
 }

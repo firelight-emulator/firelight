@@ -4,6 +4,8 @@
 #include "service_accessor.hpp"
 
 #include <QObject>
+#include <QTimer>
+#include <chrono>
 #include <qsettings.h>
 
 namespace firelight::gui {
@@ -43,6 +45,27 @@ private:
 
   ScopedConnection shortcutToggledConnection;
   ScopedConnection gamepadInputConnection;
+
+  // Auto-repeat functionality
+  struct AutoRepeatState {
+    std::chrono::steady_clock::time_point pressTime;
+    std::chrono::steady_clock::time_point lastRepeatTime;
+    bool isRepeating = false;
+    int playerIndex;
+    input::GamepadInput input;
+  };
+  std::map<std::pair<int, input::GamepadInput>, AutoRepeatState> m_autoRepeatStates;
+
+  QTimer *m_autoRepeatTimer;
+
+  // Auto-repeat configuration (in milliseconds)
+  static constexpr std::chrono::milliseconds AUTO_REPEAT_INITIAL_DELAY{500};
+  static constexpr std::chrono::milliseconds AUTO_REPEAT_INTERVAL{30};
+
+  // Auto-repeat helper methods
+  void startAutoRepeat(int playerIndex, input::GamepadInput input);
+  void stopAutoRepeat(int playerIndex, input::GamepadInput input);
+  void processAutoRepeat();
 };
 
 } // namespace firelight::gui

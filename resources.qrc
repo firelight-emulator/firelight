@@ -71,6 +71,8 @@
         <file alias="home">assets/img/icons/filled-rounded/home.svg</file>
         <file alias="info">assets/img/icons/filled-rounded/info.svg</file>
         <file alias="kid-star">assets/img/icons/filled-rounded/kid-star.svg</file>
+        <file alias="left-panel-close">assets/img/icons/filled-rounded/left-panel-close.svg</file>
+        <file alias="left-panel-open">assets/img/icons/filled-rounded/left-panel-open.svg</file>
         <file alias="new-folder">assets/img/icons/filled-rounded/new-folder.svg</file>
         <file alias="photo-library">assets/img/icons/filled-rounded/photo-library.svg</file>
         <file alias="search">assets/img/icons/filled-rounded/search.svg</file>
@@ -109,6 +111,8 @@
         <file alias="delete">assets/img/icons/notfilled-rounded/delete-notfilled.svg</file>
         <file alias="folder">assets/img/icons/notfilled-rounded/folder.svg</file>
         <file alias="info">assets/img/icons/notfilled-rounded/info-notfilled.svg</file>
+        <file alias="left-panel-close">assets/img/icons/filled-rounded/left-panel-close.svg</file>
+        <file alias="left-panel-open">assets/img/icons/filled-rounded/left-panel-open.svg</file>
         <file alias="photo-library">assets/img/icons/notfilled-rounded/photo-library-notfilled.svg</file>
         <file alias="play-circle">assets/img/icons/notfilled-rounded/play-circle-notfilled.svg</file>
         <file alias="settings">assets/img/icons/notfilled-rounded/settings-notfilled.svg</file>
