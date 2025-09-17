@@ -1,5 +1,7 @@
 #include "library_entry_item.hpp"
 
+#include <platforms/platform_service.hpp>
+
 namespace firelight {
 LibraryEntryItem::LibraryEntryItem(QQuickItem *parent) {}
 
@@ -17,6 +19,16 @@ void LibraryEntryItem::setEntryId(const int entryId) {
     m_name = entry->displayName;
     m_achievementSetId = entry->retroachievementsSetId;
     m_icon1x1SourceUrl = entry->icon1x1SourceUrl;
+    m_platformId = entry->platformId;
+
+    auto platform =
+        platforms::PlatformService::getInstance().getPlatform(m_platformId);
+    if (platform.has_value()) {
+      m_platformIconName = QString::fromStdString(platform.value().slug);
+      emit platformIconNameChanged();
+    }
+
+    emit platformIdChanged();
     emit icon1x1SourceUrlChanged();
     emit contentHashChanged();
     emit nameChanged();
@@ -38,5 +50,8 @@ int LibraryEntryItem::getAchievementSetId() const { return m_achievementSetId; }
 
 QString LibraryEntryItem::getIcon1x1SourceUrl() const {
   return m_icon1x1SourceUrl;
+}
+QString LibraryEntryItem::getPlatformIconName() const {
+  return m_platformIconName;
 }
 } // namespace firelight

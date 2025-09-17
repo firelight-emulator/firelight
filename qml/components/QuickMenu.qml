@@ -11,9 +11,62 @@ Pane {
     signal rewindPressed()
     signal closeGame()
 
+    LibraryEntry {
+        id: entry
+        entryId: EmulationService.currentEntryId
+    }
+
     padding: 32
     background: Item {}
-    contentItem: RowLayout {
+
+    Row {
+        id: titleRow
+        height: 60
+        spacing: 16
+
+        Rectangle {
+            color: "#292929"
+            visible: entry.icon1x1SourceUrl === ""
+            implicitWidth: 60
+            implicitHeight: 60
+
+            FLIcon {
+                icon: entry.platformIconName
+                color: "#595959"
+                anchors.centerIn: parent
+                height: parent.height - 16
+                width: parent.width - 16
+                size: height
+            }
+        }
+        Image {
+            source: entry.icon1x1SourceUrl
+            visible: entry.icon1x1SourceUrl !== ""
+            asynchronous: true
+            sourceSize.width: 60
+            sourceSize.height: 60
+            smooth: true
+            fillMode: Image.PreserveAspectFit
+        }
+
+        Text {
+            text: entry.name
+            font.family: Constants.regularFontFamily
+            font.pixelSize: 22
+            font.weight: Font.DemiBold
+            height: 60
+            color: "white"
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+        }
+    }
+
+    RowLayout {
+        anchors.top: titleRow.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+
         spacing: 32
          ColumnLayout {
             id: menuColumn
@@ -166,7 +219,6 @@ Pane {
                 }
              }
          }
-
      }
 
     FirelightDialog {

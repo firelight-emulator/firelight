@@ -70,7 +70,7 @@ Pane {
 
         LeftNavigationItem {
             id: quickMenuButton
-            label: "Now Playing"
+            label: EmulationService.currentGameName
             iconName: "play-circle"
             visible: root.showQuickMenuButton
 

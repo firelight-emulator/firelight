@@ -753,8 +753,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     rbResult->completed = [this, rbResult] {
       // {
 
-      printf("Format: %d\n", static_cast<int>(colorTexture()->format()));
-
       // Use appropriate format based on graphics API and texture format
       QImage::Format fmt;
       if (m_graphicsApi == QSGRendererInterface::Vulkan) {

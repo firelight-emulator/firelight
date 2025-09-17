@@ -13,6 +13,8 @@ class LibraryEntryItem : public QQuickItem, public ManagerAccessor {
   Q_PROPERTY(QString name READ getName NOTIFY nameChanged)
   Q_PROPERTY(QString icon1x1SourceUrl READ getIcon1x1SourceUrl NOTIFY
                  icon1x1SourceUrlChanged)
+  Q_PROPERTY(QString platformIconName READ getPlatformIconName NOTIFY
+                 platformIconNameChanged)
   Q_PROPERTY(int achievementSetId READ getAchievementSetId NOTIFY
                  achievementSetIdChanged)
   //        Q_PROPERTY(QString abbreviation READ getAbbreviation NOTIFY
@@ -37,6 +39,8 @@ public:
 
   [[nodiscard]] QString getIcon1x1SourceUrl() const;
 
+  QString getPlatformIconName() const;
+
   //        [[nodiscard]] QString getAbbreviation() const;
 
 signals:
@@ -52,6 +56,7 @@ signals:
 
   void icon1x1SourceUrlChanged();
 
+  void platformIconNameChanged();
   //        void abbreviationChanged();
 
 private:
@@ -61,6 +66,7 @@ private:
   QString m_name;
   int m_achievementSetId = 0;
   QString m_icon1x1SourceUrl;
+  QString m_platformIconName;
   //        QString m_abbreviation;
 };
 } // namespace firelight
