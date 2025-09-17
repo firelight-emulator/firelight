@@ -307,7 +307,14 @@ add_custom_target(copy_resources ALL
         COMMENT "Copying test resources to build directory"
 )
 
-file(COPY ${CMAKE_SOURCE_DIR}/_cores DESTINATION ${CMAKE_BINARY_DIR}/system)
+if (WIN32)
+    file(COPY ${CMAKE_SOURCE_DIR}/_cores/windows DESTINATION ${CMAKE_BINARY_DIR}/system/_cores)
+endif (WIN32)
+
+if (UNIX)
+    file(COPY ${CMAKE_SOURCE_DIR}/_cores/linux DESTINATION ${CMAKE_BINARY_DIR}/system/_cores)
+endif (UNIX)
+
 file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
 
 #if (DISCORD_SDK_RUNTIME_LIBRARY_FILE AND EXISTS "${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
@@ -480,11 +487,22 @@ install(
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
 
-install(
-        DIRECTORY
-        ${CMAKE_SOURCE_DIR}/_cores
-        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
-)
+
+if (WIN32)
+    install(
+            DIRECTORY
+            ${CMAKE_SOURCE_DIR}/_cores/windows
+            DESTINATION ${CMAKE_INSTALL_BINDIR}/system/_cores
+    )
+endif (WIN32)
+
+if (UNIX)
+    install(
+            DIRECTORY
+            ${CMAKE_SOURCE_DIR}/_cores/linux
+            DESTINATION ${CMAKE_INSTALL_BINDIR}/system/_cores
+    )
+endif (UNIX)
 
 set(CPACK_INSTALL_SCRIPT "${CMAKE_SOURCE_DIR}/cpack_portable.cmake")
 

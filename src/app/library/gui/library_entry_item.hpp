@@ -31,15 +31,15 @@ public:
 
   QString getContentHash();
 
-  int getPlatformId() const;
+  [[nodiscard]] int getPlatformId() const;
 
   [[nodiscard]] QString getName() const;
 
-  int getAchievementSetId() const;
+  [[nodiscard]] int getAchievementSetId() const;
 
   [[nodiscard]] QString getIcon1x1SourceUrl() const;
 
-  QString getPlatformIconName() const;
+  [[nodiscard]] QString getPlatformIconName() const;
 
   //        [[nodiscard]] QString getAbbreviation() const;
 
