@@ -32,7 +32,7 @@ Button {
     FLToolTip {
         id: tooltip
         text: root.label
-        visible: hoverHandler.hovered && parent.width <= 38
+        visible: (hoverHandler.hovered || root.activeFocus) && parent.width <= 38
         delay: 0
         y: parent.height / 2 - tooltip.height / 2
         x: parent.width + 8
