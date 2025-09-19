@@ -17,7 +17,7 @@ ToolTip {
     contentItem: Text {
         text: root.text
         font.pixelSize: 16
-        font.family: Constants.regularFontFamily
+        font.family: Constants.mainFontFamily
         color: ColorPalette.neutral100
     }
 

@@ -39,6 +39,10 @@ void AudioManager::initializeResampler(int64_t in_channel_layout,
 AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
     : m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
   m_elapsedTimer.start();
+
+  m_mediaDevices = new QMediaDevices(this);
+  connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this,
+          &AudioManager::onAudioDevicesChanged);
 }
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
@@ -220,7 +224,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
       return 0; // Or handle error
     }
 
-    if (output_samples > 0) {
+    if (output_samples > 0 && m_audioDevice) {
       m_audioDevice->write(reinterpret_cast<char *>(outputBuffer[0]),
                            output_samples * 2 * sizeof(int16_t)); // stereo, s16
     }
@@ -257,12 +261,50 @@ bool AudioManager::isMuted() const { return m_isMuted; }
 
 float AudioManager::getBufferLevel() const { return m_currentBufferLevel; }
 
+void AudioManager::reinitializeAudioDevice() {
+  if (!m_audioSink) {
+    return; // Not initialized yet
+  }
+
+  spdlog::info(
+      "Default audio output device changed, reinitializing audio device.");
+
+  // Stop current audio
+  if (m_audioDevice) {
+    m_audioDevice->close();
+    m_audioDevice = nullptr;
+  }
+  if (m_audioSink) {
+    m_audioSink->stop();
+    delete m_audioSink;
+    m_audioSink = nullptr;
+  }
+
+  // Recreate with same format
+  QAudioFormat format;
+  format.setChannelCount(2);
+  format.setSampleFormat(QAudioFormat::Int16);
+  format.setSampleRate(m_sampleRate);
+
+  m_audioSink = new QAudioSink(format);
+
+  auto mult = 2;
+  if (m_sampleRate > 44000) {
+    mult = 4;
+  }
+  m_audioSink->setBufferSize(8192 * mult);
+  m_audioDevice = m_audioSink->start();
+}
+
+void AudioManager::onAudioDevicesChanged() { reinitializeAudioDevice(); }
+
 AudioManager::~AudioManager() {
   if (m_audioDevice) {
     m_audioDevice->close();
   }
   if (m_audioSink) {
     m_audioSink->stop();
+    delete m_audioSink;
   }
   if (m_swrContext) {
     av_free(m_swrContext);

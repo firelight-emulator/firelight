@@ -14,8 +14,9 @@ firelight::emulation::EmulationService
     *firelight::emulation::EmulationService::s_emuServiceInstance = nullptr;
 
 namespace firelight::emulation {
-EmulationService::EmulationService(library::IUserLibrary &library)
-    : m_library(library) {}
+EmulationService::EmulationService(library::IUserLibrary &library,
+                                   settings::SettingsService &settingsService)
+    : m_settingsService(settingsService), m_library(library) {}
 EmulationService::~EmulationService() {
   spdlog::info("[EmulationService] Stopping EmulationService");
 }
@@ -114,10 +115,12 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
       m_currentPlatform = platform.value();
     }
 
-    auto configProvider = getEmulatorConfigManager()->getCoreConfigFor(
-        m_currentPlatform.id, m_currentEntry.contentHash);
+    auto coreConfig = std::make_shared<CoreConfiguration>(
+        m_currentEntry.contentHash.toStdString(), m_currentPlatform,
+        m_settingsService);
+
     auto m_core = std::make_unique<::libretro::Core>(m_currentEntry.platformId,
-                                                     corePath, configProvider,
+                                                     corePath, coreConfig,
                                                      getCoreSystemDirectory());
 
     auto contentBytes = rom.getContentBytes();

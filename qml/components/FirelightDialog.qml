@@ -59,6 +59,9 @@ Dialog {
 
     background: Rectangle {
         color: ColorPalette.neutral900
+        radius: 8
+        border.color: ColorPalette.neutral700
+        border.width: 1
     }
 
     // header: Text {

@@ -30,7 +30,8 @@ public:
     s_emuServiceInstance = service;
   }
 
-  EmulationService(library::IUserLibrary &library);
+  EmulationService(library::IUserLibrary &library,
+                   settings::SettingsService &settingsService);
   ~EmulationService();
 
   std::future<EmulatorInstance *> loadEntry(int entryId);
@@ -47,6 +48,7 @@ public:
 private:
   static EmulationService *s_emuServiceInstance;
 
+  settings::SettingsService &m_settingsService;
   library::IUserLibrary &m_library;
 
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;

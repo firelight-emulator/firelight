@@ -9,6 +9,11 @@
 #include "watched_directory.hpp"
 
 namespace firelight::library {
+
+struct EntryUpdatedEvent {
+  int entryId;
+};
+
 class IUserLibrary {
 public:
   virtual ~IUserLibrary() = default;

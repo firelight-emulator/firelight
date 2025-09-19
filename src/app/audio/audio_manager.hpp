@@ -2,6 +2,7 @@
 
 #include <QAudioSink>
 #include <QBuffer>
+#include <QMediaDevices>
 #include <array>
 #include <qelapsedtimer.h>
 #include <queue>
@@ -16,7 +17,8 @@ extern "C" {
 #include <SDL_audio.h>
 #include <vector>
 
-class AudioManager : public IAudioDataReceiver {
+class AudioManager : public QObject, public IAudioDataReceiver {
+  Q_OBJECT
 public:
   explicit AudioManager(
       std::function<void()> onAudioBufferLevelChanged = nullptr);
@@ -58,8 +60,22 @@ private:
 
   AVChannelLayout *m_channelLayout = new AVChannelLayout;
 
+  QMediaDevices *m_mediaDevices = nullptr;
+
+  // Moving average state
+  static constexpr int AVG_WINDOW_SIZE = 10;
+  int m_avgBufferUsageBytes[AVG_WINDOW_SIZE] = {};
+  int m_avgBufferIdx = 0;
+  int m_avgBufferPopulatedCount = 0;
+  double m_previousAvgFillRatio = -1.0;
+
   void initializeResampler(int64_t in_channel_layout, int in_sample_rate,
                            enum AVSampleFormat in_sample_fmt,
                            int64_t out_channel_layout, int out_sample_rate,
                            enum AVSampleFormat out_sample_fmt);
+
+  void reinitializeAudioDevice();
+
+private slots:
+  void onAudioDevicesChanged();
 };

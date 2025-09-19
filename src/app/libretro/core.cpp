@@ -259,7 +259,7 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
       return false;
     }
 
-    ptr->value = strdup(val->key.c_str());
+    ptr->value = strdup(val->c_str());
     break;
   }
 
@@ -1100,12 +1100,12 @@ template <typename T> static T loadRetroFunc(void *dll, const char *name) {
   return result;
 }
 
-Core::Core(
-    int platformId, const std::string &libPath,
-    std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider,
-    const std::string &systemDirectory)
-    : m_configurationProvider(std::move(configProvider)),
-      m_platformId(platformId), systemDirectory(systemDirectory) {
+Core::Core(int platformId, const std::string &libPath,
+           const std::shared_ptr<firelight::libretro::IConfigurationProvider>
+               &configProvider,
+           std::string systemDirectory)
+    : m_platformId(platformId), m_configurationProvider(configProvider),
+      systemDirectory(std::move(systemDirectory)) {
   coreLib = std::make_unique<QLibrary>(QString::fromStdString(libPath));
 
   // dll = SDL_LoadObject(libPath.c_str());

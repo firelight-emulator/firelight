@@ -9,7 +9,7 @@ Pane {
     signal powerButtonClicked()
 
     // implicitWidth: 320
-    padding: 16
+    padding: 12
 
     property bool expanded: false
     property bool showQuickMenuButton: false

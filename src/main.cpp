@@ -323,7 +323,8 @@ int main(int argc, char *argv[]) {
   // diskCache->setCacheDirectory(directory);
   // manager->setCache(diskCache);
 
-  firelight::emulation::EmulationService emuService(userLibrary);
+  firelight::emulation::EmulationService emuService(userLibrary,
+                                                    settingsService);
   firelight::emulation::EmulationService::setInstance(&emuService);
 
   firelight::gui::LibraryFolderListModel libraryFolderListModel;
