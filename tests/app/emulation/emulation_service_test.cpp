@@ -13,7 +13,7 @@ namespace firelight::emulation {
 
 /**
  * @brief Test fixture for EmulationService functionality
- * 
+ *
  * Tests the core emulation service operations including ROM loading,
  * archive extraction, and emulator instance management.
  */
@@ -27,11 +27,11 @@ protected:
 
   void SetUp() override {
     m_library = std::make_unique<library::SqliteUserLibrary>(":memory:", ".");
-    m_emulationService = std::make_unique<EmulationService>(*m_library);
-
     m_settingsService = std::make_unique<settings::SettingsService>(
         *new settings::SqliteSettingsRepository(":memory:"));
     settings::SettingsService::setInstance(m_settingsService.get());
+    m_emulationService =
+        std::make_unique<EmulationService>(*m_library, *m_settingsService);
   }
 
   void TearDown() override {
@@ -43,7 +43,7 @@ protected:
 
 /**
  * @brief Test that loading a non-existent entry fails gracefully
- * 
+ *
  * Verifies that attempting to load an entry that doesn't exist in the library
  * returns nullptr and triggers a GameLoadFailedEvent.
  */
@@ -56,7 +56,7 @@ TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
           });
 
   library::SqliteUserLibrary library(":memory:", ".");
-  EmulationService service(library);
+  EmulationService service(library, *m_settingsService);
 
   ASSERT_EQ(nullptr, service.loadEntry(1).get());
   ASSERT_TRUE(gameLoadFailedEventReceived);
@@ -64,7 +64,7 @@ TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
 
 /**
  * @brief Test successful loading of a valid ROM file
- * 
+ *
  * Verifies that a valid ROM file can be loaded, creates an EmulatorInstance,
  * and triggers a GameLoadedEvent. Tests that the instance has correct metadata
  * including content hash and platform ID.
@@ -82,7 +82,8 @@ TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash =
+                                "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -104,7 +105,7 @@ TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
 
 /**
  * @brief Test successful loading of a ROM file from a ZIP archive
- * 
+ *
  * Verifies that ROM files stored in ZIP archives can be properly extracted
  * and loaded. Tests archive extraction functionality and ensures the
  * EmulatorInstance is created with correct metadata.
@@ -117,14 +118,14 @@ TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{.m_fileSizeBytes = 0,
-                            .m_filePath = "testrom.gba",
-                            .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
-                            .m_inArchive = true,
-                            .m_archivePathName =
-                                "test_resources/testrom.gba.zip",
-                            .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+  library::RomFileInfo info{
+      .m_fileSizeBytes = 0,
+      .m_filePath = "testrom.gba",
+      .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
+      .m_inArchive = true,
+      .m_archivePathName = "test_resources/testrom.gba.zip",
+      .m_platformId = 3,
+      .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -146,7 +147,7 @@ TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
 
 /**
  * @brief Test successful loading of a ROM file from a 7Z archive
- * 
+ *
  * Verifies that ROM files stored in 7Z archives can be properly extracted
  * and loaded. Tests 7-Zip archive format support and ensures proper
  * EmulatorInstance creation.
@@ -159,14 +160,14 @@ TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{.m_fileSizeBytes = 0,
-                            .m_filePath = "testrom.gba",
-                            .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
-                            .m_inArchive = true,
-                            .m_archivePathName =
-                                "test_resources/testrom.gba.7z",
-                            .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+  library::RomFileInfo info{
+      .m_fileSizeBytes = 0,
+      .m_filePath = "testrom.gba",
+      .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
+      .m_inArchive = true,
+      .m_archivePathName = "test_resources/testrom.gba.7z",
+      .m_platformId = 3,
+      .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -188,7 +189,7 @@ TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
 
 /**
  * @brief Test successful loading of a ROM file from a TAR archive
- * 
+ *
  * Verifies that ROM files stored in TAR archives can be properly extracted
  * and loaded. Tests TAR archive format support and validates that the
  * resulting EmulatorInstance has correct properties.
@@ -201,14 +202,14 @@ TEST_F(EmulationServiceTest, LoadValidRomInTarSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{.m_fileSizeBytes = 0,
-                            .m_filePath = "testrom.gba",
-                            .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
-                            .m_inArchive = true,
-                            .m_archivePathName =
-                                "test_resources/testrom.gba.tar",
-                            .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+  library::RomFileInfo info{
+      .m_fileSizeBytes = 0,
+      .m_filePath = "testrom.gba",
+      .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
+      .m_inArchive = true,
+      .m_archivePathName = "test_resources/testrom.gba.tar",
+      .m_platformId = 3,
+      .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);

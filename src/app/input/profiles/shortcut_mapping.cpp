@@ -4,9 +4,7 @@ namespace firelight::input {
 
 ShortcutMapping::ShortcutMapping(
     std::function<void(ShortcutMapping &)> syncCallback)
-    : m_syncCallback(std::move(syncCallback)) {
-  m_mappings.emplace(OpenRewindMenu, InputSequence{{LeftTrigger}, {WestFace}});
-}
+    : m_syncCallback(std::move(syncCallback)) {}
 
 std::map<Shortcut, InputSequence> ShortcutMapping::getMappings() const {
   return m_mappings;

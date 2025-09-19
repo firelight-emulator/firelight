@@ -28,10 +28,11 @@ protected:
 
   void SetUp() override {
     m_library = std::make_unique<library::SqliteUserLibrary>(":memory:", ".");
-    m_emulationService = std::make_unique<EmulationService>(*m_library);
-
     m_settingsService = std::make_unique<settings::SettingsService>(
         *new settings::SqliteSettingsRepository(":memory:"));
+    m_emulationService =
+        std::make_unique<EmulationService>(*m_library, *m_settingsService);
+
     settings::SettingsService::setInstance(m_settingsService.get());
   }
 
@@ -95,7 +96,8 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash =
+                                "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -179,7 +181,8 @@ TEST_F(EmulatorInstanceTest, SettingsLevelChangeTriggersRefresh) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash =
+                                "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -232,7 +235,8 @@ TEST_F(EmulatorInstanceTest, MultipleSettingsChangeSimultaneously) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash =
+                                "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -275,7 +279,8 @@ TEST_F(EmulatorInstanceTest, WrongContentHashIgnoresGameSettings) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash =
+                                "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -313,7 +318,8 @@ TEST_F(EmulatorInstanceTest, WrongPlatformIdIgnoresPlatformSettings) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash =
+                                "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
