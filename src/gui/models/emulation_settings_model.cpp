@@ -52,7 +52,13 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
       .label = "Picture mode",
       .key = "picture-mode",
       .section = "Video",
-      .description = "Determines how the game image fills the screen.",
+      .description = "Determines how the game image fills the screen.\n\n"
+                     "Aspect Ratio Fill: Maintains the aspect ratio while "
+                     "filling the screen as much as possible\n"
+                     "Integer Scale: Scales the image by an integer to "
+                     "maintain a pixel-perfect image\n"
+                     "Stretch: Stretches the image to fill the screen, "
+                     "ignoring aspect ratio",
       .type = "combobox",
       .defaultValue = "aspect-ratio-fill",
       .options = {

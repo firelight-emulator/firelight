@@ -67,6 +67,11 @@
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
+  std::set_terminate([]() {
+    spdlog::error("Terminating due to an unhandled exception");
+    std::abort();
+  });
+
   if (auto debug = std::getenv("FL_DEBUG"); debug != nullptr) {
     spdlog::set_level(spdlog::level::debug);
   } else {

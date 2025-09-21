@@ -28,7 +28,7 @@ PlatformService::PlatformService() {
                 }}},
       .emulationSettings =
           {{.label = "Simulate LCD ghosting effects",
-            .category = "GameBoy",
+            .category = "Game Boy",
             .key = "gambatte_mix_frames",
             .description =
                 "Simple: 50/50 mix of current and previous frames\nLCD "
@@ -44,7 +44,7 @@ PlatformService::PlatformService() {
                         {.label = "LCD Ghosting (Fast)",
                          .value = "lcd_ghosting_fast"}}},
            {.label = "Allow opposing D-Pad directions",
-            .category = "GameBoy",
+            .category = "Game Boy",
             .key = "gambatte_up_down_allowed",
             .description = "Allows pressing up and down or left and right at "
                            "the same time. Can cause glitches in some games.",
@@ -53,28 +53,90 @@ PlatformService::PlatformService() {
             .trueStringValue = "enabled",
             .falseStringValue = "disabled"}},
   });
-  m_platforms.emplace_back(
-      Platform{.id = PLATFORM_ID_GAMEBOY_COLOR,
-               .name = "Game Boy Color",
-               .abbreviation = "Game Boy Color",
-               .slug = "gbc",
-               .fileAssociations = {"gbc"},
-               .controllerTypes =
-                   {{.id = 1,
-                     .name = "Retropad",
-                     .imageUrl = "qrc:/images/controllers/gbc",
-                     .inputs =
-                         {
-                             {"A", input::GamepadInput::EastFace},
-                             {"B", input::GamepadInput::SouthFace},
-                             {"Start", input::GamepadInput::Start},
-                             {"Select", input::GamepadInput::Select},
-                             {"D-Pad Up", input::GamepadInput::DpadUp},
-                             {"D-Pad Down", input::GamepadInput::DpadDown},
-                             {"D-Pad Left", input::GamepadInput::DpadLeft},
-                             {"D-Pad Right", input::GamepadInput::DpadRight},
-                         }}},
-               .emulationSettings = {}});
+  m_platforms.emplace_back(Platform{
+      .id = PLATFORM_ID_GAMEBOY_COLOR,
+      .name = "Game Boy Color",
+      .abbreviation = "Game Boy Color",
+      .slug = "gbc",
+      .fileAssociations = {"gbc"},
+      .controllerTypes =
+          {{.id = 1,
+            .name = "Retropad",
+            .imageUrl = "qrc:/images/controllers/gbc",
+            .inputs =
+                {
+                    {"A", input::GamepadInput::EastFace},
+                    {"B", input::GamepadInput::SouthFace},
+                    {"Start", input::GamepadInput::Start},
+                    {"Select", input::GamepadInput::Select},
+                    {"D-Pad Up", input::GamepadInput::DpadUp},
+                    {"D-Pad Down", input::GamepadInput::DpadDown},
+                    {"D-Pad Left", input::GamepadInput::DpadLeft},
+                    {"D-Pad Right", input::GamepadInput::DpadRight},
+                }}},
+      .emulationSettings = {
+          {.label = "Simulate LCD ghosting effects",
+           .category = "Game Boy Color",
+           .key = "gambatte_mix_frames",
+           .description =
+               "Simple: 50/50 mix of current and previous frames\nLCD "
+               "Ghosting: Mimics natural LCD response times by combining "
+               "multiple buffered frames",
+           .defaultValue = "disabled",
+           .type = settings::OPTIONS,
+           .options = {{.label = "None", .value = "disabled"},
+                       {.label = "Simple (Accurate)", .value = "mix"},
+                       {.label = "Simple (Fast)", .value = "mix_fast"},
+                       {.label = "LCD Ghosting (Accurate)",
+                        .value = "lcd_ghosting"},
+                       {.label = "LCD Ghosting (Fast)",
+                        .value = "lcd_ghosting_fast"}}},
+          {.label = "Allow opposing D-Pad directions",
+           .category = "Game Boy Color",
+           .key = "gambatte_up_down_allowed",
+           .description = "Allows pressing up and down or left and right at "
+                          "the same time. Can cause glitches in some games.",
+           .defaultValue = "disabled",
+           .type = settings::BOOLEAN,
+           .trueStringValue = "enabled",
+           .falseStringValue = "disabled"},
+          {
+              .label = "Color correction",
+              .category = "Color correction",
+              .key = "gambatte_gbc_color_correction",
+              .defaultValue = "GBC only",
+              .description = "Adjusts output colors to match the display of "
+                             "real Game Boy Color hardware.",
+              .type = settings::BOOLEAN,
+              .trueStringValue = "GBC only",
+              .falseStringValue = "disabled",
+          },
+          {.label = "Color correction mode",
+           .category = "Color correction",
+           .key = "gambatte_gbc_color_correction_mode",
+           .defaultValue = "accurate",
+           .description =
+               "You can change this from Accurate to Fast if you are "
+               "experiencing performance issues.\n\n"
+               "Accurate: Produces colors identical to original hardware\n"
+               "Fast: Darkens colors and reduces saturation",
+           .type = settings::OPTIONS,
+           .options = {{.label = "Accurate", .value = "accurate"},
+                       {.label = "Fast", .value = "fast"}}},
+          {.label = "Frontlight position",
+           .category = "Color correction",
+           .key = "gambatte_gbc_frontlight_position",
+           .defaultValue = "central",
+           .description =
+               "Simulates the physical response of the Game Boy Color LCD "
+               "panel when illuminated from different angles.\n\n"
+               "Central: Standard color reproduction\n"
+               "Above screen: Increases brightness"
+               "Below screen: Decreases brightness",
+           .type = settings::OPTIONS,
+           .options = {{.label = "Central", .value = "central"},
+                       {.label = "Above screen", .value = "above screen"},
+                       {.label = "Below screen", .value = "below screen"}}}}});
   m_platforms.emplace_back(Platform{
       .id = PLATFORM_ID_GAMEBOY_ADVANCE,
       .name = "Game Boy Advance",

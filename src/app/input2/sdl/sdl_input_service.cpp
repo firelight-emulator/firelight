@@ -10,6 +10,7 @@ SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
     : m_gamepadRepository(gamepadRepository) {
   SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
   SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
+  // SDL_SetHint(SDL_HINT_JOYSTICK_THREAD, "1");
 
   if (SDL_Init(m_sdlServices) < 0) {
     spdlog::error("SDL could not initialize! SDL_Error: {}", SDL_GetError());
