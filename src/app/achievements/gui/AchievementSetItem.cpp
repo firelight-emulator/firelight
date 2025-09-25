@@ -25,6 +25,21 @@ void AchievementSetItem::setContentHash(const QString &contentHash) {
     m_numAchievements = set->numAchievements;
     m_totalNumPoints = set->totalPoints;
     m_hasAchievements = m_numAchievements > 0;
+
+    m_numAchievementsEarned = 0;
+    for (auto achieve : set->achievements) {
+      auto unlock =
+          getAchievementService()->getUserUnlock("BiscuitCakes", achieve.id);
+      if (!unlock) {
+        continue;
+      }
+
+      if (unlock->earnedHardcore) {
+        m_numAchievementsEarned++;
+      }
+
+      m_totalNumPoints += achieve.points;
+    }
   }
 
   m_contentHash = contentHash;

@@ -454,7 +454,7 @@ RetroAchievementsCache::getUserAchievements(const std::string &username,
   while (query.next()) {
     achievements.emplace_back(
         CachedAchievement{.ID = query.value(0).toUInt(),
-                          .GameID = query.value(1).toInt(),
+                          .GameID = query.value(1).toUInt(),
                           .When = query.value(2).toUInt(),
                           .WhenHardcore = query.value(3).toUInt(),
                           .Points = query.value(4).toInt(),
@@ -487,7 +487,7 @@ std::vector<CachedAchievement> RetroAchievementsCache::getUnsyncedAchievements(
   while (query.next()) {
     achievements.emplace_back(
         CachedAchievement{.ID = query.value(0).toUInt(),
-                          .GameID = query.value(1).toInt(),
+                          .GameID = query.value(1).toUInt(),
                           .When = query.value(2).toULongLong(),
                           .WhenHardcore = query.value(3).toULongLong(),
                           .Points = query.value(4).toInt(),

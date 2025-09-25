@@ -18,6 +18,8 @@ class AchievementSetItem : public QObject, public ServiceAccessor {
   Q_PROPERTY(int numEarned MEMBER m_numEarned NOTIFY contentHashChanged)
   Q_PROPERTY(
       int numAchievements MEMBER m_numAchievements NOTIFY contentHashChanged)
+  Q_PROPERTY(int numAchievementsEarned MEMBER m_numAchievementsEarned NOTIFY
+                 contentHashChanged)
   Q_PROPERTY(
       int totalNumPoints MEMBER m_totalNumPoints NOTIFY contentHashChanged)
 
@@ -40,6 +42,7 @@ private:
   QString m_iconUrl;
   int m_numEarned = 0;
   int m_numAchievements = 0;
+  int m_numAchievementsEarned = 0;
   int m_totalNumPoints = 0;
 
   // gui::AchievementListModel m_achievementListModel;

@@ -2593,8 +2593,10 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
   auto service = AchievementService(repo);
   RetroAchievementsOfflineClient offlineClient(cache, service);
 
-  cache.setUserScore("testuser", 1000, false);
-  cache.setUserScore("testuser", 2000, true);
+  service.createOrUpdateUser(User{.username = "testuser",
+                                  .token = "testtoken",
+                                  .points = 1000,
+                                  .hardcore_points = 2000});
 
   const auto response = offlineClient.handleRequest(
       "https://retroachievements.com/dorequest.php",
@@ -2743,7 +2745,12 @@ TEST_F(RetroAchievementsOfflineClientTest,
   const auto patchResponse = json.get<PatchResponse>();
 
   for (const auto &achieve : patchResponse.PatchData.Achievements) {
-    auto achievement = cache.getAchievement(achieve.ID);
+    auto achievement = service.getAchievement(achieve.ID);
+    if (achieve.Flags == 5) {
+      ASSERT_FALSE(achievement.has_value());
+      continue;
+    }
+
     ASSERT_TRUE(achievement.has_value());
     ASSERT_EQ(achievement->id, achieve.ID);
     ASSERT_EQ(achievement->name, achieve.Title);
@@ -2752,7 +2759,7 @@ TEST_F(RetroAchievementsOfflineClientTest,
     ASSERT_EQ(achievement->flags, achieve.Flags);
     ASSERT_EQ(achievement->setId, 228);
 
-    auto unlock = cache.getUserAchievementStatus("testuser", achieve.ID);
+    auto unlock = service.getUserUnlock("testuser", achieve.ID);
     ASSERT_TRUE(unlock.has_value());
   }
 }
@@ -2766,9 +2773,10 @@ TEST_F(RetroAchievementsOfflineClientTest,
 
   offlineClient.processResponse("r=patch&g=228&u=testuser", patchData);
 
-  // User is offline: start session request is handled, online: response handled
-  cache.setUserScore("testuser", 102, true);
-  cache.setUserScore("testuser", 80, false);
+  service.createOrUpdateUser(User{.username = "testuser",
+                                  .token = "testtoken",
+                                  .points = 80,
+                                  .hardcore_points = 102});
 
   // Do unlock achievement request hardcore
   auto response = offlineClient.handleRequest(

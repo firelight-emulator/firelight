@@ -135,6 +135,7 @@ Pane {
                     console.log("Icon URL: " + iconUrl)
                     console.log("Set name: " + name)
                     console.log("Num achievements: " + numAchievements)
+                    console.log("Num achievements earned: " + numAchievementsEarned)
                     console.log("Num points: " + totalNumPoints)
                 }
             }
@@ -178,6 +179,22 @@ Pane {
                         verticalAlignment: Text.AlignVCenter
                         Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                         Layout.fillWidth: true
+                    }
+
+                    Rectangle {
+                        color: "grey"
+                        implicitHeight: 14
+                        Layout.fillWidth: true
+                        radius: 4
+
+                        Rectangle {
+                            color: "yellow"
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: parent.width * (achievementSet.numAchievementsEarned / achievementSet.numAchievements)
+                            radius: 4
+                        }
                     }
                 }
             }

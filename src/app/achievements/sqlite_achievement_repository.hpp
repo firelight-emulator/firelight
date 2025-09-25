@@ -43,6 +43,9 @@ public:
    */
   virtual ~SqliteAchievementRepository() = default;
 
+  std::optional<User> getUser(const std::string &username) const override;
+  bool createOrUpdateUser(const User &user) override;
+
   // Achievement Set Operations
 
   /**
@@ -95,6 +98,8 @@ public:
   [[nodiscard]] std::optional<AchievementSet>
   getAchievementSetByContentHash(const std::string &contentHash) const override;
 
+  std::optional<int> getGameId(const std::string &contentHash) const override;
+
   // Individual Achievement Operations
 
   /**
@@ -108,6 +113,9 @@ public:
    * @return true if the operation succeeded, false on database error
    */
   bool create(Achievement achievement) override;
+
+  std::optional<Achievement>
+  getAchievement(unsigned achievementId) const override;
 
   // Achievement Progress Operations
 

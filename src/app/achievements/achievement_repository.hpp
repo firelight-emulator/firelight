@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <rcheevos/patch_response.hpp>
+#include <rcheevos/user.h>
 
 namespace firelight::achievements {
 
@@ -25,6 +26,32 @@ protected:
   ~IAchievementRepository() = default;
 
 public:
+  // User Operations
+
+  /**
+   * @brief Retrieves user data by username
+   *
+   * Fetches complete user information including authentication token and
+   * point totals for both normal and hardcore modes. Used for session
+   * validation and progress tracking.
+   *
+   * @param username The username to retrieve data for
+   * @return User data if found, std::nullopt otherwise
+   */
+  virtual std::optional<User> getUser(const std::string &username) const = 0;
+
+  /**
+   * @brief Creates or updates user data
+   *
+   * Stores or updates user information including authentication token and
+   * point totals. Uses upsert semantics - if the user already exists, their
+   * data will be updated with the new values.
+   *
+   * @param user The user data to store or update
+   * @return true if the operation succeeded, false otherwise
+   */
+  virtual bool createOrUpdateUser(const User &user) = 0;
+
   // Achievement Set Operations
 
   /**
@@ -78,6 +105,19 @@ public:
   [[nodiscard]] virtual std::optional<AchievementSet>
   getAchievementSetByContentHash(const std::string &contentHash) const = 0;
 
+  /**
+   * @brief Retrieves the achievement set ID associated with a content hash
+   *
+   * Looks up the achievement set ID that has been mapped to a specific game
+   * content hash. This is the reverse operation of setGameId and enables
+   * querying which achievement set is associated with a given game.
+   *
+   * @param contentHash The content hash to look up
+   * @return The achievement set ID if found, std::nullopt otherwise
+   */
+  virtual std::optional<int>
+  getGameId(const std::string &contentHash) const = 0;
+
   // Individual Achievement Operations
 
   /**
@@ -90,6 +130,20 @@ public:
    * @return true if the operation succeeded, false otherwise
    */
   virtual bool create(Achievement achievement) = 0;
+
+  /**
+   * @brief Retrieves an individual achievement by its unique ID
+   *
+   * Fetches complete achievement information including name, description,
+   * points, type, display order, flags, and parent achievement set ID.
+   * Used for displaying individual achievement details or validating
+   * achievement data independently of the parent set.
+   *
+   * @param achievementId The unique ID of the achievement to retrieve
+   * @return Achievement data if found, std::nullopt otherwise
+   */
+  virtual std::optional<Achievement>
+  getAchievement(unsigned achievementId) const = 0;
 
   // Achievement Progress Operations
 

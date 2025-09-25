@@ -3,7 +3,7 @@
 namespace firelight::achievements {
     struct CachedAchievement {
         unsigned ID{};
-        int GameID{};
+        unsigned GameID{};
         unsigned long long When{};
         unsigned long long WhenHardcore{};
         int Points{};

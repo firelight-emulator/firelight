@@ -117,6 +117,71 @@ SqliteAchievementRepository::SqliteAchievementRepository(std::string dbPath)
                              std::string(e.what()));
   }
 }
+/**
+ * @brief Retrieves user data by username from the SQLite database
+ *
+ * Queries the users table to fetch complete user information including
+ * authentication token and point totals for both normal and hardcore modes.
+ *
+ * @param username The username to query for
+ * @return User data if found, std::nullopt if not found or on database error
+ */
+std::optional<User>
+SqliteAchievementRepository::getUser(const std::string &username) const {
+  try {
+    SQLite::Statement query(*m_database,
+                            "SELECT username, token, points, hardcore_points "
+                            "FROM users "
+                            "WHERE username = :username");
+    query.bind(":username", username);
+
+    if (query.executeStep()) {
+      User user;
+      user.username = query.getColumn(0).getString();
+      user.token = query.getColumn(1).getString();
+      user.points = query.getColumn(2);
+      user.hardcore_points = query.getColumn(3);
+      return user;
+    }
+
+    return std::nullopt;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get user: {}", e.what());
+    return std::nullopt;
+  }
+}
+/**
+ * @brief Creates or updates user data in the SQLite database
+ *
+ * Inserts new user data or updates existing user information including
+ * authentication token and point totals. Uses SQLite's ON CONFLICT DO UPDATE
+ * for upsert semantics based on the username primary key.
+ *
+ * @param user The user data to store or update
+ * @return true if the operation succeeded, false on database error
+ */
+bool SqliteAchievementRepository::createOrUpdateUser(const User &user) {
+  try {
+    SQLite::Statement query(
+        *m_database, "INSERT INTO users "
+                     "(username, token, points, hardcore_points) "
+                     "VALUES (:username, :token, :points, :hardcorePoints) "
+                     "ON CONFLICT(username) DO UPDATE SET "
+                     "token = excluded.token, "
+                     "points = excluded.points, "
+                     "hardcore_points = excluded.hardcore_points");
+    query.bind(":username", user.username);
+    query.bind(":token", user.token);
+    query.bind(":points", user.points);
+    query.bind(":hardcorePoints", user.hardcore_points);
+
+    query.exec();
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to createOrUpdate user: {}", e.what());
+    return false;
+  }
+}
 
 bool SqliteAchievementRepository::create(const AchievementSet achievementSet) {
   try {
@@ -250,6 +315,47 @@ bool SqliteAchievementRepository::create(const Achievement achievement) {
     return false;
   }
 }
+/**
+ * @brief Retrieves an individual achievement by its ID from the SQLite database
+ *
+ * Queries the achievements table to fetch complete achievement information
+ * including name, description, points, type, display order, flags, and parent
+ * achievement set ID. Used for displaying achievement details or validating
+ * individual achievement data.
+ *
+ * @param achievementId The unique ID of the achievement to retrieve
+ * @return Achievement data if found, std::nullopt if not found or on database error
+ */
+std::optional<Achievement>
+SqliteAchievementRepository::getAchievement(unsigned achievementId) const {
+  try {
+    SQLite::Statement query(*m_database,
+                            "SELECT id, name, description, icon_url, points, "
+                            "type, display_order, achievement_set_id, flags "
+                            "FROM achievements "
+                            "WHERE id = :achievementId");
+    query.bind(":achievementId", achievementId);
+
+    if (query.executeStep()) {
+      Achievement achievement;
+      achievement.id = query.getColumn(0);
+      achievement.name = query.getColumn(1).getString();
+      achievement.description = query.getColumn(2).getString();
+      achievement.imageUrl = query.getColumn(3).getString();
+      achievement.points = query.getColumn(4);
+      achievement.type = query.getColumn(5).getString();
+      achievement.displayOrder = query.getColumn(6);
+      achievement.setId = query.getColumn(7);
+      achievement.flags = query.getColumn(8);
+      return achievement;
+    }
+
+    return std::nullopt;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get achievement: {}", e.what());
+    return std::nullopt;
+  }
+}
 
 bool SqliteAchievementRepository::create(AchievementProgress progress) {
   try {
@@ -349,6 +455,36 @@ SqliteAchievementRepository::getAchievementSetByContentHash(
 
     return std::nullopt;
   } catch (const std::exception &e) {
+    return std::nullopt;
+  }
+}
+/**
+ * @brief Retrieves the achievement set ID associated with a content hash from
+ * the SQLite database
+ *
+ * Queries the hashes table to find the achievement set ID that has been mapped
+ * to the specified content hash. This enables reverse lookups from content hash
+ * to achievement set ID.
+ *
+ * @param contentHash The content hash to look up in the database
+ * @return The achievement set ID if found, std::nullopt if not found or on
+ * database error
+ */
+std::optional<int>
+SqliteAchievementRepository::getGameId(const std::string &contentHash) const {
+  try {
+    SQLite::Statement query(*m_database,
+                            "SELECT achievement_set_id FROM hashes "
+                            "WHERE hash = :contentHash");
+    query.bind(":contentHash", contentHash);
+
+    if (query.executeStep()) {
+      return query.getColumn(0).getInt();
+    }
+
+    return std::nullopt;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get game ID: {}", e.what());
     return std::nullopt;
   }
 }

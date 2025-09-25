@@ -9,6 +9,13 @@ namespace firelight::achievements {
 
 AchievementService::AchievementService(IAchievementRepository &m_repository)
     : m_repository(m_repository) {}
+std::optional<User>
+AchievementService::getUser(const std::string &username) const {
+  return m_repository.getUser(username);
+}
+bool AchievementService::createOrUpdateUser(const User &user) {
+  return m_repository.createOrUpdateUser(user);
+}
 
 std::optional<AchievementSet>
 AchievementService::getAchievementSetByContentHash(
@@ -21,6 +28,16 @@ bool AchievementService::setGameId(const std::string &contentHash,
   return m_repository.setGameId(contentHash, setId);
 }
 
+std::optional<Achievement>
+AchievementService::getAchievement(unsigned achievementId) const {
+  return m_repository.getAchievement(achievementId);
+}
+
+std::optional<int>
+AchievementService::getGameId(const std::string &contentHash) const {
+  return m_repository.getGameId(contentHash);
+}
+
 bool AchievementService::updateAchievementProgress(
     const AchievementProgress &progress) {
   return m_repository.create(progress);
@@ -31,6 +48,16 @@ AchievementService::getUserUnlock(const std::string &username,
                                   const unsigned achievementId) const {
   return m_repository.getUserUnlock(username, achievementId);
 }
+bool AchievementService::createOrUpdate(const UserUnlock &unlock) {
+  return m_repository.createOrUpdate(unlock);
+}
+
+std::vector<UserUnlock>
+AchievementService::getAllUserUnlocks(const std::string &username,
+                                      unsigned setId) const {
+  return m_repository.getAllUserUnlocks(username, setId);
+}
+
 std::optional<PatchResponse>
 AchievementService::getPatchResponse(const int gameId) const {
   return m_repository.getPatchResponse(gameId);

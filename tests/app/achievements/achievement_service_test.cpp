@@ -105,12 +105,232 @@ protected:
     progress.denominator = 10;
     return progress;
   }
+
+  User createTestUser(const std::string &username = "testuser",
+                      const std::string &token = "test_token_123",
+                      int points = 1500, int hardcorePoints = 750) {
+    User user;
+    user.username = username;
+    user.token = token;
+    user.points = points;
+    user.hardcore_points = hardcorePoints;
+    return user;
+  }
 };
 
 // Basic Service Operations Tests
 
 TEST_F(AchievementServiceTest, Constructor_Success) {
   EXPECT_NO_THROW(AchievementService(*repository));
+}
+
+// User Management Tests
+
+TEST_F(AchievementServiceTest, CreateUser_Success) {
+  auto user = createTestUser("testuser", "test_token_123", 1500, 750);
+
+  bool result = service->createOrUpdateUser(user);
+
+  EXPECT_TRUE(result);
+
+  // Verify the user was created
+  auto savedUser = service->getUser("testuser");
+  ASSERT_TRUE(savedUser.has_value());
+  EXPECT_EQ(savedUser->username, "testuser");
+  EXPECT_EQ(savedUser->token, "test_token_123");
+  EXPECT_EQ(savedUser->points, 1500);
+  EXPECT_EQ(savedUser->hardcore_points, 750);
+}
+
+TEST_F(AchievementServiceTest, UpdateUser_Success) {
+  auto user = createTestUser("testuser", "test_token_123", 1500, 750);
+
+  // Create user
+  EXPECT_TRUE(service->createOrUpdateUser(user));
+
+  // Update user data
+  user.token = "updated_token_456";
+  user.points = 2000;
+  user.hardcore_points = 1000;
+
+  bool result = service->createOrUpdateUser(user);
+
+  EXPECT_TRUE(result);
+
+  // Verify the user was updated
+  auto updatedUser = service->getUser("testuser");
+  ASSERT_TRUE(updatedUser.has_value());
+  EXPECT_EQ(updatedUser->username, "testuser");
+  EXPECT_EQ(updatedUser->token, "updated_token_456");
+  EXPECT_EQ(updatedUser->points, 2000);
+  EXPECT_EQ(updatedUser->hardcore_points, 1000);
+}
+
+TEST_F(AchievementServiceTest, GetUser_ExistingUser) {
+  auto user = createTestUser("testuser", "test_token_123", 1500, 750);
+  EXPECT_TRUE(service->createOrUpdateUser(user));
+
+  auto result = service->getUser("testuser");
+
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result->username, "testuser");
+  EXPECT_EQ(result->token, "test_token_123");
+  EXPECT_EQ(result->points, 1500);
+  EXPECT_EQ(result->hardcore_points, 750);
+}
+
+TEST_F(AchievementServiceTest, GetUser_NonExistentUser) {
+  auto result = service->getUser("nonexistent");
+
+  EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(AchievementServiceTest, CreateOrUpdateUser_MultipleUsers) {
+  auto user1 = createTestUser("user1", "token1", 1000, 500);
+  auto user2 = createTestUser("user2", "token2", 2000, 1500);
+
+  EXPECT_TRUE(service->createOrUpdateUser(user1));
+  EXPECT_TRUE(service->createOrUpdateUser(user2));
+
+  // Verify both users exist independently
+  auto retrievedUser1 = service->getUser("user1");
+  auto retrievedUser2 = service->getUser("user2");
+
+  ASSERT_TRUE(retrievedUser1.has_value());
+  ASSERT_TRUE(retrievedUser2.has_value());
+
+  EXPECT_EQ(retrievedUser1->username, "user1");
+  EXPECT_EQ(retrievedUser1->token, "token1");
+  EXPECT_EQ(retrievedUser1->points, 1000);
+  EXPECT_EQ(retrievedUser1->hardcore_points, 500);
+
+  EXPECT_EQ(retrievedUser2->username, "user2");
+  EXPECT_EQ(retrievedUser2->token, "token2");
+  EXPECT_EQ(retrievedUser2->points, 2000);
+  EXPECT_EQ(retrievedUser2->hardcore_points, 1500);
+}
+
+TEST_F(AchievementServiceTest, CreateOrUpdateUser_ZeroPoints) {
+  auto user = createTestUser("beginner", "token", 0, 0);
+
+  bool result = service->createOrUpdateUser(user);
+
+  EXPECT_TRUE(result);
+
+  auto savedUser = service->getUser("beginner");
+  ASSERT_TRUE(savedUser.has_value());
+  EXPECT_EQ(savedUser->points, 0);
+  EXPECT_EQ(savedUser->hardcore_points, 0);
+}
+
+TEST_F(AchievementServiceTest, CreateOrUpdateUser_EmptyToken) {
+  auto user = createTestUser("test", "", 100, 50);
+
+  bool result = service->createOrUpdateUser(user);
+
+  EXPECT_TRUE(result);
+
+  auto savedUser = service->getUser("test");
+  ASSERT_TRUE(savedUser.has_value());
+  EXPECT_EQ(savedUser->token, "");
+}
+
+// Content Hash Mapping Tests
+
+TEST_F(AchievementServiceTest, GetGameId_ExistingMapping) {
+  const std::string contentHash = "test_hash_123";
+  const int setId = 42;
+
+  // First set the mapping
+  EXPECT_TRUE(service->setGameId(contentHash, setId));
+
+  // Then retrieve it
+  auto result = service->getGameId(contentHash);
+
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), setId);
+}
+
+TEST_F(AchievementServiceTest, GetGameId_NonExistentMapping) {
+  auto result = service->getGameId("nonexistent_hash");
+
+  EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(AchievementServiceTest, GetGameId_UpdateMapping) {
+  const std::string contentHash = "test_hash_456";
+  const int originalSetId = 10;
+  const int updatedSetId = 20;
+
+  // Set initial mapping
+  EXPECT_TRUE(service->setGameId(contentHash, originalSetId));
+
+  auto firstResult = service->getGameId(contentHash);
+  ASSERT_TRUE(firstResult.has_value());
+  EXPECT_EQ(firstResult.value(), originalSetId);
+
+  // Update the mapping
+  EXPECT_TRUE(service->setGameId(contentHash, updatedSetId));
+
+  auto secondResult = service->getGameId(contentHash);
+  ASSERT_TRUE(secondResult.has_value());
+  EXPECT_EQ(secondResult.value(), updatedSetId);
+}
+
+TEST_F(AchievementServiceTest, GetGameId_MultipleMappings) {
+  const std::string hash1 = "hash_1";
+  const std::string hash2 = "hash_2";
+  const int setId1 = 100;
+  const int setId2 = 200;
+
+  // Set multiple mappings
+  EXPECT_TRUE(service->setGameId(hash1, setId1));
+  EXPECT_TRUE(service->setGameId(hash2, setId2));
+
+  // Verify each mapping independently
+  auto result1 = service->getGameId(hash1);
+  auto result2 = service->getGameId(hash2);
+
+  ASSERT_TRUE(result1.has_value());
+  ASSERT_TRUE(result2.has_value());
+  EXPECT_EQ(result1.value(), setId1);
+  EXPECT_EQ(result2.value(), setId2);
+}
+
+TEST_F(AchievementServiceTest, GetGameId_IntegrationWithSetGameId) {
+  // This test verifies the complete round-trip functionality
+  const std::string contentHash = "integration_test_hash";
+  const int setId = 777;
+
+  // First create some achievement data
+  auto patchResponse = createTestPatchResponse(setId);
+  EXPECT_TRUE(service->processPatchResponse("testuser", patchResponse));
+
+  // Set the game ID mapping
+  EXPECT_TRUE(service->setGameId(contentHash, setId));
+
+  // Verify we can get the game ID back
+  auto retrievedGameId = service->getGameId(contentHash);
+  ASSERT_TRUE(retrievedGameId.has_value());
+  EXPECT_EQ(retrievedGameId.value(), setId);
+
+  // Verify we can also get the achievement set by content hash
+  auto achievementSet = service->getAchievementSetByContentHash(contentHash);
+  ASSERT_TRUE(achievementSet.has_value());
+  EXPECT_EQ(achievementSet->id, setId);
+}
+
+TEST_F(AchievementServiceTest, GetGameId_EmptyContentHash) {
+  const std::string emptyHash = "";
+  const int setId = 123;
+
+  // Set mapping with empty hash
+  EXPECT_TRUE(service->setGameId(emptyHash, setId));
+
+  // Verify we can retrieve it
+  auto result = service->getGameId(emptyHash);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), setId);
 }
 
 TEST_F(AchievementServiceTest, GetAchievementSetByContentHash_Delegates) {
