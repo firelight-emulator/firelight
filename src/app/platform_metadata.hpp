@@ -201,7 +201,7 @@ const static std::map<int, std::map<std::string, std::string>>
           {"mupen64plus-parallel-rdp-vi-aa", "True"},
           {"mupen64plus-parallel-rdp-vi-bilinear", "True"},
           {"mupen64plus-r-cbutton", "C1"},
-          {"mupen64plus-rdp-plugin", "angrylion"},
+          // {"mupen64plus-rdp-plugin", "angrylion"},
           // {"mupen64plus-rsp-plugin", "parallel"},
           {"mupen64plus-txCacheCompression", "True"},
           {"mupen64plus-txEnhancementMode", "None"},
