@@ -374,6 +374,7 @@ add_executable(fl_test
         tests/app/emulation/emulator_instance_test.cpp
         tests/mocks/mock_library.hpp
         tests/app/achievements/sqlite_achievement_repository_test.cpp
+        tests/app/achievements/achievement_service_test.cpp
 )
 
 file(GLOB QML_TEST_FILES

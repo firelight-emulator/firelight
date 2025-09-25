@@ -453,10 +453,10 @@ RetroAchievementsCache::getUserAchievements(const std::string &username,
   std::vector<CachedAchievement> achievements;
   while (query.next()) {
     achievements.emplace_back(
-        CachedAchievement{.ID = query.value(0).toInt(),
+        CachedAchievement{.ID = query.value(0).toUInt(),
                           .GameID = query.value(1).toInt(),
-                          .When = query.value(2).toInt(),
-                          .WhenHardcore = query.value(3).toInt(),
+                          .When = query.value(2).toUInt(),
+                          .WhenHardcore = query.value(3).toUInt(),
                           .Points = query.value(4).toInt(),
                           .Earned = query.value(5).toBool(),
                           .EarnedHardcore = query.value(6).toBool()});
@@ -486,10 +486,10 @@ std::vector<CachedAchievement> RetroAchievementsCache::getUnsyncedAchievements(
   std::vector<CachedAchievement> achievements;
   while (query.next()) {
     achievements.emplace_back(
-        CachedAchievement{.ID = query.value(0).toInt(),
+        CachedAchievement{.ID = query.value(0).toUInt(),
                           .GameID = query.value(1).toInt(),
-                          .When = query.value(2).toLongLong(),
-                          .WhenHardcore = query.value(3).toLongLong(),
+                          .When = query.value(2).toULongLong(),
+                          .WhenHardcore = query.value(3).toULongLong(),
                           .Points = query.value(4).toInt(),
                           .Earned = query.value(5).toBool(),
                           .EarnedHardcore = query.value(6).toBool(),

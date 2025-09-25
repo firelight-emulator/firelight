@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
 
   QDir baseDir(defaultAppDataPathString);
   if (!baseDir.mkpath("core-system")) {
-    spdlog::warn("Unable to create core-system directory");
+    spdlog::warn("Unable to createOrUpdate core-system directory");
   }
 
   firelight::ManagerAccessor::setCoreSystemDirectory(
@@ -337,7 +337,7 @@ int main(int argc, char *argv[]) {
         }
       });
 
-  // QQmlNetworkAccessManagerFactory::create();
+  // QQmlNetworkAccessManagerFactory::createOrUpdate();
   // QNetworkAccessManager *manager = new QNetworkAccessManager();
   // QNetworkDiskCache *diskCache = new QNetworkDiskCache();
   // QString directory =

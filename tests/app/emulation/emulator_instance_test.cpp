@@ -136,7 +136,7 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
 //                             .m_platformId = 3,
 //                             .m_fileSizeBytes = 16777216};
 //
-//   m_library->create(info);
+//   m_library->createOrUpdate(info);
 //   ASSERT_NE(info.m_id, -1);
 //
 //   auto entry =

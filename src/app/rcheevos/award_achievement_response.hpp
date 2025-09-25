@@ -7,7 +7,7 @@ namespace firelight::achievements {
         bool Success;
         int Score;
         int SoftcoreScore;
-        int AchievementID;
+        unsigned AchievementID;
         int AchievementsRemaining;
         // const char* server_response = "{\"Success\":true,\"Score\":119102,\"SoftcoreScore\":777,\"AchievementID\":56481,\"AchievementsRemaining\":11}";
     };

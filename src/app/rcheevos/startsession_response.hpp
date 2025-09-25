@@ -4,8 +4,8 @@
 
 namespace firelight::achievements {
 struct Unlock {
-  int ID{};
-  long long When{};
+  unsigned ID{};
+  unsigned long long When{};
 };
 
 struct StartSessionResponse {

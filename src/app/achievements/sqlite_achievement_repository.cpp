@@ -13,25 +13,29 @@ namespace firelight::achievements {
 /**
  * @brief Constructs the SQLite achievement repository
  *
- * Initializes the database connection and creates all required tables with proper
- * schema and constraints. The database is created if it doesn't exist.
+ * Initializes the database connection and creates all required tables with
+ * proper schema and constraints. The database is created if it doesn't exist.
  *
  * Database Schema Overview:
- * - hashes: Maps game content hashes to achievement set IDs for automatic loading
- * - achievement_sets: Stores achievement collection metadata (name, points, etc.)
+ * - hashes: Maps game content hashes to achievement set IDs for automatic
+ * loading
+ * - achievement_sets: Stores achievement collection metadata (name, points,
+ * etc.)
  * - achievements: Individual achievement data with display order and flags
  * - achievement_progress: User progress tracking (numerator/denominator)
  * - user_unlocks: Achievement completion status with normal/hardcore modes
- * - patch_response_cache: Cached RetroAchievements API responses for offline use
+ * - patch_response_cache: Cached RetroAchievements API responses for offline
+ * use
  * - users: User account information and point totals
  *
- * @param dbPath Path to SQLite database file, or ":memory:" for in-memory database
+ * @param dbPath Path to SQLite database file, or ":memory:" for in-memory
+ * database
  * @throws std::runtime_error If database initialization fails
  */
 SqliteAchievementRepository::SqliteAchievementRepository(std::string dbPath)
     : m_databaseFile(std::move(dbPath)) {
   try {
-    // Open database with read/write and create flags
+    // Open database with read/write and createOrUpdate flags
     m_database = std::make_unique<SQLite::Database>(
         m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
@@ -135,7 +139,7 @@ bool SqliteAchievementRepository::create(const AchievementSet achievementSet) {
     query.exec();
     return true;
   } catch (const std::exception &e) {
-    spdlog::error("Failed to create achievement set: {}", e.what());
+    spdlog::error("Failed to createOrUpdate achievement set: {}", e.what());
     return false;
   }
 }
@@ -242,7 +246,7 @@ bool SqliteAchievementRepository::create(const Achievement achievement) {
     query.exec();
     return true;
   } catch (const std::exception &e) {
-    spdlog::error("Failed to create achievement: {}", e.what());
+    spdlog::error("Failed to createOrUpdate achievement: {}", e.what());
     return false;
   }
 }
@@ -265,12 +269,13 @@ bool SqliteAchievementRepository::create(AchievementProgress progress) {
     query.exec();
     return true;
   } catch (const std::exception &e) {
-    spdlog::error("Failed to create achievement progress: {}", e.what());
+    spdlog::error("Failed to createOrUpdate achievement progress: {}",
+                  e.what());
     return false;
   }
 }
-bool SqliteAchievementRepository::setGameHash(int setId,
-                                              const std::string &contentHash) {
+bool SqliteAchievementRepository::setGameId(const std::string &contentHash,
+                                            int setId) {
   try {
     SQLite::Statement query(*m_database,
                             "INSERT INTO hashes "
@@ -382,6 +387,94 @@ SqliteAchievementRepository::getUserUnlock(const std::string &username,
   }
 }
 
+bool SqliteAchievementRepository::createOrUpdate(const UserUnlock unlock) {
+  try {
+    SQLite::Statement query(
+        *m_database,
+        "INSERT INTO user_unlocks "
+        "(username, achievement_id, earned, earned_hardcore, \"when\", "
+        "when_hardcore, synced, synced_hardcore) "
+        "VALUES (:username, :achievementId, :earned, :earnedHardcore, "
+        ":unlockTimestamp, :unlockTimestampHardcore, :synced, :syncedHardcore) "
+        "ON CONFLICT(username, achievement_id) DO UPDATE SET "
+        "earned = excluded.earned, "
+        "earned_hardcore = excluded.earned_hardcore, "
+        "\"when\" = excluded.\"when\", "
+        "when_hardcore = excluded.when_hardcore, "
+        "synced = excluded.synced, "
+        "synced_hardcore = excluded.synced_hardcore");
+
+    query.bind(":username", unlock.username);
+    query.bind(":achievementId", unlock.achievementId);
+    query.bind(":earned", unlock.earned);
+    query.bind(":earnedHardcore", unlock.earnedHardcore);
+
+    if (unlock.unlockTimestamp != 0) {
+      query.bind(":unlockTimestamp",
+                 static_cast<int64_t>(unlock.unlockTimestamp));
+    } else {
+      query.bind(":unlockTimestamp");
+    }
+
+    if (unlock.unlockTimestampHardcore != 0) {
+      query.bind(":unlockTimestampHardcore",
+                 static_cast<int64_t>(unlock.unlockTimestampHardcore));
+    } else {
+      query.bind(":unlockTimestampHardcore");
+    }
+
+    query.bind(":synced", unlock.synced);
+    query.bind(":syncedHardcore", unlock.syncedHardcore);
+
+    query.exec();
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to createOrUpdate user unlock: {}", e.what());
+    return false;
+  }
+}
+
+std::vector<UserUnlock>
+SqliteAchievementRepository::getAllUserUnlocks(const std::string &username,
+                                               unsigned setId) const {
+  std::vector<UserUnlock> unlocks;
+
+  try {
+    SQLite::Statement query(
+        *m_database,
+        "SELECT u.username, u.achievement_id, u.earned, u.earned_hardcore, "
+        "u.\"when\", u.when_hardcore, u.synced, u.synced_hardcore "
+        "FROM user_unlocks u "
+        "JOIN achievements a ON u.achievement_id = a.id "
+        "WHERE u.username = :username AND a.achievement_set_id = :setId "
+        "ORDER BY a.display_order");
+
+    query.bind(":username", username);
+    query.bind(":setId", setId);
+
+    while (query.executeStep()) {
+      UserUnlock unlock;
+      unlock.username = query.getColumn(0).getString();
+      unlock.achievementId = query.getColumn(1);
+      unlock.earned = query.getColumn(2).getInt() != 0;
+      unlock.earnedHardcore = query.getColumn(3).getInt() != 0;
+      unlock.unlockTimestamp =
+          query.getColumn(4).isNull() ? 0 : query.getColumn(4);
+      unlock.unlockTimestampHardcore =
+          query.getColumn(5).isNull() ? 0 : query.getColumn(5);
+      unlock.synced = query.getColumn(6).getInt() != 0;
+      unlock.syncedHardcore = query.getColumn(7).getInt() != 0;
+
+      unlocks.push_back(unlock);
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get all user unlocks: {}", e.what());
+    // Return empty vector on error
+  }
+
+  return unlocks;
+}
+
 std::optional<PatchResponse>
 SqliteAchievementRepository::getPatchResponse(const int gameId) const {
   try {
@@ -424,7 +517,7 @@ bool SqliteAchievementRepository::create(const PatchResponse patchResponse) {
     query.exec();
     return true;
   } catch (const std::exception &e) {
-    spdlog::error("Failed to create patch response: {}", e.what());
+    spdlog::error("Failed to createOrUpdate patch response: {}", e.what());
     return false;
   }
 }

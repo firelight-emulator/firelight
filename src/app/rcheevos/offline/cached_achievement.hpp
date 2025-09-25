@@ -2,10 +2,10 @@
 
 namespace firelight::achievements {
     struct CachedAchievement {
-        int ID{};
+        unsigned ID{};
         int GameID{};
-        long long When{};
-        long long WhenHardcore{};
+        unsigned long long When{};
+        unsigned long long WhenHardcore{};
         int Points{};
         bool Earned{};
         bool EarnedHardcore{};

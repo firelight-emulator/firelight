@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <rcheevos/patch_response.hpp>
+#include <rcheevos/startsession_response.hpp>
 
 namespace firelight::achievements {
 
@@ -16,14 +17,19 @@ public:
   [[nodiscard]] std::optional<AchievementSet>
   getAchievementSetByContentHash(const std::string &contentHash) const;
 
-  bool setGameId(int setId, const std::string &contentHash);
+  bool setGameId(const std::string &contentHash, int setId);
   bool updateAchievementProgress(const AchievementProgress &progress);
 
   [[nodiscard]] std::optional<UserUnlock>
   getUserUnlock(const std::string &username, unsigned achievementId) const;
 
   std::optional<PatchResponse> getPatchResponse(int gameId) const;
-  bool processPatchResponse(const PatchResponse &response);
+  bool processPatchResponse(const std::string &username,
+                            const PatchResponse &response);
+
+  bool
+  processStartSessionResponse(const std::string &username, unsigned setId,
+                              const StartSessionResponse &startSessionResponse);
 
 private:
   IAchievementRepository &m_repository;

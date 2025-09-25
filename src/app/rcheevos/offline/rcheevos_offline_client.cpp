@@ -347,7 +347,7 @@ RetroAchievementsOfflineClient::handleStartSessionRequest(
 rc_api_server_response_t
 RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     const std::string &username, const std::string &token,
-    const int achievementId, const bool hardcore) {
+    const unsigned achievementId, const bool hardcore) {
 
   // If we don't know the game ID, we can't award the achievement, return
   auto gameId = m_cache.getGameIdFromAchievementId(achievementId);
@@ -399,8 +399,12 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     m_currentSessionAchievements.emplace_back(CachedAchievement{
         .ID = achievementId,
         .GameID = gameId.value(),
-        .When = hardcore ? 0 : QDateTime::currentSecsSinceEpoch(),
-        .WhenHardcore = hardcore ? QDateTime::currentSecsSinceEpoch() : 0,
+        .When = hardcore
+                    ? 0
+                    : static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch()),
+        .WhenHardcore =
+            hardcore ? static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch())
+                     : 0,
         .Points = 0,
         .Earned = !hardcore,
         .EarnedHardcore = hardcore});
@@ -489,7 +493,7 @@ void RetroAchievementsOfflineClient::processGameIdResponse(
   const auto json = nlohmann::json::parse(response);
   const auto gameidResponse = json.get<GameIdResponse>();
   m_cache.setGameId(hash, gameidResponse.GameID);
-  m_achievementService.setGameId(gameidResponse.GameID, hash);
+  m_achievementService.setGameId(hash, gameidResponse.GameID);
 }
 
 void RetroAchievementsOfflineClient::processPatchResponse(
@@ -498,7 +502,7 @@ void RetroAchievementsOfflineClient::processPatchResponse(
   const auto json = nlohmann::json::parse(response);
   const auto patchResponse = json.get<PatchResponse>();
   m_cache.setPatchResponse(username, gameId, patchResponse);
-  m_achievementService.processPatchResponse(patchResponse);
+  m_achievementService.processPatchResponse(username, patchResponse);
 
   // TODO: Only insert ones that have the flags set right
   // TODO: Remove ones that aren't present in the patch response
@@ -540,6 +544,8 @@ void RetroAchievementsOfflineClient::processStartSessionResponse(
   }
 
   auto startSessionResponse = json.get<StartSessionResponse>();
+  m_achievementService.processStartSessionResponse(username, gameId,
+                                                   startSessionResponse);
 
   auto foundUnsupportedEmu = false;
 

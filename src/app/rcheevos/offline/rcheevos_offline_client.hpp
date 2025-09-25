@@ -35,7 +35,7 @@ private:
 
   rc_api_server_response_t
   handleAwardAchievementRequest(const std::string &username,
-                                const std::string &token, int achievementId,
+                                const std::string &token, unsigned achievementId,
                                 bool hardcore);
 
   rc_api_server_response_t handleLogin2Request(const std::string &username,
