@@ -16,210 +16,95 @@ Pane {
         entryId: EmulationService.currentEntryId
     }
 
-    padding: 32
+    horizontalPadding: 16
+    verticalPadding: 0
     background: Item {}
 
-    Row {
-        id: titleRow
-        height: 60
-        spacing: 16
+    contentItem: ColumnLayout {
+        spacing: 0
+        RowLayout {
+            id: navBanner
+            Layout.fillWidth: true
+            Layout.maximumHeight: Constants.standardTopBarHeight
+            Layout.minimumHeight: Constants.standardTopBarHeight
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
 
-        Rectangle {
-            color: "#292929"
-            visible: entry.icon1x1SourceUrl === ""
-            implicitWidth: 60
-            implicitHeight: 60
+            TabBar {
+                id: navTabBar
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.preferredHeight: parent.height
+                spacing: 18
 
-            FLIcon {
-                icon: entry.platformIconName
-                color: "#595959"
-                anchors.centerIn: parent
-                height: parent.height - 16
-                width: parent.width - 16
-                size: height
+                background: Item {}
+
+                Repeater {
+                    model: ["Emulation", "Achievements", "Settings"]
+                    delegate: TabButton {
+                          HoverHandler {
+                              id: hoverHandler
+                              cursorShape: Qt.PointingHandCursor
+                          }
+                          anchors.verticalCenter: parent.verticalCenter
+                          padding: 10
+                          contentItem: Text {
+                              text: modelData
+                              font.family: Constants.mainFontFamily
+                              font.pixelSize: 16
+                              font.weight: Font.Medium
+                              color: ColorPalette.neutral100
+                              verticalAlignment: Text.AlignVCenter
+                              horizontalAlignment: Text.AlignHCenter
+                          }
+                          background: Rectangle {
+                              color: ColorPalette.neutral100
+                              opacity: parent.TabBar.index === navTabBar.currentIndex ? 0.16 : parent.pressed ? 0.04 : hoverHandler.hovered ? 0.08 : 0
+                              radius: 6
+                          }
+                          width: 130
+                      }
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
             }
         }
-        Image {
-            source: entry.icon1x1SourceUrl
-            visible: entry.icon1x1SourceUrl !== ""
-            asynchronous: true
-            sourceSize.width: 60
-            sourceSize.height: 60
-            smooth: true
-            fillMode: Image.PreserveAspectFit
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            opacity: 0.3
+            color: "#dadada"
         }
 
-        Text {
-            text: entry.name
-            font.family: Constants.regularFontFamily
-            font.pixelSize: 22
-            font.weight: Font.DemiBold
-            height: 60
-            color: "white"
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-        }
-    }
+        StackView {
+            id: quickMenuStack
+            Layout.fillHeight: true
+            Layout.fillWidth: true
 
-    RowLayout {
-        anchors.top: titleRow.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        spacing: 32
-         ColumnLayout {
-            id: menuColumn
-            KeyNavigation.right: quickMenuStack
-             Layout.maximumWidth: 400
-             Layout.alignment: Qt.AlignCenter
-             FirelightMenuItem {
-                 id: resumeGameButton
-                 labelText: "Resume Game"
-                 focus: true
-                 Layout.fillWidth: true
-                 KeyNavigation.down: restartGameButton
-                 // Layout.preferredWidth: parent.width / 2
-                 Layout.preferredHeight: 40
-                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                 checkable: false
-                 alignRight: true
-                 onClicked: function () {
-                     root.resumeGame()
-                 }
-             }
-             FirelightMenuItem {
-                 id: restartGameButton
-                 labelText: "Restart Game"
-                 Layout.fillWidth: true
-                 KeyNavigation.down: rewindButton
-                 // Layout.preferredWidth: parent.width / 2
-                 Layout.preferredHeight: 40
-                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                 checkable: false
-                 alignRight: true
-                 onClicked: {
-                     resetGameDialog.open()
-                 }
-             }
-             FirelightMenuItem {
-                 id: rewindButton
-                 labelText: "Rewind"
-                 KeyNavigation.down: suspendPointButton
-                 Layout.fillWidth: true
-                 // Layout.preferredWidth: parent.width / 2
-                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                 Layout.preferredHeight: 40
-                 checkable: false
-                 enabled: EmulationService.rewindEnabled
-                 alignRight: true
-                 onClicked: {
-                     root.rewindPressed()
-                 }
-             }
-             // Rectangle {
-             //     Layout.fillWidth: true
-             //     // Layout.preferredWidth: parent.width / 2
-             //     Layout.preferredHeight: 1
-             //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-             //     opacity: 0.3
-             //     color: "#dadada"
-             // }
-             FirelightMenuItem {
-                 id: suspendPointButton
-                 labelText: "Suspend Points"
-                 Layout.fillWidth: true
-                 KeyNavigation.down: gameSettingsButton
-                 // Layout.preferredWidth: parent.width / 2
-                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                 Layout.preferredHeight: 40
-                 checkable: false
-                 alignRight: true
-                 // enabled: false
-                 onClicked: {
-                     quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate)
-                     quickMenuStack.forceActiveFocus()
-                 }
-             }
-             FirelightMenuItem {
-                 id: gameSettingsButton
-                 labelText: "Game settings"
-                 Layout.fillWidth: true
-                 KeyNavigation.down: closeGameButton
-                 // Layout.preferredWidth: parent.width / 2
-                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                 Layout.preferredHeight: 40
-                 checkable: false
-                 alignRight: true
-                 // enabled: false
-                 onClicked: {
-                     quickMenuStack.replaceCurrentItem(gameSettingsView, {}, StackView.Immediate)
-                     quickMenuStack.forceActiveFocus()
-                 }
-             }
-             // Rectangle {
-             //     Layout.fillWidth: true
-             //     // Layout.preferredWidth: parent.width / 2
-             //     Layout.preferredHeight: 1
-             //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-             //     opacity: 0.3
-             //     color: "#dadada"
-             // }
-             // FirelightMenuItem {
-             //     id: achievementsButton
-             //     labelText: "Achievements"
-             //     Layout.fillWidth: true
-             //     KeyNavigation.down: closeGameButton
-             //     // Layout.preferredWidth: parent.width / 2
-             //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-             //     Layout.preferredHeight: 40
-             //     checkable: false
-             //     alignRight: true
-             //     // enabled: false
-             //     onClicked: {
-             //         quickMenuStack.pushItem(achievementsView, {}, StackView.Immediate)
-             //     }
-             // }
-
-             // Rectangle {
-             //     Layout.fillWidth: true
-             //     // Layout.preferredWidth: parent.width / 2
-             //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-             //     Layout.preferredHeight: 1
-             //     opacity: 0.3
-             //     color: "#dadada"
-             // }
-             FirelightMenuItem {
-                 id: closeGameButton
-                 labelText: "Close Game"
-                 Layout.fillWidth: true
-                 // Layout.preferredWidth: parent.width / 2
-                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                 Layout.preferredHeight: 40
-                 checkable: false
-                 alignRight: true
-
-                 onClicked: {
-                     closeGameDialog.open()
-                 }
-             }
-         }
-
-         StackView {
-             id: quickMenuStack
-             Layout.fillWidth: true
-             Layout.fillHeight: true
-
-             KeyNavigation.left: resumeGameButton
-
-             Keys.onBackPressed: {
-                if (quickMenuStack.depth >= 1) {
-                    quickMenuStack.pop()
-                    resumeGameButton.forceActiveFocus()
+            Connections {
+                target: navTabBar
+                function onCurrentIndexChanged() {
+                    if (navTabBar.currentIndex === 0) {
+                        quickMenuStack.replaceCurrentItem(emulationView, {}, StackView.Immediate)
+                    } else if (navTabBar.currentIndex === 1) {
+                        quickMenuStack.replaceCurrentItem(achievementsView, {}, StackView.Immediate)
+                    } else if (navTabBar.currentIndex === 2) {
+                        quickMenuStack.replaceCurrentItem(gameSettingsView, {}, StackView.Immediate)
+                    }
                 }
-             }
-         }
-     }
+            }
+
+            initialItem: emulationView
+            clip: true
+
+
+        }
 
     FirelightDialog {
         id: closeGameDialog
@@ -238,12 +123,195 @@ Pane {
     }
 
     Component {
+        id: achievementsView
+        FocusScope {
+            AchievementSet {
+                id: achievementSet
+                contentHash: EmulationService.currentContentHash
+                Component.onCompleted: {
+                    console.log("Achievements view loaded for content hash: " + EmulationService.currentContentHash)
+                    console.log("Has achievements: " + hasAchievements)
+                    console.log("Set ID: " + setId)
+                    console.log("Icon URL: " + iconUrl)
+                    console.log("Set name: " + name)
+                    console.log("Num achievements: " + numAchievements)
+                    console.log("Num points: " + totalNumPoints)
+                }
+            }
+
+            RowLayout {
+                height: 100
+                width: Math.min(parent.width, 1000)
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                spacing: 24
+                Image {
+                    id: gameIcon
+                    source: achievementSet.iconUrl
+                    sourceSize.width: 90
+                    fillMode: Image.PreserveAspectFit
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                    smooth: true
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Text {
+                        text: achievementSet.name
+                        color: "white"
+                        font.family: Constants.mainFontFamily
+                        font.pixelSize: 18
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: "Nintendo 64"
+                        color: "grey"
+                        font.family: Constants.mainFontFamily
+                        font.pixelSize: 18
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: emulationView
+        RowLayout {
+            spacing: 32
+             ColumnLayout {
+                id: menuColumn
+                KeyNavigation.right: quickMenuStack
+                 Layout.maximumWidth: 400
+                 Layout.alignment: Qt.AlignCenter
+                 FirelightMenuItem {
+                     id: resumeGameButton
+                     labelText: "Resume Game"
+                     focus: true
+                     Layout.fillWidth: true
+                     KeyNavigation.down: restartGameButton
+                     // Layout.preferredWidth: parent.width / 2
+                     Layout.preferredHeight: 40
+                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     checkable: false
+                     alignRight: true
+                     onClicked: function () {
+                         root.resumeGame()
+                     }
+                 }
+                 FirelightMenuItem {
+                     id: restartGameButton
+                     labelText: "Restart Game"
+                     Layout.fillWidth: true
+                     KeyNavigation.down: rewindButton
+                     // Layout.preferredWidth: parent.width / 2
+                     Layout.preferredHeight: 40
+                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     checkable: false
+                     alignRight: true
+                     onClicked: {
+                         resetGameDialog.open()
+                     }
+                 }
+                 FirelightMenuItem {
+                     id: rewindButton
+                     labelText: "Rewind"
+                     KeyNavigation.down: suspendPointButton
+                     Layout.fillWidth: true
+                     // Layout.preferredWidth: parent.width / 2
+                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     Layout.preferredHeight: 40
+                     checkable: false
+                     enabled: EmulationService.rewindEnabled
+                     alignRight: true
+                     onClicked: {
+                         root.rewindPressed()
+                     }
+                 }
+                 // Rectangle {
+                 //     Layout.fillWidth: true
+                 //     // Layout.preferredWidth: parent.width / 2
+                 //     Layout.preferredHeight: 1
+                 //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                 //     opacity: 0.3
+                 //     color: "#dadada"
+                 // }
+                 FirelightMenuItem {
+                     id: suspendPointButton
+                     labelText: "Suspend Points"
+                     Layout.fillWidth: true
+                     KeyNavigation.down: closeGameButton
+                     // Layout.preferredWidth: parent.width / 2
+                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     Layout.preferredHeight: 40
+                     checkable: false
+                     alignRight: true
+                     // enabled: false
+                     onClicked: {
+                         quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate)
+                         quickMenuStack.forceActiveFocus()
+                     }
+                 }
+                 FirelightMenuItem {
+                     id: closeGameButton
+                     labelText: "Close Game"
+                     Layout.fillWidth: true
+                     // Layout.preferredWidth: parent.width / 2
+                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     Layout.preferredHeight: 40
+                     checkable: false
+                     alignRight: true
+
+                     onClicked: {
+                         closeGameDialog.open()
+                     }
+                 }
+             }
+
+             StackView {
+                 id: quickMenuStack
+                 Layout.fillWidth: true
+                 Layout.fillHeight: true
+
+                 KeyNavigation.left: resumeGameButton
+
+                 Keys.onBackPressed: {
+                    if (quickMenuStack.depth >= 1) {
+                        quickMenuStack.pop()
+                        resumeGameButton.forceActiveFocus()
+                    }
+                 }
+             }
+         }
+    }
+
+    Component {
         id: gameSettingsView
         GameSettingsView {
             contentHash: EmulationService.currentContentHash
             platformId: EmulationService.currentPlatformId
             level: EmulationService.currentSettingsLevel
             platformName: EmulationService.currentPlatformName
+        }
+    }
+
+    Component {
+        id: rewindMenu
+        RewindMenu {
+            onRewindPointSelected: function(point) {
+                emulatorLoader.item.loadRewindPoint(point)
+                root.currentItem.close()
+                // root.popCurrentItem(StackView.Immediate)
+            }
         }
     }
 
@@ -470,15 +538,5 @@ Pane {
             }
         }
     }
-
-    Component {
-        id: rewindMenu
-        RewindMenu {
-            onRewindPointSelected: function(point) {
-                emulatorLoader.item.loadRewindPoint(point)
-                root.currentItem.close()
-                // root.popCurrentItem(StackView.Immediate)
-            }
-        }
-    }
+}
 }

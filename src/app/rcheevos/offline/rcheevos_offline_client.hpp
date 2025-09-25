@@ -1,13 +1,15 @@
 #pragma once
 
 #include "../ra_http_client.hpp"
+#include "achievements/achievement_service.hpp"
 #include "ra_cache.hpp"
 
 namespace firelight::achievements {
 class RetroAchievementsOfflineClient final {
 public:
-  explicit RetroAchievementsOfflineClient(RetroAchievementsCache &cache)
-      : m_cache(cache) {}
+  explicit RetroAchievementsOfflineClient(
+      RetroAchievementsCache &cache, AchievementService &achievementService)
+      : m_achievementService(achievementService), m_cache(cache) {}
 
   rc_api_server_response_t handleRequest(const std::string &url,
                                          const std::string &postBody,
@@ -62,6 +64,7 @@ private:
                                        const std::string &response) const;
 
   bool m_inHardcoreSession = false;
+  AchievementService &m_achievementService;
   RetroAchievementsCache &m_cache;
   std::vector<CachedAchievement> m_currentSessionAchievements{};
 };

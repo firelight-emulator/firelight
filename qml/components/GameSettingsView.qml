@@ -21,7 +21,9 @@ FocusScope {
     // property var level: GameSettings.Game
 
     ListView {
-        anchors.fill: parent
+        height: parent.height
+        width: Math.min(parent.width, 800)
+        anchors.horizontalCenter: parent.horizontalCenter
         spacing: 12
         focus: true
 

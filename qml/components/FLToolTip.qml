@@ -26,7 +26,7 @@ ToolTip {
             property: "opacity"
             from: 0
             to: 1
-            duration: 120
+            duration: 50
             easing.type: Easing.InOutQuad
         }
     }
@@ -36,7 +36,7 @@ ToolTip {
             property: "opacity"
             from: 1
             to: 0
-            duration: 120
+            duration: 50
             easing.type: Easing.InOutQuad
         }
     }

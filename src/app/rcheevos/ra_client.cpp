@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <spdlog/spdlog.h>
 
-#include "achievements/achievement.hpp"
+#include "achievements/models/achievement.hpp"
 #include "regular_http_client.hpp"
 
 #include "ra_constants.h"
@@ -79,6 +79,12 @@ static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
               QString(urlBuffer), event->achievement->id,
               event->achievement->title, event->achievement->description,
               std::stoi(current), std::stoi(desired));
+
+          raClient->m_service.updateAchievementProgress(AchievementProgress{
+              .username = raClient->getCurrentUser()->username,
+              .achievementId = event->achievement->id,
+              .numerator = static_cast<unsigned>(std::stoi(current)),
+              .denominator = static_cast<unsigned>(std::stoi(desired))});
         }
       }
     }
@@ -193,8 +199,8 @@ static void logCallback(const char *message, const rc_client_t *client) {
 }
 
 RAClient::RAClient(RetroAchievementsOfflineClient &offlineClient,
-                   RetroAchievementsCache &cache)
-    : m_offlineClient(offlineClient), m_cache(cache) {
+                   RetroAchievementsCache &cache, AchievementService &service)
+    : m_service(service), m_offlineClient(offlineClient), m_cache(cache) {
   m_client = rc_client_create(readMemoryCallback, httpCallback);
   rc_client_enable_logging(m_client, RC_CLIENT_LOG_LEVEL_VERBOSE, logCallback);
   rc_client_set_event_handler(m_client, eventHandler);

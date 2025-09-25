@@ -16,6 +16,8 @@
 #include <qstandardpaths.h>
 #include <spdlog/spdlog.h>
 
+#include "achievements/achievement_service.hpp"
+#include "achievements/sqlite_achievement_repository.hpp"
 #include "activity/gui/game_activity_item.hpp"
 #include "app/audio/SfxPlayer.hpp"
 #include "app/db/sqlite_content_database.hpp"
@@ -221,14 +223,30 @@ int main(int argc, char *argv[]) {
         libScanner2.scanAll();
       });
 
+  firelight::achievements::SqliteAchievementRepository achievementRepo(
+      (defaultAppDataPathString + "/rcheevos2.db").toStdString());
+  firelight::achievements::AchievementService achievementService(
+      achievementRepo);
+
   firelight::achievements::RetroAchievementsCache raCache(
       defaultAppDataPathString + "/rcheevos.db");
   firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(
-      raCache);
-  firelight::achievements::RAClient raClient(offlineRaClient, raCache);
+      raCache, achievementService);
+  firelight::achievements::RAClient raClient(offlineRaClient, raCache,
+                                             achievementService);
   firelight::ManagerAccessor::setAchievementManager(&raClient);
+  firelight::ServiceAccessor::setAchievementService(&achievementService);
 
-  // Set up the models for QML ***********************************************
+  auto set = achievementService.getAchievementSetByContentHash(
+      "1bc674be034e43c96b86487ac69d9293");
+  if (set.has_value()) {
+    for (const auto &ach : set->achievements) {
+      spdlog::info("Achievement: {} - {}", ach.id, ach.name);
+    }
+  }
+
+  // Set up the models for QML
+  // ***********************************************
   firelight::library::EntryListModel entryListModel(userLibrary);
   firelight::library::EntrySortFilterListModel entrySearchModel;
   entrySearchModel.setSourceModel(&entryListModel);

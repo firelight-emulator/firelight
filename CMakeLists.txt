@@ -193,6 +193,14 @@ add_library(firelight_lib
         src/gui/models/game_activity_list_model.hpp
         src/app/service_accessor.cpp
         src/app/service_accessor.hpp
+        src/app/achievements/achievement_service.cpp
+        src/app/achievements/achievement_service.hpp
+        src/app/achievements/models/user_unlock.hpp
+        src/app/achievements/models/achievement_set.hpp
+        src/app/achievements/achievement_repository.hpp
+        src/app/achievements/sqlite_achievement_repository.cpp
+        src/app/achievements/sqlite_achievement_repository.hpp
+        src/app/achievements/models/achievement_progress.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -365,6 +373,7 @@ add_executable(fl_test
         tests/app/emulation/emulation_service_test.cpp
         tests/app/emulation/emulator_instance_test.cpp
         tests/mocks/mock_library.hpp
+        tests/app/achievements/sqlite_achievement_repository_test.cpp
 )
 
 file(GLOB QML_TEST_FILES

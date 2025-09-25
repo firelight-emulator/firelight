@@ -292,7 +292,7 @@ rc_api_server_response_t RetroAchievementsOfflineClient::handleGameIdRequest(
 
 rc_api_server_response_t
 RetroAchievementsOfflineClient::handlePatchRequest(const int gameId) const {
-  auto cached = m_cache.getPatchResponse(gameId);
+  auto cached = m_achievementService.getPatchResponse(gameId);
   if (!cached.has_value()) {
     return GENERIC_SERVER_ERROR;
   }
@@ -489,6 +489,7 @@ void RetroAchievementsOfflineClient::processGameIdResponse(
   const auto json = nlohmann::json::parse(response);
   const auto gameidResponse = json.get<GameIdResponse>();
   m_cache.setGameId(hash, gameidResponse.GameID);
+  m_achievementService.setGameId(gameidResponse.GameID, hash);
 }
 
 void RetroAchievementsOfflineClient::processPatchResponse(
@@ -497,6 +498,7 @@ void RetroAchievementsOfflineClient::processPatchResponse(
   const auto json = nlohmann::json::parse(response);
   const auto patchResponse = json.get<PatchResponse>();
   m_cache.setPatchResponse(username, gameId, patchResponse);
+  m_achievementService.processPatchResponse(patchResponse);
 
   // TODO: Only insert ones that have the flags set right
   // TODO: Remove ones that aren't present in the patch response
@@ -505,7 +507,7 @@ void RetroAchievementsOfflineClient::processPatchResponse(
                                    .name = a.Title,
                                    .description = a.Description,
                                    .points = a.Points,
-                                   .setId = gameId,
+                                   .setId = static_cast<unsigned>(gameId),
                                    .flags = a.Flags};
     if (m_cache.createAchievement(achievement) == -1) {
       spdlog::error("Failed to create achievement: {}", achievement.id);

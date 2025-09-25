@@ -51,7 +51,7 @@ class RAClient : public QObject {
 
 public:
   explicit RAClient(RetroAchievementsOfflineClient &offlineClient,
-                    RetroAchievementsCache &cache);
+                    RetroAchievementsCache &cache, AchievementService &service);
 
   ~RAClient() override;
 
@@ -71,6 +71,7 @@ public:
 
   void deserializeState(const std::vector<uint8_t> &state);
 
+  AchievementService &m_service;
   rc_libretro_memory_regions_t m_memoryRegions{};
   bool m_memorySeemsGood = false;
   bool m_canStartReadingMemory = false;

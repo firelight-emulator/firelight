@@ -4,18 +4,14 @@
 
 namespace firelight::achievements {
 struct Achievement {
-  int id;
+  unsigned id;
   std::string name;
   std::string description;
   std::string imageUrl;
-  bool earnedHardcore;
-  bool earned;
-  std::string earnedDateHardcore;
-  std::string earnedDate;
   int points;
   std::string type;
   int displayOrder;
-  int setId;
+  unsigned setId;
   int flags;
 };
 } // namespace firelight::achievements

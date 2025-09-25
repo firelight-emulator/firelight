@@ -9,7 +9,7 @@
 #include "earned_achievement.hpp"
 
 #include <QSqlDatabase>
-#include <achievements/achievement.hpp>
+#include <achievements/models/achievement.hpp>
 #include <optional>
 #include <string>
 #include <vector>
