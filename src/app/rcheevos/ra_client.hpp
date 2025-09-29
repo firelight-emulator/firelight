@@ -51,7 +51,7 @@ class RAClient : public QObject {
 
 public:
   explicit RAClient(RetroAchievementsOfflineClient &offlineClient,
-                    RetroAchievementsCache &cache, AchievementService &service);
+                    AchievementService &service);
 
   ~RAClient() override;
 
@@ -89,8 +89,6 @@ public:
   Q_INVOKABLE void setOnlineForTesting(bool online) const;
 
   std::unique_ptr<RegularHttpClient> m_httpClient = nullptr;
-
-  RetroAchievementsCache &cache() { return m_cache; }
 
   std::optional<User> getCurrentUser() const;
 
@@ -167,7 +165,6 @@ private:
   bool m_expectToBeLoggedIn = false;
 
   RetroAchievementsOfflineClient &m_offlineClient;
-  RetroAchievementsCache &m_cache;
 
   rc_client_t *m_client;
 

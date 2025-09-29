@@ -4,7 +4,7 @@ import QtQuick.Controls
 
 Menu {
     id: control
-    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     padding: 8
     // horizontalPadding: 8

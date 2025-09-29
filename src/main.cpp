@@ -55,6 +55,7 @@
 #include "gui/gamepad_profile_item.hpp"
 #include "gui/models/emulation_settings_model.hpp"
 #include "gui/models/game_activity_list_model.hpp"
+#include "gui/qt_achievement_service_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "input2/sdl/sdl_input_service.hpp"
@@ -228,22 +229,12 @@ int main(int argc, char *argv[]) {
   firelight::achievements::AchievementService achievementService(
       achievementRepo);
 
-  firelight::achievements::RetroAchievementsCache raCache(
-      defaultAppDataPathString + "/rcheevos.db");
   firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(
-      raCache, achievementService);
-  firelight::achievements::RAClient raClient(offlineRaClient, raCache,
+      achievementService);
+  firelight::achievements::RAClient raClient(offlineRaClient,
                                              achievementService);
   firelight::ManagerAccessor::setAchievementManager(&raClient);
   firelight::ServiceAccessor::setAchievementService(&achievementService);
-
-  auto set = achievementService.getAchievementSetByContentHash(
-      "1bc674be034e43c96b86487ac69d9293");
-  if (set.has_value()) {
-    for (const auto &ach : set->achievements) {
-      spdlog::info("Achievement: {} - {}", ach.id, ach.name);
-    }
-  }
 
   // Set up the models for QML
   // ***********************************************
@@ -260,6 +251,8 @@ int main(int argc, char *argv[]) {
   firelight::shop::ShopItemModel shopItemModel(contentDatabase);
 
   firelight::gui::ContentDirectoryModel contentDirectoryModel(userLibrary);
+
+  firelight::ServiceAccessor::setLibraryService(&userLibrary);
 
   auto emulatorConfigManager =
       std::make_shared<EmulatorConfigManager>(userdata_database);
@@ -321,17 +314,17 @@ int main(int argc, char *argv[]) {
   if (QNetworkInformation::instance()->reachability() ==
       QNetworkInformation::Reachability::Online) {
     raClient.m_connected = true;
-    offlineRaClient.syncOfflineAchievements();
+    achievementService.syncOfflineAchievements();
   }
 
   QObject::connect(
       QNetworkInformation::instance(),
       &QNetworkInformation::reachabilityChanged,
       [&raClient,
-       &offlineRaClient](QNetworkInformation::Reachability reachability) {
+       &achievementService](QNetworkInformation::Reachability reachability) {
         if (reachability == QNetworkInformation::Reachability::Online) {
           raClient.m_connected = true;
-          offlineRaClient.syncOfflineAchievements();
+          achievementService.syncOfflineAchievements();
         } else {
           raClient.m_connected = false;
         }
@@ -393,6 +386,8 @@ int main(int argc, char *argv[]) {
       "InputService", new firelight::gui::QtInputServiceProxy());
   engine.rootContext()->setContextProperty(
       "EmulationService", new firelight::gui::QtEmulationServiceProxy());
+  engine.rootContext()->setContextProperty(
+      "AchievementService", new firelight::gui::QtAchievementServiceProxy());
 
   engine.rootContext()->setContextProperty("LibraryFolderModel",
                                            &libraryFolderListModel);

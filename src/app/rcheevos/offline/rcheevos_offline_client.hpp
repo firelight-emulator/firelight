@@ -8,8 +8,8 @@ namespace firelight::achievements {
 class RetroAchievementsOfflineClient final {
 public:
   explicit RetroAchievementsOfflineClient(
-      RetroAchievementsCache &cache, AchievementService &achievementService)
-      : m_achievementService(achievementService), m_cache(cache) {}
+      AchievementService &achievementService)
+      : m_achievementService(achievementService) {}
 
   rc_api_server_response_t handleRequest(const std::string &url,
                                          const std::string &postBody,
@@ -35,8 +35,8 @@ private:
 
   rc_api_server_response_t
   handleAwardAchievementRequest(const std::string &username,
-                                const std::string &token, unsigned achievementId,
-                                bool hardcore);
+                                const std::string &token,
+                                unsigned achievementId, bool hardcore);
 
   rc_api_server_response_t handleLogin2Request(const std::string &username,
                                                const std::string &password,
@@ -65,7 +65,6 @@ private:
 
   bool m_inHardcoreSession = false;
   AchievementService &m_achievementService;
-  RetroAchievementsCache &m_cache;
   std::vector<CachedAchievement> m_currentSessionAchievements{};
 };
 } // namespace firelight::achievements

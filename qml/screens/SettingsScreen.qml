@@ -15,7 +15,7 @@ Pane {
 
     background: Item{}
     horizontalPadding: AppStyle.windowPadding
-    verticalPadding: 0
+    verticalPadding: 16
 
     FLTwoColumnMenu {
         // KeyNavigation.up: closeButton

@@ -44,6 +44,38 @@ public:
   virtual ~SqliteAchievementRepository() = default;
 
   std::optional<User> getUser(const std::string &username) const override;
+
+  /**
+   * @brief Retrieves all users from the SQLite database
+   *
+   * Executes a SELECT query to fetch all user records from the users table,
+   * ordered alphabetically by username. Each user record includes complete
+   * information: username, authentication token, normal mode points, and
+   * hardcore mode points.
+   *
+   * The method constructs User objects from the database results and returns
+   * them in a vector. If no users exist, an empty vector is returned. Database
+   * errors are logged and result in an empty vector return rather than throwing
+   * exceptions.
+   *
+   * SQL Query: `SELECT username, token, points, hardcore_points FROM users
+   * ORDER BY username`
+   *
+   * @return Vector of User objects containing all users in alphabetical order
+   *         by username, or empty vector if no users exist or on database error
+   *
+   * @note Error handling follows the repository pattern - errors are logged
+   *       but don't propagate as exceptions
+   * @note The alphabetical ordering is case-sensitive per SQLite default
+   * collation
+   * @note All user data including authentication tokens are returned, handle
+   *       with appropriate security measures
+   *
+   * @see getUser() for retrieving a single user by username
+   * @see createOrUpdateUser() for adding or updating user data
+   */
+  std::vector<User> listUsers() const override;
+
   bool createOrUpdateUser(const User &user) override;
 
   // Achievement Set Operations
@@ -99,6 +131,43 @@ public:
   getAchievementSetByContentHash(const std::string &contentHash) const override;
 
   std::optional<int> getGameId(const std::string &contentHash) const override;
+
+  /**
+   * @brief Retrieves the content hash associated with an achievement set ID from SQLite
+   *
+   * Executes a SQL query to perform reverse lookup from achievement set ID to
+   * its associated content hash. Queries the hashes table to find the hash
+   * value that has been mapped to the specified achievement set ID.
+   *
+   * The method performs a simple SELECT query against the hashes table with
+   * the achievement_set_id as the key, returning the associated hash string.
+   * Database errors are logged and result in std::nullopt return values for
+   * graceful error handling.
+   *
+   * SQL Query: `SELECT hash FROM hashes WHERE achievement_set_id = :setId`
+   *
+   * Use cases:
+   * - Verifying content hash mappings for loaded achievement sets
+   * - Supporting bidirectional hash <-> set ID navigation
+   * - Debugging and troubleshooting hash mapping issues
+   * - Cache invalidation based on content hash changes
+   * - Multi-version game support where different content hashes map to same set
+   *
+   * @param setId The achievement set ID to lookup the associated content hash for
+   * @return The content hash string if a mapping exists, std::nullopt if no
+   *         mapping found or on database error
+   *
+   * @note This method forms a bidirectional lookup pair with getGameId()
+   * @note Empty hash strings are valid return values if explicitly mapped
+   * @note Database errors are logged via spdlog but don't throw exceptions
+   * @note The lookup is performed via indexed query for optimal performance
+   * @note NULL/missing mappings return std::nullopt, not empty strings
+   *
+   * @see getGameId() for the forward lookup operation (hash -> set ID)
+   * @see setGameId() to create or update hash <-> set ID mappings
+   * @see getAchievementSetByContentHash() to retrieve sets directly by hash
+   */
+  std::optional<std::string> getGameHash(unsigned setId) const override;
 
   // Individual Achievement Operations
 
@@ -188,6 +257,42 @@ public:
    */
   std::vector<UserUnlock> getAllUserUnlocks(const std::string &username,
                                             unsigned setId) const override;
+
+  /**
+   * @brief Retrieves all unsynced user unlock records for a specific user
+   *
+   * Fetches all achievement unlock records for a given user that have not yet
+   * been synchronized with remote services (synced = false). This is essential
+   * for offline achievement tracking, allowing the system to identify which
+   * unlocks need to be uploaded when connectivity is restored.
+   *
+   * The method returns unlocks across all achievement sets for the specified
+   * user, regardless of the achievement set they belong to. This provides a
+   * comprehensive view of all pending synchronization work for a user.
+   *
+   * Use cases:
+   * - Offline achievement synchronization when connectivity is restored
+   * - Identifying achievements earned while offline
+   * - Progress backup and recovery operations
+   * - Debugging synchronization issues
+   *
+   * @param username The username to query unsynced unlock records for
+   * @return Vector of UserUnlock records with synced=false, empty if none found
+   *         or on database error
+   *
+   * @note This method does not filter by achievement set - it returns all
+   *       unsynced unlocks for the user across all games/sets
+   * @note The returned unlocks include both normal and hardcore mode completion
+   *       data with their respective timestamps
+   * @note Database errors are logged but do not throw exceptions - an empty
+   *       vector is returned instead
+   *
+   * @see createOrUpdate(UserUnlock) to mark unlocks as synced after successful
+   *      upload
+   * @see getAllUserUnlocks() to get all unlocks for a specific achievement set
+   */
+  std::vector<UserUnlock>
+  getAllUnsyncedUserUnlocks(const std::string &username) const override;
 
   // Patch Response Caching Operations
 

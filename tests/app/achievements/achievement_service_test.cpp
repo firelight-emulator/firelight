@@ -439,12 +439,10 @@ TEST_F(AchievementServiceTest, ProcessPatchResponse_CreatesUserUnlocks) {
   EXPECT_FALSE(unlock1->earned);
   EXPECT_FALSE(unlock1->earnedHardcore);
   EXPECT_TRUE(unlock1->synced);
-  EXPECT_TRUE(unlock1->syncedHardcore);
 
   EXPECT_FALSE(unlock2->earned);
   EXPECT_FALSE(unlock2->earnedHardcore);
   EXPECT_TRUE(unlock2->synced);
-  EXPECT_TRUE(unlock2->syncedHardcore);
 }
 
 TEST_F(AchievementServiceTest, ProcessPatchResponse_SkipsInactiveAchievements) {
@@ -585,7 +583,6 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_Success) {
   ASSERT_TRUE(unlock2.has_value());
   EXPECT_TRUE(unlock2->earnedHardcore);
   EXPECT_EQ(unlock2->unlockTimestampHardcore, 1609545600);
-  EXPECT_TRUE(unlock2->syncedHardcore);
 }
 
 TEST_F(AchievementServiceTest, ProcessStartSessionResponse_CreatesNewUnlocks) {
@@ -646,7 +643,6 @@ TEST_F(AchievementServiceTest,
   EXPECT_FALSE(unsupportedUnlock->earned);
   EXPECT_FALSE(unsupportedUnlock->earnedHardcore);
   EXPECT_TRUE(unsupportedUnlock->synced);
-  EXPECT_TRUE(unsupportedUnlock->syncedHardcore);
 }
 
 TEST_F(AchievementServiceTest,
@@ -751,8 +747,44 @@ TEST_F(AchievementServiceTest,
   auto patchResponse = createTestPatchResponse(1);
   EXPECT_TRUE(service->processPatchResponse("testuser", patchResponse));
 
-  // Same achievement unlocked in both modes
+  // Different achievements unlocked in each mode
   std::vector<Unlock> unlocks = {createTestUnlock(1, 1609459200)};
+  std::vector<Unlock> hardcoreUnlocks = {createTestUnlock(2, 1609545600)};
+  auto startSessionResponse =
+      createTestStartSessionResponse(unlocks, hardcoreUnlocks);
+
+  bool result =
+      service->processStartSessionResponse("testuser", 1, startSessionResponse);
+
+  EXPECT_TRUE(result);
+
+  // Verify normal unlock
+  auto unlock1 = service->getUserUnlock("testuser", 1);
+  ASSERT_TRUE(unlock1.has_value());
+  EXPECT_TRUE(unlock1->earned);
+  EXPECT_FALSE(unlock1->earnedHardcore);
+  EXPECT_EQ(unlock1->unlockTimestamp, 1609459200);
+  EXPECT_EQ(unlock1->unlockTimestampHardcore, 0);
+  EXPECT_TRUE(unlock1->synced);
+
+  // Verify hardcore unlock
+  auto unlock2 = service->getUserUnlock("testuser", 2);
+  ASSERT_TRUE(unlock2.has_value());
+  EXPECT_TRUE(unlock2->earned);
+  EXPECT_TRUE(unlock2->earnedHardcore);
+  EXPECT_EQ(unlock2->unlockTimestamp, 1609545600);
+  EXPECT_EQ(unlock2->unlockTimestampHardcore, 1609545600);
+  EXPECT_TRUE(unlock2->synced);
+}
+
+TEST_F(AchievementServiceTest,
+       ProcessStartSessionResponse_HardcoreUnlockSetsEarnedTrue) {
+  // Set up achievements first
+  auto patchResponse = createTestPatchResponse(1);
+  EXPECT_TRUE(service->processPatchResponse("testuser", patchResponse));
+
+  // Achievement unlocked ONLY in hardcore mode (no non-hardcore unlock)
+  std::vector<Unlock> unlocks = {};
   std::vector<Unlock> hardcoreUnlocks = {createTestUnlock(1, 1609545600)};
   auto startSessionResponse =
       createTestStartSessionResponse(unlocks, hardcoreUnlocks);
@@ -765,13 +797,49 @@ TEST_F(AchievementServiceTest,
   auto unlock = service->getUserUnlock("testuser", 1);
   ASSERT_TRUE(unlock.has_value());
 
-  // Both modes should be unlocked
+  // Hardcore unlock should set BOTH earned and earnedHardcore to true
   EXPECT_TRUE(unlock->earned);
   EXPECT_TRUE(unlock->earnedHardcore);
-  EXPECT_EQ(unlock->unlockTimestamp, 1609459200);
+  EXPECT_EQ(unlock->unlockTimestamp,
+            1609545600); // Should use hardcore timestamp
   EXPECT_EQ(unlock->unlockTimestampHardcore, 1609545600);
   EXPECT_TRUE(unlock->synced);
-  EXPECT_TRUE(unlock->syncedHardcore);
+}
+
+TEST_F(AchievementServiceTest,
+       ProcessStartSessionResponse_HardcoreWithExistingNonHardcore) {
+  // Set up achievements first
+  auto patchResponse = createTestPatchResponse(1);
+  EXPECT_TRUE(service->processPatchResponse("testuser", patchResponse));
+
+  // Different achievements unlocked in different modes
+  std::vector<Unlock> unlocks = {createTestUnlock(1, 1609459200)};
+  std::vector<Unlock> hardcoreUnlocks = {createTestUnlock(2, 1609545600)};
+  auto startSessionResponse =
+      createTestStartSessionResponse(unlocks, hardcoreUnlocks);
+
+  bool result =
+      service->processStartSessionResponse("testuser", 1, startSessionResponse);
+
+  EXPECT_TRUE(result);
+
+  // Verify normal unlock
+  auto unlock1 = service->getUserUnlock("testuser", 1);
+  ASSERT_TRUE(unlock1.has_value());
+  EXPECT_TRUE(unlock1->earned);
+  EXPECT_FALSE(unlock1->earnedHardcore);
+  EXPECT_EQ(unlock1->unlockTimestamp, 1609459200);
+  EXPECT_EQ(unlock1->unlockTimestampHardcore, 0);
+  EXPECT_TRUE(unlock1->synced);
+
+  // Verify hardcore unlock (which sets both earned flags)
+  auto unlock2 = service->getUserUnlock("testuser", 2);
+  ASSERT_TRUE(unlock2.has_value());
+  EXPECT_TRUE(unlock2->earned);
+  EXPECT_TRUE(unlock2->earnedHardcore);
+  EXPECT_EQ(unlock2->unlockTimestamp, 1609545600);
+  EXPECT_EQ(unlock2->unlockTimestampHardcore, 1609545600);
+  EXPECT_TRUE(unlock2->synced);
 }
 
 // Edge Cases and Error Handling

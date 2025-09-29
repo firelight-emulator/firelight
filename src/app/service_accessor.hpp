@@ -1,6 +1,9 @@
 #pragma once
 
 namespace firelight {
+namespace library {
+class IUserLibrary;
+}
 namespace achievements {
 class AchievementService;
 }
@@ -20,18 +23,21 @@ public:
   static void setPlatformService(platforms::PlatformService *service);
   static void setSettingsService(settings::SettingsService *service);
   static void setAchievementService(achievements::AchievementService *service);
+  static void setLibraryService(library::IUserLibrary *service);
 
 protected:
   static input::InputService *getInputService();
   static platforms::PlatformService *getPlatformService();
   static settings::SettingsService *getSettingsService();
   static achievements::AchievementService *getAchievementService();
+  static library::IUserLibrary *getLibraryService();
 
 private:
   static input::InputService *s_inputService;
   static platforms::PlatformService *s_platformService;
   static settings::SettingsService *s_settingsService;
   static achievements::AchievementService *s_achievementService;
+  static library::IUserLibrary *s_libraryService;
 };
 
 } // namespace firelight

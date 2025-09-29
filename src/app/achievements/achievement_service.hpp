@@ -11,6 +11,18 @@
 
 namespace firelight::achievements {
 
+struct AchievementSessionStartedEvent {
+  std::string username;
+  unsigned setId;
+  bool hardcore;
+};
+
+struct AchievementSessionEndedEvent {
+  std::string username;
+  unsigned setId;
+  bool hardcore;
+};
+
 class AchievementService {
 public:
   explicit AchievementService(IAchievementRepository &m_repository);
@@ -78,8 +90,24 @@ public:
   processStartSessionResponse(const std::string &username, unsigned setId,
                               const StartSessionResponse &startSessionResponse);
 
+  void syncOfflineAchievements();
+
+  void startSession(const std::string &username, unsigned setId, bool hardcore);
+  void endSession();
+
+  bool inHardcoreSession() const;
+
+  unsigned getNumCurrentSessionHardcoreUnlocks() const;
+
 private:
   IAchievementRepository &m_repository;
+
+  bool m_inActiveSession = false;
+  std::string m_currentSessionUsername;
+  unsigned m_currentSessionSetId = 0;
+  bool m_currentSessionHardcore = false;
+
+  std::vector<unsigned> m_currentSessionHardcoreUnlocks;
 };
 
 } // namespace firelight::achievements

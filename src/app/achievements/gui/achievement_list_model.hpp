@@ -10,41 +10,38 @@ class AchievementListModel : public QAbstractListModel {
   Q_OBJECT
 
 public:
-  explicit AchievementListModel(
-      std::vector<achievements::Achievement> achievements,
-      QObject *parent = nullptr);
+  struct Item {
+    achievements::Achievement achievement;
+    achievements::UserUnlock unlockState;
+  };
 
-  QHash<int, QByteArray> roleNames() const override;
+  explicit AchievementListModel(const QVector<Item> &items,
+                                QObject *parent = nullptr);
 
-  int rowCount(const QModelIndex &parent) const override;
-
+  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
+  [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant data(const QModelIndex &index,
                               int role) const override;
 
-  Q_INVOKABLE void setSortType(const QString &sortType);
-
   int size() const;
+
+  void setHardcore(bool hardcore);
 
   enum Roles {
     Id = Qt::UserRole + 1,
     Name,
     Description,
     ImageUrl,
-    EarnedHardcore,
     Earned,
-    EarnedDateHardcore,
     EarnedDate,
+    EarnedTimestamp,
     Points,
     DisplayOrder,
     Type
   };
 
-  struct Item {
-    achievements::Achievement achievement;
-    achievements::UserUnlock unlockState;
-  };
-
 private:
-  QVector<Item> m_achievements;
+  QVector<Item> m_items;
+  bool m_hardcore = false;
 };
 } // namespace firelight::gui

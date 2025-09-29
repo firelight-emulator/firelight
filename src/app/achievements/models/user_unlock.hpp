@@ -11,6 +11,5 @@ struct UserUnlock {
   uint64_t unlockTimestamp;
   uint64_t unlockTimestampHardcore;
   bool synced;
-  bool syncedHardcore;
 };
 } // namespace firelight::achievements

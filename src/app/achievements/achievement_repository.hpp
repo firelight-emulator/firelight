@@ -38,7 +38,38 @@ public:
    * @param username The username to retrieve data for
    * @return User data if found, std::nullopt otherwise
    */
-  virtual std::optional<User> getUser(const std::string &username) const = 0;
+  [[nodiscard]] virtual std::optional<User> getUser(const std::string &username) const = 0;
+
+  /**
+   * @brief Retrieves all users from the repository
+   *
+   * Fetches a complete list of all users stored in the repository, including
+   * their usernames, authentication tokens, and point totals for both normal
+   * and hardcore modes. The results are ordered alphabetically by username
+   * for consistent presentation.
+   *
+   * This method is useful for:
+   * - User management interfaces
+   * - Administrative operations
+   * - User selection and switching
+   * - Statistical analysis across users
+   * - Debugging and system monitoring
+   *
+   * @return Vector of User objects containing all users in the repository,
+   *         ordered alphabetically by username. Returns empty vector if no
+   *         users exist or on database error.
+   *
+   * @note Database errors are handled gracefully - an empty vector is returned
+   *       instead of throwing exceptions
+   * @note All user data including tokens are included in the results, so handle
+   *       with appropriate security considerations
+   * @note The ordering by username is case-sensitive according to the database
+   *       collation
+   *
+   * @see getUser() to retrieve a specific user by username
+   * @see createOrUpdateUser() to add or modify user data
+   */
+  virtual std::vector<User> listUsers() const = 0;
 
   /**
    * @brief Creates or updates user data
@@ -88,7 +119,7 @@ public:
    * @param setId The unique identifier of the achievement set
    * @return The achievement set if found, std::nullopt otherwise
    */
-  virtual std::optional<AchievementSet>
+  [[nodiscard]] virtual std::optional<AchievementSet>
   getAchievementSet(unsigned setId) const = 0;
 
   /**
@@ -115,8 +146,39 @@ public:
    * @param contentHash The content hash to look up
    * @return The achievement set ID if found, std::nullopt otherwise
    */
-  virtual std::optional<int>
+  [[nodiscard]] virtual std::optional<int>
   getGameId(const std::string &contentHash) const = 0;
+
+  /**
+   * @brief Retrieves the content hash associated with an achievement set ID
+   *
+   * Performs the reverse lookup of getGameId - given an achievement set ID,
+   * returns the content hash that has been mapped to it. This enables
+   * bidirectional navigation between achievement sets and their associated
+   * game content hashes.
+   *
+   * This method is useful for:
+   * - Verifying which content hash is associated with a loaded achievement set
+   * - Debugging hash mapping configurations
+   * - Content verification and validation workflows
+   * - Implementing cache invalidation based on content changes
+   * - Supporting multi-hash scenarios where games may have multiple content variants
+   *
+   * @param setId The achievement set ID to look up the associated content hash for
+   * @return The content hash string if a mapping exists, std::nullopt if no
+   *         mapping is found or on database error
+   *
+   * @note This method performs the inverse operation of getGameId() - they form
+   *       a bidirectional lookup pair
+   * @note If an achievement set has no content hash mapping, std::nullopt is returned
+   * @note Database errors are handled gracefully with std::nullopt return values
+   * @note The returned hash string may be empty if an empty hash was explicitly mapped
+   *
+   * @see getGameId() for the forward lookup (hash -> set ID)
+   * @see setGameId() to create or update hash mappings
+   * @see getAchievementSetByContentHash() to retrieve achievement sets by hash
+   */
+  [[nodiscard]] virtual std::optional<std::string> getGameHash(unsigned setId) const = 0;
 
   // Individual Achievement Operations
 
@@ -142,7 +204,7 @@ public:
    * @param achievementId The unique ID of the achievement to retrieve
    * @return Achievement data if found, std::nullopt otherwise
    */
-  virtual std::optional<Achievement>
+  [[nodiscard]] virtual std::optional<Achievement>
   getAchievement(unsigned achievementId) const = 0;
 
   // Achievement Progress Operations
@@ -214,8 +276,32 @@ public:
    * @param setId The achievement set ID to filter unlocks by
    * @return Vector of UserUnlock records, empty if none found or on error
    */
-  virtual std::vector<UserUnlock> getAllUserUnlocks(const std::string &username,
+  [[nodiscard]] virtual std::vector<UserUnlock> getAllUserUnlocks(const std::string &username,
                                                     unsigned setId) const = 0;
+
+  /**
+   * @brief Retrieves all unsynced user unlock records for a specific user
+   *
+   * Fetches all achievement unlock records for a given user that have not yet
+   * been synchronized with remote services (synced = false). This is essential
+   * for offline achievement tracking, allowing the system to identify which
+   * unlocks need to be uploaded when connectivity is restored.
+   *
+   * The method returns unlocks across all achievement sets for the specified
+   * user, regardless of the achievement set they belong to. This provides a
+   * comprehensive view of all pending synchronization work for a user.
+   *
+   * @param username The username to query unsynced unlock records for
+   * @return Vector of UserUnlock records with synced=false, empty if none found
+   *         or on error
+   *
+   * @note This method does not filter by achievement set - it returns all
+   *       unsynced unlocks for the user across all games/sets
+   * @note The returned unlocks include both normal and hardcore mode completion
+   *       data with their respective timestamps
+   */
+  [[nodiscard]] virtual std::vector<UserUnlock>
+  getAllUnsyncedUserUnlocks(const std::string &username) const = 0;
 
   // Patch Response Caching Operations
 
@@ -240,7 +326,7 @@ public:
    * @param gameId The game ID to retrieve patch data for
    * @return The cached patch response if found, std::nullopt otherwise
    */
-  virtual std::optional<PatchResponse> getPatchResponse(int gameId) const = 0;
+  [[nodiscard]] virtual std::optional<PatchResponse> getPatchResponse(int gameId) const = 0;
 };
 
 } // namespace firelight::achievements

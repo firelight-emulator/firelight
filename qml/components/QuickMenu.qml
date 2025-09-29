@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts 1.0
 import Firelight 1.0
 
@@ -86,16 +87,55 @@ Pane {
             id: quickMenuStack
             Layout.fillHeight: true
             Layout.fillWidth: true
+            focus: true
+
+            property var lastIndex: 0
+            property bool movingRight: true
+
+            Keys.onPressed: function(event) {
+                if (event.key === Qt.Key_PageDown && navTabBar.currentIndex > 0) {
+                    navTabBar.currentIndex -= 1
+                    event.accept = true
+                    return
+                }
+
+                if (event.key === Qt.Key_PageUp && navTabBar.currentIndex < navTabBar.count - 1) {
+                    navTabBar.currentIndex += 1
+                    event.accept = true
+                    return
+                }
+
+                event.accept = false
+            }
 
             Connections {
                 target: navTabBar
                 function onCurrentIndexChanged() {
+                    if (navTabBar.currentIndex > quickMenuStack.lastIndex) {
+                        console.log("moving right")
+                        quickMenuStack.movingRight = true
+                    } else {
+                        console.log("moving left")
+                        quickMenuStack.movingRight = false
+                    }
+
+                    quickMenuStack.lastIndex = navTabBar.currentIndex
+
                     if (navTabBar.currentIndex === 0) {
-                        quickMenuStack.replaceCurrentItem(emulationView, {}, StackView.Immediate)
+                        quickMenuStack.replaceCurrentItem(emulationView, {}, StackView.ReplaceTransition)
+                        if (navTabBar.activeFocus) {
+                            quickMenuStack.forceActiveFocus()
+                        }
                     } else if (navTabBar.currentIndex === 1) {
-                        quickMenuStack.replaceCurrentItem(achievementsView, {}, StackView.Immediate)
+                        quickMenuStack.replaceCurrentItem(achievementsView, {}, StackView.ReplaceTransition)
+                        if (navTabBar.activeFocus) {
+                            quickMenuStack.forceActiveFocus()
+                        }
                     } else if (navTabBar.currentIndex === 2) {
-                        quickMenuStack.replaceCurrentItem(gameSettingsView, {}, StackView.Immediate)
+                        quickMenuStack.replaceCurrentItem(gameSettingsView, {}, StackView.ReplaceTransition)
+                        if (navTabBar.activeFocus) {
+                            quickMenuStack.forceActiveFocus()
+                        }
                     }
                 }
             }
@@ -104,11 +144,52 @@ Pane {
             clip: true
 
 
+            replaceEnter: Transition {
+                NumberAnimation {
+                    duration: 200
+                    from: 0.0
+                    property: "opacity"
+                    to: 1.0
+                }
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                    from: 30 * (quickMenuStack.movingRight ? 1 : -1)
+                    property: "x"
+                    to: 0
+                }
+            }
+            replaceExit: Transition {
+                NumberAnimation {
+                    duration: 20
+                    from: 1.0
+                    property: "opacity"
+                    to: 0.0
+                }
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                    from: 0
+                    property: "x"
+                    to: 30 * (quickMenuStack.movingRight ? -1 : 1)
+                }
+            }
+
+
         }
 
     FirelightDialog {
         id: closeGameDialog
-        text: "Are you sure you want to close the game?"
+        property int numUnsynced: AchievementService.numCurrentSessionHardcoreUnlocks
+        text: {
+            if (numUnsynced > 0) {
+                return "You have " + numUnsynced + " unsynced hardcore achievement unlock" + (numUnsynced > 1 ? "s" : "") + ". If you close the game, they will be demoted to non-hardcore unlocks.\n\nAre you sure you want to close the game?"
+            }
+            return "Are you sure you want to close the game?"
+        }
+        onAboutToShow: {
+            numUnsynced = AchievementService.numCurrentSessionHardcoreUnlocks
+        }
         onAccepted: {
             root.closeGame()
         }
@@ -128,74 +209,384 @@ Pane {
             AchievementSet {
                 id: achievementSet
                 contentHash: EmulationService.currentContentHash
-                Component.onCompleted: {
-                    console.log("Achievements view loaded for content hash: " + EmulationService.currentContentHash)
-                    console.log("Has achievements: " + hasAchievements)
-                    console.log("Set ID: " + setId)
-                    console.log("Icon URL: " + iconUrl)
-                    console.log("Set name: " + name)
-                    console.log("Num achievements: " + numAchievements)
-                    console.log("Num achievements earned: " + numAchievementsEarned)
-                    console.log("Num points: " + totalNumPoints)
+                hardcore: AchievementService.inHardcoreSession
+                // Component.onCompleted: {
+                //     console.log("Achievements view loaded for content hash: " + EmulationService.currentContentHash)
+                //     console.log("Has achievements: " + hasAchievements)
+                //     console.log("Set ID: " + setId)
+                //     console.log("Icon URL: " + iconUrl)
+                //     console.log("Set name: " + name)
+                //     console.log("Num achievements: " + numAchievements)
+                //     console.log("Num achievements earned: " + numEarnedHardcore)
+                //     console.log("Num points: " + totalNumPoints)
+                // }
+            }
+
+            Column {
+                anchors.right: mainArea.left
+                anchors.rightMargin: 16
+                anchors.topMargin: 24
+                anchors.top: parent.top
+
+                RadioIconButton {
+                    icon.source: "qrc:/icons/sort"
+                    icon.width: 60
+                    icon.height: 60
+                    KeyNavigation.right: mainArea
+                    model: [
+                          { label: "Default order", value: "default" },
+                          { label: "A-Z", value: "a-z" },
+                          { label: "Z-A", value: "z-a" },
+                          { label: "Points (most first)", value: "points_most" },
+                          { label: "Points (least first)", value: "points_least" },
+                          { label: "Earned date", value: "earned_date" },
+                          { label: "Type", value: "type" }
+                      ]
+
+                      onSelectionChanged: function(index, value, text) {
+                          achievementSet.achievements.sortMethod = value
+                      }
+
                 }
             }
 
-            RowLayout {
-                height: 100
+
+            Pane {
+                id: mainArea
+                anchors.top: parent.top
                 width: Math.min(parent.width, 1000)
                 anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                clip: true
+                focus: true
+                leftPadding: 16
+                rightPadding: 16
+                topPadding: 16
+                bottomPadding: 32
+                background: Item{}
+                contentItem: ListView {
+                    id: achievementList
+                    model: achievementSet.achievements
+                    highlightMoveDuration: 80
+                    highlightMoveVelocity: -1
+                    highlightRangeMode: InputMethodManager.usingMouse ? ListView.NoHighlightRange : ListView.ApplyRange
+                    preferredHighlightBegin: 200
+                    preferredHighlightEnd: height - 200
+                    boundsBehavior: Flickable.StopAtBounds
+                    contentY: 0
+                    focus: true
+                    cacheBuffer: 1000
 
-                spacing: 24
-                Image {
-                    id: gameIcon
-                    source: achievementSet.iconUrl
-                    sourceSize.width: 90
-                    fillMode: Image.PreserveAspectFit
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                    smooth: true
-                }
+                    ScrollBar.vertical: ScrollBar { }
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    header: Pane {
+                        width: Math.min(ListView.view.width, 1000)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        background: Item {}
+                        leftPadding: 0
+                        rightPadding: 0
+                        topPadding: 8
+                        bottomPadding: 24
+                        contentItem: ColumnLayout {
+                            spacing: 16
+                            // Pane {
+                            //     Layout.fillWidth: true
+                            //     background: Rectangle {
+                            //         color: "transparent"
+                            //         border.color: "#FFD700"
+                            //         radius: 6
+                            //     }
+                            //     contentItem: Text {
+                            //         text: "Hardcore mode is active"
+                            //         color: "white"
+                            //         font.family: Constants.mainFontFamily
+                            //         font.pixelSize: 16
+                            //         horizontalAlignment: Text.AlignHCenter
+                            //         verticalAlignment: Text.AlignVCenter
+                            //     }
+                            // }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 24
+                                Image {
+                                    id: gameIcon
+                                    source: achievementSet.iconUrl
+                                    sourceSize.width: 80
+                                    fillMode: Image.PreserveAspectFit
+                                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                                    smooth: true
+                                }
 
-                    Text {
-                        text: achievementSet.name
-                        color: "white"
-                        font.family: Constants.mainFontFamily
-                        font.pixelSize: 18
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                        Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                        Layout.fillWidth: true
-                    }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
 
-                    Text {
-                        text: "Nintendo 64"
-                        color: "grey"
-                        font.family: Constants.mainFontFamily
-                        font.pixelSize: 18
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                        Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                        Layout.fillWidth: true
-                    }
+                                    RowLayout {
+                                        Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                                        Layout.fillWidth: true
+                                        spacing: 16
 
-                    Rectangle {
-                        color: "grey"
-                        implicitHeight: 14
-                        Layout.fillWidth: true
-                        radius: 4
+                                        Text {
+                                            text: achievementSet.name
+                                            color: ColorPalette.neutral100
+                                            font.family: Constants.mainFontFamily
+                                            font.pixelSize: 18
+                                            horizontalAlignment: Text.AlignLeft
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
 
-                        Rectangle {
-                            color: "yellow"
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            width: parent.width * (achievementSet.numAchievementsEarned / achievementSet.numAchievements)
-                            radius: 4
+                                        Pane {
+                                            visible: AchievementService.inHardcoreSession
+                                            verticalPadding: 4
+                                            background: Rectangle {
+                                                color: "transparent"
+                                                border.color: "#FFD700"
+                                                radius: 6
+                                            }
+                                            contentItem: Text {
+                                                text: "Hardcore mode active"
+                                                color: "white"
+                                                font.family: Constants.mainFontFamily
+                                                font.pixelSize: 16
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+                                            }
+                                        }
+
+                                        Item {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                        }
+                                    }
+
+
+
+                                    RowLayout {
+                                        Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                                        Layout.fillWidth: true
+
+                                        Text {
+                                            text: achievementSet.platformName
+                                            color: ColorPalette.neutral300
+                                            font.family: Constants.mainFontFamily
+                                            font.pixelSize: 17
+                                            horizontalAlignment: Text.AlignLeft
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
+
+                                        Item {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                        }
+
+                                        Text {
+                                            text: (AchievementService.inHardcoreSession ? achievementSet.numEarnedHardcore : achievementSet.numEarned) + "/" + achievementSet.numAchievements + " earned"
+                                            color: ColorPalette.neutral300
+                                            font.family: Constants.mainFontFamily
+                                            font.pixelSize: 16
+                                            horizontalAlignment: Text.AlignLeft
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
+                                    }
+                                    Item {
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                    }
+
+                                    Rectangle {
+                                        color: "#1e1e1e"
+                                        implicitHeight: 14
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignBottom | Qt.AlignLeft
+                                        Layout.bottomMargin: 4
+                                        radius: 4
+
+                                        Rectangle {
+                                            color: "#FFD700"
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            width: parent.width * ((AchievementService.inHardcoreSession ? achievementSet.numEarnedHardcore : achievementSet.numEarned) / achievementSet.numAchievements)
+                                            radius: 4
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
+
+                    spacing: 12
+
+                    delegate: Button {
+                        id: dele
+                        required property var model
+                        required property var index
+
+                        width: ListView.view.width
+                        property bool showGlobalCursor: true
+                        focus: true
+
+                        hoverEnabled: true
+
+                        ContextMenu.menu: RightClickMenu {
+                               id: rightClickMenu
+
+                               RightClickMenuItem {
+                                   text: "Open at RetroAchievements.org"
+                                   externalLink: true
+                                   onTriggered: {
+                                       Qt.openUrlExternally("https://retroachievements.org/achievement/" + dele.model.achievementId)
+                                   }
+                               }
+                           }
+
+                        background: Rectangle {
+                            color: "transparent"
+                            border.color: model.earned ? "#FFD700" : "transparent"
+                                opacity: 0.6
+                            radius: 6
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: model.earned ? "#FFD700" : "white"
+                                opacity: dele.hovered ? 0.20 : 0.15
+                                radius: 6
+                            }
+                        }
+                        contentItem: RowLayout {
+                            spacing: 10
+                            Item {
+                                implicitWidth: 64
+                                implicitHeight: 64
+                                Layout.alignment: Qt.AlignTop | Qt.AlignLeft
+                                Image {
+                                    id: achievementIcon
+                                    anchors.fill: parent
+                                    source: model.iconUrl
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    visible: model.iconUrl !== ""
+
+                                    layer.enabled: !model.earned
+                                    layer.effect: MultiEffect {
+                                        source: achievementIcon
+                                        saturation: -1
+                                    }
+                                }
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: "black"
+                                    visible: model.iconUrl === ""
+                                }
+                            }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                spacing: 8
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Text {
+                                        text: model.name
+                                        color: "white"
+                                        font.family: Constants.mainFontFamily
+                                        font.pixelSize: 16
+                                        horizontalAlignment: Text.AlignLeft
+                                        verticalAlignment: Text.AlignVCenter
+                                        lineHeight: 1.2
+                                        wrapMode: Text.WordWrap
+                                    }
+                                    Item {
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                    }
+                                    Pane {
+                                        visible: model.type !== ""
+                                        horizontalPadding: 10
+                                        verticalPadding: 4
+                                        background: Rectangle {
+                                            color: "transparent"
+                                            radius: height / 2
+                                            border.color: "#c3c3c3"
+                                        }
+
+                                        contentItem: Text {
+                                            text: model.type
+                                            color: "#c3c3c3"
+                                            font.family: Constants.mainFontFamily
+                                            font.pixelSize: 14
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
+
+                                    }
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    text: model.description
+                                    color: "#c3c3c3"
+                                    font.family: Constants.mainFontFamily
+                                    font.weight: Font.Normal
+                                    font.pixelSize: 15
+                                    lineHeight: 1.2
+                                    wrapMode: Text.WordWrap
+                                    horizontalAlignment: Text.AlignLeft
+                                    verticalAlignment: Text.AlignTop
+                                }
+                            }
+
+                            Rectangle {
+                                color: "#c3c3c3"
+                                Layout.fillHeight: true
+                                implicitWidth: 1
+                            }
+                            ColumnLayout {
+                                Layout.preferredWidth: parent.width > 800 ? 200 : 120
+                                Layout.maximumWidth: parent.width > 800 ? 200 : 120
+                                Layout.minimumWidth: parent.width > 800 ? 200 : 120
+                                Layout.fillHeight: true
+                                spacing: 8
+
+                                Text {
+                                    text: model.points + " pts"
+                                    color: "white"
+                                    font.family: Constants.mainFontFamily
+                                    font.pixelSize: 16
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignBottom
+                                    Layout.fillHeight: true
+                                    Layout.fillWidth: true
+                                }
+
+                                Text {
+                                    text: model.earned ? model.earnedDate : "Not earned"
+                                    color: "#c3c3c3"
+                                    font.family: Constants.mainFontFamily
+                                    font.pixelSize: 15
+                                    lineHeight: 1.2
+                                    wrapMode: Text.WordWrap
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignTop
+                                    Layout.fillHeight: true
+                                    Layout.fillWidth: true
+                                }
+                            }
+                        }
+                    }
+
+                    // delegate: Text {
+                    //     required property var model
+                    //     required property var index
+                    //     text: model.name
+                    //     color: "white"
+                    //     font.family: Constants.mainFontFamily
+                    //     font.pixelSize: 16
+                    //     horizontalAlignment: Text.AlignLeft
+                    //     verticalAlignment: Text.AlignVCenter
+                    //     padding: 8
+                    // }
                 }
             }
         }
@@ -203,112 +594,116 @@ Pane {
 
     Component {
         id: emulationView
-        RowLayout {
-            spacing: 32
-             ColumnLayout {
-                id: menuColumn
-                KeyNavigation.right: quickMenuStack
-                 Layout.maximumWidth: 400
-                 Layout.alignment: Qt.AlignCenter
-                 FirelightMenuItem {
-                     id: resumeGameButton
-                     labelText: "Resume Game"
-                     focus: true
-                     Layout.fillWidth: true
-                     KeyNavigation.down: restartGameButton
-                     // Layout.preferredWidth: parent.width / 2
-                     Layout.preferredHeight: 40
-                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                     checkable: false
-                     alignRight: true
-                     onClicked: function () {
-                         root.resumeGame()
+        FocusScope {
+            RowLayout {
+                anchors.fill: parent
+                spacing: 32
+                 ColumnLayout {
+                    id: menuColumn
+                    KeyNavigation.right: quickMenuStack
+                     Layout.maximumWidth: 400
+                     Layout.alignment: Qt.AlignCenter
+                     FirelightMenuItem {
+                         id: resumeGameButton
+                         labelText: "Resume Game"
+                         focus: true
+                         Layout.fillWidth: true
+                         KeyNavigation.down: restartGameButton
+                         // Layout.preferredWidth: parent.width / 2
+                         Layout.preferredHeight: 40
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         checkable: false
+                         alignRight: true
+                         onClicked: function () {
+                             root.resumeGame()
+                         }
                      }
-                 }
-                 FirelightMenuItem {
-                     id: restartGameButton
-                     labelText: "Restart Game"
-                     Layout.fillWidth: true
-                     KeyNavigation.down: rewindButton
-                     // Layout.preferredWidth: parent.width / 2
-                     Layout.preferredHeight: 40
-                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                     checkable: false
-                     alignRight: true
-                     onClicked: {
-                         resetGameDialog.open()
+                     FirelightMenuItem {
+                         id: restartGameButton
+                         labelText: "Restart Game"
+                         Layout.fillWidth: true
+                         KeyNavigation.down: rewindButton
+                         // Layout.preferredWidth: parent.width / 2
+                         Layout.preferredHeight: 40
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         checkable: false
+                         alignRight: true
+                         onClicked: {
+                             resetGameDialog.open()
+                         }
                      }
-                 }
-                 FirelightMenuItem {
-                     id: rewindButton
-                     labelText: "Rewind"
-                     KeyNavigation.down: suspendPointButton
-                     Layout.fillWidth: true
-                     // Layout.preferredWidth: parent.width / 2
-                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                     Layout.preferredHeight: 40
-                     checkable: false
-                     enabled: EmulationService.rewindEnabled
-                     alignRight: true
-                     onClicked: {
-                         root.rewindPressed()
+                     FirelightMenuItem {
+                         id: rewindButton
+                         labelText: "Rewind"
+                         KeyNavigation.down: suspendPointButton
+                         Layout.fillWidth: true
+                         // Layout.preferredWidth: parent.width / 2
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         Layout.preferredHeight: 40
+                         checkable: false
+                         enabled: EmulationService.rewindEnabled
+                         alignRight: true
+                         onClicked: {
+                             root.rewindPressed()
+                         }
                      }
-                 }
-                 // Rectangle {
-                 //     Layout.fillWidth: true
-                 //     // Layout.preferredWidth: parent.width / 2
-                 //     Layout.preferredHeight: 1
-                 //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                 //     opacity: 0.3
-                 //     color: "#dadada"
-                 // }
-                 FirelightMenuItem {
-                     id: suspendPointButton
-                     labelText: "Suspend Points"
-                     Layout.fillWidth: true
-                     KeyNavigation.down: closeGameButton
-                     // Layout.preferredWidth: parent.width / 2
-                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                     Layout.preferredHeight: 40
-                     checkable: false
-                     alignRight: true
-                     // enabled: false
-                     onClicked: {
-                         quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate)
-                         quickMenuStack.forceActiveFocus()
+                     // Rectangle {
+                     //     Layout.fillWidth: true
+                     //     // Layout.preferredWidth: parent.width / 2
+                     //     Layout.preferredHeight: 1
+                     //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                     //     opacity: 0.3
+                     //     color: "#dadada"
+                     // }
+                     FirelightMenuItem {
+                         id: suspendPointButton
+                         labelText: "Suspend Points"
+                         Layout.fillWidth: true
+                         KeyNavigation.down: closeGameButton
+                         // Layout.preferredWidth: parent.width / 2
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         Layout.preferredHeight: 40
+                         checkable: false
+                         alignRight: true
+                         // enabled: false
+                         onClicked: {
+                             quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate)
+                             quickMenuStack.forceActiveFocus()
+                         }
                      }
-                 }
-                 FirelightMenuItem {
-                     id: closeGameButton
-                     labelText: "Close Game"
-                     Layout.fillWidth: true
-                     // Layout.preferredWidth: parent.width / 2
-                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                     Layout.preferredHeight: 40
-                     checkable: false
-                     alignRight: true
+                     FirelightMenuItem {
+                         id: closeGameButton
+                         labelText: "Close Game"
+                         Layout.fillWidth: true
+                         // Layout.preferredWidth: parent.width / 2
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         Layout.preferredHeight: 40
+                         checkable: false
+                         alignRight: true
 
-                     onClicked: {
-                         closeGameDialog.open()
+                         onClicked: {
+                             closeGameDialog.open()
+                         }
+                     }
+                 }
+
+                 StackView {
+                     id: quickMenuStack
+                     Layout.fillWidth: true
+                     Layout.fillHeight: true
+
+                     KeyNavigation.left: resumeGameButton
+
+                     Keys.onBackPressed: {
+                        if (quickMenuStack.depth >= 1) {
+                            quickMenuStack.pop()
+                            resumeGameButton.forceActiveFocus()
+                        }
                      }
                  }
              }
+        }
 
-             StackView {
-                 id: quickMenuStack
-                 Layout.fillWidth: true
-                 Layout.fillHeight: true
-
-                 KeyNavigation.left: resumeGameButton
-
-                 Keys.onBackPressed: {
-                    if (quickMenuStack.depth >= 1) {
-                        quickMenuStack.pop()
-                        resumeGameButton.forceActiveFocus()
-                    }
-                 }
-             }
-         }
     }
 
     Component {

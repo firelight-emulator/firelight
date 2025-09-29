@@ -28,6 +28,7 @@ enum GamepadInput {
   RightStickLeft = 262,  // RETRO_DEVICE_ID_JOYPAD_MASK | 6
   RightStickRight = 263, // RETRO_DEVICE_ID_JOYPAD_MASK | 7
   None = 264,            // RETRO_DEVICE_ID_JOYPAD_MASK | 8
+  Home = 265,
 };
 
 }

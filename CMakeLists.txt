@@ -201,6 +201,8 @@ add_library(firelight_lib
         src/app/achievements/sqlite_achievement_repository.cpp
         src/app/achievements/sqlite_achievement_repository.hpp
         src/app/achievements/models/achievement_progress.hpp
+        src/gui/qt_achievement_service_proxy.cpp
+        src/gui/qt_achievement_service_proxy.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

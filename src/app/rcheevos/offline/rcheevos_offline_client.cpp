@@ -114,154 +114,6 @@ void RetroAchievementsOfflineClient::processResponse(
     processAwardAchievementResponse(params["u"], params["h"] == "1", response);
   }
 }
-void RetroAchievementsOfflineClient::syncOfflineAchievements() {
-
-  // For each user... get all unsynced achievements. If they have any, try
-  // logging in and syncing them If we can't log in we need to prompt the user
-  // to re-login.
-
-  const auto headers =
-      cpr::Header{{"User-Agent", OFFLINE_USER_AGENT},
-                  {"Content-Type", "application/x-www-form-urlencoded"}};
-
-  for (const auto &user : m_cache.getUsers()) {
-    auto unsynced = m_cache.getUnsyncedAchievements(user.username);
-    if (unsynced.empty()) {
-      continue;
-    }
-
-    // Try logging in for current user
-    auto postBody = "r=login2&u=" + user.username + "&t=" + user.token;
-
-    const auto response =
-        Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{postBody});
-
-    if (response.error) {
-      spdlog::warn("Failed to log in user: {} ({})", user.username,
-                   response.error.message);
-      continue;
-    }
-
-    auto json = nlohmann::json::parse(response.text);
-    if (json.contains("Success") && json["Success"].is_boolean() &&
-        json["Success"].get<bool>()) {
-      spdlog::info("Logged in for user {}", user.username);
-    } else {
-      spdlog::error("Login was not successful for user {}", user.username);
-      continue;
-    }
-
-    // Logged in successfully
-
-    int lastScore = m_cache.getUserScore(user.username, false);
-    int lastHardcoreScore = m_cache.getUserScore(user.username, true);
-
-    for (auto &achieve : unsynced) {
-      auto timestamp = achieve.When;
-      auto hardcore = false;
-
-      auto unmarkHardcoreUnlock = false;
-
-      // Stop those dang cheaters that manually modified the database
-      if (achieve.EarnedHardcore) {
-        if (std::ranges::find_if(m_currentSessionAchievements,
-                                 [&achieve](const CachedAchievement &current) {
-                                   return current.ID == achieve.ID;
-                                 }) == m_currentSessionAchievements.end()) {
-          spdlog::info("Achievement earned offline in hardcore mode is not in "
-                       "current session; demoting to casual");
-          achieve.EarnedHardcore = false;
-          achieve.Earned = true;
-          achieve.When = achieve.WhenHardcore;
-          achieve.WhenHardcore = 0;
-
-          timestamp = achieve.When;
-          unmarkHardcoreUnlock = true;
-        } else {
-          hardcore = true;
-          timestamp = achieve.WhenHardcore;
-        }
-      }
-
-      spdlog::info("Syncing achievement with ID {} for user {}", achieve.ID,
-                   user.username);
-
-      auto secondsSinceUnlock = QDateTime::currentSecsSinceEpoch() - timestamp;
-
-      auto hashContent = std::to_string(achieve.ID) + user.username +
-                         std::to_string(hardcore ? 1 : 0) +
-                         std::to_string(achieve.ID) +
-                         std::to_string(secondsSinceUnlock);
-      hashContent =
-          QCryptographicHash::hash(hashContent, QCryptographicHash::Md5)
-              .toHex()
-              .toStdString();
-      auto gameHash = m_cache.getHashFromGameId(achieve.GameID);
-
-      if (!gameHash.has_value()) {
-        spdlog::warn("No game hash found for game ID: {}", achieve.GameID);
-        break;
-      }
-
-      auto postBody =
-          "r=awardachievement&u=" + user.username + "&t=" + user.token +
-          "&a=" + std::to_string(achieve.ID) +
-          "&h=" + std::to_string(hardcore ? 1 : 0) + "&m=" + gameHash.value() +
-          "&o=" + std::to_string(secondsSinceUnlock) + "&v=" + hashContent;
-
-      const auto response =
-          Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{postBody});
-
-      if (response.error) {
-        spdlog::warn("Failed to award achievement; will try later: {}",
-                     response.error.message);
-        continue;
-      }
-
-      auto json = nlohmann::json::parse(response.text);
-
-      if (!json.contains("Success") || !json["Success"].is_boolean() ||
-          !json["Success"].get<bool>()) {
-        if (json.contains("Error") && json["Error"].is_string()) {
-          auto errorString = json["Error"].get<std::string>();
-          if (errorString.find("already has") == std::string::npos) {
-            spdlog::warn("Got error: {}", errorString);
-            continue;
-          } else {
-            spdlog::info("Server already knows user {} has achievement {}",
-                         user.username, achieve.ID);
-          }
-        } else {
-          spdlog::error("Unsuccessful response did not contain Error flag...");
-          continue;
-        }
-      }
-
-      if (json.contains("Score") && json["Score"].is_number()) {
-        lastHardcoreScore = json["Score"];
-      }
-
-      if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
-        lastScore = json["SoftcoreScore"];
-      }
-
-      if (unmarkHardcoreUnlock) {
-        if (!m_cache.markAchievementLocked(user.username, achieve.ID, true)) {
-          spdlog::warn("Failed to unmark hardcore unlock for achievement: {}",
-                       achieve.ID);
-        }
-      }
-
-      if (!m_cache.markAchievementUnlocked(user.username, achieve.ID, hardcore,
-                                           timestamp)) {
-        spdlog::warn("Failed to mark achievement synced: {}", achieve.ID);
-      }
-    }
-
-    m_cache.setUserScore(user.username, lastScore, false);
-    m_cache.setUserScore(user.username, lastHardcoreScore, true);
-  }
-}
 
 void RetroAchievementsOfflineClient::clearSessionAchievements() {
   m_inHardcoreSession = false;
@@ -325,7 +177,7 @@ RetroAchievementsOfflineClient::handleStartSessionRequest(
 
   for (const auto &achieve :
        m_achievementService.getAllUserUnlocks(username, gameId)) {
-    if (achieve.earned) {
+    if (achieve.earned && !achieve.earnedHardcore) {
       startSessionResponse.Unlocks.emplace_back(
           Unlock{.ID = achieve.achievementId, .When = achieve.unlockTimestamp});
     }
@@ -363,23 +215,27 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     return GENERIC_SERVER_ERROR; // TODO
   }
 
+  auto now = static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch());
+
   auto unlock = m_achievementService.getUserUnlock(username, achievementId);
   if (!unlock.has_value()) {
-    auto newUnlock = UserUnlock{
-        .username = username,
-        .achievementId = achievementId,
-        .earned = !hardcore,
-        .earnedHardcore = hardcore,
-        .unlockTimestamp = hardcore ? 0
-                                    : static_cast<uint64_t>(
-                                          QDateTime::currentSecsSinceEpoch()),
-        .unlockTimestampHardcore =
-            hardcore ? static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch())
-                     : 0,
-        .synced = true,
-        .syncedHardcore = true};
+    auto newUnlock = UserUnlock{.username = username,
+                                .achievementId = achievementId,
+                                .earned = true,
+                                .earnedHardcore = hardcore,
+                                .unlockTimestamp = now,
+                                .unlockTimestampHardcore = hardcore ? now : 0,
+                                .synced = true};
+
+    // Add points for first-time unlock
+    if (hardcore) {
+      user->hardcore_points += achievement->points;
+    } else {
+      user->points += achievement->points;
+    }
 
     m_achievementService.createOrUpdate(newUnlock);
+    m_achievementService.createOrUpdateUser(*user);
   } else {
     if (hardcore && unlock->earnedHardcore) {
       spdlog::info("User {} already has achievement {} in hardcore mode",
@@ -393,19 +249,33 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     }
 
     if (hardcore) {
-      unlock->earnedHardcore = true;
-      unlock->unlockTimestampHardcore =
-          static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch());
-      unlock->syncedHardcore = false;
+      // If already earned in non-hardcore, move points from non-hardcore to
+      // hardcore
+      if (unlock->earned && !unlock->earnedHardcore) {
+        user->points -= achievement->points;
+        user->hardcore_points += achievement->points;
+      }
+      // If never earned before, add to hardcore
+      else if (!unlock->earned && !unlock->earnedHardcore) {
+        user->hardcore_points += achievement->points;
+      }
 
-      user->hardcore_points += achievement->points;
-    } else {
       unlock->earned = true;
-      unlock->unlockTimestamp =
-          static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch());
+      unlock->earnedHardcore = true;
+      if (unlock->unlockTimestamp == 0) {
+        unlock->unlockTimestamp = now;
+      }
+      unlock->unlockTimestampHardcore = now;
       unlock->synced = false;
+    } else {
+      // Only add points to non-hardcore if not already earned in any mode
+      if (!unlock->earned && !unlock->earnedHardcore) {
+        user->points += achievement->points;
+      }
 
-      user->points += achievement->points;
+      unlock->earned = true;
+      unlock->unlockTimestamp = now;
+      unlock->synced = false;
     }
 
     m_achievementService.createOrUpdate(*unlock);
@@ -593,29 +463,30 @@ void RetroAchievementsOfflineClient::processAwardAchievementResponse(
         auto newUnlock =
             UserUnlock{.username = username,
                        .achievementId = id,
-                       .earned = !hardcore,
+                       .earned = true,
                        .earnedHardcore = hardcore,
-                       .unlockTimestamp =
-                           hardcore ? 0 : static_cast<uint64_t>(epochSeconds),
+                       .unlockTimestamp = static_cast<uint64_t>(epochSeconds),
                        .unlockTimestampHardcore =
                            hardcore ? static_cast<uint64_t>(epochSeconds) : 0,
-                       .synced = true,
-                       .syncedHardcore = true};
+                       .synced = true};
 
-        m_achievementService.createOrUpdate(*unlock);
+        m_achievementService.createOrUpdate(newUnlock);
         return;
       }
 
       if (hardcore) {
+        unlock->earned = true;
         unlock->earnedHardcore = true;
+        if (unlock->unlockTimestamp == 0) {
+          unlock->unlockTimestamp = static_cast<uint64_t>(epochSeconds);
+        }
         unlock->unlockTimestampHardcore = static_cast<uint64_t>(epochSeconds);
-        unlock->syncedHardcore = true;
       } else {
         unlock->earned = true;
         unlock->unlockTimestamp = static_cast<uint64_t>(epochSeconds);
-        unlock->synced = true;
       }
 
+      unlock->synced = true;
       m_achievementService.createOrUpdate(*unlock);
     }
   }

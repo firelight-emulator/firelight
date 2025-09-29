@@ -14,7 +14,7 @@ MenuItem {
     Text {
         id: externalIndicator
         visible: control.externalLink
-        x: control.width - width - 8
+        x: control.width - width
         y: control.height / 2 - height / 2
         width: parent.height - parent.padding * 2
         height: parent.height - parent.padding * 2

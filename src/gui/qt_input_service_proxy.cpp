@@ -22,7 +22,9 @@ static QMap<input::GamepadInput, Qt::Key> gamepadToQtKeyMap = {
     {input::LeftStickDown, Qt::Key_Down},
     {input::WestFace, Qt::Key_Menu},
     {input::SouthFace, Qt::Key_Select},
-    {input::EastFace, Qt::Key_Back}};
+    {input::EastFace, Qt::Key_Back},
+    {input::LeftBumper, Qt::Key_PageDown},
+    {input::RightBumper, Qt::Key_PageUp}};
 
 QtInputServiceProxy::QtInputServiceProxy() {
   m_inputService = getInputService();
@@ -37,7 +39,8 @@ QtInputServiceProxy::QtInputServiceProxy() {
 
   // Initialize auto-repeat timer
   m_autoRepeatTimer = new QTimer(this);
-  connect(m_autoRepeatTimer, &QTimer::timeout, this, &QtInputServiceProxy::processAutoRepeat);
+  connect(m_autoRepeatTimer, &QTimer::timeout, this,
+          &QtInputServiceProxy::processAutoRepeat);
   m_autoRepeatTimer->start(16); // ~60 FPS processing
 
   shortcutToggledConnection =
@@ -114,22 +117,24 @@ bool QtInputServiceProxy::getOnlyPlayerOneCanNavigateMenus() const {
   return m_onlyPlayerOneCanNavigateMenus;
 }
 
-void QtInputServiceProxy::startAutoRepeat(int playerIndex, input::GamepadInput input) {
-  if (input == input::None) return;
+void QtInputServiceProxy::startAutoRepeat(int playerIndex,
+                                          input::GamepadInput input) {
+  if (input == input::None)
+    return;
 
   auto key = std::make_pair(playerIndex, input);
   auto now = std::chrono::steady_clock::now();
-  m_autoRepeatStates[key] = AutoRepeatState{
-    .pressTime = now,
-    .lastRepeatTime = now,
-    .isRepeating = false,
-    .playerIndex = playerIndex,
-    .input = input
-  };
+  m_autoRepeatStates[key] = AutoRepeatState{.pressTime = now,
+                                            .lastRepeatTime = now,
+                                            .isRepeating = false,
+                                            .playerIndex = playerIndex,
+                                            .input = input};
 }
 
-void QtInputServiceProxy::stopAutoRepeat(int playerIndex, input::GamepadInput input) {
-  if (input == input::None) return;
+void QtInputServiceProxy::stopAutoRepeat(int playerIndex,
+                                         input::GamepadInput input) {
+  if (input == input::None)
+    return;
 
   auto key = std::make_pair(playerIndex, input);
   m_autoRepeatStates.erase(key);
@@ -138,7 +143,7 @@ void QtInputServiceProxy::stopAutoRepeat(int playerIndex, input::GamepadInput in
 void QtInputServiceProxy::processAutoRepeat() {
   auto now = std::chrono::steady_clock::now();
 
-  for (auto& [key, state] : m_autoRepeatStates) {
+  for (auto &[key, state] : m_autoRepeatStates) {
     auto timeSincePress = now - state.pressTime;
     auto timeSinceLastRepeat = now - state.lastRepeatTime;
 
@@ -148,24 +153,22 @@ void QtInputServiceProxy::processAutoRepeat() {
       state.lastRepeatTime = now;
 
       // Send repeat event
-      EventDispatcher::instance().publish(input::GamepadInputEvent{
-        .playerIndex = state.playerIndex,
-        .input = state.input,
-        .pressed = true,
-        .autoRepeat = true
-      });
+      EventDispatcher::instance().publish(
+          input::GamepadInputEvent{.playerIndex = state.playerIndex,
+                                   .input = state.input,
+                                   .pressed = true,
+                                   .autoRepeat = true});
     }
     // Check if we should send another repeat event
     else if (state.isRepeating && timeSinceLastRepeat >= AUTO_REPEAT_INTERVAL) {
       state.lastRepeatTime = now;
 
       // Send repeat event
-      EventDispatcher::instance().publish(input::GamepadInputEvent{
-        .playerIndex = state.playerIndex,
-        .input = state.input,
-        .pressed = true,
-        .autoRepeat = true
-      });
+      EventDispatcher::instance().publish(
+          input::GamepadInputEvent{.playerIndex = state.playerIndex,
+                                   .input = state.input,
+                                   .pressed = true,
+                                   .autoRepeat = true});
     }
   }
 }

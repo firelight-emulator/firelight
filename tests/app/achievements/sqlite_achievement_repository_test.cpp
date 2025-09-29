@@ -1,15 +1,15 @@
 #include "../../../src/app/achievements/sqlite_achievement_repository.hpp"
-#include <gtest/gtest.h>
 #include <filesystem>
+#include <gtest/gtest.h>
 
 namespace firelight::achievements {
 
 /**
  * @brief Test fixture for SqliteAchievementRepository functionality
  *
- * Comprehensive test suite for the SQLite-based achievement repository implementation,
- * covering CRUD operations for achievement sets, achievements, progress tracking,
- * and hash-based lookups.
+ * Comprehensive test suite for the SQLite-based achievement repository
+ * implementation, covering CRUD operations for achievement sets, achievements,
+ * progress tracking, and hash-based lookups.
  */
 class SqliteAchievementRepositoryTest : public testing::Test {
 protected:
@@ -19,9 +19,7 @@ protected:
     repository = std::make_unique<SqliteAchievementRepository>(":memory:");
   }
 
-  void TearDown() override {
-    repository.reset();
-  }
+  void TearDown() override { repository.reset(); }
 
   AchievementSet createTestAchievementSet() {
     AchievementSet achievementSet;
@@ -47,7 +45,9 @@ protected:
     return achievement;
   }
 
-  AchievementProgress createTestProgress(const std::string& username = "testuser", unsigned achievementId = 100) {
+  AchievementProgress
+  createTestProgress(const std::string &username = "testuser",
+                     unsigned achievementId = 100) {
     AchievementProgress progress;
     progress.username = username;
     progress.achievementId = achievementId;
@@ -56,7 +56,8 @@ protected:
     return progress;
   }
 
-  UserUnlock createTestUserUnlock(const std::string& username = "testuser", unsigned achievementId = 100) {
+  UserUnlock createTestUserUnlock(const std::string &username = "testuser",
+                                  unsigned achievementId = 100) {
     UserUnlock unlock;
     unlock.username = username;
     unlock.achievementId = achievementId;
@@ -65,12 +66,11 @@ protected:
     unlock.unlockTimestamp = 1609459200; // 2021-01-01 00:00:00 UTC
     unlock.unlockTimestampHardcore = 0;
     unlock.synced = false;
-    unlock.syncedHardcore = false;
     return unlock;
   }
 
-  User createTestUser(const std::string& username = "testuser",
-                      const std::string& token = "test_token_123",
+  User createTestUser(const std::string &username = "testuser",
+                      const std::string &token = "test_token_123",
                       int points = 1500, int hardcorePoints = 750) {
     User user;
     user.username = username;
@@ -181,6 +181,190 @@ TEST_F(SqliteAchievementRepositoryTest, CreateUser_EmptyToken) {
   auto savedUser = repository->getUser("test");
   ASSERT_TRUE(savedUser.has_value());
   EXPECT_EQ(savedUser->token, "");
+}
+
+// ListUsers Tests
+
+TEST_F(SqliteAchievementRepositoryTest, ListUsers_EmptyDatabase) {
+  auto result = repository->listUsers();
+
+  EXPECT_TRUE(result.empty());
+}
+
+TEST_F(SqliteAchievementRepositoryTest, ListUsers_SingleUser) {
+  User user = createTestUser("testuser", "test_token", 1500, 750);
+  repository->createOrUpdateUser(user);
+
+  auto result = repository->listUsers();
+
+  ASSERT_EQ(result.size(), 1);
+  EXPECT_EQ(result[0].username, "testuser");
+  EXPECT_EQ(result[0].token, "test_token");
+  EXPECT_EQ(result[0].points, 1500);
+  EXPECT_EQ(result[0].hardcore_points, 750);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, ListUsers_MultipleUsers) {
+  // Create multiple users with different data
+  User user1 = createTestUser("alice", "token_alice", 2000, 1800);
+  User user2 = createTestUser("bob", "token_bob", 1200, 900);
+  User user3 = createTestUser("charlie", "token_charlie", 3500, 2100);
+
+  repository->createOrUpdateUser(user1);
+  repository->createOrUpdateUser(user2);
+  repository->createOrUpdateUser(user3);
+
+  auto result = repository->listUsers();
+
+  ASSERT_EQ(result.size(), 3);
+
+  // Results should be ordered by username (alice, bob, charlie)
+  EXPECT_EQ(result[0].username, "alice");
+  EXPECT_EQ(result[0].token, "token_alice");
+  EXPECT_EQ(result[0].points, 2000);
+  EXPECT_EQ(result[0].hardcore_points, 1800);
+
+  EXPECT_EQ(result[1].username, "bob");
+  EXPECT_EQ(result[1].token, "token_bob");
+  EXPECT_EQ(result[1].points, 1200);
+  EXPECT_EQ(result[1].hardcore_points, 900);
+
+  EXPECT_EQ(result[2].username, "charlie");
+  EXPECT_EQ(result[2].token, "token_charlie");
+  EXPECT_EQ(result[2].points, 3500);
+  EXPECT_EQ(result[2].hardcore_points, 2100);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, ListUsers_OrderedByUsername) {
+  // Create users in non-alphabetical order
+  User userZ = createTestUser("zebra", "token_z", 100, 50);
+  User userA = createTestUser("alpha", "token_a", 200, 100);
+  User userM = createTestUser("middle", "token_m", 300, 150);
+
+  repository->createOrUpdateUser(userZ);
+  repository->createOrUpdateUser(userA);
+  repository->createOrUpdateUser(userM);
+
+  auto result = repository->listUsers();
+
+  ASSERT_EQ(result.size(), 3);
+
+  // Should be ordered alphabetically by username
+  EXPECT_EQ(result[0].username, "alpha");
+  EXPECT_EQ(result[1].username, "middle");
+  EXPECT_EQ(result[2].username, "zebra");
+}
+
+TEST_F(SqliteAchievementRepositoryTest, ListUsers_WithZeroPoints) {
+  User user1 = createTestUser("newbie", "token1", 0, 0);
+  User user2 = createTestUser("veteran", "token2", 5000, 3000);
+
+  repository->createOrUpdateUser(user1);
+  repository->createOrUpdateUser(user2);
+
+  auto result = repository->listUsers();
+
+  ASSERT_EQ(result.size(), 2);
+
+  // Find the newbie user
+  auto newbieIt = std::find_if(result.begin(), result.end(), [](const User &u) {
+    return u.username == "newbie";
+  });
+  ASSERT_NE(newbieIt, result.end());
+  EXPECT_EQ(newbieIt->points, 0);
+  EXPECT_EQ(newbieIt->hardcore_points, 0);
+
+  // Find the veteran user
+  auto veteranIt =
+      std::find_if(result.begin(), result.end(),
+                   [](const User &u) { return u.username == "veteran"; });
+  ASSERT_NE(veteranIt, result.end());
+  EXPECT_EQ(veteranIt->points, 5000);
+  EXPECT_EQ(veteranIt->hardcore_points, 3000);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, ListUsers_WithEmptyTokens) {
+  User user1 = createTestUser("user1", "", 1000, 500);
+  User user2 = createTestUser("user2", "real_token", 2000, 1000);
+
+  repository->createOrUpdateUser(user1);
+  repository->createOrUpdateUser(user2);
+
+  auto result = repository->listUsers();
+
+  ASSERT_EQ(result.size(), 2);
+
+  // Find user with empty token
+  auto emptyTokenIt =
+      std::find_if(result.begin(), result.end(),
+                   [](const User &u) { return u.username == "user1"; });
+  ASSERT_NE(emptyTokenIt, result.end());
+  EXPECT_EQ(emptyTokenIt->token, "");
+
+  // Find user with real token
+  auto realTokenIt =
+      std::find_if(result.begin(), result.end(),
+                   [](const User &u) { return u.username == "user2"; });
+  ASSERT_NE(realTokenIt, result.end());
+  EXPECT_EQ(realTokenIt->token, "real_token");
+}
+
+TEST_F(SqliteAchievementRepositoryTest, ListUsers_AfterUserUpdate) {
+  User user = createTestUser("updatable", "old_token", 1000, 500);
+  repository->createOrUpdateUser(user);
+
+  // Update the user
+  user.token = "new_token";
+  user.points = 2000;
+  user.hardcore_points = 1500;
+  repository->createOrUpdateUser(user);
+
+  auto result = repository->listUsers();
+
+  ASSERT_EQ(result.size(), 1);
+  EXPECT_EQ(result[0].username, "updatable");
+  EXPECT_EQ(result[0].token, "new_token");
+  EXPECT_EQ(result[0].points, 2000);
+  EXPECT_EQ(result[0].hardcore_points, 1500);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, ListUsers_LargeDataset) {
+  // Create a larger number of users to test performance and ordering
+  const int userCount = 50;
+
+  for (int i = 0; i < userCount; ++i) {
+    std::string username = "user" + std::to_string(i);
+    std::string token = "token" + std::to_string(i);
+    int points = i * 100;
+    int hardcorePoints = i * 50;
+
+    User user = createTestUser(username, token, points, hardcorePoints);
+    repository->createOrUpdateUser(user);
+  }
+
+  auto result = repository->listUsers();
+
+  ASSERT_EQ(result.size(), userCount);
+
+  // Verify ordering - should be alphabetically sorted
+  for (int i = 0; i < userCount - 1; ++i) {
+    EXPECT_LT(result[i].username, result[i + 1].username);
+  }
+
+  // Verify a few specific users
+  auto user0It = std::find_if(result.begin(), result.end(), [](const User &u) {
+    return u.username == "user0";
+  });
+  ASSERT_NE(user0It, result.end());
+  EXPECT_EQ(user0It->points, 0);
+  EXPECT_EQ(user0It->hardcore_points, 0);
+
+  auto user25It = std::find_if(result.begin(), result.end(), [](const User &u) {
+    return u.username == "user25";
+  });
+  ASSERT_NE(user25It, result.end());
+  EXPECT_EQ(user25It->points, 2500);
+  EXPECT_EQ(user25It->hardcore_points, 1250);
 }
 
 // Achievement Set CRUD Tests
@@ -506,7 +690,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_WithAchievements) {
   EXPECT_EQ(result->achievements[2].displayOrder, 3);
 
   // Verify all achievement fields are populated
-  const auto& firstAchievement = result->achievements[0];
+  const auto &firstAchievement = result->achievements[0];
   EXPECT_EQ(firstAchievement.id, 102);
   EXPECT_EQ(firstAchievement.description, "Complete a test task");
   EXPECT_EQ(firstAchievement.imageUrl, "https://example.com/achievement.png");
@@ -532,7 +716,8 @@ TEST_F(SqliteAchievementRepositoryTest, CreateAchievementProgress_Success) {
   EXPECT_TRUE(result);
 }
 
-TEST_F(SqliteAchievementRepositoryTest, CreateAchievementProgress_UpsertBehavior) {
+TEST_F(SqliteAchievementRepositoryTest,
+       CreateAchievementProgress_UpsertBehavior) {
   AchievementSet achievementSet = createTestAchievementSet();
   repository->create(achievementSet);
 
@@ -550,10 +735,12 @@ TEST_F(SqliteAchievementRepositoryTest, CreateAchievementProgress_UpsertBehavior
   EXPECT_TRUE(repository->create(progress));
 
   // The upsert should have updated the existing record
-  // We can't directly verify this without a getter, but no exception should occur
+  // We can't directly verify this without a getter, but no exception should
+  // occur
 }
 
-TEST_F(SqliteAchievementRepositoryTest, CreateAchievementProgress_MultipleUsers) {
+TEST_F(SqliteAchievementRepositoryTest,
+       CreateAchievementProgress_MultipleUsers) {
   AchievementSet achievementSet = createTestAchievementSet();
   repository->create(achievementSet);
 
@@ -599,14 +786,14 @@ TEST_F(SqliteAchievementRepositoryTest, CreateUserUnlock_UpsertBehavior) {
   // Modify and createOrUpdate again (should update)
   unlock.earned = true;
   unlock.earnedHardcore = true;
-  unlock.unlockTimestamp = 1609545600; // 2021-01-02 00:00:00 UTC
+  unlock.unlockTimestamp = 1609545600;         // 2021-01-02 00:00:00 UTC
   unlock.unlockTimestampHardcore = 1609632000; // 2021-01-03 00:00:00 UTC
   unlock.synced = true;
-  unlock.syncedHardcore = true;
   EXPECT_TRUE(repository->createOrUpdate(unlock));
 
   // Verify the update took effect by retrieving the unlock
-  auto retrieved = repository->getUserUnlock(unlock.username, unlock.achievementId);
+  auto retrieved =
+      repository->getUserUnlock(unlock.username, unlock.achievementId);
   ASSERT_TRUE(retrieved.has_value());
   EXPECT_EQ(retrieved->username, unlock.username);
   EXPECT_EQ(retrieved->achievementId, unlock.achievementId);
@@ -615,7 +802,6 @@ TEST_F(SqliteAchievementRepositoryTest, CreateUserUnlock_UpsertBehavior) {
   EXPECT_EQ(retrieved->unlockTimestamp, 1609545600);
   EXPECT_EQ(retrieved->unlockTimestampHardcore, 1609632000);
   EXPECT_TRUE(retrieved->synced);
-  EXPECT_TRUE(retrieved->syncedHardcore);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, CreateUserUnlock_MultipleUsers) {
@@ -661,7 +847,8 @@ TEST_F(SqliteAchievementRepositoryTest, CreateUserUnlock_NullTimestamps) {
   EXPECT_TRUE(result);
 
   // Verify null timestamps are handled correctly
-  auto retrieved = repository->getUserUnlock(unlock.username, unlock.achievementId);
+  auto retrieved =
+      repository->getUserUnlock(unlock.username, unlock.achievementId);
   ASSERT_TRUE(retrieved.has_value());
   EXPECT_EQ(retrieved->unlockTimestamp, 0);
   EXPECT_EQ(retrieved->unlockTimestampHardcore, 0);
@@ -677,7 +864,8 @@ TEST_F(SqliteAchievementRepositoryTest, GetUserUnlock_ExistingUnlock) {
   UserUnlock unlock = createTestUserUnlock();
   repository->createOrUpdate(unlock);
 
-  auto result = repository->getUserUnlock(unlock.username, unlock.achievementId);
+  auto result =
+      repository->getUserUnlock(unlock.username, unlock.achievementId);
 
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->username, unlock.username);
@@ -687,7 +875,6 @@ TEST_F(SqliteAchievementRepositoryTest, GetUserUnlock_ExistingUnlock) {
   EXPECT_EQ(result->unlockTimestamp, unlock.unlockTimestamp);
   EXPECT_EQ(result->unlockTimestampHardcore, unlock.unlockTimestampHardcore);
   EXPECT_EQ(result->synced, unlock.synced);
-  EXPECT_EQ(result->syncedHardcore, unlock.syncedHardcore);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetUserUnlock_NonExistentUnlock) {
@@ -738,7 +925,8 @@ TEST_F(SqliteAchievementRepositoryTest, GetAllUserUnlocks_WithUnlocks) {
 
   ASSERT_EQ(result.size(), 2);
 
-  // Verify they're ordered by display_order (achievement1 first, then achievement3)
+  // Verify they're ordered by display_order (achievement1 first, then
+  // achievement3)
   EXPECT_EQ(result[0].achievementId, 101);
   EXPECT_TRUE(result[0].earned);
   EXPECT_FALSE(result[0].earnedHardcore);
@@ -860,7 +1048,8 @@ TEST_F(SqliteAchievementRepositoryTest, SetGameHash_UpsertBehavior) {
   EXPECT_EQ(result->name, "Second Achievement Set");
 }
 
-TEST_F(SqliteAchievementRepositoryTest, GetAchievementSetByContentHash_ExistingHash) {
+TEST_F(SqliteAchievementRepositoryTest,
+       GetAchievementSetByContentHash_ExistingHash) {
   AchievementSet achievementSet = createTestAchievementSet();
   repository->create(achievementSet);
 
@@ -877,17 +1066,21 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievementSetByContentHash_ExistingH
   EXPECT_EQ(result->id, achievementSet.id);
   EXPECT_EQ(result->name, achievementSet.name);
   EXPECT_EQ(result->numAchievements, achievementSet.numAchievements);
-  EXPECT_EQ(result->achievements.size(), 1); // Only achievements with flags == 3 are included
-  EXPECT_EQ(result->totalPoints, 50); // Calculated from achievements with flags == 3
+  EXPECT_EQ(result->achievements.size(),
+            1); // Only achievements with flags == 3 are included
+  EXPECT_EQ(result->totalPoints,
+            50); // Calculated from achievements with flags == 3
 }
 
-TEST_F(SqliteAchievementRepositoryTest, GetAchievementSetByContentHash_NonExistentHash) {
+TEST_F(SqliteAchievementRepositoryTest,
+       GetAchievementSetByContentHash_NonExistentHash) {
   auto result = repository->getAchievementSetByContentHash("nonexistent");
 
   EXPECT_FALSE(result.has_value());
 }
 
-TEST_F(SqliteAchievementRepositoryTest, GetAchievementSetByContentHash_FiltersByFlags) {
+TEST_F(SqliteAchievementRepositoryTest,
+       GetAchievementSetByContentHash_FiltersByFlags) {
   AchievementSet achievementSet = createTestAchievementSet();
   repository->create(achievementSet);
 
@@ -1020,9 +1213,177 @@ TEST_F(SqliteAchievementRepositoryTest, GetGameId_IntegrationWithSetAndGet) {
   EXPECT_EQ(retrievedGameId.value(), achievementSet.id);
 
   // Verify we can also get the achievement set by content hash
-  auto achievementSetByHash = repository->getAchievementSetByContentHash(contentHash);
+  auto achievementSetByHash =
+      repository->getAchievementSetByContentHash(contentHash);
   ASSERT_TRUE(achievementSetByHash.has_value());
   EXPECT_EQ(achievementSetByHash->id, achievementSet.id);
+}
+
+// GetGameHash Tests
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_ExistingMapping) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  const std::string contentHash = "test_hash_abc123";
+
+  // First set the mapping
+  EXPECT_TRUE(repository->setGameId(contentHash, achievementSet.id));
+
+  // Then retrieve the hash by set ID
+  auto result = repository->getGameHash(achievementSet.id);
+
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), contentHash);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_NonExistentMapping) {
+  auto result = repository->getGameHash(999);
+
+  EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_MultipleMappings) {
+  AchievementSet achievementSet1 = createTestAchievementSet();
+  achievementSet1.id = 1;
+  repository->create(achievementSet1);
+
+  AchievementSet achievementSet2 = createTestAchievementSet();
+  achievementSet2.id = 2;
+  repository->create(achievementSet2);
+
+  const std::string hash1 = "hash_for_set_1";
+  const std::string hash2 = "hash_for_set_2";
+
+  // Set multiple mappings
+  EXPECT_TRUE(repository->setGameId(hash1, achievementSet1.id));
+  EXPECT_TRUE(repository->setGameId(hash2, achievementSet2.id));
+
+  // Verify each mapping independently
+  auto result1 = repository->getGameHash(achievementSet1.id);
+  auto result2 = repository->getGameHash(achievementSet2.id);
+
+  ASSERT_TRUE(result1.has_value());
+  ASSERT_TRUE(result2.has_value());
+  EXPECT_EQ(result1.value(), hash1);
+  EXPECT_EQ(result2.value(), hash2);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_EmptyHash) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  const std::string emptyHash = "";
+
+  // Set mapping with empty hash
+  EXPECT_TRUE(repository->setGameId(emptyHash, achievementSet.id));
+
+  auto result = repository->getGameHash(achievementSet.id);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), emptyHash);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_LongHash) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  // Create a long hash string to test handling of larger strings
+  const std::string longHash =
+      "abcdef1234567890" + std::string(100, 'x') + "fedcba0987654321";
+
+  EXPECT_TRUE(repository->setGameId(longHash, achievementSet.id));
+
+  auto result = repository->getGameHash(achievementSet.id);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), longHash);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_SpecialCharacters) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  // Test hash with special characters
+  const std::string specialHash = "hash-with_special.chars+symbols@2024!";
+
+  EXPECT_TRUE(repository->setGameId(specialHash, achievementSet.id));
+
+  auto result = repository->getGameHash(achievementSet.id);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), specialHash);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_RoundTripConsistency) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  const std::string originalHash = "round_trip_test_hash_789";
+
+  // Set the hash->ID mapping
+  EXPECT_TRUE(repository->setGameId(originalHash, achievementSet.id));
+
+  // Get ID from hash
+  auto retrievedId = repository->getGameId(originalHash);
+  ASSERT_TRUE(retrievedId.has_value());
+  EXPECT_EQ(retrievedId.value(), achievementSet.id);
+
+  // Get hash from ID
+  auto retrievedHash = repository->getGameHash(achievementSet.id);
+  ASSERT_TRUE(retrievedHash.has_value());
+  EXPECT_EQ(retrievedHash.value(), originalHash);
+
+  // Verify round-trip consistency
+  EXPECT_EQ(retrievedHash.value(), originalHash);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_AfterSetDeletion) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  const std::string contentHash = "hash_for_deleted_set";
+
+  // Set mapping
+  EXPECT_TRUE(repository->setGameId(contentHash, achievementSet.id));
+
+  // Verify mapping exists
+  auto beforeResult = repository->getGameHash(achievementSet.id);
+  ASSERT_TRUE(beforeResult.has_value());
+  EXPECT_EQ(beforeResult.value(), contentHash);
+
+  // Note: We don't actually delete the achievement set in this test since
+  // there's no delete method, but this tests the case where we query
+  // for a non-existent set ID
+  auto nonExistentResult = repository->getGameHash(999);
+  EXPECT_FALSE(nonExistentResult.has_value());
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameHash_IntegrationWithGetGameId) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  const std::string contentHash = "integration_test_hash_bidirectional";
+
+  // Set the hash->ID mapping using setGameId
+  EXPECT_TRUE(repository->setGameId(contentHash, achievementSet.id));
+
+  // Test both directions of the mapping
+  auto retrievedId = repository->getGameId(contentHash);
+  auto retrievedHash = repository->getGameHash(achievementSet.id);
+
+  ASSERT_TRUE(retrievedId.has_value());
+  ASSERT_TRUE(retrievedHash.has_value());
+
+  EXPECT_EQ(retrievedId.value(), achievementSet.id);
+  EXPECT_EQ(retrievedHash.value(), contentHash);
+
+  // Verify bidirectional consistency
+  auto doubleCheckId = repository->getGameId(retrievedHash.value());
+  auto doubleCheckHash = repository->getGameHash(retrievedId.value());
+
+  ASSERT_TRUE(doubleCheckId.has_value());
+  ASSERT_TRUE(doubleCheckHash.has_value());
+
+  EXPECT_EQ(doubleCheckId.value(), achievementSet.id);
+  EXPECT_EQ(doubleCheckHash.value(), contentHash);
 }
 
 // Integration Tests
@@ -1059,7 +1420,8 @@ TEST_F(SqliteAchievementRepositoryTest, CompleteWorkflow_CreateRetrieveUpdate) {
   EXPECT_EQ(retrievedById->achievements.size(), 2);
 
   // Retrieve by hash
-  auto retrievedByHash = repository->getAchievementSetByContentHash(contentHash);
+  auto retrievedByHash =
+      repository->getAchievementSetByContentHash(contentHash);
   ASSERT_TRUE(retrievedByHash.has_value());
   EXPECT_EQ(retrievedByHash->id, achievementSet.id);
   EXPECT_EQ(retrievedByHash->achievements.size(), 2);
@@ -1071,6 +1433,215 @@ TEST_F(SqliteAchievementRepositoryTest, CompleteWorkflow_CreateRetrieveUpdate) {
   auto updatedSet = repository->getAchievementSet(achievementSet.id);
   ASSERT_TRUE(updatedSet.has_value());
   EXPECT_EQ(updatedSet->name, "Updated Achievement Set");
+}
+
+// GetAllUnsyncedUserUnlocks Tests
+
+TEST_F(SqliteAchievementRepositoryTest, GetAllUnsyncedUserUnlocks_NoUnlocks) {
+  auto result = repository->getAllUnsyncedUserUnlocks("nonexistent_user");
+
+  EXPECT_TRUE(result.empty());
+}
+
+TEST_F(SqliteAchievementRepositoryTest,
+       GetAllUnsyncedUserUnlocks_OnlyUnsyncedUnlocks) {
+  // Setup test data
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  Achievement achievement1 = createTestAchievement(101, 1);
+  Achievement achievement2 = createTestAchievement(102, 1);
+  Achievement achievement3 = createTestAchievement(103, 1);
+  repository->create(achievement1);
+  repository->create(achievement2);
+  repository->create(achievement3);
+
+  // Create unsynced unlocks
+  UserUnlock unlock1 = createTestUserUnlock("testuser", 101);
+  unlock1.synced = false;
+  unlock1.earned = true;
+  unlock1.earnedHardcore = false;
+  unlock1.unlockTimestamp = 1609459200;
+
+  UserUnlock unlock2 = createTestUserUnlock("testuser", 102);
+  unlock2.synced = false;
+  unlock2.earned = false;
+  unlock2.earnedHardcore = true;
+  unlock2.unlockTimestampHardcore = 1609545600;
+
+  UserUnlock unlock3 = createTestUserUnlock("testuser", 103);
+  unlock3.synced = false;
+  unlock3.earned = true;
+  unlock3.earnedHardcore = true;
+  unlock3.unlockTimestamp = 1609632000;
+  unlock3.unlockTimestampHardcore = 1609718400;
+
+  repository->createOrUpdate(unlock1);
+  repository->createOrUpdate(unlock2);
+  repository->createOrUpdate(unlock3);
+
+  auto result = repository->getAllUnsyncedUserUnlocks("testuser");
+
+  ASSERT_EQ(result.size(), 3);
+
+  // Verify all unlocks are returned and are unsynced
+  for (const auto &unlock : result) {
+    EXPECT_EQ(unlock.username, "testuser");
+    EXPECT_FALSE(unlock.synced);
+  }
+
+  // Verify specific unlock data
+  auto unlock1_result =
+      std::find_if(result.begin(), result.end(),
+                   [](const UserUnlock &u) { return u.achievementId == 101; });
+  ASSERT_NE(unlock1_result, result.end());
+  EXPECT_TRUE(unlock1_result->earned);
+  EXPECT_FALSE(unlock1_result->earnedHardcore);
+  EXPECT_EQ(unlock1_result->unlockTimestamp, 1609459200);
+
+  auto unlock2_result =
+      std::find_if(result.begin(), result.end(),
+                   [](const UserUnlock &u) { return u.achievementId == 102; });
+  ASSERT_NE(unlock2_result, result.end());
+  EXPECT_FALSE(unlock2_result->earned);
+  EXPECT_TRUE(unlock2_result->earnedHardcore);
+  EXPECT_EQ(unlock2_result->unlockTimestampHardcore, 1609545600);
+}
+
+TEST_F(SqliteAchievementRepositoryTest,
+       GetAllUnsyncedUserUnlocks_MixedSyncStatus) {
+  // Setup test data
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  Achievement achievement1 = createTestAchievement(201, 1);
+  Achievement achievement2 = createTestAchievement(202, 1);
+  Achievement achievement3 = createTestAchievement(203, 1);
+  repository->create(achievement1);
+  repository->create(achievement2);
+  repository->create(achievement3);
+
+  // Create unlocks with mixed sync status
+  UserUnlock unsyncedUnlock = createTestUserUnlock("testuser", 201);
+  unsyncedUnlock.synced = false;
+  unsyncedUnlock.earned = true;
+
+  UserUnlock syncedUnlock = createTestUserUnlock("testuser", 202);
+  syncedUnlock.synced = true;
+  syncedUnlock.earned = true;
+
+  UserUnlock anotherUnsyncedUnlock = createTestUserUnlock("testuser", 203);
+  anotherUnsyncedUnlock.synced = false;
+  anotherUnsyncedUnlock.earnedHardcore = true;
+
+  repository->createOrUpdate(unsyncedUnlock);
+  repository->createOrUpdate(syncedUnlock);
+  repository->createOrUpdate(anotherUnsyncedUnlock);
+
+  auto result = repository->getAllUnsyncedUserUnlocks("testuser");
+
+  // Should only return the unsynced unlocks (2 out of 3)
+  ASSERT_EQ(result.size(), 2);
+
+  // Verify only unsynced unlocks are returned
+  for (const auto &unlock : result) {
+    EXPECT_EQ(unlock.username, "testuser");
+    EXPECT_FALSE(unlock.synced);
+    EXPECT_TRUE(unlock.achievementId == 201 || unlock.achievementId == 203);
+  }
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetAllUnsyncedUserUnlocks_AllSynced) {
+  // Setup test data
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  Achievement achievement1 = createTestAchievement(301, 1);
+  Achievement achievement2 = createTestAchievement(302, 1);
+  repository->create(achievement1);
+  repository->create(achievement2);
+
+  // Create only synced unlocks
+  UserUnlock syncedUnlock1 = createTestUserUnlock("testuser", 301);
+  syncedUnlock1.synced = true;
+
+  UserUnlock syncedUnlock2 = createTestUserUnlock("testuser", 302);
+  syncedUnlock2.synced = true;
+
+  repository->createOrUpdate(syncedUnlock1);
+  repository->createOrUpdate(syncedUnlock2);
+
+  auto result = repository->getAllUnsyncedUserUnlocks("testuser");
+
+  // Should return empty vector since all unlocks are synced
+  EXPECT_TRUE(result.empty());
+}
+
+TEST_F(SqliteAchievementRepositoryTest,
+       GetAllUnsyncedUserUnlocks_MultipleUsers) {
+  // Setup test data
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  Achievement achievement1 = createTestAchievement(401, 1);
+  Achievement achievement2 = createTestAchievement(402, 1);
+  repository->create(achievement1);
+  repository->create(achievement2);
+
+  // Create unlocks for multiple users
+  UserUnlock user1Unlock = createTestUserUnlock("user1", 401);
+  user1Unlock.synced = false;
+
+  UserUnlock user2Unlock = createTestUserUnlock("user2", 401);
+  user2Unlock.synced = false;
+
+  UserUnlock user1Unlock2 = createTestUserUnlock("user1", 402);
+  user1Unlock2.synced = true; // This one is synced
+
+  repository->createOrUpdate(user1Unlock);
+  repository->createOrUpdate(user2Unlock);
+  repository->createOrUpdate(user1Unlock2);
+
+  // Query for user1 - should only get unsynced unlocks for that user
+  auto user1Result = repository->getAllUnsyncedUserUnlocks("user1");
+  ASSERT_EQ(user1Result.size(), 1);
+  EXPECT_EQ(user1Result[0].username, "user1");
+  EXPECT_EQ(user1Result[0].achievementId, 401);
+  EXPECT_FALSE(user1Result[0].synced);
+
+  // Query for user2 - should only get unsynced unlocks for that user
+  auto user2Result = repository->getAllUnsyncedUserUnlocks("user2");
+  ASSERT_EQ(user2Result.size(), 1);
+  EXPECT_EQ(user2Result[0].username, "user2");
+  EXPECT_EQ(user2Result[0].achievementId, 401);
+  EXPECT_FALSE(user2Result[0].synced);
+}
+
+TEST_F(SqliteAchievementRepositoryTest,
+       GetAllUnsyncedUserUnlocks_ZeroTimestamps) {
+  // Setup test data
+  AchievementSet achievementSet = createTestAchievementSet();
+  repository->create(achievementSet);
+
+  Achievement achievement = createTestAchievement(501, 1);
+  repository->create(achievement);
+
+  // Create unlock with zero timestamps
+  UserUnlock unlock = createTestUserUnlock("testuser", 501);
+  unlock.synced = false;
+  unlock.unlockTimestamp = 0;
+  unlock.unlockTimestampHardcore = 0;
+
+  repository->createOrUpdate(unlock);
+
+  auto result = repository->getAllUnsyncedUserUnlocks("testuser");
+
+  ASSERT_EQ(result.size(), 1);
+  EXPECT_EQ(result[0].username, "testuser");
+  EXPECT_EQ(result[0].achievementId, 501);
+  EXPECT_FALSE(result[0].synced);
+  EXPECT_EQ(result[0].unlockTimestamp, 0);
+  EXPECT_EQ(result[0].unlockTimestampHardcore, 0);
 }
 
 } // namespace firelight::achievements
