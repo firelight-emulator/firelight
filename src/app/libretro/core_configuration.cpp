@@ -70,7 +70,7 @@ CoreConfiguration::getOptionValue(const std::string &key) {
   // 3. If it's there, cache it and return it.
   // 4. If not, get the default value from the platform service, cache, return.
 
-  spdlog::info("Getting value for key {}...", key);
+  spdlog::info("[CoreConfiguration] Getting value for key {}...", key);
   if (m_cache.contains(key)) {
     return {m_cache[key]};
   }
@@ -78,13 +78,14 @@ CoreConfiguration::getOptionValue(const std::string &key) {
   auto value = m_settingsService.getValue(m_settingsLevel, m_contentHash,
                                           m_platform.id, key);
   if (value.has_value()) {
-    spdlog::info("...using user value {}", value->c_str());
+    spdlog::info("[CoreConfiguration] ...using user value {}", value->c_str());
     return value;
   }
 
   for (auto option : m_platform.emulationSettings) {
     if (option.key == key) {
-      spdlog::info("...using Firelight default value {}", option.defaultValue);
+      spdlog::info("[CoreConfiguration] ...using Firelight default value {}",
+                   option.defaultValue);
       return option.defaultValue;
     }
   }
@@ -93,13 +94,15 @@ CoreConfiguration::getOptionValue(const std::string &key) {
       firelight::PlatformMetadata::getDefaultConfigValue(m_platform.id, key);
 
   if (defaultValue.has_value()) {
-    spdlog::info("...using Firelight default value {}", defaultValue->c_str());
+    spdlog::info("[CoreConfiguration] ...using Firelight default value {}",
+                 defaultValue->c_str());
     return defaultValue;
   }
 
   for (auto option : m_options) {
     if (option.first == key) {
-      spdlog::info("...using core default value {}", option.second.key);
+      spdlog::info("[CoreConfiguration] ...using core default value {}",
+                   option.second.key);
       return option.second.defaultValueKey;
     }
   }
