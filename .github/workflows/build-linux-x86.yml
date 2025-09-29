@@ -1,0 +1,74 @@
+name: Build linux_x86
+
+on:
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: Release
+  CMAKE_GENERATOR: Ninja
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            clang \
+            clang-tools \
+            cmake \
+            ffmpeg \
+            gettext \
+            libgtest-dev \
+            libarchive-dev \
+            ninja-build \
+            nlohmann-json3-dev \
+            nsis \
+            qt6-base-dev \
+            qt6-tools-dev \
+            libsdl2-dev \
+            libspdlog-dev
+
+      - name: Install CPR
+        run: |
+          git clone https://github.com/libcpr/cpr.git
+          cd cpr
+          cmake -B build -DCPR_USE_SYSTEM_CURL=ON
+          cmake --build build
+          sudo cmake --install build
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure CMake
+        run: cmake -B build -G "${{env.CMAKE_GENERATOR}}" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run unit tests
+        working-directory: build
+        run: ctest --output-on-failure
+
+      # - name: Build zip
+      #   working-directory: build
+      #   run: cpack -G ZIP && mv Firelight-0.11.0-win64.zip Firelight-0.11.0-win64-portable.zip
+
+      # - name: Build installer
+      #   working-directory: build
+      #   run: cpack -G NSIS && mv Firelight-0.11.0-win64.exe Firelight-0.11.0-win64-installer.exe
+
+      # - name: Upload portable zip artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: Firelight-0.11.0-win64-portable
+      #     path: build/Firelight-0.11.0-win64-portable.zip
+
+      # - name: Upload installer artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: Firelight-0.11.0-win64-installer
+      #     path: build/Firelight-0.11.0-win64-installer.exe
