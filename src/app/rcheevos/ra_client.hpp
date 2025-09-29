@@ -2,7 +2,6 @@
 
 #include <QAbstractItemModel>
 
-#include "offline/ra_cache.hpp"
 #include "ra_http_client.hpp"
 #include "rcheevos/rc_client.h"
 #include "rcheevos/rc_libretro.h"

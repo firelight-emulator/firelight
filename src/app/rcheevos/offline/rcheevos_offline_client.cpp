@@ -117,7 +117,6 @@ void RetroAchievementsOfflineClient::processResponse(
 
 void RetroAchievementsOfflineClient::clearSessionAchievements() {
   m_inHardcoreSession = false;
-  m_currentSessionAchievements.clear();
 }
 
 void RetroAchievementsOfflineClient::startOnlineHardcoreSession() {
@@ -280,22 +279,6 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
 
     m_achievementService.createOrUpdate(*unlock);
     m_achievementService.createOrUpdateUser(*user);
-  }
-
-  // If in hardcore session, update the current session achievements
-  if (m_inHardcoreSession) {
-    m_currentSessionAchievements.emplace_back(CachedAchievement{
-        .ID = achievementId,
-        .GameID = achievement->setId,
-        .When = hardcore
-                    ? 0
-                    : static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch()),
-        .WhenHardcore =
-            hardcore ? static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch())
-                     : 0,
-        .Points = 0,
-        .Earned = !hardcore,
-        .EarnedHardcore = hardcore});
   }
 
   auto unlocks =

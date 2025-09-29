@@ -2,7 +2,6 @@
 
 #include "../ra_http_client.hpp"
 #include "achievements/achievement_service.hpp"
-#include "ra_cache.hpp"
 
 namespace firelight::achievements {
 class RetroAchievementsOfflineClient final {
@@ -65,6 +64,5 @@ private:
 
   bool m_inHardcoreSession = false;
   AchievementService &m_achievementService;
-  std::vector<CachedAchievement> m_currentSessionAchievements{};
 };
 } // namespace firelight::achievements

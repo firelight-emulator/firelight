@@ -1,8 +1,5 @@
 #pragma once
 
-#include <memory>
-
-#include "offline/ra_cache.hpp"
 #include "offline/rcheevos_offline_client.hpp"
 #include "ra_http_client.hpp"
 

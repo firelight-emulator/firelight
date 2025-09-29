@@ -3,8 +3,8 @@
 #include <gtest/gtest.h>
 #include <rcheevos/award_achievement_response.hpp>
 #include <rcheevos/gameid_response.hpp>
+#include <rcheevos/login2_response.hpp>
 
-#include <rcheevos/offline/ra_cache.hpp>
 #include <rcheevos/offline/rcheevos_offline_client.hpp>
 
 namespace firelight::achievements {
@@ -2481,11 +2481,10 @@ protected:
 };
 
 TEST_F(RetroAchievementsOfflineClientTest, PingCheckReturnsSuccess) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
 
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+  RetroAchievementsOfflineClient offlineClient(service);
 
   const auto response =
       offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
@@ -2503,10 +2502,10 @@ TEST_F(RetroAchievementsOfflineClientTest, PingCheckReturnsSuccess) {
 
 // test handle game id request
 TEST_F(RetroAchievementsOfflineClientTest, GameIdWithNoRecordReturnsFailure) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   const auto response =
       offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
@@ -2519,10 +2518,10 @@ TEST_F(RetroAchievementsOfflineClientTest, GameIdWithNoRecordReturnsFailure) {
 }
 
 TEST_F(RetroAchievementsOfflineClientTest, GameIdReturnsSuccess) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   // Create game id response
   auto gameIdResponse = nlohmann::json::object();
@@ -2545,10 +2544,10 @@ TEST_F(RetroAchievementsOfflineClientTest, GameIdReturnsSuccess) {
 }
 
 TEST_F(RetroAchievementsOfflineClientTest, LoginWithPasswordOffline) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   const auto response = offlineClient.handleRequest(
       "https://retroachievements.com/dorequest.php",
@@ -2561,10 +2560,10 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginWithPasswordOffline) {
 }
 
 TEST_F(RetroAchievementsOfflineClientTest, LoginWithTokenOffline) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   const auto response = offlineClient.handleRequest(
       "https://retroachievements.com/dorequest.php",
@@ -2588,10 +2587,10 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginWithTokenOffline) {
 }
 
 TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   service.createOrUpdateUser(User{.username = "testuser",
                                   .token = "testtoken",
@@ -2620,10 +2619,10 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
 }
 
 TEST_F(RetroAchievementsOfflineClientTest, NoPatchDataReturnsError) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   const auto response =
       offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
@@ -2636,10 +2635,10 @@ TEST_F(RetroAchievementsOfflineClientTest, NoPatchDataReturnsError) {
 }
 
 TEST_F(RetroAchievementsOfflineClientTest, PatchDataCachedCorrectly) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   offlineClient.processResponse("r=patch&g=228", patchData);
 
@@ -2726,10 +2725,10 @@ TEST_F(RetroAchievementsOfflineClientTest, PatchDataCachedCorrectly) {
 
 TEST_F(RetroAchievementsOfflineClientTest,
        PatchResponsePopulatesAchievementsAndUnlocks) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   offlineClient.processResponse("r=patch&g=228&u=testuser", patchData);
 
@@ -2766,10 +2765,10 @@ TEST_F(RetroAchievementsOfflineClientTest,
 
 TEST_F(RetroAchievementsOfflineClientTest,
        StartSessionWorksAfterOfflineAchievementUnlocks) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   offlineClient.processResponse("r=patch&g=228&u=testuser", patchData);
 
@@ -2871,10 +2870,10 @@ TEST_F(RetroAchievementsOfflineClientTest,
 
 TEST_F(RetroAchievementsOfflineClientTest,
        StartSessionWhenNoAchievementsUnlocked) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   offlineClient.processResponse("r=patch&g=228&u=testuser", patchData);
   auto startSessionResponse = offlineClient.handleRequest(
@@ -2892,10 +2891,10 @@ TEST_F(RetroAchievementsOfflineClientTest,
 
 TEST_F(RetroAchievementsOfflineClientTest,
        AwardAchievementFirstTimeNonHardcore) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
   User user{.username = "testuser",
@@ -2930,10 +2929,10 @@ TEST_F(RetroAchievementsOfflineClientTest,
 }
 
 TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
   User user{.username = "testuser",
@@ -2969,10 +2968,10 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
 
 TEST_F(RetroAchievementsOfflineClientTest,
        AwardAchievementHardcoreAfterNonHardcore) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
   User user{.username = "testuser",
@@ -3026,10 +3025,10 @@ TEST_F(RetroAchievementsOfflineClientTest,
 
 TEST_F(RetroAchievementsOfflineClientTest,
        AwardAchievementNonHardcoreAfterHardcore) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
   User user{.username = "testuser",
@@ -3083,10 +3082,10 @@ TEST_F(RetroAchievementsOfflineClientTest,
 
 TEST_F(RetroAchievementsOfflineClientTest,
        AwardAchievementAlreadyEarnedInSameMode) {
-  auto cache = RetroAchievementsCache(":memory:");
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
-  RetroAchievementsOfflineClient offlineClient(cache, service);
+
+  RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
   User user{.username = "testuser",

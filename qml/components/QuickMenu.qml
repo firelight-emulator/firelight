@@ -42,7 +42,7 @@ Pane {
                 background: Item {}
 
                 Repeater {
-                    model: ["Emulation", "Achievements", "Settings"]
+                    model: ["Quick Menu", "Achievements", "Settings"]
                     delegate: TabButton {
                           HoverHandler {
                               id: hoverHandler
@@ -183,7 +183,7 @@ Pane {
         property int numUnsynced: AchievementService.numCurrentSessionHardcoreUnlocks
         text: {
             if (numUnsynced > 0) {
-                return "You have " + numUnsynced + " unsynced hardcore achievement unlock" + (numUnsynced > 1 ? "s" : "") + ". If you close the game, they will be demoted to non-hardcore unlocks.\n\nAre you sure you want to close the game?"
+                return "You have " + numUnsynced + " unsynced hardcore achievement unlock" + (numUnsynced > 1 ? "s" : "") + ". If you close the game, " + (numUnsynced > 1 ? "they" : "it") + " will be demoted to " + (numUnsynced > 1 ? "" : "a") + " non-hardcore unlock" + (numUnsynced > 1 ? "s" : "") + ".\n\nAre you sure you want to close the game?"
             }
             return "Are you sure you want to close the game?"
         }
@@ -417,163 +417,17 @@ Pane {
 
                     spacing: 12
 
-                    delegate: Button {
-                        id: dele
+                    delegate: AchievementListButton {
                         required property var model
                         required property var index
 
-                        width: ListView.view.width
-                        property bool showGlobalCursor: true
-                        focus: true
-
-                        hoverEnabled: true
-
-                        ContextMenu.menu: RightClickMenu {
-                               id: rightClickMenu
-
-                               RightClickMenuItem {
-                                   text: "Open at RetroAchievements.org"
-                                   externalLink: true
-                                   onTriggered: {
-                                       Qt.openUrlExternally("https://retroachievements.org/achievement/" + dele.model.achievementId)
-                                   }
-                               }
-                           }
-
-                        background: Rectangle {
-                            color: "transparent"
-                            border.color: model.earned ? "#FFD700" : "transparent"
-                                opacity: 0.6
-                            radius: 6
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: model.earned ? "#FFD700" : "white"
-                                opacity: dele.hovered ? 0.20 : 0.15
-                                radius: 6
-                            }
-                        }
-                        contentItem: RowLayout {
-                            spacing: 10
-                            Item {
-                                implicitWidth: 64
-                                implicitHeight: 64
-                                Layout.alignment: Qt.AlignTop | Qt.AlignLeft
-                                Image {
-                                    id: achievementIcon
-                                    anchors.fill: parent
-                                    source: model.iconUrl
-                                    fillMode: Image.PreserveAspectFit
-                                    smooth: true
-                                    visible: model.iconUrl !== ""
-
-                                    layer.enabled: !model.earned
-                                    layer.effect: MultiEffect {
-                                        source: achievementIcon
-                                        saturation: -1
-                                    }
-                                }
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: "black"
-                                    visible: model.iconUrl === ""
-                                }
-                            }
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                spacing: 8
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    Text {
-                                        text: model.name
-                                        color: "white"
-                                        font.family: Constants.mainFontFamily
-                                        font.pixelSize: 16
-                                        horizontalAlignment: Text.AlignLeft
-                                        verticalAlignment: Text.AlignVCenter
-                                        lineHeight: 1.2
-                                        wrapMode: Text.WordWrap
-                                    }
-                                    Item {
-                                        Layout.fillWidth: true
-                                        Layout.fillHeight: true
-                                    }
-                                    Pane {
-                                        visible: model.type !== ""
-                                        horizontalPadding: 10
-                                        verticalPadding: 4
-                                        background: Rectangle {
-                                            color: "transparent"
-                                            radius: height / 2
-                                            border.color: "#c3c3c3"
-                                        }
-
-                                        contentItem: Text {
-                                            text: model.type
-                                            color: "#c3c3c3"
-                                            font.family: Constants.mainFontFamily
-                                            font.pixelSize: 14
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                        }
-
-                                    }
-                                }
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
-                                    text: model.description
-                                    color: "#c3c3c3"
-                                    font.family: Constants.mainFontFamily
-                                    font.weight: Font.Normal
-                                    font.pixelSize: 15
-                                    lineHeight: 1.2
-                                    wrapMode: Text.WordWrap
-                                    horizontalAlignment: Text.AlignLeft
-                                    verticalAlignment: Text.AlignTop
-                                }
-                            }
-
-                            Rectangle {
-                                color: "#c3c3c3"
-                                Layout.fillHeight: true
-                                implicitWidth: 1
-                            }
-                            ColumnLayout {
-                                Layout.preferredWidth: parent.width > 800 ? 200 : 120
-                                Layout.maximumWidth: parent.width > 800 ? 200 : 120
-                                Layout.minimumWidth: parent.width > 800 ? 200 : 120
-                                Layout.fillHeight: true
-                                spacing: 8
-
-                                Text {
-                                    text: model.points + " pts"
-                                    color: "white"
-                                    font.family: Constants.mainFontFamily
-                                    font.pixelSize: 16
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignBottom
-                                    Layout.fillHeight: true
-                                    Layout.fillWidth: true
-                                }
-
-                                Text {
-                                    text: model.earned ? model.earnedDate : "Not earned"
-                                    color: "#c3c3c3"
-                                    font.family: Constants.mainFontFamily
-                                    font.pixelSize: 15
-                                    lineHeight: 1.2
-                                    wrapMode: Text.WordWrap
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignTop
-                                    Layout.fillHeight: true
-                                    Layout.fillWidth: true
-                                }
-                            }
-                        }
+                        name: model.name
+                        description: model.description
+                        type: model.type
+                        points: model.points
+                        iconUrl: model.iconUrl
+                        earned: model.earned
+                        achievementId: model.achievementId
                     }
 
                     // delegate: Text {

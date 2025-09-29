@@ -342,7 +342,6 @@ void RAClient::loadGame(int platformId, const QString &contentMd5) {
 }
 
 void RAClient::unloadGame() {
-  m_offlineClient.clearSessionAchievements();
   rc_client_unload_game(m_client);
   m_service.endSession();
   m_gameLoaded = false;

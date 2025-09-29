@@ -96,6 +96,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
 file(GLOB QML_FILES
         qml/*.qml
+        qml/components/achievements/*.qml
         qml/components/activity/*.qml
         qml/components/navigation/*.qml
         qml/components/transitions/*.qml
@@ -144,7 +145,6 @@ add_library(firelight_lib
         src/gui/game_image_provider.cpp
         src/app/audio/SfxPlayer.cpp
         src/app/rcheevos/regular_http_client.cpp
-        src/app/rcheevos/offline/ra_cache.cpp
         src/app/rcheevos/offline/rcheevos_offline_client.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/input/keyboard_input_handler.cpp
@@ -361,7 +361,6 @@ add_executable(fl_test
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
         tests/app/db/sqlite_content_database_test.cpp
-        tests/app/rcheevos/ra_cache_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
         tests/app/settings/sqlite_settings_repository_test.cpp
         tests/app/settings/settings_service_test.cpp
