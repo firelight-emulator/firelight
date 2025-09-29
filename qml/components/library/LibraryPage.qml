@@ -13,6 +13,7 @@ Pane {
     padding: 16
     background: Item {}
     contentItem: FocusScope {
+        focus: true
 
         Component.onCompleted: {
             FilteredLibraryEntryModel.folderId = -1

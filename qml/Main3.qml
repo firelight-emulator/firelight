@@ -103,11 +103,17 @@ ApplicationWindow {
              pushItems([emulatorLoader, content], StackView.Immediate)
          }
 
-         Keys.onEscapePressed: function(event) {
-             if (EmulationService.isGameRunning && depth > 1) {
-                 popCurrentItem()
-             }
-         }
+        Keys.onPressed: function(event) {
+            if (event.key === Qt.Key_Home || event.key === Qt.Key_Escape || event.key === Qt.Key_Back) {
+                if (EmulationService.isGameRunning && depth > 1) {
+                    popCurrentItem()
+                    event.accepted = true
+                    return
+                }
+            }
+
+            event.accepted = false
+        }
 
          // onCurrentItemChanged: {
          //     currentItem.focus = true

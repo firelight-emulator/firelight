@@ -24,7 +24,8 @@ static QMap<input::GamepadInput, Qt::Key> gamepadToQtKeyMap = {
     {input::SouthFace, Qt::Key_Select},
     {input::EastFace, Qt::Key_Back},
     {input::LeftBumper, Qt::Key_PageDown},
-    {input::RightBumper, Qt::Key_PageUp}};
+    {input::RightBumper, Qt::Key_PageUp},
+    {input::Home, Qt::Key_Home}};
 
 QtInputServiceProxy::QtInputServiceProxy() {
   m_inputService = getInputService();

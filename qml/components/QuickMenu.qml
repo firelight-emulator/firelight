@@ -111,31 +111,20 @@ Pane {
             Connections {
                 target: navTabBar
                 function onCurrentIndexChanged() {
-                    if (navTabBar.currentIndex > quickMenuStack.lastIndex) {
-                        console.log("moving right")
-                        quickMenuStack.movingRight = true
-                    } else {
-                        console.log("moving left")
-                        quickMenuStack.movingRight = false
-                    }
+                    quickMenuStack.movingRight = navTabBar.currentIndex > quickMenuStack.lastIndex;
 
                     quickMenuStack.lastIndex = navTabBar.currentIndex
 
                     if (navTabBar.currentIndex === 0) {
                         quickMenuStack.replaceCurrentItem(emulationView, {}, StackView.ReplaceTransition)
-                        if (navTabBar.activeFocus) {
-                            quickMenuStack.forceActiveFocus()
-                        }
                     } else if (navTabBar.currentIndex === 1) {
                         quickMenuStack.replaceCurrentItem(achievementsView, {}, StackView.ReplaceTransition)
-                        if (navTabBar.activeFocus) {
-                            quickMenuStack.forceActiveFocus()
-                        }
                     } else if (navTabBar.currentIndex === 2) {
                         quickMenuStack.replaceCurrentItem(gameSettingsView, {}, StackView.ReplaceTransition)
-                        if (navTabBar.activeFocus) {
-                            quickMenuStack.forceActiveFocus()
-                        }
+                    }
+
+                    if (navTabBar.activeFocus) {
+                        quickMenuStack.forceActiveFocus()
                     }
                 }
             }
