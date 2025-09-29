@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <spdlog/spdlog.h>
 
-#include "achievements/achievement.hpp"
+#include "achievements/models/achievement.hpp"
 #include "regular_http_client.hpp"
 
 #include "ra_constants.h"
@@ -79,6 +79,12 @@ static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
               QString(urlBuffer), event->achievement->id,
               event->achievement->title, event->achievement->description,
               std::stoi(current), std::stoi(desired));
+
+          raClient->m_service.updateAchievementProgress(AchievementProgress{
+              .username = raClient->getCurrentUser()->username,
+              .achievementId = event->achievement->id,
+              .numerator = static_cast<unsigned>(std::stoi(current)),
+              .denominator = static_cast<unsigned>(std::stoi(desired))});
         }
       }
     }
@@ -193,8 +199,8 @@ static void logCallback(const char *message, const rc_client_t *client) {
 }
 
 RAClient::RAClient(RetroAchievementsOfflineClient &offlineClient,
-                   RetroAchievementsCache &cache)
-    : m_offlineClient(offlineClient), m_cache(cache) {
+                   AchievementService &service)
+    : m_service(service), m_offlineClient(offlineClient) {
   m_client = rc_client_create(readMemoryCallback, httpCallback);
   rc_client_enable_logging(m_client, RC_CLIENT_LOG_LEVEL_VERBOSE, logCallback);
   rc_client_set_event_handler(m_client, eventHandler);
@@ -321,6 +327,11 @@ void RAClient::loadGame(int platformId, const QString &contentMd5) {
             spdlog::info(
                 "Achievements earned in this session will be hardcore baby");
             theThing->m_offlineClient.startOnlineHardcoreSession();
+            theThing->m_service.startSession(
+                theThing->m_displayName.toStdString(), gameInfo->id, true);
+          } else {
+            theThing->m_service.startSession(
+                theThing->m_displayName.toStdString(), gameInfo->id, false);
           }
         } else {
           theThing->m_gameLoaded = false;
@@ -331,8 +342,8 @@ void RAClient::loadGame(int platformId, const QString &contentMd5) {
 }
 
 void RAClient::unloadGame() {
-  m_offlineClient.clearSessionAchievements();
   rc_client_unload_game(m_client);
+  m_service.endSession();
   m_gameLoaded = false;
   m_frameNumber = 0;
   m_memorySeemsGood = false;

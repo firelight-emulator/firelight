@@ -1,54 +1,78 @@
 #pragma once
 #include "achievement_list_model.hpp"
+#include "service_accessor.hpp"
+
 #include <QObject>
 #include <manager_accessor.hpp>
 
 namespace firelight::achievements {
-class AchievementSetItem : public QObject, public ManagerAccessor {
+class AchievementSetItem : public QObject, public ServiceAccessor {
   Q_OBJECT
-  Q_PROPERTY(int setId READ getSetId NOTIFY setIdChanged)
+  Q_PROPERTY(int setId MEMBER m_setId NOTIFY contentHashChanged)
   Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
                  contentHashChanged)
-  Q_PROPERTY(QString name READ getSetName NOTIFY setNameChanged)
   Q_PROPERTY(
-      int numAchievements READ getNumAchievements NOTIFY achievementsChanged)
+      bool hardcore READ isHardcore WRITE setHardcore NOTIFY hardcoreChanged)
+  Q_PROPERTY(QString iconUrl MEMBER m_iconUrl NOTIFY contentHashChanged)
   Q_PROPERTY(
-      int totalNumPoints READ getTotalNumPoints NOTIFY totalNumPointsChanged)
-  Q_PROPERTY(QAbstractListModel *achievements READ getAchievements NOTIFY
-                 achievementsChanged)
+      bool hasAchievements MEMBER m_hasAchievements NOTIFY contentHashChanged)
+  Q_PROPERTY(QString name MEMBER m_setName NOTIFY contentHashChanged)
+  Q_PROPERTY(int numEarned MEMBER m_numEarned NOTIFY contentHashChanged)
+  Q_PROPERTY(int numEarnedHardcore MEMBER m_numEarnedHardcore NOTIFY
+                 contentHashChanged)
+  Q_PROPERTY(
+      int numAchievements MEMBER m_numAchievements NOTIFY contentHashChanged)
+  Q_PROPERTY(
+      int totalNumPoints MEMBER m_totalNumPoints NOTIFY contentHashChanged)
+  Q_PROPERTY(
+      QString platformName MEMBER m_platformName NOTIFY contentHashChanged)
+  Q_PROPERTY(QSortFilterProxyModel *achievements READ getAchievements NOTIFY
+                 contentHashChanged)
 
 public:
+  explicit AchievementSetItem(QObject *parent = nullptr) : QObject(parent) {}
+
   [[nodiscard]] QString getContentHash() const;
   void setContentHash(const QString &contentHash);
-  [[nodiscard]] int getNumAchievements() const;
-  [[nodiscard]] int getTotalNumPoints() const;
 
-  [[nodiscard]] QString getSetName() const;
-  [[nodiscard]] int getSetId() const;
+  bool isHardcore() const { return m_hardcore; }
+  void setHardcore(const bool hardcore) {
+    if (m_hardcore == hardcore) {
+      return;
+    }
+    m_hardcore = hardcore;
 
-  [[nodiscard]] gui::AchievementListModel *getAchievements() const;
+    if (m_achievementListModel) {
+      m_achievementListModel->setHardcore(m_hardcore);
+    }
+
+    emit hardcoreChanged();
+  }
+
+  [[nodiscard]] gui::AchievementListSortFilterModel *getAchievements() const;
 
 signals:
   void contentHashChanged();
-  void totalNumPointsChanged();
-  void setNameChanged();
-  void achievementsChanged();
-  void setIdChanged();
+  void hardcoreChanged();
 
 private:
-  int m_setId = 0;
+  bool m_hasAchievements = false;
+  unsigned m_setId = 0;
   QString m_contentHash;
   QString m_setName = "lol";
-  int m_numAchievements = 0;
-  int m_totalNumPoints = 0;
+  QString m_iconUrl;
+  unsigned m_numEarned = 0;
+  unsigned m_numEarnedHardcore = 0;
+  unsigned m_numAchievements = 0;
+  unsigned m_totalNumPoints = 0;
+  QString m_platformName;
 
-  gui::AchievementListModel m_achievementListModel;
+  platforms::Platform m_platform;
 
-  QVariantList m_achievements;
-  // platform?
-  // List of achievements
-  // name of set
-  // user's progress
+  bool m_hardcore = false;
+
+  std::unique_ptr<gui::AchievementListSortFilterModel> m_sortFilterModel;
+  std::unique_ptr<gui::AchievementListModel> m_achievementListModel;
 };
 
 } // namespace firelight::achievements

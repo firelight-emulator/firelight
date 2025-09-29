@@ -44,7 +44,7 @@ FocusScope {
 
         property string title: "Firelight"
 
-        padding: 16
+        padding: 0
         background: Item {}
         contentItem: StackView {
             id: contentStack

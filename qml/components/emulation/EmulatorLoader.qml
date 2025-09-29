@@ -82,9 +82,14 @@ Loader {
             z: 10
         }
 
-        Keys.onEscapePressed: function(event) {
-            emulatorLoader.suspended()
+        Keys.onPressed: function(event) {
+            if (event.key === Qt.Key_Home || event.key === Qt.Key_Escape) {
+                emulatorLoader.suspended()
+                event.accepted = true
+                return
+            }
 
+            event.accepted = false
         }
 
         StackView.onActivated: {

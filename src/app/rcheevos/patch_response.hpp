@@ -18,7 +18,7 @@ namespace firelight::achievements {
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PatchLeaderboard, ID, Mem, Format, LowerIsBetter, Title, Description, Hidden)
 
     struct PatchAchievement {
-        int ID{};
+        unsigned ID{};
         std::string MemAddr{};
         std::string Title{};
         std::string Description{};
@@ -99,7 +99,7 @@ namespace firelight::achievements {
     }
 
     struct PatchDataStruct {
-        int ID{};
+        unsigned ID{};
         std::string Title{};
         std::string ImageIcon{};
         std::string RichPresencePatch{};

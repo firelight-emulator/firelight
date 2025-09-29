@@ -8,7 +8,7 @@ namespace firelight::library {
 
 EntrySortFilterListModel::EntrySortFilterListModel(QObject *parent)
     : QSortFilterProxyModel(parent) {
-  // setDynamicSortFilter(true);
+  setDynamicSortFilter(true);
 }
 int EntrySortFilterListModel::getFolderId() const { return m_folderId; }
 void EntrySortFilterListModel::setFolderId(const int folderId) {

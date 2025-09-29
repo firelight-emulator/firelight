@@ -24,7 +24,8 @@ const static std::map<int, GamepadInput> sdlToGamepadInputs = {
     {SDL_CONTROLLER_BUTTON_LEFTSHOULDER, LeftBumper},
     {SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, RightBumper},
     {SDL_CONTROLLER_BUTTON_LEFTSTICK, L3},
-    {SDL_CONTROLLER_BUTTON_RIGHTSTICK, R3}};
+    {SDL_CONTROLLER_BUTTON_RIGHTSTICK, R3},
+    {SDL_CONTROLLER_BUTTON_GUIDE, Home}};
 
 class SDLInputService final : public InputService {
 public:

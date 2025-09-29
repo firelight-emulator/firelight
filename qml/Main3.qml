@@ -34,18 +34,18 @@ ApplicationWindow {
         GeneralSettings.mainWindowY = y
     }
 
-    // onActiveFocusItemChanged: {
-    //     console.log("Active focus item changed to: " + window.activeFocusItem)
-    //     let item = window.activeFocusItem
-    //     let level = 0
-    //     while (item) {
-    //         let spaces = " ".repeat(level * 2)
-    //
-    //         console.log(spaces + item)
-    //         item = item.parent
-    //         level++
-    //     }
-    // }
+    onActiveFocusItemChanged: {
+        console.log("Active focus item changed to: " + window.activeFocusItem)
+        let item = window.activeFocusItem
+        let level = 0
+        while (item) {
+            let spaces = " ".repeat(level * 2)
+
+            console.log(spaces + item)
+            item = item.parent
+            level++
+        }
+    }
 
     visible: true
     visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
@@ -103,11 +103,17 @@ ApplicationWindow {
              pushItems([emulatorLoader, content], StackView.Immediate)
          }
 
-         Keys.onEscapePressed: function(event) {
-             if (EmulationService.isGameRunning && depth > 1) {
-                 popCurrentItem()
-             }
-         }
+        Keys.onPressed: function(event) {
+            if (event.key === Qt.Key_Home || event.key === Qt.Key_Escape || event.key === Qt.Key_Back) {
+                if (EmulationService.isGameRunning && depth > 1) {
+                    popCurrentItem()
+                    event.accepted = true
+                    return
+                }
+            }
+
+            event.accepted = false
+        }
 
          // onCurrentItemChanged: {
          //     currentItem.focus = true

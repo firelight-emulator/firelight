@@ -16,6 +16,8 @@
 #include <qstandardpaths.h>
 #include <spdlog/spdlog.h>
 
+#include "achievements/achievement_service.hpp"
+#include "achievements/sqlite_achievement_repository.hpp"
 #include "activity/gui/game_activity_item.hpp"
 #include "app/audio/SfxPlayer.hpp"
 #include "app/db/sqlite_content_database.hpp"
@@ -53,6 +55,7 @@
 #include "gui/gamepad_profile_item.hpp"
 #include "gui/models/emulation_settings_model.hpp"
 #include "gui/models/game_activity_list_model.hpp"
+#include "gui/qt_achievement_service_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "input2/sdl/sdl_input_service.hpp"
@@ -147,7 +150,7 @@ int main(int argc, char *argv[]) {
 
   QDir baseDir(defaultAppDataPathString);
   if (!baseDir.mkpath("core-system")) {
-    spdlog::warn("Unable to create core-system directory");
+    spdlog::warn("Unable to createOrUpdate core-system directory");
   }
 
   firelight::ManagerAccessor::setCoreSystemDirectory(
@@ -221,14 +224,20 @@ int main(int argc, char *argv[]) {
         libScanner2.scanAll();
       });
 
-  firelight::achievements::RetroAchievementsCache raCache(
-      defaultAppDataPathString + "/rcheevos.db");
-  firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(
-      raCache);
-  firelight::achievements::RAClient raClient(offlineRaClient, raCache);
-  firelight::ManagerAccessor::setAchievementManager(&raClient);
+  firelight::achievements::SqliteAchievementRepository achievementRepo(
+      (defaultAppDataPathString + "/rcheevos2.db").toStdString());
+  firelight::achievements::AchievementService achievementService(
+      achievementRepo);
 
-  // Set up the models for QML ***********************************************
+  firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(
+      achievementService);
+  firelight::achievements::RAClient raClient(offlineRaClient,
+                                             achievementService);
+  firelight::ManagerAccessor::setAchievementManager(&raClient);
+  firelight::ServiceAccessor::setAchievementService(&achievementService);
+
+  // Set up the models for QML
+  // ***********************************************
   firelight::library::EntryListModel entryListModel(userLibrary);
   firelight::library::EntrySortFilterListModel entrySearchModel;
   entrySearchModel.setSourceModel(&entryListModel);
@@ -242,6 +251,8 @@ int main(int argc, char *argv[]) {
   firelight::shop::ShopItemModel shopItemModel(contentDatabase);
 
   firelight::gui::ContentDirectoryModel contentDirectoryModel(userLibrary);
+
+  firelight::ServiceAccessor::setLibraryService(&userLibrary);
 
   auto emulatorConfigManager =
       std::make_shared<EmulatorConfigManager>(userdata_database);
@@ -303,23 +314,23 @@ int main(int argc, char *argv[]) {
   if (QNetworkInformation::instance()->reachability() ==
       QNetworkInformation::Reachability::Online) {
     raClient.m_connected = true;
-    offlineRaClient.syncOfflineAchievements();
+    achievementService.syncOfflineAchievements();
   }
 
   QObject::connect(
       QNetworkInformation::instance(),
       &QNetworkInformation::reachabilityChanged,
       [&raClient,
-       &offlineRaClient](QNetworkInformation::Reachability reachability) {
+       &achievementService](QNetworkInformation::Reachability reachability) {
         if (reachability == QNetworkInformation::Reachability::Online) {
           raClient.m_connected = true;
-          offlineRaClient.syncOfflineAchievements();
+          achievementService.syncOfflineAchievements();
         } else {
           raClient.m_connected = false;
         }
       });
 
-  // QQmlNetworkAccessManagerFactory::create();
+  // QQmlNetworkAccessManagerFactory::createOrUpdate();
   // QNetworkAccessManager *manager = new QNetworkAccessManager();
   // QNetworkDiskCache *diskCache = new QNetworkDiskCache();
   // QString directory =
@@ -375,6 +386,8 @@ int main(int argc, char *argv[]) {
       "InputService", new firelight::gui::QtInputServiceProxy());
   engine.rootContext()->setContextProperty(
       "EmulationService", new firelight::gui::QtEmulationServiceProxy());
+  engine.rootContext()->setContextProperty(
+      "AchievementService", new firelight::gui::QtAchievementServiceProxy());
 
   engine.rootContext()->setContextProperty("LibraryFolderModel",
                                            &libraryFolderListModel);

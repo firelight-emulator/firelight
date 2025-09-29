@@ -37,6 +37,10 @@ IconButton {
                 repeater.itemAt(control.currentIndex).forceActiveFocus()
             }
         }
+
+        onClosed: {
+            control.forceActiveFocus()
+        }
         
         background: Rectangle {
             color: ColorPalette.neutral900
@@ -119,7 +123,7 @@ IconButton {
                             x: parent.width - width - 8
                             y: parent.height / 2 - height / 2
                             radius: 10
-                            border.color: radioDelegate.checked ? "#21be2b" : ColorPalette.neutral400
+                            border.color: radioDelegate.checked ? "#c86500" : ColorPalette.neutral400
                             border.width: 2
 
                             Rectangle {
@@ -128,7 +132,7 @@ IconButton {
                                 x: 5
                                 y: 5
                                 radius: 5
-                                color: "#21be2b"
+                                color: "#c86500"
                                 visible: radioDelegate.checked
                             }
                         }

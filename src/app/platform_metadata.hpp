@@ -83,7 +83,7 @@ const static std::map<int, std::map<std::string, std::string>>
           {"fceumm_turbo_delay", "3"},
           {"fceumm_turbo_enable", "None"},
           {"fceumm_up_down_allowed", "disabled"},
-          {"fceumm_zapper_mode", "clightgun"},
+          {"fceumm_zapper_mode", "mouse"},
           {"fceumm_zapper_sensor", "enabled"},
           {"fceumm_zapper_tolerance", "6"},
           {"fceumm_zapper_trigger", "enabled"},

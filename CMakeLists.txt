@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23.5...3.31.6)
 project(firelight
-        VERSION 0.11.0
+        VERSION 0.12.0
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
         #    HOMEPAGE_URL ""
         LANGUAGES CXX
@@ -96,6 +96,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
 file(GLOB QML_FILES
         qml/*.qml
+        qml/components/achievements/*.qml
         qml/components/activity/*.qml
         qml/components/navigation/*.qml
         qml/components/transitions/*.qml
@@ -144,7 +145,6 @@ add_library(firelight_lib
         src/gui/game_image_provider.cpp
         src/app/audio/SfxPlayer.cpp
         src/app/rcheevos/regular_http_client.cpp
-        src/app/rcheevos/offline/ra_cache.cpp
         src/app/rcheevos/offline/rcheevos_offline_client.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/input/keyboard_input_handler.cpp
@@ -193,6 +193,16 @@ add_library(firelight_lib
         src/gui/models/game_activity_list_model.hpp
         src/app/service_accessor.cpp
         src/app/service_accessor.hpp
+        src/app/achievements/achievement_service.cpp
+        src/app/achievements/achievement_service.hpp
+        src/app/achievements/models/user_unlock.hpp
+        src/app/achievements/models/achievement_set.hpp
+        src/app/achievements/achievement_repository.hpp
+        src/app/achievements/sqlite_achievement_repository.cpp
+        src/app/achievements/sqlite_achievement_repository.hpp
+        src/app/achievements/models/achievement_progress.hpp
+        src/gui/qt_achievement_service_proxy.cpp
+        src/gui/qt_achievement_service_proxy.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -351,7 +361,6 @@ add_executable(fl_test
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
         tests/app/db/sqlite_content_database_test.cpp
-        tests/app/rcheevos/ra_cache_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
         tests/app/settings/sqlite_settings_repository_test.cpp
         tests/app/settings/settings_service_test.cpp
@@ -365,6 +374,8 @@ add_executable(fl_test
         tests/app/emulation/emulation_service_test.cpp
         tests/app/emulation/emulator_instance_test.cpp
         tests/mocks/mock_library.hpp
+        tests/app/achievements/sqlite_achievement_repository_test.cpp
+        tests/app/achievements/achievement_service_test.cpp
 )
 
 file(GLOB QML_TEST_FILES
@@ -425,7 +436,7 @@ set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 9)
 set(CPACK_PACKAGE_VERSION_PATCH 5)
-set(CPACK_PACKAGE_VERSION "0.11.0")
+set(CPACK_PACKAGE_VERSION "0.12.0")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")

@@ -96,7 +96,7 @@ void EmulatorItemRenderer::receive(const void *data, unsigned width,
     // //          .object = (quint64)m_vulkanImage.create_info.image})) {
     // //   spdlog::error("woah there");
     // // }
-    // texture->create();
+    // texture->createOrUpdate();
     // // QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
     // QImage image(m_coreMaxWidth, m_coreMaxHeight, QImage::Format_RGBA8888);
     // image.fill(Qt::green);
@@ -220,7 +220,7 @@ void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
            PFN_vkGetInstanceProcAddr get_instance_proc_addr,
            retro_vulkan_create_device_wrapper_t create_device_wrapper,
            void *opaque) {
-          printf("Calling create device 2***************\n");
+          printf("Calling createOrUpdate device 2***************\n");
           // auto vulkanHandles = reinterpret_cast<const
           // QRhiVulkanNativeHandles *>(rhi()->nativeHandles());
           // return vulkanHandles-;
@@ -233,7 +233,7 @@ void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
            retro_vulkan_create_instance_wrapper_t create_instance_wrapper,
            void *opaque) {
           spdlog::info("Calling create_instance");
-          printf("Calling create instance***************\n");
+          printf("Calling createOrUpdate instance***************\n");
           auto vulkanHandles =
               reinterpret_cast<const QRhiVulkanNativeHandles *>(
                   globalRenderer->rhi()->nativeHandles());

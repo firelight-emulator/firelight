@@ -24,20 +24,10 @@ RoundButton {
         opacity: control.pressed ? 0.14 : 0.23
     }
 
-    ToolTip {
+    FLToolTip {
         y: control.height / 2 - height / 2 - verticalPadding / 2
         x: control.width + 8
-        visible: control.hovered || control.activeFocus
-
-        background: Item {}
-        contentItem: Text {
-            text: "Sort"
-            color: "orange"
-            font.family: Constants.lightFontFamily
-            font.pixelSize: 20
-            font.weight: Font.Medium
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
+        visible: control.hovered || (!InputMethodManager.usingMouse && activeFocus)
+        text: "Sort"
     }
 }

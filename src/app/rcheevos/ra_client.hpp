@@ -2,7 +2,6 @@
 
 #include <QAbstractItemModel>
 
-#include "offline/ra_cache.hpp"
 #include "ra_http_client.hpp"
 #include "rcheevos/rc_client.h"
 #include "rcheevos/rc_libretro.h"
@@ -51,7 +50,7 @@ class RAClient : public QObject {
 
 public:
   explicit RAClient(RetroAchievementsOfflineClient &offlineClient,
-                    RetroAchievementsCache &cache);
+                    AchievementService &service);
 
   ~RAClient() override;
 
@@ -71,6 +70,7 @@ public:
 
   void deserializeState(const std::vector<uint8_t> &state);
 
+  AchievementService &m_service;
   rc_libretro_memory_regions_t m_memoryRegions{};
   bool m_memorySeemsGood = false;
   bool m_canStartReadingMemory = false;
@@ -88,8 +88,6 @@ public:
   Q_INVOKABLE void setOnlineForTesting(bool online) const;
 
   std::unique_ptr<RegularHttpClient> m_httpClient = nullptr;
-
-  RetroAchievementsCache &cache() { return m_cache; }
 
   std::optional<User> getCurrentUser() const;
 
@@ -166,7 +164,6 @@ private:
   bool m_expectToBeLoggedIn = false;
 
   RetroAchievementsOfflineClient &m_offlineClient;
-  RetroAchievementsCache &m_cache;
 
   rc_client_t *m_client;
 
