@@ -443,4 +443,12 @@ bool AchievementService::inHardcoreSession() const {
 unsigned AchievementService::getNumCurrentSessionHardcoreUnlocks() const {
   return static_cast<unsigned>(m_currentSessionHardcoreUnlocks.size());
 }
+
+void AchievementService::setLoggedInUsername(const std::string &username) {
+  m_loggedInUsername = username;
+}
+
+std::string AchievementService::getLoggedInUsername() const {
+  return m_loggedInUsername;
+}
 } // namespace firelight::achievements

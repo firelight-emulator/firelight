@@ -8,6 +8,7 @@ namespace firelight::gui {
 
 class QtAchievementServiceProxy : public QObject, public ServiceAccessor {
   Q_OBJECT
+  Q_PROPERTY(bool loggedIn READ isLoggedIn NOTIFY loggedInChanged)
   Q_PROPERTY(bool inHardcoreSession READ inHardcoreSession NOTIFY
                  inHardcoreSessionChanged)
   Q_PROPERTY(unsigned numCurrentSessionHardcoreUnlocks READ
@@ -16,9 +17,11 @@ class QtAchievementServiceProxy : public QObject, public ServiceAccessor {
 public:
   explicit QtAchievementServiceProxy(QObject *parent = nullptr);
 
+  bool isLoggedIn() const;
   bool inHardcoreSession() const;
   unsigned numCurrentSessionHardcoreUnlocks() const;
 signals:
+  void loggedInChanged();
   void inHardcoreSessionChanged();
   void numCurrentSessionHardcoreUnlocksChanged();
 

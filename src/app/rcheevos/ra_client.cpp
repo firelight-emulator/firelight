@@ -464,6 +464,8 @@ void RAClient::logInUserWithPassword(const QString &username,
         case RC_OK:
           raClient->m_displayName = QString::fromUtf8(userInfo->display_name);
           raClient->m_loggedIn = true;
+          raClient->m_service.setLoggedInUsername(
+              raClient->m_displayName.toStdString());
           emit raClient->loginSucceeded();
           emit raClient->loginStatusChanged();
           emit raClient->pointsChanged();
@@ -495,6 +497,7 @@ void RAClient::logInUserWithPassword(const QString &username,
 
 void RAClient::logout() {
   m_expectToBeLoggedIn = false;
+  m_service.setLoggedInUsername("");
   rc_client_logout(m_client);
   m_loggedIn = false;
   m_settings->remove("Username");
@@ -518,6 +521,8 @@ void RAClient::logInUserWithToken(const QString &username,
         case RC_OK:
           raClient->m_displayName = QString::fromUtf8(userInfo->display_name);
           raClient->m_loggedIn = true;
+          raClient->m_service.setLoggedInUsername(
+              raClient->m_displayName.toStdString());
           emit raClient->loginSucceeded();
           emit raClient->loginStatusChanged();
           emit raClient->pointsChanged();

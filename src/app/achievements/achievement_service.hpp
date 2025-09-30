@@ -37,7 +37,7 @@ public:
    * @param username The username to retrieve data for
    * @return User data if found, std::nullopt otherwise
    */
-  std::optional<User> getUser(const std::string &username) const;
+  [[nodiscard]] std::optional<User> getUser(const std::string &username) const;
 
   /**
    * @brief Creates or updates user data
@@ -57,7 +57,8 @@ public:
 
   bool setGameId(const std::string &contentHash, int setId);
 
-  std::optional<Achievement> getAchievement(unsigned achievementId) const;
+  [[nodiscard]] std::optional<Achievement>
+  getAchievement(unsigned achievementId) const;
 
   /**
    * @brief Retrieves the achievement set ID associated with a content hash
@@ -70,7 +71,8 @@ public:
    * @param contentHash The content hash to look up
    * @return The achievement set ID if found, std::nullopt otherwise
    */
-  std::optional<int> getGameId(const std::string &contentHash) const;
+  [[nodiscard]] std::optional<int>
+  getGameId(const std::string &contentHash) const;
 
   bool updateAchievementProgress(const AchievementProgress &progress);
 
@@ -79,10 +81,10 @@ public:
 
   bool createOrUpdate(const UserUnlock &unlock);
 
-  std::vector<UserUnlock> getAllUserUnlocks(const std::string &username,
-                                            unsigned setId) const;
+  [[nodiscard]] std::vector<UserUnlock>
+  getAllUserUnlocks(const std::string &username, unsigned setId) const;
 
-  std::optional<PatchResponse> getPatchResponse(int gameId) const;
+  [[nodiscard]] std::optional<PatchResponse> getPatchResponse(int gameId) const;
   bool processPatchResponse(const std::string &username,
                             const PatchResponse &response);
 
@@ -95,12 +97,17 @@ public:
   void startSession(const std::string &username, unsigned setId, bool hardcore);
   void endSession();
 
-  bool inHardcoreSession() const;
+  [[nodiscard]] bool inHardcoreSession() const;
 
-  unsigned getNumCurrentSessionHardcoreUnlocks() const;
+  [[nodiscard]] unsigned getNumCurrentSessionHardcoreUnlocks() const;
+
+  void setLoggedInUsername(const std::string &username);
+  [[nodiscard]] std::string getLoggedInUsername() const;
 
 private:
   IAchievementRepository &m_repository;
+
+  std::string m_loggedInUsername;
 
   bool m_inActiveSession = false;
   std::string m_currentSessionUsername;

@@ -46,8 +46,8 @@ void AchievementSetItem::setContentHash(const QString &contentHash) {
     m_numEarnedHardcore = 0;
     QVector<gui::AchievementListModel::Item> items;
     for (const auto &achieve : set->achievements) {
-      auto unlock =
-          getAchievementService()->getUserUnlock("BiscuitCakes", achieve.id);
+      auto unlock = getAchievementService()->getUserUnlock(
+          getAchievementService()->getLoggedInUsername(), achieve.id);
       if (!unlock) {
         continue;
       }

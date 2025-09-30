@@ -211,7 +211,30 @@ Pane {
                 // }
             }
 
+            Text {
+                visible: AchievementService.loggedIn && !achievementSet.hasAchievements
+                anchors.centerIn: parent
+                text: "No achievements found for this game."
+                color: ColorPalette.neutral100
+                font.family: Constants.mainFontFamily
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
+                visible: !AchievementService.loggedIn
+                anchors.centerIn: parent
+                text: "Not logged in to RetroAchievements. You can login from the Settings menu.\n\nAfter you log in, restart the game to load achievements."
+                color: ColorPalette.neutral100
+                font.family: Constants.mainFontFamily
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
             Column {
+                visible: AchievementService.loggedIn && achievementSet.hasAchievements
                 anchors.right: mainArea.left
                 anchors.rightMargin: 16
                 anchors.topMargin: 24
@@ -242,6 +265,7 @@ Pane {
 
             Pane {
                 id: mainArea
+                visible: AchievementService.loggedIn && achievementSet.hasAchievements
                 anchors.top: parent.top
                 width: Math.min(parent.width, 1000)
                 anchors.horizontalCenter: parent.horizontalCenter

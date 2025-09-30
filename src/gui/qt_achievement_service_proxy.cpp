@@ -19,6 +19,9 @@ QtAchievementServiceProxy::QtAchievementServiceProxy(QObject *parent) {
                 emit inHardcoreSessionChanged();
               });
 }
+bool QtAchievementServiceProxy::isLoggedIn() const {
+  return getAchievementService()->getLoggedInUsername() != "";
+}
 bool QtAchievementServiceProxy::inHardcoreSession() const {
   return getAchievementService()->inHardcoreSession();
 }
