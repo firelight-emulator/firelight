@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 Item {
     Text {
-        text: "Firelight Emulator\nv0.12.0"
+        text: "Firelight Emulator\nv0.12.1"
         font.pointSize: 12
         font.family: Constants.regularFontFamily
         color: "white"
