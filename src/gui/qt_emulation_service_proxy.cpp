@@ -46,6 +46,8 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
                   emit pictureModeChanged();
                 } else if (e.key == "aspect-ratio") {
                   emit aspectRatioModeChanged();
+                } else if (e.key == "integer-scale") {
+                  emit integerScaleChanged();
                 }
 
                 emit currentSettingsLevelChanged();
@@ -131,6 +133,15 @@ QString QtEmulationServiceProxy::getAspectRatioMode() const {
   }
 
   return QString::fromStdString(instance->getAspectRatioMode());
+}
+int QtEmulationServiceProxy::getIntegerScale() const {
+
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
+  if (!instance) {
+    return 0;
+  }
+
+  return instance->getIntegerScale();
 }
 
 void QtEmulationServiceProxy::loadEntry(const int entryId) {

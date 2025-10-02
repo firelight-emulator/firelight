@@ -68,6 +68,28 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
           QVariantHash{{"label", "Stretch"}, {"value", "stretch"}}}});
 
   m_items.emplace_back(Item{
+      .label = "Integer scale",
+      .key = "integer-scale",
+      .section = "Video",
+      .description =
+          "Determines how much the image is scaled. If the result is larger "
+          "than the screen, a smaller value will be used.\n"
+          "Only applies when Picture Mode is set to Integer Scale.\n\nAuto: "
+          "largest integer scale that fits on screen",
+      .type = "combobox",
+      .defaultValue = "0",
+      .options = {QVariantHash{{"label", "Auto"}, {"value", "0"}},
+                  QVariantHash{{"label", "1x"}, {"value", "1"}},
+                  QVariantHash{{"label", "2x"}, {"value", "2"}},
+                  QVariantHash{{"label", "3x"}, {"value", "3"}},
+                  QVariantHash{{"label", "4x"}, {"value", "4"}},
+                  QVariantHash{{"label", "5x"}, {"value", "5"}},
+                  QVariantHash{{"label", "6x"}, {"value", "6"}},
+                  QVariantHash{{"label", "7x"}, {"value", "7"}},
+                  QVariantHash{{"label", "8x"}, {"value", "8"}},
+                  QVariantHash{{"label", "9x"}, {"value", "9"}}}});
+
+  m_items.emplace_back(Item{
       .label = "Aspect ratio",
       .key = "aspect-ratio",
       .section = "Video",

@@ -99,11 +99,15 @@ CoreConfiguration::getOptionValue(const std::string &key) {
     return defaultValue;
   }
 
-  for (auto option : m_options) {
+  for (const auto &option : m_options) {
     if (option.first == key) {
-      spdlog::info("[CoreConfiguration] ...using core default value {}",
-                   option.second.key);
-      return option.second.defaultValueKey;
+      for (auto possibleValue : option.second.possibleValues) {
+        if (possibleValue.key == option.second.defaultValueKey) {
+          spdlog::info("[CoreConfiguration] ...using core default value {}",
+                       possibleValue.key.c_str());
+          return possibleValue.key;
+        }
+      }
     }
   }
 

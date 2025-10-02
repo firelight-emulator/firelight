@@ -183,6 +183,10 @@ void EmulatorInstance::setAspectRatioMode(const std::string &aspectRatioMode) {
 std::string EmulatorInstance::getAspectRatioMode() const {
   return m_aspectRatioMode;
 }
+void EmulatorInstance::setIntegerScale(const int integerScale) {
+  m_integerScale = integerScale;
+}
+int EmulatorInstance::getIntegerScale() const { return m_integerScale; }
 
 std::vector<uint8_t> EmulatorInstance::serializeState() {
   return m_core->serializeState();
@@ -220,5 +224,15 @@ void EmulatorInstance::refreshAllSettings() {
 
   EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
       .contentHash = m_contentHash, .key = "aspect-ratio"});
+
+  // Integer scale
+  setIntegerScale(
+      std::stoi(settings::SettingsService::instance()
+                    ->getValue(m_currentSettingsLevel, m_contentHash,
+                               m_platformId, "integer-scale")
+                    .value_or("0")));
+
+  EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
+      .contentHash = m_contentHash, .key = "integer-scale"});
 }
 } // namespace firelight::emulation

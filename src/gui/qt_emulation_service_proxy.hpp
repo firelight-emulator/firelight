@@ -28,6 +28,7 @@ class QtEmulationServiceProxy final : public QObject {
   Q_PROPERTY(QString pictureMode READ getPictureMode NOTIFY pictureModeChanged)
   Q_PROPERTY(QString aspectRatioMode READ getAspectRatioMode NOTIFY
                  aspectRatioModeChanged)
+  Q_PROPERTY(int integerScale READ getIntegerScale NOTIFY integerScaleChanged)
 
 public:
   explicit QtEmulationServiceProxy(QObject *parent = nullptr);
@@ -45,6 +46,7 @@ public:
   bool isRewindEnabled() const;
   QString getPictureMode() const;
   QString getAspectRatioMode() const;
+  int getIntegerScale() const;
 
   Q_INVOKABLE void loadEntry(int entryId);
   Q_INVOKABLE void stopEmulation();
@@ -61,6 +63,7 @@ signals:
   void rewindEnabledChanged();
   void pictureModeChanged();
   void aspectRatioModeChanged();
+  void integerScaleChanged();
 
 private:
   emulation::EmulationService *m_emulationService;

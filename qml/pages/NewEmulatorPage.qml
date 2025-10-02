@@ -185,8 +185,13 @@ FocusScope {
             const widthScale = root.width / sourceWidth
             const heightScale = root.height / sourceHeight
 
+            let intScale = EmulationService.integerScale
+            if (intScale === 0) {
+                intScale = Math.max(widthScale, heightScale) // If integer scale is 0, treat it as "unlimited"
+            }
+
             // Take the smaller of the two, and floor it to get the largest whole number scale
-            return Math.floor(Math.min(widthScale, heightScale))
+            return Math.floor(Math.min(intScale, Math.min(widthScale, heightScale)))
         }
 
         width: {

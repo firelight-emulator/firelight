@@ -45,6 +45,9 @@ public:
   void setAspectRatioMode(const std::string &aspectRatioMode);
   std::string getAspectRatioMode() const;
 
+  void setIntegerScale(int integerScale);
+  int getIntegerScale() const;
+
   std::vector<uint8_t> serializeState();
   void deserializeState(const std::vector<uint8_t> &state);
 
@@ -70,6 +73,7 @@ private:
   bool m_isRewindEnabled = true;
   std::string m_pictureMode = "aspect-ratio-fill";
   std::string m_aspectRatioMode = "emulator-corrected";
+  int m_integerScale = 0;
 
   // Settings
   settings::SettingsLevel m_currentSettingsLevel;
