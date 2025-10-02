@@ -101,13 +101,17 @@ CoreConfiguration::getOptionValue(const std::string &key) {
 
   for (const auto &option : m_options) {
     if (option.first == key) {
-      for (auto possibleValue : option.second.possibleValues) {
-        if (possibleValue.key == option.second.defaultValueKey) {
-          spdlog::info("[CoreConfiguration] ...using core default value {}",
-                       possibleValue.key.c_str());
-          return possibleValue.key;
-        }
-      }
+      spdlog::info("[CoreConfiguration] ...using core default value {}",
+                   option.second.defaultValueKey);
+      return option.second.defaultValueKey;
+
+      // for (auto possibleValue : option.second.possibleValues) {
+      //   if (possibleValue.key == option.second.defaultValueKey) {
+      //     spdlog::info("[CoreConfiguration] ...using core default value {}",
+      //                  possibleValue.key.c_str());
+      //     return possibleValue.key;
+      //   }
+      // }
     }
   }
 
