@@ -1219,6 +1219,81 @@ TEST_F(SqliteAchievementRepositoryTest, GetGameId_IntegrationWithSetAndGet) {
   EXPECT_EQ(achievementSetByHash->id, achievementSet.id);
 }
 
+TEST_F(SqliteAchievementRepositoryTest, GetGameId_FiltersOutZeroGameId) {
+  const std::string contentHash = "hash_with_zero_game_id";
+
+  // Set a mapping with game ID 0
+  EXPECT_TRUE(repository->setGameId(contentHash, 0));
+
+  // getGameId should return nullopt because achievement_set_id is 0
+  auto result = repository->getGameId(contentHash);
+
+  EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameId_ReturnsNonZeroGameId) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  achievementSet.id = 42;
+  repository->create(achievementSet);
+
+  const std::string contentHash = "hash_with_nonzero_game_id";
+
+  // Set a mapping with non-zero game ID
+  EXPECT_TRUE(repository->setGameId(contentHash, achievementSet.id));
+
+  // getGameId should return the ID since it's not 0
+  auto result = repository->getGameId(contentHash);
+
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), 42);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameId_UpdateFromZeroToNonZero) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  achievementSet.id = 100;
+  repository->create(achievementSet);
+
+  const std::string contentHash = "hash_to_update";
+
+  // First set mapping to 0
+  EXPECT_TRUE(repository->setGameId(contentHash, 0));
+
+  // Should return nullopt for 0
+  auto zeroResult = repository->getGameId(contentHash);
+  EXPECT_FALSE(zeroResult.has_value());
+
+  // Update mapping to non-zero
+  EXPECT_TRUE(repository->setGameId(contentHash, achievementSet.id));
+
+  // Should now return the non-zero value
+  auto nonZeroResult = repository->getGameId(contentHash);
+  ASSERT_TRUE(nonZeroResult.has_value());
+  EXPECT_EQ(nonZeroResult.value(), 100);
+}
+
+TEST_F(SqliteAchievementRepositoryTest, GetGameId_UpdateFromNonZeroToZero) {
+  AchievementSet achievementSet = createTestAchievementSet();
+  achievementSet.id = 50;
+  repository->create(achievementSet);
+
+  const std::string contentHash = "hash_to_zero";
+
+  // First set mapping to non-zero
+  EXPECT_TRUE(repository->setGameId(contentHash, achievementSet.id));
+
+  // Should return the non-zero value
+  auto nonZeroResult = repository->getGameId(contentHash);
+  ASSERT_TRUE(nonZeroResult.has_value());
+  EXPECT_EQ(nonZeroResult.value(), 50);
+
+  // Update mapping to 0
+  EXPECT_TRUE(repository->setGameId(contentHash, 0));
+
+  // Should now return nullopt for 0
+  auto zeroResult = repository->getGameId(contentHash);
+  EXPECT_FALSE(zeroResult.has_value());
+}
+
 // GetGameHash Tests
 
 TEST_F(SqliteAchievementRepositoryTest, GetGameHash_ExistingMapping) {

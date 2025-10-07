@@ -497,9 +497,10 @@ SqliteAchievementRepository::getAchievementSetByContentHash(
 std::optional<int>
 SqliteAchievementRepository::getGameId(const std::string &contentHash) const {
   try {
-    SQLite::Statement query(*m_database,
-                            "SELECT achievement_set_id FROM hashes "
-                            "WHERE hash = :contentHash");
+    SQLite::Statement query(
+        *m_database,
+        "SELECT achievement_set_id FROM hashes "
+        "WHERE hash = :contentHash AND achievement_set_id != 0");
     query.bind(":contentHash", contentHash);
 
     if (query.executeStep()) {
