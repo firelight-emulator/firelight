@@ -163,7 +163,6 @@ add_library(firelight_lib
         src/app/saves/gui/suspend_points_item.cpp
         src/app/activity/gui/game_activity_item.cpp
         src/app/activity/gui/play_session_list_model.cpp
-        src/app/achievements/retroachievements_backend.cpp
         src/app/settings/sqlite_settings_repository.cpp
         src/app/discord/discord_manager.cpp
         src/app/library/gui/playlist_item_model.cpp
