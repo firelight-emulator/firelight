@@ -2756,7 +2756,7 @@ TEST_F(RetroAchievementsOfflineClientTest,
     ASSERT_EQ(achievement->description, achieve.Description);
     ASSERT_EQ(achievement->points, achieve.Points);
     ASSERT_EQ(achievement->flags, achieve.Flags);
-    ASSERT_EQ(achievement->setId, 228);
+    ASSERT_EQ(achievement->gameId, 228);
 
     auto unlock = service.getUserUnlock("testuser", achieve.ID);
     ASSERT_TRUE(unlock.has_value());
@@ -2910,7 +2910,7 @@ TEST_F(RetroAchievementsOfflineClientTest,
                           .points = 25,
                           .type = "progression",
                           .displayOrder = 0,
-                          .setId = 1,
+                          .gameId = 1,
                           .flags = 3};
   repo.create(achievement);
 
@@ -2948,7 +2948,7 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
                           .points = 25,
                           .type = "progression",
                           .displayOrder = 0,
-                          .setId = 1,
+                          .gameId = 1,
                           .flags = 3};
   repo.create(achievement);
 
@@ -2987,7 +2987,7 @@ TEST_F(RetroAchievementsOfflineClientTest,
                           .points = 25,
                           .type = "progression",
                           .displayOrder = 0,
-                          .setId = 1,
+                          .gameId = 1,
                           .flags = 3};
   repo.create(achievement);
 
@@ -3044,7 +3044,7 @@ TEST_F(RetroAchievementsOfflineClientTest,
                           .points = 25,
                           .type = "progression",
                           .displayOrder = 0,
-                          .setId = 1,
+                          .gameId = 1,
                           .flags = 3};
   repo.create(achievement);
 
@@ -3101,7 +3101,7 @@ TEST_F(RetroAchievementsOfflineClientTest,
                           .points = 25,
                           .type = "progression",
                           .displayOrder = 0,
-                          .setId = 1,
+                          .gameId = 1,
                           .flags = 3};
   repo.create(achievement);
 

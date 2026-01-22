@@ -110,11 +110,11 @@ public:
    * ordered by display order. Populates the achievements vector with
    * complete achievement data including all metadata fields.
    *
-   * @param setId The unique identifier of the achievement set
+   * @param gameId The unique identifier of the achievement set
    * @return The complete achievement set if found, std::nullopt otherwise
    */
   std::optional<AchievementSet>
-  getAchievementSet(unsigned setId) const override;
+  getAchievementSet(unsigned gameId) const override;
 
   /**
    * @brief Retrieves achievement set by game content hash
@@ -133,7 +133,8 @@ public:
   std::optional<int> getGameId(const std::string &contentHash) const override;
 
   /**
-   * @brief Retrieves the content hash associated with an achievement set ID from SQLite
+   * @brief Retrieves the content hash associated with an achievement set ID
+   * from SQLite
    *
    * Executes a SQL query to perform reverse lookup from achievement set ID to
    * its associated content hash. Queries the hashes table to find the hash
@@ -144,7 +145,7 @@ public:
    * Database errors are logged and result in std::nullopt return values for
    * graceful error handling.
    *
-   * SQL Query: `SELECT hash FROM hashes WHERE achievement_set_id = :setId`
+   * SQL Query: `SELECT hash FROM hashes WHERE achievement_set_id = :gameId`
    *
    * Use cases:
    * - Verifying content hash mappings for loaded achievement sets
@@ -153,7 +154,8 @@ public:
    * - Cache invalidation based on content hash changes
    * - Multi-version game support where different content hashes map to same set
    *
-   * @param setId The achievement set ID to lookup the associated content hash for
+   * @param gameId The achievement set ID to lookup the associated content hash
+   * for
    * @return The content hash string if a mapping exists, std::nullopt if no
    *         mapping found or on database error
    *
@@ -167,7 +169,7 @@ public:
    * @see setGameId() to create or update hash <-> set ID mappings
    * @see getAchievementSetByContentHash() to retrieve sets directly by hash
    */
-  std::optional<std::string> getGameHash(unsigned setId) const override;
+  std::optional<std::string> getGameHash(unsigned gameId) const override;
 
   // Individual Achievement Operations
 
@@ -210,11 +212,11 @@ public:
    * game content fingerprinting. Uses upsert semantics to allow remapping.
    *
    * @param contentHash The game's content hash
-   * @param setId The achievement set ID to associate
+   * @param gameId The achievement set ID to associate
    * @return true if the mapping was stored successfully, false on database
    * error
    */
-  bool setGameId(const std::string &contentHash, int setId) override;
+  bool setGameId(const std::string &contentHash, int gameId) override;
 
   // User Unlock Operations
 
@@ -252,11 +254,11 @@ public:
    * for displaying a user's progress through all achievements in a game.
    *
    * @param username The username to query unlock records for
-   * @param setId The achievement set ID to filter unlocks by
+   * @param gameId The achievement set ID to filter unlocks by
    * @return Vector of UserUnlock records, empty if none found or on error
    */
   std::vector<UserUnlock> getAllUserUnlocks(const std::string &username,
-                                            unsigned setId) const override;
+                                            unsigned gameId) const override;
 
   /**
    * @brief Retrieves all unsynced user unlock records for a specific user

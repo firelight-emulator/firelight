@@ -44,7 +44,7 @@ SqliteAchievementRepository::SqliteAchievementRepository(std::string dbPath)
             -- Content hash to achievement set mapping for automatic loading
             CREATE TABLE IF NOT EXISTS hashes (
                 hash TEXT NOT NULL,                    -- Game content hash
-                achievement_set_id INTEGER NOT NULL,   -- Associated achievement set
+                achievement_set_id INTEGER NOT NULL,   -- Associated 0 set
                 PRIMARY KEY (hash)
             );
 
@@ -253,13 +253,13 @@ bool SqliteAchievementRepository::update(const AchievementSet achievementSet) {
 }
 
 std::optional<AchievementSet>
-SqliteAchievementRepository::getAchievementSet(unsigned setId) const {
+SqliteAchievementRepository::getAchievementSet(unsigned gameId) const {
   try {
     SQLite::Statement query(
         *m_database, "SELECT id, name, num_achievements, num_points, icon_url "
                      "FROM achievement_sets "
-                     "WHERE id = :setId");
-    query.bind(":setId", setId);
+                     "WHERE id = :gameId");
+    query.bind(":gameId", gameId);
 
     if (query.executeStep()) {
       AchievementSet achievementSet;
@@ -275,9 +275,9 @@ SqliteAchievementRepository::getAchievementSet(unsigned setId) const {
           "SELECT id, name, description, points, achievement_set_id, flags, "
           "type, icon_url, display_order "
           "FROM achievements "
-          "WHERE achievement_set_id = :setId "
+          "WHERE achievement_set_id = :gameId "
           "ORDER BY display_order");
-      achievementQuery.bind(":setId", achievementSet.id);
+      achievementQuery.bind(":gameId", achievementSet.id);
 
       while (achievementQuery.executeStep()) {
         Achievement achievement;
@@ -285,7 +285,7 @@ SqliteAchievementRepository::getAchievementSet(unsigned setId) const {
         achievement.name = achievementQuery.getColumn(1).getString();
         achievement.description = achievementQuery.getColumn(2).getString();
         achievement.points = achievementQuery.getColumn(3);
-        achievement.setId = achievementQuery.getColumn(4);
+        achievement.gameId = achievementQuery.getColumn(4);
         achievement.flags = achievementQuery.getColumn(5);
         achievement.type = achievementQuery.getColumn(6).getString();
         achievement.imageUrl = achievementQuery.getColumn(7).getString();
@@ -310,7 +310,7 @@ bool SqliteAchievementRepository::create(const Achievement achievement) {
         *m_database, "INSERT INTO achievements "
                      "(id, name, description, points, achievement_set_id, "
                      "flags, type, icon_url, display_order) "
-                     "VALUES (:id, :name, :description, :points, :setId, "
+                     "VALUES (:id, :name, :description, :points, :gameId, "
                      ":flags, :type, :iconUrl, :displayOrder) "
                      "ON CONFLICT(id) DO UPDATE SET "
                      "name = excluded.name, "
@@ -325,7 +325,7 @@ bool SqliteAchievementRepository::create(const Achievement achievement) {
     query.bind(":name", achievement.name);
     query.bind(":description", achievement.description);
     query.bind(":points", achievement.points);
-    query.bind(":setId", achievement.setId);
+    query.bind(":gameId", achievement.gameId);
     query.bind(":flags", achievement.flags);
     query.bind(":type", achievement.type);
     query.bind(":iconUrl", achievement.imageUrl);
@@ -369,7 +369,7 @@ SqliteAchievementRepository::getAchievement(unsigned achievementId) const {
       achievement.points = query.getColumn(4);
       achievement.type = query.getColumn(5).getString();
       achievement.displayOrder = query.getColumn(6);
-      achievement.setId = query.getColumn(7);
+      achievement.gameId = query.getColumn(7);
       achievement.flags = query.getColumn(8);
       return achievement;
     }
@@ -405,16 +405,16 @@ bool SqliteAchievementRepository::create(AchievementProgress progress) {
   }
 }
 bool SqliteAchievementRepository::setGameId(const std::string &contentHash,
-                                            int setId) {
+                                            int gameId) {
   try {
     SQLite::Statement query(*m_database,
                             "INSERT INTO hashes "
                             "(hash, achievement_set_id) "
-                            "VALUES (:contentHash, :setId) "
+                            "VALUES (:contentHash, :gameId) "
                             "ON CONFLICT(hash) DO UPDATE SET "
                             "achievement_set_id = excluded.achievement_set_id");
     query.bind(":contentHash", contentHash);
-    query.bind(":setId", setId);
+    query.bind(":gameId", gameId);
 
     query.exec();
     return true;
@@ -450,9 +450,9 @@ SqliteAchievementRepository::getAchievementSetByContentHash(
           "SELECT id, name, description, points, achievement_set_id, flags, "
           "type, icon_url, display_order "
           "FROM achievements "
-          "WHERE achievement_set_id = :setId "
+          "WHERE achievement_set_id = :gameId "
           "ORDER BY display_order");
-      achievementQuery.bind(":setId", achievementSet.id);
+      achievementQuery.bind(":gameId", achievementSet.id);
 
       unsigned totalPoints = 0;
       while (achievementQuery.executeStep()) {
@@ -461,7 +461,7 @@ SqliteAchievementRepository::getAchievementSetByContentHash(
         achievement.name = achievementQuery.getColumn(1).getString();
         achievement.description = achievementQuery.getColumn(2).getString();
         achievement.points = achievementQuery.getColumn(3);
-        achievement.setId = achievementQuery.getColumn(4);
+        achievement.gameId = achievementQuery.getColumn(4);
         achievement.flags = achievementQuery.getColumn(5);
         achievement.type = achievementQuery.getColumn(6).getString();
         achievement.imageUrl = achievementQuery.getColumn(7).getString();
@@ -498,9 +498,8 @@ std::optional<int>
 SqliteAchievementRepository::getGameId(const std::string &contentHash) const {
   try {
     SQLite::Statement query(
-        *m_database,
-        "SELECT achievement_set_id FROM hashes "
-        "WHERE hash = :contentHash AND achievement_set_id != 0");
+        *m_database, "SELECT achievement_set_id FROM hashes "
+                     "WHERE hash = :contentHash AND achievement_set_id != 0");
     query.bind(":contentHash", contentHash);
 
     if (query.executeStep()) {
@@ -514,11 +513,11 @@ SqliteAchievementRepository::getGameId(const std::string &contentHash) const {
   }
 }
 std::optional<std::string>
-SqliteAchievementRepository::getGameHash(unsigned setId) const {
+SqliteAchievementRepository::getGameHash(unsigned gameId) const {
   try {
     SQLite::Statement query(*m_database, "SELECT hash FROM hashes "
-                                         "WHERE achievement_set_id = :setId");
-    query.bind(":setId", setId);
+                                         "WHERE achievement_set_id = :gameId");
+    query.bind(":gameId", gameId);
 
     if (query.executeStep()) {
       return query.getColumn(0).getString();
@@ -611,7 +610,7 @@ bool SqliteAchievementRepository::createOrUpdate(const UserUnlock unlock) {
 
 std::vector<UserUnlock>
 SqliteAchievementRepository::getAllUserUnlocks(const std::string &username,
-                                               unsigned setId) const {
+                                               unsigned gameId) const {
   std::vector<UserUnlock> unlocks;
 
   try {
@@ -621,11 +620,11 @@ SqliteAchievementRepository::getAllUserUnlocks(const std::string &username,
         "u.\"when\", u.when_hardcore, u.synced "
         "FROM user_unlocks u "
         "JOIN achievements a ON u.achievement_id = a.id "
-        "WHERE u.username = :username AND a.achievement_set_id = :setId "
+        "WHERE u.username = :username AND a.achievement_set_id = :gameId "
         "ORDER BY a.display_order");
 
     query.bind(":username", username);
-    query.bind(":setId", setId);
+    query.bind(":gameId", gameId);
 
     while (query.executeStep()) {
       UserUnlock unlock;

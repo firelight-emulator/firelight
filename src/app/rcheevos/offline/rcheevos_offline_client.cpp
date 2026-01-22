@@ -282,7 +282,7 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
   }
 
   auto unlocks =
-      m_achievementService.getAllUserUnlocks(username, achievement->setId);
+      m_achievementService.getAllUserUnlocks(username, achievement->gameId);
 
   auto numLocked = 0;
   for (const auto &u : unlocks) {

@@ -40,7 +40,7 @@ protected:
     achievement.points = 50;
     achievement.type = "progression";
     achievement.displayOrder = 1;
-    achievement.setId = setId;
+    achievement.gameId = setId;
     achievement.flags = 3; // Active achievement
     return achievement;
   }
@@ -469,7 +469,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_ExistingAchievement) {
   EXPECT_EQ(result->type, "progression");
   EXPECT_EQ(result->flags, 3);
   EXPECT_EQ(result->displayOrder, 1);
-  EXPECT_EQ(result->setId, 1);
+  EXPECT_EQ(result->gameId, 1);
   EXPECT_EQ(result->imageUrl, "https://example.com/achievement.png");
 }
 
@@ -503,7 +503,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_VerifyAllFields) {
   EXPECT_EQ(result->points, 75);
   EXPECT_EQ(result->type, "challenge");
   EXPECT_EQ(result->displayOrder, 5);
-  EXPECT_EQ(result->setId, 1);
+  EXPECT_EQ(result->gameId, 1);
   EXPECT_EQ(result->flags, 3);
 }
 
@@ -529,7 +529,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_AfterUpdate) {
   EXPECT_EQ(result->name, "Updated Achievement");
   EXPECT_EQ(result->points, 50);
   EXPECT_EQ(result->description, "Updated description");
-  EXPECT_EQ(result->setId, 1);
+  EXPECT_EQ(result->gameId, 1);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAchievement_MultipleAchievements) {
@@ -696,7 +696,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_WithAchievements) {
   EXPECT_EQ(firstAchievement.imageUrl, "https://example.com/achievement.png");
   EXPECT_EQ(firstAchievement.points, 50);
   EXPECT_EQ(firstAchievement.type, "progression");
-  EXPECT_EQ(firstAchievement.setId, 1);
+  EXPECT_EQ(firstAchievement.gameId, 1);
   EXPECT_EQ(firstAchievement.flags, 3);
 }
 

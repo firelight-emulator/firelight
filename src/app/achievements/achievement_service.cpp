@@ -28,8 +28,8 @@ AchievementService::getAchievementSetByContentHash(
 }
 
 bool AchievementService::setGameId(const std::string &contentHash,
-                                   const int setId) {
-  return m_repository.setGameId(contentHash, setId);
+                                   const int gameId) {
+  return m_repository.setGameId(contentHash, gameId);
 }
 
 std::optional<Achievement>
@@ -61,8 +61,8 @@ bool AchievementService::createOrUpdate(const UserUnlock &unlock) {
 
 std::vector<UserUnlock>
 AchievementService::getAllUserUnlocks(const std::string &username,
-                                      unsigned setId) const {
-  return m_repository.getAllUserUnlocks(username, setId);
+                                      unsigned gameId) const {
+  return m_repository.getAllUserUnlocks(username, gameId);
 }
 
 std::optional<PatchResponse>
@@ -85,7 +85,7 @@ bool AchievementService::processPatchResponse(const std::string &username,
                                    .points = a.Points,
                                    .type = a.Type,
                                    .displayOrder = i++,
-                                   .setId = response.PatchData.ID,
+                                   .gameId = response.PatchData.ID,
                                    .flags = a.Flags};
 
     if (a.Flags == 5) {
@@ -134,7 +134,7 @@ bool AchievementService::processPatchResponse(const std::string &username,
   return true;
 }
 bool AchievementService::processStartSessionResponse(
-    const std::string &username, const unsigned setId,
+    const std::string &username, const unsigned gameId,
     const StartSessionResponse &startSessionResponse) {
   auto foundUnsupportedEmu = false;
 
@@ -190,7 +190,7 @@ bool AchievementService::processStartSessionResponse(
   // TODO: Could check to only update those that are synced
 
   // TODO: Update user score
-  for (auto &unlock : m_repository.getAllUserUnlocks(username, setId)) {
+  for (auto &unlock : m_repository.getAllUserUnlocks(username, gameId)) {
     auto foundInUnlocks = std::ranges::find_if(
         startSessionResponse.Unlocks,
         [&unlock](const Unlock &u) { return u.ID == unlock.achievementId; });
@@ -334,10 +334,10 @@ void AchievementService::syncOfflineAchievements() {
         continue;
       }
 
-      auto gameHash = m_repository.getGameHash(achievement->setId);
+      auto gameHash = m_repository.getGameHash(achievement->gameId);
       if (!gameHash.has_value()) {
         spdlog::warn("Could not find game hash for achievement set ID: {}",
-                     achievement->setId);
+                     achievement->gameId);
         continue;
       }
 
@@ -405,16 +405,16 @@ void AchievementService::syncOfflineAchievements() {
 }
 
 void AchievementService::startSession(const std::string &username,
-                                      const unsigned setId,
+                                      const unsigned gameId,
                                       const bool hardcore) {
   m_inActiveSession = true;
   m_currentSessionUsername = username;
-  m_currentSessionSetId = setId;
+  m_currentSessionGameId = gameId;
   m_currentSessionHardcore = hardcore;
 
   EventDispatcher::instance().publish(AchievementSessionStartedEvent{
       .username = m_currentSessionUsername,
-      .setId = m_currentSessionSetId,
+      .gameId = m_currentSessionGameId,
       .hardcore = m_currentSessionHardcore,
   });
 }
@@ -425,12 +425,12 @@ void AchievementService::endSession() {
 
   const auto event = AchievementSessionEndedEvent{
       .username = m_currentSessionUsername,
-      .setId = m_currentSessionSetId,
+      .gameId = m_currentSessionGameId,
       .hardcore = m_currentSessionHardcore,
   };
 
   m_currentSessionUsername.clear();
-  m_currentSessionSetId = 0;
+  m_currentSessionGameId = 0;
   m_currentSessionHardcore = false;
 
   EventDispatcher::instance().publish(event);

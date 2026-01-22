@@ -11,7 +11,7 @@ struct Achievement {
   int points;
   std::string type;
   int displayOrder;
-  unsigned setId;
+  unsigned gameId;
   int flags;
 };
 } // namespace firelight::achievements

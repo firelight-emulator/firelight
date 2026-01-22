@@ -13,13 +13,13 @@ namespace firelight::achievements {
 
 struct AchievementSessionStartedEvent {
   std::string username;
-  unsigned setId;
+  unsigned gameId;
   bool hardcore;
 };
 
 struct AchievementSessionEndedEvent {
   std::string username;
-  unsigned setId;
+  unsigned gameId;
   bool hardcore;
 };
 
@@ -55,7 +55,7 @@ public:
   [[nodiscard]] std::optional<AchievementSet>
   getAchievementSetByContentHash(const std::string &contentHash) const;
 
-  bool setGameId(const std::string &contentHash, int setId);
+  bool setGameId(const std::string &contentHash, int gameId);
 
   [[nodiscard]] std::optional<Achievement>
   getAchievement(unsigned achievementId) const;
@@ -82,19 +82,20 @@ public:
   bool createOrUpdate(const UserUnlock &unlock);
 
   [[nodiscard]] std::vector<UserUnlock>
-  getAllUserUnlocks(const std::string &username, unsigned setId) const;
+  getAllUserUnlocks(const std::string &username, unsigned gameId) const;
 
   [[nodiscard]] std::optional<PatchResponse> getPatchResponse(int gameId) const;
   bool processPatchResponse(const std::string &username,
                             const PatchResponse &response);
 
   bool
-  processStartSessionResponse(const std::string &username, unsigned setId,
+  processStartSessionResponse(const std::string &username, unsigned gameId,
                               const StartSessionResponse &startSessionResponse);
 
   void syncOfflineAchievements();
 
-  void startSession(const std::string &username, unsigned setId, bool hardcore);
+  void startSession(const std::string &username, unsigned gameId,
+                    bool hardcore);
   void endSession();
 
   [[nodiscard]] bool inHardcoreSession() const;
@@ -111,7 +112,7 @@ private:
 
   bool m_inActiveSession = false;
   std::string m_currentSessionUsername;
-  unsigned m_currentSessionSetId = 0;
+  unsigned m_currentSessionGameId = 0;
   bool m_currentSessionHardcore = false;
 
   std::vector<unsigned> m_currentSessionHardcoreUnlocks;
