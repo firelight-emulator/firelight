@@ -3,15 +3,17 @@
 #include <nlohmann/json.hpp>
 
 namespace firelight::achievements {
-    struct AwardAchievementResponse {
-        bool Success;
-        int Score;
-        int SoftcoreScore;
-        unsigned AchievementID;
-        int AchievementsRemaining;
-        // const char* server_response = "{\"Success\":true,\"Score\":119102,\"SoftcoreScore\":777,\"AchievementID\":56481,\"AchievementsRemaining\":11}";
-    };
+struct AwardAchievementResponse {
+  bool Success;
+  unsigned Score;
+  unsigned SoftcoreScore;
+  unsigned AchievementID;
+  unsigned AchievementsRemaining;
+  // const char* server_response =
+  // "{\"Success\":true,\"Score\":119102,\"SoftcoreScore\":777,\"AchievementID\":56481,\"AchievementsRemaining\":11}";
+};
 
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AwardAchievementResponse, Success, Score, SoftcoreScore, AchievementID,
-                                       AchievementsRemaining)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AwardAchievementResponse, Success, Score,
+                                   SoftcoreScore, AchievementID,
+                                   AchievementsRemaining)
 } // namespace firelight::achievements

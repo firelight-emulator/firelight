@@ -42,9 +42,8 @@ SqliteAchievementRepository::SqliteAchievementRepository(std::string dbPath)
     const std::string setupQueryString = R"(
             -- Content hash to game mapping for automatic loading
             CREATE TABLE IF NOT EXISTS game_hashes (
-                hash TEXT NOT NULL,                    -- Game content hash
-                game_id INTEGER NOT NULL,   -- Associated set
-                PRIMARY KEY (hash, game_id)
+                hash TEXT NOT NULL PRIMARY KEY,                    -- Game content hash
+                game_id INTEGER NOT NULL
             );
 
             -- Content hash to achievement set mapping for automatic loading
@@ -57,6 +56,7 @@ SqliteAchievementRepository::SqliteAchievementRepository(std::string dbPath)
             -- User account information
             CREATE TABLE IF NOT EXISTS users (
                 username TEXT PRIMARY KEY NOT NULL,
+                display_name TEXT NOT NULL DEFAULT '',    -- User display name
                 avatar_url TEXT NOT NULL DEFAULT '',      -- User avatar URL
                 token TEXT NOT NULL,                   -- Authentication token
                 score INTEGER NOT NULL,               -- Total score earned
@@ -110,6 +110,19 @@ SqliteAchievementRepository::SqliteAchievementRepository(std::string dbPath)
                 FOREIGN KEY (achievement_set_id) REFERENCES achievement_sets(id)
             );
 
+            -- Achievement set metadata
+            CREATE TABLE IF NOT EXISTS leaderboards (
+                id INTEGER NOT NULL PRIMARY KEY,
+                achievement_set_id INTEGER NOT NULL,                 -- Associated game ID
+                title TEXT NOT NULL,                      -- Achievement set name
+                description TEXT NOT NULL,                       -- Achievement set type
+                mem_address TEXT NOT NULL,                       -- Achievement set type
+                lower_is_better INTEGER NOT NULL,                       -- Achievement set type
+                format TEXT NOT NULL,                       -- Achievement set type
+                hidden INTEGER NOT NULL DEFAULT 0,                       -- Achievement set type
+                FOREIGN KEY (achievement_set_id) REFERENCES achievement_sets(id)
+            );
+
             -- User progress tracking for incremental achievements
             CREATE TABLE IF NOT EXISTS achievement_progress (
                 achievement_id INTEGER NOT NULL,       -- Achievement being tracked
@@ -153,18 +166,25 @@ SqliteAchievementRepository::SqliteAchievementRepository(std::string dbPath)
 std::optional<User>
 SqliteAchievementRepository::getUser(const std::string &username) const {
   try {
-    SQLite::Statement query(*m_database,
-                            "SELECT username, token, softcoreScore, score "
-                            "FROM users "
-                            "WHERE username = :username");
+    SQLite::Statement query(
+        *m_database,
+        "SELECT username, display_name, token, softcore_score, score, "
+        "avatar_url, messages, permissions, account_type "
+        "FROM users "
+        "WHERE username = :username");
     query.bind(":username", username);
 
     if (query.executeStep()) {
       User user;
       user.username = query.getColumn(0).getString();
-      user.token = query.getColumn(1).getString();
-      user.softcoreScore = query.getColumn(2);
-      user.score = query.getColumn(3);
+      user.displayName = query.getColumn(1).getString();
+      user.token = query.getColumn(2).getString();
+      user.softcoreScore = query.getColumn(3);
+      user.score = query.getColumn(4);
+      user.avatarUrl = query.getColumn(5).getString();
+      user.messages = query.getColumn(6);
+      user.permissions = query.getColumn(7);
+      user.accountType = query.getColumn(8).getString();
       return user;
     }
 
@@ -178,17 +198,24 @@ std::vector<User> SqliteAchievementRepository::listUsers() const {
   std::vector<User> users;
 
   try {
-    SQLite::Statement query(*m_database,
-                            "SELECT username, token, softcoreScore, score "
-                            "FROM users "
-                            "ORDER BY username");
+    SQLite::Statement query(
+        *m_database,
+        "SELECT username, display_name, token, softcore_score, score, "
+        "avatar_url, messages, permissions, account_type "
+        "FROM users "
+        "ORDER BY username");
 
     while (query.executeStep()) {
       User user;
       user.username = query.getColumn(0).getString();
-      user.token = query.getColumn(1).getString();
-      user.softcoreScore = query.getColumn(2);
-      user.score = query.getColumn(3);
+      user.displayName = query.getColumn(1).getString();
+      user.token = query.getColumn(2).getString();
+      user.softcoreScore = query.getColumn(3);
+      user.score = query.getColumn(4);
+      user.avatarUrl = query.getColumn(5).getString();
+      user.messages = query.getColumn(6);
+      user.permissions = query.getColumn(7);
+      user.accountType = query.getColumn(8).getString();
       users.emplace_back(user);
     }
   } catch (const std::exception &e) {
@@ -210,19 +237,34 @@ std::vector<User> SqliteAchievementRepository::listUsers() const {
  */
 bool SqliteAchievementRepository::createOrUpdateUser(const User &user) {
   try {
-    SQLite::Statement query(
-        *m_database,
-        "INSERT INTO users "
-        "(username, token, softcoreScore, score) "
-        "VALUES (:username, :token, :softcoreScore, :hardcorePoints) "
-        "ON CONFLICT(username) DO UPDATE SET "
-        "token = excluded.token, "
-        "softcoreScore = excluded.softcoreScore, "
-        "score = excluded.score");
+    SQLite::Statement query(*m_database,
+                            "INSERT INTO users "
+                            "(username, display_name, token, softcore_score, "
+                            "score, avatar_url, messages, "
+                            "permissions, account_type) "
+                            "VALUES (:username, :displayName, :token, "
+                            ":softcoreScore, :score, :avatarUrl, "
+                            ":messages, :permissions, :accountType) "
+                            "ON CONFLICT(username) DO UPDATE SET "
+                            "display_name = excluded.display_name, "
+                            "token = excluded.token, "
+                            "softcore_score = excluded.softcore_score, "
+                            "score = excluded.score, "
+                            "avatar_url = excluded.avatar_url, "
+                            "messages = excluded.messages, "
+                            "permissions = excluded.permissions, "
+                            "account_type = excluded.account_type");
+
     query.bind(":username", user.username);
+    // Intentionally set display_name to username on creation/update
+    query.bind(":displayName", user.username);
     query.bind(":token", user.token);
     query.bind(":softcoreScore", user.softcoreScore);
-    query.bind(":hardcorePoints", user.score);
+    query.bind(":score", user.score);
+    query.bind(":avatarUrl", user.avatarUrl);
+    query.bind(":messages", user.messages);
+    query.bind(":permissions", user.permissions);
+    query.bind(":accountType", user.accountType);
 
     query.exec();
     return true;
@@ -542,6 +584,25 @@ bool SqliteAchievementRepository::setGameId(const std::string &contentHash,
   }
 }
 
+bool SqliteAchievementRepository::setAchievementSetHash(
+    const unsigned achievementSetId, const std::string &contentHash) {
+  try {
+    SQLite::Statement query(*m_database,
+                            "INSERT INTO achievement_set_hashes "
+                            "(hash, achievement_set_id) "
+                            "VALUES (:contentHash, :achievementSetId) "
+                            "ON CONFLICT(hash, achievement_set_id) DO NOTHING");
+    query.bind(":contentHash", contentHash);
+    query.bind(":achievementSetId", achievementSetId);
+
+    query.exec();
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to set achievement set hash: {}", e.what());
+    return false;
+  }
+}
+
 std::optional<AchievementSet>
 SqliteAchievementRepository::getAchievementSetByContentHash(
     const std::string &contentHash) const {
@@ -628,7 +689,7 @@ std::optional<int>
 SqliteAchievementRepository::getGameId(const std::string &contentHash) const {
   try {
     SQLite::Statement query(*m_database,
-                            "SELECT achievement_set_id FROM game_hashes "
+                            "SELECT game_id FROM game_hashes "
                             "WHERE hash = :contentHash AND game_id != 0");
     query.bind(":contentHash", contentHash);
 
@@ -657,6 +718,39 @@ SqliteAchievementRepository::getGameHash(const unsigned gameId) const {
   } catch (const std::exception &e) {
     spdlog::error("Failed to get game hash: {}", e.what());
     return std::nullopt;
+  }
+}
+bool SqliteAchievementRepository::create(const Leaderboard &leaderboard) {
+  try {
+    SQLite::Statement query(
+        *m_database,
+        "INSERT INTO leaderboards "
+        "(id, achievement_set_id, title, description, mem_address, "
+        "lower_is_better, format, hidden) "
+        "VALUES (:id, :achievementSetId, :title, :description, :memAddress, "
+        ":lowerIsBetter, :format, :hidden) "
+        "ON CONFLICT(id) DO UPDATE SET "
+        "achievement_set_id = excluded.achievement_set_id, "
+        "title = excluded.title, "
+        "description = excluded.description, "
+        "mem_address = excluded.mem_address, "
+        "lower_is_better = excluded.lower_is_better, "
+        "format = excluded.format, "
+        "hidden = excluded.hidden");
+    query.bind(":id", leaderboard.id);
+    query.bind(":achievementSetId", leaderboard.achievementSetId);
+    query.bind(":title", leaderboard.title);
+    query.bind(":description", leaderboard.description);
+    query.bind(":memAddress", leaderboard.memAddr);
+    query.bind(":lowerIsBetter", leaderboard.lowerIsBetter);
+    query.bind(":format", leaderboard.format);
+    query.bind(":hidden", leaderboard.hidden);
+
+    query.exec();
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to create leaderboard: {}", e.what());
+    return false;
   }
 }
 
@@ -810,52 +904,5 @@ std::vector<UserUnlock> SqliteAchievementRepository::getAllUnsyncedUserUnlocks(
   }
 
   return unlocks;
-}
-
-std::optional<PatchResponse>
-SqliteAchievementRepository::getPatchResponse(const int gameId) const {
-  try {
-    SQLite::Statement query(*m_database,
-                            "SELECT cached_value FROM patch_response_cache "
-                            "WHERE game_id = :gameId");
-    query.bind(":gameId", gameId);
-
-    if (query.executeStep()) {
-      const void *blobData = query.getColumn(0).getBlob();
-      int blobSize = query.getColumn(0).getBytes();
-
-      std::string jsonString(static_cast<const char *>(blobData), blobSize);
-      auto jsonObj = nlohmann::json::parse(jsonString);
-
-      PatchResponse response;
-      from_json(jsonObj, response);
-      return response;
-    }
-
-    return std::nullopt;
-  } catch (const std::exception &e) {
-    spdlog::error("Failed to get patch response: {}", e.what());
-    return std::nullopt;
-  }
-}
-bool SqliteAchievementRepository::create(const PatchResponse patchResponse) {
-  try {
-    nlohmann::json jsonObj;
-    to_json(jsonObj, patchResponse);
-    const std::string jsonString = jsonObj.dump();
-
-    SQLite::Statement query(*m_database,
-                            "INSERT OR REPLACE INTO patch_response_cache "
-                            "(game_id, cached_value) "
-                            "VALUES (:gameId, :cachedValue)");
-    query.bind(":gameId", patchResponse.PatchData.ID);
-    query.bind(":cachedValue", jsonString.c_str(), jsonString.size());
-
-    query.exec();
-    return true;
-  } catch (const std::exception &e) {
-    spdlog::error("Failed to createOrUpdate patch response: {}", e.what());
-    return false;
-  }
 }
 } // namespace firelight::achievements

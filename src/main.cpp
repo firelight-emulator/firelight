@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
       });
 
   firelight::achievements::SqliteAchievementRepository achievementRepo(
-      (defaultAppDataPathString + "/rcheevos2.db").toStdString());
+      (defaultAppDataPathString + "/rcheevos3.db").toStdString());
   firelight::achievements::AchievementService achievementService(
       achievementRepo);
 

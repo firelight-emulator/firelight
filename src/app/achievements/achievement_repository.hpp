@@ -130,6 +130,8 @@ public:
 
   virtual bool create(Game game) = 0;
 
+  virtual bool create(const Leaderboard &leaderboard) = 0;
+
   /**
    * @brief Retrieves the achievement set ID associated with a content hash
    *
@@ -237,6 +239,9 @@ public:
    */
   virtual bool setGameId(const std::string &contentHash, int gameId) = 0;
 
+  virtual bool setAchievementSetHash(unsigned achievementSetId,
+                                     const std::string &contentHash) = 0;
+
   // User Unlock Operations
 
   /**
@@ -302,32 +307,6 @@ public:
    */
   [[nodiscard]] virtual std::vector<UserUnlock>
   getAllUnsyncedUserUnlocks(const std::string &username) const = 0;
-
-  // Patch Response Caching Operations
-
-  /**
-   * @brief Caches a patch response from RetroAchievements API
-   *
-   * Stores the complete patch response data for offline use, enabling
-   * achievement functionality when not connected to the RetroAchievements
-   * service.
-   *
-   * @param patchResponse The patch response data to cache
-   * @return true if caching succeeded, false otherwise
-   */
-  virtual bool create(PatchResponse patchResponse) = 0;
-
-  /**
-   * @brief Retrieves cached patch response data for a game
-   *
-   * Fetches previously cached patch response data, allowing offline achievement
-   * functionality without requiring a network connection.
-   *
-   * @param gameId The game ID to retrieve patch data for
-   * @return The cached patch response if found, std::nullopt otherwise
-   */
-  [[nodiscard]] virtual std::optional<PatchResponse>
-  getPatchResponse(int gameId) const = 0;
 };
 
 } // namespace firelight::achievements

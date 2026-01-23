@@ -50,15 +50,23 @@ public:
    * @param user The user data to store or update
    * @return true if the operation succeeded, false otherwise
    */
-  bool createOrUpdateUser(const User &user);
+  bool create(const User &user);
 
   [[nodiscard]] std::optional<AchievementSet>
   getAchievementSetByContentHash(const std::string &contentHash) const;
 
   bool setGameId(const std::string &contentHash, int gameId);
 
+  bool setAchievementSetHash(unsigned achievementSetId,
+                             const std::string &contentHash);
+
   [[nodiscard]] std::optional<Achievement>
   getAchievement(unsigned achievementId) const;
+
+  bool create(const Game &game);
+  bool create(const AchievementSet &achievementSet);
+  bool create(const Achievement &achievement);
+  bool create(const Leaderboard &leaderboard);
 
   /**
    * @brief Retrieves the achievement set ID associated with a content hash
@@ -83,10 +91,6 @@ public:
 
   [[nodiscard]] std::vector<UserUnlock>
   getAllUserUnlocks(const std::string &username, unsigned gameId) const;
-
-  [[nodiscard]] std::optional<PatchResponse> getPatchResponse(int gameId) const;
-  bool processPatchResponse(const std::string &username,
-                            const PatchResponse &response);
 
   bool
   processStartSessionResponse(const std::string &username, unsigned gameId,

@@ -1,9 +1,9 @@
 #include "rcheevos_offline_client.hpp"
 
+#include "../achievement_set_response.hpp"
 #include "../award_achievement_response.hpp"
 #include "../gameid_response.hpp"
 #include "../login2_response.hpp"
-#include "../patch_response.hpp"
 #include "../ra_constants.h"
 #include "../startsession_response.hpp"
 
@@ -19,7 +19,7 @@
 
 namespace firelight::achievements {
 static const std::string GAMEID = "gameid";
-static const std::string PATCH = "patch";
+static const std::string ACHIEVEMENT_SETS = "achievementsets";
 static const std::string START_SESSION = "startsession";
 static const std::string AWARD_ACHIEVEMENT = "awardachievement";
 static const std::string LOGIN2 = "login2";
@@ -58,12 +58,8 @@ RetroAchievementsOfflineClient::handleRequest(const std::string &url,
   // const auto nowEpochMillis =
   // std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-  if (params["r"] == GAMEID) {
-    return handleGameIdRequest(params["m"]);
-  }
-
-  if (params["r"] == PATCH) {
-    return handlePatchRequest(stoi(params["g"]));
+  if (params["r"] == ACHIEVEMENT_SETS) {
+    return handleAchievementSetsRequest(params["u"], params["t"], params["m"]);
   }
 
   if (params["r"] == START_SESSION) {
@@ -103,10 +99,8 @@ void RetroAchievementsOfflineClient::processResponse(
   auto params = parseQueryParams(request);
   if (params["r"] == "login2") {
     processLogin2Response(params["u"], params["t"], response);
-  } else if (params["r"] == "gameid") {
-    processGameIdResponse(params["m"], response);
-  } else if (params["r"] == "patch") {
-    processPatchResponse(params["u"], stoi(params["g"]), response);
+  } else if (params["r"] == "achievementsets") {
+    processAchievementSetsResponse(params["u"], params["m"], response);
   } else if (params["r"] == "startsession") {
     processStartSessionResponse(params["u"], stoi(params["g"]), response);
   } else if (params["r"] == "awardachievement") {
@@ -122,38 +116,11 @@ void RetroAchievementsOfflineClient::startOnlineHardcoreSession() {
   m_inHardcoreSession = true;
 }
 
-rc_api_server_response_t RetroAchievementsOfflineClient::handleGameIdRequest(
-    const std::string &hash) const {
-  const auto cached = m_achievementService.getGameId(hash);
-  if (!cached.has_value()) {
-    return GENERIC_SERVER_ERROR;
-  }
-
-  GameIdResponse gameIdResponse{.Success = true, .GameID = cached.value()};
-
-  const auto json = nlohmann::json(gameIdResponse).dump();
-
-  rc_api_server_response_t rcResponse;
-  rcResponse.http_status_code = 200;
-  rcResponse.body = strdup(json.c_str());
-  rcResponse.body_length = strlen(rcResponse.body);
-  return rcResponse;
-}
-
 rc_api_server_response_t
-RetroAchievementsOfflineClient::handlePatchRequest(const int gameId) const {
-  auto cached = m_achievementService.getPatchResponse(gameId);
-  if (!cached.has_value()) {
-    return GENERIC_SERVER_ERROR;
-  }
-
-  const auto json = nlohmann::json(cached.value()).dump();
-
-  rc_api_server_response_t rcResponse;
-  rcResponse.http_status_code = 200;
-  rcResponse.body = strdup(json.c_str());
-  rcResponse.body_length = strlen(rcResponse.body);
-  return rcResponse;
+RetroAchievementsOfflineClient::handleAchievementSetsRequest(
+    const std::string &username, const std::string &token,
+    const std::string &hash) const {
+  return GENERIC_SUCCESS;
 }
 
 rc_api_server_response_t
@@ -233,7 +200,7 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     }
 
     m_achievementService.createOrUpdate(newUnlock);
-    m_achievementService.createOrUpdateUser(*user);
+    m_achievementService.create(*user);
   } else {
     if (hardcore && unlock->earnedHardcore) {
       spdlog::info("User {} already has achievement {} in hardcore mode",
@@ -277,13 +244,13 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     }
 
     m_achievementService.createOrUpdate(*unlock);
-    m_achievementService.createOrUpdateUser(*user);
+    m_achievementService.create(*user);
   }
 
   auto unlocks = m_achievementService.getAllUserUnlocks(
       username, achievement->achievementSetId);
 
-  auto numLocked = 0;
+  unsigned numLocked = 0;
   for (const auto &u : unlocks) {
     if ((hardcore && !u.earnedHardcore) || (!hardcore && !u.earned)) {
       numLocked++;
@@ -318,7 +285,7 @@ rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(
       .username = username, .token = token, .softcoreScore = 0, .score = 0};
   auto userOpt = m_achievementService.getUser(username);
   if (!userOpt.has_value()) {
-    m_achievementService.createOrUpdateUser(user);
+    m_achievementService.create(user);
   } else {
     user = userOpt.value();
   }
@@ -353,10 +320,7 @@ RetroAchievementsOfflineClient::handleSubmitLbEntryRequest() {
 void RetroAchievementsOfflineClient::processLogin2Response(
     const std::string &username, const std::string &token,
     const std::string &response) const {
-
   auto json = nlohmann::json::parse(response);
-
-  auto user = User{.username = username, .token = token};
 
   if (!json.contains("Success") || !json["Success"].is_boolean() ||
       !json["Success"].get<bool>()) {
@@ -364,31 +328,80 @@ void RetroAchievementsOfflineClient::processLogin2Response(
     return;
   }
 
-  if (json.contains("Score") && json["Score"].is_number()) {
-    user.score = json["Score"];
-  }
-
-  if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
-    user.softcoreScore = json["SoftcoreScore"];
-  }
-
-  m_achievementService.createOrUpdateUser(user);
+  const auto user = json.get<User>();
+  m_achievementService.create(user);
 }
 
-void RetroAchievementsOfflineClient::processGameIdResponse(
-    const std::string &hash, const std::string &response) const {
-  const auto json = nlohmann::json::parse(response);
-  const auto gameidResponse = json.get<GameIdResponse>();
-  m_achievementService.setGameId(hash, gameidResponse.GameID);
-}
-
-void RetroAchievementsOfflineClient::processPatchResponse(
-    const std::string &username, const int gameId,
+void RetroAchievementsOfflineClient::processAchievementSetsResponse(
+    const std::string &username, const std::string &hash,
     const std::string &response) const {
-  const auto json = nlohmann::json::parse(response);
-  const auto patchResponse = json.get<PatchResponse>();
+  auto json = nlohmann::json::parse(response);
+  if (!json.contains("Success") || !json["Success"].is_boolean() ||
+      !json["Success"].get<bool>()) {
+    spdlog::error("Achievement sets response was not success");
+    return;
+  }
 
-  m_achievementService.processPatchResponse(username, patchResponse);
+  const auto setResponse = json.get<AchievementSetResponse>();
+  Game game{.id = setResponse.GameId,
+            .title = setResponse.Title,
+            .imageIconUrl = setResponse.ImageIconUrl,
+            .richPresenceGameId = setResponse.RichPresenceGameId,
+            .richPresencePatch = setResponse.RichPresencePatch,
+            .consoleId = setResponse.ConsoleId};
+
+  m_achievementService.create(game);
+  m_achievementService.setGameId(hash, game.id);
+
+  auto i = 0;
+  for (const auto &set : setResponse.Sets) {
+    AchievementSet achievementSet{.id = set.id,
+                                  .title = set.title,
+                                  .gameId = game.id,
+                                  .type = set.type,
+                                  .imageIconUrl = set.imageIconUrl};
+
+    m_achievementService.create(achievementSet);
+    m_achievementService.setAchievementSetHash(achievementSet.id, hash);
+
+    for (const auto &achieve : set.achievements) {
+      Achievement achievement{.id = achieve.id,
+                              .achievementSetId = set.id,
+                              .memAddr = achieve.memAddr,
+                              .title = achieve.title,
+                              .description = achieve.description,
+                              .points = achieve.points,
+                              .author = achieve.author,
+                              .modified = achieve.modified,
+                              .created = achieve.created,
+                              .flags = achieve.flags,
+                              .type = achieve.type,
+                              .rarity = achieve.rarity,
+                              .rarityHardcore = achieve.rarityHardcore,
+                              .badgeUrl = achieve.badgeUrl,
+                              .badgeLockedUrl = achieve.badgeLockedUrl,
+                              .displayOrder = i++};
+
+      m_achievementService.create(achievement);
+    }
+
+    // TODO: Calculate total points and num achievements for set?
+
+    i = 0;
+    for (const auto &leaderboard : set.leaderboards) {
+      Leaderboard newLeaderboard{.id = leaderboard.id,
+                                 .achievementSetId = set.id,
+                                 .memAddr = leaderboard.memAddr,
+                                 .format = leaderboard.format,
+                                 .lowerIsBetter = leaderboard.lowerIsBetter,
+                                 .title = leaderboard.title,
+                                 .description = leaderboard.description,
+                                 .hidden = leaderboard.hidden,
+                                 .displayOrder = i++};
+
+      m_achievementService.create(newLeaderboard);
+    }
+  }
 }
 
 void RetroAchievementsOfflineClient::processStartSessionResponse(
@@ -435,7 +448,7 @@ void RetroAchievementsOfflineClient::processAwardAchievementResponse(
     user.softcoreScore = json["SoftcoreScore"];
   }
 
-  m_achievementService.createOrUpdateUser(user);
+  m_achievementService.create(user);
 
   if (json.contains("AchievementID") && json["AchievementID"].is_number()) {
     if (auto id = json["AchievementID"];

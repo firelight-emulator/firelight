@@ -17,7 +17,7 @@ std::optional<User>
 AchievementService::getUser(const std::string &username) const {
   return m_repository.getUser(username);
 }
-bool AchievementService::createOrUpdateUser(const User &user) {
+bool AchievementService::create(const User &user) {
   return m_repository.createOrUpdateUser(user);
 }
 
@@ -31,10 +31,27 @@ bool AchievementService::setGameId(const std::string &contentHash,
                                    const int gameId) {
   return m_repository.setGameId(contentHash, gameId);
 }
+bool AchievementService::setAchievementSetHash(const unsigned achievementSetId,
+                                               const std::string &contentHash) {
+  return m_repository.setAchievementSetHash(achievementSetId, contentHash);
+}
 
 std::optional<Achievement>
-AchievementService::getAchievement(unsigned achievementId) const {
+AchievementService::getAchievement(const unsigned achievementId) const {
   return m_repository.getAchievement(achievementId);
+}
+
+bool AchievementService::create(const Game &game) {
+  return m_repository.create(game);
+}
+bool AchievementService::create(const AchievementSet &achievementSet) {
+  return m_repository.create(achievementSet);
+}
+bool AchievementService::create(const Achievement &achievement) {
+  return m_repository.create(achievement);
+}
+bool AchievementService::create(const Leaderboard &leaderboard) {
+  return m_repository.create(leaderboard);
 }
 
 std::optional<int>
@@ -65,83 +82,6 @@ AchievementService::getAllUserUnlocks(const std::string &username,
   return m_repository.getAllUserUnlocks(username, gameId);
 }
 
-std::optional<PatchResponse>
-AchievementService::getPatchResponse(const int gameId) const {
-  return m_repository.getPatchResponse(gameId);
-}
-
-bool AchievementService::processPatchResponse(const std::string &username,
-                                              const PatchResponse &response) {
-  m_repository.create(response);
-
-  std::vector<Achievement> achievements;
-  unsigned totalPoints = 0;
-  auto i = 0;
-  for (const auto &a : response.PatchData.Achievements) {
-    auto achievement = Achievement{.id = a.ID,
-                                   .achievementSetId = response.PatchData.ID,
-                                   .memAddr = a.MemAddr,
-                                   .title = a.Title,
-                                   .description = a.Description,
-                                   .points = a.Points,
-                                   .author = a.Author,
-                                   .modified = a.Modified,
-                                   .created = a.Created,
-                                   .flags = a.Flags,
-                                   .type = a.Type,
-                                   .rarity = a.Rarity,
-                                   .rarityHardcore = a.RarityHardcore,
-                                   .badgeUrl = a.BadgeURL,
-                                   .badgeLockedUrl = a.BadgeLockedURL,
-                                   .displayOrder = i++};
-
-    if (a.Flags == 5) {
-      continue;
-    }
-
-    achievements.emplace_back(achievement);
-    totalPoints += a.Points;
-  }
-
-  auto set = AchievementSet{.id = response.PatchData.ID,
-                            .title = response.PatchData.Title,
-                            .type = "core",
-                            .gameId = response.PatchData.ID,
-                            .imageIconUrl = response.PatchData.ImageIconURL,
-                            .numAchievements =
-                                static_cast<unsigned>(achievements.size()),
-                            .totalPoints = totalPoints};
-
-  if (!m_repository.create(set)) {
-    spdlog::error("Failed to createOrUpdate achievement set: {}", set.id);
-    return false;
-  }
-
-  for (const auto &achievement : achievements) {
-    if (!m_repository.create(achievement)) {
-      spdlog::error("Failed to createOrUpdate achievement: {}", achievement.id);
-      return false;
-    }
-
-    auto unlock = m_repository.getUserUnlock(username, achievement.id);
-    if (!unlock.has_value()) {
-      auto newUnlock = UserUnlock{.username = username,
-                                  .achievementId = achievement.id,
-                                  .earned = false,
-                                  .earnedHardcore = false,
-                                  .unlockTimestamp = 0,
-                                  .unlockTimestampHardcore = 0,
-                                  .synced = true};
-
-      if (!m_repository.createOrUpdate(newUnlock)) {
-        spdlog::error("Failed to createOrUpdate user unlock: {} for user {}",
-                      achievement.id, username);
-        return false;
-      }
-    }
-  }
-  return true;
-}
 bool AchievementService::processStartSessionResponse(
     const std::string &username, const unsigned gameId,
     const StartSessionResponse &startSessionResponse) {

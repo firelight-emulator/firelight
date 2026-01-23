@@ -161,9 +161,11 @@ public:
    * @see setGameId() to create or update hash <-> set ID mappings
    * @see getAchievementSetByContentHash() to retrieve sets directly by hash
    */
-  std::optional<std::string> getGameHash(unsigned gameId) const override;
+  [[nodiscard]] std::optional<std::string>
+  getGameHash(unsigned gameId) const override;
 
   // Individual Achievement Operations
+  bool create(const Leaderboard &leaderboard) override;
 
   /**
    * @brief Creates or updates an individual achievement
@@ -209,6 +211,9 @@ public:
    * error
    */
   bool setGameId(const std::string &contentHash, int gameId) override;
+
+  bool setAchievementSetHash(unsigned achievementSetId,
+                             const std::string &contentHash) override;
 
   // User Unlock Operations
 
@@ -287,31 +292,6 @@ public:
    */
   std::vector<UserUnlock>
   getAllUnsyncedUserUnlocks(const std::string &username) const override;
-
-  // Patch Response Caching Operations
-
-  /**
-   * @brief Retrieves cached patch response data for offline use
-   *
-   * Fetches previously stored RetroAchievements API patch response data,
-   * enabling achievement functionality without network connectivity.
-   *
-   * @param gameId The game ID to retrieve cached data for
-   * @return The cached patch response if available, std::nullopt otherwise
-   */
-  std::optional<PatchResponse> getPatchResponse(int gameId) const override;
-
-  /**
-   * @brief Caches RetroAchievements patch response data
-   *
-   * Stores complete patch response JSON data in binary format for later
-   * offline retrieval. Enables achievement functionality without requiring
-   * constant network connectivity.
-   *
-   * @param patchResponse The patch response data to cache
-   * @return true if caching succeeded, false on database error
-   */
-  bool create(PatchResponse patchResponse) override;
 
 private:
   /** @brief Path to the SQLite database file */

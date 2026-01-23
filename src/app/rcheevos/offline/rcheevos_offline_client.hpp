@@ -24,9 +24,10 @@ public:
   void startOnlineHardcoreSession();
 
 private:
-  rc_api_server_response_t handleGameIdRequest(const std::string &hash) const;
-
-  rc_api_server_response_t handlePatchRequest(int gameId) const;
+  rc_api_server_response_t
+  handleAchievementSetsRequest(const std::string &username,
+                               const std::string &token,
+                               const std::string &hash) const;
 
   rc_api_server_response_t
   handleStartSessionRequest(const std::string &username, int gameId,
@@ -49,11 +50,9 @@ private:
                              const std::string &token,
                              const std::string &response) const;
 
-  void processGameIdResponse(const std::string &hash,
-                             const std::string &response) const;
-
-  void processPatchResponse(const std::string &username, int gameId,
-                            const std::string &response) const;
+  void processAchievementSetsResponse(const std::string &username,
+                                      const std::string &hash,
+                                      const std::string &response) const;
 
   void processStartSessionResponse(const std::string &username, int gameId,
                                    const std::string &response) const;
