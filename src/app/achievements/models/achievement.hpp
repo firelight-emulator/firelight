@@ -5,13 +5,21 @@
 namespace firelight::achievements {
 struct Achievement {
   unsigned id;
-  std::string name;
+  unsigned achievementSetId;
+  std::string memAddr;
+  std::string title;
   std::string description;
-  std::string imageUrl;
-  int points;
-  std::string type;
-  int displayOrder;
-  unsigned gameId;
+  unsigned points;
+  std::string author;
+  unsigned modified;
+  unsigned created;
+  std::string badgeName;
   int flags;
+  std::string type;
+  float rarity;
+  float rarityHardcore;
+  std::string badgeUrl;
+  std::string badgeLockedUrl;
+  int displayOrder;
 };
 } // namespace firelight::achievements

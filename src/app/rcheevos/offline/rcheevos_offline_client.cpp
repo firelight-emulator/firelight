@@ -6,7 +6,6 @@
 #include "../patch_response.hpp"
 #include "../ra_constants.h"
 #include "../startsession_response.hpp"
-#include "cached_achievement.hpp"
 
 #include <QDateTime>
 #include <cpr/api.h>
@@ -228,9 +227,9 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
 
     // Add points for first-time unlock
     if (hardcore) {
-      user->hardcore_points += achievement->points;
+      user->score += achievement->points;
     } else {
-      user->points += achievement->points;
+      user->softcoreScore += achievement->points;
     }
 
     m_achievementService.createOrUpdate(newUnlock);
@@ -251,12 +250,12 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
       // If already earned in non-hardcore, move points from non-hardcore to
       // hardcore
       if (unlock->earned && !unlock->earnedHardcore) {
-        user->points -= achievement->points;
-        user->hardcore_points += achievement->points;
+        user->softcoreScore -= achievement->points;
+        user->score += achievement->points;
       }
       // If never earned before, add to hardcore
       else if (!unlock->earned && !unlock->earnedHardcore) {
-        user->hardcore_points += achievement->points;
+        user->score += achievement->points;
       }
 
       unlock->earned = true;
@@ -269,7 +268,7 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     } else {
       // Only add points to non-hardcore if not already earned in any mode
       if (!unlock->earned && !unlock->earnedHardcore) {
-        user->points += achievement->points;
+        user->softcoreScore += achievement->points;
       }
 
       unlock->earned = true;
@@ -281,8 +280,8 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     m_achievementService.createOrUpdateUser(*user);
   }
 
-  auto unlocks =
-      m_achievementService.getAllUserUnlocks(username, achievement->gameId);
+  auto unlocks = m_achievementService.getAllUserUnlocks(
+      username, achievement->achievementSetId);
 
   auto numLocked = 0;
   for (const auto &u : unlocks) {
@@ -293,8 +292,8 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
 
   // Build the response
   AwardAchievementResponse resp{.Success = true,
-                                .Score = user->hardcore_points,
-                                .SoftcoreScore = user->points,
+                                .Score = user->score,
+                                .SoftcoreScore = user->softcoreScore,
                                 .AchievementID = achievementId,
                                 .AchievementsRemaining = numLocked};
 
@@ -316,7 +315,7 @@ rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(
   }
 
   auto user = User{
-      .username = username, .token = token, .points = 0, .hardcore_points = 0};
+      .username = username, .token = token, .softcoreScore = 0, .score = 0};
   auto userOpt = m_achievementService.getUser(username);
   if (!userOpt.has_value()) {
     m_achievementService.createOrUpdateUser(user);
@@ -327,8 +326,8 @@ rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(
   Login2Response response{.AccountType = "1",
                           .Messages = 0,
                           .Permissions = 0,
-                          .Score = user.hardcore_points,
-                          .SoftcoreScore = user.points,
+                          .Score = user.score,
+                          .SoftcoreScore = user.softcoreScore,
                           .Success = true,
                           .Token = token, // TODO: uhh
                           .User = username};
@@ -366,11 +365,11 @@ void RetroAchievementsOfflineClient::processLogin2Response(
   }
 
   if (json.contains("Score") && json["Score"].is_number()) {
-    user.hardcore_points = json["Score"];
+    user.score = json["Score"];
   }
 
   if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
-    user.points = json["SoftcoreScore"];
+    user.softcoreScore = json["SoftcoreScore"];
   }
 
   m_achievementService.createOrUpdateUser(user);
@@ -429,11 +428,11 @@ void RetroAchievementsOfflineClient::processAwardAchievementResponse(
   }
 
   if (json.contains("Score") && json["Score"].is_number()) {
-    user.hardcore_points = json["Score"];
+    user.score = json["Score"];
   }
 
   if (json.contains("SoftcoreScore") && json["SoftcoreScore"].is_number()) {
-    user.points = json["SoftcoreScore"];
+    user.softcoreScore = json["SoftcoreScore"];
   }
 
   m_achievementService.createOrUpdateUser(user);

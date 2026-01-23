@@ -2,6 +2,7 @@
 
 #include "models/achievement_progress.hpp"
 #include "models/achievement_set.hpp"
+#include "models/game.hpp"
 #include "models/user_unlock.hpp"
 
 #include <optional>
@@ -99,18 +100,6 @@ public:
   virtual bool create(AchievementSet achievementSet) = 0;
 
   /**
-   * @brief Updates an existing achievement set
-   *
-   * Modifies the metadata of an existing achievement set. The achievement set
-   * must already exist in the repository.
-   *
-   * @param achievementSet The achievement set with updated data
-   * @return true if the update succeeded, false if the set doesn't exist or
-   * update failed
-   */
-  virtual bool update(AchievementSet achievementSet) = 0;
-
-  /**
    * @brief Retrieves an achievement set by its unique identifier
    *
    * Fetches a complete achievement set including all associated achievements
@@ -118,10 +107,10 @@ public:
    * included.
    *
    * @param gameId The unique identifier of the achievement set
-   * @return The achievement set if found, std::nullopt otherwise
+   * @return The list of achievement sets if found, empty vector otherwise
    */
-  [[nodiscard]] virtual std::optional<AchievementSet>
-  getAchievementSet(unsigned gameId) const = 0;
+  [[nodiscard]] virtual std::vector<AchievementSet>
+  getAchievementSetsByGameId(unsigned gameId) const = 0;
 
   /**
    * @brief Retrieves an achievement set by content hash
@@ -136,6 +125,10 @@ public:
    */
   [[nodiscard]] virtual std::optional<AchievementSet>
   getAchievementSetByContentHash(const std::string &contentHash) const = 0;
+
+  [[nodiscard]] virtual std::optional<Game> getGameById(int gameId) const = 0;
+
+  virtual bool create(Game game) = 0;
 
   /**
    * @brief Retrieves the achievement set ID associated with a content hash

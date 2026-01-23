@@ -7,8 +7,11 @@
 namespace firelight::achievements {
 struct AchievementSet {
   unsigned id;
-  std::string name;
-  std::string iconUrl;
+  std::string title;
+  std::string type;
+  unsigned gameId;
+  std::string imageIconUrl;
+
   unsigned numAchievements;
   unsigned totalPoints;
 

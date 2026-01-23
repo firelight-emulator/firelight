@@ -79,14 +79,21 @@ bool AchievementService::processPatchResponse(const std::string &username,
   auto i = 0;
   for (const auto &a : response.PatchData.Achievements) {
     auto achievement = Achievement{.id = a.ID,
-                                   .name = a.Title,
+                                   .achievementSetId = response.PatchData.ID,
+                                   .memAddr = a.MemAddr,
+                                   .title = a.Title,
                                    .description = a.Description,
-                                   .imageUrl = a.BadgeURL,
                                    .points = a.Points,
+                                   .author = a.Author,
+                                   .modified = a.Modified,
+                                   .created = a.Created,
+                                   .flags = a.Flags,
                                    .type = a.Type,
-                                   .displayOrder = i++,
-                                   .gameId = response.PatchData.ID,
-                                   .flags = a.Flags};
+                                   .rarity = a.Rarity,
+                                   .rarityHardcore = a.RarityHardcore,
+                                   .badgeUrl = a.BadgeURL,
+                                   .badgeLockedUrl = a.BadgeLockedURL,
+                                   .displayOrder = i++};
 
     if (a.Flags == 5) {
       continue;
@@ -97,8 +104,10 @@ bool AchievementService::processPatchResponse(const std::string &username,
   }
 
   auto set = AchievementSet{.id = response.PatchData.ID,
-                            .name = response.PatchData.Title,
-                            .iconUrl = response.PatchData.ImageIconURL,
+                            .title = response.PatchData.Title,
+                            .type = "core",
+                            .gameId = response.PatchData.ID,
+                            .imageIconUrl = response.PatchData.ImageIconURL,
                             .numAchievements =
                                 static_cast<unsigned>(achievements.size()),
                             .totalPoints = totalPoints};
@@ -334,10 +343,10 @@ void AchievementService::syncOfflineAchievements() {
         continue;
       }
 
-      auto gameHash = m_repository.getGameHash(achievement->gameId);
+      auto gameHash = m_repository.getGameHash(achievement->achievementSetId);
       if (!gameHash.has_value()) {
         spdlog::warn("Could not find game hash for achievement set ID: {}",
-                     achievement->gameId);
+                     achievement->achievementSetId);
         continue;
       }
 
@@ -385,12 +394,12 @@ void AchievementService::syncOfflineAchievements() {
       unlock.synced = true;
 
       if (unlockJson.contains("Score") && unlockJson["Score"].is_number()) {
-        user.hardcore_points = unlockJson["Score"];
+        user.score = unlockJson["Score"];
       }
 
       if (unlockJson.contains("SoftcoreScore") &&
           unlockJson["SoftcoreScore"].is_number()) {
-        user.points = unlockJson["SoftcoreScore"];
+        user.softcoreScore = unlockJson["SoftcoreScore"];
       }
 
       m_repository.createOrUpdate(unlock);

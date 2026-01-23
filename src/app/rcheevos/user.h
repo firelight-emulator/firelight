@@ -4,10 +4,11 @@
 
 namespace firelight::achievements {
 class User {
-  public:
-    std::string username;
-    std::string token;
-    int points;
-    int hardcore_points;
+public:
+  std::string username;
+  std::string avatarUrl;
+  std::string token;
+  int softcoreScore;
+  int score;
 };
-}
+} // namespace firelight::achievements

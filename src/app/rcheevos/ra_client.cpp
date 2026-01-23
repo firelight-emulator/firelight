@@ -443,8 +443,8 @@ std::optional<User> RAClient::getCurrentUser() const {
   User user;
   user.username = data->username;
   user.token = data->token;
-  user.points = data->score_softcore;
-  user.hardcore_points = data->score;
+  user.softcoreScore = data->score_softcore;
+  user.score = data->score;
 
   return {user};
 }

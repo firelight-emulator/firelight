@@ -112,8 +112,8 @@ protected:
     User user;
     user.username = username;
     user.token = token;
-    user.points = points;
-    user.hardcore_points = hardcorePoints;
+    user.softcoreScore = points;
+    user.score = hardcorePoints;
     return user;
   }
 };
@@ -138,8 +138,8 @@ TEST_F(AchievementServiceTest, CreateUser_Success) {
   ASSERT_TRUE(savedUser.has_value());
   EXPECT_EQ(savedUser->username, "testuser");
   EXPECT_EQ(savedUser->token, "test_token_123");
-  EXPECT_EQ(savedUser->points, 1500);
-  EXPECT_EQ(savedUser->hardcore_points, 750);
+  EXPECT_EQ(savedUser->softcoreScore, 1500);
+  EXPECT_EQ(savedUser->score, 750);
 }
 
 TEST_F(AchievementServiceTest, UpdateUser_Success) {
@@ -150,8 +150,8 @@ TEST_F(AchievementServiceTest, UpdateUser_Success) {
 
   // Update user data
   user.token = "updated_token_456";
-  user.points = 2000;
-  user.hardcore_points = 1000;
+  user.softcoreScore = 2000;
+  user.score = 1000;
 
   bool result = service->createOrUpdateUser(user);
 
@@ -162,8 +162,8 @@ TEST_F(AchievementServiceTest, UpdateUser_Success) {
   ASSERT_TRUE(updatedUser.has_value());
   EXPECT_EQ(updatedUser->username, "testuser");
   EXPECT_EQ(updatedUser->token, "updated_token_456");
-  EXPECT_EQ(updatedUser->points, 2000);
-  EXPECT_EQ(updatedUser->hardcore_points, 1000);
+  EXPECT_EQ(updatedUser->softcoreScore, 2000);
+  EXPECT_EQ(updatedUser->score, 1000);
 }
 
 TEST_F(AchievementServiceTest, GetUser_ExistingUser) {
@@ -175,8 +175,8 @@ TEST_F(AchievementServiceTest, GetUser_ExistingUser) {
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->username, "testuser");
   EXPECT_EQ(result->token, "test_token_123");
-  EXPECT_EQ(result->points, 1500);
-  EXPECT_EQ(result->hardcore_points, 750);
+  EXPECT_EQ(result->softcoreScore, 1500);
+  EXPECT_EQ(result->score, 750);
 }
 
 TEST_F(AchievementServiceTest, GetUser_NonExistentUser) {
@@ -201,13 +201,13 @@ TEST_F(AchievementServiceTest, CreateOrUpdateUser_MultipleUsers) {
 
   EXPECT_EQ(retrievedUser1->username, "user1");
   EXPECT_EQ(retrievedUser1->token, "token1");
-  EXPECT_EQ(retrievedUser1->points, 1000);
-  EXPECT_EQ(retrievedUser1->hardcore_points, 500);
+  EXPECT_EQ(retrievedUser1->softcoreScore, 1000);
+  EXPECT_EQ(retrievedUser1->score, 500);
 
   EXPECT_EQ(retrievedUser2->username, "user2");
   EXPECT_EQ(retrievedUser2->token, "token2");
-  EXPECT_EQ(retrievedUser2->points, 2000);
-  EXPECT_EQ(retrievedUser2->hardcore_points, 1500);
+  EXPECT_EQ(retrievedUser2->softcoreScore, 2000);
+  EXPECT_EQ(retrievedUser2->score, 1500);
 }
 
 TEST_F(AchievementServiceTest, CreateOrUpdateUser_ZeroPoints) {
@@ -219,8 +219,8 @@ TEST_F(AchievementServiceTest, CreateOrUpdateUser_ZeroPoints) {
 
   auto savedUser = service->getUser("beginner");
   ASSERT_TRUE(savedUser.has_value());
-  EXPECT_EQ(savedUser->points, 0);
-  EXPECT_EQ(savedUser->hardcore_points, 0);
+  EXPECT_EQ(savedUser->softcoreScore, 0);
+  EXPECT_EQ(savedUser->score, 0);
 }
 
 TEST_F(AchievementServiceTest, CreateOrUpdateUser_EmptyToken) {

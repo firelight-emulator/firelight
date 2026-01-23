@@ -2594,8 +2594,8 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
 
   service.createOrUpdateUser(User{.username = "testuser",
                                   .token = "testtoken",
-                                  .points = 1000,
-                                  .hardcore_points = 2000});
+                                  .softcoreScore = 1000,
+                                  .score = 2000});
 
   const auto response = offlineClient.handleRequest(
       "https://retroachievements.com/dorequest.php",
@@ -2774,8 +2774,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
 
   service.createOrUpdateUser(User{.username = "testuser",
                                   .token = "testtoken",
-                                  .points = 80,
-                                  .hardcore_points = 102});
+                                  .softcoreScore = 80,
+                                  .score = 102});
 
   // Do unlock achievement request hardcore
   auto response = offlineClient.handleRequest(
@@ -2899,8 +2899,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Set up user and achievement
   User user{.username = "testuser",
             .token = "token",
-            .points = 100,
-            .hardcore_points = 50};
+            .softcoreScore = 100,
+            .score = 50};
   service.createOrUpdateUser(user);
 
   Achievement achievement{.id = 1,
@@ -2924,8 +2924,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Verify points were added to non-hardcore
   auto updatedUser = service.getUser("testuser");
   ASSERT_TRUE(updatedUser.has_value());
-  EXPECT_EQ(updatedUser->points, 125);         // 100 + 25
-  EXPECT_EQ(updatedUser->hardcore_points, 50); // Unchanged
+  EXPECT_EQ(updatedUser->softcoreScore, 125);         // 100 + 25
+  EXPECT_EQ(updatedUser->score, 50); // Unchanged
 }
 
 TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
@@ -2937,8 +2937,8 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
   // Set up user and achievement
   User user{.username = "testuser",
             .token = "token",
-            .points = 100,
-            .hardcore_points = 50};
+            .softcoreScore = 100,
+            .score = 50};
   service.createOrUpdateUser(user);
 
   Achievement achievement{.id = 1,
@@ -2962,8 +2962,8 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
   // Verify points were added to hardcore
   auto updatedUser = service.getUser("testuser");
   ASSERT_TRUE(updatedUser.has_value());
-  EXPECT_EQ(updatedUser->points, 100);         // Unchanged
-  EXPECT_EQ(updatedUser->hardcore_points, 75); // 50 + 25
+  EXPECT_EQ(updatedUser->softcoreScore, 100);         // Unchanged
+  EXPECT_EQ(updatedUser->score, 75); // 50 + 25
 }
 
 TEST_F(RetroAchievementsOfflineClientTest,
@@ -2976,8 +2976,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Set up user and achievement
   User user{.username = "testuser",
             .token = "token",
-            .points = 100,
-            .hardcore_points = 50};
+            .softcoreScore = 100,
+            .score = 50};
   service.createOrUpdateUser(user);
 
   Achievement achievement{.id = 1,
@@ -3000,8 +3000,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Verify initial state
   auto userAfterFirst = service.getUser("testuser");
   ASSERT_TRUE(userAfterFirst.has_value());
-  EXPECT_EQ(userAfterFirst->points, 125);         // 100 + 25
-  EXPECT_EQ(userAfterFirst->hardcore_points, 50); // Unchanged
+  EXPECT_EQ(userAfterFirst->softcoreScore, 125);         // 100 + 25
+  EXPECT_EQ(userAfterFirst->score, 50); // Unchanged
 
   // Then, award in hardcore mode (should move points)
   auto response2 = offlineClient.handleRequest(
@@ -3012,8 +3012,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Verify points moved from non-hardcore to hardcore
   auto finalUser = service.getUser("testuser");
   ASSERT_TRUE(finalUser.has_value());
-  EXPECT_EQ(finalUser->points, 100); // 125 - 25 (moved to hardcore)
-  EXPECT_EQ(finalUser->hardcore_points,
+  EXPECT_EQ(finalUser->softcoreScore, 100); // 125 - 25 (moved to hardcore)
+  EXPECT_EQ(finalUser->score,
             75); // 50 + 25 (moved from non-hardcore)
 
   // Verify unlock state
@@ -3033,8 +3033,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Set up user and achievement
   User user{.username = "testuser",
             .token = "token",
-            .points = 100,
-            .hardcore_points = 50};
+            .softcoreScore = 100,
+            .score = 50};
   service.createOrUpdateUser(user);
 
   Achievement achievement{.id = 1,
@@ -3057,8 +3057,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Verify initial state
   auto userAfterFirst = service.getUser("testuser");
   ASSERT_TRUE(userAfterFirst.has_value());
-  EXPECT_EQ(userAfterFirst->points, 100);         // Unchanged
-  EXPECT_EQ(userAfterFirst->hardcore_points, 75); // 50 + 25
+  EXPECT_EQ(userAfterFirst->softcoreScore, 100);         // Unchanged
+  EXPECT_EQ(userAfterFirst->score, 75); // 50 + 25
 
   // Then, try to award in non-hardcore mode (should be ignored - no points
   // change)
@@ -3070,8 +3070,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Verify points unchanged (hardcore takes precedence)
   auto finalUser = service.getUser("testuser");
   ASSERT_TRUE(finalUser.has_value());
-  EXPECT_EQ(finalUser->points, 100);         // Unchanged
-  EXPECT_EQ(finalUser->hardcore_points, 75); // Unchanged
+  EXPECT_EQ(finalUser->softcoreScore, 100);         // Unchanged
+  EXPECT_EQ(finalUser->score, 75); // Unchanged
 
   // Verify unlock state (both should be true)
   auto unlock = service.getUserUnlock("testuser", 1);
@@ -3090,8 +3090,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Set up user and achievement
   User user{.username = "testuser",
             .token = "token",
-            .points = 100,
-            .hardcore_points = 50};
+            .softcoreScore = 100,
+            .score = 50};
   service.createOrUpdateUser(user);
 
   Achievement achievement{.id = 1,
@@ -3119,8 +3119,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   // Verify points only added once
   auto finalUser = service.getUser("testuser");
   ASSERT_TRUE(finalUser.has_value());
-  EXPECT_EQ(finalUser->points, 125);         // 100 + 25 (only once)
-  EXPECT_EQ(finalUser->hardcore_points, 50); // Unchanged
+  EXPECT_EQ(finalUser->softcoreScore, 125);         // 100 + 25 (only once)
+  EXPECT_EQ(finalUser->score, 50); // Unchanged
 }
 
 /**

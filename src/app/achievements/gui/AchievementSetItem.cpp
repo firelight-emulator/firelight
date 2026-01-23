@@ -36,8 +36,8 @@ void AchievementSetItem::setContentHash(const QString &contentHash) {
     m_hasAchievements = false;
   } else {
     m_setId = set->id;
-    m_setName = QString::fromStdString(set->name);
-    m_iconUrl = QString::fromStdString(set->iconUrl);
+    m_setName = QString::fromStdString(set->title);
+    m_iconUrl = QString::fromStdString(set->imageIconUrl);
     m_numAchievements = set->numAchievements;
     m_totalNumPoints = set->totalPoints;
     m_hasAchievements = m_numAchievements > 0;

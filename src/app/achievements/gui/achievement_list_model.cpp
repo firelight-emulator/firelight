@@ -40,13 +40,13 @@ QVariant AchievementListModel::data(const QModelIndex &index, int role) const {
   case Id:
     return QVariant::fromValue(item.achievement.id);
   case Name:
-    return QVariant::fromValue(QString::fromStdString(item.achievement.name));
+    return QVariant::fromValue(QString::fromStdString(item.achievement.title));
   case Description:
     return QVariant::fromValue(
         QString::fromStdString(item.achievement.description));
   case ImageUrl:
     return QVariant::fromValue(
-        QString::fromStdString(item.achievement.imageUrl));
+        QString::fromStdString(item.achievement.badgeUrl));
   case Earned:
     return QVariant::fromValue(m_hardcore ? item.unlockState.earnedHardcore
                                           : item.unlockState.earned);

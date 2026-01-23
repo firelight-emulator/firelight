@@ -58,7 +58,7 @@ public:
    * errors are logged and result in an empty vector return rather than throwing
    * exceptions.
    *
-   * SQL Query: `SELECT username, token, points, hardcore_points FROM users
+   * SQL Query: `SELECT username, token, points, score FROM users
    * ORDER BY username`
    *
    * @return Vector of User objects containing all users in alphabetical order
@@ -74,7 +74,7 @@ public:
    * @see getUser() for retrieving a single user by username
    * @see createOrUpdateUser() for adding or updating user data
    */
-  std::vector<User> listUsers() const override;
+  [[nodiscard]] std::vector<User> listUsers() const override;
 
   bool createOrUpdateUser(const User &user) override;
 
@@ -92,18 +92,6 @@ public:
   bool create(AchievementSet achievementSet) override;
 
   /**
-   * @brief Updates an existing achievement set's metadata
-   *
-   * Modifies the stored data for an achievement set that must already exist.
-   * Does not affect associated achievements.
-   *
-   * @param achievementSet The achievement set with updated data
-   * @return true if update succeeded, false if set doesn't exist or database
-   * error
-   */
-  bool update(AchievementSet achievementSet) override;
-
-  /**
    * @brief Retrieves a complete achievement set by ID
    *
    * Fetches the achievement set metadata and all associated achievements,
@@ -111,10 +99,10 @@ public:
    * complete achievement data including all metadata fields.
    *
    * @param gameId The unique identifier of the achievement set
-   * @return The complete achievement set if found, std::nullopt otherwise
+   * @return The list of achievement sets if found, empty vector otherwise
    */
-  std::optional<AchievementSet>
-  getAchievementSet(unsigned gameId) const override;
+  [[nodiscard]] std::vector<AchievementSet>
+  getAchievementSetsByGameId(unsigned gameId) const override;
 
   /**
    * @brief Retrieves achievement set by game content hash
@@ -130,7 +118,11 @@ public:
   [[nodiscard]] std::optional<AchievementSet>
   getAchievementSetByContentHash(const std::string &contentHash) const override;
 
-  std::optional<int> getGameId(const std::string &contentHash) const override;
+  [[nodiscard]] std::optional<Game> getGameById(int gameId) const override;
+  bool create(Game game) override;
+
+  [[nodiscard]] std::optional<int>
+  getGameId(const std::string &contentHash) const override;
 
   /**
    * @brief Retrieves the content hash associated with an achievement set ID
