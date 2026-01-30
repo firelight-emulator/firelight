@@ -18,7 +18,7 @@ Here are the things you need to build the application:
 - A C++17 compiler. I use Clang, but other stuff should work too... I think.
 - CMake 3.22.1 or later.
 - The following libraries:
-    - Qt6 (6.7)
+    - Qt6 (6.10)
         - Components:
             - Quick
             - Gui

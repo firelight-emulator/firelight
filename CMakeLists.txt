@@ -70,7 +70,7 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
 # find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
-find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
+find_package(Qt6 6.10 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
 if (Qt6_VERSION VERSION_GREATER_EQUAL 6.10.0)
     find_package(Qt6 OPTIONAL_COMPONENTS
         GuiPrivate
@@ -82,7 +82,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(LibArchive REQUIRED)
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
-qt6_standard_project_setup(REQUIRES 6.8)
+qt6_standard_project_setup(REQUIRES 6.10)
 
 
 #add_compile_definitions(QT_QML_DEBUG)
@@ -230,7 +230,6 @@ target_link_libraries(firelight_lib PUBLIC
         Qt6::Sql
         Qt6::QuickTest
         Qt6::Multimedia
-        Qt6::GuiPrivate
         Qt6::Network
         Qt6::Widgets
         # ${FFMPEG_LIBRARIES}
@@ -248,6 +247,10 @@ target_link_libraries(firelight_lib PUBLIC
         rcheevos
         discord
 )
+
+if (TARGET Qt6::GuiPrivate)
+    target_link_libraries(firelight_lib PUBLIC Qt6::GuiPrivate)
+endif ()
 
 # qt_import_plugins(firelight_lib
 #         INCLUDE QFFmpegMediaPlugin)
