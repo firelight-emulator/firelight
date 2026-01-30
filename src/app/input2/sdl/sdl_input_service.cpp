@@ -232,340 +232,341 @@ void SDLInputService::run() {
   spdlog::info("Starting SDL Input Service...");
   while (m_running) {
     SDL_Event ev;
-    if (SDL_WaitEventTimeout(&ev, 200)) {
-      switch (ev.type) {
-      case SDL_CONTROLLERDEVICEADDED:
-        openSdlGamepad(ev.cdevice.which);
+    if (!SDL_WaitEvent(&ev)) {
+      continue;
+    }
+    switch (ev.type) {
+    case SDL_CONTROLLERDEVICEADDED:
+      openSdlGamepad(ev.cdevice.which);
+      break;
+    case SDL_CONTROLLERDEVICEREMOVED:
+      removeGamepadByInstanceId(ev.cdevice.which);
+      break;
+    case SDL_CONTROLLERAXISMOTION: {
+      const auto joystickInstanceId = ev.cbutton.which;
+      std::shared_ptr<IGamepad> gamepad;
+      for (const auto &g : m_gamepads) {
+        if (g && g->getInstanceId() == joystickInstanceId) {
+          gamepad = g;
+          break;
+        }
+      }
+
+      if (!gamepad) {
         break;
-      case SDL_CONTROLLERDEVICEREMOVED:
-        removeGamepadByInstanceId(ev.cdevice.which);
+      }
+
+      auto index = gamepad->getPlayerIndex();
+
+      switch (ev.caxis.axis) {
+      case SDL_CONTROLLER_AXIS_LEFTX: {
+        if (ev.caxis.value < 8192 && ev.caxis.value > -8192) {
+          if (m_gamepadLastStates[index][LeftStickLeft]) {
+            m_gamepadLastStates[index][LeftStickLeft] = false;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = LeftStickLeft,
+                .pressed = false,
+            });
+          }
+
+          if (m_gamepadLastStates[index][LeftStickRight]) {
+            m_gamepadLastStates[index][LeftStickRight] = false;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = LeftStickRight,
+                .pressed = false,
+            });
+          }
+          break;
+        }
+        if (ev.caxis.value > 8192) {
+          if (!m_gamepadLastStates[index][LeftStickRight]) {
+            m_gamepadLastStates[index][LeftStickRight] = true;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = LeftStickRight,
+                .pressed = true,
+            });
+          }
+          break;
+        }
+        if (ev.caxis.value < -8192) {
+          if (!m_gamepadLastStates[index][LeftStickLeft]) {
+            m_gamepadLastStates[index][LeftStickLeft] = true;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = LeftStickLeft,
+                .pressed = true,
+            });
+          }
+          break;
+        }
         break;
-      case SDL_CONTROLLERAXISMOTION: {
-        const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<IGamepad> gamepad;
-        for (const auto &g : m_gamepads) {
-          if (g && g->getInstanceId() == joystickInstanceId) {
-            gamepad = g;
-            break;
+      }
+      case SDL_CONTROLLER_AXIS_LEFTY: {
+        if (ev.caxis.value < 8192 && ev.caxis.value > -8192) {
+          if (m_gamepadLastStates[index][LeftStickUp]) {
+            m_gamepadLastStates[index][LeftStickUp] = false;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = LeftStickUp,
+                .pressed = false,
+            });
           }
-        }
 
-        if (!gamepad) {
-          break;
-        }
-
-        auto index = gamepad->getPlayerIndex();
-
-        switch (ev.caxis.axis) {
-        case SDL_CONTROLLER_AXIS_LEFTX: {
-          if (ev.caxis.value < 8192 && ev.caxis.value > -8192) {
-            if (m_gamepadLastStates[index][LeftStickLeft]) {
-              m_gamepadLastStates[index][LeftStickLeft] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickLeft,
-                  .pressed = false,
-              });
-            }
-
-            if (m_gamepadLastStates[index][LeftStickRight]) {
-              m_gamepadLastStates[index][LeftStickRight] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickRight,
-                  .pressed = false,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value > 8192) {
-            if (!m_gamepadLastStates[index][LeftStickRight]) {
-              m_gamepadLastStates[index][LeftStickRight] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickRight,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value < -8192) {
-            if (!m_gamepadLastStates[index][LeftStickLeft]) {
-              m_gamepadLastStates[index][LeftStickLeft] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickLeft,
-                  .pressed = true,
-              });
-            }
-            break;
+          if (m_gamepadLastStates[index][LeftStickDown]) {
+            m_gamepadLastStates[index][LeftStickDown] = false;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = LeftStickDown,
+                .pressed = false,
+            });
           }
           break;
         }
-        case SDL_CONTROLLER_AXIS_LEFTY: {
-          if (ev.caxis.value < 8192 && ev.caxis.value > -8192) {
-            if (m_gamepadLastStates[index][LeftStickUp]) {
-              m_gamepadLastStates[index][LeftStickUp] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickUp,
-                  .pressed = false,
-              });
-            }
-
-            if (m_gamepadLastStates[index][LeftStickDown]) {
-              m_gamepadLastStates[index][LeftStickDown] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickDown,
-                  .pressed = false,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value > 8192) {
-            if (!m_gamepadLastStates[index][LeftStickDown]) {
-              m_gamepadLastStates[index][LeftStickDown] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickDown,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value < -8192) {
-            if (!m_gamepadLastStates[index][LeftStickUp]) {
-              m_gamepadLastStates[index][LeftStickUp] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickUp,
-                  .pressed = true,
-              });
-            }
-            break;
+        if (ev.caxis.value > 8192) {
+          if (!m_gamepadLastStates[index][LeftStickDown]) {
+            m_gamepadLastStates[index][LeftStickDown] = true;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = LeftStickDown,
+                .pressed = true,
+            });
           }
           break;
         }
-        case SDL_CONTROLLER_AXIS_RIGHTX: {
-          if (ev.caxis.value < 8192 && ev.caxis.value > -8192) {
-            if (m_gamepadLastStates[index][RightStickLeft]) {
-              m_gamepadLastStates[index][RightStickLeft] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickLeft,
-                  .pressed = false,
-              });
-            }
-
-            if (m_gamepadLastStates[index][RightStickRight]) {
-              m_gamepadLastStates[index][RightStickRight] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickRight,
-                  .pressed = false,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value > 8192) {
-            if (!m_gamepadLastStates[index][RightStickRight]) {
-              m_gamepadLastStates[index][RightStickRight] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickRight,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value < -8192) {
-            if (!m_gamepadLastStates[index][RightStickLeft]) {
-              m_gamepadLastStates[index][RightStickLeft] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickLeft,
-                  .pressed = true,
-              });
-            }
-            break;
+        if (ev.caxis.value < -8192) {
+          if (!m_gamepadLastStates[index][LeftStickUp]) {
+            m_gamepadLastStates[index][LeftStickUp] = true;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = LeftStickUp,
+                .pressed = true,
+            });
           }
           break;
         }
-        case SDL_CONTROLLER_AXIS_RIGHTY: {
-          if (ev.caxis.value < 8192 && ev.caxis.value > -8192) {
-            if (m_gamepadLastStates[index][RightStickUp]) {
-              m_gamepadLastStates[index][RightStickUp] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickUp,
-                  .pressed = false,
-              });
-            }
+        break;
+      }
+      case SDL_CONTROLLER_AXIS_RIGHTX: {
+        if (ev.caxis.value < 8192 && ev.caxis.value > -8192) {
+          if (m_gamepadLastStates[index][RightStickLeft]) {
+            m_gamepadLastStates[index][RightStickLeft] = false;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = RightStickLeft,
+                .pressed = false,
+            });
+          }
 
-            if (m_gamepadLastStates[index][RightStickDown]) {
-              m_gamepadLastStates[index][RightStickDown] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickDown,
-                  .pressed = false,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value > 8192) {
-            if (!m_gamepadLastStates[index][RightStickDown]) {
-              m_gamepadLastStates[index][RightStickDown] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickDown,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value < -8192) {
-            if (!m_gamepadLastStates[index][RightStickUp]) {
-              m_gamepadLastStates[index][RightStickUp] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickUp,
-                  .pressed = true,
-              });
-            }
-            break;
+          if (m_gamepadLastStates[index][RightStickRight]) {
+            m_gamepadLastStates[index][RightStickRight] = false;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = RightStickRight,
+                .pressed = false,
+            });
           }
           break;
         }
-        case SDL_CONTROLLER_AXIS_TRIGGERLEFT: {
-          if (ev.caxis.value < 8192) {
-            if (m_gamepadLastStates[index][LeftTrigger]) {
-              m_gamepadLastStates[index][LeftTrigger] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftTrigger,
-                  .pressed = false,
-              });
-              break;
-            }
-
-            break;
+        if (ev.caxis.value > 8192) {
+          if (!m_gamepadLastStates[index][RightStickRight]) {
+            m_gamepadLastStates[index][RightStickRight] = true;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = RightStickRight,
+                .pressed = true,
+            });
+          }
+          break;
+        }
+        if (ev.caxis.value < -8192) {
+          if (!m_gamepadLastStates[index][RightStickLeft]) {
+            m_gamepadLastStates[index][RightStickLeft] = true;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = RightStickLeft,
+                .pressed = true,
+            });
+          }
+          break;
+        }
+        break;
+      }
+      case SDL_CONTROLLER_AXIS_RIGHTY: {
+        if (ev.caxis.value < 8192 && ev.caxis.value > -8192) {
+          if (m_gamepadLastStates[index][RightStickUp]) {
+            m_gamepadLastStates[index][RightStickUp] = false;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = RightStickUp,
+                .pressed = false,
+            });
           }
 
-          if (!m_gamepadLastStates[index][LeftTrigger]) {
-            m_gamepadLastStates[index][LeftTrigger] = true;
+          if (m_gamepadLastStates[index][RightStickDown]) {
+            m_gamepadLastStates[index][RightStickDown] = false;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = RightStickDown,
+                .pressed = false,
+            });
+          }
+          break;
+        }
+        if (ev.caxis.value > 8192) {
+          if (!m_gamepadLastStates[index][RightStickDown]) {
+            m_gamepadLastStates[index][RightStickDown] = true;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = RightStickDown,
+                .pressed = true,
+            });
+          }
+          break;
+        }
+        if (ev.caxis.value < -8192) {
+          if (!m_gamepadLastStates[index][RightStickUp]) {
+            m_gamepadLastStates[index][RightStickUp] = true;
+            EventDispatcher::instance().publish(GamepadInputEvent{
+                .playerIndex = index,
+                .input = RightStickUp,
+                .pressed = true,
+            });
+          }
+          break;
+        }
+        break;
+      }
+      case SDL_CONTROLLER_AXIS_TRIGGERLEFT: {
+        if (ev.caxis.value < 8192) {
+          if (m_gamepadLastStates[index][LeftTrigger]) {
+            m_gamepadLastStates[index][LeftTrigger] = false;
             EventDispatcher::instance().publish(GamepadInputEvent{
                 .playerIndex = index,
                 .input = LeftTrigger,
-                .pressed = true,
+                .pressed = false,
             });
+            break;
           }
 
           break;
         }
-        case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: {
-          if (ev.caxis.value < 8192) {
-            if (m_gamepadLastStates[index][RightTrigger]) {
-              m_gamepadLastStates[index][RightTrigger] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightTrigger,
-                  .pressed = false,
-              });
-              break;
-            }
 
-            break;
-          }
+        if (!m_gamepadLastStates[index][LeftTrigger]) {
+          m_gamepadLastStates[index][LeftTrigger] = true;
+          EventDispatcher::instance().publish(GamepadInputEvent{
+              .playerIndex = index,
+              .input = LeftTrigger,
+              .pressed = true,
+          });
+        }
 
-          if (!m_gamepadLastStates[index][RightTrigger]) {
-            m_gamepadLastStates[index][RightTrigger] = true;
+        break;
+      }
+      case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: {
+        if (ev.caxis.value < 8192) {
+          if (m_gamepadLastStates[index][RightTrigger]) {
+            m_gamepadLastStates[index][RightTrigger] = false;
             EventDispatcher::instance().publish(GamepadInputEvent{
                 .playerIndex = index,
                 .input = RightTrigger,
-                .pressed = true,
+                .pressed = false,
             });
-          }
-
-          break;
-        }
-        }
-      }
-      case SDL_CONTROLLERBUTTONUP: {
-        const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<IGamepad> gamepad;
-        for (const auto &g : m_gamepads) {
-          if (g && g->getInstanceId() == joystickInstanceId) {
-            gamepad = g;
             break;
           }
-        }
 
-        if (!gamepad) {
           break;
         }
 
-        const auto input = sdlToGamepadInputs.contains(ev.cbutton.button)
-                               ? sdlToGamepadInputs.at(ev.cbutton.button)
-                               : None;
-
-        EventDispatcher::instance().publish(GamepadInputEvent{
-            .playerIndex = gamepad->getPlayerIndex(),
-            .input = input,
-            .pressed = false,
-        });
+        if (!m_gamepadLastStates[index][RightTrigger]) {
+          m_gamepadLastStates[index][RightTrigger] = true;
+          EventDispatcher::instance().publish(GamepadInputEvent{
+              .playerIndex = index,
+              .input = RightTrigger,
+              .pressed = true,
+          });
+        }
 
         break;
       }
-      case SDL_CONTROLLERBUTTONDOWN: {
-        const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<IGamepad> gamepad;
-        for (const auto &g : m_gamepads) {
-          if (g && g->getInstanceId() == joystickInstanceId) {
-            gamepad = g;
-            break;
-          }
-        }
-
-        if (!gamepad) {
+      }
+    }
+    case SDL_CONTROLLERBUTTONUP: {
+      const auto joystickInstanceId = ev.cbutton.which;
+      std::shared_ptr<IGamepad> gamepad;
+      for (const auto &g : m_gamepads) {
+        if (g && g->getInstanceId() == joystickInstanceId) {
+          gamepad = g;
           break;
         }
+      }
 
-        const auto input = sdlToGamepadInputs.contains(ev.cbutton.button)
-                               ? sdlToGamepadInputs.at(ev.cbutton.button)
-                               : None;
+      if (!gamepad) {
+        break;
+      }
 
-        for (const auto shortcut : gamepad->getToggledShortcuts(input)) {
-          EventDispatcher::instance().publish(ShortcutToggledEvent{
-              .playerIndex = gamepad->getPlayerIndex(), .shortcut = shortcut});
+      const auto input = sdlToGamepadInputs.contains(ev.cbutton.button)
+                             ? sdlToGamepadInputs.at(ev.cbutton.button)
+                             : None;
+
+      EventDispatcher::instance().publish(GamepadInputEvent{
+          .playerIndex = gamepad->getPlayerIndex(),
+          .input = input,
+          .pressed = false,
+      });
+
+      break;
+    }
+    case SDL_CONTROLLERBUTTONDOWN: {
+      const auto joystickInstanceId = ev.cbutton.which;
+      std::shared_ptr<IGamepad> gamepad;
+      for (const auto &g : m_gamepads) {
+        if (g && g->getInstanceId() == joystickInstanceId) {
+          gamepad = g;
+          break;
         }
+      }
 
-        EventDispatcher::instance().publish(GamepadInputEvent{
-            .playerIndex = gamepad->getPlayerIndex(),
-            .input = input,
-            .pressed = true,
-        });
-
+      if (!gamepad) {
         break;
       }
-      case SDL_KEYDOWN:
-      case SDL_KEYUP:
-      case SDL_JOYAXISMOTION:
-      case SDL_JOYBUTTONUP:
-      case SDL_JOYBUTTONDOWN:
-      case SDL_JOYDEVICEADDED:
-      case SDL_JOYDEVICEREMOVED:
-        spdlog::debug("Ignoring event type: {}", ev.type);
-        break;
-      case SDL_QUIT:
-        spdlog::info("Quitting SDL Input Service");
-        SDL_QuitSubSystem(m_sdlServices);
-        SDL_Quit();
-        return;
-      default:
-        spdlog::debug("Got an unhandled SDL event {}", ev.type);
-        break;
+
+      const auto input = sdlToGamepadInputs.contains(ev.cbutton.button)
+                             ? sdlToGamepadInputs.at(ev.cbutton.button)
+                             : None;
+
+      for (const auto shortcut : gamepad->getToggledShortcuts(input)) {
+        EventDispatcher::instance().publish(ShortcutToggledEvent{
+            .playerIndex = gamepad->getPlayerIndex(), .shortcut = shortcut});
       }
+
+      EventDispatcher::instance().publish(GamepadInputEvent{
+          .playerIndex = gamepad->getPlayerIndex(),
+          .input = input,
+          .pressed = true,
+      });
+
+      break;
+    }
+    case SDL_KEYDOWN:
+    case SDL_KEYUP:
+    case SDL_JOYAXISMOTION:
+    case SDL_JOYBUTTONUP:
+    case SDL_JOYBUTTONDOWN:
+    case SDL_JOYDEVICEADDED:
+    case SDL_JOYDEVICEREMOVED:
+      spdlog::debug("Ignoring event type: {}", ev.type);
+      break;
+    case SDL_QUIT:
+      spdlog::info("Quitting SDL Input Service");
+      SDL_QuitSubSystem(m_sdlServices);
+      SDL_Quit();
+      return;
+    default:
+      spdlog::debug("Got an unhandled SDL event {}", ev.type);
+      break;
     }
     prunePendingRemovals();
   }
