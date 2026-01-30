@@ -104,9 +104,9 @@ PlatformService::PlatformService() {
               .label = "Color correction",
               .category = "Color correction",
               .key = "gambatte_gbc_color_correction",
-              .defaultValue = "GBC only",
               .description = "Adjusts output colors to match the display of "
                              "real Game Boy Color hardware.",
+              .defaultValue = "GBC only",
               .type = settings::BOOLEAN,
               .trueStringValue = "GBC only",
               .falseStringValue = "disabled",
@@ -114,25 +114,25 @@ PlatformService::PlatformService() {
           {.label = "Color correction mode",
            .category = "Color correction",
            .key = "gambatte_gbc_color_correction_mode",
-           .defaultValue = "accurate",
            .description =
                "You can change this from Accurate to Fast if you are "
                "experiencing performance issues.\n\n"
                "Accurate: Produces colors identical to original hardware\n"
                "Fast: Darkens colors and reduces saturation",
+           .defaultValue = "accurate",
            .type = settings::OPTIONS,
            .options = {{.label = "Accurate", .value = "accurate"},
                        {.label = "Fast", .value = "fast"}}},
           {.label = "Frontlight position",
            .category = "Color correction",
            .key = "gambatte_gbc_frontlight_position",
-           .defaultValue = "central",
            .description =
                "Simulates the physical response of the Game Boy Color LCD "
                "panel when illuminated from different angles.\n\n"
                "Central: Standard color reproduction\n"
                "Above screen: Increases brightness"
                "Below screen: Decreases brightness",
+           .defaultValue = "central",
            .type = settings::OPTIONS,
            .options = {{.label = "Central", .value = "central"},
                        {.label = "Above screen", .value = "above screen"},
