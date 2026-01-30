@@ -5,6 +5,15 @@
 #include <SDL_hints.h>
 #include <spdlog/spdlog.h>
 
+namespace {
+bool isSameDevice(const firelight::input::DeviceIdentifier &left,
+                  const firelight::input::DeviceIdentifier &right) {
+  return left.vendorId == right.vendorId && left.productId == right.productId &&
+         left.productVersion == right.productVersion &&
+         left.deviceName == right.deviceName;
+}
+} // namespace
+
 namespace firelight::input {
 SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
     : m_gamepadRepository(gamepadRepository) {
@@ -44,6 +53,18 @@ int SDLInputService::addGamepad(std::shared_ptr<IGamepad> gamepad) {
 
   m_gamepads.emplace_back(gamepad);
   auto nextSlot = getNextAvailablePlayerIndex();
+  if (m_preferredPlayerIndex.has_value()) {
+    const auto preferred = *m_preferredPlayerIndex;
+    const auto slotAvailable =
+        preferred >= 0 && preferred < MAX_PLAYERS &&
+        (!m_playerSlots.contains(preferred) ||
+         m_playerSlots[preferred] == nullptr);
+    if (slotAvailable) {
+      nextSlot = preferred;
+      m_reservedPlayerSlots.erase(preferred);
+    }
+    m_preferredPlayerIndex.reset();
+  }
   if (nextSlot == -1) {
     gamepad->setPlayerIndex(-1);
     EventDispatcher::instance().publish(GamepadConnectedEvent{gamepad});
@@ -91,16 +112,37 @@ int SDLInputService::addGamepad(std::shared_ptr<IGamepad> gamepad) {
 bool SDLInputService::removeGamepadByInstanceId(int instanceId) {
   for (auto it = m_gamepads.begin(); it != m_gamepads.end(); ++it) {
     if (*it && (*it)->getInstanceId() == instanceId) {
-      spdlog::info("Removing gamepad: {}", instanceId);
+      const auto deviceIdentifier = (*it)->getDeviceIdentifier();
+      const auto playerIndex = (*it)->getPlayerIndex();
+      const auto deviceName = (*it)->getName();
+
+      if (!(*it)->isWired() && playerIndex >= 0) {
+        m_pendingRemovals.push_back(PendingRemoval{
+            .identifier = deviceIdentifier,
+            .playerIndex = playerIndex,
+            .instanceId = instanceId,
+            .deviceName = deviceName,
+            .removedAt = std::chrono::steady_clock::now(),
+        });
+        m_reservedPlayerSlots.insert(playerIndex);
+      } else {
+        spdlog::info("Removing gamepad: {}", instanceId);
+        for (int i = 0; i < MAX_PLAYERS; ++i) {
+          if (m_playerSlots.contains(i) && m_playerSlots[i] == *it) {
+            m_playerSlots.erase(i);
+            spdlog::info("Removed player slot for player {}", i + 1);
+          }
+        }
+
+        EventDispatcher::instance().publish(
+            GamepadDisconnectedEvent{playerIndex});
+      }
+
       for (int i = 0; i < MAX_PLAYERS; ++i) {
         if (m_playerSlots.contains(i) && m_playerSlots[i] == *it) {
           m_playerSlots.erase(i);
-          spdlog::info("Removed player slot for player {}", i + 1);
         }
       }
-
-      EventDispatcher::instance().publish(
-          GamepadDisconnectedEvent{(*it)->getPlayerIndex()});
 
       (*it)->setPlayerIndex(-1);
       (*it)->disconnect();
@@ -190,7 +232,7 @@ void SDLInputService::run() {
   spdlog::info("Starting SDL Input Service...");
   while (m_running) {
     SDL_Event ev;
-    while (SDL_WaitEvent(&ev)) {
+    if (SDL_WaitEventTimeout(&ev, 200)) {
       switch (ev.type) {
       case SDL_CONTROLLERDEVICEADDED:
         openSdlGamepad(ev.cdevice.which);
@@ -525,6 +567,7 @@ void SDLInputService::run() {
         break;
       }
     }
+    prunePendingRemovals();
   }
 
   SDL_QuitSubSystem(m_sdlServices);
@@ -637,13 +680,69 @@ void SDLInputService::openSdlGamepad(const int deviceIndex) {
     }
   }
 
-  addGamepad(std::make_shared<SdlController>(gameController));
+  auto newGamepad = std::make_shared<SdlController>(gameController);
+  const auto deviceIdentifier = newGamepad->getDeviceIdentifier();
+  const auto reconnectSlot = consumeReconnectSlot(deviceIdentifier);
+  if (reconnectSlot.has_value()) {
+    m_preferredPlayerIndex = reconnectSlot;
+  }
+
+  addGamepad(std::move(newGamepad));
 
   // Retrieve the gamepad profile and assign it to the gamepad
 }
 
+void SDLInputService::prunePendingRemovals() {
+  if (m_pendingRemovals.empty()) {
+    return;
+  }
+
+  const auto now = std::chrono::steady_clock::now();
+  for (auto it = m_pendingRemovals.begin(); it != m_pendingRemovals.end();) {
+    if (now - it->removedAt < RECONNECT_GRACE) {
+      ++it;
+      continue;
+    }
+
+    if (it->playerIndex >= 0) {
+      spdlog::info("Removing gamepad after reconnect grace: {}",
+                   it->deviceName);
+      spdlog::info("Removed player slot for player {}", it->playerIndex + 1);
+      EventDispatcher::instance().publish(
+          GamepadDisconnectedEvent{it->playerIndex});
+      m_reservedPlayerSlots.erase(it->playerIndex);
+    }
+
+    it = m_pendingRemovals.erase(it);
+  }
+}
+
+std::optional<int>
+SDLInputService::consumeReconnectSlot(const DeviceIdentifier &identifier) {
+  const auto now = std::chrono::steady_clock::now();
+  for (auto it = m_pendingRemovals.begin(); it != m_pendingRemovals.end();
+       ++it) {
+    if (now - it->removedAt >= RECONNECT_GRACE) {
+      continue;
+    }
+    if (!isSameDevice(identifier, it->identifier)) {
+      continue;
+    }
+
+    const auto playerIndex = it->playerIndex;
+    m_reservedPlayerSlots.erase(playerIndex);
+    m_pendingRemovals.erase(it);
+    return playerIndex;
+  }
+
+  return std::nullopt;
+}
+
 int SDLInputService::getNextAvailablePlayerIndex() const {
   for (int i = 0; i < MAX_PLAYERS; ++i) {
+    if (m_reservedPlayerSlots.contains(i)) {
+      continue;
+    }
     if (!m_playerSlots.contains(i) || m_playerSlots.at(i) == nullptr) {
       return i;
     }
