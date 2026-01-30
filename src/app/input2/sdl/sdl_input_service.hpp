@@ -5,8 +5,11 @@
 #include "sdl_controller.hpp"
 #include <SDL.h>
 #include <SDL_gamecontroller.h>
+#include <chrono>
 #include <functional>
 #include <input/controller_repository.hpp>
+#include <optional>
+#include <set>
 
 namespace firelight::input {
 
@@ -60,14 +63,28 @@ public:
 
 private:
   static constexpr int MAX_PLAYERS = 16;
+  static constexpr auto RECONNECT_GRACE = std::chrono::seconds(3);
+
+  struct PendingRemoval {
+    DeviceIdentifier identifier;
+    int playerIndex = -1;
+    int instanceId = -1;
+    std::string deviceName;
+    std::chrono::steady_clock::time_point removedAt;
+  };
 
   void openSdlGamepad(int deviceIndex);
+  void prunePendingRemovals();
+  std::optional<int> consumeReconnectSlot(const DeviceIdentifier &identifier);
   int getNextAvailablePlayerIndex() const;
   bool moveGamepadToPlayerIndex(int oldIndex, int newIndex);
 
   IControllerRepository &m_gamepadRepository;
   std::vector<std::shared_ptr<IGamepad>> m_gamepads;
   std::map<int, std::shared_ptr<IGamepad>> m_playerSlots;
+  std::set<int> m_reservedPlayerSlots;
+  std::vector<PendingRemoval> m_pendingRemovals;
+  std::optional<int> m_preferredPlayerIndex;
 
   std::shared_ptr<IGamepad> m_keyboard;
 
