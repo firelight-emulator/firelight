@@ -366,7 +366,7 @@ TEST_F(AchievementServiceTest, SetGameId_Success) {
 TEST_F(AchievementServiceTest, UpdateAchievementProgress_Success) {
   auto progress = createTestProgress();
 
-  bool result = service->updateAchievementProgress(progress);
+  bool result = service->create(progress);
 
   EXPECT_TRUE(result);
 }
@@ -509,8 +509,8 @@ TEST_F(AchievementServiceTest,
 //   unlock2->earned = true;
 //   unlock2->unlockTimestamp = 1609459200;
 //
-//   EXPECT_TRUE(repository->createOrUpdate(*unlock1));
-//   EXPECT_TRUE(repository->createOrUpdate(*unlock2));
+//   EXPECT_TRUE(repository->create(*unlock1));
+//   EXPECT_TRUE(repository->create(*unlock2));
 //
 //   // Process start session with only achievement 1 unlocked
 //   std::vector<Unlock> unlocks = {createTestUnlock(1, 1609459200)};
@@ -550,8 +550,8 @@ TEST_F(AchievementServiceTest,
 //   unlock2->earnedHardcore = true;
 //   unlock2->unlockTimestampHardcore = 1609459200;
 //
-//   EXPECT_TRUE(repository->createOrUpdate(*unlock1));
-//   EXPECT_TRUE(repository->createOrUpdate(*unlock2));
+//   EXPECT_TRUE(repository->create(*unlock1));
+//   EXPECT_TRUE(repository->create(*unlock2));
 //
 //   // Process start session with only achievement 1 hardcore unlocked
 //   std::vector<Unlock> hardcoreUnlocks = {createTestUnlock(1, 1609459200)};

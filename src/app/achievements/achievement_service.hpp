@@ -67,6 +67,8 @@ public:
   bool create(const AchievementSet &achievementSet);
   bool create(const Achievement &achievement);
   bool create(const Leaderboard &leaderboard);
+  bool create(const AchievementProgress &progress);
+  bool create(const UserUnlock &unlock);
 
   /**
    * @brief Retrieves the achievement set ID associated with a content hash
@@ -82,12 +84,10 @@ public:
   [[nodiscard]] std::optional<int>
   getGameId(const std::string &contentHash) const;
 
-  bool updateAchievementProgress(const AchievementProgress &progress);
+  std::optional<Game> getGameForHash(const std::string &contentHash) const;
 
   [[nodiscard]] std::optional<UserUnlock>
   getUserUnlock(const std::string &username, unsigned achievementId) const;
-
-  bool createOrUpdate(const UserUnlock &unlock);
 
   [[nodiscard]] std::vector<UserUnlock>
   getAllUserUnlocks(const std::string &username, unsigned gameId) const;

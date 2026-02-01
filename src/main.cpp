@@ -17,6 +17,7 @@
 #include <spdlog/spdlog.h>
 
 #include "achievements/achievement_service.hpp"
+#include "achievements/gui/retro_achievements_game_item.hpp"
 #include "achievements/sqlite_achievement_repository.hpp"
 #include "activity/gui/game_activity_item.hpp"
 #include "app/audio/SfxPlayer.hpp"
@@ -150,7 +151,7 @@ int main(int argc, char *argv[]) {
 
   QDir baseDir(defaultAppDataPathString);
   if (!baseDir.mkpath("core-system")) {
-    spdlog::warn("Unable to createOrUpdate core-system directory");
+    spdlog::warn("Unable to create core-system directory");
   }
 
   firelight::ManagerAccessor::setCoreSystemDirectory(
@@ -289,8 +290,10 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::gui::GamepadProfileItem>("Firelight", 1, 0,
                                                       "GamepadProfile");
   qmlRegisterType<firelight::mods::ModInfoItem>("Firelight", 1, 0, "ModInfo");
-  qmlRegisterType<firelight::achievements::AchievementSetItem>(
-      "Firelight", 1, 0, "AchievementSet");
+
+  qmlRegisterType<firelight::achievements::RetroAchievementsGameItem>(
+      "Firelight", 1, 0, "RetroAchievementsGame");
+
   qmlRegisterType<firelight::LibraryEntryItem>("Firelight", 1, 0,
                                                "LibraryEntry");
   qmlRegisterType<firelight::saves::SuspendPointsItem>("Firelight", 1, 0,
@@ -330,7 +333,7 @@ int main(int argc, char *argv[]) {
         }
       });
 
-  // QQmlNetworkAccessManagerFactory::createOrUpdate();
+  // QQmlNetworkAccessManagerFactory::create();
   // QNetworkAccessManager *manager = new QNetworkAccessManager();
   // QNetworkDiskCache *diskCache = new QNetworkDiskCache();
   // QString directory =

@@ -80,7 +80,7 @@ static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
               event->achievement->title, event->achievement->description,
               std::stoi(current), std::stoi(desired));
 
-          raClient->m_service.updateAchievementProgress(AchievementProgress{
+          raClient->m_service.create(AchievementProgress{
               .username = raClient->getCurrentUser()->username,
               .achievementId = event->achievement->id,
               .numerator = static_cast<unsigned>(std::stoi(current)),

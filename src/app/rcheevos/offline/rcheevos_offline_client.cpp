@@ -18,7 +18,6 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::achievements {
-static const std::string GAMEID = "gameid";
 static const std::string ACHIEVEMENT_SETS = "achievementsets";
 static const std::string START_SESSION = "startsession";
 static const std::string AWARD_ACHIEVEMENT = "awardachievement";
@@ -26,10 +25,10 @@ static const std::string LOGIN2 = "login2";
 static const std::string PING = "ping";
 static const std::string SUBMIT_LB_ENTRY = "submitlbentry";
 
-static const rc_api_server_response_t GENERIC_SERVER_ERROR = {"", 0, 500};
+static constexpr rc_api_server_response_t GENERIC_SERVER_ERROR = {"", 0, 500};
 
-static const rc_api_server_response_t GENERIC_SUCCESS = {"{\"Success\":true}",
-                                                         16, 200};
+static constexpr rc_api_server_response_t GENERIC_SUCCESS = {
+    "{\"Success\":true}", 16, 200};
 
 std::unordered_map<std::string, std::string>
 parseQueryParams(const std::string &query) {
@@ -199,7 +198,7 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
       user->softcoreScore += achievement->points;
     }
 
-    m_achievementService.createOrUpdate(newUnlock);
+    m_achievementService.create(newUnlock);
     m_achievementService.create(*user);
   } else {
     if (hardcore && unlock->earnedHardcore) {
@@ -243,7 +242,7 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
       unlock->synced = false;
     }
 
-    m_achievementService.createOrUpdate(*unlock);
+    m_achievementService.create(*unlock);
     m_achievementService.create(*user);
   }
 
@@ -465,7 +464,7 @@ void RetroAchievementsOfflineClient::processAwardAchievementResponse(
                            hardcore ? static_cast<uint64_t>(epochSeconds) : 0,
                        .synced = true};
 
-        m_achievementService.createOrUpdate(newUnlock);
+        m_achievementService.create(newUnlock);
         return;
       }
 
@@ -482,7 +481,7 @@ void RetroAchievementsOfflineClient::processAwardAchievementResponse(
       }
 
       unlock->synced = true;
-      m_achievementService.createOrUpdate(*unlock);
+      m_achievementService.create(*unlock);
     }
   }
 }

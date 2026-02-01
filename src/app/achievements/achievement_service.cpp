@@ -59,8 +59,17 @@ AchievementService::getGameId(const std::string &contentHash) const {
   return m_repository.getGameId(contentHash);
 }
 
-bool AchievementService::updateAchievementProgress(
-    const AchievementProgress &progress) {
+std::optional<Game>
+AchievementService::getGameForHash(const std::string &contentHash) const {
+  const auto id = m_repository.getGameId(contentHash);
+  if (!id.has_value()) {
+    return std::nullopt;
+  }
+
+  return m_repository.getGameById(*id);
+}
+
+bool AchievementService::create(const AchievementProgress &progress) {
   return m_repository.create(progress);
 }
 
@@ -69,7 +78,7 @@ AchievementService::getUserUnlock(const std::string &username,
                                   const unsigned achievementId) const {
   return m_repository.getUserUnlock(username, achievementId);
 }
-bool AchievementService::createOrUpdate(const UserUnlock &unlock) {
+bool AchievementService::create(const UserUnlock &unlock) {
   if (m_currentSessionHardcore) {
     m_currentSessionHardcoreUnlocks.emplace_back(unlock.achievementId);
   }
@@ -104,8 +113,8 @@ bool AchievementService::processStartSessionResponse(
                                   .unlockTimestampHardcore = 0,
                                   .synced = true};
       if (!m_repository.createOrUpdate(newUnlock)) {
-        spdlog::error("Failed to createOrUpdate user unlock: {} for user {}",
-                      a.ID, username);
+        spdlog::error("Failed to create user unlock: {} for user {}", a.ID,
+                      username);
         return false;
       }
     }
@@ -128,8 +137,8 @@ bool AchievementService::processStartSessionResponse(
                                   .unlockTimestampHardcore = a.When,
                                   .synced = true};
       if (!m_repository.createOrUpdate(newUnlock)) {
-        spdlog::error("Failed to createOrUpdate user unlock: {} for user {}",
-                      a.ID, username);
+        spdlog::error("Failed to create user unlock: {} for user {}", a.ID,
+                      username);
         return false;
       }
     }
@@ -193,7 +202,7 @@ bool AchievementService::processStartSessionResponse(
       .synced = true};
 
   if (!m_repository.createOrUpdate(newUnlock)) {
-    spdlog::error("Failed to createOrUpdate unsupported achievement user "
+    spdlog::error("Failed to create unsupported achievement user "
                   "unlock: {} for user {}",
                   UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID, username);
   }
@@ -202,6 +211,11 @@ bool AchievementService::processStartSessionResponse(
 }
 
 void AchievementService::syncOfflineAchievements() {
+  // TODO:
+  // Need to probably add rate limiting
+  // Need to store the hash with the user unlocks to get accurate one when
+  // sending offline award request
+
   const auto headers =
       cpr::Header{{"User-Agent", OFFLINE_USER_AGENT},
                   {"Content-Type", "application/x-www-form-urlencoded"}};

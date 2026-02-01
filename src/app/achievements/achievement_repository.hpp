@@ -256,7 +256,7 @@ public:
    * @return The unlock data if found, std::nullopt otherwise
    */
   [[nodiscard]] virtual std::optional<UserUnlock>
-  getUserUnlock(const std::string &username, unsigned achievementId) const = 0;
+  getUserUnlock(const std::string &username, unsigned achievementId) = 0;
 
   /**
    * @brief Creates or updates user unlock status for an achievement

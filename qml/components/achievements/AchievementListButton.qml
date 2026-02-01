@@ -18,6 +18,7 @@ Button {
     width: ListView.view.width
     property bool showGlobalCursor: true
     focus: true
+    padding: 8
 
     hoverEnabled: true
 

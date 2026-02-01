@@ -228,8 +228,7 @@ public:
    * @return The unlock data if found, std::nullopt if no unlock record exists
    */
   [[nodiscard]] std::optional<UserUnlock>
-  getUserUnlock(const std::string &username,
-                unsigned achievementId) const override;
+  getUserUnlock(const std::string &username, unsigned achievementId) override;
 
   /**
    * @brief Creates or updates user unlock status for an achievement
