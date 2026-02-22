@@ -17,12 +17,6 @@ Pane {
         entryId: EmulationService.currentEntryId
     }
 
-    RetroAchievementsGame {
-        id: rcheevosGame
-        contentHash: EmulationService.currentContentHash
-        hardcore: AchievementService.inHardcoreSession
-    }
-
     horizontalPadding: 16
     verticalPadding: 0
     background: Item {}
@@ -48,6 +42,7 @@ Pane {
                 background: Item {}
 
                 Repeater {
+                    focus: true
                     model: ["Quick Menu", "Achievements", "Settings"]
                     delegate: TabButton {
                           HoverHandler {
@@ -56,6 +51,7 @@ Pane {
                           }
                           anchors.verticalCenter: parent.verticalCenter
                           padding: 10
+                          property bool showGlobalCursor: true
                           contentItem: Text {
                               text: modelData
                               font.family: Constants.mainFontFamily
@@ -206,6 +202,7 @@ Pane {
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
+                KeyNavigation.right: achievementListContainer
                 width: (parent.width - 700) > 280 ? 280 : 108
                 // width: Math.max(80, Math.min(300, parent.width - 1000))
                 // Behavior on width {
@@ -214,13 +211,26 @@ Pane {
                 //         easing.type: Easing.InOutQuad
                 //     }
                 // }
+                RetroAchievementsGame {
+                    id: rcheevosGame
+                    contentHash: EmulationService.currentContentHash
+                    hardcore: AchievementService.inHardcoreSession
+                }
                 background: Item {}
                 contentItem: ListView {
                         id: actualList
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         model: rcheevosGame.achievementSets
-                        spacing: 4
+                        spacing: 6
+                         highlightMoveDuration: 80
+                         highlightMoveVelocity: -1
+                         highlightRangeMode: InputMethodManager.usingMouse ? ListView.NoHighlightRange : ListView.ApplyRange
+                         preferredHighlightBegin: 200
+                         preferredHighlightEnd: height - 200
+                         boundsBehavior: Flickable.StopAtBounds
+                         keyNavigationEnabled: true
+                         focus: true
                         delegate: Button {
                             id: control
                             width: setListContainer.width > 108 ? actualList.width : implicitWidth
@@ -229,6 +239,7 @@ Pane {
                                     actualList.currentIndex = index
                                 }
                             }
+                            property bool showGlobalCursor: true
                             padding: 8
                           background: Rectangle {
                               color: "white"
@@ -338,11 +349,14 @@ Pane {
                     }
             }
             Pane {
+                id: achievementListContainer
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.left: setListContainer.right
-                anchors.right: parent.right
+                anchors.right: sortBar.left
+                KeyNavigation.right: sortBar
                 clip: true
+                focus: true
                 background: Item {}
                 contentItem: ColumnLayout {
                     spacing: 16
@@ -364,6 +378,7 @@ Pane {
                          preferredHighlightBegin: 200
                          preferredHighlightEnd: height - 200
                          boundsBehavior: Flickable.StopAtBounds
+                         keyNavigationEnabled: true
                          contentY: 0
                          focus: true
                          cacheBuffer: 1000
@@ -374,39 +389,6 @@ Pane {
                              anchors.left: achievementList.right
                              anchors.leftMargin: 4
                              anchors.bottom: achievementList.bottom
-                          }
-
-                          header: Pane {
-                             background: Item {}
-                             width: ListView.view.width
-                             padding: 0
-                             bottomPadding: 16
-                             height: 64
-                             contentItem: RowLayout {
-                                 RadioIconButton {
-                                     Layout.fillHeight: true
-                                     Layout.preferredWidth: height
-                                     Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                                      icon.source: "qrc:/icons/sort"
-                                      // icon.height: 42
-                                      // icon.width: 42
-                                      // KeyNavigation.right: mainArea
-                                      model: [
-                                            { label: "Default order", value: "default" },
-                                            { label: "A-Z", value: "a-z" },
-                                            { label: "Z-A", value: "z-a" },
-                                            { label: "Points (most first)", value: "points_most" },
-                                            { label: "Points (least first)", value: "points_least" },
-                                            { label: "Earned date", value: "earned_date" },
-                                            { label: "Type", value: "type" }
-                                        ]
-
-                                        onSelectionChanged: function(index, value, text) {
-                                            rcheevosGame.achievementSets[actualList.currentIndex].achievements.sortMethod = value
-                                        }
-
-                                  }
-                              }
                           }
 
                          // header: Pane {
@@ -573,6 +555,41 @@ Pane {
                          // }
                      }
                  }
+            }
+
+            Pane {
+                id: sortBar
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                width: 64
+                background: Item {}
+                contentItem: ColumnLayout {
+                    RadioIconButton {
+                         Layout.preferredWidth: 42
+                         Layout.preferredHeight: 42
+                         Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+                         focus: true
+                          icon.source: "qrc:/icons/sort"
+                          // icon.height: 42
+                          // icon.width: 42
+                          // KeyNavigation.right: mainArea
+                          model: [
+                                { label: "Default order", value: "default" },
+                                { label: "A-Z", value: "a-z" },
+                                { label: "Z-A", value: "z-a" },
+                                { label: "Points (most first)", value: "points_most" },
+                                { label: "Points (least first)", value: "points_least" },
+                                { label: "Earned date", value: "earned_date" },
+                                { label: "Type", value: "type" }
+                            ]
+
+                            onSelectionChanged: function(index, value, text) {
+                                rcheevosGame.achievementSets[actualList.currentIndex].achievements.sortMethod = value
+                            }
+
+                      }
+                }
             }
 
             // Pane {

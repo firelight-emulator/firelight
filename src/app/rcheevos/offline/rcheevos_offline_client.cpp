@@ -2,15 +2,12 @@
 
 #include "../achievement_set_response.hpp"
 #include "../award_achievement_response.hpp"
-#include "../gameid_response.hpp"
 #include "../login2_response.hpp"
 #include "../ra_constants.h"
 #include "../startsession_response.hpp"
 
 #include <QDateTime>
 #include <cpr/api.h>
-#include <cpr/body.h>
-#include <cpr/cprtypes.h>
 #include <qcryptographichash.h>
 #include <sstream>
 #include <unordered_map>

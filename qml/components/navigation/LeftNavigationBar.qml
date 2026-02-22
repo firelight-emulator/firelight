@@ -42,7 +42,7 @@ Pane {
     }
 
     background: Rectangle {
-        color: "#19181d"
+        color: "#18181c"
     }
 
     contentItem: ColumnLayout {

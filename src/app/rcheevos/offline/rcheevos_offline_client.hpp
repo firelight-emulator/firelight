@@ -24,12 +24,12 @@ public:
   void startOnlineHardcoreSession();
 
 private:
-  rc_api_server_response_t
+  [[nodiscard]] rc_api_server_response_t
   handleAchievementSetsRequest(const std::string &username,
                                const std::string &token,
                                const std::string &hash) const;
 
-  rc_api_server_response_t
+  [[nodiscard]] rc_api_server_response_t
   handleStartSessionRequest(const std::string &username, int gameId,
                             bool hardcore) const;
 
@@ -38,9 +38,9 @@ private:
                                 const std::string &token,
                                 unsigned achievementId, bool hardcore);
 
-  rc_api_server_response_t handleLogin2Request(const std::string &username,
-                                               const std::string &password,
-                                               const std::string &token) const;
+  [[nodiscard]] rc_api_server_response_t
+  handleLogin2Request(const std::string &username, const std::string &password,
+                      const std::string &token) const;
 
   rc_api_server_response_t handlePingRequest();
 

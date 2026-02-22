@@ -800,7 +800,7 @@ SqliteAchievementRepository::getUserUnlock(const std::string &username,
         .earnedHardcore = false,
         .unlockTimestamp = 0,
         .unlockTimestampHardcore = 0,
-        .synced = false,
+        .synced = true,
     };
     createOrUpdate(newUnlock);
 
