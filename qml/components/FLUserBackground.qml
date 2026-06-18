@@ -10,8 +10,18 @@ Rectangle {
     property color defaultColor: "black"
 
     property real blurAmount: root.blur ? 0.5 : 0
+    property real dimAmount: 0
 
-    color: defaultColor
+    // color: defaultColor
+
+    gradient: Gradient {
+        GradientStop {
+            position: 0.0; color: defaultColor
+        }
+        GradientStop {
+            position: 1.0; color: Qt.lighter(defaultColor, 1.2)
+        }
+    }
 
     Behavior on blurAmount {
         NumberAnimation {
@@ -30,6 +40,7 @@ Rectangle {
         blurMultiplier: 0
         blurMax: 64
         blur: root.blurAmount
+        autoPaddingEnabled: false
     }
 
 
@@ -53,7 +64,7 @@ Rectangle {
         Rectangle {
             anchors.fill: parent
             color: "black"
-            opacity: 0.65
+            opacity: root.dimAmount
         }
 
         Rectangle {

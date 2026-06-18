@@ -1,5 +1,5 @@
 #pragma once
-#include <event_dispatcher.hpp>
+#include <firelight/event_dispatcher.hpp>
 #include <firelight/libretro/configuration_provider.hpp>
 #include <map>
 #include <platforms/models/platform.hpp>

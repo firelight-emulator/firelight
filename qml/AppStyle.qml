@@ -3,7 +3,6 @@ import QtQuick
 pragma Singleton
 
 Item {
-
     readonly property var windowPadding: 18
     readonly property var mainHeaderHeight: 42 + mainHeaderPadding * 2
     readonly property var mainHeaderPadding: 18
@@ -30,6 +29,37 @@ Item {
     readonly property color buttonTextColorDisabled: ColorPalette.neutral500
     readonly property color buttonTextColorInactive: "white"
     readonly property color buttonTextColorFocused: "black"
+
+    //*************************************************************
+    // Top Bar
+    //*************************************************************
+    readonly property real topBarHeight: 52
+    readonly property real topBarPadding: 8
+    readonly property real topBarUtilityButtonWidth: 48
+    readonly property real topBarUtilityButtonIconSize: 10
+
+    readonly property color topBarMinimizeButtonColorHovered: "white"
+    readonly property real topBarMinimizeButtonOpacityHovered: 0.08
+    readonly property color topBarMinimizeButtonColorPressed: "white"
+    readonly property real topBarMinimizeButtonOpacityPressed: 0.05
+
+    readonly property color topBarMaximizeButtonColorHovered: "white"
+    readonly property real topBarMaximizeButtonOpacityHovered: 0.08
+    readonly property color topBarMaximizeButtonColorPressed: "white"
+    readonly property real topBarMaximizeButtonOpacityPressed: 0.05
+
+    readonly property color topBarCloseButtonColorHovered: "#c42b1c"
+    readonly property real topBarCloseButtonOpacityHovered: 1
+    readonly property color topBarCloseButtonColorPressed: "#941320"
+    readonly property real topBarCloseButtonOpacityPressed: 1
+
+    //*************************************************************
+    // Something Else
+    //*************************************************************
+
+
+
+
 
 
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include "event_dispatcher.hpp"
+#include "firelight/event_dispatcher.hpp"
 #include "input2/input_service.hpp"
 #include "service_accessor.hpp"
 
@@ -54,7 +54,8 @@ private:
     int playerIndex;
     input::GamepadInput input;
   };
-  std::map<std::pair<int, input::GamepadInput>, AutoRepeatState> m_autoRepeatStates;
+  std::map<std::pair<int, input::GamepadInput>, AutoRepeatState>
+      m_autoRepeatStates;
 
   QTimer *m_autoRepeatTimer;
 

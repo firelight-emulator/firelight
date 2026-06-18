@@ -1,4 +1,4 @@
-#include "../../../src/app/achievements/sqlite_achievement_repository.hpp"
+#include <sqlite_achievement_repository.hpp>
 #include <filesystem>
 #include <gtest/gtest.h>
 

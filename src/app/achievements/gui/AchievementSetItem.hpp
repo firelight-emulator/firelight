@@ -1,7 +1,7 @@
 #pragma once
 #include "achievement_list_model.hpp"
 #include "achievement_list_sort_filter_model.hpp"
-#include "achievements/models/achievement_set.hpp"
+#include <firelight/achievement_set.hpp>
 #include "service_accessor.hpp"
 
 #include <QObject>

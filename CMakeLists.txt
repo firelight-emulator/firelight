@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23.5...3.31.6)
+cmake_minimum_required(VERSION 3.24.0...3.31.6)
 project(firelight
         VERSION 0.12.2
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
@@ -7,7 +7,6 @@ project(firelight
 )
 
 set(QT_QML_GENERATE_QMLLS_INI ON)
-
 
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
@@ -70,19 +69,19 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
 # find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
-find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
+find_package(Qt6 6.11 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
 if (Qt6_VERSION VERSION_GREATER_EQUAL 6.10.0)
     find_package(Qt6 OPTIONAL_COMPONENTS
-        GuiPrivate
+            GuiPrivate
     )
-endif()
+endif ()
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(LibArchive REQUIRED)
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
-qt6_standard_project_setup(REQUIRES 6.8)
+qt6_standard_project_setup(REQUIRES 6.11)
 
 
 #add_compile_definitions(QT_QML_DEBUG)
@@ -91,6 +90,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 #include(${CMAKE_SOURCE_DIR}/libs/qwindowkit/CMakeLists.txt)
 include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
+add_subdirectory(libs/firelight/achievements)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -110,6 +110,8 @@ file(GLOB QML_FILES
         qml/components/settings/*.qml
         qml/components/emulation/*.qml
         qml/components/controllers/*.qml
+        qml/components/v2/*.qml
+        qml/components/v2/*/*.qml
         qml/**/*.qml
 )
 
@@ -136,7 +138,7 @@ add_library(firelight_lib
         src/app/db/sqlite_userdata_database.cpp
         src/app/input/gui/controller_list_model.cpp
         src/app/saves/gui/savefile_list_model.cpp
-        src/app/rcheevos/ra_client.cpp
+        libs/firelight/achievements/src/rcheevos/ra_client.cpp
         src/gui/eventhandlers/window_resize_handler.cpp
         src/app/achievements/gui/achievement_list_model.cpp
         src/app/achievements/gui/achievement_list_sort_filter_model.cpp
@@ -149,8 +151,6 @@ add_library(firelight_lib
         src/app/saves/gui/suspend_point_list_model.cpp
         src/gui/game_image_provider.cpp
         src/app/audio/SfxPlayer.cpp
-        src/app/rcheevos/regular_http_client.cpp
-        src/app/rcheevos/offline/rcheevos_offline_client.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/input/keyboard_input_handler.cpp
         src/app/library/gui/entry_list_model.cpp
@@ -171,7 +171,6 @@ add_library(firelight_lib
         src/app/settings/sqlite_settings_repository.cpp
         src/app/discord/discord_manager.cpp
         src/app/library/gui/playlist_item_model.cpp
-        src/app/library/gui/entry_sort_filter_list_model.cpp
         src/gui/filesystem_utils.cpp
         src/app/saves/gui/save_files_item.cpp
         src/app/library/gui/content_directory_model.cpp
@@ -197,25 +196,18 @@ add_library(firelight_lib
         src/gui/models/game_activity_list_model.hpp
         src/app/service_accessor.cpp
         src/app/service_accessor.hpp
-        src/app/achievements/achievement_service.cpp
-        src/app/achievements/achievement_service.hpp
-        src/app/achievements/models/user_unlock.hpp
-        src/app/achievements/models/achievement_set.hpp
-        src/app/achievements/achievement_repository.hpp
-        src/app/achievements/sqlite_achievement_repository.cpp
-        src/app/achievements/sqlite_achievement_repository.hpp
-        src/app/achievements/models/achievement_progress.hpp
         src/gui/qt_achievement_service_proxy.cpp
         src/gui/qt_achievement_service_proxy.hpp
         src/app/achievements/gui/retro_achievements_game_item.cpp
-        src/app/achievements/gui/retro_achievements_game_item.hpp
+        src/gui/eventhandlers/windows_frame_filter.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
+target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src/rcheevos ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src)
 target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS} ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/lib/debug)
 
 if (WIN32)
-    target_link_libraries(firelight_lib PUBLIC mingw32)
+    target_link_libraries(firelight_lib PUBLIC mingw32 dwmapi)
 endif ()
 
 target_link_libraries(firelight_lib PUBLIC
@@ -245,6 +237,7 @@ target_link_libraries(firelight_lib PUBLIC
         LibArchive::LibArchive
         spdlog::spdlog
         cpr::cpr
+        firelight_achievements
         library
         patching
         rcheevos
@@ -283,6 +276,7 @@ qt6_add_qml_module(firelight
 )
 
 #target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
+target_include_directories(firelight PRIVATE libs/firelight/achievements/src)
 #target_link_libraries(firelight PRIVATE firelight_lib)
 target_link_libraries(firelight PUBLIC
         discord
@@ -426,7 +420,7 @@ add_test(NAME QMLTests COMMAND fl_qml_test)
 
 add_dependencies(fl_test copy_resources)
 
-target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include)
+target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include libs/firelight/achievements/src)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
 #ctest_coverage_collect_gcov()

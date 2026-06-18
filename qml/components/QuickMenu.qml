@@ -197,8 +197,24 @@ Pane {
     Component {
         id: achievementsView
         FocusScope {
+            RetroAchievementsGame {
+                id: rcheevosGame
+                contentHash: EmulationService.currentContentHash
+                hardcore: AchievementService.inHardcoreSession
+            }
+            Text {
+                visible: AchievementService.loggedIn && rcheevosGame.achievementSets.length === 0
+                anchors.centerIn: parent
+                text: "No achievements found for this game"
+                color: ColorPalette.neutral100
+                font.family: Constants.mainFontFamily
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
             Pane {
                 id: setListContainer
+                visible: rcheevosGame.achievementSets.length >= 1
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
@@ -211,11 +227,6 @@ Pane {
                 //         easing.type: Easing.InOutQuad
                 //     }
                 // }
-                RetroAchievementsGame {
-                    id: rcheevosGame
-                    contentHash: EmulationService.currentContentHash
-                    hardcore: AchievementService.inHardcoreSession
-                }
                 background: Item {}
                 contentItem: ListView {
                         id: actualList

@@ -11,6 +11,8 @@ RoundButton {
     icon.height: 32
     icon.color: "white"
 
+    property string tooltipText: ""
+
     hoverEnabled: true
 
     property bool showGlobalCursor: true
@@ -27,7 +29,7 @@ RoundButton {
     FLToolTip {
         y: control.height / 2 - height / 2 - verticalPadding / 2
         x: control.width + 8
-        visible: control.hovered || (!InputMethodManager.usingMouse && activeFocus)
-        text: "Sort"
+        visible: control.hovered || (!InputMethodManager.usingMouse && activeFocus) && control.tooltipText !== ""
+        text: control.tooltipText
     }
 }

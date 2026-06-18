@@ -1,6 +1,6 @@
 #include "retro_achievements_game_item.hpp"
 
-#include "achievements/achievement_service.hpp"
+#include <firelight/achievement_service.hpp>
 
 #include <library/user_library.hpp>
 #include <platforms/platform_service.hpp>

@@ -1,6 +1,6 @@
 #include "qt_achievement_service_proxy.hpp"
 
-#include "achievements/achievement_service.hpp"
+#include <firelight/achievement_service.hpp>
 
 namespace firelight::gui {
 QtAchievementServiceProxy::QtAchievementServiceProxy(QObject *parent) {

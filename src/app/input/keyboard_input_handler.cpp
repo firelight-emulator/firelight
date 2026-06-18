@@ -1,6 +1,6 @@
 #include "keyboard_input_handler.hpp"
 
-#include "event_dispatcher.hpp"
+#include "firelight/event_dispatcher.hpp"
 #include "input2/input_service.hpp"
 
 #include <qevent.h>

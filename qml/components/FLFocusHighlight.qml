@@ -9,7 +9,9 @@ Item {
     property real borderWidth: 2
     property real bounceAmplitude: 16
     property real defaultAnchorMargins: -4
-    property int animationDuration: 85
+    property int animationDuration: 50
+    property real scrollMarginTop: 100
+    property real scrollMarginBottom: 100
     z: 1000
 
     required property Item target
@@ -39,6 +41,17 @@ Item {
             return -item.globalCursorSpacing
         }
         return root.defaultAnchorMargins
+    }
+
+    function findFlickableAncestor(item: Item): Item {
+        var p = item.parent
+        while (p) {
+            if (p.hasOwnProperty("flickableDirection") && p.hasOwnProperty("interactive") && p.interactive) {
+                return p
+            }
+            p = p.parent
+        }
+        return null
     }
 
     // Two highlights that crossfade via re-parenting
@@ -77,6 +90,21 @@ Item {
             highlightA.opacity = 0
             highlightB.opacity = 0
             return
+        }
+
+        if (!root.usingMouse) {
+            var flickable = findFlickableAncestor(target)
+            if (flickable !== null) {
+                var pos = target.mapToItem(flickable.contentItem, 0, 0)
+                var targetTop = pos.y
+                var targetBottom = targetTop + target.height
+                if (targetTop - root.scrollMarginTop < flickable.contentY) {
+                    flickable.contentY = Math.max(0, targetTop - root.scrollMarginTop)
+                } else if (targetBottom + root.scrollMarginBottom > flickable.contentY + flickable.height) {
+                    flickable.contentY = Math.min(targetBottom + root.scrollMarginBottom - flickable.height,
+                                                  flickable.contentHeight - flickable.height)
+                }
+            }
         }
 
         if (target.hasOwnProperty('showGlobalCursor') && target.showGlobalCursor) {

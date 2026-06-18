@@ -1,11 +1,11 @@
-#include "achievements/sqlite_achievement_repository.hpp"
+#include <sqlite_achievement_repository.hpp>
 
 #include <gtest/gtest.h>
 #include <rcheevos/award_achievement_response.hpp>
 #include <rcheevos/gameid_response.hpp>
 #include <rcheevos/login2_response.hpp>
 
-#include <rcheevos/offline/rcheevos_offline_client.hpp>
+#include <rcheevos/rcheevos_offline_client.hpp>
 
 namespace firelight::achievements {
 
