@@ -11,24 +11,30 @@ ApplicationWindow {
     objectName: "Application Window"
     title: qsTr("Firelight")
     visibility: Window.Windowed
-    visible: true
+    visible: false
 
     width: GeneralSettings.mainWindowWidth
     height: GeneralSettings.mainWindowHeight
-    x: GeneralSettings.mainWindowX
-    y: GeneralSettings.mainWindowY
+
+    property bool frameReady: false
+    property real previousX: 0
+    property real previousY: 0
+    property real previousWidth: width
+    property real previousHeight: height
 
     Component.onCompleted: {
         WindowFrame.setWindow(window)
+        WindowFrame.setNativePosition(GeneralSettings.mainWindowX, GeneralSettings.mainWindowY)
+        visible = true
+        frameReady = true
+    }
+
+    onActiveFocusItemChanged: {
+        console.log("Active focus item: " + activeFocusItem)
     }
 
     minimumWidth: 800
     minimumHeight: 600
-
-    property real previousX: x
-    property real previousY: y
-    property real previousWidth: width
-    property real previousHeight: height
 
     background: FLUserBackground {
         // blur: window.blur
@@ -52,10 +58,10 @@ ApplicationWindow {
         GeneralSettings.mainWindowWidth = width;
     }
     onXChanged: {
-        GeneralSettings.mainWindowX = x;
+        if (frameReady) GeneralSettings.mainWindowX = WindowFrame.nativeX()
     }
     onYChanged: {
-        GeneralSettings.mainWindowY = y;
+        if (frameReady) GeneralSettings.mainWindowY = WindowFrame.nativeY()
     }
 
     Popup {
@@ -165,6 +171,14 @@ ApplicationWindow {
                 to: 1.0
             }
         }
+    }
+
+    Action {
+        id: searchAction
+        text: qsTr("&Copy")
+        icon.name: "edit-copy"
+        shortcut: StandardKey.Find
+        onTriggered: actualTopBar.activateSearch()
     }
 
     // Pane {
@@ -511,20 +525,19 @@ ApplicationWindow {
             anchors.fill: parent
         }
 
-        MainTopBar {
-            id: mainBar
+        TopBar {
+            id: actualTopBar
             anchors.fill: parent
 
             onMaximizeClicked: {
                 if (window.visibility === Window.Maximized) {
                     window.showNormal()
-                    window.x = window.previousX
-                    window.y = window.previousY
+                    WindowFrame.setNativePosition(window.previousX, window.previousY)
                     window.width = window.previousWidth
                     window.height = window.previousHeight
                 } else {
-                    window.previousX = window.x
-                    window.previousY = window.y
+                    window.previousX = WindowFrame.nativeX()
+                    window.previousY = WindowFrame.nativeY()
                     window.previousWidth = window.width
                     window.previousHeight = window.height
                     window.showMaximized()
@@ -573,7 +586,6 @@ ApplicationWindow {
         anchors.leftMargin: 8
         anchors.rightMargin: 8
         anchors.bottomMargin: 8
-        anchors.topMargin: 2
         orientation: Qt.Horizontal
         spacing: 0
 

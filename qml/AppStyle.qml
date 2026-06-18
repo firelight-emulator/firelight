@@ -33,7 +33,7 @@ Item {
     //*************************************************************
     // Top Bar
     //*************************************************************
-    readonly property real topBarHeight: 52
+    readonly property real topBarHeight: 58
     readonly property real topBarPadding: 8
     readonly property real topBarUtilityButtonWidth: 48
     readonly property real topBarUtilityButtonIconSize: 10

@@ -11,9 +11,16 @@ class WindowsFrameFilter : public QObject, public QAbstractNativeEventFilter {
 public:
     explicit WindowsFrameFilter(QObject *parent = nullptr);
 
-    // Called from QML to register hit zones (in logical pixels)
     Q_INVOKABLE void setWindow(QWindow *window);
 
+    // Outer frame position in logical (QML) pixels via GetWindowRect,
+    // bypassing Qt's frame-margin adjustment.
+    Q_INVOKABLE int nativeX() const;
+    Q_INVOKABLE int nativeY() const;
+
+    // Move the outer frame to (logicalX, logicalY) via SetWindowPos,
+    // bypassing Qt's frame-margin subtraction.
+    Q_INVOKABLE void setNativePosition(int logicalX, int logicalY);
 
     bool nativeEventFilter(const QByteArray &eventType,
                            void *message, qintptr *result) override;

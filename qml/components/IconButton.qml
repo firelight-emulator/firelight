@@ -23,13 +23,13 @@ RoundButton {
     background: Rectangle {
         color: control.pressed || control.hovered ? ColorPalette.neutral100 : "transparent"
         radius: control.width / 2
-        opacity: control.pressed ? 0.14 : 0.23
+        opacity: !control.enabled ? 0 : control.pressed ? 0.14 : 0.23
     }
 
     FLToolTip {
         y: control.height / 2 - height / 2 - verticalPadding / 2
         x: control.width + 8
-        visible: control.hovered || (!InputMethodManager.usingMouse && activeFocus) && control.tooltipText !== ""
+        visible: (control.hovered || (!InputMethodManager.usingMouse && activeFocus)) && control.tooltipText !== ""
         text: control.tooltipText
     }
 }

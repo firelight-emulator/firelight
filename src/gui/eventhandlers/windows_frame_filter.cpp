@@ -9,11 +9,46 @@ void WindowsFrameFilter::setWindow(QWindow *window) {
     m_hwnd = reinterpret_cast<HWND>(window->winId());
     m_dpr = window->devicePixelRatio();
 
-    // Keep DWM shadow when using WM_NCCALCSIZE trick
     MARGINS m{1, 1, 1, 1};
     DwmExtendFrameIntoClientArea(m_hwnd, &m);
 
-    SetWindowPos(m_hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    // Activate our WM_NCCALCSIZE handler (client area = full window rect).
+    SetWindowPos(m_hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+    // Qt cached a title-bar-height content offset before our filter was active.
+    // Nudging the size forces WM_SIZE, which makes Qt re-query GetClientRect.
+    // Now that WM_NCCALCSIZE returns client=window, Qt resets contentItem Y to 0.
+    RECT wr;
+    GetWindowRect(m_hwnd, &wr);
+    int w = wr.right - wr.left;
+    int h = wr.bottom - wr.top;
+    SetWindowPos(m_hwnd, nullptr, 0, 0, w, h + 1,
+                 SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(m_hwnd, nullptr, 0, 0, w, h,
+                 SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+int WindowsFrameFilter::nativeX() const {
+    if (!m_hwnd) return 0;
+    RECT wr;
+    GetWindowRect(m_hwnd, &wr);
+    return static_cast<int>(wr.left / m_dpr);
+}
+
+int WindowsFrameFilter::nativeY() const {
+    if (!m_hwnd) return 0;
+    RECT wr;
+    GetWindowRect(m_hwnd, &wr);
+    return static_cast<int>(wr.top / m_dpr);
+}
+
+void WindowsFrameFilter::setNativePosition(int logicalX, int logicalY) {
+    if (!m_hwnd) return;
+    int px = static_cast<int>(logicalX * m_dpr);
+    int py = static_cast<int>(logicalY * m_dpr);
+    SetWindowPos(m_hwnd, nullptr, px, py, 0, 0,
+                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 bool WindowsFrameFilter::nativeEventFilter(const QByteArray &eventType,
