@@ -263,7 +263,7 @@ FocusScope {
 
                             Connections {
                                 target: SearchResultsModel
-                                onCountChanged: {
+                                function onCountChanged() {
                                     countText.text = "(" + SearchResultsModel.rowCount() + ")"
                                 }
                             }
@@ -348,8 +348,6 @@ FocusScope {
                 ScrollBar.vertical: ScrollBar {
                     id: verticalScrollBar
                     policy: ScrollBar.AsNeeded
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
                     anchors.bottomMargin: 6
                     anchors.right: parent.right
                     anchors.rightMargin: -20
