@@ -71,6 +71,7 @@
 #include <unistd.h>
 
 #include "gui/eventhandlers/windows_frame_filter.hpp"
+#include "gui/models/search_results_list_model.hpp"
 
 int main(int argc, char *argv[]) {
     // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
@@ -384,6 +385,10 @@ int main(int argc, char *argv[]) {
                                              &entryListModel);
     engine.rootContext()->setContextProperty("PlatformModel",
                                              &platformListModel);
+
+    const auto searchResultsModel = new firelight::gui::SearchResultsListModel();
+    engine.rootContext()->setContextProperty("SearchResultsModel", searchResultsModel);
+
 
     engine.rootContext()->setContextProperty(
         "InputService", new firelight::gui::QtInputServiceProxy());

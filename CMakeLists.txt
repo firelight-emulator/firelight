@@ -200,6 +200,9 @@ add_library(firelight_lib
         src/gui/qt_achievement_service_proxy.hpp
         src/app/achievements/gui/retro_achievements_game_item.cpp
         src/gui/eventhandlers/windows_frame_filter.cpp
+        src/app/util/fuzzy_string_matcher.hpp
+        src/gui/models/search_results_list_model.cpp
+        src/gui/models/search_results_list_model.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
