@@ -6,17 +6,28 @@ Menu {
     id: control
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-    padding: 8
+    padding: 6
     // horizontalPadding: 8
 
-    implicitWidth: 300
+    implicitWidth: {
+        var maxWidth = 0
+
+        for (var i = 0; i < count; i++) {
+            var item = itemAt(i)
+            if (item.implicitWidth > maxWidth) {
+                maxWidth = item.implicitWidth
+            }
+        }
+
+        return maxWidth + horizontalPadding * 2
+    }
     implicitHeight: {
-        var height = 16
+        var height = 0
 
         for (var i = 0; i < count; i++) {
             height += itemAt(i).implicitHeight
         }
-        return height
+        return height + verticalPadding * 2
         
     }
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "emulation/emulation_service.hpp"
-#include "event_dispatcher.hpp"
+#include "firelight/event_dispatcher.hpp"
 
 #include <QObject>
 #include <settings/settings_service.hpp>

@@ -1,15 +1,20 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts 1.0
 
 MenuItem {
     id: control
-    padding: 4
 
-    focus: true
+    property string iconSource: ""
     property bool externalLink: false
     property bool dangerous: false
+    property real minWidth: 0
+    property real maxWidth: -1
 
-    implicitHeight: 48
+    implicitHeight: 42
+    implicitWidth: contentItem.width
+    padding: 4
+    horizontalPadding: 8
 
     Text {
         id: externalIndicator
@@ -64,17 +69,53 @@ MenuItem {
         radius: 4
     }
 
-    contentItem: CarouselText {
-        hovered: renameHover.hovered
-        text: control.text
-        color: enabled ? hovered ? "white" : (control.dangerous ? ColorPalette.red500 : "#dfdfdf") : "grey"
-        leftPadding: 8
-        rightPadding: 8
-        font.pixelSize: 16
-        font.weight: Font.DemiBold
-        font.family: Constants.regularFontFamily
-        // font.weight: Font.DemiBold
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
+    contentItem: RowLayout {
+        width: {
+            if (control.maxWidth > 0 && implicitWidth > control.maxWidth) {
+                return control.maxWidth
+            } else if (implicitWidth < control.minWidth) {
+                return control.minWidth
+            } else {
+                return implicitWidth
+            }
+        }
+        spacing: 12
+        Image {
+            Layout.preferredHeight: parent.height * 0.84
+            Layout.preferredWidth: height * 0.84
+            sourceSize.width: 32
+            sourceSize.height: 32
+            source: control.iconSource
+            fillMode: Image.PreserveAspectFit
+            visible: control.iconSource !== undefined && control.iconSource !== ""
+        }
+
+        CarouselText {
+            Layout.fillWidth: true
+            Layout.topMargin: -1
+            hovered: renameHover.hovered
+            text: control.text
+            color: enabled ? renameHover.hovered ? (control.dangerous ? ColorPalette.red700 : "white") : (control.dangerous ? ColorPalette.red500 : "#dfdfdf") : "grey"
+            font.pixelSize: 15
+            font.weight: Font.DemiBold
+            font.family: Constants.regularFontFamily
+            // font.weight: Font.DemiBold
+            horizontalAlignment: Text.AlignLeft
+            verticalAlignment: Text.AlignVCenter
+        }
     }
+
+    // contentItem: CarouselText {
+    //     hovered: renameHover.hovered
+    //     text: control.text
+    //     color: enabled ? hovered ? "white" : (control.dangerous ? ColorPalette.red500 : "#dfdfdf") : "grey"
+    //     leftPadding: 8
+    //     rightPadding: 8
+    //     font.pixelSize: 16
+    //     font.weight: Font.DemiBold
+    //     font.family: Constants.regularFontFamily
+    //     // font.weight: Font.DemiBold
+    //     horizontalAlignment: Text.AlignLeft
+    //     verticalAlignment: Text.AlignVCenter
+    // }
 }

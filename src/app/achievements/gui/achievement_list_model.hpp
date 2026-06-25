@@ -1,7 +1,7 @@
 #pragma once
 
-#include "achievements/models/achievement.hpp"
-#include "achievements/models/user_unlock.hpp"
+#include <firelight/achievement.hpp>
+#include <firelight/user_unlock.hpp>
 
 #include <QAbstractListModel>
 

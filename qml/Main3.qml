@@ -180,13 +180,12 @@ ApplicationWindow {
             gameRunning: EmulationService.isGameRunning
         }
 
-        Component {
+
+        LibraryPage {
             id: allGamesPage
-            LibraryPage {
-                currentEntryId: EmulationService.currentEntryId
-                onStartGame: function (entryId) {
-                    window.startGame(entryId)
-                }
+            currentEntryId: EmulationService.currentEntryId
+            onStartGame: function (entryId) {
+                window.startGame(entryId)
             }
         }
 

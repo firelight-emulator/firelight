@@ -27,7 +27,9 @@
     </qresource>
     <qresource prefix="/images">
         <file alias="retroachievements-banner">assets/img/retroachievements_banner.png</file>
-        <file alias="firelight-logo">assets/img/firelight_logo1 (1).svg</file>
+        <file alias="firelight-logo">assets/img/firelight_logo.svg</file>
+        <file alias="firelight-logo-inverted">assets/img/white-logo-orange-bg.png</file>
+        <file alias="firelight-logo-white">assets/img/firelight-logo-white.png</file>
     </qresource>
     <qresource prefix="/images/controllers">
         <file alias="placeholder">assets/img/controllers/placeholder.svg</file>
@@ -57,15 +59,22 @@
     <qresource prefix="/icons">
         <file alias="add">assets/img/icons/filled-rounded/add.svg</file>
         <file alias="add-circle">assets/img/icons/filled-rounded/add-circle.svg</file>
+        <file alias="arrow">assets/img/icons/filled-rounded/arrow.svg</file>
         <file alias="arrow-back">assets/img/icons/filled-rounded/arrow-back.svg</file>
         <file alias="arrow-forward">assets/img/icons/filled-rounded/arrow-forward.svg</file>
+        <file alias="arrow-down">assets/img/icons/filled-rounded/down-arrow.svg</file>
+        <file alias="arrow-up">assets/img/icons/filled-rounded/up-arrow.svg</file>
         <file alias="bar-chart">assets/img/icons/filled-rounded/bar-chart.svg</file>
         <file alias="bell">assets/img/icons/filled-rounded/bell.svg</file>
         <file alias="book">assets/img/icons/filled-rounded/book2.svg</file>
         <file alias="bookmark-star">assets/img/icons/filled-rounded/bookmark-star.svg</file>
         <file alias="browse">assets/img/icons/filled-rounded/browse.svg</file>
+        <file alias="cancel">assets/img/icons/filled-rounded/cancel.svg</file>
         <file alias="controller">assets/img/icons/filled-rounded/controller.svg</file>
+        <file alias="chevron-back">assets/img/icons/filled-rounded/chevron-arrow-back.svg</file>
+        <file alias="chevron-forward">assets/img/icons/filled-rounded/chevron-arrow-forward.svg</file>
         <file alias="delete">assets/img/icons/filled-rounded/delete.svg</file>
+        <file alias="favorite">assets/img/icons/filled-rounded/favorite.svg</file>
         <file alias="folder">assets/img/icons/filled-rounded/folder.svg</file>
         <file alias="history">assets/img/icons/filled-rounded/history.svg</file>
         <file alias="home">assets/img/icons/filled-rounded/home.svg</file>
@@ -73,6 +82,9 @@
         <file alias="kid-star">assets/img/icons/filled-rounded/kid-star.svg</file>
         <file alias="left-panel-close">assets/img/icons/filled-rounded/left-panel-close.svg</file>
         <file alias="left-panel-open">assets/img/icons/filled-rounded/left-panel-open.svg</file>
+        <file alias="menu">assets/img/icons/filled-rounded/menu.svg</file>
+        <file alias="more-vertical">assets/img/icons/filled-rounded/more-vertical.svg</file>
+        <file alias="more-horizontal">assets/img/icons/filled-rounded/more-horizontal.svg</file>
         <file alias="new-folder">assets/img/icons/filled-rounded/new-folder.svg</file>
         <file alias="photo-library">assets/img/icons/filled-rounded/photo-library.svg</file>
         <file alias="search">assets/img/icons/filled-rounded/search.svg</file>
@@ -109,6 +121,7 @@
         <file alias="book">assets/img/icons/notfilled-rounded/book2-notfilled.svg</file>
         <file alias="controller">assets/img/icons/notfilled-rounded/controller-notfilled.svg</file>
         <file alias="delete">assets/img/icons/notfilled-rounded/delete-notfilled.svg</file>
+        <file alias="favorite">assets/img/icons/notfilled-rounded/favorite.svg</file>
         <file alias="folder">assets/img/icons/notfilled-rounded/folder.svg</file>
         <file alias="info">assets/img/icons/notfilled-rounded/info-notfilled.svg</file>
         <file alias="left-panel-close">assets/img/icons/filled-rounded/left-panel-close.svg</file>

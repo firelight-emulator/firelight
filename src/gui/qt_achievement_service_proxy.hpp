@@ -2,7 +2,7 @@
 #include "service_accessor.hpp"
 
 #include <QObject>
-#include <event_dispatcher.hpp>
+#include <firelight/event_dispatcher.hpp>
 
 namespace firelight::gui {
 

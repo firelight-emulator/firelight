@@ -1,6 +1,6 @@
 #include "sdl_input_service.hpp"
 
-#include "event_dispatcher.hpp"
+#include "firelight/event_dispatcher.hpp"
 
 #include <SDL_hints.h>
 #include <spdlog/spdlog.h>

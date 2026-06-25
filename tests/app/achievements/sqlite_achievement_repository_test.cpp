@@ -1,4 +1,4 @@
-#include "../../../src/app/achievements/sqlite_achievement_repository.hpp"
+#include <sqlite_achievement_repository.hpp>
 #include <filesystem>
 #include <gtest/gtest.h>
 
@@ -24,8 +24,10 @@ protected:
   AchievementSet createTestAchievementSet() {
     AchievementSet achievementSet;
     achievementSet.id = 1;
-    achievementSet.name = "Test Game Achievements";
-    achievementSet.iconUrl = "https://example.com/icon.png";
+    achievementSet.title = "Test Game Achievements";
+    achievementSet.type = "core";
+    achievementSet.gameId = 1;
+    achievementSet.imageIconUrl = "https://example.com/icon.png";
     achievementSet.numAchievements = 3;
     achievementSet.totalPoints = 150;
     return achievementSet;
@@ -34,14 +36,22 @@ protected:
   Achievement createTestAchievement(unsigned id = 100, unsigned setId = 1) {
     Achievement achievement;
     achievement.id = id;
-    achievement.name = "Test Achievement";
+    achievement.achievementSetId = setId;
+    achievement.memAddr = "";
+    achievement.title = "Test Achievement";
     achievement.description = "Complete a test task";
-    achievement.imageUrl = "https://example.com/achievement.png";
     achievement.points = 50;
-    achievement.type = "progression";
-    achievement.displayOrder = 1;
-    achievement.setId = setId;
+    achievement.author = "";
+    achievement.modified = 0;
+    achievement.created = 0;
+    achievement.badgeName = "test_badge";
     achievement.flags = 3; // Active achievement
+    achievement.type = "progression";
+    achievement.rarity = 0.0;
+    achievement.rarityHardcore = 0.0;
+    achievement.badgeUrl = "https://example.com/achievement.png";
+    achievement.badgeLockedUrl = "https://example.com/achievement_locked.png";
+    achievement.displayOrder = 1;
     return achievement;
   }
 
@@ -75,8 +85,8 @@ protected:
     User user;
     user.username = username;
     user.token = token;
-    user.points = points;
-    user.hardcore_points = hardcorePoints;
+    user.softcoreScore = points;
+    user.score = hardcorePoints;
     return user;
   }
 };
@@ -99,8 +109,8 @@ TEST_F(SqliteAchievementRepositoryTest, CreateUser_UpsertBehavior) {
 
   // Modify and update (should upsert)
   user.token = "updated_token_456";
-  user.points = 2000;
-  user.hardcore_points = 1000;
+  user.softcoreScore = 2000;
+  user.score = 1000;
 
   bool result = repository->createOrUpdateUser(user);
   EXPECT_TRUE(result);
@@ -110,8 +120,8 @@ TEST_F(SqliteAchievementRepositoryTest, CreateUser_UpsertBehavior) {
   ASSERT_TRUE(retrieved.has_value());
   EXPECT_EQ(retrieved->username, "testuser");
   EXPECT_EQ(retrieved->token, "updated_token_456");
-  EXPECT_EQ(retrieved->points, 2000);
-  EXPECT_EQ(retrieved->hardcore_points, 1000);
+  EXPECT_EQ(retrieved->softcoreScore, 2000);
+  EXPECT_EQ(retrieved->score, 1000);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetUser_ExistingUser) {
@@ -123,8 +133,8 @@ TEST_F(SqliteAchievementRepositoryTest, GetUser_ExistingUser) {
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->username, "testuser");
   EXPECT_EQ(result->token, "test_token_123");
-  EXPECT_EQ(result->points, 1500);
-  EXPECT_EQ(result->hardcore_points, 750);
+  EXPECT_EQ(result->softcoreScore, 1500);
+  EXPECT_EQ(result->score, 750);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetUser_NonExistentUser) {
@@ -149,13 +159,13 @@ TEST_F(SqliteAchievementRepositoryTest, CreateUser_MultipleUsers) {
 
   EXPECT_EQ(retrievedUser1->username, "user1");
   EXPECT_EQ(retrievedUser1->token, "token1");
-  EXPECT_EQ(retrievedUser1->points, 1000);
-  EXPECT_EQ(retrievedUser1->hardcore_points, 500);
+  EXPECT_EQ(retrievedUser1->softcoreScore, 1000);
+  EXPECT_EQ(retrievedUser1->score, 500);
 
   EXPECT_EQ(retrievedUser2->username, "user2");
   EXPECT_EQ(retrievedUser2->token, "token2");
-  EXPECT_EQ(retrievedUser2->points, 2000);
-  EXPECT_EQ(retrievedUser2->hardcore_points, 1500);
+  EXPECT_EQ(retrievedUser2->softcoreScore, 2000);
+  EXPECT_EQ(retrievedUser2->score, 1500);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, CreateUser_ZeroPoints) {
@@ -167,8 +177,8 @@ TEST_F(SqliteAchievementRepositoryTest, CreateUser_ZeroPoints) {
 
   auto savedUser = repository->getUser("beginner");
   ASSERT_TRUE(savedUser.has_value());
-  EXPECT_EQ(savedUser->points, 0);
-  EXPECT_EQ(savedUser->hardcore_points, 0);
+  EXPECT_EQ(savedUser->softcoreScore, 0);
+  EXPECT_EQ(savedUser->score, 0);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, CreateUser_EmptyToken) {
@@ -200,8 +210,8 @@ TEST_F(SqliteAchievementRepositoryTest, ListUsers_SingleUser) {
   ASSERT_EQ(result.size(), 1);
   EXPECT_EQ(result[0].username, "testuser");
   EXPECT_EQ(result[0].token, "test_token");
-  EXPECT_EQ(result[0].points, 1500);
-  EXPECT_EQ(result[0].hardcore_points, 750);
+  EXPECT_EQ(result[0].softcoreScore, 1500);
+  EXPECT_EQ(result[0].score, 750);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, ListUsers_MultipleUsers) {
@@ -221,18 +231,18 @@ TEST_F(SqliteAchievementRepositoryTest, ListUsers_MultipleUsers) {
   // Results should be ordered by username (alice, bob, charlie)
   EXPECT_EQ(result[0].username, "alice");
   EXPECT_EQ(result[0].token, "token_alice");
-  EXPECT_EQ(result[0].points, 2000);
-  EXPECT_EQ(result[0].hardcore_points, 1800);
+  EXPECT_EQ(result[0].softcoreScore, 2000);
+  EXPECT_EQ(result[0].score, 1800);
 
   EXPECT_EQ(result[1].username, "bob");
   EXPECT_EQ(result[1].token, "token_bob");
-  EXPECT_EQ(result[1].points, 1200);
-  EXPECT_EQ(result[1].hardcore_points, 900);
+  EXPECT_EQ(result[1].softcoreScore, 1200);
+  EXPECT_EQ(result[1].score, 900);
 
   EXPECT_EQ(result[2].username, "charlie");
   EXPECT_EQ(result[2].token, "token_charlie");
-  EXPECT_EQ(result[2].points, 3500);
-  EXPECT_EQ(result[2].hardcore_points, 2100);
+  EXPECT_EQ(result[2].softcoreScore, 3500);
+  EXPECT_EQ(result[2].score, 2100);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, ListUsers_OrderedByUsername) {
@@ -271,16 +281,16 @@ TEST_F(SqliteAchievementRepositoryTest, ListUsers_WithZeroPoints) {
     return u.username == "newbie";
   });
   ASSERT_NE(newbieIt, result.end());
-  EXPECT_EQ(newbieIt->points, 0);
-  EXPECT_EQ(newbieIt->hardcore_points, 0);
+  EXPECT_EQ(newbieIt->softcoreScore, 0);
+  EXPECT_EQ(newbieIt->score, 0);
 
   // Find the veteran user
   auto veteranIt =
       std::find_if(result.begin(), result.end(),
                    [](const User &u) { return u.username == "veteran"; });
   ASSERT_NE(veteranIt, result.end());
-  EXPECT_EQ(veteranIt->points, 5000);
-  EXPECT_EQ(veteranIt->hardcore_points, 3000);
+  EXPECT_EQ(veteranIt->softcoreScore, 5000);
+  EXPECT_EQ(veteranIt->score, 3000);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, ListUsers_WithEmptyTokens) {
@@ -315,8 +325,8 @@ TEST_F(SqliteAchievementRepositoryTest, ListUsers_AfterUserUpdate) {
 
   // Update the user
   user.token = "new_token";
-  user.points = 2000;
-  user.hardcore_points = 1500;
+  user.softcoreScore = 2000;
+  user.score = 1500;
   repository->createOrUpdateUser(user);
 
   auto result = repository->listUsers();
@@ -324,8 +334,8 @@ TEST_F(SqliteAchievementRepositoryTest, ListUsers_AfterUserUpdate) {
   ASSERT_EQ(result.size(), 1);
   EXPECT_EQ(result[0].username, "updatable");
   EXPECT_EQ(result[0].token, "new_token");
-  EXPECT_EQ(result[0].points, 2000);
-  EXPECT_EQ(result[0].hardcore_points, 1500);
+  EXPECT_EQ(result[0].softcoreScore, 2000);
+  EXPECT_EQ(result[0].score, 1500);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, ListUsers_LargeDataset) {
@@ -356,15 +366,15 @@ TEST_F(SqliteAchievementRepositoryTest, ListUsers_LargeDataset) {
     return u.username == "user0";
   });
   ASSERT_NE(user0It, result.end());
-  EXPECT_EQ(user0It->points, 0);
-  EXPECT_EQ(user0It->hardcore_points, 0);
+  EXPECT_EQ(user0It->softcoreScore, 0);
+  EXPECT_EQ(user0It->score, 0);
 
   auto user25It = std::find_if(result.begin(), result.end(), [](const User &u) {
     return u.username == "user25";
   });
   ASSERT_NE(user25It, result.end());
-  EXPECT_EQ(user25It->points, 2500);
-  EXPECT_EQ(user25It->hardcore_points, 1250);
+  EXPECT_EQ(user25It->softcoreScore, 2500);
+  EXPECT_EQ(user25It->score, 1250);
 }
 
 // Achievement Set CRUD Tests
@@ -384,64 +394,67 @@ TEST_F(SqliteAchievementRepositoryTest, CreateAchievementSet_UpsertBehavior) {
   EXPECT_TRUE(repository->create(achievementSet));
 
   // Modify and createOrUpdate again (should update)
-  achievementSet.name = "Updated Game Achievements";
+  achievementSet.title = "Updated Game Achievements";
   achievementSet.totalPoints = 200;
   EXPECT_TRUE(repository->create(achievementSet));
 
   // Verify the update took effect
-  auto retrieved = repository->getAchievementSet(achievementSet.id);
-  ASSERT_TRUE(retrieved.has_value());
-  EXPECT_EQ(retrieved->name, "Updated Game Achievements");
-  EXPECT_EQ(retrieved->totalPoints, 200);
+  auto retrieved =
+      repository->getAchievementSetsByGameId(achievementSet.gameId);
+  ASSERT_TRUE(retrieved.size() == 1);
+  EXPECT_EQ(retrieved[0].title, "Updated Game Achievements");
+  EXPECT_EQ(retrieved[0].totalPoints, 200);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_ExistingSet) {
   AchievementSet achievementSet = createTestAchievementSet();
   repository->create(achievementSet);
 
-  auto result = repository->getAchievementSet(achievementSet.id);
+  auto result = repository->getAchievementSetsByGameId(achievementSet.gameId);
 
-  ASSERT_TRUE(result.has_value());
-  EXPECT_EQ(result->id, achievementSet.id);
-  EXPECT_EQ(result->name, achievementSet.name);
-  EXPECT_EQ(result->iconUrl, achievementSet.iconUrl);
-  EXPECT_EQ(result->numAchievements, achievementSet.numAchievements);
-  EXPECT_EQ(result->totalPoints, achievementSet.totalPoints);
-  EXPECT_TRUE(result->achievements.empty()); // No achievements added yet
+  ASSERT_TRUE(result.size() == 1);
+  EXPECT_EQ(result[0].id, achievementSet.id);
+  EXPECT_EQ(result[0].title, achievementSet.title);
+  EXPECT_EQ(result[0].imageIconUrl, achievementSet.imageIconUrl);
+  EXPECT_EQ(result[0].numAchievements, achievementSet.numAchievements);
+  EXPECT_EQ(result[0].totalPoints, achievementSet.totalPoints);
+  EXPECT_TRUE(result[0].achievements.empty()); // No achievements added yet
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_NonExistentSet) {
-  auto result = repository->getAchievementSet(999);
+  auto result = repository->getAchievementSetsByGameId(999);
 
-  EXPECT_FALSE(result.has_value());
+  EXPECT_TRUE(result.empty());
 }
 
 TEST_F(SqliteAchievementRepositoryTest, UpdateAchievementSet_Success) {
   AchievementSet achievementSet = createTestAchievementSet();
   repository->create(achievementSet);
 
-  achievementSet.name = "Updated Achievement Set";
+  achievementSet.title = "Updated Achievement Set";
   achievementSet.totalPoints = 300;
-  achievementSet.iconUrl = "https://example.com/new-icon.png";
+  achievementSet.imageIconUrl = "https://example.com/new-icon.png";
 
-  bool result = repository->update(achievementSet);
+  bool result = repository->create(achievementSet);
 
   EXPECT_TRUE(result);
 
-  auto retrieved = repository->getAchievementSet(achievementSet.id);
-  ASSERT_TRUE(retrieved.has_value());
-  EXPECT_EQ(retrieved->name, "Updated Achievement Set");
-  EXPECT_EQ(retrieved->totalPoints, 300);
-  EXPECT_EQ(retrieved->iconUrl, "https://example.com/new-icon.png");
+  auto retrieved =
+      repository->getAchievementSetsByGameId(achievementSet.gameId);
+  ASSERT_TRUE(retrieved.size() == 1);
+  EXPECT_EQ(retrieved[0].title, "Updated Achievement Set");
+  EXPECT_EQ(retrieved[0].totalPoints, 300);
+  EXPECT_EQ(retrieved[0].imageIconUrl, "https://example.com/new-icon.png");
 }
 
 TEST_F(SqliteAchievementRepositoryTest, UpdateAchievementSet_NonExistentSet) {
   AchievementSet achievementSet = createTestAchievementSet();
   achievementSet.id = 999;
+  achievementSet.gameId = 999;
 
-  bool result = repository->update(achievementSet);
+  bool result = repository->create(achievementSet);
 
-  EXPECT_FALSE(result); // Should return false for non-existent set
+  EXPECT_TRUE(result); // Should return true (upsert creates new entry)
 }
 
 // Achievement CRUD Tests
@@ -451,7 +464,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_ExistingAchievement) {
   repository->create(achievementSet);
 
   Achievement achievement = createTestAchievement(101, 1);
-  achievement.name = "Test Achievement";
+  achievement.title = "Test Achievement";
   achievement.description = "Complete a test task";
   achievement.points = 50;
   achievement.type = "progression";
@@ -463,14 +476,14 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_ExistingAchievement) {
 
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->id, 101);
-  EXPECT_EQ(result->name, "Test Achievement");
+  EXPECT_EQ(result->title, "Test Achievement");
   EXPECT_EQ(result->description, "Complete a test task");
   EXPECT_EQ(result->points, 50);
   EXPECT_EQ(result->type, "progression");
   EXPECT_EQ(result->flags, 3);
   EXPECT_EQ(result->displayOrder, 1);
-  EXPECT_EQ(result->setId, 1);
-  EXPECT_EQ(result->imageUrl, "https://example.com/achievement.png");
+  EXPECT_EQ(result->achievementSetId, 1);
+  EXPECT_EQ(result->badgeUrl, "https://example.com/achievement.png");
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAchievement_NonExistentAchievement) {
@@ -484,9 +497,9 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_VerifyAllFields) {
   repository->create(achievementSet);
 
   Achievement achievement = createTestAchievement(202, 1);
-  achievement.name = "Detailed Achievement";
+  achievement.title = "Detailed Achievement";
   achievement.description = "A comprehensive test achievement";
-  achievement.imageUrl = "https://example.com/detailed.png";
+  achievement.badgeUrl = "https://example.com/detailed.png";
   achievement.points = 75;
   achievement.type = "challenge";
   achievement.displayOrder = 5;
@@ -497,13 +510,13 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_VerifyAllFields) {
 
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->id, 202);
-  EXPECT_EQ(result->name, "Detailed Achievement");
+  EXPECT_EQ(result->title, "Detailed Achievement");
   EXPECT_EQ(result->description, "A comprehensive test achievement");
-  EXPECT_EQ(result->imageUrl, "https://example.com/detailed.png");
+  EXPECT_EQ(result->badgeUrl, "https://example.com/detailed.png");
   EXPECT_EQ(result->points, 75);
   EXPECT_EQ(result->type, "challenge");
   EXPECT_EQ(result->displayOrder, 5);
-  EXPECT_EQ(result->setId, 1);
+  EXPECT_EQ(result->achievementSetId, 1);
   EXPECT_EQ(result->flags, 3);
 }
 
@@ -512,12 +525,12 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_AfterUpdate) {
   repository->create(achievementSet);
 
   Achievement achievement = createTestAchievement(303, 1);
-  achievement.name = "Original Achievement";
+  achievement.title = "Original Achievement";
   achievement.points = 25;
   repository->create(achievement);
 
   // Update the achievement
-  achievement.name = "Updated Achievement";
+  achievement.title = "Updated Achievement";
   achievement.points = 50;
   achievement.description = "Updated description";
   EXPECT_TRUE(repository->create(achievement)); // Should upsert
@@ -526,10 +539,10 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_AfterUpdate) {
 
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->id, 303);
-  EXPECT_EQ(result->name, "Updated Achievement");
+  EXPECT_EQ(result->title, "Updated Achievement");
   EXPECT_EQ(result->points, 50);
   EXPECT_EQ(result->description, "Updated description");
-  EXPECT_EQ(result->setId, 1);
+  EXPECT_EQ(result->achievementSetId, 1);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAchievement_MultipleAchievements) {
@@ -538,17 +551,17 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_MultipleAchievements) {
 
   // Create multiple achievements
   Achievement achievement1 = createTestAchievement(401, 1);
-  achievement1.name = "First Achievement";
+  achievement1.title = "First Achievement";
   achievement1.points = 10;
   repository->create(achievement1);
 
   Achievement achievement2 = createTestAchievement(402, 1);
-  achievement2.name = "Second Achievement";
+  achievement2.title = "Second Achievement";
   achievement2.points = 20;
   repository->create(achievement2);
 
   Achievement achievement3 = createTestAchievement(403, 1);
-  achievement3.name = "Third Achievement";
+  achievement3.title = "Third Achievement";
   achievement3.points = 30;
   repository->create(achievement3);
 
@@ -561,13 +574,13 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_MultipleAchievements) {
   ASSERT_TRUE(result2.has_value());
   ASSERT_TRUE(result3.has_value());
 
-  EXPECT_EQ(result1->name, "First Achievement");
+  EXPECT_EQ(result1->title, "First Achievement");
   EXPECT_EQ(result1->points, 10);
 
-  EXPECT_EQ(result2->name, "Second Achievement");
+  EXPECT_EQ(result2->title, "Second Achievement");
   EXPECT_EQ(result2->points, 20);
 
-  EXPECT_EQ(result3->name, "Third Achievement");
+  EXPECT_EQ(result3->title, "Third Achievement");
   EXPECT_EQ(result3->points, 30);
 }
 
@@ -577,12 +590,12 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_DifferentFlags) {
 
   // Create achievements with different flag values
   Achievement activeAchievement = createTestAchievement(501, 1);
-  activeAchievement.name = "Active Achievement";
+  activeAchievement.title = "Active Achievement";
   activeAchievement.flags = 3; // Active
   repository->create(activeAchievement);
 
   Achievement inactiveAchievement = createTestAchievement(502, 1);
-  inactiveAchievement.name = "Inactive Achievement";
+  inactiveAchievement.title = "Inactive Achievement";
   inactiveAchievement.flags = 5; // Inactive/prototype
   repository->create(inactiveAchievement);
 
@@ -593,10 +606,10 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_DifferentFlags) {
   ASSERT_TRUE(activeResult.has_value());
   ASSERT_TRUE(inactiveResult.has_value());
 
-  EXPECT_EQ(activeResult->name, "Active Achievement");
+  EXPECT_EQ(activeResult->title, "Active Achievement");
   EXPECT_EQ(activeResult->flags, 3);
 
-  EXPECT_EQ(inactiveResult->name, "Inactive Achievement");
+  EXPECT_EQ(inactiveResult->title, "Inactive Achievement");
   EXPECT_EQ(inactiveResult->flags, 5);
 }
 
@@ -605,19 +618,19 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievement_EmptyStringFields) {
   repository->create(achievementSet);
 
   Achievement achievement = createTestAchievement(601, 1);
-  achievement.name = "Achievement with Empty Fields";
+  achievement.title = "Achievement with Empty Fields";
   achievement.description = "";
   achievement.type = "";
-  achievement.imageUrl = "";
+  achievement.badgeUrl = "";
   repository->create(achievement);
 
   auto result = repository->getAchievement(601);
 
   ASSERT_TRUE(result.has_value());
-  EXPECT_EQ(result->name, "Achievement with Empty Fields");
+  EXPECT_EQ(result->title, "Achievement with Empty Fields");
   EXPECT_EQ(result->description, "");
   EXPECT_EQ(result->type, "");
-  EXPECT_EQ(result->imageUrl, "");
+  EXPECT_EQ(result->badgeUrl, "");
 }
 
 TEST_F(SqliteAchievementRepositoryTest, CreateAchievement_Success) {
@@ -642,18 +655,19 @@ TEST_F(SqliteAchievementRepositoryTest, CreateAchievement_UpsertBehavior) {
   EXPECT_TRUE(repository->create(achievement));
 
   // Modify and createOrUpdate again (should update)
-  achievement.name = "Updated Achievement";
+  achievement.title = "Updated Achievement";
   achievement.points = 75;
   achievement.type = "challenge";
   EXPECT_TRUE(repository->create(achievement));
 
   // Verify by retrieving the achievement set
-  auto retrievedSet = repository->getAchievementSet(achievementSet.id);
-  ASSERT_TRUE(retrievedSet.has_value());
-  ASSERT_EQ(retrievedSet->achievements.size(), 1);
-  EXPECT_EQ(retrievedSet->achievements[0].name, "Updated Achievement");
-  EXPECT_EQ(retrievedSet->achievements[0].points, 75);
-  EXPECT_EQ(retrievedSet->achievements[0].type, "challenge");
+  auto retrievedSet =
+      repository->getAchievementSetsByGameId(achievementSet.gameId);
+  ASSERT_TRUE(retrievedSet.size() == 1);
+  ASSERT_EQ(retrievedSet[0].achievements.size(), 1);
+  EXPECT_EQ(retrievedSet[0].achievements[0].title, "Updated Achievement");
+  EXPECT_EQ(retrievedSet[0].achievements[0].points, 75);
+  EXPECT_EQ(retrievedSet[0].achievements[0].type, "challenge");
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_WithAchievements) {
@@ -661,42 +675,42 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_WithAchievements) {
   repository->create(achievementSet);
 
   // Add multiple achievements with different display orders
-  Achievement achievement1 = createTestAchievement(101, 1);
-  achievement1.name = "First Achievement";
+  Achievement achievement1 = createTestAchievement(101, achievementSet.id);
+  achievement1.title = "First Achievement";
   achievement1.displayOrder = 2;
   repository->create(achievement1);
 
-  Achievement achievement2 = createTestAchievement(102, 1);
-  achievement2.name = "Second Achievement";
+  Achievement achievement2 = createTestAchievement(102, achievementSet.id);
+  achievement2.title = "Second Achievement";
   achievement2.displayOrder = 1;
   repository->create(achievement2);
 
-  Achievement achievement3 = createTestAchievement(103, 1);
-  achievement3.name = "Third Achievement";
+  Achievement achievement3 = createTestAchievement(103, achievementSet.id);
+  achievement3.title = "Third Achievement";
   achievement3.displayOrder = 3;
   repository->create(achievement3);
 
-  auto result = repository->getAchievementSet(achievementSet.id);
+  auto result = repository->getAchievementSetsByGameId(achievementSet.gameId);
 
-  ASSERT_TRUE(result.has_value());
-  ASSERT_EQ(result->achievements.size(), 3);
+  ASSERT_TRUE(result.size() == 1);
+  ASSERT_EQ(result[0].achievements.size(), 3);
 
   // Verify achievements are ordered by display_order
-  EXPECT_EQ(result->achievements[0].name, "Second Achievement");
-  EXPECT_EQ(result->achievements[0].displayOrder, 1);
-  EXPECT_EQ(result->achievements[1].name, "First Achievement");
-  EXPECT_EQ(result->achievements[1].displayOrder, 2);
-  EXPECT_EQ(result->achievements[2].name, "Third Achievement");
-  EXPECT_EQ(result->achievements[2].displayOrder, 3);
+  EXPECT_EQ(result[0].achievements[0].title, "Second Achievement");
+  EXPECT_EQ(result[0].achievements[0].displayOrder, 1);
+  EXPECT_EQ(result[0].achievements[1].title, "First Achievement");
+  EXPECT_EQ(result[0].achievements[1].displayOrder, 2);
+  EXPECT_EQ(result[0].achievements[2].title, "Third Achievement");
+  EXPECT_EQ(result[0].achievements[2].displayOrder, 3);
 
   // Verify all achievement fields are populated
-  const auto &firstAchievement = result->achievements[0];
+  const auto &firstAchievement = result[0].achievements[0];
   EXPECT_EQ(firstAchievement.id, 102);
   EXPECT_EQ(firstAchievement.description, "Complete a test task");
-  EXPECT_EQ(firstAchievement.imageUrl, "https://example.com/achievement.png");
+  EXPECT_EQ(firstAchievement.badgeUrl, "https://example.com/achievement.png");
   EXPECT_EQ(firstAchievement.points, 50);
   EXPECT_EQ(firstAchievement.type, "progression");
-  EXPECT_EQ(firstAchievement.setId, 1);
+  EXPECT_EQ(firstAchievement.achievementSetId, 1);
   EXPECT_EQ(firstAchievement.flags, 3);
 }
 
@@ -895,17 +909,17 @@ TEST_F(SqliteAchievementRepositoryTest, GetAllUserUnlocks_WithUnlocks) {
 
   // Create multiple achievements in the set
   Achievement achievement1 = createTestAchievement(101, 1);
-  achievement1.name = "First Achievement";
+  achievement1.title = "First Achievement";
   achievement1.displayOrder = 1;
   repository->create(achievement1);
 
   Achievement achievement2 = createTestAchievement(102, 1);
-  achievement2.name = "Second Achievement";
+  achievement2.title = "Second Achievement";
   achievement2.displayOrder = 2;
   repository->create(achievement2);
 
   Achievement achievement3 = createTestAchievement(103, 1);
-  achievement3.name = "Third Achievement";
+  achievement3.title = "Third Achievement";
   achievement3.displayOrder = 3;
   repository->create(achievement3);
 
@@ -970,7 +984,8 @@ TEST_F(SqliteAchievementRepositoryTest, GetAllUserUnlocks_FiltersBySet) {
 
   AchievementSet achievementSet2 = createTestAchievementSet();
   achievementSet2.id = 2;
-  achievementSet2.name = "Second Set";
+  achievementSet2.gameId = 2;
+  achievementSet2.title = "Second Set";
   repository->create(achievementSet2);
 
   // Create achievements in different sets
@@ -1030,7 +1045,8 @@ TEST_F(SqliteAchievementRepositoryTest, SetGameHash_UpsertBehavior) {
 
   AchievementSet achievementSet2 = createTestAchievementSet();
   achievementSet2.id = 2;
-  achievementSet2.name = "Second Achievement Set";
+  achievementSet2.gameId = 2;
+  achievementSet2.title = "Second Achievement Set";
   repository->create(achievementSet2);
 
   const std::string contentHash = "abc123def456";
@@ -1045,7 +1061,7 @@ TEST_F(SqliteAchievementRepositoryTest, SetGameHash_UpsertBehavior) {
   auto result = repository->getAchievementSetByContentHash(contentHash);
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->id, achievementSet2.id);
-  EXPECT_EQ(result->name, "Second Achievement Set");
+  EXPECT_EQ(result->title, "Second Achievement Set");
 }
 
 TEST_F(SqliteAchievementRepositoryTest,
@@ -1064,7 +1080,7 @@ TEST_F(SqliteAchievementRepositoryTest,
 
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->id, achievementSet.id);
-  EXPECT_EQ(result->name, achievementSet.name);
+  EXPECT_EQ(result->title, achievementSet.title);
   EXPECT_EQ(result->numAchievements, achievementSet.numAchievements);
   EXPECT_EQ(result->achievements.size(),
             1); // Only achievements with flags == 3 are included
@@ -1469,13 +1485,13 @@ TEST_F(SqliteAchievementRepositoryTest, CompleteWorkflow_CreateRetrieveUpdate) {
   EXPECT_TRUE(repository->create(achievementSet));
 
   // Add achievements
-  Achievement achievement1 = createTestAchievement(101, 1);
-  achievement1.name = "First Achievement";
+  Achievement achievement1 = createTestAchievement(101, achievementSet.id);
+  achievement1.title = "First Achievement";
   achievement1.displayOrder = 1;
   EXPECT_TRUE(repository->create(achievement1));
 
-  Achievement achievement2 = createTestAchievement(102, 1);
-  achievement2.name = "Second Achievement";
+  Achievement achievement2 = createTestAchievement(102, achievementSet.id);
+  achievement2.title = "Second Achievement";
   achievement2.displayOrder = 2;
   EXPECT_TRUE(repository->create(achievement2));
 
@@ -1489,10 +1505,11 @@ TEST_F(SqliteAchievementRepositoryTest, CompleteWorkflow_CreateRetrieveUpdate) {
   EXPECT_TRUE(repository->create(progress1));
   EXPECT_TRUE(repository->create(progress2));
 
-  // Retrieve by ID
-  auto retrievedById = repository->getAchievementSet(achievementSet.id);
-  ASSERT_TRUE(retrievedById.has_value());
-  EXPECT_EQ(retrievedById->achievements.size(), 2);
+  // Retrieve by game ID
+  auto retrievedById =
+      repository->getAchievementSetsByGameId(achievementSet.gameId);
+  ASSERT_TRUE(retrievedById.size() == 1);
+  EXPECT_EQ(retrievedById[0].achievements.size(), 2);
 
   // Retrieve by hash
   auto retrievedByHash =
@@ -1502,12 +1519,13 @@ TEST_F(SqliteAchievementRepositoryTest, CompleteWorkflow_CreateRetrieveUpdate) {
   EXPECT_EQ(retrievedByHash->achievements.size(), 2);
 
   // Update achievement set
-  achievementSet.name = "Updated Achievement Set";
-  EXPECT_TRUE(repository->update(achievementSet));
+  achievementSet.title = "Updated Achievement Set";
+  EXPECT_TRUE(repository->create(achievementSet));
 
-  auto updatedSet = repository->getAchievementSet(achievementSet.id);
-  ASSERT_TRUE(updatedSet.has_value());
-  EXPECT_EQ(updatedSet->name, "Updated Achievement Set");
+  auto updatedSet =
+      repository->getAchievementSetsByGameId(achievementSet.gameId);
+  ASSERT_TRUE(updatedSet.size() == 1);
+  EXPECT_EQ(updatedSet[0].title, "Updated Achievement Set");
 }
 
 // GetAllUnsyncedUserUnlocks Tests

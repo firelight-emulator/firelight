@@ -1,15 +1,16 @@
 #pragma once
 
-#include <activity/activity_log.hpp>
+#include <firelight/activity/activity_log.hpp>
 #include <library/user_library.hpp>
 
 #include "discord/discord_manager.hpp"
 #include "emulator_config_manager.hpp"
 #include "firelight/userdata_database.hpp"
 #include "mods/mod_repository.hpp"
-#include "rcheevos/ra_client.hpp"
 #include "saves/save_manager.hpp"
 #include "settings/settings_repository.hpp"
+
+#include "../../libs/firelight/achievements/src/rcheevos/ra_client.hpp"
 
 namespace firelight {
 namespace gui {

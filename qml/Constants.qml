@@ -23,7 +23,7 @@ Item {
     readonly property color surface_color: "#121212"
 
 
-    readonly property real standardTopBarHeight: 60
+    readonly property real standardTitleBarHeight: 60
 
 
     FontLoader {

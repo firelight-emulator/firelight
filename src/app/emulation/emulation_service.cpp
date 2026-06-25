@@ -1,6 +1,6 @@
 #include "emulation_service.hpp"
 
-#include "event_dispatcher.hpp"
+#include "firelight/event_dispatcher.hpp"
 #include "input2/input_service.hpp"
 #include "platforms/platform_service.hpp"
 

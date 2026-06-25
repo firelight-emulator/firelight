@@ -1,6 +1,6 @@
 #pragma once
 
-#include "event_dispatcher.hpp"
+#include "firelight/event_dispatcher.hpp"
 #include "input2/input_service.hpp"
 #include "service_accessor.hpp"
 

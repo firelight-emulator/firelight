@@ -42,30 +42,50 @@ Pane {
     }
 
     background: Rectangle {
-        color: "#19181d"
+        color: "transparent"
+
+        // Rectangle {
+        //     color: "white"
+        //     opacity: 0.14
+        //     width: 1
+        //     anchors.top: parent.top
+        //     anchors.bottom: parent.bottom
+        //     anchors.right: parent.right
+        //
+        //     anchors.topMargin: 16
+        //     anchors.bottomMargin: 16
+        // }
     }
 
     contentItem: ColumnLayout {
         spacing: 8
 
-        LeftNavigationItem {
-            id: expandButton
-            label: root.expanded ? "Collapse menu" : "Expand menu"
-            iconName: root.expanded ? "left-panel-close" : "left-panel-open"
-            checkable: false
-
-            KeyNavigation.down: quickMenuButton
-
-            Layout.fillWidth: true
-
-            onClicked: {
-                root.expanded = !root.expanded
-            }
+        Image {
+            source: "qrc:/images/firelight-logo"
+            Layout.alignment: Qt.AlignHCenter
+            sourceSize.width: 30
+            sourceSize.height: 30
+            fillMode: Image.PreserveAspectFit
         }
 
+        // LeftNavigationItem {
+        //     id: expandButton
+        //     label: root.expanded ? "Collapse menu" : "Expand menu"
+        //     iconName: root.expanded ? "left-panel-close" : "left-panel-open"
+        //     checkable: false
+        //
+        //     KeyNavigation.down: quickMenuButton
+        //
+        //     Layout.fillWidth: true
+        //
+        //     onClicked: {
+        //         root.expanded = !root.expanded
+        //     }
+        // }
+
         Item {
-            implicitWidth: 38
-            implicitHeight: 38
+            implicitWidth: 6
+            implicitHeight: 6
         }
 
         LeftNavigationItem {
