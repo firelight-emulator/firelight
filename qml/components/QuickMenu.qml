@@ -26,8 +26,8 @@ Pane {
         RowLayout {
             id: navBanner
             Layout.fillWidth: true
-            Layout.maximumHeight: Constants.standardTopBarHeight
-            Layout.minimumHeight: Constants.standardTopBarHeight
+            Layout.maximumHeight: Constants.standardTitleBarHeight
+            Layout.minimumHeight: Constants.standardTitleBarHeight
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true

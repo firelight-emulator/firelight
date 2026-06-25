@@ -67,7 +67,7 @@ FocusScope {
             }
         }
 
-        TopBarSearchBar {
+        TitleBarSearchBar {
             id: searchBar
             anchors.top: parent.top
             anchors.bottom: parent.bottom
@@ -96,13 +96,13 @@ FocusScope {
                 opacity: 0.7
             }
 
-            TopBarProfileButton {
+            TitleBarProfileButton {
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
                 avatarUrlSource: achievement_manager.avatarUrl
             }
 
-            TopBarUtilityButtons {
+            TitleBarUtilityButtons {
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: -(parent.spacing / 2)

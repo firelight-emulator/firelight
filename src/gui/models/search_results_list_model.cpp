@@ -71,6 +71,18 @@ namespace firelight::gui {
             m_allItems.append(item);
         }
 
+        for (const auto &platform: getPlatformService()->listPlatforms()) {
+            Item item;
+            item.displayName = QString::fromStdString(platform.name);
+            item.category = "Platforms";
+            // item.iconSourceUrl = QString::fromStdString(platform.slug);
+            item.itemType = "Platform";
+            // item.platformName = QString::fromStdString(platform.name);
+            // item.platformShortName = QString::fromStdString(platform.slug);
+            // item.platformIconSourceUrl = QString::fromStdString(platform.slug);
+            m_allItems.append(item);
+        }
+
         // Seed visible items: group by category, alphabetical within each group
         m_visibleItems.clear();
         m_visibleItems = m_allItems;

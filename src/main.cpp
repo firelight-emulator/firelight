@@ -43,7 +43,7 @@
 
 #include <QtConcurrent>
 
-#include "app/activity/sqlite_activity_log.hpp"
+#include <firelight/activity/sqlite_activity_log.hpp>
 #include "app/emulator_item.hpp"
 #include "app/input/gui/gamepad_status_item.hpp"
 #include "app/library/gui/entry_list_model.hpp"
@@ -71,6 +71,7 @@
 #include <unistd.h>
 
 #include "gui/eventhandlers/windows_frame_filter.hpp"
+#include "gui/models/activity_buckets_list_model.hpp"
 #include "gui/models/search_results_list_model.hpp"
 
 int main(int argc, char *argv[]) {
@@ -177,6 +178,7 @@ int main(int argc, char *argv[]) {
     firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString +
                                                        "/activity.db");
     firelight::ManagerAccessor::setActivityLog(&activityLog);
+    firelight::ServiceAccessor::setActivityService(&activityLog);
 
     auto gameImageProvider = new firelight::gui::GameImageProvider();
     firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
@@ -385,6 +387,10 @@ int main(int argc, char *argv[]) {
                                              &entryListModel);
     engine.rootContext()->setContextProperty("PlatformModel",
                                              &platformListModel);
+
+    const auto activityBucketsModel = new firelight::gui::ActivityBucketsListModel();
+    engine.rootContext()->setContextProperty("ActivityBucketsModel",
+                                             activityBucketsModel);
 
     const auto searchResultsModel = new firelight::gui::SearchResultsListModel();
     engine.rootContext()->setContextProperty("SearchResultsModel", searchResultsModel);

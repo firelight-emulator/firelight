@@ -25,9 +25,9 @@ FocusScope {
             id: minButton
             objectName: "Top Bar Minimize Button"
             Layout.fillHeight: true
-            Layout.preferredWidth: AppStyle.topBarUtilityButtonWidth
-            Layout.topMargin: -(AppStyle.topBarPadding)
-            Layout.bottomMargin: -(AppStyle.topBarPadding)
+            Layout.preferredWidth: AppStyle.titleBarUtilityButtonWidth
+            Layout.topMargin: -(AppStyle.titleBarPadding)
+            Layout.bottomMargin: -(AppStyle.titleBarPadding)
 
             focus: true
 
@@ -39,8 +39,8 @@ FocusScope {
 
             Canvas {
                 anchors.centerIn: parent
-                width: AppStyle.topBarUtilityButtonIconSize
-                height: AppStyle.topBarUtilityButtonIconSize
+                width: AppStyle.titleBarUtilityButtonIconSize
+                height: AppStyle.titleBarUtilityButtonIconSize
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
@@ -51,8 +51,8 @@ FocusScope {
             }
 
             background: Rectangle {
-                color: minButton.down ? AppStyle.topBarMinimizeButtonColorPressed : minButton.hovered ? AppStyle.topBarMinimizeButtonColorHovered : "transparent"
-                opacity: minButton.down ? AppStyle.topBarMinimizeButtonOpacityPressed : minButton.hovered ? AppStyle.topBarMinimizeButtonOpacityHovered : 0
+                color: minButton.down ? AppStyle.titleBarMinimizeButtonColorPressed : minButton.hovered ? AppStyle.titleBarMinimizeButtonColorHovered : "transparent"
+                opacity: minButton.down ? AppStyle.titleBarMinimizeButtonOpacityPressed : minButton.hovered ? AppStyle.titleBarMinimizeButtonOpacityHovered : 0
             }
         }
 
@@ -60,9 +60,9 @@ FocusScope {
             id: maxButton
             objectName: "Top Bar Maximize Button"
             Layout.fillHeight: true
-            Layout.preferredWidth: AppStyle.topBarUtilityButtonWidth
-            Layout.topMargin: -(AppStyle.topBarPadding)
-            Layout.bottomMargin: -(AppStyle.topBarPadding)
+            Layout.preferredWidth: AppStyle.titleBarUtilityButtonWidth
+            Layout.topMargin: -(AppStyle.titleBarPadding)
+            Layout.bottomMargin: -(AppStyle.titleBarPadding)
 
             HoverHandler {
                 cursorShape: Qt.PointingHandCursor
@@ -71,14 +71,14 @@ FocusScope {
             onClicked: root.maximizeClicked()
 
             background: Rectangle {
-                color: maxButton.down ? AppStyle.topBarMaximizeButtonColorPressed : maxButton.hovered ? AppStyle.topBarMaximizeButtonColorHovered : "transparent"
-                opacity: maxButton.down ? AppStyle.topBarMaximizeButtonOpacityPressed : maxButton.hovered ? AppStyle.topBarMaximizeButtonOpacityHovered : 0
+                color: maxButton.down ? AppStyle.titleBarMaximizeButtonColorPressed : maxButton.hovered ? AppStyle.titleBarMaximizeButtonColorHovered : "transparent"
+                opacity: maxButton.down ? AppStyle.titleBarMaximizeButtonOpacityPressed : maxButton.hovered ? AppStyle.titleBarMaximizeButtonOpacityHovered : 0
             }
 
             Rectangle {
                 anchors.centerIn: parent
-                width: AppStyle.topBarUtilityButtonIconSize
-                height: AppStyle.topBarUtilityButtonIconSize
+                width: AppStyle.titleBarUtilityButtonIconSize
+                height: AppStyle.titleBarUtilityButtonIconSize
                 color: "transparent"
                 border.color: "white"
                 border.width: 1
@@ -90,24 +90,24 @@ FocusScope {
             id: closeButton
             objectName: "Top Bar Close Button"
             Layout.fillHeight: true
-            Layout.preferredWidth: AppStyle.topBarUtilityButtonWidth
-            Layout.topMargin: -(AppStyle.topBarPadding)
-            Layout.bottomMargin: -(AppStyle.topBarPadding)
-            Layout.rightMargin: -(AppStyle.topBarPadding)
+            Layout.preferredWidth: AppStyle.titleBarUtilityButtonWidth
+            Layout.topMargin: -(AppStyle.titleBarPadding)
+            Layout.bottomMargin: -(AppStyle.titleBarPadding)
+            Layout.rightMargin: -(AppStyle.titleBarPadding)
 
             HoverHandler {
                 cursorShape: Qt.PointingHandCursor
             }
 
             background: Rectangle {
-                color: closeButton.down ? AppStyle.topBarCloseButtonColorPressed : closeButton.hovered ? AppStyle.topBarCloseButtonColorHovered : "transparent"
-                opacity: closeButton.down ? AppStyle.topBarCloseButtonOpacityPressed : closeButton.hovered ? AppStyle.topBarCloseButtonOpacityHovered : 0
+                color: closeButton.down ? AppStyle.titleBarCloseButtonColorPressed : closeButton.hovered ? AppStyle.titleBarCloseButtonColorHovered : "transparent"
+                opacity: closeButton.down ? AppStyle.titleBarCloseButtonOpacityPressed : closeButton.hovered ? AppStyle.titleBarCloseButtonOpacityHovered : 0
             }
 
             Canvas {
                 anchors.centerIn: parent
-                width: AppStyle.topBarUtilityButtonIconSize
-                height: AppStyle.topBarUtilityButtonIconSize
+                width: AppStyle.titleBarUtilityButtonIconSize
+                height: AppStyle.titleBarUtilityButtonIconSize
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);

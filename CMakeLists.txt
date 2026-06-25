@@ -91,6 +91,7 @@ set(CMAKE_CXX_STANDARD 20)
 #include(${CMAKE_SOURCE_DIR}/libs/qwindowkit/CMakeLists.txt)
 include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 add_subdirectory(libs/firelight/achievements)
+add_subdirectory(libs/firelight/activity)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -157,7 +158,7 @@ add_library(firelight_lib
         src/app/emulator_item_renderer.cpp
         src/app/emulator_item.cpp
         src/app/input/gui/gamepad_status_item.cpp
-        src/app/activity/sqlite_activity_log.cpp
+        libs/firelight/activity/src/sqlite_activity_log.cpp
         src/app/input/sqlite_controller_repository.cpp
         src/app/library/gui/library_entry_item.cpp
         src/later/video_encoder.cpp
@@ -203,6 +204,8 @@ add_library(firelight_lib
         src/app/util/fuzzy_string_matcher.hpp
         src/gui/models/search_results_list_model.cpp
         src/gui/models/search_results_list_model.hpp
+        src/gui/models/activity_buckets_list_model.cpp
+        src/gui/models/activity_buckets_list_model.hpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)

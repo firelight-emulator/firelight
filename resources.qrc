@@ -71,6 +71,8 @@
         <file alias="browse">assets/img/icons/filled-rounded/browse.svg</file>
         <file alias="cancel">assets/img/icons/filled-rounded/cancel.svg</file>
         <file alias="controller">assets/img/icons/filled-rounded/controller.svg</file>
+        <file alias="chevron-back">assets/img/icons/filled-rounded/chevron-arrow-back.svg</file>
+        <file alias="chevron-forward">assets/img/icons/filled-rounded/chevron-arrow-forward.svg</file>
         <file alias="delete">assets/img/icons/filled-rounded/delete.svg</file>
         <file alias="favorite">assets/img/icons/filled-rounded/favorite.svg</file>
         <file alias="folder">assets/img/icons/filled-rounded/folder.svg</file>

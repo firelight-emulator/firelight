@@ -9,6 +9,12 @@ void WindowsFrameFilter::setWindow(QWindow *window) {
     m_hwnd = reinterpret_cast<HWND>(window->winId());
     m_dpr = window->devicePixelRatio();
 
+    // Qt's logical size is the true desired content size. GetWindowRect would
+    // return an inflated outer rect (Qt added title bar + borders via
+    // AdjustWindowRect), so we convert the logical size directly instead.
+    int physW = static_cast<int>(window->width()  * m_dpr);
+    int physH = static_cast<int>(window->height() * m_dpr);
+
     MARGINS m{1, 1, 1, 1};
     DwmExtendFrameIntoClientArea(m_hwnd, &m);
 
@@ -16,16 +22,12 @@ void WindowsFrameFilter::setWindow(QWindow *window) {
     SetWindowPos(m_hwnd, nullptr, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-    // Qt cached a title-bar-height content offset before our filter was active.
-    // Nudging the size forces WM_SIZE, which makes Qt re-query GetClientRect.
-    // Now that WM_NCCALCSIZE returns client=window, Qt resets contentItem Y to 0.
-    RECT wr;
-    GetWindowRect(m_hwnd, &wr);
-    int w = wr.right - wr.left;
-    int h = wr.bottom - wr.top;
-    SetWindowPos(m_hwnd, nullptr, 0, 0, w, h + 1,
+    // Nudge forces WM_SIZE so Qt re-queries GetClientRect. Because
+    // WM_NCCALCSIZE now returns client=window, Qt sees physW x physH and
+    // resets contentItem to (0,0) with the correct dimensions.
+    SetWindowPos(m_hwnd, nullptr, 0, 0, physW, physH + 1,
                  SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(m_hwnd, nullptr, 0, 0, w, h,
+    SetWindowPos(m_hwnd, nullptr, 0, 0, physW, physH,
                  SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
