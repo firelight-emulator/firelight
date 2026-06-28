@@ -1,9 +1,9 @@
-#include "event_dispatcher.hpp"
+#include <firelight/event_dispatcher.hpp>
 #include "test_gamepad.hpp"
 
 #include <gtest/gtest.h>
 #include <input/sqlite_controller_repository.hpp>
-#include <input2/sdl/sdl_input_service.hpp>
+#include <firelight/input/sdl_input_service.hpp>
 
 namespace firelight::db {
 class InputServiceImplTest : public testing::Test {

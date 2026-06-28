@@ -6,7 +6,7 @@
 
 #include "../../manager_accessor.hpp"
 
-#include <input2/gamepad.hpp>
+#include <firelight/input/igamepad.hpp>
 
 namespace firelight::input {
 class GamepadStatusItem : public QQuickItem,

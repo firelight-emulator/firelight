@@ -1,6 +1,6 @@
 #include "gamepad_status_item.hpp"
 
-#include "input2/input_service.hpp"
+#include <firelight/input/input_service.hpp>
 
 namespace firelight::input {
 GamepadStatusItem::GamepadStatusItem(QQuickItem *parent) : QQuickItem(parent) {

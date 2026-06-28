@@ -5,7 +5,7 @@
 
 #include "emulation/emulation_service.hpp"
 #include "emulator_item_renderer.hpp"
-#include "input2/input_service.hpp"
+#include <firelight/input/input_service.hpp>
 #include "platform_metadata.hpp"
 
 #include <library/rom_file.hpp>

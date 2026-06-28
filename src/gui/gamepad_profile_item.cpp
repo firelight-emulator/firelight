@@ -1,6 +1,6 @@
 #include "gamepad_profile_item.hpp"
 
-#include "input2/input_service.hpp"
+#include <firelight/input/input_service.hpp>
 #include "shortcuts_model.hpp"
 
 namespace firelight::gui {

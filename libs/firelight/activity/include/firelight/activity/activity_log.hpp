@@ -7,7 +7,7 @@
 
 namespace firelight::activity {
 class IActivityLog {
-protected:
+public:
   virtual ~IActivityLog() = default;
 
 public:

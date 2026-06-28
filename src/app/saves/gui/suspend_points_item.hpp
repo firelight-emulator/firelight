@@ -1,5 +1,6 @@
 #pragma once
 #include <manager_accessor.hpp>
+#include "suspend_point_list_model.hpp"
 
 namespace firelight::saves {
 class SuspendPointsItem : public QObject, public ManagerAccessor {
@@ -15,7 +16,7 @@ public:
   explicit SuspendPointsItem(QObject *parent = nullptr) : QObject(parent) {
     m_suspendPointsModel = new SuspendPointListModel(*getGameImageProvider());
 
-    connect(getSaveManager(), &SaveManager::suspendPointUpdated, this,
+    connect(getSaveManager(), &ISaveManager::suspendPointUpdated, this,
             [this](const QString &contentHash, int saveSlotNumber, int index) {
               if (contentHash != m_contentHash ||
                   saveSlotNumber != m_saveSlotNumber) {
@@ -29,7 +30,7 @@ public:
               }
             });
 
-    connect(getSaveManager(), &SaveManager::suspendPointDeleted, this,
+    connect(getSaveManager(), &ISaveManager::suspendPointDeleted, this,
             [this](const QString &contentHash, int saveSlotNumber, int index) {
               if (contentHash != m_contentHash ||
                   saveSlotNumber != m_saveSlotNumber) {

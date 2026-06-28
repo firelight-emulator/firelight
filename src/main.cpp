@@ -30,6 +30,7 @@
 #include "app/library/gui/playlist_item_model.hpp"
 #include "app/library/library_scanner2.hpp"
 #include "app/saves/save_manager.hpp"
+#include <firelight/saves/save_manager_impl.hpp>
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/game_image_provider.hpp"
@@ -50,7 +51,7 @@
 #include "app/library/gui/library_entry_item.hpp"
 #include "app/library/gui/library_path_model.hpp"
 #include "app/library/sqlite_user_library.hpp"
-#include "app/mods/SqliteModRepository.h"
+#include <firelight/mods/sqlite_mod_repository.hpp>
 #include "app/mods/gui/ModInfoItem.hpp"
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
@@ -61,18 +62,19 @@
 #include "gui/qt_achievement_service_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
-#include "input2/sdl/sdl_input_service.hpp"
-#include "settings/sqlite_settings_repository.hpp"
+#include <firelight/input/sdl_input_service.hpp>
+#include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <input/gui/input_mappings_model.hpp>
 #include <input/keyboard_input_handler.hpp>
-#include <platforms/platform_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 #include <saves/gui/save_files_item.hpp>
 #include <unistd.h>
 
 #include "gui/eventhandlers/windows_frame_filter.hpp"
 #include "gui/models/activity_buckets_list_model.hpp"
 #include "gui/models/search_results_list_model.hpp"
+#include <firelight/discord/discord_manager_impl.hpp>
 
 int main(int argc, char *argv[]) {
     // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
@@ -169,7 +171,7 @@ int main(int argc, char *argv[]) {
     firelight::input::SDLInputService inputService(controllerRepository);
     firelight::ServiceAccessor::setInputService(&inputService);
 
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
     firelight::db::SqliteUserdataDatabase userdata_database(
         defaultAppDataPathString + "/userdata.db");
@@ -187,8 +189,7 @@ int main(int argc, char *argv[]) {
     firelight::db::SqliteContentDatabase contentDatabase(
         defaultAppDataPathString + "/content.db");
 
-    firelight::saves::SaveManager saveManager(savesPath, userdata_database,
-                                              *gameImageProvider);
+    firelight::saves::SaveManager saveManager(savesPath, userdata_database);
     firelight::ManagerAccessor::setSaveManager(&saveManager);
 
     firelight::library::SqliteUserLibrary userLibrary(
@@ -422,7 +423,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
         []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-    engine.loadFromModule("QMLFirelight", "Main4");
+    engine.loadFromModule("QMLFirelight", "Main3");
 
     QObject *rootObject = engine.rootObjects().value(0);
     auto window = qobject_cast<QQuickWindow *>(rootObject);

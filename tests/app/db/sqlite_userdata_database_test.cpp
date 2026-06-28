@@ -1,5 +1,6 @@
 #include "../../../src/app/db/sqlite_userdata_database.hpp"
 #include <gtest/gtest.h>
+#include <filesystem>
 
 namespace firelight::db {
 

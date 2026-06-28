@@ -1,5 +1,5 @@
 #pragma once
-#include "input2/input_service.hpp"
+#include <firelight/input/input_service.hpp>
 #include "service_accessor.hpp"
 
 #include <QAbstractListModel>

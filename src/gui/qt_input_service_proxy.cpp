@@ -5,7 +5,7 @@
 #include "qt_input_service_proxy.hpp"
 
 #include "EventEmitter.h"
-#include "input2/input_service.hpp"
+#include <firelight/input/input_service.hpp>
 
 #include <QApplication>
 

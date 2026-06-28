@@ -1,26 +1,4 @@
 #pragma once
-
-#include "activity_log.hpp"
-
-#include <QSqlDatabase>
-
-namespace firelight::activity {
-class SqliteActivityLog final : public IActivityLog {
-public:
-  explicit SqliteActivityLog(QString dbPath);
-
-  bool createPlaySession(PlaySession &session) override;
-
-  std::optional<PlaySession>
-  getLatestPlaySession(std::string contentHash) override;
-
-  [[nodiscard]] QSqlDatabase getDatabase() const;
-
-  std::vector<PlaySession> getPlaySessions(std::string contentHash) override;
-  std::vector<PlaySession> getPlaySessions() override;
-
-private:
-  QString databasePath;
-};
-} // namespace firelight::activity
-// firelight
+// Implementation detail — not part of the public API.
+// This header will be removed from the public include path in a future cleanup.
+#include "../../../src/firelight/activity/sqlite_activity_log.hpp"

@@ -1,11 +1,3 @@
 #pragma once
-
-namespace firelight::input {
-enum Shortcut {
-  OpenRewindMenu,
-  HoldFastForward,
-  HoldRewind,
-  SpeedUp,
-  SlowDown
-};
-}
+// Moved to libs/firelight/input/. This file exists only for backward compatibility.
+#include <firelight/input/shortcuts.hpp>

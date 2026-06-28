@@ -1,12 +1,3 @@
 #pragma once
-#include "gamepad_input.hpp"
-#include <vector>
-
-namespace firelight::input {
-
-struct InputSequence {
-  std::vector<int> modifiers;
-  int input;
-};
-
-} // namespace firelight::input
+// Moved to libs/firelight/input/. This file exists only for backward compatibility.
+#include <firelight/input/input_sequence.hpp>

@@ -112,7 +112,7 @@ Button {
             verticalAlignment: Text.AlignVCenter
         }
         Text {
-            text: platform_model.getPlatformDisplayName(root.model.platformId)
+            text: PlatformModel.getPlatformDisplayName(root.model.platformId)
             font.pixelSize: 17
             font.weight: Font.Medium
             font.family: Constants.mainFontFamily

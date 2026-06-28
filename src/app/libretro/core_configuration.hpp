@@ -3,7 +3,7 @@
 #include <firelight/libretro/configuration_provider.hpp>
 #include <map>
 #include <platforms/models/platform.hpp>
-#include <settings/settings_service.hpp>
+#include <firelight/settings/settings_service.hpp>
 
 class CoreConfiguration final
     : public firelight::libretro::IConfigurationProvider {

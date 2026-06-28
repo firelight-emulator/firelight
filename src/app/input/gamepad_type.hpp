@@ -1,15 +1,3 @@
 #pragma once
-
-enum GamepadType {
-    KEYBOARD,
-    MICROSOFT_XBOX_360,
-    MICROSOFT_XBOX_ONE,
-    SONY_DUALSHOCK_3,
-    SONY_DUALSHOCK_4,
-    SONY_DUALSENSE,
-    NINTENDO_SWITCH_PRO,
-    NINTENDO_NSO_N64,
-    NINTENDO_NSO_SNES,
-    NINTENDO_NSO_GENESIS,
-    UNKNOWN
-};
+// Moved to libs/firelight/input/. This file exists only for backward compatibility.
+#include <firelight/input/gamepad_type.hpp>

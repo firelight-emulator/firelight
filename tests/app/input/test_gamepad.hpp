@@ -1,5 +1,5 @@
 #pragma once
-#include <input2/gamepad.hpp>
+#include <firelight/input/igamepad.hpp>
 
 namespace firelight::input {
 

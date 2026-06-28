@@ -6,6 +6,7 @@
 #include <db/sqlite_userdata_database.hpp>
 #include <gtest/gtest.h>
 #include <manager_accessor.hpp>
+#include <firelight/saves/save_manager_impl.hpp>
 #include <settings/settings_service.hpp>
 #include <settings/sqlite_settings_repository.hpp>
 
@@ -13,10 +14,9 @@ int main(int argc, char **argv) {
   QApplication app(argc, argv);
 
   firelight::db::SqliteUserdataDatabase userdata(":memory:");
-  firelight::gui::GameImageProvider gameImageProvider;
   firelight::ManagerAccessor::setSaveManager(new firelight::saves::SaveManager(
       QString::fromStdString(std::filesystem::temp_directory_path().string()),
-      userdata, gameImageProvider));
+      userdata));
 
   firelight::settings::SqliteSettingsRepository settings(":memory:");
   auto settingsService =
@@ -29,14 +29,6 @@ int main(int argc, char **argv) {
 
   ::testing::InitGoogleTest(&argc, argv);
   auto result = RUN_ALL_TESTS();
-  //
-  // QQuickView view;
-  // view.setSource(QUrl("qrc:/tests.qml"));
-  // view.show();
-
-  // Enter the Qt event loop to run QML tests
-  // QApplication::exec();
-  // QUICK_TEST_MAIN(example);
 
   return result;
 }

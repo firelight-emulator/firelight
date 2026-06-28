@@ -1,8 +1,3 @@
 #pragma once
-
-namespace firelight::library {
-struct FolderEntryInfo {
-  int folderId = -1;
-  int entryId = -1;
-};
-} // namespace firelight::library
+// Moved to include/firelight/library/folder_entry_info.hpp
+#include <firelight/library/folder_entry_info.hpp>

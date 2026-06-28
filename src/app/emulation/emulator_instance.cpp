@@ -2,12 +2,12 @@
 
 #include "emulation_service.hpp"
 #include "firelight/event_dispatcher.hpp"
-#include "input2/input_service.hpp"
+#include <firelight/input/input_service.hpp>
 
 #include <spdlog/spdlog.h>
 
 #include <audio/audio_manager.hpp>
-#include <settings/settings_service.hpp>
+#include <firelight/settings/settings_service.hpp>
 #include <utility>
 
 namespace firelight::emulation {

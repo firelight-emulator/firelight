@@ -1,12 +1,3 @@
 #pragma once
-#include "mod_info.hpp"
-
-#include <optional>
-
-namespace firelight::mods {
-class IModRepository {
-public:
-  virtual ~IModRepository() = default;
-  virtual std::optional<ModInfo> getModInfo(int modId) = 0;
-};
-}
+// Moved to libs/firelight/mods/. This file exists only for backward compatibility.
+#include <firelight/mods/mod_repository.hpp>

@@ -300,7 +300,7 @@ Pane {
             preferredHighlightBegin: 64
             preferredHighlightEnd: height - 64
             ScrollBar.vertical: ScrollBar { }
-            model: FilteredLibraryEntryModel
+            model: LibraryEntryModel
             focus: true
 
             KeyNavigation.left: libraryNavFocusScope

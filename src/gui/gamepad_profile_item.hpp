@@ -1,5 +1,5 @@
 #pragma once
-#include "input2/gamepad_profile.hpp"
+#include <firelight/input/gamepad_profile.hpp>
 
 #include <QAbstractListModel>
 #include <QQuickItem>

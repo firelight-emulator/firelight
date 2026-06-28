@@ -1,4 +1,4 @@
-#include "../../../src/app/platforms/platform_service.hpp"
+#include <firelight/platforms/platform_service.hpp>
 #include <gtest/gtest.h>
 
 class PlatformServiceTest : public testing::Test {

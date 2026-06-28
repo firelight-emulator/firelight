@@ -1,6 +1,6 @@
-#include "../../../src/app/settings/settings_service.hpp"
-#include "../../../src/app/settings/sqlite_settings_repository.hpp"
-#include "event_dispatcher.hpp"
+#include <firelight/settings/settings_service.hpp>
+#include <firelight/settings/sqlite_settings_repository.hpp>
+#include <firelight/event_dispatcher.hpp>
 #include <filesystem>
 #include <gtest/gtest.h>
 

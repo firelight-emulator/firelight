@@ -92,11 +92,19 @@ set(CMAKE_CXX_STANDARD 20)
 include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 add_subdirectory(libs/firelight/achievements)
 add_subdirectory(libs/firelight/activity)
+add_subdirectory(libs/firelight/settings)
+add_subdirectory(libs/firelight/platforms)
+add_subdirectory(libs/firelight/mods)
+add_subdirectory(libs/firelight/input)
+add_subdirectory(libs/firelight/db)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(/opt/homebrew/include)
 add_subdirectory(src/app)
+add_subdirectory(libs/firelight/library)
+add_subdirectory(libs/firelight/saves)
+add_subdirectory(libs/firelight/discord)
 add_subdirectory(libs/discord)
 add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
@@ -130,13 +138,9 @@ set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLET
 add_library(firelight_lib
         src/app/libretro/core.cpp
         src/app/libretro/game.cpp
-        src/app/db/sqlite_content_database.cpp
-        src/app/input2/sdl/sdl_controller.cpp
         src/app/manager_accessor.cpp
         src/app/audio/audio_manager.cpp
-        src/app/saves/save_manager.cpp
-        src/app/saves/savefile.cpp
-        src/app/db/sqlite_userdata_database.cpp
+
         src/app/input/gui/controller_list_model.cpp
         src/app/saves/gui/savefile_list_model.cpp
         libs/firelight/achievements/src/rcheevos/ra_client.cpp
@@ -144,7 +148,6 @@ add_library(firelight_lib
         src/app/achievements/gui/achievement_list_model.cpp
         src/app/achievements/gui/achievement_list_sort_filter_model.cpp
         src/gui/router.cpp
-        src/app/input/profiles/input_mapping.cpp
         src/gui/platform_list_model.cpp
         src/app/libretro/core_configuration.cpp
         src/app/emulator_config_manager.cpp
@@ -153,38 +156,26 @@ add_library(firelight_lib
         src/gui/game_image_provider.cpp
         src/app/audio/SfxPlayer.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
-        src/app/input/keyboard_input_handler.cpp
         src/app/library/gui/entry_list_model.cpp
         src/app/emulator_item_renderer.cpp
         src/app/emulator_item.cpp
         src/app/input/gui/gamepad_status_item.cpp
-        libs/firelight/activity/src/sqlite_activity_log.cpp
-        src/app/input/sqlite_controller_repository.cpp
         src/app/library/gui/library_entry_item.cpp
         src/later/video_encoder.cpp
         src/later/video_decoder.cpp
         src/app/achievements/gui/AchievementSetItem.cpp
         src/app/mods/gui/ModInfoItem.cpp
-        src/app/mods/SqliteModRepository.cpp
         src/app/saves/gui/suspend_points_item.cpp
         src/app/activity/gui/game_activity_item.cpp
         src/app/activity/gui/play_session_list_model.cpp
-        src/app/settings/sqlite_settings_repository.cpp
-        src/app/discord/discord_manager.cpp
         src/app/library/gui/playlist_item_model.cpp
         src/gui/filesystem_utils.cpp
         src/app/saves/gui/save_files_item.cpp
         src/app/library/gui/content_directory_model.cpp
         src/app/input/gui/input_mappings_model.cpp
-        src/app/platforms/platform_service.cpp
-        src/app/input/profiles/shortcut_mapping.cpp
-        src/app/input2/input_service.cpp
-        src/app/input2/gamepad_profile.cpp
-        src/app/input2/sdl/sdl_input_service.cpp
         src/gui/shortcuts_model.cpp
         src/gui/gamepad_profile_item.cpp
         src/gui/qt_input_service_proxy.cpp
-        src/app/settings/settings_service.cpp
         src/gui/EventEmitter.h
         src/gui/qt_input_service_proxy.hpp
         src/gui/qt_emulation_service_proxy.cpp
@@ -206,10 +197,11 @@ add_library(firelight_lib
         src/gui/models/search_results_list_model.hpp
         src/gui/models/activity_buckets_list_model.cpp
         src/gui/models/activity_buckets_list_model.hpp
+        src/app/library/gui/library_path_model.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
-target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src/rcheevos ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src)
+target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src/rcheevos ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src ${CMAKE_SOURCE_DIR}/libs/firelight/input/src ${CMAKE_SOURCE_DIR}/libs/firelight/db/src ${CMAKE_SOURCE_DIR}/libs/firelight/library/src)
 target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS} ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/lib/debug)
 
 if (WIN32)
@@ -244,7 +236,15 @@ target_link_libraries(firelight_lib PUBLIC
         spdlog::spdlog
         cpr::cpr
         firelight_achievements
-        library
+        firelight_activity
+        firelight_settings
+        firelight_platforms
+        firelight_mods
+        firelight_input
+        firelight_db
+        firelight_library
+        firelight_saves
+        firelight_discord
         patching
         rcheevos
         discord
@@ -282,7 +282,7 @@ qt6_add_qml_module(firelight
 )
 
 #target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
-target_include_directories(firelight PRIVATE libs/firelight/achievements/src)
+target_include_directories(firelight PRIVATE libs/firelight/achievements/src libs/firelight/activity/src libs/firelight/settings/src libs/firelight/mods/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/discord/src)
 #target_link_libraries(firelight PRIVATE firelight_lib)
 target_link_libraries(firelight PUBLIC
         discord
@@ -426,7 +426,7 @@ add_test(NAME QMLTests COMMAND fl_qml_test)
 
 add_dependencies(fl_test copy_resources)
 
-target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include libs/firelight/achievements/src)
+target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
 #ctest_coverage_collect_gcov()

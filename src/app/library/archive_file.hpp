@@ -1,7 +1,3 @@
 #pragma once
-
-namespace firelight::library {
-    class ArchiveFile {
-
-    };
-}
+// Moved to libs/firelight/library/src/firelight/library/archive_file.hpp
+#include <firelight/library/archive_file.hpp>

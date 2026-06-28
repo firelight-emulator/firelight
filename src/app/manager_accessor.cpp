@@ -3,7 +3,7 @@
 #include <utility>
 
 namespace firelight {
-saves::SaveManager *ManagerAccessor::m_saveManager;
+saves::ISaveManager *ManagerAccessor::m_saveManager;
 db::IUserdataDatabase *ManagerAccessor::m_userdataDatabase;
 db::ILibraryDatabase *ManagerAccessor::m_libraryDatabase;
 achievements::RAClient *ManagerAccessor::m_achievementManager;
@@ -15,9 +15,9 @@ std::string ManagerAccessor::m_coreSystemDirectory;
 mods::IModRepository *ManagerAccessor::m_modDatabase;
 settings::ISettingsRepository
     *ManagerAccessor::m_emulationSettingsManager;
-discord::DiscordManager *ManagerAccessor::m_discordManager;
+discord::IDiscordManager *ManagerAccessor::m_discordManager;
 
-void ManagerAccessor::setSaveManager(saves::SaveManager *t_manager) {
+void ManagerAccessor::setSaveManager(saves::ISaveManager *t_manager) {
   m_saveManager = t_manager;
 }
 
@@ -65,11 +65,11 @@ void ManagerAccessor::setEmulationSettingsManager(
   m_emulationSettingsManager = t_emulationSettingsManager;
 }
 void ManagerAccessor::setDiscordManager(
-    discord::DiscordManager *t_discordManager) {
+    discord::IDiscordManager *t_discordManager) {
   m_discordManager = t_discordManager;
 }
 
-saves::SaveManager *ManagerAccessor::getSaveManager() { return m_saveManager; }
+saves::ISaveManager *ManagerAccessor::getSaveManager() { return m_saveManager; }
 
 db::IUserdataDatabase *ManagerAccessor::getUserdataManager() {
   return m_userdataDatabase;
@@ -110,7 +110,7 @@ settings::ISettingsRepository *
 ManagerAccessor::getEmulationSettingsManager() {
   return m_emulationSettingsManager;
 }
-discord::DiscordManager *ManagerAccessor::getDiscordManager() {
+discord::IDiscordManager *ManagerAccessor::getDiscordManager() {
   return m_discordManager;
 }
 } // namespace firelight

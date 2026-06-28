@@ -1,7 +1,8 @@
 #include "emulation_service.hpp"
 
+#include <qfile.h>
 #include "firelight/event_dispatcher.hpp"
-#include "input2/input_service.hpp"
+#include <firelight/input/input_service.hpp>
 #include "platforms/platform_service.hpp"
 
 #include <audio/audio_manager.hpp>

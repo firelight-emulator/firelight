@@ -3,7 +3,7 @@
 
 #include <QAbstractListModel>
 #include <firelight/event_dispatcher.hpp>
-#include <settings/settings_service.hpp>
+#include <firelight/settings/settings_service.hpp>
 
 namespace firelight::settings {
 
