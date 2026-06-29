@@ -270,6 +270,7 @@ namespace firelight {
     static constexpr int PLATFORM_ID_WONDERSWAN = 24;
     static constexpr int PLATFORM_ID_SG1000 = 25;
     static constexpr int PLATFORM_ID_NEOGEO_POCKET = 27;
+    static constexpr int PLATFORM_ID_SEGA_DREAMCAST = 27;
 
     static constexpr int OS_ID_UNKNOWN = -1;
     static constexpr int OS_ID_WINDOWS = 0;

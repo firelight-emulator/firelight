@@ -158,6 +158,7 @@ add_library(firelight_lib
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/library/gui/entry_list_model.cpp
         src/app/emulator_item_renderer.cpp
+        src/app/emulator_vulkan_renderer.cpp
         src/app/emulator_item.cpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp

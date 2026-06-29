@@ -594,7 +594,7 @@ namespace libretro {
         }
 
         auto ptr = static_cast<retro_hw_render_interface **>(data);
-        currentCore->videoReceiver->setHwRenderInterface(ptr);
+        currentCore->videoReceiver->getHwRenderInterface(ptr);
         return true;
       }
       case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS: {
@@ -613,9 +613,6 @@ namespace libretro {
         auto ptr =
             static_cast<retro_hw_render_context_negotiation_interface *>(data);
         currentCore->videoReceiver->setHwRenderContextNegotiationInterface(ptr);
-        auto type = ptr->interface_type;
-        auto version = ptr->interface_version;
-
         break;
       }
       case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
