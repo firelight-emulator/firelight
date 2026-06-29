@@ -173,7 +173,16 @@ private:
   float m_coreAspectRatio = 0.0f;
   float m_calculatedAspectRatio = 0.0f;
 
+  void initializeEmulatorInstance(QRhiCommandBuffer *cb);
+
+  void displayPauseImage(QRhiCommandBuffer *cb);
+
+  // Actual render dimensions from the video callback; applied to colorTexture in synchronize().
+  uint m_pendingColorBufferW = 0;
+  uint m_pendingColorBufferH = 0;
+
   bool m_usingHardwareRenderer = false;
+  bool m_firstFrameReady = false;
 
   // ── Vulkan ───────────────────────────────────────────────────────────────
   const retro_hw_render_context_negotiation_interface_vulkan *m_negotiation = nullptr;

@@ -196,7 +196,12 @@ void EmulatorItemRenderer::setHwRenderInterface(
 void EmulatorItemRenderer::receive(const void *data, unsigned width,
                                    unsigned height, size_t pitch) {
   if (data == RETRO_HW_FRAME_BUFFER_VALID) {
-    // Vulkan: m_coreImage already set by set_image() earlier this frame
+    // Vulkan: m_coreImage already set by set_image() earlier this frame.
+    // Record the actual render dimensions so synchronize() can resize colorTexture to match.
+    if (width >= 2 && height >= 2) {
+      m_pendingColorBufferW = width;
+      m_pendingColorBufferH = height;
+    }
     m_vkRenderWidth = width;
     m_vkRenderHeight = height;
     m_vkFrameReady = true;
@@ -274,6 +279,18 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   m_contentHash = emulatorItem->m_contentHash;
   m_saveSlotNumber = emulatorItem->m_saveSlotNumber;
   m_platformId = emulatorItem->m_platformId;
+
+  // Apply video-callback render dimensions to colorTexture.
+  // synchronize() runs with the main thread blocked, so setFixed* is safe here.
+  if (m_pendingColorBufferW >= 2 && m_pendingColorBufferH >= 2 &&
+      (static_cast<int>(m_pendingColorBufferW) != emulatorItem->fixedColorBufferWidth() ||
+       static_cast<int>(m_pendingColorBufferH) != emulatorItem->fixedColorBufferHeight())) {
+    spdlog::info("synchronize: resizing colorBuffer {}x{} -> {}x{}",
+                 emulatorItem->fixedColorBufferWidth(), emulatorItem->fixedColorBufferHeight(),
+                 m_pendingColorBufferW, m_pendingColorBufferH);
+    emulatorItem->setFixedColorBufferWidth(m_pendingColorBufferW);
+    emulatorItem->setFixedColorBufferHeight(m_pendingColorBufferH);
+  }
 
   while (!m_commandQueue.isEmpty()) {
     const auto command = m_commandQueue.dequeue();
@@ -426,27 +443,22 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 }
 
 void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
-  if (m_quitting)
+  if (m_quitting) {
     return;
+  }
 
-  if (m_emulatorItem)
-    emit m_emulatorItem->aboutToRunFrame();
+  if (m_emulatorInstance && !m_emulatorInstance->isInitialized()) {
+    initializeEmulatorInstance(cb);
+    update();
+    return;
+  }
 
-  // ── Vulkan path ───────────────────────────────────────────────────────────
   if (m_graphicsApi == QSGRendererInterface::Vulkan) {
-    if (m_emulatorInstance && !m_emulatorInstance->isInitialized()) {
-      // Load the core — env callbacks fire here, setting m_negotiation and
-      // m_resetContextFunction. No GPU commands, so no QRhi pass needed.
-      m_emulatorInstance->initialize(this);
-
-      m_playSession.contentHash = m_contentHash.toStdString();
-      m_playSession.startTime = QDateTime::currentMSecsSinceEpoch();
-      m_playSession.slotNumber = m_saveSlotNumber;
-      if (!m_paused)
-        m_playSessionTimer.start();
-
-      update(); // schedule the frame that will call initVulkan()
-      return;
+    // For HW cores: clear to black until the first real game frame is blitted.
+    // Software cores upload directly to colorTexture so they don't need this.
+    if (m_usingHardwareRenderer && !m_firstFrameReady) {
+      cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
+      cb->endPass();
     }
 
     // initVulkan() is deferred until after the emulator is loaded so that
@@ -458,20 +470,23 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
           return;
         }
       }
+
       update();
       return;
     }
+  }
 
-    if (m_paused) {
-      if (!m_overlayImage.isNull()) {
-        QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-        cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, batch);
-        cb->endPass(batch);
-        m_overlayImage = QImage();
-      }
-      return;
-    }
+  if (m_paused) {
+    displayPauseImage(cb);
+    return;
+  }
 
+  if (m_emulatorItem) {
+    emit m_emulatorItem->aboutToRunFrame();
+  }
+
+  // ── Vulkan path ───────────────────────────────────────────────────────────
+  if (m_graphicsApi == QSGRendererInterface::Vulkan) {
     if (!m_emulatorInstance || !m_emulatorInstance->isInitialized() ||
         !m_shouldRunFrame)
       return;
@@ -502,23 +517,23 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     } else {
       renderVulkanFrame();
 
-      // Composite the shared image into colorTexture() via a GPU copy.
-      // renderVulkanFrame() already CPU-waited on the blit fence, so m_sharedImage
-      // is guaranteed complete — no GPU-side semaphore needed here.
-      if (m_sharedTex && m_sharedSemValue > 0) {
-        // Refresh Qt's layout tracking each frame: Granite leaves the shared image
-        // in SHADER_READ_ONLY_OPTIMAL after the post-copy barrier.
+      if (m_firstFrameReady && m_sharedTex && m_sharedSemValue > 0) {
+        // Composite the shared image into colorTexture() via a GPU copy.
+        // renderVulkanFrame() already CPU-waited on the blit fence, so m_sharedImage
+        // is guaranteed complete — no GPU-side semaphore needed here.
         m_sharedTex->createFrom({
           reinterpret_cast<quint64>(m_qtSharedImage),
           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
         });
 
-        // GPU copy from shared image into colorTexture(); batch goes to endPass
-        // so it executes after vkCmdEndRenderPass and survives the clear.
         QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
         batch->copyTexture(colorTexture(), m_sharedTex);
-        cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, nullptr);
+        cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
         cb->endPass(batch);
+      } else {
+        // No real frame yet — clear to opaque black so colorTexture always has valid content.
+        cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
+        cb->endPass();
       }
     }
 
@@ -527,36 +542,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   }
 
   // ── OpenGL / software path ────────────────────────────────────────────────
-  if (m_paused) {
-    if (!m_overlayImage.isNull()) {
-      QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-      cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
-                    QRhiCommandBuffer::ExternalContent);
-      batch->uploadTexture(colorTexture(), m_overlayImage.copy());
-      cb->endPass(batch);
-      m_overlayImage = QImage();
-    }
-    return;
-  }
-
-  if (m_emulatorInstance && !m_emulatorInstance->isInitialized()) {
-    QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-    cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
-                  QRhiCommandBuffer::ExternalContent);
-    cb->beginExternal();
-    m_emulatorInstance->initialize(this);
-    cb->endExternal();
-    cb->endPass(batch);
-
-    m_playSession.contentHash = m_contentHash.toStdString();
-    m_playSession.startTime = QDateTime::currentMSecsSinceEpoch();
-    m_playSession.slotNumber = m_saveSlotNumber;
-    if (!m_paused)
-      m_playSessionTimer.start();
-
-    update();
-    return;
-  }
 
   if (!m_paused && m_emulatorInstance && m_emulatorInstance->isInitialized() &&
       m_shouldRunFrame) {
@@ -596,6 +581,34 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
     m_currentUpdateBatch = nullptr;
     cb->endPass(batch);
+  }
+}
+
+void EmulatorItemRenderer::initializeEmulatorInstance(QRhiCommandBuffer *cb) {
+  QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
+  cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
+                QRhiCommandBuffer::ExternalContent);
+  cb->beginExternal();
+  m_emulatorInstance->initialize(this);
+  cb->endExternal();
+  cb->endPass(batch);
+
+  m_playSession.contentHash = m_contentHash.toStdString();
+  m_playSession.startTime = QDateTime::currentMSecsSinceEpoch();
+  m_playSession.slotNumber = m_saveSlotNumber;
+  if (!m_paused) {
+    m_playSessionTimer.start();
+  }
+}
+
+void EmulatorItemRenderer::displayPauseImage(QRhiCommandBuffer *cb) {
+  if (!m_overlayImage.isNull()) {
+    QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
+    cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
+                  QRhiCommandBuffer::ExternalContent);
+    batch->uploadTexture(colorTexture(), m_overlayImage.copy());
+    cb->endPass(batch);
+    m_overlayImage = QImage();
   }
 }
 
@@ -1207,15 +1220,29 @@ void EmulatorItemRenderer::renderVulkanFrame() {
 
   // vkFrameReady is set by core in the video callback
   if (!m_vkFrameReady || m_coreImage == VK_NULL_HANDLE || !m_usingHardwareRenderer) {
+    spdlog::debug("renderVulkanFrame: early exit – frameReady={} coreImage={} hwRenderer={}",
+                  m_vkFrameReady, m_coreImage != VK_NULL_HANDLE, m_usingHardwareRenderer);
     return;
   }
 
   // Skip until receive() has reported real dimensions (first frame may be 1×1 init)
-  if (m_vkRenderWidth < 2 || m_vkRenderHeight < 2)
+  if (m_vkRenderWidth < 2 || m_vkRenderHeight < 2) {
+    spdlog::debug("renderVulkanFrame: degenerate dims {}x{}, skipping blit",
+                  m_vkRenderWidth, m_vkRenderHeight);
     return;
+  }
 
-  if (!ensureSharedImage())
+  if (!ensureSharedImage()) {
+    spdlog::debug("renderVulkanFrame: ensureSharedImage() failed");
     return;
+  }
+
+  m_firstFrameReady = true;
+
+
+  spdlog::debug("renderVulkanFrame: blitting {}x{} -> {}x{} fmt={}",
+                m_vkRenderWidth, m_vkRenderHeight, m_sharedImageW, m_sharedImageH,
+                static_cast<int>(m_coreImageFormat));
 
   // Wait for the previous frame's copy command buffer to finish before we
   // record into it again, then reset for re-use. (Fence is pre-signaled on first call.)
