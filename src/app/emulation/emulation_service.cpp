@@ -108,12 +108,9 @@ namespace firelight::emulation {
                                                      corePath, coreConfig,
                                                      getCoreSystemDirectory());
 
-    const auto &contentBytes = loaded.contentBytes;
-
     m_emulatorInstance = std::make_unique<EmulatorInstance>(
       std::move(m_core), contentFile.m_filePath, m_currentContentHash,
-      entry->platformId, entry->activeSaveSlot,
-      std::vector<uint8_t>(contentBytes.begin(), contentBytes.end()),
+      entry->platformId, entry->activeSaveSlot, std::move(loaded.contentBytes),
       std::vector<uint8_t>(saveDataBytes.begin(), saveDataBytes.end()));
 
     EventDispatcher::instance().publish(GameLoadedEvent{});

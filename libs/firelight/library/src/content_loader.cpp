@@ -2,11 +2,9 @@
 
 #include <firelight/library/archive_reader.hpp>
 #include <firelight/library/content_hasher.hpp>
+#include <firelight/library/file_bytes.hpp>
 
 #include <spdlog/spdlog.h>
-
-#include <fstream>
-#include <iterator>
 
 namespace firelight::library {
 
@@ -26,23 +24,20 @@ LoadedContent ContentLoader::load(const ContentFile &info) const {
   if (info.m_inArchive) {
     rawBytes = ArchiveReader(info.m_archivePathName).readEntryByPath(info.m_filePath);
   } else {
-    std::ifstream file(info.m_filePath, std::ios::binary);
-    if (!file) {
-      spdlog::error("[ContentLoader] Could not open content file: {}",
+    rawBytes = readAllBytes(info.m_filePath);
+    if (rawBytes.empty()) {
+      spdlog::error("[ContentLoader] Could not read content file: {}",
                     info.m_filePath);
       return {};
     }
-    rawBytes.assign(std::istreambuf_iterator<char>(file),
-                    std::istreambuf_iterator<char>());
-    file.close();
   }
 
-  const HashedContent hashed = ContentHasher{}.hash(info.m_platformId, rawBytes);
+  HashedContent hashed = ContentHasher{}.hash(info.m_platformId, rawBytes);
 
   LoadedContent content;
-  content.contentBytes = hashed.contentBytes;
   content.contentHash = hashed.contentHash;
-  content.valid = !hashed.contentHash.empty();
+  content.contentBytes = std::move(hashed.contentBytes);
+  content.valid = !content.contentHash.empty();
   return content;
 }
 
@@ -54,10 +49,10 @@ void ContentLoader::applyPatch(LoadedContent &content, const int platformId,
   }
 
   const std::vector<uint8_t> patched = patch.patch(content.contentBytes);
-  const HashedContent hashed = ContentHasher{}.hash(platformId, patched);
-  content.contentBytes = hashed.contentBytes;
+  HashedContent hashed = ContentHasher{}.hash(platformId, patched);
   content.contentHash = hashed.contentHash;
-  content.valid = !hashed.contentHash.empty();
+  content.contentBytes = std::move(hashed.contentBytes);
+  content.valid = !content.contentHash.empty();
 }
 
 } // namespace firelight::library

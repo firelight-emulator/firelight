@@ -1,6 +1,7 @@
 #include <firelight/library/disc_inspector.hpp>
 
 #include <firelight/library/archive_reader.hpp>
+#include <firelight/library/file_bytes.hpp>
 
 #include <rcheevos/rc_hash.h>
 
@@ -212,13 +213,10 @@ std::vector<IdentifiedDiscMember>
 DiscInspector::collectLooseMembers(const std::string &sheetPath) const {
   std::vector<IdentifiedDiscMember> members;
 
-  std::ifstream file(sheetPath, std::ios::binary);
-  if (!file) {
+  const std::vector<uint8_t> bytes = readAllBytes(sheetPath);
+  if (bytes.empty()) {
     return members;
   }
-  const std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(file)),
-                                   std::istreambuf_iterator<char>());
-  file.close();
 
   const std::filesystem::path sheet(sheetPath);
   const std::filesystem::path dir = sheet.parent_path();

@@ -1,11 +1,11 @@
 #include <firelight/library/content_identifier.hpp>
 
+#include <firelight/library/file_bytes.hpp>
 #include <platform_metadata.hpp>
 
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-#include <fstream>
 
 namespace firelight::library {
 
@@ -45,13 +45,10 @@ IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
     return content;
   }
 
-  std::ifstream file(path, std::ios::binary);
-  if (!file) {
+  const std::vector<uint8_t> bytes = readAllBytes(path);
+  if (bytes.empty()) {
     return content;
   }
-  const std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(file)),
-                                   std::istreambuf_iterator<char>());
-  file.close();
 
   content.fileSizeBytes = bytes.size();
   content.fileMd5 = ContentHasher::md5(bytes.data(), bytes.size());

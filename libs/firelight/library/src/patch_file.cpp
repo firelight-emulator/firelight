@@ -1,11 +1,10 @@
 #include <firelight/library/patch_file.hpp>
 
+#include <firelight/library/file_bytes.hpp>
 #include <patching/rom_patch.hpp>
 #include <patching/bps_patch.hpp>
 #include <patching/ips_patch.hpp>
 #include <patching/ups_patch.hpp>
-
-#include <fstream>
 
 namespace firelight::library {
 
@@ -16,14 +15,10 @@ bool PatchFile::load() {
     return false;
   }
 
-  std::ifstream file(m_filePath, std::ios::binary);
-  if (!file) {
+  m_patchData = readAllBytes(m_filePath);
+  if (m_patchData.empty()) {
     return false;
   }
-
-  m_patchData = std::vector<uint8_t>(std::istreambuf_iterator(file), {});
-
-  file.close();
 
   auto suffix = m_filePath.substr(m_filePath.find_last_of('.') + 1);
   if (suffix == "ips") {
