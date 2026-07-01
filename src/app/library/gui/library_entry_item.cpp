@@ -1,6 +1,7 @@
 #include "library_entry_item.hpp"
+#include <firelight/library/user_library_service.hpp>
 
-#include <platforms/platform_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 namespace firelight {
 LibraryEntryItem::LibraryEntryItem(QQuickItem *parent) {}
@@ -10,7 +11,7 @@ void LibraryEntryItem::setEntryId(const int entryId) {
     m_entryId = entryId;
     emit entryIdChanged();
 
-    const auto entry = getUserLibrary()->getEntry(m_entryId);
+    const auto entry = getLibraryService()->getEntry(m_entryId);
     if (!entry) {
       return;
     }

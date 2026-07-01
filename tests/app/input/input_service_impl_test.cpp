@@ -2,7 +2,7 @@
 #include "test_gamepad.hpp"
 
 #include <gtest/gtest.h>
-#include <input/sqlite_controller_repository.hpp>
+#include <firelight/input/sqlite_controller_repository.hpp>
 #include <firelight/input/sdl_input_service.hpp>
 
 namespace firelight::db {
@@ -49,6 +49,29 @@ TEST_F(InputServiceImplTest, AddGamepadTest) {
 
   auto retrieved = inputService.getPlayerGamepad(0);
   ASSERT_EQ(retrieved, gamepad);
+}
+
+TEST_F(InputServiceImplTest, PlatformPreferredControllerPromotedToPlayerOne) {
+  input::SDLInputService inputService(m_repo);
+
+  auto xboxPad = std::make_shared<input::TestGamepad>(1);
+  xboxPad->setType(MICROSOFT_XBOX_ONE);
+  auto n64Pad = std::make_shared<input::TestGamepad>(2);
+  n64Pad->setType(NINTENDO_NSO_N64);
+
+  inputService.addGamepad(xboxPad); // player 0
+  inputService.addGamepad(n64Pad);  // player 1
+  ASSERT_EQ(xboxPad->getPlayerIndex(), 0);
+  ASSERT_EQ(n64Pad->getPlayerIndex(), 1);
+
+  constexpr int platformId = 5;
+  m_repo.setPlatformPreferredType(platformId, NINTENDO_NSO_N64);
+
+  inputService.applyGameContext(std::nullopt, platformId);
+
+  // The N64 controller should now be player one, swapping with the Xbox pad.
+  ASSERT_EQ(n64Pad->getPlayerIndex(), 0);
+  ASSERT_EQ(xboxPad->getPlayerIndex(), 1);
 }
 
 TEST_F(InputServiceImplTest, AddKeyboardTest) {

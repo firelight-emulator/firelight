@@ -13,6 +13,15 @@ void GamepadProfile::setIsKeyboardProfile(const bool isKeyboardProfile) {
   m_isKeyboardProfile = isKeyboardProfile;
 }
 
+bool GamepadProfile::isBuiltin() const { return m_builtin; }
+void GamepadProfile::setBuiltin(const bool builtin) { m_builtin = builtin; }
+
+int GamepadProfile::getBasedOnType() const { return m_basedOnType; }
+void GamepadProfile::setBasedOnType(const int type) { m_basedOnType = type; }
+
+std::string GamepadProfile::getIcon() const { return m_icon; }
+void GamepadProfile::setIcon(const std::string &icon) { m_icon = icon; }
+
 void GamepadProfile::setName(const std::string &name) { m_name = name; }
 
 std::shared_ptr<InputMapping>
@@ -44,6 +53,24 @@ void GamepadProfile::setShortcutMapping(
 }
 std::shared_ptr<ShortcutMapping> GamepadProfile::getShortcutMapping() const {
   return m_shortcutMapping;
+}
+
+const AnalogSettings &GamepadProfile::getDefaultAnalogSettings() const {
+  return m_defaultAnalogSettings;
+}
+
+void GamepadProfile::setDefaultAnalogSettings(const AnalogSettings &settings) {
+  m_defaultAnalogSettings = settings;
+}
+
+AnalogSettings GamepadProfile::getAnalogSettings(const int platformId,
+                                                 const int controllerType) const {
+  const auto mapping =
+      getMappingForPlatformAndController(platformId, controllerType);
+  if (mapping && mapping->getAnalogOverride().has_value()) {
+    return mapping->getAnalogOverride().value();
+  }
+  return m_defaultAnalogSettings;
 }
 
 } // namespace firelight::input

@@ -7,7 +7,7 @@
 #include <libretro/core.hpp>
 #include <manager_accessor.hpp>
 #include <memory>
-#include <saves/suspend_point.hpp>
+#include <firelight/saves/suspend_point.hpp>
 #include <string>
 
 namespace firelight::emulation {

@@ -6,11 +6,17 @@ find_package(LibArchive REQUIRED)
 find_package(ZLIB REQUIRED)
 
 add_library(firelight_library STATIC
-        ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_user_library.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_user_library_repository.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/library_scanner2.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/rom_file.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/archive_reader.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/content_hasher.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/content_identifier.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/content_loader.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/disc_inspector.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/entry_resolver.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/library_ingest_service.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/user_library_service.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/patch_file.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/firelight/library/sqlite_user_library.hpp
         ${CMAKE_CURRENT_LIST_DIR}/src/firelight/library/library_scanner2.hpp
 )
 
@@ -18,6 +24,7 @@ target_include_directories(firelight_library
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
         PRIVATE ${CMAKE_SOURCE_DIR}/src/app
         PRIVATE ${CMAKE_SOURCE_DIR}/src
+        PRIVATE ${CMAKE_SOURCE_DIR}/libs/rcheevos/src/rhash
         PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
 )
 

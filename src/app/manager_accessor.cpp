@@ -5,11 +5,9 @@
 namespace firelight {
 saves::ISaveManager *ManagerAccessor::m_saveManager;
 db::IUserdataDatabase *ManagerAccessor::m_userdataDatabase;
-db::ILibraryDatabase *ManagerAccessor::m_libraryDatabase;
 achievements::RAClient *ManagerAccessor::m_achievementManager;
 std::shared_ptr<EmulatorConfigManager> ManagerAccessor::m_emulatorConfigManager;
 gui::GameImageProvider *ManagerAccessor::m_gameImageProvider;
-library::IUserLibrary *ManagerAccessor::m_userLibrary;
 activity::IActivityLog *ManagerAccessor::m_activityLog;
 std::string ManagerAccessor::m_coreSystemDirectory;
 mods::IModRepository *ManagerAccessor::m_modDatabase;
@@ -26,11 +24,6 @@ void ManagerAccessor::setUserdataManager(
   m_userdataDatabase = t_userdataManager;
 }
 
-void ManagerAccessor::setLibraryDatabase(
-    db::ILibraryDatabase *t_libraryDatabase) {
-  m_libraryDatabase = t_libraryDatabase;
-}
-
 void ManagerAccessor::setAchievementManager(
     achievements::RAClient *t_achievementManager) {
   m_achievementManager = t_achievementManager;
@@ -44,10 +37,6 @@ void ManagerAccessor::setEmulatorConfigManager(
 void ManagerAccessor::setGameImageProvider(
     gui::GameImageProvider *t_gameImageProvider) {
   m_gameImageProvider = t_gameImageProvider;
-}
-
-void ManagerAccessor::setUserLibrary(library::IUserLibrary *t_userLibrary) {
-  m_userLibrary = t_userLibrary;
 }
 
 void ManagerAccessor::setActivityLog(activity::IActivityLog *t_activityLog) {
@@ -75,10 +64,6 @@ db::IUserdataDatabase *ManagerAccessor::getUserdataManager() {
   return m_userdataDatabase;
 }
 
-db::ILibraryDatabase *ManagerAccessor::getLibraryDatabase() {
-  return m_libraryDatabase;
-}
-
 achievements::RAClient *ManagerAccessor::getAchievementManager() {
   return m_achievementManager;
 }
@@ -90,10 +75,6 @@ ManagerAccessor::getEmulatorConfigManager() {
 
 gui::GameImageProvider *ManagerAccessor::getGameImageProvider() {
   return m_gameImageProvider;
-}
-
-library::IUserLibrary *ManagerAccessor::getUserLibrary() {
-  return m_userLibrary;
 }
 
 activity::IActivityLog *ManagerAccessor::getActivityLog() {

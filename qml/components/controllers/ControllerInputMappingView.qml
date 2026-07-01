@@ -71,6 +71,36 @@ FocusScope {
         }
     }
 
+    // Per-button editor for turbo/autofire, toggle, and alternate bindings.
+    Popup {
+        id: bindingOptionsPopup
+
+        property int targetInput: -1
+        property string targetLabel: ""
+
+        parent: Overlay.overlay
+        anchors.centerIn: Overlay.overlay
+        width: 640
+        height: 520
+        modal: true
+        padding: 0
+
+        background: Rectangle {
+            color: ColorPalette.neutral900
+            radius: 8
+            border.color: ColorPalette.neutral600
+        }
+
+        contentItem: BindingOptionsPage {
+            profileId: root.profileId
+            platformId: root.platformId
+            controllerTypeId: root.controllerType
+            targetInput: bindingOptionsPopup.targetInput
+            targetLabel: bindingOptionsPopup.targetLabel
+            capturePlayerNumber: root.gamepad.playerNumber
+        }
+    }
+
     ListView {
         id: buttonList
         anchors.fill: parent
@@ -266,6 +296,16 @@ FocusScope {
                     text: "Clear mapping"
                     onTriggered: {
                           inputMappingsModel.clearMapping(model.originalInput)
+                    }
+                }
+
+                RightClickMenuItem {
+                    text: "Turbo & alternate bindings…"
+                    visible: !root.isKeyboard
+                    onTriggered: {
+                        bindingOptionsPopup.targetInput = model.originalInput
+                        bindingOptionsPopup.targetLabel = model.originalInputName
+                        bindingOptionsPopup.open()
                     }
                 }
             }

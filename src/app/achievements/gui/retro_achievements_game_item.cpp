@@ -2,8 +2,8 @@
 
 #include <firelight/achievement_service.hpp>
 
-#include <library/user_library.hpp>
-#include <platforms/platform_service.hpp>
+#include <firelight/library/user_library_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::achievements {
 RetroAchievementsGameItem::RetroAchievementsGameItem(QObject *parent) {}

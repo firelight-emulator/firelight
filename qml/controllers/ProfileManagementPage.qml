@@ -1,0 +1,184 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Dialogs
+import Firelight 1.0
+
+// Standalone controller-profile manager: create, clone, rename, delete, and
+// import/export profiles. Self-contained; bind nothing — it loads all profiles
+// from the input service.
+FocusScope {
+    id: root
+
+    property int pendingId: -1
+    // "create" | "rename" | "clone"
+    property string nameMode: "create"
+
+    ProfileListModel {
+        id: profiles
+    }
+
+    function openNameDialog(mode, id, suggested) {
+        root.nameMode = mode;
+        root.pendingId = id;
+        nameField.text = suggested;
+        nameDialog.open();
+    }
+
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 16
+        spacing: 12
+
+        RowLayout {
+            Layout.fillWidth: true
+            Text {
+                text: "Controller Profiles"
+                color: ColorPalette.neutral100
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                font.pixelSize: 22
+                Layout.fillWidth: true
+            }
+            Button {
+                text: "Import…"
+                onClicked: importDialog.open()
+            }
+            Button {
+                text: "New Profile"
+                onClicked: root.openNameDialog("create", -1, "New Profile")
+            }
+        }
+
+        ListView {
+            id: list
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            spacing: 4
+            model: profiles
+
+            delegate: Rectangle {
+                required property int profileId
+                required property string name
+                required property bool builtin
+
+                width: ListView.view.width
+                height: 56
+                radius: 4
+                color: ColorPalette.neutral800
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 14
+                    anchors.rightMargin: 10
+                    spacing: 8
+
+                    Text {
+                        text: name
+                        color: ColorPalette.neutral100
+                        font.family: Constants.regularFontFamily
+                        font.pixelSize: 16
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        visible: builtin
+                        text: "Built-in"
+                        color: ColorPalette.neutral400
+                        font.family: Constants.regularFontFamily
+                        font.pixelSize: 12
+                    }
+
+                    Button {
+                        text: "Clone"
+                        onClicked: root.openNameDialog("clone", profileId, name + " copy")
+                    }
+                    Button {
+                        text: "Rename"
+                        enabled: !builtin
+                        onClicked: root.openNameDialog("rename", profileId, name)
+                    }
+                    Button {
+                        text: "Export"
+                        onClicked: {
+                            root.pendingId = profileId;
+                            exportDialog.currentFile = "file:///" + name + ".json";
+                            exportDialog.open();
+                        }
+                    }
+                    Button {
+                        text: "Delete"
+                        enabled: !builtin
+                        onClicked: {
+                            root.pendingId = profileId;
+                            deleteDialog.open();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: nameDialog
+        anchors.centerIn: parent
+        modal: true
+        title: root.nameMode === "rename" ? "Rename Profile"
+             : root.nameMode === "clone" ? "Clone Profile" : "New Profile"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        TextField {
+            id: nameField
+            width: 320
+            placeholderText: "Profile name"
+            onAccepted: nameDialog.accept()
+        }
+
+        onAccepted: {
+            const text = nameField.text.trim();
+            if (text.length === 0) {
+                return;
+            }
+            if (root.nameMode === "create") {
+                profiles.createProfile(text);
+            } else if (root.nameMode === "clone") {
+                profiles.cloneProfile(root.pendingId, text);
+            } else if (root.nameMode === "rename") {
+                profiles.renameProfile(root.pendingId, text);
+            }
+        }
+    }
+
+    Dialog {
+        id: deleteDialog
+        anchors.centerIn: parent
+        modal: true
+        title: "Delete Profile"
+        standardButtons: Dialog.Yes | Dialog.No
+
+        Text {
+            text: "Delete this profile? This cannot be undone."
+            color: ColorPalette.neutral100
+            font.family: Constants.regularFontFamily
+        }
+
+        onAccepted: profiles.deleteProfile(root.pendingId)
+    }
+
+    FileDialog {
+        id: exportDialog
+        title: "Export Profile"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["JSON files (*.json)"]
+        onAccepted: profiles.exportProfile(root.pendingId, selectedFile)
+    }
+
+    FileDialog {
+        id: importDialog
+        title: "Import Profile"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["JSON files (*.json)"]
+        onAccepted: profiles.importProfile(selectedFile)
+    }
+}

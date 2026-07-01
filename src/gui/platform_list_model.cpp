@@ -4,7 +4,7 @@
 #include <firelight/libretro/retropad.hpp>
 
 #include "../app/platform_metadata.hpp"
-#include "platforms/platform_service.hpp"
+#include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::gui {
   PlatformListModel::PlatformListModel() {

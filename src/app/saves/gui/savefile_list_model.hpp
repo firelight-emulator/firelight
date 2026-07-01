@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../savefile_info.hpp"
+#include <firelight/saves/savefile_info.hpp>
 #include <QAbstractListModel>
 
 namespace firelight::saves {

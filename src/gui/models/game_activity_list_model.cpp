@@ -3,8 +3,9 @@
 //
 
 #include "game_activity_list_model.hpp"
+#include <firelight/library/user_library_service.hpp>
 
-#include <platforms/platform_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::activity {
 GameActivityListModel::GameActivityListModel(QObject *parent)
@@ -26,7 +27,7 @@ GameActivityListModel::GameActivityListModel(QObject *parent)
       newItem.contentHash = QString::fromStdString(session.contentHash);
       newItem.numSecondsPlayed = session.unpausedDurationMillis / 1000;
 
-      auto entry = getUserLibrary()->getEntryWithContentHash(
+      auto entry = getLibraryService()->getEntryWithContentHash(
           QString::fromStdString(session.contentHash));
       if (entry) {
         auto platform = platforms::PlatformService::getInstance().getPlatform(

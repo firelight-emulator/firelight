@@ -10,6 +10,9 @@
 #include <spdlog/spdlog.h>
 
 namespace libretro {
+  // Only supports one core at a time for now, but, eh.
+  static Core *currentCore;
+
   void log(enum retro_log_level level, const char *fmt, ...) {
     char msg[4096] = {};
     va_list va;
@@ -37,9 +40,6 @@ namespace libretro {
       spdlog::info("[Core] {}", msg); // Default to info for unknown levels.
     }
   }
-
-  // Only supports one core at a time for now, but, eh.
-  static Core *currentCore;
 
   static int16_t inputStateCallback(unsigned port, unsigned device,
                                     unsigned index, unsigned id) {
@@ -126,6 +126,7 @@ namespace libretro {
   }
 
   bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
+    spdlog::info("Environment call: {}", cmd);
     switch (cmd) {
       case RETRO_ENVIRONMENT_SET_ROTATION: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_ROTATION");
@@ -1197,7 +1198,7 @@ namespace libretro {
 
     // info.path = game->getPath().c_str();
     info.path = strdup(
-      std::filesystem::path(game->getPath()).filename().string().c_str());
+      std::filesystem::path(game->getPath()).string().c_str());
     // info.path = R"()";
     info.data = game->getData();
     info.size = game->getSize();
@@ -1215,7 +1216,7 @@ namespace libretro {
     //  video->setGameGeometry(&retroSystemAVInfo->geometry);
 
     audioReceiver->initialize(retroSystemAVInfo->timing.sample_rate);
-    this->game = nullptr;
+    // this->game = nullptr;
     return result;
   }
 
@@ -1248,6 +1249,13 @@ namespace libretro {
   void Core::init() {
     symRetroInit();
     symRetroGetSystemInfo(retroSystemInfo);
+
+    spdlog::info("[Core] Libretro core loaded. Core info:");
+    spdlog::info("[Core]   Library name: {}", retroSystemInfo->library_name);
+    spdlog::info("[Core]   Library version: {}", retroSystemInfo->library_version);
+    spdlog::info("[Core]   Valid extensions: {}", retroSystemInfo->valid_extensions);
+    spdlog::info("[Core]   Need full path: {}", retroSystemInfo->need_fullpath);
+    spdlog::info("[Core]   Block extraction: {}", retroSystemInfo->block_extract);
   }
 
   void Core::deinit() { symRetroDeinit(); }

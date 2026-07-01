@@ -2,7 +2,7 @@
 #include "AchievementSetItem.hpp"
 
 #include <QObject>
-#include <platforms/models/platform.hpp>
+#include <firelight/platforms/platform.hpp>
 
 namespace firelight::achievements {
 

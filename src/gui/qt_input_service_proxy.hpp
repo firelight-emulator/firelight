@@ -31,8 +31,12 @@ public:
   void setOnlyPlayerOneCanNavigateMenus(bool onlyPlayerOneCanNavigateMenus);
 
   [[nodiscard]] bool getOnlyPlayerOneCanNavigateMenus() const;
+
+  // Switches shortcut scope between in-game and menu contexts (driven by the UI).
+  Q_INVOKABLE void setShortcutsInGame(bool inGame);
 signals:
-  void shortcutToggled(int playerIndex, int shortcut);
+  // phase: 0 = Started, 1 = Ended (see input::ShortcutPhase).
+  void shortcutTriggered(int playerIndex, const QString &id, int phase);
   void prioritizeControllerOverKeyboardChanged();
   void onlyPlayerOneCanNavigateMenusChanged();
 

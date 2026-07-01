@@ -3,9 +3,10 @@
 #include <QQuickItem>
 
 #include "manager_accessor.hpp"
+#include "service_accessor.hpp"
 
 namespace firelight {
-class LibraryEntryItem : public QQuickItem, public ManagerAccessor {
+class LibraryEntryItem : public QQuickItem, public ManagerAccessor, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int entryId READ getEntryId WRITE setEntryId NOTIFY entryIdChanged)
   Q_PROPERTY(QString contentHash READ getContentHash NOTIFY contentHashChanged)

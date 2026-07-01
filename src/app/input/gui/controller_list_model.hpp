@@ -27,10 +27,6 @@ private:
   ScopedConnection m_disconnectedHandler;
   ScopedConnection m_gamepadOrderChangedHandler;
 
-  void onGamepadConnected(const input::GamepadConnectedEvent &event);
-  void onGamepadDisconnected(const input::GamepadDisconnectedEvent &event);
-  void validateAll();
-
   struct Item {
     int playerIndex;
     bool connected;

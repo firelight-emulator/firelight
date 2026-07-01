@@ -1,10 +1,10 @@
 #include <firelight/library/library_scanner2.hpp>
-#include <firelight/library/rom_file.hpp>
+#include <firelight/library/archive_reader.hpp>
+#include <firelight/library/content_identifier.hpp>
+#include <QDir>
 #include <QtConcurrent>
-#include <archive.h>
-#include <archive_entry.h>
+#include <qcryptographichash.h>
 #include <qdiriterator.h>
-#include <rcheevos/rc_hash.h>
 #include <spdlog/spdlog.h>
 
 #include <platform_metadata.hpp>
@@ -12,7 +12,20 @@
 #include <zlib.h>
 
 namespace firelight::library {
-LibraryScanner2::LibraryScanner2(IUserLibrary &library) : m_library(library) {
+
+void LibraryScanner2::persistDiscMembers(
+    const int contentFileId,
+    const std::vector<IdentifiedDiscMember> &members) {
+  for (size_t i = 0; i < members.size(); ++i) {
+    DiscMember member{.m_contentFileId = contentFileId,
+                      .m_path = members[i].path,
+                      .m_role = members[i].role,
+                      .m_sortIndex = static_cast<int>(i)};
+    m_library.create(member);
+  }
+}
+
+LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library) : m_library(library) {
   m_threadPool.setMaxThreadCount(1);
   for (const auto &dir : m_library.getWatchedDirectories()) {
     watchPath(dir.path);
@@ -55,7 +68,7 @@ QFuture<bool> LibraryScanner2::startScan() {
                     nextDirectory.value().toStdString());
     }
 
-    auto allRoms = m_library.getRomFiles();
+    auto allRoms = m_library.getContentFiles();
     for (auto &romFile : allRoms) {
       auto filePath = romFile.m_filePath;
       if (romFile.m_inArchive) {
@@ -64,7 +77,7 @@ QFuture<bool> LibraryScanner2::startScan() {
 
       if (!QFileInfo::exists(QString::fromStdString(filePath))) {
         spdlog::debug("Removing missing file: {}", filePath);
-        m_library.deleteRomFile(romFile.m_id);
+        m_library.deleteContentFile(romFile.m_id);
       }
     }
 
@@ -110,6 +123,7 @@ std::optional<QString> LibraryScanner2::getNextDirectory() {
 }
 
 void LibraryScanner2::scanDirectory(const QString &path) {
+  const ContentIdentifier identifier;
   QDirIterator iter(path, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
 
   auto dirInfo = QFileInfo(path);
@@ -132,79 +146,99 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       continue;
     }
 
-    if (fileInfo.size() > 1024 * 1024 * 1024) {
+    auto extension = fileInfo.suffix().toLower();
+    const auto extensionStd = extension.toStdString();
+    const bool isArchive = extension == "zip" || extension == "7z" ||
+                           extension == "tar" || extension == "rar";
+    const bool isDisc =
+        PlatformMetadata::isPossibleDiscExtension(extensionStd);
+
+    // Disc images (and archives that may contain them) routinely exceed 1 GB,
+    // so the size cap only applies to other files.
+    if (fileInfo.size() > 1024LL * 1024 * 1024 && !isDisc && !isArchive) {
       spdlog::info("Skipping large file: {}",
                    fileInfo.filePath().toStdString());
       continue;
     }
 
-    auto extension = fileInfo.suffix().toLower();
-    if (extension == "zip" || extension == "7z" || extension == "tar" ||
-        extension == "rar") {
-      archive_entry *entry;
+    if (isArchive) {
+      const std::string archivePath = fileInfo.filePath().toStdString();
 
-      archive *a = archive_read_new();
-      archive_read_support_filter_all(a);
-      archive_read_support_format_all(a);
+      ArchiveReader(archivePath)
+          .forEachEntry([&](const ArchiveReader::Entry &entry,
+                            const std::function<std::vector<uint8_t>()>
+                                &readBytes) {
+            if (entry.size <= 0) {
+              return;
+            }
+            const auto dotPos = entry.pathName.find_last_of('.');
+            if (dotPos == std::string::npos) {
+              return;
+            }
+            const std::string ext =
+                QString::fromStdString(entry.pathName.substr(dotPos + 1))
+                    .toLower()
+                    .toStdString();
 
-      int r = archive_read_open_filename(
-          a, fileInfo.filePath().toStdString().c_str(), 10240);
+            if (PlatformMetadata::isPossibleDiscExtension(ext)) {
+              // Raw track files are pulled in via their cue/gdi sheet, so don't
+              // classify them on their own.
+              if (PlatformMetadata::isDiscTrackExtension(ext)) {
+                return;
+              }
+              if (m_library.getContentFileWithPathAndSize(
+                      QString::fromStdString(entry.pathName), entry.size,
+                      true)) {
+                return;
+              }
 
-      if (r != ARCHIVE_OK) {
-        continue;
-      }
-
-      while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-        auto size = archive_entry_size(entry);
-        if (size > 0) {
-          auto entryPathName = std::string(archive_entry_pathname(entry));
-          auto dotPos = entryPathName.find_last_of('.');
-
-          if (dotPos == std::string::npos) {
-            continue;
-          }
-
-          auto archiveFileExtension =
-              QString::fromStdString(entryPathName.substr(dotPos + 1))
-                  .toLower();
-
-          if (PlatformMetadata::isPossibleRomFileExtension(
-                  archiveFileExtension.toStdString())) {
-            if (m_library.getRomFileWithPathAndSize(
-                    QString::fromStdString(entryPathName), size, true)) {
-              spdlog::debug("Skipping known file: {}",
-                            archive_entry_pathname(entry));
-              continue;
+              // Disc detection re-opens the archive to extract the disc set, so
+              // we don't buffer the (potentially multi-GB) entry here.
+              const auto identified = identifier.identifyInArchive(
+                  entry.pathName, {}, static_cast<size_t>(entry.size),
+                  archivePath);
+              if (identified.valid) {
+                auto romInfo = ContentFile{
+                    .m_type = ContentType::Disc,
+                    .m_fileSizeBytes = identified.fileSizeBytes,
+                    .m_filePath = entry.pathName,
+                    .m_fileMd5 = identified.fileMd5,
+                    .m_fileCrc32 = ":)",
+                    .m_inArchive = true,
+                    .m_archivePathName = archivePath,
+                    .m_platformId = identified.platformId,
+                    .m_contentHash = identified.contentHash};
+                m_library.create(romInfo);
+                persistDiscMembers(romInfo.m_id, identified.discMembers);
+              }
+              return;
             }
 
-            auto buffer = new char[size];
-            archive_read_data(a, buffer, size);
-            auto romFile = RomFile(QString::fromStdString(entryPathName),
-                                   buffer, size, fileInfo.filePath());
+            if (PlatformMetadata::isPossibleRomFileExtension(ext)) {
+              if (m_library.getContentFileWithPathAndSize(
+                      QString::fromStdString(entry.pathName), entry.size,
+                      true)) {
+                return;
+              }
 
-            if (romFile.isValid()) {
-              auto romInfo = RomFileInfo{
-                  .m_fileSizeBytes = romFile.getFileSizeBytes(),
-                  .m_filePath = romFile.getFilePath().toStdString(),
-                  .m_fileMd5 = romFile.getFileMd5().toStdString(),
-                  .m_fileCrc32 = ":)",
-                  .m_inArchive = romFile.inArchive(),
-                  .m_archivePathName =
-                      romFile.getArchivePathName().toStdString(),
-                  .m_platformId = romFile.getPlatformId(),
-                  .m_contentHash = romFile.getContentHash().toStdString()};
-              m_library.create(romInfo);
+              const std::vector<uint8_t> bytes = readBytes();
+              const auto identified = identifier.identifyInArchive(
+                  entry.pathName, bytes, bytes.size(), archivePath);
+              if (identified.valid) {
+                auto romInfo = ContentFile{
+                    .m_type = ContentType::Cartridge,
+                    .m_fileSizeBytes = identified.fileSizeBytes,
+                    .m_filePath = entry.pathName,
+                    .m_fileMd5 = identified.fileMd5,
+                    .m_fileCrc32 = ":)",
+                    .m_inArchive = true,
+                    .m_archivePathName = archivePath,
+                    .m_platformId = identified.platformId,
+                    .m_contentHash = identified.contentHash};
+                m_library.create(romInfo);
+              }
             }
-
-            delete[] buffer;
-          }
-        }
-        archive_read_data_skip(a);
-      }
-      r = archive_read_free(a);
-      if (r != ARCHIVE_OK) {
-        continue;
-      }
+          });
       continue;
     }
 
@@ -244,26 +278,40 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       continue;
     }
 
-    if (PlatformMetadata::isPossibleRomFileExtension(extension.toStdString())) {
-      if (m_library.getRomFileWithPathAndSize(fileInfo.filePath(),
+    if (PlatformMetadata::isPossibleRomOrDiscExtension(extensionStd)) {
+      // A raw disc track (bin/img/...) is classified via its sibling cue/gdi
+      // sheet; skip the lone track when such a sheet exists in the directory.
+      if (PlatformMetadata::isDiscTrackExtension(extensionStd)) {
+        const auto sheets = fileInfo.absoluteDir().entryList(
+            {"*.cue", "*.gdi", "*.ccd", "*.m3u"}, QDir::Files);
+        if (!sheets.isEmpty()) {
+          continue;
+        }
+      }
+
+      if (m_library.getContentFileWithPathAndSize(fileInfo.filePath(),
                                               fileInfo.size(), false)) {
         spdlog::debug("Skipping known file: {}",
                       fileInfo.filePath().toStdString());
         continue;
       }
 
-      auto romFile = RomFile(fileInfo.filePath());
-      if (romFile.isValid()) {
-        auto romInfo = RomFileInfo{
-            .m_fileSizeBytes = romFile.getFileSizeBytes(),
-            .m_filePath = romFile.getFilePath().toStdString(),
-            .m_fileMd5 = romFile.getFileMd5().toStdString(),
+      const auto identified =
+          identifier.identify(fileInfo.filePath().toStdString());
+      if (identified.valid) {
+        auto romInfo = ContentFile{
+            .m_type =
+                identified.isDisc ? ContentType::Disc : ContentType::Cartridge,
+            .m_fileSizeBytes = identified.fileSizeBytes,
+            .m_filePath = fileInfo.filePath().toStdString(),
+            .m_fileMd5 = identified.fileMd5,
             .m_fileCrc32 = ":)",
-            .m_inArchive = romFile.inArchive(),
-            .m_archivePathName = romFile.getArchivePathName().toStdString(),
-            .m_platformId = romFile.getPlatformId(),
-            .m_contentHash = romFile.getContentHash().toStdString()};
+            .m_inArchive = false,
+            .m_archivePathName = "",
+            .m_platformId = identified.platformId,
+            .m_contentHash = identified.contentHash};
         m_library.create(romInfo);
+        persistDiscMembers(romInfo.m_id, identified.discMembers);
       }
     }
   }

@@ -1,9 +1,9 @@
 #include "library_path_model.hpp"
 
-#include "../user_library.hpp"
+#include <firelight/library/user_library_service.hpp>
 
 namespace firelight::gui {
-  LibraryPathModel::LibraryPathModel(library::IUserLibrary &userLibrary)
+  LibraryPathModel::LibraryPathModel(library::UserLibraryService &userLibrary)
     : m_userLibrary(userLibrary) {
     // m_settings = std::make_unique<QSettings>();
     m_items = m_userLibrary.getWatchedDirectories();

@@ -1,12 +1,13 @@
 #pragma once
 
+#include <cstdint>
+#include <map>
 #include <memory>
 #include <SDL_gamecontroller.h>
 #include <string>
 
 #include <firelight/input/gamepad_type.hpp>
 #include <firelight/input/igamepad.hpp>
-#include <firelight/input/shortcut_mapping.hpp>
 
 namespace firelight::input {
 class SdlController : public IGamepad {
@@ -22,8 +23,6 @@ public:
   [[nodiscard]] std::shared_ptr<GamepadProfile> getProfile() const override;
 
   void setProfile(const std::shared_ptr<GamepadProfile> &profile) override;
-
-  std::vector<Shortcut> getToggledShortcuts(GamepadInput input) override;
 
   bool isButtonPressed(int platformId, int controllerTypeId,
                        Input t_button) override;
@@ -52,13 +51,27 @@ public:
 
   [[nodiscard]] GamepadType getType() const override;
 
+  [[nodiscard]] DeviceType getDeviceType() const override;
+
   [[nodiscard]] DeviceIdentifier getDeviceIdentifier() const override;
 
   bool disconnect() override;
 
 private:
   [[nodiscard]] int16_t evaluateMapping(GamepadInput input) const;
+  // Evaluates a single Binding to a digital pressed/not-pressed result,
+  // honoring its modifiers (all must be held) and analog threshold.
+  [[nodiscard]] bool evaluateBindingDigital(const Binding &binding) const;
+  // Evaluates a Binding including toggle (latch on rising edge) and turbo
+  // (autofire while active) behavior. Mutates per-binding state, so it must be
+  // called once per frame per binding.
+  bool evaluateBindingWithModes(GamepadInput target, std::size_t index,
+                                const Binding &binding);
   std::shared_ptr<GamepadProfile> m_profile = nullptr;
+
+  // Per-binding state for toggle/turbo, keyed by (target << 8 | bindingIndex).
+  std::map<uint64_t, bool> m_togglePrevRaw;
+  std::map<uint64_t, bool> m_toggleLatch;
 
   SDL_GameController *m_SDLController = nullptr;
   SDL_Joystick *m_SDLJoystick = nullptr;

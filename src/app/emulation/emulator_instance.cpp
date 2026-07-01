@@ -76,6 +76,10 @@ EmulatorInstance::EmulatorInstance(
 
 EmulatorInstance::~EmulatorInstance() {
   spdlog::info("[EmulatorInstance] Shutting down");
+  // Restore device-default controller profiles when the game unloads.
+  if (const auto inputService = getInputService()) {
+    inputService->clearGameContext();
+  }
   save().wait();
 }
 
@@ -101,6 +105,9 @@ bool EmulatorInstance::initialize(
 
   getAchievementManager()->loadGame(m_platformId,
                                     QString::fromStdString(m_contentHash));
+
+  // Apply per-game controller profile override + platform preferred controller.
+  getInputService()->applyGameContext(m_contentHash, m_platformId);
 
   m_initialized = true;
 

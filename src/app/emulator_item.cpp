@@ -8,7 +8,7 @@
 #include <firelight/input/input_service.hpp>
 #include "platform_metadata.hpp"
 
-#include <library/rom_file.hpp>
+#include <firelight/library/content_file.hpp>
 #include <patching/bps_patch.hpp>
 #include <patching/ups_patch.hpp>
 

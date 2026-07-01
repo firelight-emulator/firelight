@@ -16,16 +16,20 @@ FocusScope {
     Connections {
         target: InputService
 
-        function onShortcutToggled(player, shortcut) {
+        function onShortcutTriggered(player, id, phase) {
             if (root.parent.StackView.status !== StackView.Active) {
                 return
             }
+            // 0 = Started (see input::ShortcutPhase); act on the press only.
+            if (phase !== 0) {
+                return
+            }
 
-            if (shortcut === 0 && !achievement_manager.inHardcoreMode) {
+            if (id === "open_rewind_menu" && !achievement_manager.inHardcoreMode) {
                 root.createRewindPoints()
-            } else if (shortcut === 3) {
+            } else if (id === "speed_up") {
                 emulator.incrementPlaybackMultiplier()
-            } else if (shortcut === 4) {
+            } else if (id === "slow_down") {
                 emulator.decrementPlaybackMultiplier()
             }
         }

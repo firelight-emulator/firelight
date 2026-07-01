@@ -48,7 +48,7 @@ FocusScope {
             //     gamepadProfile.currentPlatformId = platformList.currentItem.model.platform_id
             // }
 
-            model: platform_model
+            model: PlatformModel
             delegate: FirelightMenuItem {
                 required property var model
                 required property var index

@@ -1,14 +1,14 @@
-#include "settings/sqlite_settings_repository.hpp"
+#include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <QApplication>
 #include <QTest>
 #include <QtQuickTest>
-#include <db/sqlite_userdata_database.hpp>
+#include <firelight/db/sqlite_userdata_database.hpp>
 #include <gtest/gtest.h>
 #include <manager_accessor.hpp>
 #include <firelight/saves/save_manager_impl.hpp>
-#include <settings/settings_service.hpp>
-#include <settings/sqlite_settings_repository.hpp>
+#include <firelight/settings/settings_service.hpp>
+#include <firelight/settings/sqlite_settings_repository.hpp>
 
 int main(int argc, char **argv) {
   QApplication app(argc, argv);

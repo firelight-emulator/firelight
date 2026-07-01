@@ -1,4 +1,4 @@
-#include "../../../src/app/db/sqlite_content_database.hpp"
+#include <firelight/db/sqlite_content_database.hpp>
 #include <gtest/gtest.h>
 #include <filesystem>
 

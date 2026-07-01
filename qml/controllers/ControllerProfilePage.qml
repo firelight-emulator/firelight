@@ -60,6 +60,21 @@ Pane {
                          }
                      }
                  }
+                FirelightMenuItem {
+                     labelText: "Analog Sticks"
+                     property bool showGlobalCursor: true
+                     Layout.preferredHeight: 50
+                     Layout.fillWidth: true
+                     visible: !profile.isKeyboardProfile
+
+                     ButtonGroup.group: menuButtonGroup
+
+                     onToggled: {
+                         if (checked) {
+                             theStack.replaceCurrentItem(analogPage, {profileId: root.profileId}, StackView.Immediate)
+                         }
+                     }
+                 }
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 1
@@ -94,7 +109,7 @@ Pane {
                      //     gamepadProfile.currentPlatformId = platformList.currentItem.model.platform_id
                      // }
 
-                     model: platform_model
+                     model: PlatformModel
                      delegate: FirelightMenuItem {
                          required property var model
                          required property var index
@@ -152,18 +167,25 @@ Pane {
         }
 
         Component {
+            id: analogPage
+
+            AnalogTuningPage {
+            }
+        }
+
+        Component {
             id: shortcutsList
             ListView {
                 id: shortcutsListView
                 ShortcutInputPromptDialog {
                     id: shortcutDialog
                     shortcutName: ""
-                    shortcut: 0
+                    shortcut: ""
                     gamepad: gamepadStatus
                     isKeyboard: profile.isKeyboardProfile
 
                     onMappingAdded: function(shortcut, modifiers, input) {
-                        shortcutsListView.model.setMapping(shortcut, modifiers, input);
+                        shortcutsListView.model.addBinding(shortcut, modifiers, input);
                     }
                 }
                 header: Text {
@@ -202,7 +224,7 @@ Pane {
                           text: "Assign"
 
                           onTriggered: {
-                              shortcutDialog.shortcut = model.shortcut
+                              shortcutDialog.shortcut = model.shortcutId
                               shortcutDialog.shortcutName = model.name
                               shortcutDialog.open()
                             // dialog.buttons = []
@@ -225,7 +247,7 @@ Pane {
                       RightClickMenuItem {
                           text: "Clear mapping"
                           onTriggered: {
-                                model.hasMapping = false
+                                shortcutsListView.model.clearBindings(model.shortcutId)
                           }
                       }
                   }
@@ -233,7 +255,7 @@ Pane {
                       ListView.view.currentIndex = index;
                   }
                   onDoubleClicked: function() {
-                      shortcutDialog.shortcut = model.shortcut
+                      shortcutDialog.shortcut = model.shortcutId
                       shortcutDialog.shortcutName = model.name
                       shortcutDialog.open()
                   }
@@ -256,57 +278,17 @@ Pane {
                           verticalAlignment: Text.AlignVCenter
                       }
 
-                      Row {
-                          Layout.preferredWidth: 240
-                          Layout.maximumWidth: 240
+                      Text {
+                          Layout.fillWidth: true
                           Layout.alignment: Qt.AlignLeft
                           Layout.fillHeight: true
-
-                          Repeater {
-                              model: myDelegate.model.modifierNames
-                              delegate: Text {
-                                  height: parent.height
-                                  text: modelData + " + "
-                                  color: "white"
-                                  font.pixelSize: 15
-                                  font.family: Constants.regularFontFamily
-                                  font.weight: Font.DemiBold
-                                  verticalAlignment: Text.AlignVCenter
-                              }
-                          }
-
-                          Text {
-                              height: parent.height
-                              // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
-                              // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-                              font.pixelSize: 15
-                              color: model.hasConflict ? "yellow" : (!model.hasMapping ? ColorPalette.neutral400 : "white")
-                              text: model.hasMapping ? model.inputName : "(Not mapped)"
-
-                              font.family: Constants.regularFontFamily
-                              font.weight: !model.hasMapping ? Font.Medium : Font.DemiBold
-                              verticalAlignment: Text.AlignVCenter
-                          }
-                      }
-
-
-                      Item {
-                          Layout.preferredHeight: 32
-                          Layout.preferredWidth: 32
-                          Layout.alignment: Qt.AlignVCenter
-
-                          FLIcon {
-                              icon: "bar-chart"
-                              color: "yellow"
-                              anchors.fill: parent
-                              size: height
-                              visible: model.hasConflict
-                          }
-                      }
-
-                      Item {
-                          Layout.fillWidth: true
-                          Layout.fillHeight: true
+                          font.pixelSize: 15
+                          color: model.hasBinding ? "white" : ColorPalette.neutral400
+                          text: model.bindingsLabel
+                          font.family: Constants.regularFontFamily
+                          font.weight: model.hasBinding ? Font.DemiBold : Font.Medium
+                          verticalAlignment: Text.AlignVCenter
+                          elide: Text.ElideRight
                       }
                   }
               }

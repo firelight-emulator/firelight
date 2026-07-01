@@ -1,7 +1,9 @@
 #pragma once
 
-#include <firelight/library/user_library.hpp>
+#include <firelight/library/disc_inspector.hpp>
+#include <firelight/library/user_library_repository.hpp>
 #include <QFileSystemWatcher>
+#include <vector>
 #include <QFuture>
 #include <QObject>
 #include <QQueue>
@@ -14,7 +16,7 @@ class LibraryScanner2 : public QObject {
   Q_PROPERTY(bool scanning MEMBER m_scanRunning NOTIFY scanningChanged)
 
 public:
-  explicit LibraryScanner2(IUserLibrary &library);
+  explicit LibraryScanner2(IUserLibraryRepository &library);
 
   ~LibraryScanner2() override;
 
@@ -37,7 +39,7 @@ signals:
 
 private:
   QTimer m_scanTimer;
-  IUserLibrary &m_library;
+  IUserLibraryRepository &m_library;
   bool m_shuttingDown = false;
   QFileSystemWatcher m_watcher;
   std::map<QString, bool> m_scanQueuedByPath;
@@ -54,6 +56,10 @@ private:
   void scanDirectory(const QString &path);
 
   bool pathIsQueued(const QString &path);
+
+  // Persists a disc set's member files against its primary ContentFile.
+  void persistDiscMembers(int contentFileId,
+                          const std::vector<IdentifiedDiscMember> &members);
 
   std::string calculateMd5(const QByteArray &data);
 };

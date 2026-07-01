@@ -231,20 +231,8 @@ FocusScope {
             }
             contentItem: ColumnLayout {
                 DirectoryOption {
-                    id: gameDirectoryOption
-                    Layout.fillWidth: true
-                    label: "Game directory"
-                    focus: true
-                    description: "This is where you’ll put your game files. Firelight will automatically detect files in this directory and add them to your library."
-                    value: UserLibrary.mainGameDirectory
-
-                    onValueChanged: function () {
-                        UserLibrary.mainGameDirectory = value
-                    }
-                }
-                DirectoryOption {
                     id: saveDirectoryOption
-                    KeyNavigation.up: gameDirectoryOption
+                    focus: true
                     KeyNavigation.down: dirNextButton
                     Layout.fillWidth: true
                     label: "Saves directory"

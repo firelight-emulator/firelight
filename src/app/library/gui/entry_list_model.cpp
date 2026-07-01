@@ -1,12 +1,12 @@
 #include "entry_list_model.hpp"
 
-#include "platforms/platform_service.hpp"
+#include <firelight/platforms/platform_service.hpp>
 
 #include <emulation/emulation_service.hpp>
 #include <spdlog/spdlog.h>
 
 namespace firelight::library {
-  EntryListModel::EntryListModel(IUserLibrary &userLibrary, QObject *parent)
+  EntryListModel::EntryListModel(UserLibraryService &userLibrary, QObject *parent)
     : QAbstractListModel(parent), m_userLibrary(userLibrary) {
     m_gamePlayedConnection =
         EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(

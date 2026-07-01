@@ -13,3 +13,7 @@ enum GamepadType {
     NINTENDO_NSO_GENESIS,
     UNKNOWN
 };
+
+// Broad class of input device. Used to model the keyboard as a device without
+// special-casing it throughout the runtime.
+enum class DeviceType { Gamepad, Keyboard };

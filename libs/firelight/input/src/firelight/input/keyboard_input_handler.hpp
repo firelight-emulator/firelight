@@ -21,7 +21,6 @@ public:
   [[nodiscard]] std::shared_ptr<GamepadProfile> getProfile() const override;
   void setProfile(const std::shared_ptr<GamepadProfile> &profile) override;
 
-  std::vector<Shortcut> getToggledShortcuts(GamepadInput input) override;
   [[nodiscard]] int16_t evaluateRawInput(GamepadInput input) const override;
 
   bool isButtonPressed(int platformId, int controllerTypeId,
@@ -48,6 +47,8 @@ public:
   [[nodiscard]] bool isWired() const override;
 
   [[nodiscard]] GamepadType getType() const override;
+
+  [[nodiscard]] DeviceType getDeviceType() const override;
 
   int getInstanceId() const override;
   bool disconnect() override;

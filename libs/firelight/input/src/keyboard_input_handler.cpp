@@ -50,9 +50,23 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
     auto mapping = m_profile->getMappingForPlatformAndController(
         platformId, controllerTypeId);
     if (mapping) {
-      const auto mappedKey = mapping->getMappedInput(input);
-      if (mappedKey.has_value()) {
-        return m_keyStates[static_cast<Qt::Key>(mappedKey.value())];
+      const auto &bindings = mapping->getBindings(input);
+      if (!bindings.empty()) {
+        // Multiple key bindings for one emulated input are OR'd together.
+        for (const auto &binding : bindings) {
+          bool modifiersHeld = true;
+          for (const auto mod : binding.source.modifiers) {
+            if (!m_keyStates[static_cast<Qt::Key>(mod)]) {
+              modifiersHeld = false;
+              break;
+            }
+          }
+          if (modifiersHeld &&
+              m_keyStates[static_cast<Qt::Key>(binding.source.code)]) {
+            return true;
+          }
+        }
+        return false;
       }
     }
   }
@@ -221,6 +235,10 @@ bool KeyboardInputHandler::isWired() const { return true; }
 
 GamepadType KeyboardInputHandler::getType() const { return KEYBOARD; }
 
+DeviceType KeyboardInputHandler::getDeviceType() const {
+  return DeviceType::Keyboard;
+}
+
 int KeyboardInputHandler::getInstanceId() const { return -2; }
 
 bool KeyboardInputHandler::disconnect() {
@@ -230,6 +248,7 @@ bool KeyboardInputHandler::disconnect() {
 DeviceIdentifier KeyboardInputHandler::getDeviceIdentifier() const {
   return DeviceIdentifier{
       .deviceName = "Keyboard",
+      .type = DeviceType::Keyboard,
       .vendorId = -1,
       .productId = -1,
       .productVersion = -1,
@@ -242,47 +261,22 @@ bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
     if (keyEvent->modifiers() == Qt::KeyboardModifier::KeyboardModifierMask) {
       return false;
     }
-    for (auto &thing : m_profile->getShortcutMapping()->getMappings()) {
-      auto pressed = true;
-      auto ctrlPressed = keyEvent->modifiers() & Qt::ControlModifier;
-      auto altPressed = keyEvent->modifiers() & Qt::AltModifier;
-      auto shiftPressed = keyEvent->modifiers() & Qt::ShiftModifier;
-
-      for (auto mod : thing.second.modifiers) {
-        if (mod == Qt::Key_Control && !ctrlPressed) {
-          pressed = false;
-          break;
-        }
-
-        if (mod == Qt::Key_Alt && !altPressed) {
-          pressed = false;
-          break;
-        }
-
-        if (mod == Qt::Key_Shift && !shiftPressed) {
-          pressed = false;
-          break;
-        }
-      }
-
-      if (!pressed) {
-        continue;
-      }
-
-      if (thing.second.input == keyEvent->key()) {
-        spdlog::info("Shortcut {} triggered", static_cast<int>(thing.first));
-        EventDispatcher::instance().publish(
-            ShortcutToggledEvent{.shortcut = thing.first});
-        return true;
-      }
+    const auto key = static_cast<Qt::Key>(keyEvent->key());
+    // Ignore auto-repeat: only report the rising edge to the shortcut engine.
+    if (!m_keyStates.value(key, false)) {
+      m_keyStates[key] = true;
+      EventDispatcher::instance().publish(KeyboardKeyEvent{
+          .playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = true});
     }
-    m_keyStates[static_cast<Qt::Key>(keyEvent->key())] = true;
   } else if (event->type() == QEvent::KeyRelease) {
     const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
     if (keyEvent->modifiers() == Qt::KeyboardModifier::KeyboardModifierMask) {
       return false;
     }
-    m_keyStates[static_cast<Qt::Key>(keyEvent->key())] = false;
+    const auto key = static_cast<Qt::Key>(keyEvent->key());
+    m_keyStates[key] = false;
+    EventDispatcher::instance().publish(KeyboardKeyEvent{
+        .playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = false});
   }
 
   return QObject::eventFilter(obj, event);
@@ -293,11 +287,6 @@ std::shared_ptr<GamepadProfile> KeyboardInputHandler::getProfile() const {
 void KeyboardInputHandler::setProfile(
     const std::shared_ptr<GamepadProfile> &profile) {
   m_profile = profile;
-}
-
-std::vector<Shortcut>
-KeyboardInputHandler::getToggledShortcuts(GamepadInput input) {
-  return {};
 }
 
 int16_t KeyboardInputHandler::evaluateRawInput(const GamepadInput input) const {

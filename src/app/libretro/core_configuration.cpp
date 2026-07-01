@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <platform_metadata.hpp>
-#include <platforms/platform_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 #include <spdlog/spdlog.h>
 #include <utility>
 

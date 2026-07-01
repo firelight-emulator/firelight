@@ -369,10 +369,8 @@ FocusScope {
     }
 
     RowLayout {
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 400
+        id: mainThing
+        anchors.fill: parent
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -396,9 +394,25 @@ FocusScope {
             //     verticalAlignment: Text.AlignVCenter
             // }
 
-            Item {
+            RowLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
+                Layout.maximumHeight: 60
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                FirelightButton {
+                    id: manageProfilesButton
+                    label: "Manage Profiles"
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+
+                    onClicked: function () {
+                        root.StackView.view.pushItem(profileManagementPage, {}, StackView.PushTransition)
+                    }
+                }
             }
 
             ListView {
@@ -406,7 +420,7 @@ FocusScope {
 
                 focus: true
                 keyNavigationEnabled: true
-                Layout.preferredWidth: 836
+                Layout.fillWidth: true
                 // Layout.preferredWidth: 500
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillHeight: true
@@ -446,6 +460,12 @@ FocusScope {
         Component {
             id: profilePage
             ControllerProfilePage {
+            }
+        }
+
+        Component {
+            id: profileManagementPage
+            ProfileManagementPage {
             }
         }
 

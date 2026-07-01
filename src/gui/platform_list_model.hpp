@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platforms/models/platform.hpp"
+#include <firelight/platforms/platform.hpp>
 
 #include <QAbstractListModel>
 #include <firelight/db/platform.hpp>

@@ -1,6 +1,6 @@
 #pragma once
-#include "../entry.hpp"
-#include "../user_library.hpp"
+#include <firelight/library/entry.hpp>
+#include <firelight/library/user_library_service.hpp>
 #include <QAbstractListModel>
 #include <firelight/event_dispatcher.hpp>
 #include <manager_accessor.hpp>
@@ -48,7 +48,7 @@ namespace firelight::library {
       uint64_t lastPlayedEpochMillis{};
     };
 
-    explicit EntryListModel(IUserLibrary &userLibrary, QObject *parent = nullptr);
+    explicit EntryListModel(UserLibraryService &userLibrary, QObject *parent = nullptr);
 
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
@@ -87,7 +87,7 @@ namespace firelight::library {
     void countByFolderIdChanged();
 
   private:
-    IUserLibrary &m_userLibrary;
+    UserLibraryService &m_userLibrary;
     QList<Item> m_items{};
 
     ScopedConnection m_gamePlayedConnection;

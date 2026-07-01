@@ -4,7 +4,7 @@
 #include <string>
 #include <QString>
 
-#include "gamepad_type.hpp"
+#include <firelight/input/gamepad_type.hpp>
 
 class ControllerIcons {
     static const std::map<int, std::string> controllerIcons;

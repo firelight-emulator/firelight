@@ -2,7 +2,7 @@
 #include <QAbstractListModel>
 #include <QUrl>
 #include <qsettings.h>
-#include "../user_library.hpp"
+#include <firelight/library/user_library_service.hpp>
 
 namespace firelight::gui {
     class LibraryPathModel : public QAbstractListModel {
@@ -10,12 +10,12 @@ namespace firelight::gui {
 
         std::vector<library::WatchedDirectory> m_items;
         std::unique_ptr<QSettings> m_settings;
-        library::IUserLibrary &m_userLibrary;
+        library::UserLibraryService &m_userLibrary;
 
     public:
         enum Roles { Path = Qt::UserRole + 1, LocalFilename, NumGameFiles };
 
-        explicit LibraryPathModel(library::IUserLibrary &userLibrary);
+        explicit LibraryPathModel(library::UserLibraryService &userLibrary);
 
         int rowCount(const QModelIndex &parent) const override;
 

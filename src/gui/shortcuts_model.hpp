@@ -1,55 +1,59 @@
 #pragma once
-#include <firelight/input/input_service.hpp>
+#include <firelight/input/input_source.hpp>
+#include <firelight/input/shortcut_mapping.hpp>
 #include "service_accessor.hpp"
 
 #include <QAbstractListModel>
+#include <memory>
 
 namespace firelight::gui {
 
+// Lists the global shortcut catalog (from ShortcutRegistry) alongside the
+// bindings a single profile has for each action. One row per action.
 class ShortcutsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
 
 public:
   explicit ShortcutsModel(
       bool isKeyboard,
-      const std::shared_ptr<input::ShortcutMapping> &shortcutMapping);
+      std::shared_ptr<input::ShortcutMapping> shortcutMapping);
+
   int rowCount(const QModelIndex &parent) const override;
   QVariant data(const QModelIndex &index, int role) const override;
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
-  Qt::ItemFlags flags(const QModelIndex &index) const override;
-  bool setData(const QModelIndex &index, const QVariant &value,
-               int role) override;
 
-  Q_INVOKABLE void setMapping(int shortcut, QList<int> modifiers, int input);
+  // Appends a binding to a shortcut. `modifiers`/`input` are GamepadInput codes
+  // for a controller profile, or Qt::Key codes for a keyboard profile.
+  Q_INVOKABLE void addBinding(const QString &shortcutId, QList<int> modifiers,
+                              int input);
+  Q_INVOKABLE void clearBindings(const QString &shortcutId);
 
 private:
   enum Roles {
-    Shortcut = Qt::UserRole + 1,
-    Name,
-    HasMapping,
-    HasConflict,
-    Modifiers,
-    ModifierNames,
-    Input,
-    InputName
+    ShortcutIdRole = Qt::UserRole + 1,
+    NameRole,
+    CategoryRole,
+    ActivationRole,
+    HasBindingRole,
+    BindingsLabelRole,
   };
 
   struct Item {
-    input::Shortcut shortcut;
-    QString shortcutName;
-    bool hasMapping = false;
-    bool hasConflict = false;
-    QList<int> modifiers;
-    QStringList modifierNames;
-    int input;
-    QString inputName;
+    QString id;
+    QString name;
+    QString category;
+    int activation = 0;
+    bool hasBinding = false;
+    QString bindingsLabel;
   };
 
-  input::InputService *m_inputService;
-  std::shared_ptr<input::ShortcutMapping> m_shortcutMapping;
-  int m_profileId = -1;
-  bool m_isKeyboard;
+  void rebuild();
+  void refreshRow(const QString &id);
+  int indexOfId(const QString &id) const;
+  QString labelForBindings(const std::vector<input::InputSource> &sources) const;
 
+  std::shared_ptr<input::ShortcutMapping> m_shortcutMapping;
+  bool m_isKeyboard;
   QList<Item> m_items;
 };
 

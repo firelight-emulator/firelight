@@ -2,7 +2,7 @@
 #include <QAbstractListModel>
 
 #include "../../../gui/game_image_provider.hpp"
-#include "../suspend_point.hpp"
+#include <firelight/saves/suspend_point.hpp>
 
 namespace firelight::saves {
 static constexpr int MAX_NUM_SUSPEND_POINTS = 16;

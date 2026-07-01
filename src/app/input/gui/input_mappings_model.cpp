@@ -1,10 +1,11 @@
 
 #include "input_mappings_model.hpp"
 
-#include "platforms/models/platform.hpp"
-#include "platforms/platform_service.hpp"
+#include <firelight/input/controller_repository.hpp>
+#include <firelight/platforms/platform.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
-#include <input/keyboard_input_handler.hpp>
+#include <firelight/input/keyboard_input_handler.hpp>
 #include <platform_metadata.hpp>
 
 namespace firelight::input {
@@ -67,8 +68,8 @@ void InputMappingsModel::setProfileId(const int profileId) {
   }
 
   m_profileId = profileId;
-  m_currentProfile = m_inputService->getProfile(m_profileId);
-  m_isKeyboard = m_currentProfile->isKeyboardProfile();
+  m_currentProfile = getControllerProfileRepository()->getProfile(m_profileId);
+  m_isKeyboard = m_currentProfile && m_currentProfile->isKeyboardProfile();
   emit profileIdChanged();
   refreshMappings();
 }

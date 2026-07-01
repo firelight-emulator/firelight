@@ -141,7 +141,12 @@ add_library(firelight_lib
         src/app/manager_accessor.cpp
         src/app/audio/audio_manager.cpp
 
+        src/app/input/gui/analog_settings_model.cpp
+        src/app/input/gui/profile_list_model.cpp
+        src/app/input/gui/binding_list_model.cpp
+        src/app/input/gui/platform_input_preferences.cpp
         src/app/input/gui/controller_list_model.cpp
+        src/app/input/shortcut_catalog.cpp
         src/app/saves/gui/savefile_list_model.cpp
         libs/firelight/achievements/src/rcheevos/ra_client.cpp
         src/gui/eventhandlers/window_resize_handler.cpp
@@ -184,7 +189,6 @@ add_library(firelight_lib
         src/image_cache.cpp
         src/app/emulation/emulation_service.cpp
         src/app/emulation/emulator_instance.cpp
-        src/app/settings/emulation_setting.hpp
         src/gui/models/game_activity_list_model.cpp
         src/gui/models/game_activity_list_model.hpp
         src/app/service_accessor.cpp
@@ -362,9 +366,9 @@ add_executable(fl_test
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
         tests/app/saves/save_manager_test.cpp
-        tests/app/library/sqlite_library_database_test.cpp
-        tests/app/library/playlist_test.cpp
-        tests/app/library/library_entry_test.cpp
+        tests/app/library/archive_reader_test.cpp
+        tests/app/library/content_identifier_test.cpp
+        tests/app/library/entry_resolver_test.cpp
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
         tests/app/db/sqlite_content_database_test.cpp
@@ -376,11 +380,13 @@ add_executable(fl_test
         tests/app/library/sqlite_user_library_test.cpp
         tests/app/platforms/platform_service_test.cpp
         tests/app/input/input_service_impl_test.cpp
+        tests/app/input/input_model_test.cpp
+        tests/app/input/controller_repository_test.cpp
+        tests/app/input/shortcut_test.cpp
         tests/app/input/test_gamepad.cpp
         tests/app/input/test_gamepad.hpp
         tests/app/emulation/emulation_service_test.cpp
         tests/app/emulation/emulator_instance_test.cpp
-        tests/mocks/mock_library.hpp
         tests/app/achievements/sqlite_achievement_repository_test.cpp
         tests/app/achievements/achievement_service_test.cpp
 )

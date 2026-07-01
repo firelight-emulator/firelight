@@ -1,4 +1,5 @@
 #include "save_files_item.hpp"
+#include <firelight/library/user_library_service.hpp>
 
 namespace firelight::saves {
 
@@ -12,7 +13,7 @@ void SaveFilesItem::setEntryId(const int entryId) {
   m_entryId = entryId;
   emit entryIdChanged();
 
-  auto entry = getUserLibrary()->getEntry(m_entryId);
+  auto entry = getLibraryService()->getEntry(m_entryId);
   if (!entry.has_value()) {
     spdlog::warn("SaveFilesItem: Entry with ID {} not found", m_entryId);
     return;
@@ -40,14 +41,14 @@ void SaveFilesItem::setActiveSaveSlotNumber(const int activeSaveSlotNumber) {
   m_activeSaveSlotNumber = activeSaveSlotNumber;
   emit activeSaveSlotNumberChanged();
 
-  auto entry = getUserLibrary()->getEntry(m_entryId);
+  auto entry = getLibraryService()->getEntry(m_entryId);
   if (!entry.has_value()) {
     spdlog::warn("SaveFilesItem: Entry with ID {} not found", m_entryId);
     return;
   }
 
   entry->activeSaveSlot = activeSaveSlotNumber;
-  if (!getUserLibrary()->update(*entry)) {
+  if (!getLibraryService()->update(*entry)) {
     spdlog::error("SaveFilesItem: Failed to update entry with ID {}",
                   m_entryId);
   }

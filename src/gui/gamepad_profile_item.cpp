@@ -1,6 +1,6 @@
 #include "gamepad_profile_item.hpp"
 
-#include <firelight/input/input_service.hpp>
+#include <firelight/input/controller_repository.hpp>
 #include "shortcuts_model.hpp"
 
 namespace firelight::gui {
@@ -9,7 +9,7 @@ void GamepadProfileItem::setId(const int id) {
   if (m_id != id) {
     m_id = id;
 
-    m_profile = getInputService()->getProfile(m_id);
+    m_profile = getControllerProfileRepository()->getProfile(m_id);
     emit profileIdChanged(m_id);
     emit nameChanged(name());
     emit isKeyboardProfileChanged();

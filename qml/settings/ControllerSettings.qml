@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Firelight 1.0
 
 FocusScope {
     ColumnLayout {
@@ -128,6 +129,62 @@ FocusScope {
                 Layout.bottomMargin: 20
             }
 
+        }
+
+        PlatformInputPreferences {
+            id: platformPrefs
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: 12
+            spacing: 4
+
+            Text {
+                text: "Preferred controller per platform"
+                font.pixelSize: 15
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
+                color: ColorPalette.neutral100
+                Layout.fillWidth: true
+            }
+            Text {
+                text: "When a controller of the chosen type is connected, it becomes player one whenever a game for that platform launches."
+                font.pixelSize: 13
+                font.family: Constants.regularFontFamily
+                color: ColorPalette.neutral400
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+                Layout.bottomMargin: 8
+            }
+
+            Repeater {
+                model: PlatformModel
+                delegate: RowLayout {
+                    required property int platformId
+                    required property string displayName
+                    Layout.fillWidth: true
+                    spacing: 12
+
+                    Text {
+                        text: displayName
+                        color: ColorPalette.neutral100
+                        font.pixelSize: 14
+                        font.family: Constants.regularFontFamily
+                        Layout.fillWidth: true
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    ComboBox {
+                        Layout.preferredWidth: 220
+                        textRole: "label"
+                        valueRole: "value"
+                        model: platformPrefs.controllerTypeOptions()
+                        Component.onCompleted: currentIndex =
+                            indexOfValue(platformPrefs.preferredType(platformId))
+                        onActivated: platformPrefs.setPreferredType(platformId, currentValue)
+                    }
+                }
+            }
         }
 
         Item {

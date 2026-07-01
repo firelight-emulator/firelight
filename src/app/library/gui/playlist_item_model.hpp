@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../../manager_accessor.hpp"
-#include "../library_database.hpp"
+#include "../../service_accessor.hpp"
 
+#include <firelight/library/folder_info.hpp>
 #include <QAbstractListModel>
 
 namespace firelight::gui {
   class LibraryFolderListModel : public QAbstractListModel,
-                                 public ManagerAccessor {
+                                 public ManagerAccessor, public ServiceAccessor {
     Q_OBJECT
 
   public:

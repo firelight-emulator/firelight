@@ -37,7 +37,7 @@ void AudioManager::initializeResampler(int64_t in_channel_layout,
 }
 
 AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
-    : m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
+  : m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
   m_elapsedTimer.start();
 
   m_mediaDevices = new QMediaDevices(this);
@@ -46,6 +46,7 @@ AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
 }
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
+  spdlog::info("AudioManager::receive called with numFrames={}", numFrames);
   // TODO: REALLY BAD SOLUTION for mupen sometimes sending very small number of
   // frames
   if (numFrames < 30) {
@@ -58,7 +59,8 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     m_numSamples = 0;
   }
 
-  if (!m_isMuted && m_audioDevice && m_audioSink) { // Added m_audioSink check
+  if (!m_isMuted && m_audioDevice && m_audioSink) {
+    // Added m_audioSink check
     const auto bufferTotalCapacity = m_audioSink->bufferSize();
     if (bufferTotalCapacity == 0)
       return numFrames; // Avoid division by zero
@@ -79,7 +81,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
         0; // To correctly average when buffer isn't full yet
     static double previous_avg_fill_ratio =
         -1.0; // Previous cycle's average fill ratio, -1.0 indicates
-              // uninitialized
+    // uninitialized
 
     // Insert the current usedBytes into the circular buffer
     avg_buffer_usage_bytes[avg_buffer_idx] = usedBytes;
@@ -154,28 +156,35 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     if (allowResamplingAdjustment) {
       // Calculate delta based on current buffer deviation
       // This is your existing logic for determining delta
-      if (bufferDeviation > 0.6) { // >80% full (target is 50%)
+      if (bufferDeviation > 0.6) {
+        // >80% full (target is 50%)
         delta = -5;
-      } else if (bufferDeviation > 0.3) { // >65%
+      } else if (bufferDeviation > 0.3) {
+        // >65%
         delta = -4;
-      } else if (bufferDeviation > 0.1) { // >55%
+      } else if (bufferDeviation > 0.1) {
+        // >55%
         delta = -3;
-      } else if (bufferDeviation > -0.1) { // 45%-55% (This will be overridden
-                                           // by isNearTarget usually)
+      } else if (bufferDeviation > -0.1) {
+        // 45%-55% (This will be overridden
+        // by isNearTarget usually)
         delta = 0;
-      } else if (bufferDeviation > -0.3) { // 35%-45%
+      } else if (bufferDeviation > -0.3) {
+        // 35%-45%
         // Original logic had delta = 0 here. If buffer is consistently too low
         // and not trending up, we might want to add samples.
         // Consider if this should be delta = 1 or if deadband is intentional.
         // For now, keeping original logic unless overridden by trend:
         delta = 0; // Maintained original logic for this band if adjustment is
-                   // allowed but if it's stuck here and not trending well, this
-                   // might need to be positive. However, the
-                   // EXTREME_DEVIATION_THRESHOLD_RATIO for allowing adjustment
-                   // helps.
-      } else if (bufferDeviation > -0.6) { // 20%-35%
+        // allowed but if it's stuck here and not trending well, this
+        // might need to be positive. However, the
+        // EXTREME_DEVIATION_THRESHOLD_RATIO for allowing adjustment
+        // helps.
+      } else if (bufferDeviation > -0.6) {
+        // 20%-35%
         delta = 1;
-      } else { // <20%
+      } else {
+        // <20%
         delta = 2;
       }
       // spdlog::debug("Resampling allowed. BufferDev: {:.2f}, Delta: {}",
@@ -216,7 +225,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
 
     const int output_samples =
         swr_convert(m_swrContext, outputBuffer, max_output_samples,
-                    (const uint8_t **)&data, numFrames);
+                    (const uint8_t **) &data, numFrames);
 
     if (output_samples < 0) {
       spdlog::error("Error during swr_convert: {}", av_err2str(output_samples));
@@ -230,7 +239,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
 
     av_freep(&outputBuffer[0]); // Frees the entire buffer allocated by
-                                // av_samples_alloc
+    // av_samples_alloc
   }
 
   return numFrames; // Return original number of frames consumed
@@ -267,7 +276,7 @@ void AudioManager::reinitializeAudioDevice() {
   }
 
   spdlog::info(
-      "Default audio output device changed, reinitializing audio device.");
+    "Default audio output device changed, reinitializing audio device.");
 
   // Stop current audio
   if (m_audioDevice) {

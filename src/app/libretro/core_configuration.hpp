@@ -2,7 +2,7 @@
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/libretro/configuration_provider.hpp>
 #include <map>
-#include <platforms/models/platform.hpp>
+#include <firelight/platforms/platform.hpp>
 #include <firelight/settings/settings_service.hpp>
 
 class CoreConfiguration final

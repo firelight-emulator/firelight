@@ -6,6 +6,7 @@
 
 #include "EventEmitter.h"
 #include <firelight/input/input_service.hpp>
+#include <firelight/input/shortcut_action.hpp>
 
 #include <QApplication>
 
@@ -45,9 +46,11 @@ QtInputServiceProxy::QtInputServiceProxy() {
   m_autoRepeatTimer->start(16); // ~60 FPS processing
 
   shortcutToggledConnection =
-      EventDispatcher::instance().subscribe<input::ShortcutToggledEvent>(
-          [this](const input::ShortcutToggledEvent &event) {
-            emit shortcutToggled(event.playerIndex, event.shortcut);
+      EventDispatcher::instance().subscribe<input::ShortcutEvent>(
+          [this](const input::ShortcutEvent &event) {
+            emit shortcutTriggered(event.playerIndex,
+                                   QString::fromStdString(event.id),
+                                   static_cast<int>(event.phase));
           });
 
   gamepadInputConnection =
@@ -116,6 +119,11 @@ void QtInputServiceProxy::setOnlyPlayerOneCanNavigateMenus(
 
 bool QtInputServiceProxy::getOnlyPlayerOneCanNavigateMenus() const {
   return m_onlyPlayerOneCanNavigateMenus;
+}
+
+void QtInputServiceProxy::setShortcutsInGame(const bool inGame) {
+  m_inputService->setShortcutContext(inGame ? input::ScopeInGame
+                                            : input::ScopeInMenu);
 }
 
 void QtInputServiceProxy::startAutoRepeat(int playerIndex,

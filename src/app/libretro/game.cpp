@@ -33,7 +33,9 @@ namespace libretro {
 
   string Game::getPath() { return this->path; }
 
-  void *Game::getData() { return &this->data[0]; }
+  void *Game::getData() {
+    return data.empty() ? nullptr : &this->data[0];
+  }
 
   size_t Game::getSize() {
     return this->data.size();

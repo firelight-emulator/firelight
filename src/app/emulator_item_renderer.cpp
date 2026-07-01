@@ -55,13 +55,13 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 retro_hw_context_type EmulatorItemRenderer::getPreferredHwRender() {
-  if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-    return RETRO_HW_CONTEXT_OPENGL;
-  }
-
-  if (m_graphicsApi == QSGRendererInterface::Vulkan) {
-    return RETRO_HW_CONTEXT_VULKAN;
-  }
+  // if (m_graphicsApi == QSGRendererInterface::OpenGL) {
+  //   return RETRO_HW_CONTEXT_OPENGL;
+  // }
+  //
+  // if (m_graphicsApi == QSGRendererInterface::Vulkan) {
+  //   return RETRO_HW_CONTEXT_VULKAN;
+  // }
 
   return RETRO_HW_CONTEXT_NONE;
 }
@@ -180,11 +180,15 @@ void EmulatorItemRenderer::getHwRenderInterface(
 
 void EmulatorItemRenderer::receive(const void *data, const unsigned width,
                                    const unsigned height, const size_t pitch) {
+  spdlog::info("receive() called with data={}, width={}, height={}, pitch={}", data, width,
+               height, pitch);
   if (data == RETRO_HW_FRAME_BUFFER_VALID) {
     // Vulkan: m_coreImage already set by set_image() earlier this frame.
     // Record the actual render dimensions so synchronize() can resize colorTexture to match.
-    if (m_vulkanRenderer)
+    if (m_vulkanRenderer) {
       m_vulkanRenderer->setRenderDimensions(width, height);
+    }
+
     return;
   }
 
@@ -230,7 +234,6 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
       cb->endExternal();
       cb->endPass(batch);
     }
-    return;
   }
 }
 

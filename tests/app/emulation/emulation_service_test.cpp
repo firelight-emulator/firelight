@@ -1,13 +1,14 @@
-#include "../../mocks/mock_library.hpp"
 #include <firelight/event_dispatcher.hpp>
-#include "library/sqlite_user_library.hpp"
+#include <firelight/library/sqlite_user_library.hpp>
 
-#include <db/sqlite_userdata_database.hpp>
+#include <firelight/db/sqlite_userdata_database.hpp>
 #include <emulation/emulation_service.hpp>
-#include <gmock/gmock-function-mocker.h>
+#include <firelight/library/entry_resolver.hpp>
+#include <firelight/library/library_ingest_service.hpp>
+#include <firelight/library/user_library_service.hpp>
 #include <gtest/gtest.h>
-#include <settings/settings_service.hpp>
-#include <settings/sqlite_settings_repository.hpp>
+#include <firelight/settings/settings_service.hpp>
+#include <firelight/settings/sqlite_settings_repository.hpp>
 
 namespace firelight::emulation {
 
@@ -19,24 +20,33 @@ namespace firelight::emulation {
  */
 class EmulationServiceTest : public testing::Test {
 protected:
-  std::unique_ptr<library::SqliteUserLibrary> m_library;
+  std::unique_ptr<library::SqliteUserLibraryRepository> m_library;
+  std::unique_ptr<library::LibraryIngestService> m_ingest;
+  std::unique_ptr<library::UserLibraryService> m_service;
+  std::unique_ptr<library::EntryResolver> m_resolver;
   std::unique_ptr<EmulationService> m_emulationService;
   std::unique_ptr<settings::SettingsService> m_settingsService;
 
   std::string m_testContentHash = "e26ee0d44e809351c8ce2d73c7400cdd";
 
   void SetUp() override {
-    m_library = std::make_unique<library::SqliteUserLibrary>(":memory:", ".");
+    m_library = std::make_unique<library::SqliteUserLibraryRepository>(":memory:");
+    m_ingest = std::make_unique<library::LibraryIngestService>(*m_library);
+    m_service = std::make_unique<library::UserLibraryService>(*m_library, ".");
+    m_resolver = std::make_unique<library::EntryResolver>(*m_library);
     m_settingsService = std::make_unique<settings::SettingsService>(
         *new settings::SqliteSettingsRepository(":memory:"));
     settings::SettingsService::setInstance(m_settingsService.get());
-    m_emulationService =
-        std::make_unique<EmulationService>(*m_library, *m_settingsService);
+    m_emulationService = std::make_unique<EmulationService>(
+        *m_service, *m_resolver, *m_settingsService);
   }
 
   void TearDown() override {
     m_settingsService.reset();
     m_emulationService.reset();
+    m_resolver.reset();
+    m_service.reset();
+    m_ingest.reset();
     m_library.reset();
   }
 };
@@ -55,8 +65,10 @@ TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
             gameLoadFailedEventReceived = true;
           });
 
-  library::SqliteUserLibrary library(":memory:", ".");
-  EmulationService service(library, *m_settingsService);
+  library::SqliteUserLibraryRepository library(":memory:");
+  library::UserLibraryService libraryService(library, ".");
+  library::EntryResolver resolver(library);
+  EmulationService service(libraryService, resolver, *m_settingsService);
 
   ASSERT_EQ(nullptr, service.loadEntry(1).get());
   ASSERT_TRUE(gameLoadFailedEventReceived);
@@ -77,7 +89,7 @@ TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{.m_fileSizeBytes = 16777216,
+  library::ContentFile info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
@@ -118,7 +130,7 @@ TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{
+  library::ContentFile info{
       .m_fileSizeBytes = 0,
       .m_filePath = "testrom.gba",
       .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
@@ -160,7 +172,7 @@ TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{
+  library::ContentFile info{
       .m_fileSizeBytes = 0,
       .m_filePath = "testrom.gba",
       .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
@@ -202,7 +214,7 @@ TEST_F(EmulationServiceTest, LoadValidRomInTarSucceeds) {
             gameLoadedEventReceived = true;
           });
 
-  library::RomFileInfo info{
+  library::ContentFile info{
       .m_fileSizeBytes = 0,
       .m_filePath = "testrom.gba",
       .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",

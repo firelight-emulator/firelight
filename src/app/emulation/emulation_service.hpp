@@ -1,10 +1,15 @@
 #pragma once
 #include "emulator_instance.hpp"
-#include "platforms/models/platform.hpp"
+#include <firelight/platforms/platform.hpp>
 
-#include <library/entry.hpp>
+#include <firelight/library/entry.hpp>
 #include <manager_accessor.hpp>
 #include <string>
+
+namespace firelight::library {
+class UserLibraryService;
+class EntryResolver;
+} // namespace firelight::library
 
 namespace firelight::emulation {
 
@@ -30,7 +35,8 @@ public:
     s_emuServiceInstance = service;
   }
 
-  EmulationService(library::IUserLibrary &library,
+  EmulationService(library::UserLibraryService &library,
+                   library::EntryResolver &entryResolver,
                    settings::SettingsService &settingsService);
   ~EmulationService();
 
@@ -49,7 +55,8 @@ private:
   static EmulationService *s_emuServiceInstance;
 
   settings::SettingsService &m_settingsService;
-  library::IUserLibrary &m_library;
+  library::UserLibraryService &m_library;
+  library::EntryResolver &m_resolver;
 
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;
 

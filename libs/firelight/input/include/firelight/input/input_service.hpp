@@ -4,6 +4,8 @@
 #include <firelight/libretro/pointer_input_provider.hpp>
 #include <firelight/libretro/retropad_provider.hpp>
 #include <memory>
+#include <optional>
+#include <string>
 
 namespace firelight::input {
 
@@ -24,20 +26,17 @@ struct GamepadInputEvent {
   bool autoRepeat = false;
 };
 
-struct ShortcutToggledEvent {
+// Raw keyboard key transition, published by the keyboard handler so the shortcut
+// engine can treat the keyboard like any other device.
+struct KeyboardKeyEvent {
   int playerIndex;
-  Shortcut shortcut;
+  int key; // Qt::Key
+  bool pressed;
 };
 
 class InputService : public libretro::IRetropadProvider,
                      public libretro::IPointerInputProvider {
 public:
-  static std::map<Shortcut, std::string> listShortcuts() {
-    return {{OpenRewindMenu, "Open rewind menu"},
-            {SpeedUp, "Speed up"},
-            {SlowDown, "Slow down"}};
-  }
-
   ~InputService() override = default;
   virtual int addGamepad(std::shared_ptr<IGamepad> gamepad) = 0;
 
@@ -47,8 +46,6 @@ public:
   virtual std::vector<std::shared_ptr<IGamepad>> listGamepads() = 0;
   virtual std::shared_ptr<IGamepad> getPlayerGamepad(int playerIndex) = 0;
 
-  virtual std::shared_ptr<GamepadProfile> getProfile(int id) = 0;
-
   virtual void changeGamepadOrder(const std::map<int, int> &oldToNewIndex) = 0;
 
   virtual bool preferGamepadOverKeyboard() const = 0;
@@ -56,6 +53,19 @@ public:
 
   virtual void updateMouseState(double x, double y, bool mousePressed) = 0;
   virtual void updateMousePressed(bool mousePressed) = 0;
+
+  // Applies the input context for a launched game: any per-game profile
+  // override (by content hash) and the platform's preferred controller type
+  // (promoting a matching controller to player 1). Pass an empty hash to skip
+  // the override lookup.
+  virtual void applyGameContext(std::optional<std::string> contentHash,
+                                int platformId) = 0;
+  // Clears the per-game override, restoring device-default profiles. Player
+  // slot order is left as-is.
+  virtual void clearGameContext() = 0;
+
+  // Sets which shortcuts are currently active (ScopeInGame / ScopeInMenu).
+  virtual void setShortcutContext(int scope) = 0;
 };
 
 } // namespace firelight::input

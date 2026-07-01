@@ -1,4 +1,5 @@
 #include "playlist_item_model.hpp"
+#include <firelight/library/user_library_service.hpp>
 
 namespace firelight::gui {
   bool LibraryFolderListModel::setData(const QModelIndex &index,
@@ -19,7 +20,7 @@ namespace firelight::gui {
         return false;
     }
 
-    getUserLibrary()->update(item);
+    getLibraryService()->update(item);
 
     emit dataChanged(index, index, {role});
 
@@ -31,13 +32,7 @@ namespace firelight::gui {
   }
 
   LibraryFolderListModel::LibraryFolderListModel() {
-    m_items = getUserLibrary()->listFolders({});
-    // const auto entries = m_libraryDatabase->getAllPlaylists();
-
-    // for (const auto &entry : entries) {
-    //   m_items.emplace_back(
-    //       Item({entry.id, QString::fromStdString(entry.displayName)}));
-    // }
+    m_items = getLibraryService()->listFolders();
   }
 
   int LibraryFolderListModel::rowCount(const QModelIndex &parent) const {
@@ -78,7 +73,7 @@ namespace firelight::gui {
   bool LibraryFolderListModel::addFolder(const QString &displayName) {
     if (auto folder =
           library::FolderInfo{.displayName = displayName.toStdString()};
-      getUserLibrary()->create(folder)) {
+      getLibraryService()->create(folder)) {
       beginInsertRows(QModelIndex(), rowCount(QModelIndex()),
                       rowCount(QModelIndex()));
 
@@ -92,7 +87,7 @@ namespace firelight::gui {
   }
 
   void LibraryFolderListModel::deleteFolder(const int folderId) {
-    if (!getUserLibrary()->deleteFolder(folderId)) {
+    if (!getLibraryService()->deleteFolder(folderId)) {
       spdlog::warn("Failed to delete folder with ID {}", folderId);
       return;
     }
@@ -107,18 +102,4 @@ namespace firelight::gui {
       }
     }
   }
-
-  //
-  // void PlaylistItemModel::renamePlaylist(const int playlistId,
-  //                                        const QString &newName) {
-  //   m_libraryDatabase->renamePlaylist(playlistId, newName.toStdString());
-  //
-  //   for (int i = 0; i < m_items.size(); ++i) {
-  //     if (m_items.at(i).playlistId == playlistId) {
-  //       setData(createIndex(i, 0), newName, DisplayName);
-  //       break;
-  //     }
-  //   }
-  // }
-  //
 } // namespace firelight::gui

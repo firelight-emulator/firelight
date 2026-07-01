@@ -80,46 +80,6 @@ void ControllerListModel::changeGamepadOrder(const QVariantMap &oldToNewIndex) {
   m_inputService->changeGamepadOrder(map);
 }
 
-void ControllerListModel::onGamepadConnected(
-    const input::GamepadConnectedEvent &event) {
-  const auto gamepad = event.gamepad;
-  const auto playerIndex = gamepad->getPlayerIndex();
-  if (playerIndex > 3 || playerIndex < 0) {
-    return;
-  }
-  m_items[playerIndex] = {
-      playerIndex,
-      true,
-      gamepad->getProfile()->getId(),
-      QString::fromStdString(gamepad->getName()),
-      "None",
-      gamepad->isWired(),
-      ControllerIcons::sourceUrlFromType(gamepad->getType())};
-  emit dataChanged(createIndex(playerIndex, 0), createIndex(playerIndex, 0),
-                   {});
-}
-
-void ControllerListModel::onGamepadDisconnected(
-    const input::GamepadDisconnectedEvent &event) {
-  const auto playerIndex = event.playerIndex;
-  if (playerIndex > 3 || playerIndex < 0) {
-    return;
-  }
-
-  m_items[playerIndex] = {playerIndex, false, -1, "Default", "None", true};
-  emit dataChanged(createIndex(playerIndex, 0), createIndex(playerIndex, 0),
-                   {});
-}
-void ControllerListModel::validateAll() {
-  for (int i = 0; i < 4; i++) {
-    const auto con = m_inputService->getPlayerGamepad(i);
-    if (!con || m_items[i].playerIndex != i) {
-      refreshControllerList();
-      break;
-    }
-  }
-}
-
 void ControllerListModel::refreshControllerList() {
   emit beginResetModel();
   m_items.clear();

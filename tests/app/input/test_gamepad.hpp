@@ -17,7 +17,6 @@ public:
   void setWeakRumble(int platformId, uint16_t t_strength) override;
   std::shared_ptr<GamepadProfile> getProfile() const override;
   void setProfile(const std::shared_ptr<GamepadProfile> &profile) override;
-  std::vector<Shortcut> getToggledShortcuts(GamepadInput input) override;
   int16_t evaluateRawInput(const GamepadInput input) const override;
   std::string getName() const override;
   int getPlayerIndex() const override;
@@ -25,6 +24,8 @@ public:
   int getInstanceId() const override;
   bool isWired() const override;
   GamepadType getType() const override;
+  DeviceType getDeviceType() const override;
+  void setType(GamepadType type);
   bool disconnect() override;
   DeviceIdentifier getDeviceIdentifier() const override;
 
@@ -34,6 +35,7 @@ private:
   int m_productId = 0;
   int m_productVersion = 0;
   int m_playerIndex = -1;
+  GamepadType m_type = MICROSOFT_XBOX_ONE;
   std::shared_ptr<GamepadProfile> m_profile;
 };
 

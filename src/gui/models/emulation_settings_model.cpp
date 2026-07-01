@@ -1,6 +1,6 @@
 #include "emulation_settings_model.hpp"
 
-#include <platforms/platform_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 #include <spdlog/spdlog.h>
 
 namespace firelight::settings {

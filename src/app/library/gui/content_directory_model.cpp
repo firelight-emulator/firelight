@@ -56,7 +56,7 @@ void ContentDirectoryModel::addItem(QString path) {
   endInsertRows();
 }
 
-ContentDirectoryModel::ContentDirectoryModel(library::IUserLibrary &library)
+ContentDirectoryModel::ContentDirectoryModel(library::UserLibraryService &library)
     : m_library(library) {
   m_items = m_library.getWatchedDirectories();
 }

@@ -1,7 +1,7 @@
 #include "search_results_list_model.hpp"
 
-#include <library/user_library.hpp>
-#include <platforms/platform_service.hpp>
+#include <firelight/library/user_library_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 #include "util/fuzzy_string_matcher.hpp"
 
@@ -62,7 +62,7 @@ namespace firelight::gui {
             m_allItems.append(item);
         }
 
-        for (const auto &folder: getLibraryService()->listFolders({})) {
+        for (const auto &folder: getLibraryService()->listFolders()) {
             Item item;
             item.displayName = QString::fromStdString(folder.displayName);
             item.category = "Folders";

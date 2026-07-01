@@ -1,4 +1,4 @@
-#include "../../../src/app/settings/sqlite_settings_repository.hpp"
+#include <firelight/settings/sqlite_settings_repository.hpp>
 #include <gtest/gtest.h>
 #include <filesystem>
 

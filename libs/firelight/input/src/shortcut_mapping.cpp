@@ -1,70 +1,76 @@
 #include <firelight/input/shortcut_mapping.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace firelight::input {
 
 ShortcutMapping::ShortcutMapping(
     std::function<void(ShortcutMapping &)> syncCallback)
     : m_syncCallback(std::move(syncCallback)) {}
 
-std::map<Shortcut, InputSequence> ShortcutMapping::getMappings() const {
-  return m_mappings;
+const std::vector<InputSource> &
+ShortcutMapping::getBindings(const ShortcutId &id) const {
+  static const std::vector<InputSource> kEmpty;
+  const auto it = m_bindings.find(id);
+  return it == m_bindings.end() ? kEmpty : it->second;
+}
+
+void ShortcutMapping::setBindings(const ShortcutId &id,
+                                  std::vector<InputSource> sources) {
+  if (sources.empty()) {
+    m_bindings.erase(id);
+  } else {
+    m_bindings[id] = std::move(sources);
+  }
+}
+
+void ShortcutMapping::addBinding(const ShortcutId &id,
+                                 const InputSource &source) {
+  m_bindings[id].push_back(source);
+}
+
+void ShortcutMapping::removeBinding(const ShortcutId &id,
+                                    const std::size_t index) {
+  const auto it = m_bindings.find(id);
+  if (it == m_bindings.end() || index >= it->second.size()) {
+    return;
+  }
+  it->second.erase(it->second.begin() + static_cast<std::ptrdiff_t>(index));
+  if (it->second.empty()) {
+    m_bindings.erase(it);
+  }
+}
+
+const std::map<ShortcutId, std::vector<InputSource>> &
+ShortcutMapping::getAll() const {
+  return m_bindings;
 }
 
 std::string ShortcutMapping::serialize() const {
-  auto result = std::string();
-
-  for (const auto &[shortcut, sequence] : m_mappings) {
-    result += std::to_string(shortcut) + ":";
-    for (const auto &modifier : sequence.modifiers) {
-      result += std::to_string(modifier) + "+";
-    }
-    result += std::to_string(sequence.input) + ",";
+  nlohmann::json shortcuts = nlohmann::json::object();
+  for (const auto &[id, sources] : m_bindings) {
+    shortcuts[id] = sources;
   }
-  return result;
+
+  nlohmann::json j;
+  j["version"] = 1;
+  j["shortcuts"] = shortcuts;
+  return j.dump();
 }
 
 void ShortcutMapping::deserialize(const std::string &data) {
-  m_mappings.clear();
+  m_bindings.clear();
   if (data.empty()) {
     return;
   }
 
-  size_t start = 0;
-  while (start < data.size()) {
-    auto end = data.find(',', start);
-    if (end == std::string::npos) {
-      end = data.size();
-    }
+  const auto j = nlohmann::json::parse(data, nullptr, false);
+  if (j.is_discarded() || !j.is_object() || !j.contains("shortcuts")) {
+    return; // tolerate legacy/invalid blobs
+  }
 
-    auto mapping = data.substr(start, end - start);
-    if (!mapping.empty()) {
-      auto colon = mapping.find(':');
-      if (colon != std::string::npos) {
-        auto shortcut =
-            static_cast<Shortcut>(std::stoi(mapping.substr(0, colon)));
-        auto seq = mapping.substr(colon + 1);
-        std::vector<int> modifiers;
-        size_t plus = 0, prev = 0;
-        while ((plus = seq.find('+', prev)) != std::string::npos) {
-          if (plus > prev) {
-            modifiers.push_back(std::stoi(seq.substr(prev, plus - prev)));
-          }
-          prev = plus + 1;
-        }
-        int input = 0;
-        if (prev < seq.size()) {
-          input = std::stoi(seq.substr(prev));
-        }
-        InputSequence sequence;
-        sequence.modifiers.clear();
-        for (int mod : modifiers) {
-          sequence.modifiers.push_back(static_cast<GamepadInput>(mod));
-        }
-        sequence.input = static_cast<GamepadInput>(input);
-        m_mappings.emplace(shortcut, sequence);
-      }
-    }
-    start = end + 1;
+  for (const auto &[id, sources] : j.at("shortcuts").items()) {
+    m_bindings[id] = sources.get<std::vector<InputSource>>();
   }
 }
 
@@ -72,15 +78,6 @@ void ShortcutMapping::sync() {
   if (m_syncCallback) {
     m_syncCallback(*this);
   }
-}
-void ShortcutMapping::setMapping(Shortcut shortcut,
-                                 const InputSequence &sequence) {
-  m_mappings.erase(shortcut);
-  m_mappings.emplace(shortcut, sequence);
-}
-
-void ShortcutMapping::clearMapping(const Shortcut shortcut) {
-  m_mappings.erase(shortcut);
 }
 
 } // namespace firelight::input

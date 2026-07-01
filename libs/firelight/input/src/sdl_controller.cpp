@@ -1,6 +1,8 @@
 #include <firelight/input/sdl_controller.hpp>
 
 #include <bits/stl_algo.h>
+#include <chrono>
+#include <cmath>
 
 namespace firelight::input {
 SdlController::~SdlController() = default;
@@ -14,26 +16,9 @@ std::shared_ptr<GamepadProfile> SdlController::getProfile() const {
 }
 void SdlController::setProfile(const std::shared_ptr<GamepadProfile> &profile) {
   m_profile = profile;
-}
-
-std::vector<Shortcut> SdlController::getToggledShortcuts(GamepadInput input) {
-  std::vector<Shortcut> result;
-  for (const auto &seq : m_profile->getShortcutMapping()->getMappings()) {
-    auto modifiers = seq.second.modifiers;
-
-    auto toggled = true;
-    for (const auto &mod : modifiers) {
-      if (!evaluateMapping(static_cast<GamepadInput>(mod))) {
-        toggled = false;
-        break;
-      }
-    }
-    if (toggled && seq.second.input == input) {
-      result.emplace_back(seq.first);
-    }
-  }
-
-  return result;
+  // Drop any latched toggle/turbo state from the previous profile.
+  m_togglePrevRaw.clear();
+  m_toggleLatch.clear();
 }
 
 SdlController::SdlController(SDL_GameController *t_controller)
@@ -47,6 +32,50 @@ SdlController::SdlController(SDL_GameController *t_controller)
   m_productVersion = SDL_JoystickGetProductVersion(m_SDLJoystick);
 }
 
+bool SdlController::evaluateBindingDigital(const Binding &binding) const {
+  // All combo modifiers must be held for the binding to be active.
+  for (const auto mod : binding.source.modifiers) {
+    if (std::abs(evaluateMapping(static_cast<GamepadInput>(mod))) <= 16383) {
+      return false;
+    }
+  }
+
+  const auto code = static_cast<GamepadInput>(binding.source.code);
+  if (code == None) {
+    return false;
+  }
+  const auto threshold = static_cast<int>(binding.threshold * 32767.0f);
+  return std::abs(evaluateMapping(code)) > threshold;
+}
+
+bool SdlController::evaluateBindingWithModes(const GamepadInput target,
+                                             const std::size_t index,
+                                             const Binding &binding) {
+  bool active = evaluateBindingDigital(binding);
+
+  if (binding.toggle) {
+    const uint64_t key = (static_cast<uint64_t>(target) << 8) | index;
+    const bool previous = m_togglePrevRaw[key];
+    if (active && !previous) {
+      // Flip the latch on the rising edge of the source.
+      m_toggleLatch[key] = !m_toggleLatch[key];
+    }
+    m_togglePrevRaw[key] = active;
+    active = m_toggleLatch[key];
+  }
+
+  if (binding.turbo.enabled && active) {
+    const double rate = binding.turbo.rateHz > 0.0f ? binding.turbo.rateHz : 10.0;
+    const double t = std::chrono::duration<double>(
+                         std::chrono::steady_clock::now().time_since_epoch())
+                         .count();
+    // Square wave: "pressed" for the first half of each autofire cycle.
+    return std::fmod(t * rate, 1.0) < 0.5;
+  }
+
+  return active;
+}
+
 bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
                                     const Input t_button) {
   auto input = static_cast<GamepadInput>(t_button);
@@ -55,13 +84,17 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
     auto mapping = m_profile->getMappingForPlatformAndController(
         platformId, controllerTypeId);
     if (mapping != nullptr) {
-      const auto mapped = mapping->getMappedInput(input);
-      if (mapped.has_value()) {
-        if (mapped.value() == None) {
-          return false;
+      const auto &bindings = mapping->getBindings(input);
+      if (!bindings.empty()) {
+        // Evaluate every binding (so toggle/turbo state stays current) and OR
+        // the results together.
+        bool active = false;
+        for (std::size_t i = 0; i < bindings.size(); ++i) {
+          if (evaluateBindingWithModes(input, i, bindings[i])) {
+            active = true;
+          }
         }
-        return std::abs(evaluateMapping(
-                   static_cast<GamepadInput>(mapped.value()))) > 0;
+        return active;
       }
     }
   }
@@ -103,12 +136,22 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
   case GamepadInput::RightBumper:
     return SDL_GameControllerGetButton(m_SDLController,
                                        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
-  case GamepadInput::LeftTrigger:
+  case GamepadInput::LeftTrigger: {
+    const auto settings =
+        m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
+                  : AnalogSettings{};
     return SDL_GameControllerGetAxis(m_SDLController,
-                                     SDL_CONTROLLER_AXIS_TRIGGERLEFT) > 0;
-  case GamepadInput::RightTrigger:
+                                     SDL_CONTROLLER_AXIS_TRIGGERLEFT) >
+           static_cast<int>(settings.leftTrigger.threshold * 32767.0f);
+  }
+  case GamepadInput::RightTrigger: {
+    const auto settings =
+        m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
+                  : AnalogSettings{};
     return SDL_GameControllerGetAxis(m_SDLController,
-                                     SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 0;
+                                     SDL_CONTROLLER_AXIS_TRIGGERRIGHT) >
+           static_cast<int>(settings.rightTrigger.threshold * 32767.0f);
+  }
   case GamepadInput::L3:
     return SDL_GameControllerGetButton(m_SDLController,
                                        SDL_CONTROLLER_BUTTON_LEFTSTICK);
@@ -122,137 +165,132 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
 
 int16_t SdlController::getLeftStickXPosition(const int platformId,
                                              int controllerTypeId) {
-  auto rawX =
+  const auto settings =
+      m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
+                : AnalogSettings{};
+  const auto rawX =
       SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTX);
-  if (rawX > -8192 && rawX < 8192) {
-    rawX = 0;
+
+  if (m_profile) {
+    const auto mapping = m_profile->getMappingForPlatformAndController(
+        platformId, controllerTypeId);
+    if (mapping) {
+      const auto &left = mapping->getBindings(GamepadInput::LeftStickLeft);
+      const auto &right = mapping->getBindings(GamepadInput::LeftStickRight);
+      if (!left.empty() || !right.empty()) {
+        const auto valLeft =
+            left.empty()
+                ? 0
+                : evaluateMapping(
+                      static_cast<GamepadInput>(left.front().source.code));
+        const auto valRight =
+            right.empty()
+                ? 0
+                : evaluateMapping(
+                      static_cast<GamepadInput>(right.front().source.code));
+        return static_cast<int16_t>(valRight - valLeft);
+      }
+    }
   }
 
-  if (!m_profile) {
-    return rawX;
-  }
-
-  const auto mapping = m_profile->getMappingForPlatformAndController(
-      platformId, controllerTypeId);
-  if (!mapping) {
-    return rawX;
-  }
-
-  const auto mappedLeft = mapping->getMappedInput(GamepadInput::LeftStickLeft);
-  const auto mappedRight =
-      mapping->getMappedInput(GamepadInput::LeftStickRight);
-
-  if (!mappedLeft && !mappedRight) {
-    return rawX;
-  }
-
-  const auto valLeft =
-      mappedLeft ? evaluateMapping(static_cast<GamepadInput>(*mappedLeft)) : 0;
-  const auto valRight =
-      mappedRight ? evaluateMapping(static_cast<GamepadInput>(*mappedRight))
-                  : 0;
-
-  return valRight - valLeft;
+  return applyAxisSettings(rawX, settings.leftStick);
 }
 
 int16_t SdlController::getLeftStickYPosition(const int platformId,
                                              int controllerTypeId) {
-  auto rawY =
+  const auto settings =
+      m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
+                : AnalogSettings{};
+  const auto rawY =
       SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_LEFTY);
-  if (rawY > -8192 && rawY < 8192) {
-    rawY = 0;
+
+  if (m_profile) {
+    const auto mapping = m_profile->getMappingForPlatformAndController(
+        platformId, controllerTypeId);
+    if (mapping) {
+      const auto &up = mapping->getBindings(GamepadInput::LeftStickUp);
+      const auto &down = mapping->getBindings(GamepadInput::LeftStickDown);
+      if (!up.empty() || !down.empty()) {
+        const auto valUp =
+            up.empty() ? 0
+                       : evaluateMapping(
+                             static_cast<GamepadInput>(up.front().source.code));
+        const auto valDown =
+            down.empty()
+                ? 0
+                : evaluateMapping(
+                      static_cast<GamepadInput>(down.front().source.code));
+        return static_cast<int16_t>(valDown - valUp);
+      }
+    }
   }
 
-  if (!m_profile) {
-    return rawY;
-  }
-
-  const auto mapping = m_profile->getMappingForPlatformAndController(
-      platformId, controllerTypeId);
-  if (!mapping) {
-    return rawY;
-  }
-
-  const auto mappedUp = mapping->getMappedInput(GamepadInput::LeftStickUp);
-  const auto mappedDown = mapping->getMappedInput(GamepadInput::LeftStickDown);
-
-  if (!mappedUp && !mappedDown) {
-    return rawY;
-  }
-
-  const auto valUp =
-      mappedUp ? evaluateMapping(static_cast<GamepadInput>(*mappedUp)) : 0;
-  const auto valDown =
-      mappedDown ? evaluateMapping(static_cast<GamepadInput>(*mappedDown)) : 0;
-
-  return valDown - valUp;
+  return applyAxisSettings(rawY, settings.leftStick);
 }
 
 int16_t SdlController::getRightStickXPosition(const int platformId,
                                               int controllerTypeId) {
-  auto rawX =
+  const auto settings =
+      m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
+                : AnalogSettings{};
+  const auto rawX =
       SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTX);
-  if (rawX > -8192 && rawX < 8192) {
-    rawX = 0;
+
+  if (m_profile) {
+    const auto mapping = m_profile->getMappingForPlatformAndController(
+        platformId, controllerTypeId);
+    if (mapping) {
+      const auto &left = mapping->getBindings(GamepadInput::RightStickLeft);
+      const auto &right = mapping->getBindings(GamepadInput::RightStickRight);
+      if (!left.empty() || !right.empty()) {
+        const auto valLeft =
+            left.empty()
+                ? 0
+                : evaluateMapping(
+                      static_cast<GamepadInput>(left.front().source.code));
+        const auto valRight =
+            right.empty()
+                ? 0
+                : evaluateMapping(
+                      static_cast<GamepadInput>(right.front().source.code));
+        return static_cast<int16_t>(valRight - valLeft);
+      }
+    }
   }
 
-  if (!m_profile) {
-    return rawX;
-  }
-
-  const auto mapping = m_profile->getMappingForPlatformAndController(
-      platformId, controllerTypeId);
-  if (!mapping) {
-    return rawX;
-  }
-
-  const auto mappedLeft = mapping->getMappedInput(GamepadInput::RightStickLeft);
-  const auto mappedRight =
-      mapping->getMappedInput(GamepadInput::RightStickRight);
-
-  if (!mappedLeft && !mappedRight) {
-    return rawX;
-  }
-
-  const auto valLeft =
-      mappedLeft ? evaluateMapping(static_cast<GamepadInput>(*mappedLeft)) : 0;
-  const auto valRight =
-      mappedRight ? evaluateMapping(static_cast<GamepadInput>(*mappedRight))
-                  : 0;
-
-  return valRight - valLeft;
+  return applyAxisSettings(rawX, settings.rightStick);
 }
 
 int16_t SdlController::getRightStickYPosition(const int platformId,
                                               int controllerTypeId) {
-  auto rawY =
+  const auto settings =
+      m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
+                : AnalogSettings{};
+  const auto rawY =
       SDL_GameControllerGetAxis(m_SDLController, SDL_CONTROLLER_AXIS_RIGHTY);
-  if (rawY > -8192 && rawY < 8192) {
-    rawY = 0;
+
+  if (m_profile) {
+    const auto mapping = m_profile->getMappingForPlatformAndController(
+        platformId, controllerTypeId);
+    if (mapping) {
+      const auto &up = mapping->getBindings(GamepadInput::RightStickUp);
+      const auto &down = mapping->getBindings(GamepadInput::RightStickDown);
+      if (!up.empty() || !down.empty()) {
+        const auto valUp =
+            up.empty() ? 0
+                       : evaluateMapping(
+                             static_cast<GamepadInput>(up.front().source.code));
+        const auto valDown =
+            down.empty()
+                ? 0
+                : evaluateMapping(
+                      static_cast<GamepadInput>(down.front().source.code));
+        return static_cast<int16_t>(valDown - valUp);
+      }
+    }
   }
-  if (!m_profile) {
-    return rawY;
-  }
 
-  const auto mapping = m_profile->getMappingForPlatformAndController(
-      platformId, controllerTypeId);
-  if (!mapping) {
-    return rawY;
-  }
-
-  const auto mappedUp = mapping->getMappedInput(GamepadInput::RightStickUp);
-  const auto mappedDown = mapping->getMappedInput(GamepadInput::RightStickDown);
-
-  if (!mappedUp && !mappedDown) {
-    return rawY;
-  }
-
-  const auto valUp =
-      mappedUp ? evaluateMapping(static_cast<GamepadInput>(*mappedUp)) : 0;
-  const auto valDown =
-      mappedDown ? evaluateMapping(static_cast<GamepadInput>(*mappedDown)) : 0;
-
-  return valDown - valUp;
+  return applyAxisSettings(rawY, settings.rightStick);
 }
 
 int32_t SdlController::getInstanceId() const { return m_SDLJoystickInstanceId; }
@@ -321,9 +359,16 @@ GamepadType SdlController::getType() const {
   }
 }
 
+DeviceType SdlController::getDeviceType() const { return DeviceType::Gamepad; }
+
 DeviceIdentifier SdlController::getDeviceIdentifier() const {
-  return DeviceIdentifier{m_deviceName, m_vendorId, m_productId,
-                          m_productVersion};
+  return DeviceIdentifier{
+      .deviceName = m_deviceName,
+      .type = DeviceType::Gamepad,
+      .vendorId = m_vendorId,
+      .productId = m_productId,
+      .productVersion = m_productVersion,
+  };
 }
 bool SdlController::disconnect() {
   SDL_GameControllerClose(m_SDLController);
@@ -461,6 +506,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
     return 0;
   }
   case None:
+  case Home:
     break;
   }
   return 0;

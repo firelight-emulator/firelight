@@ -1,10 +1,13 @@
 #pragma once
 
-#include "input/gamepad_input.hpp"
+#include <firelight/input/gamepad_input.hpp>
 #include "input/platform_input_descriptor.hpp"
 
 #include <firelight/libretro/retropad.hpp>
 #include <map>
+#include <optional>
+#include <rcheevos/rc_consoles.h>
+#include <string>
 
 namespace firelight {
   const static std::map<int, std::map<std::string, std::string> >
@@ -270,6 +273,80 @@ namespace firelight {
     static constexpr int PLATFORM_ID_WONDERSWAN = 24;
     static constexpr int PLATFORM_ID_SG1000 = 25;
     static constexpr int PLATFORM_ID_NEOGEO_POCKET = 27;
+
+    // Legacy gap: Virtual Boy was already referenced as platform id 4.
+    static constexpr int PLATFORM_ID_VIRTUAL_BOY = 4;
+
+    // Platforms added for full RetroAchievements console coverage. These use a
+    // provisional, collision-free numbering scheme (1000 + rcheevos console id)
+    // so detection can map every RA-supported console to a real platform id.
+    // Numbers are provisional and may be renumbered later.
+    static constexpr int PLATFORM_ID_ATARI_LYNX = 1000 + RC_CONSOLE_ATARI_LYNX;
+    static constexpr int PLATFORM_ID_GAMECUBE = 1000 + RC_CONSOLE_GAMECUBE;
+    static constexpr int PLATFORM_ID_ATARI_JAGUAR = 1000 + RC_CONSOLE_ATARI_JAGUAR;
+    static constexpr int PLATFORM_ID_WII = 1000 + RC_CONSOLE_WII;
+    static constexpr int PLATFORM_ID_WII_U = 1000 + RC_CONSOLE_WII_U;
+    static constexpr int PLATFORM_ID_XBOX = 1000 + RC_CONSOLE_XBOX;
+    static constexpr int PLATFORM_ID_MAGNAVOX_ODYSSEY2 =
+        1000 + RC_CONSOLE_MAGNAVOX_ODYSSEY2;
+    static constexpr int PLATFORM_ID_ATARI_2600 = 1000 + RC_CONSOLE_ATARI_2600;
+    static constexpr int PLATFORM_ID_MS_DOS = 1000 + RC_CONSOLE_MS_DOS;
+    static constexpr int PLATFORM_ID_ARCADE = 1000 + RC_CONSOLE_ARCADE;
+    static constexpr int PLATFORM_ID_MSX = 1000 + RC_CONSOLE_MSX;
+    static constexpr int PLATFORM_ID_COMMODORE_64 = 1000 + RC_CONSOLE_COMMODORE_64;
+    static constexpr int PLATFORM_ID_ZX81 = 1000 + RC_CONSOLE_ZX81;
+    static constexpr int PLATFORM_ID_ORIC = 1000 + RC_CONSOLE_ORIC;
+    static constexpr int PLATFORM_ID_VIC20 = 1000 + RC_CONSOLE_VIC20;
+    static constexpr int PLATFORM_ID_AMIGA = 1000 + RC_CONSOLE_AMIGA;
+    static constexpr int PLATFORM_ID_ATARI_ST = 1000 + RC_CONSOLE_ATARI_ST;
+    static constexpr int PLATFORM_ID_AMSTRAD_PC = 1000 + RC_CONSOLE_AMSTRAD_PC;
+    static constexpr int PLATFORM_ID_APPLE_II = 1000 + RC_CONSOLE_APPLE_II;
+    static constexpr int PLATFORM_ID_DREAMCAST = 1000 + RC_CONSOLE_DREAMCAST;
+    static constexpr int PLATFORM_ID_CDI = 1000 + RC_CONSOLE_CDI;
+    static constexpr int PLATFORM_ID_3DO = 1000 + RC_CONSOLE_3DO;
+    static constexpr int PLATFORM_ID_COLECOVISION = 1000 + RC_CONSOLE_COLECOVISION;
+    static constexpr int PLATFORM_ID_INTELLIVISION = 1000 + RC_CONSOLE_INTELLIVISION;
+    static constexpr int PLATFORM_ID_VECTREX = 1000 + RC_CONSOLE_VECTREX;
+    static constexpr int PLATFORM_ID_PC8800 = 1000 + RC_CONSOLE_PC8800;
+    static constexpr int PLATFORM_ID_PC9800 = 1000 + RC_CONSOLE_PC9800;
+    static constexpr int PLATFORM_ID_PCFX = 1000 + RC_CONSOLE_PCFX;
+    static constexpr int PLATFORM_ID_ATARI_5200 = 1000 + RC_CONSOLE_ATARI_5200;
+    static constexpr int PLATFORM_ID_ATARI_7800 = 1000 + RC_CONSOLE_ATARI_7800;
+    static constexpr int PLATFORM_ID_X68K = 1000 + RC_CONSOLE_X68K;
+    static constexpr int PLATFORM_ID_CASSETTEVISION = 1000 + RC_CONSOLE_CASSETTEVISION;
+    static constexpr int PLATFORM_ID_SUPER_CASSETTEVISION =
+        1000 + RC_CONSOLE_SUPER_CASSETTEVISION;
+    static constexpr int PLATFORM_ID_NEOGEO_CD = 1000 + RC_CONSOLE_NEO_GEO_CD;
+    static constexpr int PLATFORM_ID_FAIRCHILD_CHANNEL_F =
+        1000 + RC_CONSOLE_FAIRCHILD_CHANNEL_F;
+    static constexpr int PLATFORM_ID_FM_TOWNS = 1000 + RC_CONSOLE_FM_TOWNS;
+    static constexpr int PLATFORM_ID_ZX_SPECTRUM = 1000 + RC_CONSOLE_ZX_SPECTRUM;
+    static constexpr int PLATFORM_ID_GAME_AND_WATCH = 1000 + RC_CONSOLE_GAME_AND_WATCH;
+    static constexpr int PLATFORM_ID_NOKIA_NGAGE = 1000 + RC_CONSOLE_NOKIA_NGAGE;
+    static constexpr int PLATFORM_ID_NINTENDO_3DS = 1000 + RC_CONSOLE_NINTENDO_3DS;
+    static constexpr int PLATFORM_ID_SUPERVISION = 1000 + RC_CONSOLE_SUPERVISION;
+    static constexpr int PLATFORM_ID_SHARPX1 = 1000 + RC_CONSOLE_SHARPX1;
+    static constexpr int PLATFORM_ID_TIC80 = 1000 + RC_CONSOLE_TIC80;
+    static constexpr int PLATFORM_ID_THOMSONTO8 = 1000 + RC_CONSOLE_THOMSONTO8;
+    static constexpr int PLATFORM_ID_PC6000 = 1000 + RC_CONSOLE_PC6000;
+    static constexpr int PLATFORM_ID_PICO = 1000 + RC_CONSOLE_PICO;
+    static constexpr int PLATFORM_ID_MEGADUCK = 1000 + RC_CONSOLE_MEGADUCK;
+    static constexpr int PLATFORM_ID_ZEEBO = 1000 + RC_CONSOLE_ZEEBO;
+    static constexpr int PLATFORM_ID_ARDUBOY = 1000 + RC_CONSOLE_ARDUBOY;
+    static constexpr int PLATFORM_ID_WASM4 = 1000 + RC_CONSOLE_WASM4;
+    static constexpr int PLATFORM_ID_ARCADIA_2001 = 1000 + RC_CONSOLE_ARCADIA_2001;
+    static constexpr int PLATFORM_ID_INTERTON_VC_4000 =
+        1000 + RC_CONSOLE_INTERTON_VC_4000;
+    static constexpr int PLATFORM_ID_ELEKTOR_TV_GAMES_COMPUTER =
+        1000 + RC_CONSOLE_ELEKTOR_TV_GAMES_COMPUTER;
+    static constexpr int PLATFORM_ID_PC_ENGINE_CD = 1000 + RC_CONSOLE_PC_ENGINE_CD;
+    static constexpr int PLATFORM_ID_ATARI_JAGUAR_CD =
+        1000 + RC_CONSOLE_ATARI_JAGUAR_CD;
+    static constexpr int PLATFORM_ID_NINTENDO_DSI = 1000 + RC_CONSOLE_NINTENDO_DSI;
+    static constexpr int PLATFORM_ID_TI83 = 1000 + RC_CONSOLE_TI83;
+    static constexpr int PLATFORM_ID_UZEBOX = 1000 + RC_CONSOLE_UZEBOX;
+    static constexpr int PLATFORM_ID_FAMICOM_DISK_SYSTEM =
+        1000 + RC_CONSOLE_FAMICOM_DISK_SYSTEM;
     static constexpr int PLATFORM_ID_SEGA_DREAMCAST = 27;
 
     static constexpr int OS_ID_UNKNOWN = -1;
@@ -343,6 +420,136 @@ namespace firelight {
           return "SG-1000";
         case PLATFORM_ID_NEOGEO_POCKET:
           return "NeoGeo Pocket";
+        case PLATFORM_ID_SEGA_SATURN:
+          return "Sega Saturn";
+        case PLATFORM_ID_SEGA_32X:
+          return "Sega 32X";
+        case PLATFORM_ID_SEGA_CD:
+          return "Sega CD/Mega CD";
+        case PLATFORM_ID_PS1:
+          return "PlayStation";
+        case PLATFORM_ID_PS2:
+          return "PlayStation 2";
+        case PLATFORM_ID_VIRTUAL_BOY:
+          return "Virtual Boy";
+        case PLATFORM_ID_ATARI_LYNX:
+          return "Atari Lynx";
+        case PLATFORM_ID_GAMECUBE:
+          return "Nintendo GameCube";
+        case PLATFORM_ID_ATARI_JAGUAR:
+          return "Atari Jaguar";
+        case PLATFORM_ID_WII:
+          return "Nintendo Wii";
+        case PLATFORM_ID_WII_U:
+          return "Nintendo Wii U";
+        case PLATFORM_ID_XBOX:
+          return "Xbox";
+        case PLATFORM_ID_MAGNAVOX_ODYSSEY2:
+          return "Magnavox Odyssey 2";
+        case PLATFORM_ID_ATARI_2600:
+          return "Atari 2600";
+        case PLATFORM_ID_MS_DOS:
+          return "MS-DOS";
+        case PLATFORM_ID_ARCADE:
+          return "Arcade";
+        case PLATFORM_ID_MSX:
+          return "MSX";
+        case PLATFORM_ID_COMMODORE_64:
+          return "Commodore 64";
+        case PLATFORM_ID_ZX81:
+          return "ZX81";
+        case PLATFORM_ID_ORIC:
+          return "Oric";
+        case PLATFORM_ID_VIC20:
+          return "Commodore VIC-20";
+        case PLATFORM_ID_AMIGA:
+          return "Amiga";
+        case PLATFORM_ID_ATARI_ST:
+          return "Atari ST";
+        case PLATFORM_ID_AMSTRAD_PC:
+          return "Amstrad CPC";
+        case PLATFORM_ID_APPLE_II:
+          return "Apple II";
+        case PLATFORM_ID_DREAMCAST:
+          return "Sega Dreamcast";
+        case PLATFORM_ID_CDI:
+          return "Philips CD-i";
+        case PLATFORM_ID_3DO:
+          return "3DO Interactive Multiplayer";
+        case PLATFORM_ID_COLECOVISION:
+          return "ColecoVision";
+        case PLATFORM_ID_INTELLIVISION:
+          return "Intellivision";
+        case PLATFORM_ID_VECTREX:
+          return "Vectrex";
+        case PLATFORM_ID_PC8800:
+          return "PC-8800";
+        case PLATFORM_ID_PC9800:
+          return "PC-9800";
+        case PLATFORM_ID_PCFX:
+          return "PC-FX";
+        case PLATFORM_ID_ATARI_5200:
+          return "Atari 5200";
+        case PLATFORM_ID_ATARI_7800:
+          return "Atari 7800";
+        case PLATFORM_ID_X68K:
+          return "Sharp X68000";
+        case PLATFORM_ID_CASSETTEVISION:
+          return "Cassette Vision";
+        case PLATFORM_ID_SUPER_CASSETTEVISION:
+          return "Super Cassette Vision";
+        case PLATFORM_ID_NEOGEO_CD:
+          return "Neo Geo CD";
+        case PLATFORM_ID_FAIRCHILD_CHANNEL_F:
+          return "Fairchild Channel F";
+        case PLATFORM_ID_FM_TOWNS:
+          return "FM Towns";
+        case PLATFORM_ID_ZX_SPECTRUM:
+          return "ZX Spectrum";
+        case PLATFORM_ID_GAME_AND_WATCH:
+          return "Game & Watch";
+        case PLATFORM_ID_NOKIA_NGAGE:
+          return "Nokia N-Gage";
+        case PLATFORM_ID_NINTENDO_3DS:
+          return "Nintendo 3DS";
+        case PLATFORM_ID_SUPERVISION:
+          return "Watara Supervision";
+        case PLATFORM_ID_SHARPX1:
+          return "Sharp X1";
+        case PLATFORM_ID_TIC80:
+          return "TIC-80";
+        case PLATFORM_ID_THOMSONTO8:
+          return "Thomson TO8";
+        case PLATFORM_ID_PC6000:
+          return "PC-6000";
+        case PLATFORM_ID_PICO:
+          return "Sega Pico";
+        case PLATFORM_ID_MEGADUCK:
+          return "Mega Duck";
+        case PLATFORM_ID_ZEEBO:
+          return "Zeebo";
+        case PLATFORM_ID_ARDUBOY:
+          return "Arduboy";
+        case PLATFORM_ID_WASM4:
+          return "WASM-4";
+        case PLATFORM_ID_ARCADIA_2001:
+          return "Arcadia 2001";
+        case PLATFORM_ID_INTERTON_VC_4000:
+          return "Interton VC 4000";
+        case PLATFORM_ID_ELEKTOR_TV_GAMES_COMPUTER:
+          return "Elektor TV Games Computer";
+        case PLATFORM_ID_PC_ENGINE_CD:
+          return "PC Engine CD/TurboGrafx-CD";
+        case PLATFORM_ID_ATARI_JAGUAR_CD:
+          return "Atari Jaguar CD";
+        case PLATFORM_ID_NINTENDO_DSI:
+          return "Nintendo DSi";
+        case PLATFORM_ID_TI83:
+          return "TI-83";
+        case PLATFORM_ID_UZEBOX:
+          return "Uzebox";
+        case PLATFORM_ID_FAMICOM_DISK_SYSTEM:
+          return "Famicom Disk System";
         default:
           return "Unknown";
       }
@@ -402,6 +609,96 @@ namespace firelight {
 
     static bool isPossibleRomFileExtension(const std::string &extension) {
       return getIdFromFileExtension(extension) != PLATFORM_ID_UNKNOWN;
+    }
+
+    // Disc-image extensions are ambiguous: the same extension is used by many
+    // different consoles, so the platform can only be determined by inspecting
+    // the disc contents (done via rcheevos AUTO detection in RomFile). These are
+    // intentionally kept separate from getIdFromFileExtension().
+    static bool isPossibleDiscExtension(const std::string &extension) {
+      return extension == "iso" || extension == "bin" || extension == "cue" ||
+             extension == "chd" || extension == "pbp" || extension == "cso" ||
+             extension == "m3u" || extension == "gdi" || extension == "ccd" ||
+             extension == "img" || extension == "mdf" || extension == "nrg";
+    }
+
+    // True for any file the scanner should attempt to identify -- either an
+    // unambiguous cartridge extension or an ambiguous disc extension.
+    static bool isPossibleRomOrDiscExtension(const std::string &extension) {
+      return isPossibleRomFileExtension(extension) ||
+             isPossibleDiscExtension(extension);
+    }
+
+    // A raw track/data file that is normally referenced by a separate cue/
+    // playlist sheet. When such a sheet sits next to it we classify the sheet
+    // (not the raw track) to avoid duplicate library entries. Note: iso/chd/pbp
+    // are self-contained and are NOT treated as raw tracks.
+    static bool isDiscTrackExtension(const std::string &extension) {
+      return extension == "bin" || extension == "img" || extension == "mdf" ||
+             extension == "nrg";
+    }
+
+    static bool isDiscSheetExtension(const std::string &extension) {
+      return extension == "cue" || extension == "gdi" || extension == "ccd" ||
+             extension == "m3u";
+    }
+
+    // Maps an rcheevos console id (as returned by AUTO disc detection) to a
+    // Firelight platform id. Consoles Firelight already modeled keep their
+    // legacy ids; every other RA-supported console gets its provisional id.
+    static int getIdFromRcConsoleId(const int rcConsoleId) {
+      switch (rcConsoleId) {
+        // Already modeled with legacy ids.
+        case RC_CONSOLE_GAMEBOY:
+          return PLATFORM_ID_GAMEBOY;
+        case RC_CONSOLE_GAMEBOY_COLOR:
+          return PLATFORM_ID_GAMEBOY_COLOR;
+        case RC_CONSOLE_GAMEBOY_ADVANCE:
+          return PLATFORM_ID_GAMEBOY_ADVANCE;
+        case RC_CONSOLE_VIRTUAL_BOY:
+          return PLATFORM_ID_VIRTUAL_BOY;
+        case RC_CONSOLE_NINTENDO:
+          return PLATFORM_ID_NES;
+        case RC_CONSOLE_SUPER_NINTENDO:
+          return PLATFORM_ID_SNES;
+        case RC_CONSOLE_NINTENDO_64:
+          return PLATFORM_ID_N64;
+        case RC_CONSOLE_NINTENDO_DS:
+          return PLATFORM_ID_NINTENDO_DS;
+        case RC_CONSOLE_MASTER_SYSTEM:
+          return PLATFORM_ID_SEGA_MASTER_SYSTEM;
+        case RC_CONSOLE_MEGA_DRIVE:
+          return PLATFORM_ID_SEGA_GENESIS;
+        case RC_CONSOLE_GAME_GEAR:
+          return PLATFORM_ID_SEGA_GAMEGEAR;
+        case RC_CONSOLE_SATURN:
+          return PLATFORM_ID_SEGA_SATURN;
+        case RC_CONSOLE_SEGA_32X:
+          return PLATFORM_ID_SEGA_32X;
+        case RC_CONSOLE_SEGA_CD:
+          return PLATFORM_ID_SEGA_CD;
+        case RC_CONSOLE_PLAYSTATION:
+          return PLATFORM_ID_PS1;
+        case RC_CONSOLE_PLAYSTATION_2:
+          return PLATFORM_ID_PS2;
+        case RC_CONSOLE_PSP:
+          return PLATFORM_ID_PLAYSTATION_PORTABLE;
+        case RC_CONSOLE_PC_ENGINE:
+          return PLATFORM_ID_TURBOGRAFX16;
+        case RC_CONSOLE_POKEMON_MINI:
+          return PLATFORM_ID_POKEMON_MINI;
+        case RC_CONSOLE_WONDERSWAN:
+          return PLATFORM_ID_WONDERSWAN;
+        case RC_CONSOLE_SG1000:
+          return PLATFORM_ID_SG1000;
+        case RC_CONSOLE_NEOGEO_POCKET:
+          return PLATFORM_ID_NEOGEO_POCKET;
+        case RC_CONSOLE_UNKNOWN:
+          return PLATFORM_ID_UNKNOWN;
+        // Every other RA-supported console gets its provisional id.
+        default:
+          return 1000 + rcConsoleId;
+      }
     }
 
     static std::string getDiscordLargeImageName(const int platformId) {

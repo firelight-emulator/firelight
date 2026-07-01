@@ -36,9 +36,6 @@ void TestGamepad::setProfile(const std::shared_ptr<GamepadProfile> &profile) {
   m_profile = profile;
 }
 
-std::vector<Shortcut> TestGamepad::getToggledShortcuts(GamepadInput input) {
-  return {};
-}
 int16_t TestGamepad::evaluateRawInput(const GamepadInput input) const {
   return 0;
 }
@@ -54,13 +51,17 @@ void TestGamepad::setPlayerIndex(int playerIndex) {
 int TestGamepad::getInstanceId() const { return m_instanceId; }
 
 bool TestGamepad::isWired() const { return true; }
-GamepadType TestGamepad::getType() const { return MICROSOFT_XBOX_ONE; }
+GamepadType TestGamepad::getType() const { return m_type; }
+void TestGamepad::setType(const GamepadType type) { m_type = type; }
+
+DeviceType TestGamepad::getDeviceType() const { return DeviceType::Gamepad; }
 
 bool TestGamepad::disconnect() { return true; }
 
 DeviceIdentifier TestGamepad::getDeviceIdentifier() const {
   return DeviceIdentifier{
       .deviceName = "TestGamepad",
+      .type = DeviceType::Gamepad,
       .vendorId = m_vendorId,
       .productId = m_productId,
       .productVersion = m_productVersion,
