@@ -2,6 +2,7 @@
 #include <firelight/input/shortcut_action.hpp>
 
 #include <map>
+#include <mutex>
 
 namespace firelight::input {
 class IGamepad;
@@ -27,6 +28,11 @@ private:
   [[nodiscard]] bool isSourceSatisfied(IGamepad *device,
                                        const InputSource &source) const;
 
+  // Guards all state below. onInput runs on the SDL event thread (controller)
+  // and the GUI thread (keyboard); setContext/forgetDevice come from other
+  // threads too. ShortcutEvents are collected under the lock and published
+  // after releasing it, so a subscriber can't re-enter and deadlock.
+  mutable std::mutex m_mutex;
   int m_context = ScopeInMenu; // no game is active until the UI says so
   std::map<IGamepad *, std::map<int, bool>> m_held;
   std::map<IGamepad *, std::map<ShortcutId, bool>> m_satisfied;

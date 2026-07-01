@@ -1,6 +1,8 @@
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 
+#include "fake_core.hpp"
+
 #include <firelight/db/sqlite_userdata_database.hpp>
 #include <emulation/emulation_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
@@ -38,7 +40,12 @@ protected:
         *new settings::SqliteSettingsRepository(":memory:"));
     settings::SettingsService::setInstance(m_settingsService.get());
     m_emulationService = std::make_unique<EmulationService>(
-        *m_service, *m_resolver, *m_settingsService);
+        *m_service, *m_resolver, *m_settingsService,
+        [](int, const std::string &,
+           std::shared_ptr<firelight::libretro::IConfigurationProvider>,
+           const std::string &) -> std::unique_ptr<::libretro::ICore> {
+          return std::make_unique<FakeCore>();
+        });
   }
 
   void TearDown() override {
@@ -71,6 +78,39 @@ TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
   EmulationService service(libraryService, resolver, *m_settingsService);
 
   ASSERT_EQ(nullptr, service.loadEntry(1).get());
+  ASSERT_TRUE(gameLoadFailedEventReceived);
+}
+
+/**
+ * @brief Test that an entry whose content file is missing fails gracefully
+ *
+ * The entry resolves from the library, but its on-disk content path does not
+ * exist. loadEntry must return a ready future holding nullptr (never an invalid
+ * future) and publish a GameLoadFailedEvent, without attempting to load a core.
+ */
+TEST_F(EmulationServiceTest, LoadWithMissingContentPathFails) {
+  bool gameLoadFailedEventReceived = false;
+  ScopedConnection loadFailedConnection =
+      EventDispatcher::instance().subscribe<GameLoadFailedEvent>(
+          [&gameLoadFailedEventReceived](const GameLoadFailedEvent &) {
+            gameLoadFailedEventReceived = true;
+          });
+
+  library::ContentFile info{.m_fileSizeBytes = 16777216,
+                            .m_filePath = "test_resources/does_not_exist.gba",
+                            .m_fileMd5 = "deadbeefdeadbeefdeadbeefdeadbeef",
+                            .m_inArchive = false,
+                            .m_platformId = 3,
+                            .m_contentHash =
+                                "deadbeefdeadbeefdeadbeefdeadbeef"};
+  m_library->create(info);
+  ASSERT_NE(info.m_id, -1);
+
+  auto entry =
+      m_library->getEntryWithContentHash("deadbeefdeadbeefdeadbeefdeadbeef");
+  ASSERT_TRUE(entry.has_value());
+
+  ASSERT_EQ(nullptr, m_emulationService->loadEntry(entry->id).get());
   ASSERT_TRUE(gameLoadFailedEventReceived);
 }
 

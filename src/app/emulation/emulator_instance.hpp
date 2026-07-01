@@ -3,8 +3,8 @@
 
 #include <audio/audio_manager.hpp>
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/libretro/icore.hpp>
 #include <future>
-#include <libretro/core.hpp>
 #include <manager_accessor.hpp>
 #include <memory>
 #include <firelight/saves/suspend_point.hpp>
@@ -14,7 +14,7 @@ namespace firelight::emulation {
 
 class EmulatorInstance : public ManagerAccessor, public ServiceAccessor {
 public:
-  EmulatorInstance(std::unique_ptr<::libretro::Core>, std::string contentPath,
+  EmulatorInstance(std::unique_ptr<::libretro::ICore>, std::string contentPath,
                    std::string contentHash, int platformId, int saveSlotNumber,
                    std::vector<uint8_t> gameData,
                    std::vector<uint8_t> saveData);
@@ -51,12 +51,10 @@ public:
   std::vector<uint8_t> serializeState();
   void deserializeState(const std::vector<uint8_t> &state);
 
-  ::libretro::Core *getCore();
-
 private:
   bool m_initialized = false;
 
-  std::unique_ptr<::libretro::Core> m_core;
+  std::unique_ptr<::libretro::ICore> m_core;
   std::shared_ptr<AudioManager> m_audioManager;
   std::vector<uint8_t> m_gameData;
   std::vector<uint8_t> m_saveData;

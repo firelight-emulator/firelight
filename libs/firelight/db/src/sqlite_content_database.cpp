@@ -352,7 +352,10 @@ namespace firelight::db {
                   name.toStdString());
     auto db = QSqlDatabase::addDatabase("QSQLITE", name);
     db.setDatabaseName(databaseFile);
-    db.open();
+    if (!db.open()) {
+      spdlog::error("Failed to open content database connection '{}'",
+                    name.toStdString());
+    }
     return db;
   }
 

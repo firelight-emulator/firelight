@@ -236,7 +236,12 @@ here). It:
   applies any per-game profile override *and* promotes a platform-preferred
   controller to player 1; `clearGameContext()` reverts on unload.
 - Is the core's `IRetropadProvider` — `getRetropadForPlayerIndex(port)` returns
-  the right `IGamepad` for a player slot.
+  a `shared_ptr<IRetroPad>` for a player slot (null if empty). Sharing ownership
+  keeps the device alive while the core uses it, even across an unplug on the
+  SDL thread. The device collections are guarded by a `std::shared_mutex`:
+  hot readers (this call, `getPlayerGamepad`, `listGamepads`) take a shared
+  lock and run concurrently; connect/disconnect/reorder take a unique lock and
+  publish their events *after* releasing it.
 
 ---
 

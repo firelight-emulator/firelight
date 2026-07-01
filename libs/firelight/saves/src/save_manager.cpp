@@ -100,6 +100,8 @@ std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
                QString::number(saveSlotNumber);
     if (!QDir(m_saveDirectory + "/" + contentHash)
              .mkpath("slot" + QString::number(saveSlotNumber))) {
+      spdlog::error("Failed to create save directory for {} slot {}",
+                    contentHash.toStdString(), saveSlotNumber);
       return false;
     }
 
@@ -108,19 +110,43 @@ std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
     const auto saveFile =
         std::filesystem::path((dir + "/savefile.srm").toStdString());
 
-    std::ofstream saveFileStream(tempSaveFile, std::ios::binary);
-    saveFileStream.write(bytes.data(), bytes.size());
-    saveFileStream.close();
+    // Write to a temp file first and verify the write fully succeeded before
+    // replacing the existing save, so a failed/partial write cannot corrupt a
+    // known-good save.
+    {
+      std::ofstream saveFileStream(tempSaveFile, std::ios::binary);
+      saveFileStream.write(bytes.data(), bytes.size());
+      saveFileStream.close();
+      if (saveFileStream.fail()) {
+        spdlog::error("Failed to write savefile for {} slot {}",
+                      contentHash.toStdString(), saveSlotNumber);
+        std::error_code ec;
+        std::filesystem::remove(tempSaveFile, ec);
+        return false;
+      }
+    }
 
-    std::filesystem::rename(tempSaveFile, saveFile);
+    std::error_code renameEc;
+    std::filesystem::rename(tempSaveFile, saveFile, renameEc);
+    if (renameEc) {
+      spdlog::error("Failed to replace savefile for {} slot {}: {}",
+                    contentHash.toStdString(), saveSlotNumber,
+                    renameEc.message());
+      std::error_code removeEc;
+      std::filesystem::remove(tempSaveFile, removeEc);
+      return false;
+    }
 
-    auto timestamp = 0;
-    metadata.lastModifiedAt = timestamp;
+    metadata.lastModifiedAt = QDateTime::currentSecsSinceEpoch();
 
-    if (exists) {
-      m_userdataDatabase.updateSavefileMetadata(metadata);
-    } else {
-      m_userdataDatabase.createSavefileMetadata(metadata);
+    const bool metadataOk =
+        exists ? m_userdataDatabase.updateSavefileMetadata(metadata)
+               : m_userdataDatabase.createSavefileMetadata(metadata);
+    if (!metadataOk) {
+      // The save data is safely on disk; only the metadata index failed.
+      spdlog::warn(
+          "Savefile written but metadata persistence failed for {} slot {}",
+          contentHash.toStdString(), saveSlotNumber);
     }
 
     return true;

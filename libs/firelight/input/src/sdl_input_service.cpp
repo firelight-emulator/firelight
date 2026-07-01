@@ -25,9 +25,16 @@ SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
   m_keyboardKeyConnection =
       EventDispatcher::instance().subscribe<KeyboardKeyEvent>(
           [this](const KeyboardKeyEvent &event) {
-            if (m_keyboard) {
-              m_shortcutEngine.onInput(m_keyboard->getPlayerIndex(),
-                                       m_keyboard.get(), event.key,
+            // Snapshot the keyboard under the device lock, then feed the engine
+            // without holding it (the engine takes its own lock).
+            std::shared_ptr<IGamepad> keyboard;
+            {
+              std::shared_lock lock(m_devicesMutex);
+              keyboard = m_keyboard;
+            }
+            if (keyboard) {
+              m_shortcutEngine.onInput(keyboard->getPlayerIndex(),
+                                       keyboard.get(), event.key,
                                        event.pressed);
             }
           });
@@ -124,10 +131,13 @@ void SDLInputService::assignPlayerSlot(
 }
 
 int SDLInputService::addGamepad(std::shared_ptr<IGamepad> gamepad) {
-  gamepad->setProfile(resolveProfileForGamepad(gamepad));
-  m_gamepads.emplace_back(gamepad);
-  assignPlayerSlot(gamepad);
-  publishConnected(gamepad);
+  {
+    std::unique_lock lock(m_devicesMutex);
+    gamepad->setProfile(resolveProfileForGamepad(gamepad));
+    m_gamepads.emplace_back(gamepad);
+    assignPlayerSlot(gamepad);
+  }
+  publishConnected(gamepad); // outside the lock: subscribers read slots
   return gamepad->getPlayerIndex();
 }
 
@@ -139,14 +149,16 @@ void SDLInputService::reapplyDeviceProfiles() {
   }
 }
 
-void SDLInputService::promoteDeviceToPlayerOne(
+bool SDLInputService::promoteDeviceToPlayerOne(
     const std::shared_ptr<IGamepad> &gamepad) {
+  // Precondition: m_devicesMutex is held by the caller.
   const int current = gamepad->getPlayerIndex();
   if (current == 0) {
-    return; // already player one
+    return false; // already player one
   }
 
-  const auto occupant = getPlayerGamepad(0);
+  const auto slotIt = m_playerSlots.find(0);
+  const auto occupant = slotIt != m_playerSlots.end() ? slotIt->second : nullptr;
   assignToSlot(0, gamepad);
 
   // Move whoever held player one into the promoted device's old slot.
@@ -166,61 +178,78 @@ void SDLInputService::promoteDeviceToPlayerOne(
     }
   }
 
-  EventDispatcher::instance().publish(GamepadOrderChangedEvent{});
+  return true; // caller publishes GamepadOrderChangedEvent outside the lock
 }
 
 void SDLInputService::applyGameContext(std::optional<std::string> contentHash,
                                        const int platformId) {
-  // 1. Per-game profile override.
-  m_gameProfileOverride =
-      contentHash.has_value()
-          ? m_gamepadRepository.getGameProfileOverride(*contentHash)
-          : std::nullopt;
-  reapplyDeviceProfiles();
+  bool orderChanged = false;
+  {
+    std::unique_lock lock(m_devicesMutex);
+    // 1. Per-game profile override.
+    m_gameProfileOverride =
+        contentHash.has_value()
+            ? m_gamepadRepository.getGameProfileOverride(*contentHash)
+            : std::nullopt;
+    reapplyDeviceProfiles();
 
-  // 2. Preferred controller type for this platform: if a connected controller
-  //    matches, promote it to player one.
-  if (platformId >= 0) {
-    const auto preferred =
-        m_gamepadRepository.getPlatformPreferredType(platformId);
-    if (preferred.has_value()) {
-      for (const auto &gamepad : m_gamepads) {
-        if (gamepad && static_cast<int>(gamepad->getType()) == *preferred) {
-          promoteDeviceToPlayerOne(gamepad);
-          break;
+    // 2. Preferred controller type for this platform: if a connected controller
+    //    matches, promote it to player one.
+    if (platformId >= 0) {
+      const auto preferred =
+          m_gamepadRepository.getPlatformPreferredType(platformId);
+      if (preferred.has_value()) {
+        for (const auto &gamepad : m_gamepads) {
+          if (gamepad && static_cast<int>(gamepad->getType()) == *preferred) {
+            orderChanged = promoteDeviceToPlayerOne(gamepad);
+            break;
+          }
         }
       }
     }
   }
+  if (orderChanged) {
+    EventDispatcher::instance().publish(GamepadOrderChangedEvent{});
+  }
 }
 
 void SDLInputService::clearGameContext() {
+  std::unique_lock lock(m_devicesMutex);
   m_gameProfileOverride = std::nullopt;
   reapplyDeviceProfiles();
 }
 
 bool SDLInputService::removeGamepadByInstanceId(int instanceId) {
-  for (auto it = m_gamepads.begin(); it != m_gamepads.end(); ++it) {
-    if (!*it || (*it)->getInstanceId() != instanceId) {
-      continue;
-    }
-    const auto gamepad = *it;
-    spdlog::info("Removing gamepad: {}", instanceId);
-    m_shortcutEngine.forgetDevice(gamepad.get());
-
-    for (int i = 0; i < MAX_PLAYERS; ++i) {
-      if (m_playerSlots.contains(i) && m_playerSlots[i] == gamepad) {
-        m_playerSlots.erase(i);
+  std::shared_ptr<IGamepad> removed;
+  int removedSlot = -1;
+  {
+    std::unique_lock lock(m_devicesMutex);
+    for (auto it = m_gamepads.begin(); it != m_gamepads.end(); ++it) {
+      if (!*it || (*it)->getInstanceId() != instanceId) {
+        continue;
       }
-    }
+      removed = *it;
+      removedSlot = removed->getPlayerIndex();
 
-    publishDisconnected(gamepad->getPlayerIndex());
-    gamepad->setPlayerIndex(-1);
-    gamepad->disconnect();
-    m_gamepads.erase(it);
-    return true;
+      for (int i = 0; i < MAX_PLAYERS; ++i) {
+        if (m_playerSlots.contains(i) && m_playerSlots[i] == removed) {
+          m_playerSlots.erase(i);
+        }
+      }
+
+      removed->setPlayerIndex(-1);
+      removed->disconnect();
+      m_gamepads.erase(it);
+      break;
+    }
   }
 
+  if (removed) {
+    spdlog::info("Removing gamepad: {}", instanceId);
+    // Both take their own locks; do them outside m_devicesMutex.
+    m_shortcutEngine.forgetDevice(removed.get());
+    publishDisconnected(removedSlot);
+  }
   return true;
 }
 
@@ -233,11 +262,9 @@ bool SDLInputService::removeGamepadByPlayerIndex(int playerIndex) {
 }
 
 std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
-  std::vector<std::shared_ptr<IGamepad>> connectedGamepads;
-  for (const auto &gamepad : m_gamepads) {
-    connectedGamepads.emplace_back(gamepad);
-  }
-
+  std::shared_lock lock(m_devicesMutex);
+  std::vector<std::shared_ptr<IGamepad>> connectedGamepads(m_gamepads.begin(),
+                                                           m_gamepads.end());
   if (m_keyboard) {
     connectedGamepads.emplace_back(m_keyboard);
   }
@@ -247,19 +274,27 @@ std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
 
 std::shared_ptr<IGamepad>
 SDLInputService::getPlayerGamepad(const int playerIndex) {
-  if (m_playerSlots.contains(playerIndex)) {
-    return m_playerSlots[playerIndex];
-  }
-
-  return {};
+  std::shared_lock lock(m_devicesMutex);
+  const auto it = m_playerSlots.find(playerIndex);
+  return it != m_playerSlots.end() ? it->second : nullptr;
 }
 
-std::optional<libretro::IRetroPad *>
+std::shared_ptr<IGamepad>
+SDLInputService::findGamepadByInstanceId(const int instanceId) {
+  std::shared_lock lock(m_devicesMutex);
+  for (const auto &gamepad : m_gamepads) {
+    if (gamepad && gamepad->getInstanceId() == instanceId) {
+      return gamepad;
+    }
+  }
+  return nullptr;
+}
+
+std::shared_ptr<libretro::IRetroPad>
 SDLInputService::getRetropadForPlayerIndex(const int t_player) {
-  const auto gamepad = getPlayerGamepad(t_player);
-  return gamepad
-             ? std::optional(static_cast<libretro::IRetroPad *>(gamepad.get()))
-             : std::nullopt;
+  // Upcast IGamepad -> IRetroPad, sharing ownership so the caller can hold the
+  // device across an unplug. Null if the slot is empty.
+  return getPlayerGamepad(t_player);
 }
 
 std::pair<int16_t, int16_t> SDLInputService::getPointerPosition() const {
@@ -289,13 +324,7 @@ void SDLInputService::run() {
         break;
       case SDL_CONTROLLERAXISMOTION: {
         const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<IGamepad> gamepad;
-        for (const auto &g : m_gamepads) {
-          if (g && g->getInstanceId() == joystickInstanceId) {
-            gamepad = g;
-            break;
-          }
-        }
+        const auto gamepad = findGamepadByInstanceId(joystickInstanceId);
 
         if (!gamepad) {
           break;
@@ -541,13 +570,7 @@ void SDLInputService::run() {
       }
       case SDL_CONTROLLERBUTTONUP: {
         const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<IGamepad> gamepad;
-        for (const auto &g : m_gamepads) {
-          if (g && g->getInstanceId() == joystickInstanceId) {
-            gamepad = g;
-            break;
-          }
-        }
+        const auto gamepad = findGamepadByInstanceId(joystickInstanceId);
 
         if (!gamepad) {
           break;
@@ -570,13 +593,7 @@ void SDLInputService::run() {
       }
       case SDL_CONTROLLERBUTTONDOWN: {
         const auto joystickInstanceId = ev.cbutton.which;
-        std::shared_ptr<IGamepad> gamepad;
-        for (const auto &g : m_gamepads) {
-          if (g && g->getInstanceId() == joystickInstanceId) {
-            gamepad = g;
-            break;
-          }
-        }
+        const auto gamepad = findGamepadByInstanceId(joystickInstanceId);
 
         if (!gamepad) {
           break;
@@ -632,27 +649,30 @@ void SDLInputService::stop() {
 
 void SDLInputService::changeGamepadOrder(
     const std::map<int, int> &oldToNewIndex) {
-  std::map<int, std::shared_ptr<IGamepad>> newPlayerSlots;
+  {
+    std::unique_lock lock(m_devicesMutex);
+    std::map<int, std::shared_ptr<IGamepad>> newPlayerSlots;
 
-  for (const auto &[oldIndex, newIndex] : oldToNewIndex) {
-    if (m_playerSlots.contains(oldIndex)) {
-      const auto gamepad = m_playerSlots[oldIndex];
-      m_playerSlots.erase(oldIndex);
-      newPlayerSlots[newIndex] = gamepad;
-      if (gamepad) {
-        gamepad->setPlayerIndex(newIndex);
-        spdlog::info("Changed player slot for {} to {}", gamepad->getName(),
-                     newIndex + 1);
+    for (const auto &[oldIndex, newIndex] : oldToNewIndex) {
+      if (m_playerSlots.contains(oldIndex)) {
+        const auto gamepad = m_playerSlots[oldIndex];
+        m_playerSlots.erase(oldIndex);
+        newPlayerSlots[newIndex] = gamepad;
+        if (gamepad) {
+          gamepad->setPlayerIndex(newIndex);
+          spdlog::info("Changed player slot for {} to {}", gamepad->getName(),
+                       newIndex + 1);
+        }
       }
     }
-  }
 
-  for (auto i = 0; i < MAX_PLAYERS; ++i) {
-    auto gamepad = newPlayerSlots.contains(i) ? newPlayerSlots[i] : nullptr;
-    if (gamepad) {
-      m_playerSlots[i] = gamepad;
-    } else {
-      m_playerSlots.erase(i);
+    for (auto i = 0; i < MAX_PLAYERS; ++i) {
+      auto gamepad = newPlayerSlots.contains(i) ? newPlayerSlots[i] : nullptr;
+      if (gamepad) {
+        m_playerSlots[i] = gamepad;
+      } else {
+        m_playerSlots.erase(i);
+      }
     }
   }
 
@@ -668,12 +688,17 @@ void SDLInputService::setPreferGamepadOverKeyboard(const bool prefer) {
 }
 
 void SDLInputService::setKeyboard(std::shared_ptr<IGamepad> keyboard) {
-  m_keyboard = std::move(keyboard);
-  // The keyboard uses the same profile-resolution and slot-assignment path as
-  // any other device (its DeviceType is Keyboard).
-  m_keyboard->setProfile(resolveProfileForGamepad(m_keyboard));
-  assignPlayerSlot(m_keyboard);
-  publishConnected(m_keyboard);
+  std::shared_ptr<IGamepad> assigned;
+  {
+    std::unique_lock lock(m_devicesMutex);
+    m_keyboard = std::move(keyboard);
+    // The keyboard uses the same profile-resolution and slot-assignment path as
+    // any other device (its DeviceType is Keyboard).
+    m_keyboard->setProfile(resolveProfileForGamepad(m_keyboard));
+    assignPlayerSlot(m_keyboard);
+    assigned = m_keyboard;
+  }
+  publishConnected(assigned);
 }
 
 void SDLInputService::openSdlGamepad(const int deviceIndex) {
@@ -687,11 +712,10 @@ void SDLInputService::openSdlGamepad(const int deviceIndex) {
   const auto joystick = SDL_GameControllerGetJoystick(gameController);
   auto joystickInstanceId = SDL_JoystickInstanceID(joystick);
 
-  for (const auto &gamepad : m_gamepads) {
-    if (gamepad && gamepad->getInstanceId() == joystickInstanceId) {
-      spdlog::debug("Gamepad already exists: {}", joystickInstanceId);
-      return;
-    }
+  // Dedup against already-open devices (addGamepad takes the lock itself).
+  if (findGamepadByInstanceId(joystickInstanceId)) {
+    spdlog::debug("Gamepad already exists: {}", joystickInstanceId);
+    return;
   }
 
   addGamepad(std::make_shared<SdlController>(gameController));

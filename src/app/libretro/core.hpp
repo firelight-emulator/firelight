@@ -2,6 +2,7 @@
 
 #include "firelight/libretro/audio_data_receiver.hpp"
 #include "firelight/libretro/configuration_provider.hpp"
+#include "firelight/libretro/icore.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
 #include "firelight/libretro/video_data_receiver.hpp"
 #include "game.hpp"
@@ -18,12 +19,7 @@ using std::string;
 using std::vector;
 
 namespace libretro {
-enum MemoryType {
-  SAVE_RAM = RETRO_MEMORY_SAVE_RAM,
-  RTC = RETRO_MEMORY_RTC,
-  SYSTEM_RAM = RETRO_MEMORY_SYSTEM_RAM,
-  VIDEO_RAM = RETRO_MEMORY_VIDEO_RAM
-};
+// MemoryType now lives in firelight/libretro/icore.hpp.
 
 typedef void (*RetroSetEnvironment)(bool (*)(unsigned cmd, void *data));
 
@@ -39,7 +35,7 @@ typedef void (*RetroInputPoll)(retro_input_poll_t);
 
 typedef void (*RetroRunFunc)();
 
-class Core {
+class Core : public ICore {
 public:
   std::basic_string<char> dumpJson();
 
@@ -50,12 +46,14 @@ public:
 
   virtual ~Core();
 
-  void setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver);
-
-  void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
+  void
+  setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) override;
 
   void
-  setPointerInputProvider(firelight::libretro::IPointerInputProvider *provider);
+  setRetropadProvider(firelight::libretro::IRetropadProvider *provider) override;
+
+  void setPointerInputProvider(
+      firelight::libretro::IPointerInputProvider *provider) override;
 
   [[nodiscard]] firelight::libretro::IPointerInputProvider *
   getPointerInputProvider() const;
@@ -63,43 +61,45 @@ public:
   [[nodiscard]] firelight::libretro::IRetropadProvider *
   getRetropadProvider() const;
 
-  void setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver);
+  void setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) override;
 
   bool handleEnvironmentCall(unsigned cmd, void *data);
 
-  void init();
+  void init() override;
 
   void deinit();
 
-  void reset();
+  void reset() override;
 
-  void run(double deltaTime);
+  void run(double deltaTime) override;
 
-  bool loadGame(Game *game);
+  bool loadGame(Game *game) override;
 
   void unloadGame();
 
-  std::vector<uint8_t> serializeState() const;
+  std::vector<uint8_t> serializeState() const override;
 
-  void deserializeState(const std::vector<uint8_t> &data) const;
+  void deserializeState(const std::vector<uint8_t> &data) const override;
 
   size_t getSerializeSize() const;
 
-  void setSystemDirectory(const string &);
+  void setSystemDirectory(const string &) override;
 
   void setSaveDirectory(const string &);
 
-  [[nodiscard]] std::vector<char> getMemoryData(MemoryType memType) const;
+  [[nodiscard]] std::vector<char>
+  getMemoryData(MemoryType memType) const override;
 
-  void writeMemoryData(MemoryType memType, const std::vector<char> &data);
+  void writeMemoryData(MemoryType memType,
+                       const std::vector<char> &data) override;
 
   firelight::libretro::IVideoDataReceiver *videoReceiver;
 
-  void *getMemoryData(unsigned id) const;
+  void *getMemoryData(unsigned id) const override;
 
-  size_t getMemorySize(unsigned id) const;
+  size_t getMemorySize(unsigned id) const override;
 
-  retro_memory_map *getMemoryMap();
+  retro_memory_map *getMemoryMap() override;
 
   std::function<void()> destroyContextFunction = nullptr;
 

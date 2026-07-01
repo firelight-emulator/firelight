@@ -558,7 +558,10 @@ QSqlDatabase SqliteControllerRepository::getDatabase() const {
                 name.toStdString());
   auto db = QSqlDatabase::addDatabase("QSQLITE", name);
   db.setDatabaseName(m_dbFilePath);
-  db.open();
+  if (!db.open()) {
+    spdlog::error("Failed to open controller database connection '{}'",
+                  name.toStdString());
+  }
   return db;
 }
 

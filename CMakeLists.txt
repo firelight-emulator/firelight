@@ -167,8 +167,6 @@ add_library(firelight_lib
         src/app/emulator_item.cpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp
-        src/later/video_encoder.cpp
-        src/later/video_decoder.cpp
         src/app/achievements/gui/AchievementSetItem.cpp
         src/app/mods/gui/ModInfoItem.cpp
         src/app/saves/gui/suspend_points_item.cpp
@@ -379,16 +377,12 @@ add_executable(fl_test
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
         tests/app/platforms/platform_service_test.cpp
-        tests/app/input/input_service_impl_test.cpp
-        tests/app/input/input_model_test.cpp
-        tests/app/input/controller_repository_test.cpp
-        tests/app/input/shortcut_test.cpp
-        tests/app/input/test_gamepad.cpp
-        tests/app/input/test_gamepad.hpp
         tests/app/emulation/emulation_service_test.cpp
         tests/app/emulation/emulator_instance_test.cpp
+        tests/app/emulation/emulator_instance_e2e_test.cpp
         tests/app/achievements/sqlite_achievement_repository_test.cpp
         tests/app/achievements/achievement_service_test.cpp
+        tests/app/activity/sqlite_activity_log_test.cpp
 )
 
 file(GLOB QML_TEST_FILES
@@ -433,7 +427,7 @@ add_test(NAME QMLTests COMMAND fl_qml_test)
 
 add_dependencies(fl_test copy_resources)
 
-target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src)
+target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/activity/src libs/firelight/activity/include)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
 #ctest_coverage_collect_gcov()

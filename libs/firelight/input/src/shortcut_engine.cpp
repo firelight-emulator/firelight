@@ -7,12 +7,21 @@
 
 #include "firelight/event_dispatcher.hpp"
 
+#include <vector>
+
 namespace firelight::input {
 
-void ShortcutEngine::setContext(const int scope) { m_context = scope; }
-int ShortcutEngine::context() const { return m_context; }
+void ShortcutEngine::setContext(const int scope) {
+  std::lock_guard lock(m_mutex);
+  m_context = scope;
+}
+int ShortcutEngine::context() const {
+  std::lock_guard lock(m_mutex);
+  return m_context;
+}
 
 void ShortcutEngine::forgetDevice(IGamepad *device) {
+  std::lock_guard lock(m_mutex);
   m_held.erase(device);
   m_satisfied.erase(device);
   m_holdActive.erase(device);
@@ -50,80 +59,91 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
   if (!device) {
     return;
   }
-  m_held[device][code] = pressed;
 
-  const auto profile = device->getProfile();
-  if (!profile) {
-    return;
-  }
-  const auto shortcuts = profile->getShortcutMapping();
-  if (!shortcuts) {
-    return;
-  }
+  // Detect edges under the lock, buffering events, then publish them after
+  // releasing so a subscriber can't re-enter the engine and deadlock.
+  std::vector<ShortcutEvent> events;
+  {
+    std::lock_guard lock(m_mutex);
+    m_held[device][code] = pressed;
 
-  auto &registry = ShortcutRegistry::instance();
-  auto &dispatcher = EventDispatcher::instance();
-
-  for (const auto &[id, sources] : shortcuts->getAll()) {
-    const auto *action = registry.getAction(id);
-    if (!action) {
-      continue;
+    const auto profile = device->getProfile();
+    if (!profile) {
+      return;
+    }
+    const auto shortcuts = profile->getShortcutMapping();
+    if (!shortcuts) {
+      return;
     }
 
-    bool satisfied = false;
-    for (const auto &source : sources) {
-      if (isSourceSatisfied(device, source)) {
-        satisfied = true;
+    auto &registry = ShortcutRegistry::instance();
+
+    for (const auto &[id, sources] : shortcuts->getAll()) {
+      const auto *action = registry.getAction(id);
+      if (!action) {
+        continue;
+      }
+
+      bool satisfied = false;
+      for (const auto &source : sources) {
+        if (isSourceSatisfied(device, source)) {
+          satisfied = true;
+          break;
+        }
+      }
+
+      bool &previous = m_satisfied[device][id];
+      if (satisfied == previous) {
+        continue; // no edge for this shortcut
+      }
+      const bool rising = satisfied && !previous;
+      previous = satisfied;
+
+      const bool inScope = (action->scope & m_context) != 0;
+
+      switch (action->activation) {
+      case ActivationType::Press:
+        if (rising && inScope) {
+          events.push_back(ShortcutEvent{.playerIndex = playerIndex,
+                                         .id = id,
+                                         .phase = ShortcutPhase::Started});
+        }
         break;
-      }
-    }
 
-    bool &previous = m_satisfied[device][id];
-    if (satisfied == previous) {
-      continue; // no edge for this shortcut
-    }
-    const bool rising = satisfied && !previous;
-    previous = satisfied;
-
-    const bool inScope = (action->scope & m_context) != 0;
-
-    switch (action->activation) {
-    case ActivationType::Press:
-      if (rising && inScope) {
-        dispatcher.publish(ShortcutEvent{.playerIndex = playerIndex,
+      case ActivationType::Hold: {
+        bool &active = m_holdActive[device][id];
+        if (rising && inScope) {
+          active = true;
+          events.push_back(ShortcutEvent{.playerIndex = playerIndex,
                                          .id = id,
                                          .phase = ShortcutPhase::Started});
-      }
-      break;
-
-    case ActivationType::Hold: {
-      bool &active = m_holdActive[device][id];
-      if (rising && inScope) {
-        active = true;
-        dispatcher.publish(ShortcutEvent{.playerIndex = playerIndex,
-                                         .id = id,
-                                         .phase = ShortcutPhase::Started});
-      } else if (!satisfied && active) {
-        // Release a hold that we started, even if we've since left its scope.
-        active = false;
-        dispatcher.publish(ShortcutEvent{.playerIndex = playerIndex,
+        } else if (!satisfied && active) {
+          // Release a hold that we started, even if we've left its scope.
+          active = false;
+          events.push_back(ShortcutEvent{.playerIndex = playerIndex,
                                          .id = id,
                                          .phase = ShortcutPhase::Ended});
+        }
+        break;
       }
-      break;
-    }
 
-    case ActivationType::Toggle:
-      if (rising && inScope) {
-        bool &latch = m_toggleLatch[device][id];
-        latch = !latch;
-        dispatcher.publish(ShortcutEvent{.playerIndex = playerIndex,
+      case ActivationType::Toggle:
+        if (rising && inScope) {
+          bool &latch = m_toggleLatch[device][id];
+          latch = !latch;
+          events.push_back(ShortcutEvent{.playerIndex = playerIndex,
                                          .id = id,
                                          .phase = ShortcutPhase::Started,
                                          .toggledState = latch});
+        }
+        break;
       }
-      break;
     }
+  }
+
+  auto &dispatcher = EventDispatcher::instance();
+  for (const auto &event : events) {
+    dispatcher.publish(event);
   }
 }
 

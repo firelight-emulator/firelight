@@ -14,18 +14,18 @@ void AudioManager::initializeResampler(int64_t in_channel_layout,
                                        AVSampleFormat out_sample_fmt) {
   m_swrContext = swr_alloc();
 
-  av_channel_layout_default(m_channelLayout, 2);
+  av_channel_layout_default(&m_channelLayout, 2);
   char thing[256];
 
-  av_channel_layout_describe(m_channelLayout, thing, sizeof(thing));
+  av_channel_layout_describe(&m_channelLayout, thing, sizeof(thing));
 
   // Set options for input and output
   // av_opt_set_int(m_swrContext, "in_channel_layout", in_channel_layout, 0);
-  av_opt_set_chlayout(m_swrContext, "ichl", m_channelLayout, 0);
+  av_opt_set_chlayout(m_swrContext, "ichl", &m_channelLayout, 0);
   av_opt_set_int(m_swrContext, "in_sample_rate", in_sample_rate, 0);
   av_opt_set_sample_fmt(m_swrContext, "in_sample_fmt", in_sample_fmt, 0);
 
-  av_opt_set_chlayout(m_swrContext, "ochl", m_channelLayout, 0);
+  av_opt_set_chlayout(m_swrContext, "ochl", &m_channelLayout, 0);
   av_opt_set_int(m_swrContext, "out_sample_rate", out_sample_rate, 0);
   av_opt_set_sample_fmt(m_swrContext, "out_sample_fmt", out_sample_fmt, 0);
 
@@ -255,7 +255,7 @@ void AudioManager::initialize(const double new_freq) {
   format.setSampleFormat(QAudioFormat::Int16);
   format.setSampleRate(m_sampleRate);
 
-  m_audioSink = new QAudioSink(format);
+  m_audioSink = std::make_unique<QAudioSink>(format);
 
   auto mult = 2;
   if (m_sampleRate > 44000) {
@@ -285,8 +285,7 @@ void AudioManager::reinitializeAudioDevice() {
   }
   if (m_audioSink) {
     m_audioSink->stop();
-    delete m_audioSink;
-    m_audioSink = nullptr;
+    m_audioSink.reset();
   }
 
   // Recreate with same format
@@ -295,7 +294,7 @@ void AudioManager::reinitializeAudioDevice() {
   format.setSampleFormat(QAudioFormat::Int16);
   format.setSampleRate(m_sampleRate);
 
-  m_audioSink = new QAudioSink(format);
+  m_audioSink = std::make_unique<QAudioSink>(format);
 
   auto mult = 2;
   if (m_sampleRate > 44000) {
@@ -313,9 +312,10 @@ AudioManager::~AudioManager() {
   }
   if (m_audioSink) {
     m_audioSink->stop();
-    delete m_audioSink;
+    m_audioSink.reset();
   }
   if (m_swrContext) {
-    av_free(m_swrContext);
+    swr_free(&m_swrContext);
   }
+  av_channel_layout_uninit(&m_channelLayout);
 }

@@ -165,6 +165,36 @@ namespace firelight::library {
                     createRomFileUniqueIndex.lastError().text().toStdString());
     }
 
+    // folder_entries is looked up by entry_id (per-entry, in loops). The
+    // UNIQUE(folder_id, entry_id) index can't serve entry_id-only lookups, so
+    // add a dedicated index to avoid table scans.
+    QSqlQuery createFolderEntryIdIndex(getDatabase());
+    createFolderEntryIdIndex.prepare(
+      "CREATE INDEX IF NOT EXISTS folderEntryEntryIdx ON "
+      "folder_entries(entry_id);");
+
+    if (!createFolderEntryIdIndex.exec()) {
+      spdlog::error("Query failed: {}",
+                    createFolderEntryIdIndex.lastError().text().toStdString());
+    }
+
+    // content_hash is the primary lookup key for entries, run configurations and
+    // content files (loadEntry + library scanning), so index each.
+    for (const auto &indexStmt :
+         {"CREATE INDEX IF NOT EXISTS entriesContentHashIdx ON "
+          "entriesv1(content_hash);",
+          "CREATE INDEX IF NOT EXISTS runConfigContentHashIdx ON "
+          "run_configurations(content_hash);",
+          "CREATE INDEX IF NOT EXISTS contentFileContentHashIdx ON "
+          "content_files(content_hash);"}) {
+      QSqlQuery createIndex(getDatabase());
+      createIndex.prepare(indexStmt);
+      if (!createIndex.exec()) {
+        spdlog::error("Index creation failed: {}",
+                      createIndex.lastError().text().toStdString());
+      }
+    }
+
     // The default content directory is guaranteed by UserLibraryService, not
     // seeded here. The scan-time orchestration (content file -> run
     // configuration -> entry) lives in LibraryIngestService, which subscribes to
@@ -1098,7 +1128,10 @@ namespace firelight::library {
                   name.toStdString());
     auto db = QSqlDatabase::addDatabase("QSQLITE", name);
     db.setDatabaseName(m_databasePath);
-    db.open();
+    if (!db.open()) {
+      spdlog::error("Failed to open library database connection '{}'",
+                    name.toStdString());
+    }
     return db;
   }
 } // namespace firelight::library

@@ -1,6 +1,6 @@
 #include "ra_client.hpp"
 
-#include <libretro/core.hpp>
+#include <firelight/libretro/icore.hpp>
 #include "cpr/cpr.h"
 #include "rcheevos/rc_consoles.h"
 #include <QThreadPool>
@@ -13,8 +13,14 @@
 
 #include "ra_constants.h"
 
+// Previously pulled in transitively from core.hpp; declared here now that this
+// file includes the lean icore.hpp instead.
+using std::array;
+using std::string;
+using std::vector;
+
 namespace firelight::achievements {
-static ::libretro::Core *theCore;
+static ::libretro::ICore *theCore;
 
 static void eventHandler(const rc_client_event_t *event, rc_client_t *client) {
   auto raClient = static_cast<RAClient *>(rc_client_get_userdata(client));
@@ -351,7 +357,7 @@ void RAClient::unloadGame() {
   emit gameUnloaded();
 }
 
-void RAClient::doFrame(::libretro::Core *core) {
+void RAClient::doFrame(::libretro::ICore *core) {
   if (!m_loggedIn) {
     return;
   }

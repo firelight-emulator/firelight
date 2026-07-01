@@ -3,7 +3,10 @@
 #include <firelight/platforms/platform.hpp>
 
 #include <firelight/library/entry.hpp>
+#include <firelight/libretro/configuration_provider.hpp>
+#include <functional>
 #include <manager_accessor.hpp>
+#include <memory>
 #include <string>
 
 namespace firelight::library {
@@ -12,6 +15,14 @@ class EntryResolver;
 } // namespace firelight::library
 
 namespace firelight::emulation {
+
+// Builds the ICore for a loaded entry. Injectable so tests can supply a fake
+// core instead of dlopen'ing a real libretro DLL. A null factory uses the
+// default (real Core).
+using CoreFactory = std::function<std::unique_ptr<::libretro::ICore>(
+    int platformId, const std::string &corePath,
+    std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider,
+    const std::string &systemDirectory)>;
 
 struct GameLoadStarted {};
 struct GameLoadedEvent {};
@@ -37,7 +48,8 @@ public:
 
   EmulationService(library::UserLibraryService &library,
                    library::EntryResolver &entryResolver,
-                   settings::SettingsService &settingsService);
+                   settings::SettingsService &settingsService,
+                   CoreFactory coreFactory = nullptr);
   ~EmulationService();
 
   std::future<EmulatorInstance *> loadEntry(int entryId);
@@ -57,6 +69,7 @@ private:
   settings::SettingsService &m_settingsService;
   library::UserLibraryService &m_library;
   library::EntryResolver &m_resolver;
+  CoreFactory m_coreFactory;
 
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;
 

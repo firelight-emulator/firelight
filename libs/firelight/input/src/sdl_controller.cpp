@@ -1,6 +1,6 @@
 #include <firelight/input/sdl_controller.hpp>
 
-#include <bits/stl_algo.h>
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 

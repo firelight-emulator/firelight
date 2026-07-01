@@ -7,7 +7,10 @@
 #include <firelight/input/shortcut_engine.hpp>
 #include <SDL.h>
 #include <SDL_gamecontroller.h>
+#include <atomic>
 #include <functional>
+#include <mutex>
+#include <shared_mutex>
 
 namespace firelight::input {
 
@@ -39,7 +42,7 @@ public:
   std::vector<std::shared_ptr<IGamepad>> listGamepads() override;
   std::shared_ptr<IGamepad> getPlayerGamepad(int playerIndex) override;
 
-  std::optional<libretro::IRetroPad *>
+  std::shared_ptr<libretro::IRetroPad>
   getRetropadForPlayerIndex(int t_player) override;
 
   [[nodiscard]] std::pair<int16_t, int16_t> getPointerPosition() const override;
@@ -67,6 +70,8 @@ private:
   static constexpr int MAX_PLAYERS = 16;
 
   void openSdlGamepad(int deviceIndex);
+  // Locks m_devicesMutex internally; safe to call without holding it.
+  std::shared_ptr<IGamepad> findGamepadByInstanceId(int instanceId);
   int getNextAvailablePlayerIndex() const;
   bool moveGamepadToPlayerIndex(int oldIndex, int newIndex);
   // Resolves the profile a gamepad should use: the active per-game override if
@@ -82,9 +87,20 @@ private:
   // Re-resolves every connected gamepad's profile (used when the game context
   // changes). Moves a device into player one, displacing the current occupant.
   void reapplyDeviceProfiles();
-  void promoteDeviceToPlayerOne(const std::shared_ptr<IGamepad> &gamepad);
+  // Returns true if the slot order actually changed (caller publishes the event
+  // after releasing the lock).
+  bool promoteDeviceToPlayerOne(const std::shared_ptr<IGamepad> &gamepad);
 
   IControllerRepository &m_gamepadRepository;
+
+  // Guards the device collections below. run() mutates them from the SDL event
+  // thread while the render/UI threads read them; every access goes through
+  // this. It is a read-write lock: the hot readers (getPlayerGamepad /
+  // getRetropadForPlayerIndex every frame, listGamepads) take a shared lock and
+  // run concurrently; mutators take a unique lock. Connect/disconnect/order
+  // events are published *outside* the lock because subscribers (e.g.
+  // ControllerListModel) call back in to read slots.
+  std::shared_mutex m_devicesMutex;
   std::optional<int> m_gameProfileOverride;
   std::vector<std::shared_ptr<IGamepad>> m_gamepads;
   std::map<int, std::shared_ptr<IGamepad>> m_playerSlots;
@@ -97,7 +113,7 @@ private:
   std::map<int, std::map<GamepadInput, bool>> m_gamepadLastStates;
 
   int m_sdlServices = SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC;
-  bool m_running = true;
+  std::atomic<bool> m_running{true};
 
   bool m_preferGamepadOverKeyboard = true;
 

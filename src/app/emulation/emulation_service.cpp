@@ -19,9 +19,22 @@ firelight::emulation::EmulationService
 namespace firelight::emulation {
   EmulationService::EmulationService(library::UserLibraryService &library,
                                      library::EntryResolver &entryResolver,
-                                     settings::SettingsService &settingsService)
+                                     settings::SettingsService &settingsService,
+                                     CoreFactory coreFactory)
     : m_settingsService(settingsService), m_library(library),
-      m_resolver(entryResolver) {
+      m_resolver(entryResolver), m_coreFactory(std::move(coreFactory)) {
+    // Default factory builds the real dlopen'd Core; tests inject a fake.
+    if (!m_coreFactory) {
+      m_coreFactory =
+          [](int platformId, const std::string &corePath,
+             std::shared_ptr<firelight::libretro::IConfigurationProvider>
+                 configProvider,
+             const std::string &systemDirectory)
+          -> std::unique_ptr<::libretro::ICore> {
+        return std::make_unique<::libretro::Core>(
+            platformId, corePath, configProvider, systemDirectory);
+      };
+    }
   }
 
   EmulationService::~EmulationService() {
@@ -29,6 +42,16 @@ namespace firelight::emulation {
   }
 
   std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
+    // Every failure path returns a *ready* future holding nullptr (never a
+    // default-constructed, invalid future that would be UB to .get()) and
+    // announces the failure so the UI can react.
+    const auto failed = [] {
+      std::promise<EmulatorInstance *> promise;
+      promise.set_value(nullptr);
+      EventDispatcher::instance().publish(GameLoadFailedEvent{});
+      return promise.get_future();
+    };
+
     if (m_emulatorInstance) {
       stopEmulation();
     }
@@ -39,11 +62,7 @@ namespace firelight::emulation {
 
     if (!entry.has_value()) {
       spdlog::warn("[EmulationService] Entry with id {} does not exist", entryId);
-      EventDispatcher::instance().publish(GameLoadFailedEvent{});
-
-      std::promise<EmulatorInstance *> promise;
-      promise.set_value(nullptr);
-      return promise.get_future();
+      return failed();
     }
 
     // Pick the most correct content (ROM/disc + optional patch) for this entry.
@@ -51,7 +70,7 @@ namespace firelight::emulation {
     if (!resolved.valid) {
       spdlog::warn("[EmulationService] No usable content for entry with id {}",
                    entryId);
-      return {};
+      return failed();
     }
 
     const auto &contentFile = resolved.contentFile;
@@ -61,7 +80,7 @@ namespace firelight::emulation {
     if (!std::filesystem::exists(contentPath)) {
       spdlog::error("[EmulationService] Content path doesn't exist: {}",
                     contentPath);
-      return {};
+      return failed();
     }
 
     library::ContentLoader contentLoader;
@@ -69,27 +88,31 @@ namespace firelight::emulation {
     if (!loaded.valid) {
       spdlog::error("[EmulationService] Failed to load content for entry {}",
                     entryId);
-      return {};
+      return failed();
     }
 
     if (resolved.patch.has_value()) {
       auto patch = *resolved.patch;
-      if (patch.load()) {
-        contentLoader.applyPatch(loaded, contentFile.m_platformId, patch);
-      } else {
+      if (!patch.load()) {
+        // The entry resolved to a patched version; running it unpatched would be
+        // wrong (and could corrupt saves), so treat this as a load failure.
         spdlog::error("[EmulationService] Failed to load patch {} for entry {}",
                       patch.m_filePath, entryId);
+        return failed();
       }
+      contentLoader.applyPatch(loaded, contentFile.m_platformId, patch);
     }
 
     std::string corePath = PlatformMetadata::getCoreDllPath(entry->platformId);
 
     QByteArray saveDataBytes;
-    const auto saveData = getSaveManager()->readSaveData(
-        QString::fromStdString(loaded.contentHash), entry->activeSaveSlot);
-    if (saveData.has_value()) {
-      saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                 saveData->getSaveRamData().size());
+    if (const auto saveManager = getSaveManager()) {
+      const auto saveData = saveManager->readSaveData(
+          QString::fromStdString(loaded.contentHash), entry->activeSaveSlot);
+      if (saveData.has_value()) {
+        saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
+                                   saveData->getSaveRamData().size());
+      }
     }
 
     m_currentEntry = entry.value();
@@ -104,20 +127,31 @@ namespace firelight::emulation {
       m_currentEntry.contentHash.toStdString(), m_currentPlatform,
       m_settingsService);
 
-    auto m_core = std::make_unique<::libretro::Core>(m_currentEntry.platformId,
-                                                     corePath, coreConfig,
-                                                     getCoreSystemDirectory());
+    std::unique_ptr<::libretro::ICore> core;
+    try {
+      core = m_coreFactory(m_currentEntry.platformId, corePath, coreConfig,
+                           getCoreSystemDirectory());
+    } catch (const std::exception &e) {
+      spdlog::error("[EmulationService] Failed to load core for entry {}: {}",
+                    entryId, e.what());
+      return failed();
+    }
+    if (!core) {
+      spdlog::error("[EmulationService] Core factory returned null for entry {}",
+                    entryId);
+      return failed();
+    }
 
     m_emulatorInstance = std::make_unique<EmulatorInstance>(
-      std::move(m_core), contentFile.m_filePath, m_currentContentHash,
+      std::move(core), contentFile.m_filePath, m_currentContentHash,
       entry->platformId, entry->activeSaveSlot, std::move(loaded.contentBytes),
       std::vector<uint8_t>(saveDataBytes.begin(), saveDataBytes.end()));
 
     EventDispatcher::instance().publish(GameLoadedEvent{});
 
-    return std::async(std::launch::async, [this]() -> EmulatorInstance *{
-      return m_emulatorInstance.get();
-    });
+    std::promise<EmulatorInstance *> promise;
+    promise.set_value(m_emulatorInstance.get());
+    return promise.get_future();
   }
 
   void EmulationService::stopEmulation() {

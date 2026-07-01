@@ -17,7 +17,7 @@
 #include "regular_http_client.hpp"
 
 namespace libretro {
-    class Core;
+    class ICore;
 }
 
 namespace firelight::achievements {
@@ -60,7 +60,7 @@ namespace firelight::achievements {
 
         bool loggedIn() const { return m_loggedIn; }
 
-        void doFrame(::libretro::Core *core);
+        void doFrame(::libretro::ICore *core);
 
         std::vector<uint8_t> serializeState();
 

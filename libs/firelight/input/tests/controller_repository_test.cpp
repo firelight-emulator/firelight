@@ -162,4 +162,54 @@ TEST_F(ControllerRepositoryTest, GameProfileOverrideRoundTrip) {
   EXPECT_FALSE(m_repo.getGameProfileOverride("abc123").has_value());
 }
 
+TEST_F(ControllerRepositoryTest, RenameProfilePersists) {
+  const auto profile = m_repo.createProfile("Old Name");
+  ASSERT_TRUE(profile);
+
+  EXPECT_TRUE(m_repo.renameProfile(profile->getId(), "New Name"));
+  EXPECT_EQ(profile->getName(), "New Name");
+
+  bool found = false;
+  for (const auto &p : m_repo.listProfiles()) {
+    if (p->getId() == profile->getId()) {
+      found = true;
+      EXPECT_EQ(p->getName(), "New Name");
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
+TEST_F(ControllerRepositoryTest, GetProfileReturnsCachedInstance) {
+  const auto created = m_repo.createProfile("Cached");
+  ASSERT_TRUE(created);
+  // The same shared_ptr should come back from the in-memory cache.
+  EXPECT_EQ(m_repo.getProfile(created->getId()), created);
+}
+
+TEST_F(ControllerRepositoryTest, CloneCopiesPerPlatformBindings) {
+  const auto platforms =
+      platforms::PlatformService::getInstance().listPlatforms();
+  ASSERT_FALSE(platforms.empty());
+  ASSERT_FALSE(platforms.front().controllerTypes.empty());
+  const auto platformId = platforms.front().id;
+  const auto controllerType = platforms.front().controllerTypes.front().id;
+
+  const auto src = m_repo.createProfile("BindingSrc");
+  ASSERT_TRUE(src);
+  auto mapping =
+      src->getMappingForPlatformAndController(platformId, controllerType);
+  ASSERT_TRUE(mapping);
+  mapping->addMapping(GamepadInput::SouthFace, GamepadInput::EastFace);
+  mapping->sync();
+
+  const auto clone = m_repo.cloneProfile(src->getId(), "BindingClone");
+  ASSERT_TRUE(clone);
+  auto clonedMapping =
+      clone->getMappingForPlatformAndController(platformId, controllerType);
+  ASSERT_TRUE(clonedMapping);
+  const auto mapped = clonedMapping->getMappedInput(GamepadInput::SouthFace);
+  ASSERT_TRUE(mapped.has_value());
+  EXPECT_EQ(mapped.value(), GamepadInput::EastFace);
+}
+
 } // namespace firelight::input

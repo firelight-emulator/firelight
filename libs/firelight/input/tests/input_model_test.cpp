@@ -170,4 +170,69 @@ TEST(InputModelTest, InputMappingToleratesLegacyData) {
   EXPECT_TRUE(mapping.getAllBindings().empty());
 }
 
+TEST(InputModelTest, InputMappingRemoveAndClear) {
+  InputMapping mapping(1, 1, 1, 1);
+  Binding a;
+  a.source.code = GamepadInput::SouthFace;
+  Binding b;
+  b.source.code = GamepadInput::EastFace;
+  mapping.setBindings(GamepadInput::DpadUp, {a, b});
+  ASSERT_EQ(mapping.getBindings(GamepadInput::DpadUp).size(), 2u);
+
+  mapping.removeBinding(GamepadInput::DpadUp, 0);
+  ASSERT_EQ(mapping.getBindings(GamepadInput::DpadUp).size(), 1u);
+  EXPECT_EQ(mapping.getBindings(GamepadInput::DpadUp).front().source.code,
+            GamepadInput::EastFace);
+
+  // Removing the last binding prunes the entry entirely.
+  mapping.removeBinding(GamepadInput::DpadUp, 0);
+  EXPECT_TRUE(mapping.getAllBindings().empty());
+
+  // setBindings with an empty list also clears.
+  mapping.setBindings(GamepadInput::DpadDown, {a});
+  mapping.setBindings(GamepadInput::DpadDown, {});
+  EXPECT_TRUE(mapping.getBindings(GamepadInput::DpadDown).empty());
+}
+
+TEST(InputModelTest, ApplyAxisSettingsSensitivityClampsToFull) {
+  AxisSettings settings;
+  settings.innerDeadzone = 0.0f;
+  settings.sensitivity = 2.0f;
+  // A half-deflection at 2x gain saturates at full range.
+  EXPECT_EQ(applyAxisSettings(20000, settings), 32767);
+}
+
+TEST(InputModelTest, ApplyAxisSettingsOuterDeadzoneReachesFullEarly) {
+  AxisSettings settings;
+  settings.innerDeadzone = 0.0f;
+  settings.outerDeadzone = 0.2f; // top 20% is treated as full
+  EXPECT_EQ(applyAxisSettings(static_cast<int>(0.85f * 32767), settings), 32767);
+}
+
+TEST(InputModelTest, ApplyAxisSettingsExponentialLowersMidRange) {
+  AxisSettings linear;
+  linear.innerDeadzone = 0.0f;
+  AxisSettings expo;
+  expo.innerDeadzone = 0.0f;
+  expo.curve = ResponseCurve::Exponential;
+  expo.curveExponent = 2.0f;
+
+  const auto half = static_cast<int>(0.5f * 32767);
+  // An exponential curve pulls mid-range values below the linear response.
+  EXPECT_LT(applyAxisSettings(half, expo), applyAxisSettings(half, linear));
+}
+
+TEST(InputModelTest, ApplyAxisSettingsAntiDeadzoneLiftsSmallInputs) {
+  AxisSettings settings;
+  settings.innerDeadzone = 0.0f;
+  settings.antiDeadzone = 0.5f; // outputs start at 50% once past the deadzone
+  const auto out = applyAxisSettings(static_cast<int>(0.01f * 32767), settings);
+  EXPECT_GT(out, static_cast<int>(0.45f * 32767));
+}
+
+TEST(InputModelTest, ApplyAxisSettingsPreservesNegativeSign) {
+  AxisSettings settings;
+  EXPECT_LT(applyAxisSettings(-20000, settings), 0);
+}
+
 } // namespace firelight::input

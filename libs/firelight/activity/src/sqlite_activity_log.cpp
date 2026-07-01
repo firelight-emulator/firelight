@@ -179,7 +179,10 @@ namespace firelight::activity {
                   name.toStdString());
     auto db = QSqlDatabase::addDatabase("QSQLITE", name);
     db.setDatabaseName(databasePath);
-    db.open();
+    if (!db.open()) {
+      spdlog::error("Failed to open activity database connection '{}'",
+                    name.toStdString());
+    }
     return db;
   }
 } // namespace firelight::activity

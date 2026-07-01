@@ -173,4 +173,96 @@ TEST_F(ShortcutTest, ComboRequiresModifierHeld) {
   EXPECT_EQ(events[0].id, "ff");
 }
 
+TEST_F(ShortcutTest, ShortcutMappingAddRemoveSet) {
+  ShortcutMapping mapping;
+  mapping.addBinding("ff", btn(GamepadInput::Start));
+  mapping.addBinding("ff", btn(GamepadInput::Select));
+  ASSERT_EQ(mapping.getBindings("ff").size(), 2u);
+
+  mapping.removeBinding("ff", 0);
+  ASSERT_EQ(mapping.getBindings("ff").size(), 1u);
+  EXPECT_EQ(mapping.getBindings("ff").front().code, GamepadInput::Select);
+
+  mapping.setBindings("ff", {});
+  EXPECT_TRUE(mapping.getBindings("ff").empty());
+  EXPECT_TRUE(mapping.getAll().empty());
+}
+
+TEST_F(ShortcutTest, AlternateSourcesEitherFires) {
+  addAction("ss", ActivationType::Press, ScopeInGame);
+  auto profile = makeProfile();
+  profile->getShortcutMapping()->setBindings(
+      "ss", {btn(GamepadInput::Select), btn(GamepadInput::Start)});
+  TestGamepad pad;
+  pad.setProfile(profile);
+
+  ShortcutEngine engine;
+  engine.setContext(ScopeInGame);
+  std::vector<ShortcutEvent> events;
+  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
+      [&events](const ShortcutEvent &e) { events.push_back(e); });
+
+  // Either alternate fires the same action.
+  engine.onInput(0, &pad, GamepadInput::Start, true);
+  ASSERT_EQ(events.size(), 1u);
+  EXPECT_EQ(events[0].id, "ss");
+}
+
+TEST_F(ShortcutTest, HoldEndsEvenAfterScopeChange) {
+  addAction("ff", ActivationType::Hold, ScopeInGame);
+  auto profile = makeProfile();
+  profile->getShortcutMapping()->setBindings("ff", {btn(GamepadInput::Start)});
+  TestGamepad pad;
+  pad.setProfile(profile);
+
+  ShortcutEngine engine;
+  engine.setContext(ScopeInGame);
+  std::vector<ShortcutEvent> events;
+  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
+      [&events](const ShortcutEvent &e) { events.push_back(e); });
+
+  engine.onInput(0, &pad, GamepadInput::Start, true); // Started (in scope)
+  engine.setContext(ScopeInMenu);                     // leave the scope
+  engine.onInput(0, &pad, GamepadInput::Start, false);
+
+  ASSERT_EQ(events.size(), 2u);
+  EXPECT_EQ(events[0].phase, ShortcutPhase::Started);
+  EXPECT_EQ(events[1].phase, ShortcutPhase::Ended);
+}
+
+TEST_F(ShortcutTest, ForgetDeviceResetsHoldState) {
+  addAction("ff", ActivationType::Hold, ScopeInGame);
+  auto profile = makeProfile();
+  profile->getShortcutMapping()->setBindings("ff", {btn(GamepadInput::Start)});
+  TestGamepad pad;
+  pad.setProfile(profile);
+
+  ShortcutEngine engine;
+  engine.setContext(ScopeInGame);
+  std::vector<ShortcutEvent> events;
+  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
+      [&events](const ShortcutEvent &e) { events.push_back(e); });
+
+  engine.onInput(0, &pad, GamepadInput::Start, true); // Started
+  engine.forgetDevice(&pad);
+  // After forgetting, the stale release should not emit an Ended.
+  engine.onInput(0, &pad, GamepadInput::Start, false);
+
+  ASSERT_EQ(events.size(), 1u);
+  EXPECT_EQ(events[0].phase, ShortcutPhase::Started);
+}
+
+TEST_F(ShortcutTest, NullProfileIsSafe) {
+  addAction("ss", ActivationType::Press, ScopeInGame);
+  TestGamepad pad; // no profile set
+  ShortcutEngine engine;
+  engine.setContext(ScopeInGame);
+  std::vector<ShortcutEvent> events;
+  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
+      [&events](const ShortcutEvent &e) { events.push_back(e); });
+
+  EXPECT_NO_THROW(engine.onInput(0, &pad, GamepadInput::Select, true));
+  EXPECT_TRUE(events.empty());
+}
+
 } // namespace firelight::input

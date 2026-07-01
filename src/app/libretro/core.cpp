@@ -3,8 +3,10 @@
 
 #include "SDL2/SDL.h"
 #include "virtual_filesystem.hpp"
-#include <bits/fs_path.h>
 #include <cstdarg>
+#include <filesystem>
+#include <stdexcept>
+#include <vector>
 #include <utility>
 
 #include <spdlog/spdlog.h>
@@ -80,13 +82,11 @@ namespace libretro {
       }
     }
 
-    const auto controllerOpt =
+    const auto controller =
         currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
-    if (!controllerOpt.has_value()) {
+    if (!controller) {
       return 0;
     }
-
-    firelight::libretro::IRetroPad *controller = controllerOpt.value();
 
     if (device == RETRO_DEVICE_ANALOG) {
       if (index == RETRO_DEVICE_INDEX_ANALOG_LEFT) {
@@ -329,13 +329,12 @@ namespace libretro {
         auto ptr = static_cast<retro_rumble_interface *>(data);
         ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
                                    uint16_t strength) {
-          const auto con =
+          const auto controller =
               currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
-          if (!con.has_value()) {
+          if (!controller) {
             return true;
           }
 
-          auto controller = con.value();
           if (effect == RETRO_RUMBLE_STRONG) {
             controller->setStrongRumble(currentCore->m_platformId, strength);
           } else if (effect == RETRO_RUMBLE_WEAK) {
@@ -1105,54 +1104,92 @@ namespace libretro {
     // // Check error
     // }
 
-    symRetroInit = coreLib->resolve("retro_init");
-    symRetroDeinit = coreLib->resolve("retro_deinit");
-    symRetroApiVersion = reinterpret_cast<unsigned int (*)()>(
-      coreLib->resolve("retro_api_version"));
+    if (!coreLib->load()) {
+      throw std::runtime_error("Failed to load libretro core '" + libPath +
+                               "': " + coreLib->errorString().toStdString());
+    }
+
+    // Resolve every libretro entry point up front. A compliant core exports all
+    // of them (features it doesn't support are stubbed), so a missing symbol
+    // means a broken/incompatible core; collect any misses and fail with a
+    // clear message instead of crashing on a null call later.
+    std::vector<std::string> missingSymbols;
+    const auto req = [&](const char *name) -> QFunctionPointer {
+      const auto ptr = coreLib->resolve(name);
+      if (!ptr) {
+        missingSymbols.emplace_back(name);
+      }
+      return ptr;
+    };
+
+    symRetroInit = req("retro_init");
+    symRetroDeinit = req("retro_deinit");
+    symRetroApiVersion =
+        reinterpret_cast<unsigned int (*)()>(req("retro_api_version"));
     symRetroGetSystemInfo = reinterpret_cast<void (*)(retro_system_info *)>(
-      coreLib->resolve("retro_get_system_info"));
+      req("retro_get_system_info"));
     symRetroGetSystemAVInfo = reinterpret_cast<void (*)(retro_system_av_info *)>(
-      coreLib->resolve("retro_get_system_av_info"));
+      req("retro_get_system_av_info"));
     symRetroSetControllerPortDevice =
         reinterpret_cast<void (*)(unsigned int, unsigned int)>(
-          coreLib->resolve("retro_set_controller_port_device"));
-    symRetroReset = coreLib->resolve("retro_reset");
-    symRetroRun = coreLib->resolve("retro_run");
+          req("retro_set_controller_port_device"));
+    symRetroReset = req("retro_reset");
+    symRetroRun = req("retro_run");
     symRetroSerializeSize =
-        reinterpret_cast<size_t (*)()>(coreLib->resolve("retro_serialize_size"));
-    symRetroSerialize = reinterpret_cast<bool (*)(void *, size_t)>(
-      coreLib->resolve("retro_serialize"));
+        reinterpret_cast<size_t (*)()>(req("retro_serialize_size"));
+    symRetroSerialize =
+        reinterpret_cast<bool (*)(void *, size_t)>(req("retro_serialize"));
     symRetroUnserialize = reinterpret_cast<bool (*)(const void *, size_t)>(
-      coreLib->resolve("retro_unserialize"));
-    symRetroCheatReset = coreLib->resolve("retro_cheat_reset");
+      req("retro_unserialize"));
+    symRetroCheatReset = req("retro_cheat_reset");
     symRetroCheatSet = reinterpret_cast<void (*)(unsigned, bool, const char *)>(
-      coreLib->resolve("retro_cheat_set"));
+      req("retro_cheat_set"));
 
     symRetroLoadGame = reinterpret_cast<bool (*)(const retro_game_info *)>(
-      coreLib->resolve("retro_load_game"));
+      req("retro_load_game"));
     symRetroLoadGameSpecial =
         reinterpret_cast<bool (*)(unsigned int, const retro_game_info *, size_t)>(
-          coreLib->resolve("retro_load_game_special"));
-    symRetroUnloadGame = coreLib->resolve("retro_unload_game");
-    symRetroGetRegion = reinterpret_cast<unsigned int (*)()>(
-      coreLib->resolve("retro_get_region"));
+          req("retro_load_game_special"));
+    symRetroUnloadGame = req("retro_unload_game");
+    symRetroGetRegion =
+        reinterpret_cast<unsigned int (*)()>(req("retro_get_region"));
 
-    symRetroGetMemoryData = reinterpret_cast<void *(*)(unsigned int)>(
-      coreLib->resolve("retro_get_memory_data"));
-    symRetroGetMemoryDataSize = reinterpret_cast<size_t (*)(unsigned int)>(
-      coreLib->resolve("retro_get_memory_size"));
+    symRetroGetMemoryData =
+        reinterpret_cast<void *(*)(unsigned int)>(req("retro_get_memory_data"));
+    symRetroGetMemoryDataSize =
+        reinterpret_cast<size_t (*)(unsigned int)>(req("retro_get_memory_size"));
+
+    const auto setEnvironment =
+        reinterpret_cast<RetroSetEnvironment>(req("retro_set_environment"));
+    const auto setVideoRefresh =
+        reinterpret_cast<RetroSetVideoRefresh>(req("retro_set_video_refresh"));
+    const auto setAudioSample =
+        reinterpret_cast<RetroSetAudioSample>(req("retro_set_audio_sample"));
+    const auto setAudioSampleBatch = reinterpret_cast<RetroSetAudioSampleBatch>(
+      req("retro_set_audio_sample_batch"));
+    const auto setInputPoll =
+        reinterpret_cast<RetroInputPoll>(req("retro_set_input_poll"));
+    const auto setInputState =
+        reinterpret_cast<RetroInputState>(req("retro_set_input_state"));
+
+    if (!missingSymbols.empty()) {
+      std::string joined;
+      for (size_t i = 0; i < missingSymbols.size(); ++i) {
+        joined += (i == 0 ? "" : ", ") + missingSymbols[i];
+      }
+      coreLib->unload();
+      throw std::runtime_error("libretro core '" + libPath +
+                               "' is missing required symbol(s): " + joined);
+    }
 
     retroSystemInfo = new retro_system_info;
     retroSystemAVInfo = new retro_system_av_info;
 
     currentCore = this; // todo prob different namespace
 
-    reinterpret_cast<RetroSetEnvironment>(
-      coreLib->resolve("retro_set_environment"))(envCallback);
-    reinterpret_cast<RetroSetVideoRefresh>(
-      coreLib->resolve("retro_set_video_refresh"))(videoCallback);
-    reinterpret_cast<RetroSetAudioSample>(coreLib->resolve(
-      "retro_set_audio_sample"))([](int16_t left, int16_t right) {
+    setEnvironment(envCallback);
+    setVideoRefresh(videoCallback);
+    setAudioSample([](int16_t left, int16_t right) {
     });
 
     auto processAudioLambda = [](const int16_t *data, size_t frames) -> size_t {
@@ -1165,13 +1202,10 @@ namespace libretro {
       return core->audioReceiver->receive(data, frames);
     };
 
-    reinterpret_cast<RetroSetAudioSampleBatch>(
-      coreLib->resolve("retro_set_audio_sample_batch"))(processAudioLambda);
-    reinterpret_cast<RetroInputPoll>(coreLib->resolve("retro_set_input_poll"))(
-      [] {
-      });
-    reinterpret_cast<RetroInputState>(coreLib->resolve("retro_set_input_state"))(
-      inputStateCallback);
+    setAudioSampleBatch(processAudioLambda);
+    setInputPoll([] {
+    });
+    setInputState(inputStateCallback);
   }
 
   Core::~Core() {

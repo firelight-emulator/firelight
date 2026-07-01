@@ -4,6 +4,7 @@
 #include <QBuffer>
 #include <QMediaDevices>
 #include <array>
+#include <memory>
 #include <qelapsedtimer.h>
 #include <queue>
 
@@ -45,7 +46,7 @@ private:
 
   int m_frameNumber = 0;
   SwrContext *m_swrContext = nullptr;
-  QAudioSink *m_audioSink = nullptr;
+  std::unique_ptr<QAudioSink> m_audioSink;
   QIODevice *m_audioDevice = nullptr;
 
   double m_changeThing = 0.0;
@@ -58,7 +59,7 @@ private:
 
   int m_sampleRate = 0;
 
-  AVChannelLayout *m_channelLayout = new AVChannelLayout;
+  AVChannelLayout m_channelLayout{};
 
   QMediaDevices *m_mediaDevices = nullptr;
 

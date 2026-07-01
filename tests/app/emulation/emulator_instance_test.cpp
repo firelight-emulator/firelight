@@ -2,6 +2,8 @@
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
+#include "fake_core.hpp"
+
 #include <firelight/db/sqlite_userdata_database.hpp>
 #include <emulation/emulation_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
@@ -38,7 +40,12 @@ protected:
     m_settingsService = std::make_unique<settings::SettingsService>(
         *new settings::SqliteSettingsRepository(":memory:"));
     m_emulationService = std::make_unique<EmulationService>(
-        *m_service, *m_resolver, *m_settingsService);
+        *m_service, *m_resolver, *m_settingsService,
+        [](int, const std::string &,
+           std::shared_ptr<firelight::libretro::IConfigurationProvider>,
+           const std::string &) -> std::unique_ptr<::libretro::ICore> {
+          return std::make_unique<FakeCore>();
+        });
 
     settings::SettingsService::setInstance(m_settingsService.get());
   }
