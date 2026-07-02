@@ -1,4 +1,5 @@
 #include "ModInfoItem.hpp"
+#include <firelight/mods/mod_repository.hpp>
 
 #include <platform_metadata.hpp>
 

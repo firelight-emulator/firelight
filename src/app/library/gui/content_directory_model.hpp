@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../../manager_accessor.hpp"
-
 #include <firelight/library/user_library_service.hpp>
 
 #include <QAbstractListModel>

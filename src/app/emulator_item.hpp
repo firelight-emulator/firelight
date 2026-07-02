@@ -1,14 +1,15 @@
 #pragma once
 
 #include "audio/audio_manager.hpp"
+#include <rcheevos/ra_client.hpp>
+#include <QThreadPool>
 #include "emulator_item_renderer.hpp"
 #include "libretro/core_configuration.hpp"
-#include "manager_accessor.hpp"
+#include "service_accessor.hpp"
 
 #include <qchronotimer.h>
 
 class EmulatorItem : public QQuickRhiItem,
-                     public firelight::ManagerAccessor,
                      public firelight::ServiceAccessor {
 protected:
   void mouseMoveEvent(QMouseEvent *event) override;

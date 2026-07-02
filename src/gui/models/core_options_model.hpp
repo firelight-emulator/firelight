@@ -2,6 +2,7 @@
 #include "service_accessor.hpp"
 
 #include <QAbstractListModel>
+#include <firelight/event_dispatcher.hpp>
 #include <firelight/settings/settings_service.hpp>
 
 #include <optional>
@@ -93,6 +94,8 @@ private:
   std::optional<std::string> resolveValue(const std::string &key);
 
   SettingsService *m_settingsService = SettingsService::instance();
+  ScopedConnection m_platformSettingChangedConnection;
+  ScopedConnection m_gameSettingChangedConnection;
   QString m_contentHash;
   int m_platformId = -1;
   SettingsLevel m_level = Unknown;

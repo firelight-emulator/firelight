@@ -40,7 +40,7 @@ protected:
         *new settings::SqliteSettingsRepository(":memory:"));
     settings::SettingsService::setInstance(m_settingsService.get());
     m_emulationService = std::make_unique<EmulationService>(
-        *m_service, *m_resolver, *m_settingsService,
+        *m_service, *m_resolver, *m_settingsService, EmulationContext{},
         [](int, const std::string &,
            std::shared_ptr<firelight::libretro::IConfigurationProvider>,
            const std::string &) -> std::unique_ptr<::libretro::ICore> {
@@ -75,7 +75,8 @@ TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
   library::SqliteUserLibraryRepository library(":memory:");
   library::UserLibraryService libraryService(library, ".");
   library::EntryResolver resolver(library);
-  EmulationService service(libraryService, resolver, *m_settingsService);
+  EmulationService service(libraryService, resolver, *m_settingsService,
+                           EmulationContext{});
 
   ASSERT_EQ(nullptr, service.loadEntry(1).get());
   ASSERT_TRUE(gameLoadFailedEventReceived);

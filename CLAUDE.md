@@ -65,12 +65,9 @@ cmake/                      # rcheevos.cmake, clang-checks.cmake
 
 ### Service Locator Pattern
 
-Two global accessor bases provide singleton access to services throughout the codebase. Classes inherit from one or both to call `get*()` methods:
+A single global accessor base, **`ServiceAccessor`** (`src/app/service_accessor.hpp`), provides singleton access to services. Its contract is narrow: it exists only for the types the QML engine default-constructs via `qmlRegisterType` (EmulatorItem, the item models), which can't take constructor arguments and so must reach services through a locator. Everything the app constructs itself (Qt proxies, context-property models, EmulationService/EmulatorInstance) should take its dependencies via the constructor instead of inheriting the locator.
 
-- **`ManagerAccessor`** (`src/app/manager_accessor.hpp`) — holds SaveManager, RAClient, UserLibrary, UserdataDatabase, ActivityLog, EmulatorConfigManager, ModRepository, SettingsRepository, DiscordManager, GameImageProvider.
-- **`ServiceAccessor`** (`src/app/service_accessor.hpp`) — holds InputService, PlatformService, SettingsService, AchievementService, IUserLibrary.
-
-All singletons are set in `main.cpp` via `set*()` calls before services are used.
+`ServiceAccessor` holds InputService, PlatformService, SettingsService, AchievementService (RAClient), IUserLibrary, SaveManager, UserdataDatabase, ActivityLog, ModRepository, SettingsRepository, DiscordManager, GameImageProvider, and the core-system directory. All members are set once in `main.cpp` via `set*()` calls before services are used.
 
 ### Qt/QML Bridge
 
@@ -93,7 +90,7 @@ The `firelight_achievements` library (`libs/firelight/achievements/`) is a self-
 - `rcheevos/rcheevos_offline_client.*` — wraps the rcheevos C library for offline evaluation
 - `rcheevos/ra_client.*` — online RetroAchievements API client (HTTP + login flow)
 
-`RAClient` (accessed via `ManagerAccessor::getAchievementManager()`) is called from `EmulatorInstance` on every frame via `doFrame()`. Hardcore mode blocks rewind.
+`RAClient` (accessed via `ServiceAccessor::getAchievementManager()`) is called from `EmulatorInstance` on every frame via `doFrame()`. Hardcore mode blocks rewind.
 
 ### Emulation Lifecycle
 

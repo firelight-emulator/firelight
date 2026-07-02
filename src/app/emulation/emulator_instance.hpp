@@ -1,23 +1,22 @@
 #pragma once
-#include "service_accessor.hpp"
+#include "emulation_context.hpp"
 
 #include <audio/audio_manager.hpp>
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/libretro/icore.hpp>
 #include <future>
-#include <manager_accessor.hpp>
 #include <memory>
 #include <firelight/saves/suspend_point.hpp>
 #include <string>
 
 namespace firelight::emulation {
 
-class EmulatorInstance : public ManagerAccessor, public ServiceAccessor {
+class EmulatorInstance {
 public:
   EmulatorInstance(std::unique_ptr<::libretro::ICore>, std::string contentPath,
                    std::string contentHash, int platformId, int saveSlotNumber,
-                   std::vector<uint8_t> gameData,
-                   std::vector<uint8_t> saveData);
+                   std::vector<uint8_t> gameData, std::vector<uint8_t> saveData,
+                   EmulationContext context);
   ~EmulatorInstance();
 
   // Must be called from the render thread (with active graphics context)
@@ -54,6 +53,7 @@ public:
 private:
   bool m_initialized = false;
 
+  EmulationContext m_context;
   std::unique_ptr<::libretro::ICore> m_core;
   std::shared_ptr<AudioManager> m_audioManager;
   std::vector<uint8_t> m_gameData;

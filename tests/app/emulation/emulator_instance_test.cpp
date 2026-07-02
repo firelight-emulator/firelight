@@ -40,7 +40,7 @@ protected:
     m_settingsService = std::make_unique<settings::SettingsService>(
         *new settings::SqliteSettingsRepository(":memory:"));
     m_emulationService = std::make_unique<EmulationService>(
-        *m_service, *m_resolver, *m_settingsService,
+        *m_service, *m_resolver, *m_settingsService, EmulationContext{},
         [](int, const std::string &,
            std::shared_ptr<firelight::libretro::IConfigurationProvider>,
            const std::string &) -> std::unique_ptr<::libretro::ICore> {

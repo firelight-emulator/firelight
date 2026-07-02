@@ -3,6 +3,8 @@
 //
 
 #include "game_activity_list_model.hpp"
+#include <firelight/activity/activity_log.hpp>
+#include <spdlog/spdlog.h>
 #include <firelight/library/user_library_service.hpp>
 
 #include <firelight/platforms/platform_service.hpp>
@@ -10,7 +12,7 @@
 namespace firelight::activity {
 GameActivityListModel::GameActivityListModel(QObject *parent)
     : QAbstractListModel(parent) {
-  const auto activityLog = getActivityLog();
+  const auto activityLog = getActivityService();
   if (activityLog == nullptr) {
     return;
   }

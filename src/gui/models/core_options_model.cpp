@@ -1,14 +1,37 @@
 #include "core_options_model.hpp"
 
+#include "libretro/core_registry.hpp"
 #include "platform_metadata.hpp"
 
+#include <firelight/event_dispatcher.hpp>
 #include <firelight/settings/core_option_repository.hpp>
 #include <spdlog/spdlog.h>
 
 namespace firelight::settings {
 
 CoreOptionsModel::CoreOptionsModel(QObject *parent)
-    : QAbstractListModel(parent) {}
+    : QAbstractListModel(parent) {
+  // Changing the resolved core (the "core" key) at a matching scope changes
+  // which raw options exist, so rebuild the list.
+  m_platformSettingChangedConnection =
+      EventDispatcher::instance().subscribe<PlatformSettingChangedEvent>(
+          [this](const PlatformSettingChangedEvent &e) {
+            if (e.platformId == m_platformId &&
+                e.key == CoreRegistry::kCoreSettingKey) {
+              rebuild();
+              refreshValues();
+            }
+          });
+  m_gameSettingChangedConnection =
+      EventDispatcher::instance().subscribe<GameSettingChangedEvent>(
+          [this](const GameSettingChangedEvent &e) {
+            if (e.contentHash == m_contentHash.toStdString() &&
+                e.key == CoreRegistry::kCoreSettingKey) {
+              rebuild();
+              refreshValues();
+            }
+          });
+}
 
 int CoreOptionsModel::getPlatformId() const { return m_platformId; }
 
@@ -49,7 +72,8 @@ void CoreOptionsModel::rebuild() {
   m_items.clear();
   m_categories.clear();
 
-  const auto coreName = PlatformMetadata::getCoreName(m_platformId);
+  const auto coreName = CoreRegistry::instance().resolveCoreName(
+      m_platformId, m_contentHash.toStdString());
   const auto repository = getCoreOptionRepository();
   if (!coreName.empty() && repository) {
     const auto filter = m_categoryFilter.toStdString();

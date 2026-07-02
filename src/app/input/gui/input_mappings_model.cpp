@@ -1,5 +1,6 @@
 
 #include "input_mappings_model.hpp"
+#include <spdlog/spdlog.h>
 
 #include <firelight/input/controller_repository.hpp>
 #include <firelight/platforms/platform.hpp>

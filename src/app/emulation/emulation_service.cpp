@@ -1,4 +1,5 @@
 #include "emulation_service.hpp"
+#include <firelight/saves/isave_manager.hpp>
 
 #include <qfile.h>
 #include "firelight/event_dispatcher.hpp"
@@ -13,6 +14,7 @@
 #include <firelight/settings/core_option_repository.hpp>
 #include <libretro/core.hpp>
 #include <libretro/core_configuration.hpp>
+#include <libretro/core_registry.hpp>
 #include <platform_metadata.hpp>
 #include <spdlog/spdlog.h>
 
@@ -23,9 +25,11 @@ namespace firelight::emulation {
   EmulationService::EmulationService(library::UserLibraryService &library,
                                      library::EntryResolver &entryResolver,
                                      settings::SettingsService &settingsService,
+                                     EmulationContext context,
                                      CoreFactory coreFactory)
     : m_settingsService(settingsService), m_library(library),
-      m_resolver(entryResolver), m_coreFactory(std::move(coreFactory)) {
+      m_resolver(entryResolver), m_context(std::move(context)),
+      m_coreFactory(std::move(coreFactory)) {
     // Default factory builds the real dlopen'd Core; tests inject a fake.
     if (!m_coreFactory) {
       m_coreFactory =
@@ -49,12 +53,14 @@ namespace firelight::emulation {
   }
 
   void EmulationService::persistCoreOptions() {
-    const auto repository = getCoreOptionRepository();
+    const auto repository = m_context.coreOptionRepository;
     if (!repository || !m_currentCoreConfig) {
       return;
     }
-    const auto coreName =
-        PlatformMetadata::getCoreName(m_currentEntry.platformId);
+    // Persist under the core actually resolved for this entry (honors any
+    // per-platform / per-game core override), so the cache matches what ran.
+    const auto coreName = CoreRegistry::instance().resolveCoreName(
+        m_currentEntry.platformId, m_currentContentHash);
     if (coreName.empty()) {
       return;
     }
@@ -145,10 +151,8 @@ namespace firelight::emulation {
       contentLoader.applyPatch(loaded, contentFile.m_platformId, patch);
     }
 
-    std::string corePath = PlatformMetadata::getCoreDllPath(entry->platformId);
-
     QByteArray saveDataBytes;
-    if (const auto saveManager = getSaveManager()) {
+    if (const auto saveManager = m_context.saveManager) {
       const auto saveData = saveManager->readSaveData(
           QString::fromStdString(loaded.contentHash), entry->activeSaveSlot);
       if (saveData.has_value()) {
@@ -165,8 +169,11 @@ namespace firelight::emulation {
       m_currentPlatform = platform.value();
     }
 
-    const auto coreName =
-        PlatformMetadata::getCoreName(m_currentEntry.platformId);
+    // Resolve the core for this entry (default -> per-platform -> per-game
+    // override) and locate its DLL.
+    const auto coreName = CoreRegistry::instance().resolveCoreName(
+        m_currentEntry.platformId, m_currentContentHash);
+    const std::string corePath = CoreRegistry::instance().dllPathFor(coreName);
     const auto &catalog = settings::SettingsCatalog::instance();
     auto coreConfig = std::make_shared<CoreConfiguration>(
       m_currentEntry.contentHash.toStdString(), m_currentEntry.platformId,
@@ -177,7 +184,7 @@ namespace firelight::emulation {
     std::unique_ptr<::libretro::ICore> core;
     try {
       core = m_coreFactory(m_currentEntry.platformId, corePath, coreConfig,
-                           getCoreSystemDirectory());
+                           m_context.coreSystemDirectory);
     } catch (const std::exception &e) {
       spdlog::error("[EmulationService] Failed to load core for entry {}: {}",
                     entryId, e.what());
@@ -192,7 +199,7 @@ namespace firelight::emulation {
     m_emulatorInstance = std::make_unique<EmulatorInstance>(
       std::move(core), contentFile.m_filePath, m_currentContentHash,
       entry->platformId, entry->activeSaveSlot, std::move(loaded.contentBytes),
-      std::vector<uint8_t>(saveDataBytes.begin(), saveDataBytes.end()));
+      std::vector<uint8_t>(saveDataBytes.begin(), saveDataBytes.end()), m_context);
 
     EventDispatcher::instance().publish(GameLoadedEvent{});
 

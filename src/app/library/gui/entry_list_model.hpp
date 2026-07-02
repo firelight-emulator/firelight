@@ -3,10 +3,13 @@
 #include <firelight/library/user_library_service.hpp>
 #include <QAbstractListModel>
 #include <firelight/event_dispatcher.hpp>
-#include <manager_accessor.hpp>
+
+namespace firelight::activity {
+  class IActivityLog;
+}
 
 namespace firelight::library {
-  class EntryListModel : public QAbstractListModel, public ManagerAccessor {
+  class EntryListModel : public QAbstractListModel {
     Q_OBJECT
     Q_PROPERTY(int count READ getCount NOTIFY countChanged)
     Q_PROPERTY(int numFavorites READ numFavorites NOTIFY numFavoritesChanged)
@@ -48,7 +51,9 @@ namespace firelight::library {
       uint64_t lastPlayedEpochMillis{};
     };
 
-    explicit EntryListModel(UserLibraryService &userLibrary, QObject *parent = nullptr);
+    EntryListModel(UserLibraryService &userLibrary,
+                   activity::IActivityLog &activityLog,
+                   QObject *parent = nullptr);
 
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
@@ -88,6 +93,7 @@ namespace firelight::library {
 
   private:
     UserLibraryService &m_userLibrary;
+    activity::IActivityLog &m_activityLog;
     QList<Item> m_items{};
 
     ScopedConnection m_gamePlayedConnection;

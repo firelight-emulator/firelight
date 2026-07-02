@@ -1,4 +1,5 @@
 #include "entry_list_model.hpp"
+#include <firelight/activity/activity_log.hpp>
 
 #include <firelight/platforms/platform_service.hpp>
 
@@ -6,8 +7,11 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::library {
-  EntryListModel::EntryListModel(UserLibraryService &userLibrary, QObject *parent)
-    : QAbstractListModel(parent), m_userLibrary(userLibrary) {
+  EntryListModel::EntryListModel(UserLibraryService &userLibrary,
+                                 activity::IActivityLog &activityLog,
+                                 QObject *parent)
+    : QAbstractListModel(parent), m_userLibrary(userLibrary),
+      m_activityLog(activityLog) {
     m_gamePlayedConnection =
         EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
           [this](const emulation::EmulationStartedEvent &event) {
@@ -230,7 +234,7 @@ namespace firelight::library {
   void EntryListModel::reset() {
     emit beginResetModel();
     m_items.clear();
-    auto activityLog = getActivityLog();
+    auto activityLog = &m_activityLog;
     for (const auto &entry: m_userLibrary.getEntries(0, 0)) {
       if (!entry.hidden) {
         auto item = Item{.entry = entry};

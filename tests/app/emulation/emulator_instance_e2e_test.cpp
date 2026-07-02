@@ -10,7 +10,6 @@
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_core_option_repository.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
-#include <manager_accessor.hpp>
 #include <platform_metadata.hpp>
 
 #include <gtest/gtest.h>
@@ -57,11 +56,9 @@ protected:
     m_saveManager =
         std::make_unique<saves::SaveManager>(m_saveDir.path(), *m_userdataDb);
     m_saveManager->setSaveDirectory(m_saveDir.path());
-    ManagerAccessor::setSaveManager(m_saveManager.get());
 
     m_coreOptionRepo =
         std::make_unique<settings::SqliteCoreOptionRepository>(":memory:");
-    ServiceAccessor::setCoreOptionRepository(m_coreOptionRepo.get());
 
     CoreFactory factory =
         [this](int, const std::string &,
@@ -73,15 +70,18 @@ protected:
       m_fakeCore = fake.get();
       return fake;
     };
+
+    EmulationContext context;
+    context.saveManager = m_saveManager.get();
+    context.coreOptionRepository = m_coreOptionRepo.get();
     m_emulationService = std::make_unique<EmulationService>(
-        *m_libraryService, *m_resolver, *m_settingsService, std::move(factory));
+        *m_libraryService, *m_resolver, *m_settingsService, context,
+        std::move(factory));
   }
 
   void TearDown() override {
     m_emulationService.reset();
-    ServiceAccessor::setCoreOptionRepository(nullptr);
     m_coreOptionRepo.reset();
-    ManagerAccessor::setSaveManager(nullptr);
     m_saveManager.reset();
     m_userdataDb.reset();
     settings::SettingsService::setInstance(nullptr);

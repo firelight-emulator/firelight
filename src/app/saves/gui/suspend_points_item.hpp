@@ -1,9 +1,10 @@
 #pragma once
-#include <manager_accessor.hpp>
+#include <service_accessor.hpp>
+#include <firelight/saves/isave_manager.hpp>
 #include "suspend_point_list_model.hpp"
 
 namespace firelight::saves {
-class SuspendPointsItem : public QObject, public ManagerAccessor {
+class SuspendPointsItem : public QObject, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
                  contentHashChanged)

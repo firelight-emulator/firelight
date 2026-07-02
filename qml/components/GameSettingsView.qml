@@ -48,6 +48,16 @@ FocusScope {
             lineHeight: 1.2
         }
 
+        CoreSelector {
+            Layout.fillWidth: true
+            Layout.leftMargin: 12
+            Layout.rightMargin: 12
+            Layout.bottomMargin: 8
+            level: root.level
+            platformId: root.platformId
+            contentHash: root.contentHash
+        }
+
         EmulationSettingsSurface {
             Layout.fillWidth: true
             Layout.fillHeight: true

@@ -1,10 +1,9 @@
 #pragma once
 #include "savefile_list_model.hpp"
-#include <manager_accessor.hpp>
 #include <service_accessor.hpp>
 
 namespace firelight::saves {
-class SaveFilesItem : public QObject, public ManagerAccessor, public ServiceAccessor {
+class SaveFilesItem : public QObject, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int entryId READ getEntryId WRITE setEntryId NOTIFY entryIdChanged)
   Q_PROPERTY(int activeSaveSlotNumber READ getActiveSaveSlotNumber WRITE

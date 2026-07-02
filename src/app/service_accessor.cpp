@@ -9,6 +9,14 @@ namespace firelight {
   achievements::AchievementService *ServiceAccessor::s_achievementService;
   library::UserLibraryService *ServiceAccessor::s_libraryService;
   activity::IActivityLog *ServiceAccessor::s_activityService;
+  saves::ISaveManager *ServiceAccessor::s_saveManager;
+  db::IUserdataDatabase *ServiceAccessor::s_userdataDatabase;
+  achievements::RAClient *ServiceAccessor::s_achievementManager;
+  gui::GameImageProvider *ServiceAccessor::s_gameImageProvider;
+  std::string ServiceAccessor::s_coreSystemDirectory;
+  mods::IModRepository *ServiceAccessor::s_modRepository;
+  settings::ISettingsRepository *ServiceAccessor::s_emulationSettingsManager;
+  discord::IDiscordManager *ServiceAccessor::s_discordManager;
 
   void ServiceAccessor::setInputService(input::InputService *service) {
     s_inputService = service;
@@ -45,6 +53,39 @@ namespace firelight {
     s_activityService = service;
   }
 
+  void ServiceAccessor::setSaveManager(saves::ISaveManager *manager) {
+    s_saveManager = manager;
+  }
+
+  void ServiceAccessor::setUserdataManager(db::IUserdataDatabase *manager) {
+    s_userdataDatabase = manager;
+  }
+
+  void ServiceAccessor::setAchievementManager(achievements::RAClient *manager) {
+    s_achievementManager = manager;
+  }
+
+  void ServiceAccessor::setGameImageProvider(gui::GameImageProvider *provider) {
+    s_gameImageProvider = provider;
+  }
+
+  void ServiceAccessor::setCoreSystemDirectory(const std::string &directory) {
+    s_coreSystemDirectory = directory;
+  }
+
+  void ServiceAccessor::setModRepository(mods::IModRepository *repository) {
+    s_modRepository = repository;
+  }
+
+  void ServiceAccessor::setEmulationSettingsManager(
+    settings::ISettingsRepository *repository) {
+    s_emulationSettingsManager = repository;
+  }
+
+  void ServiceAccessor::setDiscordManager(discord::IDiscordManager *manager) {
+    s_discordManager = manager;
+  }
+
   input::InputService *ServiceAccessor::getInputService() {
     return s_inputService;
   }
@@ -76,5 +117,37 @@ namespace firelight {
 
   activity::IActivityLog *ServiceAccessor::getActivityService() {
     return s_activityService;
+  }
+
+  saves::ISaveManager *ServiceAccessor::getSaveManager() {
+    return s_saveManager;
+  }
+
+  db::IUserdataDatabase *ServiceAccessor::getUserdataManager() {
+    return s_userdataDatabase;
+  }
+
+  achievements::RAClient *ServiceAccessor::getAchievementManager() {
+    return s_achievementManager;
+  }
+
+  gui::GameImageProvider *ServiceAccessor::getGameImageProvider() {
+    return s_gameImageProvider;
+  }
+
+  std::string ServiceAccessor::getCoreSystemDirectory() {
+    return s_coreSystemDirectory;
+  }
+
+  mods::IModRepository *ServiceAccessor::getModRepository() {
+    return s_modRepository;
+  }
+
+  settings::ISettingsRepository *ServiceAccessor::getEmulationSettingsManager() {
+    return s_emulationSettingsManager;
+  }
+
+  discord::IDiscordManager *ServiceAccessor::getDiscordManager() {
+    return s_discordManager;
   }
 } // namespace firelight

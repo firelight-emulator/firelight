@@ -1,4 +1,5 @@
 #include "content_directory_model.hpp"
+#include <spdlog/spdlog.h>
 
 namespace firelight::gui {
 

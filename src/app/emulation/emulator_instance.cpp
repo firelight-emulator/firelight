@@ -1,4 +1,6 @@
 #include "emulator_instance.hpp"
+#include <rcheevos/ra_client.hpp>
+#include <firelight/saves/isave_manager.hpp>
 
 #include "emulation_service.hpp"
 #include "firelight/event_dispatcher.hpp"
@@ -15,9 +17,11 @@ namespace firelight::emulation {
 EmulatorInstance::EmulatorInstance(
     std::unique_ptr<::libretro::ICore> core, std::string contentPath,
     std::string contentHash, const int platformId, const int saveSlotNumber,
-    std::vector<uint8_t> gameData, std::vector<uint8_t> saveData)
-    : m_core(std::move(core)), m_gameData(std::move(gameData)),
-      m_saveData(std::move(saveData)), m_contentPath(std::move(contentPath)),
+    std::vector<uint8_t> gameData, std::vector<uint8_t> saveData,
+    EmulationContext context)
+    : m_context(std::move(context)), m_core(std::move(core)),
+      m_gameData(std::move(gameData)), m_saveData(std::move(saveData)),
+      m_contentPath(std::move(contentPath)),
       m_contentHash(std::move(contentHash)), m_platformId(platformId),
       m_saveSlotNumber(saveSlotNumber) {
   m_lastSaveTime = std::chrono::steady_clock::now();
@@ -66,7 +70,7 @@ EmulatorInstance::~EmulatorInstance() {
   m_globalSettingChangedConnection = {};
 
   // Restore device-default controller profiles when the game unloads.
-  if (const auto inputService = getInputService()) {
+  if (const auto inputService = m_context.inputService) {
     inputService->clearGameContext();
   }
   save().wait();
@@ -78,9 +82,9 @@ bool EmulatorInstance::initialize(
 
   m_core->setVideoReceiver(videoDataReceiver);
   m_core->setAudioReceiver(m_audioManager);
-  m_core->setRetropadProvider(getInputService());
-  m_core->setPointerInputProvider(getInputService());
-  m_core->setSystemDirectory(getCoreSystemDirectory());
+  m_core->setRetropadProvider(m_context.inputService);
+  m_core->setPointerInputProvider(m_context.inputService);
+  m_core->setSystemDirectory(m_context.coreSystemDirectory);
   m_core->init();
 
   ::libretro::Game game(m_contentPath, m_gameData);
@@ -92,13 +96,13 @@ bool EmulatorInstance::initialize(
         std::vector<char>(m_saveData.begin(), m_saveData.end()));
   }
 
-  if (const auto achievements = getAchievementManager()) {
+  if (const auto achievements = m_context.achievementManager) {
     achievements->loadGame(m_platformId,
                            QString::fromStdString(m_contentHash));
   }
 
   // Apply per-game controller profile override + platform preferred controller.
-  if (const auto inputService = getInputService()) {
+  if (const auto inputService = m_context.inputService) {
     inputService->applyGameContext(m_contentHash, m_platformId);
   }
 
@@ -125,13 +129,13 @@ void EmulatorInstance::runFrame() {
   }
 
   m_core->run(0);
-  if (const auto achievements = getAchievementManager()) {
+  if (const auto achievements = m_context.achievementManager) {
     achievements->doFrame(m_core.get());
   }
 }
 void EmulatorInstance::reset() {
   m_core->reset();
-  if (const auto achievements = getAchievementManager()) {
+  if (const auto achievements = m_context.achievementManager) {
     achievements->reset();
   }
 }
@@ -145,8 +149,8 @@ std::future<bool> EmulatorInstance::save() {
   //     m_currentImage.height() > 0) {
   //   saveData.setImage(m_currentImage.copy());
   // }
-  return getSaveManager()->writeSaveData(m_contentHash.data(), m_saveSlotNumber,
-                                         saveData);
+  return m_context.saveManager->writeSaveData(m_contentHash.data(),
+                                              m_saveSlotNumber, saveData);
 }
 
 void EmulatorInstance::setMuted(const bool muted) {
@@ -170,8 +174,8 @@ bool EmulatorInstance::isRewindEnabled() const {
     return false;
   }
 
-  if (getAchievementManager()->loggedIn() &&
-      getAchievementManager()->hardcoreModeActive()) {
+  if (m_context.achievementManager->loggedIn() &&
+      m_context.achievementManager->hardcoreModeActive()) {
     return false;
   }
 

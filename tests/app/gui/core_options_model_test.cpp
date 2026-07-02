@@ -3,7 +3,6 @@
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_core_option_repository.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
-#include <manager_accessor.hpp>
 #include <service_accessor.hpp>
 
 #include <gtest/gtest.h>

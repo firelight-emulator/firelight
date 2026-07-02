@@ -1,4 +1,6 @@
 #include "save_files_item.hpp"
+#include <spdlog/spdlog.h>
+#include <firelight/saves/isave_manager.hpp>
 #include <firelight/library/user_library_service.hpp>
 
 namespace firelight::saves {

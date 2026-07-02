@@ -3,7 +3,9 @@
 #include <firelight/achievement_service.hpp>
 
 namespace firelight::gui {
-QtAchievementServiceProxy::QtAchievementServiceProxy(QObject *parent) {
+QtAchievementServiceProxy::QtAchievementServiceProxy(
+    achievements::AchievementService &achievementService, QObject *parent)
+    : QObject(parent), m_achievementService(&achievementService) {
   m_sessionStartedConnection =
       EventDispatcher::instance()
           .subscribe<achievements::AchievementSessionStartedEvent>(
@@ -20,12 +22,12 @@ QtAchievementServiceProxy::QtAchievementServiceProxy(QObject *parent) {
               });
 }
 bool QtAchievementServiceProxy::isLoggedIn() const {
-  return getAchievementService()->getLoggedInUsername() != "";
+  return m_achievementService->getLoggedInUsername() != "";
 }
 bool QtAchievementServiceProxy::inHardcoreSession() const {
-  return getAchievementService()->inHardcoreSession();
+  return m_achievementService->inHardcoreSession();
 }
 unsigned QtAchievementServiceProxy::numCurrentSessionHardcoreUnlocks() const {
-  return getAchievementService()->getNumCurrentSessionHardcoreUnlocks();
+  return m_achievementService->getNumCurrentSessionHardcoreUnlocks();
 }
 } // namespace firelight::gui

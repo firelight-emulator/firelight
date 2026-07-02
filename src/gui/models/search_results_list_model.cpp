@@ -47,7 +47,7 @@ namespace firelight::gui {
         beginResetModel();
         m_allItems.clear();
 
-        for (const auto &entry: getLibraryService()->getEntries(0, 0)) {
+        for (const auto &entry: m_library->getEntries(0, 0)) {
             if (entry.hidden) continue;
 
             Item item;
@@ -55,14 +55,14 @@ namespace firelight::gui {
             item.category = "Games";
             item.iconSourceUrl = entry.icon1x1SourceUrl;
             item.itemType = "LibraryEntry";
-            item.platformName = QString::fromStdString(getPlatformService()->getPlatform(entry.platformId)->name);
-            item.platformShortName = QString::fromStdString(getPlatformService()->getPlatform(entry.platformId)->slug);
+            item.platformName = QString::fromStdString(m_platformService->getPlatform(entry.platformId)->name);
+            item.platformShortName = QString::fromStdString(m_platformService->getPlatform(entry.platformId)->slug);
             item.platformIconSourceUrl = QString::fromStdString(
-                getPlatformService()->getPlatform(entry.platformId)->slug);
+                m_platformService->getPlatform(entry.platformId)->slug);
             m_allItems.append(item);
         }
 
-        for (const auto &folder: getLibraryService()->listFolders()) {
+        for (const auto &folder: m_library->listFolders()) {
             Item item;
             item.displayName = QString::fromStdString(folder.displayName);
             item.category = "Folders";
@@ -71,7 +71,7 @@ namespace firelight::gui {
             m_allItems.append(item);
         }
 
-        for (const auto &platform: getPlatformService()->listPlatforms()) {
+        for (const auto &platform: m_platformService->listPlatforms()) {
             Item item;
             item.displayName = QString::fromStdString(platform.name);
             item.category = "Platforms";

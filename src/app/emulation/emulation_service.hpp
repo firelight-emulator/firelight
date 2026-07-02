@@ -1,19 +1,22 @@
 #pragma once
+#include "emulation_context.hpp"
 #include "emulator_instance.hpp"
 #include <firelight/platforms/platform.hpp>
 
 #include <firelight/library/entry.hpp>
 #include <firelight/libretro/configuration_provider.hpp>
 #include <functional>
-#include <manager_accessor.hpp>
 #include <memory>
-#include <service_accessor.hpp>
 #include <string>
 
 namespace firelight::library {
 class UserLibraryService;
 class EntryResolver;
 } // namespace firelight::library
+
+namespace firelight::settings {
+class SettingsService;
+}
 
 // Resolves core-option values for a loaded entry (global namespace).
 class CoreConfiguration;
@@ -43,7 +46,7 @@ struct EmulationStartedEvent {
 
 struct EmulationStoppedEvent {};
 
-class EmulationService : public ManagerAccessor, public ServiceAccessor {
+class EmulationService {
 public:
   static EmulationService *getInstance() { return s_emuServiceInstance; }
   static void setInstance(EmulationService *service) {
@@ -53,6 +56,7 @@ public:
   EmulationService(library::UserLibraryService &library,
                    library::EntryResolver &entryResolver,
                    settings::SettingsService &settingsService,
+                   EmulationContext context,
                    CoreFactory coreFactory = nullptr);
   ~EmulationService();
 
@@ -73,6 +77,7 @@ private:
   settings::SettingsService &m_settingsService;
   library::UserLibraryService &m_library;
   library::EntryResolver &m_resolver;
+  EmulationContext m_context;
   CoreFactory m_coreFactory;
 
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;

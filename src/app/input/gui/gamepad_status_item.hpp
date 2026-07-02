@@ -4,13 +4,11 @@
 
 #include <QQuickItem>
 
-#include "../../manager_accessor.hpp"
 
 #include <firelight/input/igamepad.hpp>
 
 namespace firelight::input {
 class GamepadStatusItem : public QQuickItem,
-                          public ManagerAccessor,
                           public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int playerNumber READ getPlayerNumber WRITE setPlayerNumber NOTIFY

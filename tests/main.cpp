@@ -5,7 +5,7 @@
 #include <QtQuickTest>
 #include <firelight/db/sqlite_userdata_database.hpp>
 #include <gtest/gtest.h>
-#include <manager_accessor.hpp>
+#include <service_accessor.hpp>
 #include <firelight/saves/save_manager_impl.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   QApplication app(argc, argv);
 
   firelight::db::SqliteUserdataDatabase userdata(":memory:");
-  firelight::ManagerAccessor::setSaveManager(new firelight::saves::SaveManager(
+  firelight::ServiceAccessor::setSaveManager(new firelight::saves::SaveManager(
       QString::fromStdString(std::filesystem::temp_directory_path().string()),
       userdata));
 
@@ -22,10 +22,6 @@ int main(int argc, char **argv) {
   auto settingsService =
       std::make_shared<firelight::settings::SettingsService>(settings);
   firelight::settings::SettingsService::setInstance(settingsService.get());
-
-  auto emulatorConfigManager =
-      std::make_shared<EmulatorConfigManager>(userdata);
-  firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
 
   ::testing::InitGoogleTest(&argc, argv);
   auto result = RUN_ALL_TESTS();

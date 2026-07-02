@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+#include <firelight/activity/activity_log.hpp>
 #include <QMediaCaptureSession>
 #include <QMediaRecorder>
 #include <QOpenGLFramebufferObject>
@@ -18,7 +19,7 @@
 #include "emulation/emulator_instance.hpp"
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"
-#include "manager_accessor.hpp"
+#include "service_accessor.hpp"
 
 #include <libretro/libretro_vulkan.h>
 #include <memory>
@@ -31,7 +32,7 @@ class EmulatorItem;
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver,
-                             public firelight::ManagerAccessor {
+                             public firelight::ServiceAccessor {
 public:
   explicit EmulatorItemRenderer(
     QSGRendererInterface::GraphicsApi api, QWindow *window,

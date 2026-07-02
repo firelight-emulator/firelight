@@ -1,7 +1,6 @@
 #pragma once
 #include "firelight/event_dispatcher.hpp"
 #include <firelight/input/input_service.hpp>
-#include "service_accessor.hpp"
 
 #include <QObject>
 #include <QTimer>
@@ -10,7 +9,7 @@
 
 namespace firelight::gui {
 
-class QtInputServiceProxy final : public QObject, public ServiceAccessor {
+class QtInputServiceProxy final : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool prioritizeControllerOverKeyboard READ
                  prioritizeControllerOverKeyboard WRITE
@@ -21,7 +20,7 @@ class QtInputServiceProxy final : public QObject, public ServiceAccessor {
           WRITE setOnlyPlayerOneCanNavigateMenus NOTIFY
               onlyPlayerOneCanNavigateMenusChanged)
 public:
-  QtInputServiceProxy();
+  explicit QtInputServiceProxy(input::InputService &inputService);
 
   void
   setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);

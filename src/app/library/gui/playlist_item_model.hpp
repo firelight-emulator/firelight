@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../manager_accessor.hpp"
 #include "../../service_accessor.hpp"
 
 #include <firelight/library/folder_info.hpp>
@@ -8,7 +7,7 @@
 
 namespace firelight::gui {
   class LibraryFolderListModel : public QAbstractListModel,
-                                 public ManagerAccessor, public ServiceAccessor {
+                                 public ServiceAccessor {
     Q_OBJECT
 
   public:

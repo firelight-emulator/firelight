@@ -65,6 +65,13 @@ FocusScope {
             color: "#333333"
         }
 
+        CoreSelector {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 8
+            level: 1 // Platform tier
+            platformId: root.platformId
+        }
+
         EmulationSettingsSurface {
             Layout.fillWidth: true
             Layout.fillHeight: true

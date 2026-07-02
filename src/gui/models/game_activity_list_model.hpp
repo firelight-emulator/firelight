@@ -1,12 +1,11 @@
 #pragma once
 #include <QAbstractListModel>
-#include <manager_accessor.hpp>
 #include <service_accessor.hpp>
 
 namespace firelight::activity {
 
 class GameActivityListModel : public QAbstractListModel,
-                              public ManagerAccessor, public ServiceAccessor {
+                              public ServiceAccessor {
   Q_OBJECT
 
 public:

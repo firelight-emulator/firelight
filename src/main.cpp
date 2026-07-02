@@ -31,6 +31,8 @@
 #include "app/input/gui/profile_list_model.hpp"
 #include "app/input/shortcut_catalog.hpp"
 #include <firelight/input/sqlite_controller_repository.hpp>
+#include "app/emulation/emulation_context.hpp"
+#include "app/emulator_config_manager.hpp"
 #include "app/library/gui/content_directory_model.hpp"
 #include "app/library/gui/playlist_item_model.hpp"
 #include <firelight/library/library_scanner2.hpp>
@@ -70,6 +72,7 @@
 #include "gui/models/core_options_model.hpp"
 #include "gui/models/emulation_settings_model.hpp"
 #include "gui/qt_audio_settings_proxy.hpp"
+#include "gui/qt_core_registry_proxy.hpp"
 #include "gui/models/game_activity_list_model.hpp"
 #include "gui/qt_achievement_service_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
@@ -176,7 +179,7 @@ int main(int argc, char *argv[]) {
         spdlog::warn("Unable to create core-system directory");
     }
 
-    firelight::ManagerAccessor::setCoreSystemDirectory(
+    firelight::ServiceAccessor::setCoreSystemDirectory(
         (defaultAppDataPathString + "/core-system").toStdString());
 
     firelight::input::SqliteControllerRepository controllerRepository(
@@ -193,22 +196,21 @@ int main(int argc, char *argv[]) {
 
     firelight::db::SqliteUserdataDatabase userdata_database(
         defaultAppDataPathString + "/userdata.db");
-    firelight::ManagerAccessor::setUserdataManager(&userdata_database);
+    firelight::ServiceAccessor::setUserdataManager(&userdata_database);
 
     firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString +
                                                        "/activity.db");
-    firelight::ManagerAccessor::setActivityLog(&activityLog);
     firelight::ServiceAccessor::setActivityService(&activityLog);
 
     auto gameImageProvider = new firelight::gui::GameImageProvider();
-    firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
+    firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);
 
     //   **** Load Content Database ****
     firelight::db::SqliteContentDatabase contentDatabase(
         defaultAppDataPathString + "/content.db");
 
     firelight::saves::SaveManager saveManager(savesPath, userdata_database);
-    firelight::ManagerAccessor::setSaveManager(&saveManager);
+    firelight::ServiceAccessor::setSaveManager(&saveManager);
 
     firelight::library::SqliteUserLibraryRepository userLibrary(
         defaultAppDataPathString + "/library.db");
@@ -259,12 +261,13 @@ int main(int argc, char *argv[]) {
         achievementService);
     firelight::achievements::RAClient raClient(offlineRaClient,
                                                achievementService);
-    firelight::ManagerAccessor::setAchievementManager(&raClient);
+    firelight::ServiceAccessor::setAchievementManager(&raClient);
     firelight::ServiceAccessor::setAchievementService(&achievementService);
 
     // Set up the models for QML
     // ***********************************************
-    firelight::library::EntryListModel entryListModel(userLibraryService);
+    firelight::library::EntryListModel entryListModel(userLibraryService,
+                                                      activityLog);
 
     QObject::connect(&libScanner2,
                      &firelight::library::LibraryScanner2::scanFinished,
@@ -280,14 +283,13 @@ int main(int argc, char *argv[]) {
 
     auto emulatorConfigManager =
             std::make_shared<EmulatorConfigManager>(userdata_database);
-    firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
 
     firelight::mods::SqliteModRepository modRepository;
-    firelight::ManagerAccessor::setModRepository(&modRepository);
+    firelight::ServiceAccessor::setModRepository(&modRepository);
 
     firelight::settings::SqliteSettingsRepository emulationSettingsManager(
         (defaultAppDataPathString + "/settings.db").toStdString());
-    firelight::ManagerAccessor::setEmulationSettingsManager(
+    firelight::ServiceAccessor::setEmulationSettingsManager(
         &emulationSettingsManager);
 
     // Caches each core's declared options (populated after a core loads) so the
@@ -389,9 +391,18 @@ int main(int argc, char *argv[]) {
     // diskCache->setCacheDirectory(directory);
     // manager->setCache(diskCache);
 
+    firelight::emulation::EmulationContext emulationContext{
+        .inputService = &inputService,
+        .achievementManager = &raClient,
+        .saveManager = &saveManager,
+        .coreOptionRepository = &coreOptionRepository,
+        .coreSystemDirectory =
+            (defaultAppDataPathString + "/core-system").toStdString(),
+    };
     firelight::emulation::EmulationService emuService(userLibraryService,
                                                       entryResolver,
-                                                      settingsService);
+                                                      settingsService,
+                                                      emulationContext);
     firelight::emulation::EmulationService::setInstance(&emuService);
 
     firelight::gui::LibraryFolderListModel libraryFolderListModel;
@@ -418,6 +429,8 @@ int main(int argc, char *argv[]) {
                                              new firelight::gui::EventEmitter());
     engine.rootContext()->setContextProperty(
         "AudioSettings", new firelight::gui::QtAudioSettingsProxy());
+    engine.rootContext()->setContextProperty(
+        "CoreRegistry", new firelight::gui::QtCoreRegistryProxy());
     engine.rootContext()->setContextProperty("Router",
                                              new firelight::gui::Router());
     engine.rootContext()->setContextProperty("emulator_config_manager",
@@ -436,16 +449,18 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("ActivityBucketsModel",
                                              activityBucketsModel);
 
-    const auto searchResultsModel = new firelight::gui::SearchResultsListModel();
+    const auto searchResultsModel = new firelight::gui::SearchResultsListModel(
+        userLibraryService, firelight::platforms::PlatformService::getInstance());
     engine.rootContext()->setContextProperty("SearchResultsModel", searchResultsModel);
 
 
     engine.rootContext()->setContextProperty(
-        "InputService", new firelight::gui::QtInputServiceProxy());
+        "InputService", new firelight::gui::QtInputServiceProxy(inputService));
     engine.rootContext()->setContextProperty(
         "EmulationService", new firelight::gui::QtEmulationServiceProxy());
     engine.rootContext()->setContextProperty(
-        "AchievementService", new firelight::gui::QtAchievementServiceProxy());
+        "AchievementService",
+        new firelight::gui::QtAchievementServiceProxy(achievementService));
 
     engine.rootContext()->setContextProperty("LibraryFolderModel",
                                              &libraryFolderListModel);
@@ -484,7 +499,7 @@ int main(int argc, char *argv[]) {
 
     firelight::discord::DiscordManager discordManager;
     discordManager.initialize();
-    firelight::ManagerAccessor::setDiscordManager(&discordManager);
+    firelight::ServiceAccessor::setDiscordManager(&discordManager);
 
     QObject::connect(window, &QQuickWindow::afterRendering,
                      [&]() { discordManager.runCallbacks(); });

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace firelight {
   namespace library {
     class UserLibraryService;
@@ -7,11 +9,13 @@ namespace firelight {
 
   namespace achievements {
     class AchievementService;
+    class RAClient;
   }
 
   namespace settings {
     class SettingsService;
     class ICoreOptionRepository;
+    class ISettingsRepository;
   }
 
   namespace platforms {
@@ -27,6 +31,31 @@ namespace firelight {
     class IActivityLog;
   }
 
+  namespace saves {
+    class ISaveManager;
+  }
+
+  namespace db {
+    class IUserdataDatabase;
+  }
+
+  namespace mods {
+    class IModRepository;
+  }
+
+  namespace discord {
+    class IDiscordManager;
+  }
+
+  namespace gui {
+    class GameImageProvider;
+  }
+
+  // The one app-wide service locator. Its contract: it exists only for objects
+  // the QML engine default-constructs (qmlRegisterType models/items) which
+  // cannot receive dependencies via a constructor. Everything we construct
+  // ourselves should take its dependencies via the constructor instead. All
+  // members are set once in main.cpp.
   class ServiceAccessor {
   public:
     static void setInputService(input::InputService *service);
@@ -47,6 +76,23 @@ namespace firelight {
 
     static void setActivityService(activity::IActivityLog *service);
 
+    static void setSaveManager(saves::ISaveManager *manager);
+
+    static void setUserdataManager(db::IUserdataDatabase *manager);
+
+    static void setAchievementManager(achievements::RAClient *manager);
+
+    static void setGameImageProvider(gui::GameImageProvider *provider);
+
+    static void setCoreSystemDirectory(const std::string &directory);
+
+    static void setModRepository(mods::IModRepository *repository);
+
+    static void
+    setEmulationSettingsManager(settings::ISettingsRepository *repository);
+
+    static void setDiscordManager(discord::IDiscordManager *manager);
+
   protected:
     static input::InputService *getInputService();
 
@@ -64,6 +110,22 @@ namespace firelight {
 
     static activity::IActivityLog *getActivityService();
 
+    static saves::ISaveManager *getSaveManager();
+
+    static db::IUserdataDatabase *getUserdataManager();
+
+    static achievements::RAClient *getAchievementManager();
+
+    static gui::GameImageProvider *getGameImageProvider();
+
+    static std::string getCoreSystemDirectory();
+
+    static mods::IModRepository *getModRepository();
+
+    static settings::ISettingsRepository *getEmulationSettingsManager();
+
+    static discord::IDiscordManager *getDiscordManager();
+
   private:
     static input::InputService *s_inputService;
     static input::IControllerRepository *s_controllerProfileRepository;
@@ -73,5 +135,13 @@ namespace firelight {
     static achievements::AchievementService *s_achievementService;
     static library::UserLibraryService *s_libraryService;
     static activity::IActivityLog *s_activityService;
+    static saves::ISaveManager *s_saveManager;
+    static db::IUserdataDatabase *s_userdataDatabase;
+    static achievements::RAClient *s_achievementManager;
+    static gui::GameImageProvider *s_gameImageProvider;
+    static std::string s_coreSystemDirectory;
+    static mods::IModRepository *s_modRepository;
+    static settings::ISettingsRepository *s_emulationSettingsManager;
+    static discord::IDiscordManager *s_discordManager;
   };
 } // namespace firelight

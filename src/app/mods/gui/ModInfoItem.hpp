@@ -1,12 +1,12 @@
 #pragma once
-#include <manager_accessor.hpp>
+#include <service_accessor.hpp>
 
 #include <QObject>
 #include <QVariant>
 
 namespace firelight::mods {
 
-class ModInfoItem : public QObject, public ManagerAccessor {
+class ModInfoItem : public QObject, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int modId READ modId WRITE setModId NOTIFY modIdChanged)
   Q_PROPERTY(QString modName READ modName NOTIFY modNameChanged)

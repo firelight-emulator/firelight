@@ -1,5 +1,6 @@
 #include "emulation_settings_model.hpp"
 
+#include "libretro/core_registry.hpp"
 #include "platform_metadata.hpp"
 
 #include <firelight/settings/settings_catalog.hpp>
@@ -30,8 +31,15 @@ QString widgetFor(const EmulationSetting &setting) {
 
 EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
     : QAbstractListModel(parent) {
-  const auto refreshOnMatch = [this](bool matches) {
-    if (matches) {
+  // A "core" change re-resolves which core (and thus which settings) apply, so
+  // the item set must be rebuilt; any other key just refreshes values.
+  const auto onMatch = [this](bool matches, const std::string &key) {
+    if (!matches) {
+      return;
+    }
+    if (key == CoreRegistry::kCoreSettingKey) {
+      rebuildItems();
+    } else {
       refreshValues();
     }
   };
@@ -42,14 +50,14 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
 
   m_platformSettingChangedConnection =
       EventDispatcher::instance().subscribe<PlatformSettingChangedEvent>(
-          [this, refreshOnMatch](const PlatformSettingChangedEvent &e) {
-            refreshOnMatch(e.platformId == m_platformId);
+          [this, onMatch](const PlatformSettingChangedEvent &e) {
+            onMatch(e.platformId == m_platformId, e.key);
           });
 
   m_gameSettingChangedConnection =
       EventDispatcher::instance().subscribe<GameSettingChangedEvent>(
-          [this, refreshOnMatch](const GameSettingChangedEvent &e) {
-            refreshOnMatch(e.contentHash == m_contentHash.toStdString());
+          [this, onMatch](const GameSettingChangedEvent &e) {
+            onMatch(e.contentHash == m_contentHash.toStdString(), e.key);
           });
 
   rebuildItems();
@@ -62,7 +70,8 @@ void EmulationSettingsModel::rebuildItems() {
   const auto &catalog = SettingsCatalog::instance();
   std::vector<EmulationSetting> settings = catalog.commonSettings();
   if (m_platformId != -1) {
-    const auto coreName = PlatformMetadata::getCoreName(m_platformId);
+    const auto coreName = CoreRegistry::instance().resolveCoreName(
+        m_platformId, m_contentHash.toStdString());
     for (const auto &s : catalog.coreSpecificSettings(coreName)) {
       settings.push_back(s);
     }

@@ -1,12 +1,14 @@
 #pragma once
-#include "service_accessor.hpp"
-
 #include <QObject>
 #include <firelight/event_dispatcher.hpp>
 
+namespace firelight::achievements {
+class AchievementService;
+}
+
 namespace firelight::gui {
 
-class QtAchievementServiceProxy : public QObject, public ServiceAccessor {
+class QtAchievementServiceProxy : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool loggedIn READ isLoggedIn NOTIFY loggedInChanged)
   Q_PROPERTY(bool inHardcoreSession READ inHardcoreSession NOTIFY
@@ -15,7 +17,9 @@ class QtAchievementServiceProxy : public QObject, public ServiceAccessor {
                  numCurrentSessionHardcoreUnlocks NOTIFY
                      numCurrentSessionHardcoreUnlocksChanged)
 public:
-  explicit QtAchievementServiceProxy(QObject *parent = nullptr);
+  explicit QtAchievementServiceProxy(
+      achievements::AchievementService &achievementService,
+      QObject *parent = nullptr);
 
   bool isLoggedIn() const;
   bool inHardcoreSession() const;
@@ -26,6 +30,7 @@ signals:
   void numCurrentSessionHardcoreUnlocksChanged();
 
 private:
+  achievements::AchievementService *m_achievementService;
   ScopedConnection m_sessionStartedConnection;
   ScopedConnection m_sessionEndedConnection;
 };

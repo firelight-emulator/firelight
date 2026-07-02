@@ -2,10 +2,10 @@
 #include "play_session_list_model.hpp"
 
 #include <QObject>
-#include <manager_accessor.hpp>
+#include <service_accessor.hpp>
 namespace firelight::activity {
 
-class GameActivityItem : public QObject, public ManagerAccessor {
+class GameActivityItem : public QObject, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
                  contentHashChanged)

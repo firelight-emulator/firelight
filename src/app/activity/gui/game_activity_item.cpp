@@ -1,4 +1,5 @@
 #include "game_activity_item.hpp"
+#include <firelight/activity/activity_log.hpp>
 
 namespace firelight::activity {
 
@@ -12,7 +13,7 @@ void GameActivityItem::setContentHash(const QString &contentHash) {
   m_contentHash = contentHash;
 
   auto playSessions =
-      getActivityLog()->getPlaySessions(m_contentHash.toStdString());
+      getActivityService()->getPlaySessions(m_contentHash.toStdString());
 
   m_playSessions->refreshItems(playSessions);
 

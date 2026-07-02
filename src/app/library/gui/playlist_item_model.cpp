@@ -1,4 +1,5 @@
 #include "playlist_item_model.hpp"
+#include <spdlog/spdlog.h>
 #include <firelight/library/user_library_service.hpp>
 
 namespace firelight::gui {

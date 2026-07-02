@@ -2,6 +2,7 @@
 
 #include <firelight/input/gamepad_input.hpp>
 #include "input/platform_input_descriptor.hpp"
+#include "libretro/core_registry.hpp"
 
 #include <firelight/libretro/retropad.hpp>
 #include <map>
@@ -767,51 +768,17 @@ namespace firelight {
       }
     }
 
-    // Stable identity of the libretro core that runs a platform. Also the key
-    // under which the settings catalog stores that core's options (core option
-    // keys differ per core).
+    // The default core that runs a platform. Thin shim over CoreRegistry (the
+    // authority); kept for existing call sites. For the *resolved* core
+    // (honoring per-platform / per-game overrides) use
+    // CoreRegistry::resolveCoreName. Also the key under which the settings
+    // catalog stores that core's options.
     static std::string getCoreName(const int platformId) {
-      switch (platformId) {
-        case PLATFORM_ID_GAMEBOY:
-        case PLATFORM_ID_GAMEBOY_COLOR:
-          return "gambatte_libretro";
-        case PLATFORM_ID_GAMEBOY_ADVANCE:
-          return "mgba_libretro";
-        case PLATFORM_ID_NES:
-          return "fceumm_libretro";
-        case PLATFORM_ID_SNES:
-          return "snes9x_libretro";
-        case PLATFORM_ID_N64:
-          return "mupen64plus_next_libretro";
-        case PLATFORM_ID_NINTENDO_DS:
-          return "melondsds_libretro";
-        case PLATFORM_ID_SG1000:
-        case PLATFORM_ID_SEGA_GENESIS:
-        case PLATFORM_ID_SEGA_GAMEGEAR:
-        case PLATFORM_ID_SEGA_MASTER_SYSTEM:
-          return "genesis_plus_gx_libretro";
-        case PLATFORM_ID_PLAYSTATION_PORTABLE:
-          return "ppsspp_libretro";
-        case PLATFORM_ID_TURBOGRAFX16:
-        case PLATFORM_ID_SUPERGRAFX:
-          return "mednafen_supergrafx_libretro";
-        case PLATFORM_ID_POKEMON_MINI:
-          return "pokemini_libretro";
-        case PLATFORM_ID_WONDERSWAN:
-          return "mednafen_wswan_libretro";
-        case PLATFORM_ID_NEOGEO_POCKET:
-          return "mednafen_ngp_libretro";
-        default:
-          return "";
-      }
+      return CoreRegistry::instance().defaultCoreForPlatform(platformId);
     }
 
     static std::string getCoreDllPath(const int platformId) {
-      const auto coreName = getCoreName(platformId);
-      if (coreName.empty()) {
-        return "";
-      }
-      return getCoreDirectoryPath() + coreName + getCoreDllExtension();
+      return CoreRegistry::instance().dllPathFor(getCoreName(platformId));
     }
 
     static std::string getInputName(const input::GamepadInput input) {

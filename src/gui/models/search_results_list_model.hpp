@@ -2,16 +2,24 @@
 #include <QSortFilterProxyModel>
 #include <qtmetamacros.h>
 
-#include "service_accessor.hpp"
+namespace firelight::library {
+    class UserLibraryService;
+}
+namespace firelight::platforms {
+    class PlatformService;
+}
 
 namespace firelight::gui {
-    class SearchResultsListModel : public QAbstractListModel, public ServiceAccessor {
+    class SearchResultsListModel : public QAbstractListModel {
         Q_OBJECT
         Q_PROPERTY(int count READ count NOTIFY countChanged)
 
     public:
-        explicit SearchResultsListModel(QObject *parent = nullptr)
-            : QAbstractListModel(parent) {
+        SearchResultsListModel(firelight::library::UserLibraryService &library,
+                               firelight::platforms::PlatformService &platformService,
+                               QObject *parent = nullptr)
+            : QAbstractListModel(parent), m_library(&library),
+              m_platformService(&platformService) {
             refreshItems();
         }
 
@@ -63,6 +71,9 @@ namespace firelight::gui {
             QString platformIconSourceUrl;
             int matchScore;
         };
+
+        firelight::library::UserLibraryService *m_library;
+        firelight::platforms::PlatformService *m_platformService;
 
         QVector<Item> m_allItems;
         QVector<Item> m_visibleItems;

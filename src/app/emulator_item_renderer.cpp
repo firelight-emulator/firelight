@@ -1,4 +1,7 @@
 #include "emulator_item_renderer.hpp"
+#include <firelight/saves/isave_manager.hpp>
+#include <rcheevos/ra_client.hpp>
+#include <QJsonObject>
 
 #include "../gui/game_image_provider.hpp"
 
@@ -37,7 +40,7 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
     m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
 
   m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
-  getActivityLog()->createPlaySession(m_playSession);
+  getActivityService()->createPlaySession(m_playSession);
 
   getAchievementManager()->unloadGame();
 

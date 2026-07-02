@@ -1,4 +1,5 @@
 #include "emulator_item.hpp"
+#include <firelight/discord/idiscord_manager.hpp>
 #include <QQuickWindow>
 #include <rhi/qrhi_platform.h>
 #include <spdlog/spdlog.h>
