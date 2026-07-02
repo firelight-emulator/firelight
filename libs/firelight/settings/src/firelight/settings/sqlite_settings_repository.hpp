@@ -13,9 +13,6 @@ public:
   explicit SqliteSettingsRepository(std::string databaseFile);
   ~SqliteSettingsRepository() override;
 
-  SettingsLevel getSettingsLevel(std::string contentHash) override;
-  bool setSettingsLevel(std::string contentHash, SettingsLevel level) override;
-
   std::optional<std::string> getGlobalValue(const std::string &key) override;
   bool setGlobalValue(const std::string &key, const std::string &value) override;
   bool resetGlobalValue(const std::string &key) override;

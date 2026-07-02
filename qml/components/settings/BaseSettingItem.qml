@@ -10,6 +10,11 @@ FocusScope {
     required property Item control
     property string description: ""
 
+    // Shown when this setting has an override at the current tier; emits reset()
+    // so the caller can clear it (falling back to the inherited value).
+    property bool resettable: false
+    signal reset()
+
     property var onClicked: null
 
     implicitHeight: button.implicitHeight
@@ -76,6 +81,36 @@ FocusScope {
                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                         font.family: Constants.regularFontFamily
                         font.weight: Font.DemiBold
+                    }
+                    Button {
+                        id: resetButton
+                        visible: root.resettable
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        Layout.rightMargin: 8
+                        padding: 6
+                        hoverEnabled: true
+                        focusPolicy: Qt.NoFocus
+
+                        onClicked: root.reset()
+
+                        HoverHandler {
+                            cursorShape: Qt.PointingHandCursor
+                        }
+
+                        background: Rectangle {
+                            radius: 6
+                            color: resetButton.hovered ? ColorPalette.neutral300 : "transparent"
+                            opacity: resetButton.hovered ? 0.2 : 0
+                        }
+
+                        contentItem: Text {
+                            text: qsTr("Reset")
+                            color: ColorPalette.neutral300
+                            font.pixelSize: 14
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.Medium
+                            verticalAlignment: Text.AlignVCenter
+                        }
                     }
                     Pane {
                         id: controlItem

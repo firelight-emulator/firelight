@@ -19,14 +19,12 @@ protected:
   std::unique_ptr<SettingsService> service;
 
   // Event handlers
-  ScopedConnection settingsLevelChangedHandler;
   ScopedConnection platformSettingChangedHandler;
   ScopedConnection platformSettingResetHandler;
   ScopedConnection gameSettingChangedHandler;
   ScopedConnection gameSettingResetHandler;
 
   // Event storage
-  std::vector<SettingsLevelChangedEvent> settingsLevelChangedEvents;
   std::vector<PlatformSettingChangedEvent> platformSettingChangedEvents;
   std::vector<PlatformSettingResetEvent> platformSettingResetEvents;
   std::vector<GameSettingChangedEvent> gameSettingChangedEvents;
@@ -37,12 +35,6 @@ protected:
     service = std::make_unique<SettingsService>(*repository);
 
     // Subscribe to all events
-    settingsLevelChangedHandler =
-        EventDispatcher::instance().subscribe<SettingsLevelChangedEvent>(
-            [this](const SettingsLevelChangedEvent &event) {
-              settingsLevelChangedEvents.push_back(event);
-            });
-
     platformSettingChangedHandler =
         EventDispatcher::instance().subscribe<PlatformSettingChangedEvent>(
             [this](const PlatformSettingChangedEvent &event) {
@@ -73,69 +65,12 @@ protected:
     repository.reset();
 
     // Clear event vectors
-    settingsLevelChangedEvents.clear();
     platformSettingChangedEvents.clear();
     platformSettingResetEvents.clear();
     gameSettingChangedEvents.clear();
     gameSettingResetEvents.clear();
   }
 };
-
-// Settings Level Tests
-/**
- * @brief Test that settings level defaults to Platform for new content
- * 
- * Verifies that when no explicit settings level is set for a content hash,
- * the service returns Platform as the default settings level.
- */
-TEST_F(SettingsServiceTest, GetSettingsLevel_DefaultsToPlatform) {
-  const std::string contentHash = "test_content_hash";
-
-  SettingsLevel level = service->getSettingsLevel(contentHash);
-
-  EXPECT_EQ(level, SettingsLevel::Platform);
-}
-
-/**
- * @brief Test that setting settings level succeeds and publishes event
- * 
- * Verifies that setting a settings level for a content hash works correctly
- * and publishes a SettingsLevelChangedEvent with the correct data.
- */
-TEST_F(SettingsServiceTest, SetSettingsLevel_Success_PublishesEvent) {
-  const std::string contentHash = "test_content_hash";
-  const SettingsLevel level = Game;
-
-  bool success = service->setSettingsLevel(contentHash, level);
-
-  EXPECT_TRUE(success);
-  EXPECT_EQ(service->getSettingsLevel(contentHash), level);
-
-  // Verify event was published
-  ASSERT_EQ(settingsLevelChangedEvents.size(), 1);
-  EXPECT_EQ(settingsLevelChangedEvents[0].contentHash, contentHash);
-  EXPECT_EQ(settingsLevelChangedEvents[0].level, level);
-}
-
-/**
- * @brief Test that multiple settings level changes publish multiple events
- * 
- * Verifies that each settings level change operation publishes a separate
- * event, allowing observers to track all settings level transitions.
- */
-TEST_F(SettingsServiceTest,
-       SetSettingsLevel_MultipleChanges_PublishesMultipleEvents) {
-  const std::string contentHash = "test_content_hash";
-
-  service->setSettingsLevel(contentHash, Game);
-  service->setSettingsLevel(contentHash, Platform);
-  service->setSettingsLevel(contentHash, Game);
-
-  ASSERT_EQ(settingsLevelChangedEvents.size(), 3);
-  EXPECT_EQ(settingsLevelChangedEvents[0].level, SettingsLevel::Game);
-  EXPECT_EQ(settingsLevelChangedEvents[1].level, SettingsLevel::Platform);
-  EXPECT_EQ(settingsLevelChangedEvents[2].level, SettingsLevel::Game);
-}
 
 // Platform Value Tests
 /**
@@ -352,10 +287,10 @@ TEST_F(SettingsServiceTest, ResetGameValue_NonExistent_PublishesEvent) {
 // Integration Tests
 /**
  * @brief Test that mixed operations publish all correct events
- * 
- * Verifies that performing a combination of settings operations (level changes,
- * platform settings, game settings, resets) publishes all expected events
- * with correct data.
+ *
+ * Verifies that performing a combination of settings operations (platform
+ * settings, game settings, resets) publishes all expected events with correct
+ * data.
  */
 TEST_F(SettingsServiceTest, MixedOperations_PublishesCorrectEvents) {
   const std::string contentHash = "game_hash";
@@ -364,23 +299,18 @@ TEST_F(SettingsServiceTest, MixedOperations_PublishesCorrectEvents) {
   const std::string value = "setting_value";
 
   // Perform mixed operations
-  service->setSettingsLevel(contentHash, Game);
   service->setPlatformValue(platformId, key, value);
   service->setGameValue(contentHash, key, value);
   service->resetPlatformValue(platformId, key);
   service->resetGameValue(contentHash, key);
 
   // Verify all events were published
-  EXPECT_EQ(settingsLevelChangedEvents.size(), 1);
   EXPECT_EQ(platformSettingChangedEvents.size(), 1);
   EXPECT_EQ(gameSettingChangedEvents.size(), 1);
   EXPECT_EQ(platformSettingResetEvents.size(), 1);
   EXPECT_EQ(gameSettingResetEvents.size(), 1);
 
   // Verify event contents
-  EXPECT_EQ(settingsLevelChangedEvents[0].contentHash, contentHash);
-  EXPECT_EQ(settingsLevelChangedEvents[0].level, SettingsLevel::Game);
-
   EXPECT_EQ(platformSettingChangedEvents[0].platformId, platformId);
   EXPECT_EQ(platformSettingChangedEvents[0].key, key);
   EXPECT_EQ(platformSettingChangedEvents[0].value, value);

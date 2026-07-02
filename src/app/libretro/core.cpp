@@ -900,11 +900,13 @@ namespace libretro {
           return false;
         }
 
+        std::map<std::string, std::string> categoryLabels;
         for (int i = 0; i < 100; ++i) {
-          auto opt = ptr->categories[i];
-          if (opt.key == nullptr) {
+          auto cat = ptr->categories[i];
+          if (cat.key == nullptr) {
             break;
           }
+          categoryLabels[cat.key] = cat.desc != nullptr ? cat.desc : cat.key;
         }
 
         for (int i = 0; i < 200; ++i) {
@@ -915,6 +917,13 @@ namespace libretro {
 
           firelight::libretro::IConfigurationProvider::Option option;
           option.key = strdup(opt.key);
+
+          if (opt.category_key != nullptr) {
+            option.category = opt.category_key;
+            const auto it = categoryLabels.find(opt.category_key);
+            option.categoryLabel =
+                it != categoryLabels.end() ? it->second : opt.category_key;
+          }
 
           if (opt.default_value != nullptr) {
             option.defaultValueKey = strdup(opt.default_value);
@@ -967,6 +976,17 @@ namespace libretro {
           return false;
         }
 
+        std::map<std::string, std::string> categoryLabels;
+        if (ptr->us != nullptr && ptr->us->categories != nullptr) {
+          for (int i = 0; i < 100; ++i) {
+            auto cat = ptr->us->categories[i];
+            if (cat.key == nullptr) {
+              break;
+            }
+            categoryLabels[cat.key] = cat.desc != nullptr ? cat.desc : cat.key;
+          }
+        }
+
         for (int i = 0; i < 200; ++i) {
           auto opt = ptr->us->definitions[i];
           if (opt.key == nullptr) {
@@ -975,6 +995,13 @@ namespace libretro {
 
           firelight::libretro::IConfigurationProvider::Option option;
           option.key = strdup(opt.key);
+
+          if (opt.category_key != nullptr) {
+            option.category = opt.category_key;
+            const auto it = categoryLabels.find(opt.category_key);
+            option.categoryLabel =
+                it != categoryLabels.end() ? it->second : opt.category_key;
+          }
 
           if (opt.default_value != nullptr) {
             option.defaultValueKey = strdup(opt.default_value);

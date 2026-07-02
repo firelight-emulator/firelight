@@ -66,6 +66,8 @@ namespace firelight::emulation {
       def.label = option.label;
       def.description = option.description;
       def.defaultValue = option.defaultValueKey;
+      def.category = option.category;
+      def.categoryLabel = option.categoryLabel;
       for (const auto &value : option.possibleValues) {
         def.values.push_back({value.key, value.label});
       }

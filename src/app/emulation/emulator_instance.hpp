@@ -73,13 +73,13 @@ private:
   std::string m_aspectRatioMode = "emulator-corrected";
   int m_integerScale = 0;
 
-  // Settings
-  settings::SettingsLevel m_currentSettingsLevel;
+  // Settings — resolved by inheritance (game -> platform -> global -> default),
+  // so any change at any tier that affects this game triggers a refresh.
   void refreshAllSettings();
 
   ScopedConnection m_platformSettingChangedConnection;
   ScopedConnection m_gameSettingChangedConnection;
-  ScopedConnection m_settingsLevelChangedConnection;
+  ScopedConnection m_globalSettingChangedConnection;
 };
 
 } // namespace firelight::emulation

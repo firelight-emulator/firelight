@@ -49,8 +49,6 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
                 } else if (e.key == "integer-scale") {
                   emit integerScaleChanged();
                 }
-
-                emit currentSettingsLevelChanged();
               });
 }
 QtEmulationServiceProxy::~QtEmulationServiceProxy() = default;
@@ -70,13 +68,6 @@ QString QtEmulationServiceProxy::getCurrentContentHash() const {
 
   return "";
 }
-int QtEmulationServiceProxy::getCurrentSettingsLevel() const {
-  const auto contentHash = getCurrentContentHash();
-
-  return settings::SettingsService::instance()->getSettingsLevel(
-      contentHash.toStdString());
-}
-
 int QtEmulationServiceProxy::getCurrentEntryId() const {
   const auto entry = m_emulationService->getCurrentEntry();
   if (entry.has_value()) {

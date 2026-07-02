@@ -1116,7 +1116,9 @@ Pane {
         GameSettingsView {
             contentHash: EmulationService.currentContentHash
             platformId: EmulationService.currentPlatformId
-            level: EmulationService.currentSettingsLevel
+            // Default to editing this game's own overrides; the tab lets the
+            // user switch to the platform tier. (Values inherit at runtime.)
+            level: 0
             platformName: EmulationService.currentPlatformName
         }
     }

@@ -147,6 +147,12 @@ add_library(firelight_lib
         src/app/input/gui/platform_input_preferences.cpp
         src/app/input/gui/controller_list_model.cpp
         src/app/input/shortcut_catalog.cpp
+        src/gui/models/core_options_model.cpp
+        src/gui/models/core_options_model.hpp
+        src/gui/models/emulation_settings_model.cpp
+        src/gui/models/emulation_settings_model.hpp
+        src/gui/qt_audio_settings_proxy.cpp
+        src/gui/qt_audio_settings_proxy.hpp
         src/app/saves/gui/savefile_list_model.cpp
         libs/firelight/achievements/src/rcheevos/ra_client.cpp
         src/gui/eventhandlers/window_resize_handler.cpp
@@ -263,8 +269,6 @@ qt6_add_executable(firelight
         resources.qrc
         app_resources.rc
         src/main.cpp
-        src/gui/models/emulation_settings_model.cpp
-        src/gui/models/emulation_settings_model.hpp
 )
 
 
@@ -380,6 +384,8 @@ add_executable(fl_test
         tests/app/settings/emulation_setting_test.cpp
         tests/app/settings/settings_catalog_test.cpp
         tests/app/settings/sqlite_core_option_repository_test.cpp
+        tests/app/gui/core_options_model_test.cpp
+        tests/app/gui/emulation_settings_model_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
@@ -435,7 +441,7 @@ add_test(NAME QMLTests COMMAND fl_qml_test)
 
 add_dependencies(fl_test copy_resources)
 
-target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/activity/src libs/firelight/activity/include)
+target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include src libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/activity/src libs/firelight/activity/include)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
 #ctest_coverage_collect_gcov()

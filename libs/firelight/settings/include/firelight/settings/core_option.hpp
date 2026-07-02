@@ -20,6 +20,9 @@ struct CoreOption {
   std::string description;
   std::string defaultValue;
   std::vector<CoreOptionValue> values;
+  // Core-options v2 category grouping ("" = top-level/uncategorized).
+  std::string category;      // category key
+  std::string categoryLabel; // human-readable category name
 };
 
 } // namespace firelight::settings

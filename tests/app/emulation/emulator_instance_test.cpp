@@ -89,9 +89,7 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
   // Check initial picture mode value
   EXPECT_EQ("aspect-ratio-fill", instance->getPictureMode());
 
-  // Change game setting
-  m_settingsService->setSettingsLevel(m_testContentHash,
-                                      settings::SettingsLevel::Game);
+  // Change game setting — a game override applies immediately.
   m_settingsService->setGameValue(m_testContentHash, "picture-mode",
                                   "integer-scale");
 
@@ -128,16 +126,10 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
   // Verify instance is not initialized
   ASSERT_FALSE(instance->isInitialized());
 
-  // Set instance to use platform-level settings
-  m_settingsService->setSettingsLevel("e26ee0d44e809351c8ce2d73c7400cdd",
-                                      settings::SettingsLevel::Platform);
-
   // Check initial aspect ratio mode value
   EXPECT_EQ("emulator-corrected", instance->getAspectRatioMode());
 
-  // Change platform setting
-  m_settingsService->setSettingsLevel(m_testContentHash,
-                                      settings::SettingsLevel::Platform);
+  // Change platform setting — with no game override, it applies to this game.
   m_settingsService->setPlatformValue(3, "aspect-ratio", "pixel-perfect");
 
   // Verify the instance received the update
@@ -186,13 +178,13 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
 // }
 
 /**
- * @brief Test that changing settings level triggers EmulatorInstance refresh
+ * @brief Test that settings resolve by inheritance (game overrides platform).
  *
- * Verifies that when the settings level is changed between Game and Platform,
- * the EmulatorInstance updates its settings accordingly. Tests transitioning
- * from game-level to platform-level settings and back.
+ * There is no stored "settings level": the running game resolves each setting
+ * as game override -> platform override -> global -> default. A platform value
+ * applies when there's no game override; a game override then shadows it.
  */
-TEST_F(EmulatorInstanceTest, SettingsLevelChangeTriggersRefresh) {
+TEST_F(EmulatorInstanceTest, GameValueOverridesPlatformValue) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
@@ -210,31 +202,15 @@ TEST_F(EmulatorInstanceTest, SettingsLevelChangeTriggersRefresh) {
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
   auto instance = m_emulationService->getCurrentEmulatorInstance();
-  // Verify instance is not initialized
   ASSERT_FALSE(instance->isInitialized());
 
-  // Set different values at game and platform level
-  m_settingsService->setSettingsLevel("e26ee0d44e809351c8ce2d73c7400cdd",
-                                      settings::SettingsLevel::Game);
-  m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd",
-                                  "picture-mode", "integer-scale");
+  // With no game override, the platform value applies.
   m_settingsService->setPlatformValue(3, "picture-mode", "stretch");
-
-  // Initially should use game settings
-  EXPECT_EQ("integer-scale", instance->getPictureMode());
-
-  // Change to platform level
-  m_settingsService->setSettingsLevel("e26ee0d44e809351c8ce2d73c7400cdd",
-                                      settings::SettingsLevel::Platform);
-
-  // Should now reflect platform setting
   EXPECT_EQ("stretch", instance->getPictureMode());
 
-  // Change back to game level
-  m_settingsService->setSettingsLevel("e26ee0d44e809351c8ce2d73c7400cdd",
-                                      settings::SettingsLevel::Game);
-
-  // Should reflect game setting again
+  // A game override shadows the platform value.
+  m_settingsService->setGameValue(m_testContentHash, "picture-mode",
+                                  "integer-scale");
   EXPECT_EQ("integer-scale", instance->getPictureMode());
 }
 
@@ -268,8 +244,6 @@ TEST_F(EmulatorInstanceTest, MultipleSettingsChangeSimultaneously) {
   ASSERT_FALSE(instance->isInitialized());
 
   // Change multiple settings at once
-  m_settingsService->setSettingsLevel(m_testContentHash,
-                                      settings::SettingsLevel::Game);
   m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd",
                                   "picture-mode", "stretch");
   m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd",
@@ -349,10 +323,6 @@ TEST_F(EmulatorInstanceTest, WrongPlatformIdIgnoresPlatformSettings) {
   auto instance = m_emulationService->getCurrentEmulatorInstance();
   // Verify instance is not initialized
   ASSERT_FALSE(instance->isInitialized());
-
-  // Set to platform settings level
-  m_settingsService->setSettingsLevel("e26ee0d44e809351c8ce2d73c7400cdd",
-                                      settings::SettingsLevel::Platform);
 
   // Check initial aspect ratio mode
   EXPECT_EQ("emulator-corrected", instance->getAspectRatioMode());

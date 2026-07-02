@@ -1,5 +1,7 @@
 #include <firelight/settings/sqlite_core_option_repository.hpp>
 
+#include <SQLiteCpp/Database.h>
+#include <QTemporaryDir>
 #include <gtest/gtest.h>
 
 namespace firelight::settings {
@@ -16,6 +18,42 @@ CoreOption option(std::string key, std::string defaultValue,
   return o;
 }
 } // namespace
+
+// A DB created before category columns existed must be migrated on open,
+// otherwise reads/writes referencing category_key fail and return nothing.
+TEST(SqliteCoreOptionRepositoryTest, MigratesLegacyTableMissingCategoryColumns) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  const auto path = (dir.path() + "/legacy.db").toStdString();
+
+  {
+    SQLite::Database db(path,
+                        SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+    db.exec("CREATE TABLE core_options (core_name TEXT NOT NULL, key TEXT NOT "
+            "NULL, label TEXT NOT NULL, description TEXT NOT NULL, "
+            "default_value TEXT NOT NULL, values_json TEXT NOT NULL, position "
+            "INTEGER NOT NULL, PRIMARY KEY (core_name, key))");
+    db.exec("INSERT INTO core_options VALUES ('core', 'old_key', 'Old', 'desc', "
+            "'v', '[]', 0)");
+  }
+
+  // Opening through the repository migrates the schema; the legacy row reads
+  // back with an empty category, and new category-aware writes work.
+  SqliteCoreOptionRepository repo(path);
+  auto read = repo.getCoreOptions("core");
+  ASSERT_EQ(read.size(), 1u);
+  EXPECT_EQ(read[0].key, "old_key");
+  EXPECT_EQ(read[0].category, "");
+
+  CoreOption withCategory = option("new_key", "x", {{"x", "X"}});
+  withCategory.category = "video";
+  withCategory.categoryLabel = "Video";
+  repo.upsertCoreOptions("core", {withCategory});
+
+  read = repo.getCoreOptions("core");
+  ASSERT_EQ(read.size(), 1u);
+  EXPECT_EQ(read[0].category, "video");
+}
 
 TEST(SqliteCoreOptionRepositoryTest, RoundTripsOptionsInOrder) {
   SqliteCoreOptionRepository repo(":memory:");

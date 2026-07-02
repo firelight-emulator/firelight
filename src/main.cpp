@@ -67,7 +67,9 @@
 #include "gui/EventEmitter.h"
 #include "gui/filesystem_utils.hpp"
 #include "gui/gamepad_profile_item.hpp"
+#include "gui/models/core_options_model.hpp"
 #include "gui/models/emulation_settings_model.hpp"
+#include "gui/qt_audio_settings_proxy.hpp"
 #include "gui/models/game_activity_list_model.hpp"
 #include "gui/qt_achievement_service_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
@@ -353,6 +355,8 @@ int main(int argc, char *argv[]) {
                                                          "GamepadListModel");
     qmlRegisterType<firelight::settings::EmulationSettingsModel>(
         "Firelight", 1, 0, "EmulationSettingsModel");
+    qmlRegisterType<firelight::settings::CoreOptionsModel>(
+        "Firelight", 1, 0, "CoreOptionsModel");
     qmlRegisterType<firelight::activity::GameActivityListModel>(
         "Firelight", 1, 0, "GameActivityModel");
 
@@ -412,6 +416,8 @@ int main(int argc, char *argv[]) {
         "FilesystemUtils", new firelight::gui::FilesystemUtils());
     engine.rootContext()->setContextProperty("EventEmitter",
                                              new firelight::gui::EventEmitter());
+    engine.rootContext()->setContextProperty(
+        "AudioSettings", new firelight::gui::QtAudioSettingsProxy());
     engine.rootContext()->setContextProperty("Router",
                                              new firelight::gui::Router());
     engine.rootContext()->setContextProperty("emulator_config_manager",

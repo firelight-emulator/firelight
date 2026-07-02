@@ -22,11 +22,10 @@ EmulatorInstance::EmulatorInstance(
       m_saveSlotNumber(saveSlotNumber) {
   m_lastSaveTime = std::chrono::steady_clock::now();
 
-  m_currentSettingsLevel =
-      settings::SettingsService::instance()->getSettingsLevel(m_contentHash);
-
-  // m_currentSettingsLevel = settings::SettingsLevel::Game;
-
+  // Settings resolve by inheritance (game -> platform -> global -> default), so
+  // a change at ANY tier can alter this game's effective value: refresh on a
+  // platform change for our platform, a game change for our hash, or any global
+  // change.
   m_platformSettingChangedConnection =
       EventDispatcher::instance()
           .subscribe<settings::PlatformSettingChangedEvent>(
@@ -34,41 +33,22 @@ EmulatorInstance::EmulatorInstance(
                 if (e.platformId != m_platformId) {
                   return;
                 }
-
-                if (m_currentSettingsLevel !=
-                    settings::SettingsLevel::Platform) {
-                  return;
-                }
-
                 refreshAllSettings();
               });
 
   m_gameSettingChangedConnection =
       EventDispatcher::instance().subscribe<settings::GameSettingChangedEvent>(
           [this](const settings::GameSettingChangedEvent &e) {
-            spdlog::info("Game setting changed event for {} (current {})",
-                         e.contentHash, m_contentHash);
             if (e.contentHash != m_contentHash) {
               return;
             }
-
-            if (m_currentSettingsLevel != settings::SettingsLevel::Game) {
-              return;
-            }
-
             refreshAllSettings();
           });
 
-  m_settingsLevelChangedConnection =
+  m_globalSettingChangedConnection =
       EventDispatcher::instance()
-          .subscribe<settings::SettingsLevelChangedEvent>(
-              [this](const settings::SettingsLevelChangedEvent &e) {
-                if (e.contentHash != m_contentHash) {
-                  return;
-                }
-
-                m_currentSettingsLevel = e.level;
-
+          .subscribe<settings::GlobalSettingChangedEvent>(
+              [this](const settings::GlobalSettingChangedEvent &) {
                 refreshAllSettings();
               });
 
@@ -79,12 +59,11 @@ EmulatorInstance::~EmulatorInstance() {
   spdlog::info("[EmulatorInstance] Shutting down");
 
   // Unsubscribe first: the settings callbacks capture `this` and touch members
-  // (m_core, m_currentSettingsLevel, ...). Disconnecting before we tear anything
-  // down ensures a late-arriving settings event can't fire into a
-  // partially-destroyed instance.
+  // (m_core, ...). Disconnecting before we tear anything down ensures a
+  // late-arriving settings event can't fire into a partially-destroyed instance.
   m_platformSettingChangedConnection = {};
   m_gameSettingChangedConnection = {};
-  m_settingsLevelChangedConnection = {};
+  m_globalSettingChangedConnection = {};
 
   // Restore device-default controller profiles when the game unloads.
   if (const auto inputService = getInputService()) {
@@ -224,8 +203,8 @@ void EmulatorInstance::refreshAllSettings() {
 
   // Rewind enabled
   setRewindEnabled(settings::SettingsService::instance()
-                       ->getValueAtLevel(m_currentSettingsLevel, m_contentHash,
-                                  m_platformId, "rewind-enabled")
+                       ->getEffectiveValue(m_contentHash, m_platformId,
+                                           "rewind-enabled")
                        .value_or("true") == "true");
 
   EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
@@ -233,8 +212,8 @@ void EmulatorInstance::refreshAllSettings() {
 
   // Picture mode
   setPictureMode(settings::SettingsService::instance()
-                     ->getValueAtLevel(m_currentSettingsLevel, m_contentHash,
-                                m_platformId, "picture-mode")
+                     ->getEffectiveValue(m_contentHash, m_platformId,
+                                         "picture-mode")
                      .value_or("aspect-ratio-fill"));
 
   EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
@@ -242,8 +221,8 @@ void EmulatorInstance::refreshAllSettings() {
 
   // Aspect ratio mode
   setAspectRatioMode(settings::SettingsService::instance()
-                         ->getValueAtLevel(m_currentSettingsLevel, m_contentHash,
-                                    m_platformId, "aspect-ratio")
+                         ->getEffectiveValue(m_contentHash, m_platformId,
+                                             "aspect-ratio")
                          .value_or("emulator-corrected"));
 
   EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
@@ -252,8 +231,8 @@ void EmulatorInstance::refreshAllSettings() {
   // Integer scale
   setIntegerScale(
       std::stoi(settings::SettingsService::instance()
-                    ->getValueAtLevel(m_currentSettingsLevel, m_contentHash,
-                               m_platformId, "integer-scale")
+                    ->getEffectiveValue(m_contentHash, m_platformId,
+                                        "integer-scale")
                     .value_or("0")));
 
   EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{

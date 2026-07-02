@@ -5,63 +5,11 @@ import QtQuick.Layouts
 FocusScope {
     id: root
 
+    // One generic, catalog-driven page for every console; pushed with the
+    // target platform's id + name.
     Component {
-        id: n64Settings
-        Nintendo64Settings {
-        }
-    }
-
-    Component {
-        id: snesSettings
-        SnesSettings {
-        }
-    }
-
-    Component {
-        id: nesSettings
-        NesSettings {
-        }
-    }
-
-    Component {
-        id: gbaSettings
-        GbaSettings {
-        }
-    }
-
-    Component {
-        id: gbcSettings
-        GameBoyColorSettings {
-        }
-    }
-
-    Component {
-        id: gbSettings
-        GameBoySettings {
-        }
-    }
-
-    Component {
-        id: genesisSettings
-        GenesisSettings {
-        }
-    }
-
-    Component {
-        id: nintendoDsSettings
-        NintendoDsSettings {
-        }
-    }
-
-    Component {
-        id: gamegearSettings
-        GameGearSettings {
-        }
-    }
-
-    Component {
-        id: masterSystemSettings
-        MasterSystemSettings {
+        id: platformPage
+        PlatformEmulationSettingsPage {
         }
     }
 
@@ -109,7 +57,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(gbSettings)
+                    root.StackView.view.push(platformPage, {platformId: 1, platformName: "Game Boy"})
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -144,7 +92,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(gbcSettings)
+                    root.StackView.view.push(platformPage, {platformId: 2, platformName: "Game Boy Color"})
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -179,7 +127,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(gbaSettings)
+                    root.StackView.view.push(platformPage, {platformId: 3, platformName: "Game Boy Advance"})
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -214,7 +162,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(nesSettings)
+                    root.StackView.view.push(platformPage, {platformId: 5, platformName: "NES"})
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -250,7 +198,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(snesSettings)
+                    root.StackView.view.push(platformPage, {platformId: 6, platformName: "SNES"})
                 }
 
                 hoverEnabled: true
@@ -287,7 +235,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(n64Settings)
+                    root.StackView.view.push(platformPage, {platformId: 7, platformName: "Nintendo 64"})
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -323,7 +271,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(nintendoDsSettings)
+                    root.StackView.view.push(platformPage, {platformId: 10, platformName: "Nintendo DS"})
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -359,7 +307,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(masterSystemSettings)
+                    root.StackView.view.push(platformPage, {platformId: 12, platformName: "Master System"})
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -395,7 +343,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(genesisSettings)
+                    root.StackView.view.push(platformPage, {platformId: 13, platformName: "Genesis/Mega Drive"})
                 }
                 hoverEnabled: true
                 background: Rectangle {
@@ -431,7 +379,7 @@ FocusScope {
                 Layout.preferredHeight: 80
 
                 onClicked: function () {
-                    root.StackView.view.push(gamegearSettings)
+                    root.StackView.view.push(platformPage, {platformId: 14, platformName: "Game Gear"})
                 }
                 hoverEnabled: true
                 background: Rectangle {

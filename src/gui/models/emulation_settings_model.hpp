@@ -3,10 +3,19 @@
 
 #include <QAbstractListModel>
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/settings/emulation_setting.hpp>
 #include <firelight/settings/settings_service.hpp>
+
+#include <optional>
+#include <vector>
 
 namespace firelight::settings {
 
+// Backs the friendly emulation-settings surface at any tier (Global / Platform /
+// Game). Setting definitions come from the SettingsCatalog (common settings plus
+// the platform's core-specific ones); values come from SettingsService and are
+// shown as the *effective* value for the tier (this tier's override, else the
+// inherited value), with `overridden` marking whether this tier set it.
 class EmulationSettingsModel : public QAbstractListModel,
                                public ServiceAccessor {
   Q_OBJECT
@@ -34,6 +43,10 @@ public:
   bool setData(const QModelIndex &index, const QVariant &value,
                int role) override;
 
+  // Clears this tier's override for the row so it falls back to the inherited
+  // value (lower tier -> catalog default).
+  Q_INVOKABLE void resetValue(int row);
+
 signals:
   void platformIdChanged();
   void levelChanged();
@@ -45,9 +58,16 @@ private:
     KeyRole,
     DescriptionRole,
     SectionRole,
-    TypeRole,
+    WidgetRole,
     ValueRole,
+    DefaultValueRole,
     OptionsRole,
+    MinimumRole,
+    MaximumRole,
+    StepRole,
+    OverriddenRole,
+    VisibleRole,
+    EnabledRole,
     RequiresRestartRole
   };
   struct Item {
@@ -55,30 +75,38 @@ private:
     QString key;
     QString section;
     QString description;
-    QString type;
+    QString widget; // UI control id: toggle / dropdown / slider / spinbox / ...
 
-    // Text, filepath, combobox, etc
-    QString stringValue;
-
-    // Number, slider, etc
-    int intValue;
-
-    // Toggle
-    bool boolValue = true;
+    QString stringValue; // effective value (string form)
+    bool boolValue = true; // effective value (for toggle widgets)
     QString trueValue = "true";
     QString falseValue = "false";
 
     QString defaultValue;
-
-    // Combo-box specific
-    QVector<QVariantHash> options;
+    QVector<QVariantHash> options; // {label, value}
+    double minimumValue = 0;
+    double maximumValue = 0;
+    double stepValue = 1;
     bool requiresRestart = false;
+
+    bool overridden = false; // has an override at this tier
+    bool visible = true;
+    bool enabled = true;
+    std::vector<SettingCondition> visibleWhen;
+    std::vector<SettingCondition> enabledWhen;
   };
 
+  void rebuildItems();
   void refreshValues();
+  void recomputeConditions();
   void setItemValue(int itemIndex, Item &item, const std::string &value);
+  // First override at m_level or a lower tier (toward Global); nullopt if none.
+  std::optional<std::string> resolveValue(const std::string &key);
+  // Current effective value of a sibling setting (for condition evaluation).
+  std::string currentValueOf(const std::string &key) const;
 
   SettingsService *m_settingsService = SettingsService::instance();
+  ScopedConnection m_globalSettingChangedConnection;
   ScopedConnection m_platformSettingChangedConnection;
   ScopedConnection m_gameSettingChangedConnection;
 

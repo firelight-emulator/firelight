@@ -26,8 +26,15 @@ Pane {
         // anchors.rightMargin: 40
         // anchors.top: headerBar.bottom
         anchors.fill: parent
-        menuItems: ["Appearance", "Directories", "Controllers", "Achievements", "Audio / Video", "Platforms", "About"]
-        pages: [appearanceSettings, directorySettings, controllerSettings, retroAchievementSettings, videoSettings, platformSettings, about]
+        menuItems: ["Appearance", "Directories", "Controllers", "Achievements", "Audio / Video", "Emulation", "Platforms", "About"]
+        pages: [appearanceSettings, directorySettings, controllerSettings, retroAchievementSettings, videoSettings, emulationSettings, platformSettings, about]
+    }
+
+    Component {
+        id: emulationSettings
+
+        GlobalEmulationSettings {
+        }
     }
 
     Component {

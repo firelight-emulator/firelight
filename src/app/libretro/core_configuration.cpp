@@ -13,9 +13,7 @@ CoreConfiguration::CoreConfiguration(
     : m_contentHash(std::move(contentHash)), m_platformId(platformId),
       m_friendlySettings(std::move(friendlySettings)),
       m_coreDefaults(std::move(coreDefaults)),
-      m_settingsService(settingsService) {
-  m_settingsLevel = m_settingsService.getSettingsLevel(m_contentHash);
-}
+      m_settingsService(settingsService) {}
 
 void CoreConfiguration::registerOption(Option option) {
   m_options.emplace(option.key, option);

@@ -44,7 +44,6 @@ private:
   std::vector<firelight::settings::EmulationSetting> m_friendlySettings;
   std::map<std::string, std::string> m_coreDefaults;
   firelight::settings::SettingsService &m_settingsService;
-  firelight::settings::SettingsLevel m_settingsLevel;
 
   std::map<std::string, std::string> m_cache;
   bool m_anyValueHasChanged = false;

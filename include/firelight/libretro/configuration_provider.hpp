@@ -23,6 +23,10 @@ public:
     std::string description;
     std::vector<OptionValue> possibleValues;
     std::string defaultValueKey;
+    // Core-options v2 groups options into categories (e.g. a "Parallel" renderer
+    // subsection). Empty for uncategorized / top-level options.
+    std::string category;      // category key
+    std::string categoryLabel; // human-readable category name
   };
 
   // TODO: Option categories

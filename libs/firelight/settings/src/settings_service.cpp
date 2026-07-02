@@ -8,20 +8,6 @@ SettingsService *SettingsService::s_instance = nullptr;
 SettingsService::SettingsService(ISettingsRepository &settingsRepo)
     : m_settingsRepo(settingsRepo) {}
 
-SettingsLevel SettingsService::getSettingsLevel(const std::string &contentHash) const {
-  return m_settingsRepo.getSettingsLevel(contentHash);
-}
-
-bool SettingsService::setSettingsLevel(const std::string &contentHash,
-                                       SettingsLevel level) {
-  const auto result = m_settingsRepo.setSettingsLevel(contentHash, level);
-  if (result) {
-    EventDispatcher::instance().publish(
-        SettingsLevelChangedEvent{.contentHash = contentHash, .level = level});
-  }
-  return result;
-}
-
 std::optional<std::string>
 SettingsService::getGlobalValue(const std::string &key) {
   return m_settingsRepo.getGlobalValue(key);

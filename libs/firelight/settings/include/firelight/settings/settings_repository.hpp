@@ -5,16 +5,14 @@
 
 namespace firelight::settings {
 
-// Order matters: Game/Platform keep their historic ints (stored in
-// game_setting_levels), Global is appended so existing rows are unaffected.
+// A setting override tier. Values resolve Game -> Platform -> Global -> default;
+// there is no stored "current level" per game — inheritance is the fallback
+// chain. `Unknown` is a sentinel for "not a real tier".
 enum SettingsLevel { Game, Platform, Global, Unknown };
 
 class ISettingsRepository {
 public:
   virtual ~ISettingsRepository() = default;
-
-  virtual SettingsLevel getSettingsLevel(std::string contentHash) = 0;
-  virtual bool setSettingsLevel(std::string contentHash, SettingsLevel level) = 0;
 
   virtual std::optional<std::string> getGlobalValue(const std::string &key) = 0;
   virtual bool setGlobalValue(const std::string &key,

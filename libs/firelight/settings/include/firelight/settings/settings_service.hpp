@@ -6,11 +6,6 @@
 
 namespace firelight::settings {
 
-struct SettingsLevelChangedEvent {
-  std::string contentHash;
-  SettingsLevel level;
-};
-
 struct GameSettingChangedEvent {
   std::string contentHash;
   std::string key;
@@ -54,9 +49,6 @@ public:
 
   static void setInstance(SettingsService *instance) { s_instance = instance; }
   static SettingsService *instance() { return s_instance; }
-
-  SettingsLevel getSettingsLevel(const std::string &contentHash) const;
-  bool setSettingsLevel(const std::string &contentHash, SettingsLevel level);
 
   std::optional<std::string> getGlobalValue(const std::string &key);
   bool setGlobalValue(const std::string &key, const std::string &value);

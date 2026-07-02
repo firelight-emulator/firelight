@@ -29,47 +29,10 @@ SqliteSettingsRepository::SqliteSettingsRepository(std::string databaseFile)
         value TEXT NOT NULL,
         PRIMARY KEY (content_hash, platform_id, key)
     );
-    CREATE TABLE IF NOT EXISTS game_setting_levels (
-        content_hash TEXT NOT NULL,
-        level INTEGER NOT NULL,
-        PRIMARY KEY (content_hash)
-    );
   )");
 }
 
 SqliteSettingsRepository::~SqliteSettingsRepository() = default;
-
-SettingsLevel SqliteSettingsRepository::getSettingsLevel(std::string contentHash) {
-  try {
-    SQLite::Statement query(*m_database,
-                            "SELECT level FROM game_setting_levels WHERE "
-                            "content_hash = :contentHash");
-    query.bind(":contentHash", contentHash);
-    if (query.executeStep()) {
-      return static_cast<SettingsLevel>(static_cast<int>(query.getColumn(0)));
-    }
-    return Platform;
-  } catch (const std::exception &e) {
-    spdlog::error("Failed to get settings level: {}", e.what());
-    return Platform;
-  }
-}
-
-bool SqliteSettingsRepository::setSettingsLevel(std::string contentHash,
-                                                SettingsLevel level) {
-  try {
-    SQLite::Statement query(
-        *m_database, "INSERT OR REPLACE INTO game_setting_levels "
-                     "(content_hash, level) VALUES (:contentHash, :level)");
-    query.bind(":contentHash", contentHash);
-    query.bind(":level", level);
-    query.exec();
-    return true;
-  } catch (const std::exception &e) {
-    spdlog::error("Failed to set settings level: {}", e.what());
-    return false;
-  }
-}
 
 std::optional<std::string>
 SqliteSettingsRepository::getGlobalValue(const std::string &key) {

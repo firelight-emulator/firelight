@@ -20,10 +20,33 @@ SqliteCoreOptionRepository::SqliteCoreOptionRepository(std::string databaseFile)
         description TEXT NOT NULL,
         default_value TEXT NOT NULL,
         values_json TEXT NOT NULL,
+        category_key TEXT NOT NULL DEFAULT '',
+        category_label TEXT NOT NULL DEFAULT '',
         position INTEGER NOT NULL,
         PRIMARY KEY (core_name, key)
     );
   )");
+
+  // Migrate DBs created before category columns existed. CREATE TABLE IF NOT
+  // EXISTS won't add columns to an existing table, so add them here; otherwise
+  // reads/writes referencing them fail on older databases.
+  const auto hasColumn = [this](const char *name) {
+    SQLite::Statement query(*m_database, "PRAGMA table_info(core_options)");
+    while (query.executeStep()) {
+      if (query.getColumn(1).getString() == name) {
+        return true;
+      }
+    }
+    return false;
+  };
+  if (!hasColumn("category_key")) {
+    m_database->exec("ALTER TABLE core_options ADD COLUMN category_key TEXT NOT "
+                     "NULL DEFAULT ''");
+  }
+  if (!hasColumn("category_label")) {
+    m_database->exec("ALTER TABLE core_options ADD COLUMN category_label TEXT "
+                     "NOT NULL DEFAULT ''");
+  }
 }
 
 SqliteCoreOptionRepository::~SqliteCoreOptionRepository() = default;
@@ -44,8 +67,9 @@ void SqliteCoreOptionRepository::upsertCoreOptions(
     SQLite::Statement insert(
         *m_database,
         "INSERT INTO core_options (core_name, key, label, description, "
-        "default_value, values_json, position) VALUES (:core, :key, :label, "
-        ":desc, :def, :values, :pos)");
+        "default_value, values_json, category_key, category_label, position) "
+        "VALUES (:core, :key, :label, :desc, :def, :values, :catKey, "
+        ":catLabel, :pos)");
     int position = 0;
     for (const auto &option : options) {
       nlohmann::json values = nlohmann::json::array();
@@ -58,6 +82,8 @@ void SqliteCoreOptionRepository::upsertCoreOptions(
       insert.bind(":desc", option.description);
       insert.bind(":def", option.defaultValue);
       insert.bind(":values", values.dump());
+      insert.bind(":catKey", option.category);
+      insert.bind(":catLabel", option.categoryLabel);
       insert.bind(":pos", position++);
       insert.exec();
       insert.reset();
@@ -76,8 +102,9 @@ SqliteCoreOptionRepository::getCoreOptions(const std::string &coreName) {
   try {
     SQLite::Statement query(
         *m_database,
-        "SELECT key, label, description, default_value, values_json FROM "
-        "core_options WHERE core_name = :core ORDER BY position");
+        "SELECT key, label, description, default_value, values_json, "
+        "category_key, category_label FROM core_options WHERE core_name = :core "
+        "ORDER BY position");
     query.bind(":core", coreName);
     while (query.executeStep()) {
       CoreOption option;
@@ -85,6 +112,8 @@ SqliteCoreOptionRepository::getCoreOptions(const std::string &coreName) {
       option.label = query.getColumn(1).getString();
       option.description = query.getColumn(2).getString();
       option.defaultValue = query.getColumn(3).getString();
+      option.category = query.getColumn(5).getString();
+      option.categoryLabel = query.getColumn(6).getString();
 
       const auto valuesJson = nlohmann::json::parse(
           query.getColumn(4).getString(), nullptr, /*allow_exceptions=*/false);

@@ -1,10 +1,27 @@
 #include "audio_manager.hpp"
 
+#include <QSettings>
 #include <spdlog/spdlog.h>
 
 extern "C" {
 #include <libswresample/swresample.h>
 }
+
+namespace {
+// The output device the user picked (by description), persisted in QSettings,
+// or the system default if unset / no longer present.
+QAudioDevice selectedOutputDevice() {
+  const QString desc = QSettings().value("audio/outputDevice").toString();
+  if (!desc.isEmpty()) {
+    for (const auto &device : QMediaDevices::audioOutputs()) {
+      if (device.description() == desc) {
+        return device;
+      }
+    }
+  }
+  return QMediaDevices::defaultAudioOutput();
+}
+} // namespace
 
 void AudioManager::initializeResampler(int64_t in_channel_layout,
                                        int in_sample_rate,
@@ -255,7 +272,7 @@ void AudioManager::initialize(const double new_freq) {
   format.setSampleFormat(QAudioFormat::Int16);
   format.setSampleRate(m_sampleRate);
 
-  m_audioSink = std::make_unique<QAudioSink>(format);
+  m_audioSink = std::make_unique<QAudioSink>(selectedOutputDevice(), format);
 
   auto mult = 2;
   if (m_sampleRate > 44000) {
@@ -294,7 +311,7 @@ void AudioManager::reinitializeAudioDevice() {
   format.setSampleFormat(QAudioFormat::Int16);
   format.setSampleRate(m_sampleRate);
 
-  m_audioSink = std::make_unique<QAudioSink>(format);
+  m_audioSink = std::make_unique<QAudioSink>(selectedOutputDevice(), format);
 
   auto mult = 2;
   if (m_sampleRate > 44000) {
