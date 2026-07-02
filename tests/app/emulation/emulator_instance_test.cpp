@@ -98,6 +98,44 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
 }
 
 /**
+ * @brief Sync-method and target-framerate resolve and react to setting changes.
+ *
+ * These drive the frame-pacing strategy. With no override they fall back to the
+ * defaults (audio / 60), and a game override updates the live instance via the
+ * GameSettingChangedEvent -> refreshAllSettings path.
+ */
+TEST_F(EmulatorInstanceTest, SyncSettingsUpdateInstance) {
+  library::ContentFile info{.m_fileSizeBytes = 16777216,
+                            .m_filePath = "test_resources/testrom.gba",
+                            .m_fileMd5 = m_testContentHash,
+                            .m_inArchive = false,
+                            .m_platformId = 3,
+                            .m_contentHash = m_testContentHash};
+
+  m_library->create(info);
+  ASSERT_NE(info.m_id, -1);
+
+  auto entry = m_library->getEntryWithContentHash(
+      QString::fromStdString(m_testContentHash));
+  ASSERT_TRUE(entry.has_value());
+  ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
+
+  auto instance = m_emulationService->getCurrentEmulatorInstance();
+  ASSERT_NE(instance, nullptr);
+
+  // No overrides yet -> defaults.
+  EXPECT_EQ("audio", instance->getSyncMethod());
+  EXPECT_EQ(60, instance->getTargetFramerate());
+
+  // Game overrides update the live instance.
+  m_settingsService->setGameValue(m_testContentHash, "sync-method", "monitor");
+  EXPECT_EQ("monitor", instance->getSyncMethod());
+
+  m_settingsService->setGameValue(m_testContentHash, "target-framerate", "120");
+  EXPECT_EQ(120, instance->getTargetFramerate());
+}
+
+/**
  * @brief Test that platform-level setting changes update the EmulatorInstance
  *
  * Verifies that when platform-specific settings are changed, the

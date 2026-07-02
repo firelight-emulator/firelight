@@ -106,6 +106,54 @@ TEST_F(SettingsCatalogTest, ParsesVisibilityDependency) {
   EXPECT_TRUE(settingIsVisible(*solarLevel, on));
 }
 
+TEST(SettingsCatalogSyncTest, ParsesSyncMethodAndTargetFramerate) {
+  SettingsCatalog catalog;
+  ASSERT_TRUE(catalog.loadFromJson(R"JSON(
+{
+  "common": [
+    { "key": "sync-method", "type": "options", "default": "audio",
+      "options": [
+        { "label": "Audio", "value": "audio" },
+        { "label": "Sync to monitor", "value": "monitor" },
+        { "label": "Native timer", "value": "native" },
+        { "label": "Fixed framerate", "value": "fixed" }
+      ] },
+    { "key": "target-framerate", "type": "spinbox", "default": "60",
+      "min": 30, "max": 240, "step": 1, "advanced": true,
+      "enabledWhen": [ { "key": "sync-method", "values": ["fixed"] } ] }
+  ],
+  "cores": {}
+}
+)JSON"));
+
+  const auto &common = catalog.commonSettings();
+
+  const auto *sync = find(common, "sync-method");
+  ASSERT_NE(sync, nullptr);
+  EXPECT_EQ(sync->type, OPTIONS);
+  EXPECT_EQ(sync->defaultValue, "audio");
+  ASSERT_EQ(sync->options.size(), 4u);
+  EXPECT_FALSE(sync->advanced); // defaults to false when omitted
+
+  const auto *fps = find(common, "target-framerate");
+  ASSERT_NE(fps, nullptr);
+  EXPECT_EQ(fps->type, INTEGER);
+  EXPECT_EQ(fps->widget, "spinbox");
+  EXPECT_TRUE(fps->advanced); // "advanced": true parsed
+  EXPECT_DOUBLE_EQ(fps->minValue, 30.0);
+  EXPECT_DOUBLE_EQ(fps->maxValue, 240.0);
+  // Only editable when sync-method is "fixed".
+  ASSERT_EQ(fps->enabledWhen.size(), 1u);
+  EXPECT_EQ(fps->enabledWhen[0].key, "sync-method");
+  ASSERT_EQ(fps->enabledWhen[0].values.size(), 1u);
+  EXPECT_EQ(fps->enabledWhen[0].values[0], "fixed");
+
+  const SettingValueResolver fixed = [](const std::string &) { return "fixed"; };
+  const SettingValueResolver audio = [](const std::string &) { return "audio"; };
+  EXPECT_TRUE(settingIsEnabled(*fps, fixed));
+  EXPECT_FALSE(settingIsEnabled(*fps, audio));
+}
+
 TEST_F(SettingsCatalogTest, InvalidJsonLeavesCatalogIntact) {
   EXPECT_FALSE(catalog.loadFromJson("{ this is not valid"));
   EXPECT_EQ(catalog.commonSettings().size(), 2u);

@@ -21,7 +21,21 @@
       "options": [
         { "label": "Pixel perfect", "value": "pixel-perfect" },
         { "label": "Emulator corrected", "value": "emulator-corrected" }
-      ] }
+      ] },
+    { "key": "sync-method", "label": "Sync method", "category": "Video",
+      "description": "How gameplay is paced. Audio keeps the sound buffer full (smoothest audio, low CPU, works on any display); Sync to monitor matches your display's refresh rate when it's close to the game's and resamples audio to it (smoothest video); Native timer paces to the core's native rate; Fixed framerate paces to a rate you choose.",
+      "type": "options", "default": "audio",
+      "options": [
+        { "label": "Audio", "value": "audio" },
+        { "label": "Sync to monitor", "value": "monitor" },
+        { "label": "Native timer", "value": "native" },
+        { "label": "Fixed framerate", "value": "fixed" }
+      ] },
+    { "key": "target-framerate", "label": "Target framerate", "category": "Video",
+      "description": "Frames per second to target when using Fixed framerate sync.",
+      "type": "spinbox", "default": "60", "min": 30, "max": 240, "step": 1,
+      "advanced": true,
+      "enabledWhen": [ { "key": "sync-method", "values": ["fixed"] } ] }
   ],
 
   "cores": {

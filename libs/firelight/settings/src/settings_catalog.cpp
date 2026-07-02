@@ -39,6 +39,7 @@ EmulationSetting parseSetting(const nlohmann::json &j) {
   s.description = j.value("description", std::string{});
   s.defaultValue = j.value("default", std::string{});
   s.requiresRestart = j.value("requiresRestart", false);
+  s.advanced = j.value("advanced", false);
   s.trueStringValue = j.value("trueValue", std::string("true"));
   s.falseStringValue = j.value("falseValue", std::string("false"));
 
@@ -165,6 +166,16 @@ SettingsCatalog::settingsForCore(const std::string &coreName) const {
   const auto &specific = coreSpecificSettings(coreName);
   result.insert(result.end(), specific.begin(), specific.end());
   return result;
+}
+
+std::string
+SettingsCatalog::defaultForCommonKey(const std::string &key) const {
+  for (const auto &setting : m_common) {
+    if (setting.key == key) {
+      return setting.defaultValue;
+    }
+  }
+  return {};
 }
 
 } // namespace firelight::settings

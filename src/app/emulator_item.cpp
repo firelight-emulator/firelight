@@ -1,6 +1,8 @@
 #include "emulator_item.hpp"
 #include <firelight/discord/idiscord_manager.hpp>
 #include <QQuickWindow>
+#include <QScreen>
+#include <firelight/settings/settings_service.hpp>
 #include <rhi/qrhi_platform.h>
 #include <spdlog/spdlog.h>
 
@@ -9,6 +11,8 @@
 #include <firelight/input/input_service.hpp>
 #include "platform_metadata.hpp"
 
+#include <cmath>
+#include <deque>
 #include <firelight/library/content_file.hpp>
 #include <patching/bps_patch.hpp>
 #include <patching/ups_patch.hpp>
@@ -31,6 +35,18 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
   m_threadPool.setMaxThreadCount(1);
 
+  // Re-pace when the sync method or target framerate changes (any tier).
+  m_settingChangedConnection =
+      EventDispatcher::instance()
+          .subscribe<firelight::settings::EmulationSettingChangedEvent>(
+              [this](
+                  const firelight::settings::EmulationSettingChangedEvent &e) {
+                if (e.key == "sync-method" || e.key == "target-framerate") {
+                  QMetaObject::invokeMethod(this, "reconfigurePacing",
+                                            Qt::QueuedConnection);
+                }
+              });
+
   m_rewindPointTimer.setInterval(3000);
   m_rewindPointTimer.setSingleShot(false);
   connect(&m_rewindPointTimer, &QTimer::timeout, [this] {
@@ -50,7 +66,31 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   m_emulationTimer.setTimerType(Qt::PreciseTimer);
 
   connect(&m_emulationTimer, &QChronoTimer::timeout, [this] {
-    auto actualTargetNs = m_emulationTimingTargetNs;
+    // Audio-driven pacing: submit a frame whenever the audio buffer has room to
+    // accept another, instead of spinning to a wall-clock target. The audio
+    // device's consumption rate becomes the master clock.
+    if (m_audioSyncActive.load()) {
+      // When paused, no audio is produced so the buffer would sit empty and we'd
+      // submit a frame every tick — skip entirely (the renderer holds the pause
+      // image).
+      if (m_paused) {
+        return;
+      }
+      const auto emulator =
+          firelight::emulation::EmulationService::getInstance()
+              ->getCurrentEmulatorInstance();
+      if (emulator && m_renderer) {
+        const float level = emulator->getAudioBufferLevel();
+        // Keep the buffer around half full; below that, room for another frame.
+        if (level >= 0.0f && level < 0.5f) {
+          m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
+          QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+        }
+      }
+      return;
+    }
+
+    auto actualTargetNs = m_emulationTimingTargetNs.load();
     // Static variables for timing and rolling average
     static int64_t previousFrameActualEndTimeNs =
         0; // When the last frame *actually* ended (after spin)
@@ -248,7 +288,120 @@ void EmulatorItem::setMuted(const bool muted) {
   emit mutedChanged();
 }
 float EmulatorItem::audioBufferLevel() const {
-  return m_audioManager ? m_audioManager->getBufferLevel() : 0.0f;
+  const auto emulator = firelight::emulation::EmulationService::getInstance()
+                            ->getCurrentEmulatorInstance();
+  if (!emulator) {
+    return 0.0f;
+  }
+  const float level = emulator->getAudioBufferLevel();
+  return level >= 0.0f ? level : 0.0f;
+}
+
+EmulatorItem::SyncMethod
+EmulatorItem::syncMethodFromString(const std::string &method) {
+  if (method == "monitor") {
+    return SyncMethod::Monitor;
+  }
+  if (method == "fixed") {
+    return SyncMethod::Fixed;
+  }
+  if (method == "audio") {
+    return SyncMethod::Audio;
+  }
+  return SyncMethod::Native;
+}
+
+int64_t EmulatorItem::computeTargetIntervalNs(const SyncMethod method,
+                                              const double coreFps,
+                                              const int targetFramerate,
+                                              const double refreshHz) {
+  double fps = 0.0;
+  switch (method) {
+  case SyncMethod::Fixed:
+    fps = static_cast<double>(targetFramerate);
+    break;
+  case SyncMethod::Native:
+    fps = coreFps;
+    break;
+  case SyncMethod::Monitor: // resolved via monitorPacingRate()
+  case SyncMethod::Audio:   // audio-driven: no wall-clock target
+    return 0;
+  }
+  if (fps <= 0.0) {
+    return 0;
+  }
+  return static_cast<int64_t>(1e9 / fps);
+}
+
+double EmulatorItem::monitorPacingRate(const double coreFps,
+                                       const double refreshHz) {
+  if (coreFps <= 0.0 || refreshHz <= 0.0) {
+    return 0.0;
+  }
+  // Divide the refresh rate down to the integer fraction closest to the content
+  // rate (e.g. 120 Hz / 2 = 60 for a 60 fps game; 144 Hz / 2 = 72, which won't
+  // match below).
+  const double multiple = std::round(refreshHz / coreFps);
+  if (multiple < 1.0) {
+    return 0.0;
+  }
+  const double effectiveRate = refreshHz / multiple;
+  constexpr double kTolerance = 0.05; // within 5% of the content rate
+  if (std::abs(effectiveRate - coreFps) / coreFps <= kTolerance) {
+    return effectiveRate;
+  }
+  return 0.0; // display doesn't line up with the content rate
+}
+
+void EmulatorItem::reconfigurePacing() {
+  const auto emulator = firelight::emulation::EmulationService::getInstance()
+                            ->getCurrentEmulatorInstance();
+  if (!emulator) {
+    return;
+  }
+
+  const auto method = syncMethodFromString(emulator->getSyncMethod());
+  const double coreFps = m_coreFps.load() > 0.0 ? m_coreFps.load() : 60.0;
+  const int targetFramerate = emulator->getTargetFramerate();
+
+  double refreshHz = 60.0;
+  if (const auto *w = window()) {
+    if (const auto *screen = w->screen();
+        screen && screen->refreshRate() > 0.0) {
+      refreshHz = screen->refreshRate();
+    }
+  }
+
+  // Audio sync needs a working audio device; otherwise fall back to wall-clock.
+  const bool audioAvailable = emulator->getAudioBufferLevel() >= 0.0f;
+  m_audioSyncActive = (method == SyncMethod::Audio) && audioAvailable;
+
+  // Only sync-to-monitor bends audio to the display rate; other modes play audio
+  // at the core's native rate.
+  double audioRatio = 1.0;
+  int64_t targetNs = 0;
+
+  if (method == SyncMethod::Monitor) {
+    // Match the display only when it divides down close to the content rate
+    // (e.g. 60/120/240 Hz for a 60 fps game); otherwise fall back to native so we
+    // never over/underspeed the game (e.g. on a 144 Hz display).
+    if (const double rate = monitorPacingRate(coreFps, refreshHz); rate > 0.0) {
+      targetNs = static_cast<int64_t>(1e9 / rate);
+      audioRatio = rate / coreFps;
+    }
+    // else: leave targetNs 0 -> native fallback below.
+  } else {
+    targetNs = computeTargetIntervalNs(method, coreFps, targetFramerate, refreshHz);
+  }
+
+  if (targetNs <= 0) {
+    // Native pacing (also the fallback for audio-with-no-device and for a monitor
+    // that doesn't line up with the content rate).
+    targetNs = static_cast<int64_t>(1e9 / coreFps);
+  }
+
+  emulator->setAudioPlaybackRateRatio(audioRatio);
+  m_emulationTimingTargetNs = targetNs;
 }
 
 void EmulatorItem::writeSuspendPoint(const int index) {
@@ -360,7 +513,11 @@ void EmulatorItem::startGame() {
                                          unsigned int height, float aspectRatio,
                                          double framerate) {
       updateGeometry(width, height, aspectRatio);
-      m_emulationTimingTargetNs = static_cast<int64_t>(1e9 / framerate);
+      if (framerate > 0.0) {
+        m_coreFps = framerate;
+      }
+      QMetaObject::invokeMethod(this, "reconfigurePacing",
+                                Qt::QueuedConnection);
     });
 
     // Setting these causes the item's geometry to be visible, and the renderer

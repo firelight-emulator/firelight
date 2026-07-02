@@ -14,7 +14,9 @@ FocusScope {
     property int level: 0
     property var platformId: -1
     property var contentHash: ""
-    property bool advancedOpen: false
+    // Driven by the global "Show advanced settings" preference — reveals both
+    // advanced friendly settings and the raw core-options section.
+    property bool advancedOpen: GeneralSettings.showAdvancedSettings
 
     property alias model: settingsModel
 
@@ -23,6 +25,7 @@ FocusScope {
         level: root.level
         platformId: root.platformId
         contentHash: root.contentHash
+        showAdvanced: GeneralSettings.showAdvancedSettings
     }
 
     // Raw libretro options for the "Advanced" section (populated once a game on
@@ -62,7 +65,8 @@ FocusScope {
         // by default.
         footer: ColumnLayout {
             width: ListView.view.width
-            visible: root.platformId !== -1
+            // Only for a specific console, and only when advanced settings are on.
+            visible: root.platformId !== -1 && root.advancedOpen
             spacing: 8
 
             Rectangle {
@@ -72,27 +76,15 @@ FocusScope {
                 color: "#333333"
             }
 
-            Button {
+            Text {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 48
-                hoverEnabled: true
-                focusPolicy: Qt.NoFocus
-
-                background: Rectangle {
-                    color: ColorPalette.neutral300
-                    opacity: parent.hovered ? 0.2 : 0.08
-                    radius: 8
-                }
-                contentItem: Text {
-                    text: root.advancedOpen ? qsTr("Hide advanced core options") : qsTr("Show advanced core options")
-                    color: ColorPalette.neutral100
-                    leftPadding: 8
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 16
-                    font.family: Constants.regularFontFamily
-                    font.weight: Font.DemiBold
-                }
-                onClicked: root.advancedOpen = !root.advancedOpen
+                text: qsTr("Advanced core options")
+                color: ColorPalette.neutral100
+                leftPadding: 8
+                topPadding: 8
+                font.pixelSize: 16
+                font.family: Constants.regularFontFamily
+                font.weight: Font.DemiBold
             }
 
             Text {

@@ -8,6 +8,7 @@ Settings {
 
     property bool fullscreen: false
     property bool showNewUserFlow: true
+    property bool showAdvancedSettings: false
     property real mainWindowX: 200
     property real mainWindowY: 200
     property real mainWindowWidth: 1280

@@ -47,6 +47,21 @@ public:
   void setIntegerScale(int integerScale);
   int getIntegerScale() const;
 
+  void setSyncMethod(const std::string &syncMethod);
+  std::string getSyncMethod() const;
+
+  void setTargetFramerate(int targetFramerate);
+  int getTargetFramerate() const;
+
+  // Audio buffer fill ratio (0.0-1.0), or -1.0 when there is no audio device
+  // (used by the "audio" sync method to pace frames). Safe to call from the
+  // emulation pacing thread.
+  float getAudioBufferLevel() const;
+
+  // Biases audio playback rate (1.0 = native); set by sync-to-monitor to
+  // resample audio to the display refresh rate.
+  void setAudioPlaybackRateRatio(double ratio);
+
   std::vector<uint8_t> serializeState();
   void deserializeState(const std::vector<uint8_t> &state);
 
@@ -68,10 +83,15 @@ private:
   int m_platformId;
   int m_saveSlotNumber;
 
-  bool m_isRewindEnabled = true;
-  std::string m_pictureMode = "aspect-ratio-fill";
-  std::string m_aspectRatioMode = "emulator-corrected";
+  // Populated by refreshAllSettings() (called in the constructor); the declared
+  // defaults live in the settings catalog, not here. These initial values are
+  // just placeholders.
+  bool m_isRewindEnabled = false;
+  std::string m_pictureMode;
+  std::string m_aspectRatioMode;
   int m_integerScale = 0;
+  std::string m_syncMethod;
+  int m_targetFramerate = 0;
 
   // Settings — resolved by inheritance (game -> platform -> global -> default),
   // so any change at any tier that affects this game triggers a refresh.

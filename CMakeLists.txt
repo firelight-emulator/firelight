@@ -140,6 +140,8 @@ add_library(firelight_lib
         src/app/libretro/core_registry.cpp
         src/app/libretro/game.cpp
         src/app/audio/audio_manager.cpp
+        src/app/audio/audio_resampler.cpp
+        src/app/audio/audio_rate_controller.cpp
 
         src/app/input/gui/analog_settings_model.cpp
         src/app/input/gui/profile_list_model.cpp
@@ -385,6 +387,7 @@ add_executable(fl_test
         tests/app/settings/settings_service_test.cpp
         tests/app/settings/emulation_setting_test.cpp
         tests/app/settings/settings_catalog_test.cpp
+        tests/app/audio/audio_rate_controller_test.cpp
         tests/app/settings/sqlite_core_option_repository_test.cpp
         tests/app/gui/core_options_model_test.cpp
         tests/app/gui/emulation_settings_model_test.cpp

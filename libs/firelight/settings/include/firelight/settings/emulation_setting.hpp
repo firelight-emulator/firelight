@@ -69,6 +69,9 @@ struct EmulationSetting {
   // to a specific control ("spinbox") or, for CUSTOM, a bespoke QML delegate id
   // (e.g. "gbc-palette"). Keeps custom widgets open-ended without schema churn.
   std::string widget;
+  // Hidden by default; only shown when the user enables "Show advanced settings".
+  // Purely a UI concern — does not affect value resolution.
+  bool advanced = false;
   // Empty => a frontend-only setting (consumed by EmulatorInstance) or a
   // setting whose `key` is itself the core option key (identity). Non-empty =>
   // an explicit friendly->core mapping applied when composing core values.

@@ -91,6 +91,7 @@ void EmulationSettingsModel::rebuildItems() {
     item.maximumValue = setting.maxValue;
     item.stepValue = setting.stepValue;
     item.requiresRestart = setting.requiresRestart;
+    item.advanced = setting.advanced;
     item.visibleWhen = setting.visibleWhen;
     item.enabledWhen = setting.enabledWhen;
     for (const auto &option : setting.options) {
@@ -145,13 +146,25 @@ void EmulationSettingsModel::recomputeConditions() {
     return currentValueOf(key);
   };
   for (auto &item : m_items) {
-    item.visible = conditionsHold(item.visibleWhen, resolver);
+    item.visible = conditionsHold(item.visibleWhen, resolver) &&
+                   (!item.advanced || m_showAdvanced);
     item.enabled = conditionsHold(item.enabledWhen, resolver);
   }
   if (!m_items.isEmpty()) {
     emit dataChanged(index(0), index(m_items.size() - 1),
                      {VisibleRole, EnabledRole});
   }
+}
+
+bool EmulationSettingsModel::getShowAdvanced() const { return m_showAdvanced; }
+
+void EmulationSettingsModel::setShowAdvanced(const bool showAdvanced) {
+  if (m_showAdvanced == showAdvanced) {
+    return;
+  }
+  m_showAdvanced = showAdvanced;
+  emit showAdvancedChanged();
+  recomputeConditions();
 }
 
 int EmulationSettingsModel::getPlatformId() const { return m_platformId; }

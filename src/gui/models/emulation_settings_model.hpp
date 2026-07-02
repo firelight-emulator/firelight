@@ -24,6 +24,10 @@ class EmulationSettingsModel : public QAbstractListModel,
   Q_PROPERTY(int level READ getLevel WRITE setLevel NOTIFY levelChanged)
   Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
                  contentHashChanged)
+  // When false, settings marked `advanced` in the catalog are hidden. Bound in
+  // QML to the global "Show advanced settings" preference.
+  Q_PROPERTY(bool showAdvanced READ getShowAdvanced WRITE setShowAdvanced NOTIFY
+                 showAdvancedChanged)
 public:
   explicit EmulationSettingsModel(QObject *parent = nullptr);
 
@@ -35,6 +39,9 @@ public:
 
   QString getContentHash() const;
   void setContentHash(const QString &contentHash);
+
+  bool getShowAdvanced() const;
+  void setShowAdvanced(bool showAdvanced);
 
   int rowCount(const QModelIndex &parent) const override;
   QVariant data(const QModelIndex &index, int role) const override;
@@ -51,6 +58,7 @@ signals:
   void platformIdChanged();
   void levelChanged();
   void contentHashChanged();
+  void showAdvancedChanged();
 
 private:
   enum Roles {
@@ -92,6 +100,7 @@ private:
     bool overridden = false; // has an override at this tier
     bool visible = true;
     bool enabled = true;
+    bool advanced = false; // hidden unless "Show advanced settings" is on
     std::vector<SettingCondition> visibleWhen;
     std::vector<SettingCondition> enabledWhen;
   };
@@ -113,6 +122,7 @@ private:
   QString m_contentHash;
   int m_platformId = -1;
   SettingsLevel m_level = Unknown;
+  bool m_showAdvanced = false;
 
   QVector<Item> m_items;
 };

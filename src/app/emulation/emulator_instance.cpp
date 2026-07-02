@@ -10,6 +10,7 @@
 #include <spdlog/spdlog.h>
 
 #include <audio/audio_manager.hpp>
+#include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <utility>
 
@@ -195,6 +196,22 @@ void EmulatorInstance::setIntegerScale(const int integerScale) {
   m_integerScale = integerScale;
 }
 int EmulatorInstance::getIntegerScale() const { return m_integerScale; }
+void EmulatorInstance::setSyncMethod(const std::string &syncMethod) {
+  m_syncMethod = syncMethod;
+}
+std::string EmulatorInstance::getSyncMethod() const { return m_syncMethod; }
+void EmulatorInstance::setTargetFramerate(const int targetFramerate) {
+  m_targetFramerate = targetFramerate;
+}
+int EmulatorInstance::getTargetFramerate() const { return m_targetFramerate; }
+float EmulatorInstance::getAudioBufferLevel() const {
+  return m_audioManager ? m_audioManager->getBufferLevel() : -1.0f;
+}
+void EmulatorInstance::setAudioPlaybackRateRatio(const double ratio) {
+  if (m_audioManager) {
+    m_audioManager->setPlaybackRateRatio(ratio);
+  }
+}
 
 std::vector<uint8_t> EmulatorInstance::serializeState() {
   return m_core->serializeState();
@@ -204,42 +221,36 @@ void EmulatorInstance::deserializeState(const std::vector<uint8_t> &state) {
 }
 
 void EmulatorInstance::refreshAllSettings() {
+  auto *service = settings::SettingsService::instance();
+  const auto &catalog = settings::SettingsCatalog::instance();
 
-  // Rewind enabled
-  setRewindEnabled(settings::SettingsService::instance()
-                       ->getEffectiveValue(m_contentHash, m_platformId,
-                                           "rewind-enabled")
-                       .value_or("true") == "true");
+  // Effective value for a common setting: the resolved override
+  // (game -> platform -> global), else the catalog-declared default. The catalog
+  // JSON is the single source of truth for these defaults.
+  const auto value = [&](const std::string &key) {
+    return service->getEffectiveValue(m_contentHash, m_platformId, key)
+        .value_or(catalog.defaultForCommonKey(key));
+  };
+  const auto intValue = [&](const std::string &key) {
+    try {
+      return std::stoi(value(key));
+    } catch (const std::exception &) {
+      return 0; // missing/non-numeric (e.g. catalog not loaded) -> neutral
+    }
+  };
+  const auto apply = [&](const std::string &key, auto &&setter) {
+    setter();
+    EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
+        .contentHash = m_contentHash, .key = key});
+  };
 
-  EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
-      .contentHash = m_contentHash, .key = "rewind-enabled"});
-
-  // Picture mode
-  setPictureMode(settings::SettingsService::instance()
-                     ->getEffectiveValue(m_contentHash, m_platformId,
-                                         "picture-mode")
-                     .value_or("aspect-ratio-fill"));
-
-  EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
-      .contentHash = m_contentHash, .key = "picture-mode"});
-
-  // Aspect ratio mode
-  setAspectRatioMode(settings::SettingsService::instance()
-                         ->getEffectiveValue(m_contentHash, m_platformId,
-                                             "aspect-ratio")
-                         .value_or("emulator-corrected"));
-
-  EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
-      .contentHash = m_contentHash, .key = "aspect-ratio"});
-
-  // Integer scale
-  setIntegerScale(
-      std::stoi(settings::SettingsService::instance()
-                    ->getEffectiveValue(m_contentHash, m_platformId,
-                                        "integer-scale")
-                    .value_or("0")));
-
-  EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
-      .contentHash = m_contentHash, .key = "integer-scale"});
+  apply("rewind-enabled",
+        [&] { setRewindEnabled(value("rewind-enabled") == "true"); });
+  apply("picture-mode", [&] { setPictureMode(value("picture-mode")); });
+  apply("aspect-ratio", [&] { setAspectRatioMode(value("aspect-ratio")); });
+  apply("integer-scale", [&] { setIntegerScale(intValue("integer-scale")); });
+  apply("sync-method", [&] { setSyncMethod(value("sync-method")); });
+  apply("target-framerate",
+        [&] { setTargetFramerate(intValue("target-framerate")); });
 }
 } // namespace firelight::emulation

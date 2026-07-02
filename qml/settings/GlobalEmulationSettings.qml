@@ -33,6 +33,32 @@ FocusScope {
             Layout.bottomMargin: 8
         }
 
+        ToggleOption {
+            id: showAdvancedToggle
+            Layout.fillWidth: true
+            Layout.bottomMargin: 8
+            label: qsTr("Show advanced settings")
+
+            background: Rectangle {
+                color: ColorPalette.neutral300
+                radius: 8
+                border.color: ColorPalette.neutral500
+                opacity: parent.hovered || (!InputMethodManager.usingMouse && showAdvancedToggle.activeFocus) ? 0.2 : 0.1
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+
+            checked: GeneralSettings.showAdvancedSettings
+            onCheckedChanged: {
+                GeneralSettings.showAdvancedSettings = checked
+            }
+        }
+
         EmulationSettingsSurface {
             Layout.fillWidth: true
             Layout.fillHeight: true

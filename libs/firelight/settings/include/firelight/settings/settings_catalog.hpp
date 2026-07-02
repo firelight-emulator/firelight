@@ -42,6 +42,11 @@ public:
   [[nodiscard]] std::vector<EmulationSetting>
   settingsForCore(const std::string &coreName) const;
 
+  // The declared default for a common (frontend) setting, or "" if the catalog
+  // doesn't define it. The single source of truth for these defaults — callers
+  // resolve overrides first, then fall back to this.
+  [[nodiscard]] std::string defaultForCommonKey(const std::string &key) const;
+
 private:
   std::vector<EmulationSetting> m_common;
   std::map<std::string, std::vector<EmulationSetting>> m_perCore;

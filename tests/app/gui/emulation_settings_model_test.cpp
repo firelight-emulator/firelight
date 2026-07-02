@@ -29,7 +29,9 @@ const char *kCatalog = R"JSON(
          "type": "boolean", "default": "false"},
         {"key": "solar-level", "label": "Solar level", "category": "Hardware",
          "type": "slider", "default": "0", "min": 0, "max": 10, "step": 1,
-         "visibleWhen": [{"key": "solar-sensor", "values": ["true"]}]}
+         "visibleWhen": [{"key": "solar-sensor", "values": ["true"]}]},
+        {"key": "adv-opt", "label": "Advanced option", "category": "Hardware",
+         "type": "boolean", "default": "false", "advanced": true}
       ]
     }
   }
@@ -89,7 +91,7 @@ TEST_F(EmulationSettingsModelTest, PlatformShowsCommonPlusCoreSettings) {
   EmulationSettingsModel model;
   model.setPlatformId(kGbaPlatformId);
   model.setLevel(Platform);
-  EXPECT_EQ(model.rowCount({}), 4);
+  EXPECT_EQ(model.rowCount({}), 5); // 2 common + 3 core (incl. advanced)
   EXPECT_NE(findRow(model, "solar-sensor"), -1);
 }
 
@@ -170,6 +172,24 @@ TEST_F(EmulationSettingsModelTest, VisibleWhenTracksDependency) {
   const int valueRole = roleFor(model, "value");
   ASSERT_TRUE(model.setData(model.index(sensor), true, valueRole));
   EXPECT_TRUE(value(model, level, "visible").toBool());
+}
+
+TEST_F(EmulationSettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
+  EmulationSettingsModel model;
+  model.setPlatformId(kGbaPlatformId);
+  model.setLevel(Platform);
+
+  const int adv = findRow(model, "adv-opt");
+  ASSERT_NE(adv, -1);
+
+  // Advanced settings are hidden by default (showAdvanced defaults false).
+  EXPECT_FALSE(value(model, adv, "visible").toBool());
+
+  model.setShowAdvanced(true);
+  EXPECT_TRUE(value(model, adv, "visible").toBool());
+
+  model.setShowAdvanced(false);
+  EXPECT_FALSE(value(model, adv, "visible").toBool());
 }
 
 } // namespace firelight::settings

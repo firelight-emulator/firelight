@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QElapsedTimer>
 #include <QImage>
 #include <firelight/activity/activity_log.hpp>
 #include <QMediaCaptureSession>
