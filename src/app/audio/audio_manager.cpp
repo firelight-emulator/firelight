@@ -93,6 +93,17 @@ void AudioManager::initialize(const double new_freq) {
 void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
 bool AudioManager::isMuted() const { return m_isMuted; }
 
+void AudioManager::setPaused(const bool paused) {
+  if (!m_audioSink) {
+    return;
+  }
+  if (paused) {
+    m_audioSink->suspend(); // halt playback, keep the buffered audio
+  } else {
+    m_audioSink->resume();
+  }
+}
+
 float AudioManager::getBufferLevel() const {
   // Live read of the sink's occupancy. The "audio" sync method paces frames off
   // this value from another thread; a cached value only refreshed while we're

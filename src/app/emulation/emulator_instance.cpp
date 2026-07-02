@@ -160,6 +160,12 @@ void EmulatorInstance::setMuted(const bool muted) {
   }
   m_audioManager->setMuted(muted);
 }
+void EmulatorInstance::setPaused(const bool paused) {
+  if (!m_audioManager) {
+    return;
+  }
+  m_audioManager->setPaused(paused);
+}
 bool EmulatorInstance::isMuted() const {
   if (!m_audioManager) {
     return false;

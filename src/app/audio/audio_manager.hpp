@@ -24,6 +24,12 @@ public:
 
   bool isMuted() const;
 
+  // Suspends/resumes the output device. On pause we stop feeding the sink, so
+  // without this the device keeps draining its queued buffer (an audible "tail");
+  // suspend() halts playback immediately and preserves the buffer for a seamless
+  // resume.
+  void setPaused(bool paused);
+
   // Buffer fill ratio (0.0-1.0). Safe to read from other threads (e.g. the
   // emulation pacing thread when sync method is "audio").
   float getBufferLevel() const;

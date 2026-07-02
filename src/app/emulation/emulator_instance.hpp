@@ -35,6 +35,10 @@ public:
   void setMuted(bool muted);
   bool isMuted() const;
 
+  // Suspends/resumes audio output when the game is paused/resumed, so buffered
+  // audio doesn't keep playing after a pause.
+  void setPaused(bool paused);
+
   void setRewindEnabled(bool enabled);
   bool isRewindEnabled() const;
 

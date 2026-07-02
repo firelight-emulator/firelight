@@ -248,11 +248,17 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   m_emulatorItem = emulatorItem;
 
   if (m_paused && !emulatorItem->paused()) {
+    // Resumed: bring audio back.
+    if (m_emulatorInstance)
+      m_emulatorInstance->setPaused(false);
     if (m_playSessionTimer.isValid())
       m_playSessionTimer.restart();
     else
       m_playSessionTimer.start();
   } else if (!m_paused && emulatorItem->paused()) {
+    // Paused: suspend audio so the queued buffer doesn't keep playing.
+    if (m_emulatorInstance)
+      m_emulatorInstance->setPaused(true);
     if (m_playSessionTimer.isValid())
       m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
   }
