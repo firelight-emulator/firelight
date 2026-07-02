@@ -29,6 +29,10 @@ public:
 
   virtual void registerOption(Option option) = 0;
 
+  // All options the core has declared so far (via registerOption). Lets the
+  // frontend cache/persist a core's option definitions for pre-launch editing.
+  [[nodiscard]] virtual std::vector<Option> getOptions() const = 0;
+
   virtual bool anyOptionValueHasChanged() = 0;
 
   virtual void setDefaultValue(const std::string &key,

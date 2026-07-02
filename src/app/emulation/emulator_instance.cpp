@@ -224,7 +224,7 @@ void EmulatorInstance::refreshAllSettings() {
 
   // Rewind enabled
   setRewindEnabled(settings::SettingsService::instance()
-                       ->getValue(m_currentSettingsLevel, m_contentHash,
+                       ->getValueAtLevel(m_currentSettingsLevel, m_contentHash,
                                   m_platformId, "rewind-enabled")
                        .value_or("true") == "true");
 
@@ -233,7 +233,7 @@ void EmulatorInstance::refreshAllSettings() {
 
   // Picture mode
   setPictureMode(settings::SettingsService::instance()
-                     ->getValue(m_currentSettingsLevel, m_contentHash,
+                     ->getValueAtLevel(m_currentSettingsLevel, m_contentHash,
                                 m_platformId, "picture-mode")
                      .value_or("aspect-ratio-fill"));
 
@@ -242,7 +242,7 @@ void EmulatorInstance::refreshAllSettings() {
 
   // Aspect ratio mode
   setAspectRatioMode(settings::SettingsService::instance()
-                         ->getValue(m_currentSettingsLevel, m_contentHash,
+                         ->getValueAtLevel(m_currentSettingsLevel, m_contentHash,
                                     m_platformId, "aspect-ratio")
                          .value_or("emulator-corrected"));
 
@@ -252,7 +252,7 @@ void EmulatorInstance::refreshAllSettings() {
   // Integer scale
   setIntegerScale(
       std::stoi(settings::SettingsService::instance()
-                    ->getValue(m_currentSettingsLevel, m_contentHash,
+                    ->getValueAtLevel(m_currentSettingsLevel, m_contentHash,
                                m_platformId, "integer-scale")
                     .value_or("0")));
 

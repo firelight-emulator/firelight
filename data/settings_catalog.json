@@ -1,0 +1,136 @@
+{
+  "_comment": "Friendly emulation settings catalog, keyed by CORE (not platform) because core option keys differ per core. 'common' settings are frontend concepts applied to every core (rewind, aspect ratio, ...). Each 'cores.<coreName>' entry has 'settings' (friendly, shown in the UI) and 'defaults' (Firelight's opinionated overrides of the core's own raw option defaults). A friendly setting with a 'mapping' drives one or more core options ('values' maps friendly value -> core value; omit for identity, and omit 'mapping' entirely when the setting's own key IS the core option key). 'visibleWhen'/'enabledWhen' gate a setting on other settings' values (clauses AND-ed; a clause holds when the named setting is one of 'values').",
+  "_types_comment": "'type' accepts author-friendly aliases: 'boolean'/'toggle' -> BOOLEAN; 'options'/'dropdown' -> OPTIONS (needs 'options'); 'integer'/'slider' -> INTEGER (slider); 'number'/'spinbox' -> INTEGER (spinbox); 'custom' -> CUSTOM (needs an explicit 'widget' naming a QML delegate, e.g. 'gbc-palette'). An explicit 'widget' overrides the derived control. Slider/number settings take 'min', 'max', and 'step' (all numeric). 'step' may be fractional (e.g. 0.25 -> float slider), a whole number other than 1 (e.g. 5 -> increments of 5), and defaults to 1 when omitted.",
+
+  "common": [
+    { "key": "rewind-enabled", "label": "Rewind", "category": "Emulation",
+      "description": "Allow rewinding gameplay. Disabled in RetroAchievements hardcore mode.",
+      "type": "boolean", "default": "true" },
+    { "key": "auto-save", "label": "Automatic save", "category": "Emulation",
+      "description": "Periodically write battery/SRAM to disk while playing.",
+      "type": "boolean", "default": "true" },
+    { "key": "picture-mode", "label": "Picture mode", "category": "Video",
+      "type": "options", "default": "aspect-ratio-fill",
+      "options": [
+        { "label": "Fill (keep aspect)", "value": "aspect-ratio-fill" },
+        { "label": "Integer scale", "value": "integer-scale" },
+        { "label": "Stretch", "value": "stretch" }
+      ] },
+    { "key": "aspect-ratio", "label": "Aspect ratio", "category": "Video",
+      "type": "options", "default": "emulator-corrected",
+      "options": [
+        { "label": "Pixel perfect", "value": "pixel-perfect" },
+        { "label": "Emulator corrected", "value": "emulator-corrected" }
+      ] }
+  ],
+
+  "cores": {
+    "gambatte_libretro": {
+      "_note": "Game Boy / Game Boy Color. These friendly settings use the core key directly (identity); no 'mapping' needed.",
+      "settings": [
+        { "key": "gambatte_mix_frames", "label": "Simulate LCD ghosting effects",
+          "category": "Video", "type": "options", "default": "disabled",
+          "options": [
+            { "label": "None", "value": "disabled" },
+            { "label": "Simple (Accurate)", "value": "mix" },
+            { "label": "Simple (Fast)", "value": "mix_fast" },
+            { "label": "LCD Ghosting (Accurate)", "value": "lcd_ghosting" },
+            { "label": "LCD Ghosting (Fast)", "value": "lcd_ghosting_fast" }
+          ] },
+        { "key": "gambatte_up_down_allowed", "label": "Allow opposing D-Pad directions",
+          "category": "Input", "type": "boolean",
+          "default": "disabled", "trueValue": "enabled", "falseValue": "disabled" },
+        { "key": "gambatte_gbc_color_correction", "label": "Color correction",
+          "category": "Video", "type": "options", "default": "GBC only",
+          "options": [
+            { "label": "Off", "value": "disabled" },
+            { "label": "GBC only", "value": "GBC only" },
+            { "label": "Always", "value": "always" }
+          ] },
+        { "key": "gambatte_gbc_frontlight_position", "label": "Frontlight position",
+          "category": "Video", "type": "options", "default": "central",
+          "options": [
+            { "label": "Central", "value": "central" },
+            { "label": "Above screen", "value": "above screen" },
+            { "label": "Below screen", "value": "below screen" }
+          ] },
+        { "key": "gambatte_gb_internal_palette", "label": "Color palette",
+          "category": "Video",
+          "description": "Palette used for original Game Boy games.",
+          "type": "custom", "widget": "gbc-palette", "default": "GB - DMG",
+          "options": [
+            { "label": "DMG", "value": "GB - DMG" },
+            { "label": "Pocket", "value": "GB - Pocket" },
+            { "label": "Light", "value": "GB - Light" }
+          ] }
+      ],
+      "defaults": {
+        "gambatte_gbc_color_correction": "GBC only",
+        "gambatte_gbc_color_correction_mode": "accurate",
+        "gambatte_gbc_frontlight_position": "central",
+        "gambatte_dark_filter_level": "0",
+        "gambatte_up_down_allowed": "disabled",
+        "gambatte_mix_frames": "disabled",
+        "gambatte_gb_colorization": "auto",
+        "gambatte_gb_internal_palette": "GB - DMG",
+        "gambatte_gb_bootloader": "disabled",
+        "gambatte_gb_hwmode": "auto"
+      }
+    },
+
+    "mgba_libretro": {
+      "_note": "Game Boy Advance. Demonstrates a friendly setting that MAPS to a core key with value translation, plus a dependency.",
+      "settings": [
+        { "key": "gba-color-correction", "label": "Color correction",
+          "category": "Video",
+          "description": "Simulate the GBA screen's washed-out colors.",
+          "type": "options", "default": "Off",
+          "options": [
+            { "label": "Off", "value": "Off" },
+            { "label": "Accurate (GBA)", "value": "GBA" }
+          ],
+          "mapping": [
+            { "coreKey": "mgba_color_correction",
+              "values": { "Off": "OFF", "GBA": "GBA" } }
+          ] },
+        { "key": "gba-solar-sensor", "label": "Solar sensor",
+          "category": "Hardware", "description": "Emulate the Boktai solar sensor.",
+          "type": "boolean", "default": "false" },
+        { "key": "gba-solar-level", "label": "Solar sensor level",
+          "category": "Hardware", "type": "slider", "default": "0",
+          "min": 0, "max": 10, "step": 1,
+          "mapping": [{ "coreKey": "mgba_solar_sensor_level" }],
+          "visibleWhen": [{ "key": "gba-solar-sensor", "values": ["true"] }] }
+      ],
+      "defaults": {
+        "mgba_solar_sensor_level": "0",
+        "mgba_gb_model": "Autodetect",
+        "mgba_sgb_borders": "ON",
+        "mgba_use_bios": "ON",
+        "mgba_skip_bios": "OFF",
+        "mgba_frameskip": "disabled",
+        "mgba_audio_low_pass_filter": "disabled",
+        "mgba_idle_optimization": "Remove Known",
+        "mgba_color_correction": "OFF",
+        "mgba_interframe_blending": "mix_smart"
+      }
+    },
+
+    "melondsds_libretro": {
+      "_note": "Nintendo DS.",
+      "settings": [
+        { "key": "melonds_screen_gap", "label": "Screen gap",
+          "category": "Video", "type": "options", "default": "0",
+          "options": [
+            { "label": "0px", "value": "0" },
+            { "label": "5px", "value": "5" },
+            { "label": "10px", "value": "10" }
+          ] }
+      ],
+      "defaults": {
+        "melonds_homebrew_sdcard": "disabled",
+        "melonds_number_of_screen_layouts": "8"
+      }
+    }
+  }
+}

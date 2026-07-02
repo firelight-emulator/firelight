@@ -11,6 +11,11 @@ SqliteSettingsRepository::SqliteSettingsRepository(std::string databaseFile)
       m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
   m_database->exec(R"(
+    CREATE TABLE IF NOT EXISTS global_settings (
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY (key)
+    );
     CREATE TABLE IF NOT EXISTS platform_settings (
         platform_id INTEGER NOT NULL,
         key TEXT NOT NULL,
@@ -62,6 +67,54 @@ bool SqliteSettingsRepository::setSettingsLevel(std::string contentHash,
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to set settings level: {}", e.what());
+    return false;
+  }
+}
+
+std::optional<std::string>
+SqliteSettingsRepository::getGlobalValue(const std::string &key) {
+  try {
+    SQLite::Statement query(
+        *m_database, "SELECT value FROM global_settings WHERE key = :key");
+    query.bind(":key", key);
+    if (query.executeStep()) {
+      return std::string(query.getColumn(0));
+    }
+    return std::nullopt;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get global value: {}", e.what());
+    return std::nullopt;
+  }
+}
+
+bool SqliteSettingsRepository::setGlobalValue(const std::string &key,
+                                              const std::string &value) {
+  try {
+    SQLite::Statement query(*m_database,
+                            "INSERT OR REPLACE INTO global_settings "
+                            "(key, value) VALUES (:key, :value)");
+    query.bind(":key", key);
+    query.bind(":value", value);
+    query.exec();
+    emit globalValueChanged(QString::fromStdString(key),
+                            QString::fromStdString(value));
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to set global value: {}", e.what());
+    return false;
+  }
+}
+
+bool SqliteSettingsRepository::resetGlobalValue(const std::string &key) {
+  try {
+    SQLite::Statement query(*m_database,
+                            "DELETE FROM global_settings WHERE key = :key");
+    query.bind(":key", key);
+    query.exec();
+    emit globalValueReset(QString::fromStdString(key));
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to reset global value: {}", e.what());
     return false;
   }
 }

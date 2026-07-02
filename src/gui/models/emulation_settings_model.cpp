@@ -269,7 +269,7 @@ bool EmulationSettingsModel::setData(const QModelIndex &index,
     if (item.type == "combobox" && value.canConvert<QString>()) {
       item.stringValue = value.toString();
 
-      m_settingsService->setValue(m_level, m_contentHash.toStdString(),
+      m_settingsService->setValueAtLevel(m_level, m_contentHash.toStdString(),
                                   m_platformId, item.key.toStdString(),
                                   item.stringValue.toStdString());
       emit dataChanged(index, index, {ValueRole});
@@ -280,7 +280,7 @@ bool EmulationSettingsModel::setData(const QModelIndex &index,
       item.boolValue = value.toBool();
       auto strValue = item.boolValue ? item.trueValue : item.falseValue;
 
-      m_settingsService->setValue(m_level, m_contentHash.toStdString(),
+      m_settingsService->setValueAtLevel(m_level, m_contentHash.toStdString(),
                                   m_platformId, item.key.toStdString(),
                                   strValue.toStdString());
 
@@ -306,7 +306,7 @@ void EmulationSettingsModel::refreshValues() {
     auto &item = m_items[i];
     auto valueString = item.defaultValue;
     auto val =
-        m_settingsService->getValue(m_level, m_contentHash.toStdString(),
+        m_settingsService->getValueAtLevel(m_level, m_contentHash.toStdString(),
                                     m_platformId, item.key.toStdString());
     if (val) {
       valueString = QString::fromStdString(*val);

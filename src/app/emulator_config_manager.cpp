@@ -12,31 +12,6 @@ EmulatorConfigManager::EmulatorConfigManager(
 
 EmulatorConfigManager::~EmulatorConfigManager() = default;
 
-std::shared_ptr<CoreConfiguration>
-EmulatorConfigManager::getCoreConfigFor(const int platformId,
-                                        const QString &contentHash) {
-  const auto key = std::to_string(platformId) + "_" + contentHash.toStdString();
-
-  // if (!m_coreConfigs.contains(key)) {
-  //     m_coreConfigs[key] = std::make_shared<CoreConfiguration>();
-  // }
-
-  // m_coreConfigs[key] = std::make_shared<CoreConfiguration>();
-
-  for (const auto &setting :
-       firelight::PlatformMetadata::getDefaultConfigValues(platformId)) {
-    m_coreConfigs[key]->setPlatformValue(setting.first, setting.second);
-  }
-
-  const auto allSettings =
-      m_userdataDatabase.getAllPlatformSettings(platformId);
-  for (const auto &setting : allSettings) {
-    m_coreConfigs[key]->setPlatformValue(setting.first, setting.second);
-  }
-
-  return m_coreConfigs.at(key);
-}
-
 void EmulatorConfigManager::setOptionValueForPlatform(const int platformId,
                                                       const QString &key,
                                                       const QString &value) {

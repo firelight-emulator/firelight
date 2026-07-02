@@ -9,7 +9,10 @@
 #include <firelight/library/content_loader.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/user_library_service.hpp>
+#include <firelight/settings/settings_catalog.hpp>
+#include <firelight/settings/core_option_repository.hpp>
 #include <libretro/core.hpp>
+#include <libretro/core_configuration.hpp>
 #include <platform_metadata.hpp>
 #include <spdlog/spdlog.h>
 
@@ -34,6 +37,43 @@ namespace firelight::emulation {
         return std::make_unique<::libretro::Core>(
             platformId, corePath, configProvider, systemDirectory);
       };
+    }
+
+    // Core options are only known once the core declares them during
+    // EmulatorInstance::initialize (render thread). That publishes
+    // EmulationStartedEvent, at which point we cache the declared options so the
+    // advanced editor can list them before the next launch.
+    m_emulationStartedConnection =
+        EventDispatcher::instance().subscribe<EmulationStartedEvent>(
+            [this](const EmulationStartedEvent &) { persistCoreOptions(); });
+  }
+
+  void EmulationService::persistCoreOptions() {
+    const auto repository = getCoreOptionRepository();
+    if (!repository || !m_currentCoreConfig) {
+      return;
+    }
+    const auto coreName =
+        PlatformMetadata::getCoreName(m_currentEntry.platformId);
+    if (coreName.empty()) {
+      return;
+    }
+
+    std::vector<settings::CoreOption> definitions;
+    for (const auto &option : m_currentCoreConfig->getOptions()) {
+      settings::CoreOption def;
+      def.key = option.key;
+      def.label = option.label;
+      def.description = option.description;
+      def.defaultValue = option.defaultValueKey;
+      for (const auto &value : option.possibleValues) {
+        def.values.push_back({value.key, value.label});
+      }
+      definitions.push_back(std::move(def));
+    }
+
+    if (!definitions.empty()) {
+      repository->upsertCoreOptions(coreName, definitions);
     }
   }
 
@@ -123,9 +163,14 @@ namespace firelight::emulation {
       m_currentPlatform = platform.value();
     }
 
+    const auto coreName =
+        PlatformMetadata::getCoreName(m_currentEntry.platformId);
+    const auto &catalog = settings::SettingsCatalog::instance();
     auto coreConfig = std::make_shared<CoreConfiguration>(
-      m_currentEntry.contentHash.toStdString(), m_currentPlatform,
+      m_currentEntry.contentHash.toStdString(), m_currentEntry.platformId,
+      catalog.settingsForCore(coreName), catalog.coreDefaults(coreName),
       m_settingsService);
+    m_currentCoreConfig = coreConfig;
 
     std::unique_ptr<::libretro::ICore> core;
     try {

@@ -767,60 +767,51 @@ namespace firelight {
       }
     }
 
-    static std::string getCoreDllPath(const int platformId) {
-      const auto corePath = getCoreDirectoryPath();
-      const auto coreExt = getCoreDllExtension();
-      auto coreName = "";
-
+    // Stable identity of the libretro core that runs a platform. Also the key
+    // under which the settings catalog stores that core's options (core option
+    // keys differ per core).
+    static std::string getCoreName(const int platformId) {
       switch (platformId) {
         case PLATFORM_ID_GAMEBOY:
         case PLATFORM_ID_GAMEBOY_COLOR:
-          coreName = "gambatte_libretro";
-          break;
+          return "gambatte_libretro";
         case PLATFORM_ID_GAMEBOY_ADVANCE:
-          coreName = "mgba_libretro";
-          break;
+          return "mgba_libretro";
         case PLATFORM_ID_NES:
-          coreName = "fceumm_libretro";
-          break;
+          return "fceumm_libretro";
         case PLATFORM_ID_SNES:
-          coreName = "snes9x_libretro";
-          break;
+          return "snes9x_libretro";
         case PLATFORM_ID_N64:
-          coreName = "mupen64plus_next_libretro";
-          break;
+          return "mupen64plus_next_libretro";
         case PLATFORM_ID_NINTENDO_DS:
-          coreName = "melondsds_libretro";
-          break;
+          return "melondsds_libretro";
         case PLATFORM_ID_SG1000:
         case PLATFORM_ID_SEGA_GENESIS:
         case PLATFORM_ID_SEGA_GAMEGEAR:
         case PLATFORM_ID_SEGA_MASTER_SYSTEM:
-          coreName = "genesis_plus_gx_libretro";
-          break;
+          return "genesis_plus_gx_libretro";
         case PLATFORM_ID_PLAYSTATION_PORTABLE:
-          coreName = "ppsspp_libretro";
-          break;
+          return "ppsspp_libretro";
         case PLATFORM_ID_TURBOGRAFX16:
         case PLATFORM_ID_SUPERGRAFX:
-          coreName = "mednafen_supergrafx_libretro";
-          break;
+          return "mednafen_supergrafx_libretro";
         case PLATFORM_ID_POKEMON_MINI:
-          coreName = "pokemini_libretro";
-          break;
+          return "pokemini_libretro";
         case PLATFORM_ID_WONDERSWAN:
-          coreName = "mednafen_wswan_libretro";
-          break;
+          return "mednafen_wswan_libretro";
         case PLATFORM_ID_NEOGEO_POCKET:
-          coreName = "mednafen_ngp_libretro";
-          break;
+          return "mednafen_ngp_libretro";
         default:
-          coreName = "";
-          break;
+          return "";
       }
+    }
 
-      const auto coreDllPath = corePath + coreName + coreExt;
-      return coreDllPath;
+    static std::string getCoreDllPath(const int platformId) {
+      const auto coreName = getCoreName(platformId);
+      if (coreName.empty()) {
+        return "";
+      }
+      return getCoreDirectoryPath() + coreName + getCoreDllExtension();
     }
 
     static std::string getInputName(const input::GamepadInput input) {

@@ -1,20 +1,29 @@
 #pragma once
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/libretro/configuration_provider.hpp>
-#include <map>
-#include <firelight/platforms/platform.hpp>
+#include <firelight/settings/emulation_setting.hpp>
 #include <firelight/settings/settings_service.hpp>
+#include <map>
+#include <string>
+#include <vector>
 
 class CoreConfiguration final
     : public firelight::libretro::IConfigurationProvider {
 public:
-  explicit CoreConfiguration(
-      std::string contentHash, firelight::platforms::Platform platform,
+  // Friendly settings + Firelight core-option default overrides are resolved
+  // from the settings catalog (by core) and injected here, so this class is
+  // decoupled from Platform / the catalog itself.
+  CoreConfiguration(
+      std::string contentHash, int platformId,
+      std::vector<firelight::settings::EmulationSetting> friendlySettings,
+      std::map<std::string, std::string> coreDefaults,
       firelight::settings::SettingsService &settingsService);
 
-  virtual ~CoreConfiguration() = default;
+  ~CoreConfiguration() = default;
 
   void registerOption(Option option) override;
+
+  [[nodiscard]] std::vector<Option> getOptions() const override;
 
   bool anyOptionValueHasChanged() override;
 
@@ -31,12 +40,13 @@ public:
 
 private:
   std::string m_contentHash;
-  firelight::platforms::Platform m_platform;
+  int m_platformId;
+  std::vector<firelight::settings::EmulationSetting> m_friendlySettings;
+  std::map<std::string, std::string> m_coreDefaults;
   firelight::settings::SettingsService &m_settingsService;
   firelight::settings::SettingsLevel m_settingsLevel;
 
   std::map<std::string, std::string> m_cache;
-  // std::map<std::string, bool> m_changedFlags;
   bool m_anyValueHasChanged = false;
 
   ScopedConnection m_platformSettingChangedConnection;

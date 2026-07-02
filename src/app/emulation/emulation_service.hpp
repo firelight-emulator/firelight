@@ -7,12 +7,16 @@
 #include <functional>
 #include <manager_accessor.hpp>
 #include <memory>
+#include <service_accessor.hpp>
 #include <string>
 
 namespace firelight::library {
 class UserLibraryService;
 class EntryResolver;
 } // namespace firelight::library
+
+// Resolves core-option values for a loaded entry (global namespace).
+class CoreConfiguration;
 
 namespace firelight::emulation {
 
@@ -39,7 +43,7 @@ struct EmulationStartedEvent {
 
 struct EmulationStoppedEvent {};
 
-class EmulationService : public ManagerAccessor {
+class EmulationService : public ManagerAccessor, public ServiceAccessor {
 public:
   static EmulationService *getInstance() { return s_emuServiceInstance; }
   static void setInstance(EmulationService *service) {
@@ -77,6 +81,12 @@ private:
   std::string m_currentContentHash;
   platforms::Platform m_currentPlatform;
   bool m_gameRunning = false;
+
+  // Retained so its declared options can be cached once the core has declared
+  // them (on EmulationStartedEvent, i.e. after the render thread inits the core).
+  std::shared_ptr<CoreConfiguration> m_currentCoreConfig;
+  ScopedConnection m_emulationStartedConnection;
+  void persistCoreOptions();
 };
 
 } // namespace firelight::emulation

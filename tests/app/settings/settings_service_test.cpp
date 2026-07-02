@@ -445,7 +445,7 @@ TEST_F(SettingsServiceTest, SetValue_GameLevel_DelegatesToGameValue) {
   const std::string key = "test_key";
   const std::string value = "test_value";
 
-  bool success = service->setValue(Game, contentHash, platformId, key, value);
+  bool success = service->setValueAtLevel(Game, contentHash, platformId, key, value);
 
   EXPECT_TRUE(success);
 
@@ -474,7 +474,7 @@ TEST_F(SettingsServiceTest, SetValue_PlatformLevel_DelegatesToPlatformValue) {
   const std::string value = "test_value";
 
   bool success =
-      service->setValue(Platform, contentHash, platformId, key, value);
+      service->setValueAtLevel(Platform, contentHash, platformId, key, value);
 
   EXPECT_TRUE(success);
 
@@ -505,7 +505,7 @@ TEST_F(SettingsServiceTest, GetValue_GameLevel_DelegatesToGameValue) {
 
   service->setGameValue(contentHash, key, value);
 
-  auto retrievedValue = service->getValue(Game, contentHash, platformId, key);
+  auto retrievedValue = service->getValueAtLevel(Game, contentHash, platformId, key);
 
   ASSERT_TRUE(retrievedValue.has_value());
   EXPECT_EQ(retrievedValue.value(), value);
@@ -526,7 +526,7 @@ TEST_F(SettingsServiceTest, GetValue_PlatformLevel_DelegatesToPlatformValue) {
   service->setPlatformValue(platformId, key, value);
 
   auto retrievedValue =
-      service->getValue(Platform, contentHash, platformId, key);
+      service->getValueAtLevel(Platform, contentHash, platformId, key);
 
   ASSERT_TRUE(retrievedValue.has_value());
   EXPECT_EQ(retrievedValue.value(), value);
@@ -543,11 +543,11 @@ TEST_F(SettingsServiceTest, GetValue_NonExistent_ReturnsNullopt) {
   const int platformId = 1;
   const std::string key = "non_existent_key";
 
-  auto gameValue = service->getValue(Game, contentHash, platformId, key);
+  auto gameValue = service->getValueAtLevel(Game, contentHash, platformId, key);
   EXPECT_FALSE(gameValue.has_value());
 
   auto platformValue =
-      service->getValue(Platform, contentHash, platformId, key);
+      service->getValueAtLevel(Platform, contentHash, platformId, key);
   EXPECT_FALSE(platformValue.has_value());
 }
 
@@ -566,7 +566,7 @@ TEST_F(SettingsServiceTest,
 
   service->setPlatformValue(platformId, key, value);
 
-  auto retrievedValue = service->getValue(Game, contentHash, platformId, key);
+  auto retrievedValue = service->getValueAtLevel(Game, contentHash, platformId, key);
   EXPECT_FALSE(retrievedValue.has_value());
 }
 
@@ -586,7 +586,7 @@ TEST_F(SettingsServiceTest,
   service->setGameValue(contentHash, key, value);
 
   auto retrievedValue =
-      service->getValue(Platform, contentHash, platformId, key);
+      service->getValueAtLevel(Platform, contentHash, platformId, key);
   EXPECT_FALSE(retrievedValue.has_value());
 }
 

@@ -336,6 +336,10 @@ endif (UNIX)
 
 file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
 
+# Friendly emulation settings + per-core option defaults (loaded at runtime by
+# EmulationService, resolved through CoreConfiguration).
+file(COPY ${CMAKE_SOURCE_DIR}/data/settings_catalog.json DESTINATION ${CMAKE_BINARY_DIR}/system)
+
 #if (DISCORD_SDK_RUNTIME_LIBRARY_FILE AND EXISTS "${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
 #    add_custom_command(TARGET firelight POST_BUILD
 #            COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -373,6 +377,9 @@ add_executable(fl_test
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
         tests/app/settings/sqlite_settings_repository_test.cpp
         tests/app/settings/settings_service_test.cpp
+        tests/app/settings/emulation_setting_test.cpp
+        tests/app/settings/settings_catalog_test.cpp
+        tests/app/settings/sqlite_core_option_repository_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
@@ -380,6 +387,7 @@ add_executable(fl_test
         tests/app/emulation/emulation_service_test.cpp
         tests/app/emulation/emulator_instance_test.cpp
         tests/app/emulation/emulator_instance_e2e_test.cpp
+        tests/app/emulation/core_configuration_test.cpp
         tests/app/achievements/sqlite_achievement_repository_test.cpp
         tests/app/achievements/achievement_service_test.cpp
         tests/app/activity/sqlite_activity_log_test.cpp
@@ -502,6 +510,7 @@ install(
 install(
         FILES
         ${CMAKE_SOURCE_DIR}/content.db
+        ${CMAKE_SOURCE_DIR}/data/settings_catalog.json
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
 

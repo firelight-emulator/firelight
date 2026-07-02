@@ -33,6 +33,15 @@ struct PlatformSettingResetEvent {
   std::string key;
 };
 
+struct GlobalSettingChangedEvent {
+  std::string key;
+  std::string value;
+};
+
+struct GlobalSettingResetEvent {
+  std::string key;
+};
+
 struct EmulationSettingChangedEvent {
   std::string contentHash;
   std::string key;
@@ -49,6 +58,10 @@ public:
   SettingsLevel getSettingsLevel(const std::string &contentHash) const;
   bool setSettingsLevel(const std::string &contentHash, SettingsLevel level);
 
+  std::optional<std::string> getGlobalValue(const std::string &key);
+  bool setGlobalValue(const std::string &key, const std::string &value);
+  bool resetGlobalValue(const std::string &key);
+
   std::optional<std::string> getPlatformValue(int platformId, const std::string &key);
   bool setPlatformValue(int platformId, const std::string &key, const std::string &value);
   bool resetPlatformValue(int platformId, const std::string &key);
@@ -59,10 +72,24 @@ public:
                     const std::string &value);
   bool resetGameValue(const std::string &contentHash, const std::string &key);
 
-  bool setValue(SettingsLevel level, const std::string &contentHash, int platformId,
-                const std::string &key, const std::string &value);
-  std::optional<std::string> getValue(SettingsLevel level, const std::string &contentHash,
-                                      int platformId, const std::string &key);
+  bool setValueAtLevel(SettingsLevel level, const std::string &contentHash,
+                       int platformId, const std::string &key,
+                       const std::string &value);
+  // Reads the value stored *at exactly* `level` (no fallback). Used to tell
+  // whether a level has its own override. Contrast with getEffectiveValue.
+  std::optional<std::string> getValueAtLevel(SettingsLevel level,
+                                             const std::string &contentHash,
+                                             int platformId,
+                                             const std::string &key);
+  // Clears the override at `level` so the setting falls through to the next tier.
+  bool resetValueAtLevel(SettingsLevel level, const std::string &contentHash,
+                         int platformId, const std::string &key);
+
+  // Canonical resolution: game override -> platform override -> global. Returns
+  // nullopt if unset at every level (caller applies the catalog default).
+  std::optional<std::string> getEffectiveValue(const std::string &contentHash,
+                                               int platformId,
+                                               const std::string &key);
 
 private:
   static SettingsService *s_instance;

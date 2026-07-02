@@ -3,8 +3,10 @@
 #include <QObject>
 #include <firelight/userdata_database.hpp>
 
-#include "libretro/core_configuration.hpp"
-
+// NOTE: legacy. Only the GB/GBC/GBA platform settings QML pages still use this
+// (a thin wrapper over userdata platform_settings + PlatformMetadata defaults).
+// It is slated for removal when those pages move to the catalog-driven settings
+// UI (config redesign Phase 4). It no longer touches CoreConfiguration.
 class EmulatorConfigManager : public QObject {
     Q_OBJECT
 
@@ -12,8 +14,6 @@ public:
     explicit EmulatorConfigManager(firelight::db::IUserdataDatabase &userdataDatabase);
 
     ~EmulatorConfigManager() override;
-
-    [[nodiscard]] std::shared_ptr<CoreConfiguration> getCoreConfigFor(int platformId, const QString &contentHash);
 
     Q_INVOKABLE void setOptionValueForPlatform(int platformId, const QString &key, const QString &value);
 
@@ -25,5 +25,4 @@ public:
 
 private:
     firelight::db::IUserdataDatabase &m_userdataDatabase;
-    std::map<std::string, std::shared_ptr<CoreConfiguration> > m_coreConfigs;
 };

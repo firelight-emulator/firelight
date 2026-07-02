@@ -794,4 +794,83 @@ TEST_F(SqliteSettingsRepositoryTest, GameValue_IsolatedFromPlatformValue) {
   EXPECT_TRUE(repository->getPlatformValue(platformId, key).has_value());
 }
 
+/**
+ * @brief Global values: set / get / reset round trip.
+ */
+TEST_F(SqliteSettingsRepositoryTest, GlobalValue_SetGetReset) {
+  const std::string key = "rewind-enabled";
+
+  EXPECT_FALSE(repository->getGlobalValue(key).has_value());
+
+  EXPECT_TRUE(repository->setGlobalValue(key, "true"));
+  ASSERT_TRUE(repository->getGlobalValue(key).has_value());
+  EXPECT_EQ(repository->getGlobalValue(key).value(), "true");
+
+  // Overwrite.
+  EXPECT_TRUE(repository->setGlobalValue(key, "false"));
+  EXPECT_EQ(repository->getGlobalValue(key).value(), "false");
+
+  EXPECT_TRUE(repository->resetGlobalValue(key));
+  EXPECT_FALSE(repository->getGlobalValue(key).has_value());
+}
+
+/**
+ * @brief Global values are isolated from platform/game values with the same key.
+ */
+TEST_F(SqliteSettingsRepositoryTest, GlobalValue_IsolatedFromOtherLevels) {
+  const std::string contentHash = "hash";
+  const int platformId = 3;
+  const std::string key = "aspect-ratio";
+
+  repository->setGlobalValue(key, "global");
+  repository->setPlatformValue(platformId, key, "platform");
+  repository->setGameValue(contentHash, key, "game");
+
+  EXPECT_EQ(repository->getGlobalValue(key).value(), "global");
+  EXPECT_EQ(repository->getPlatformValue(platformId, key).value(), "platform");
+  EXPECT_EQ(repository->getGameValue(contentHash, key).value(), "game");
+}
+
+/**
+ * @brief getEffectiveValue resolves game -> platform -> global -> default.
+ */
+TEST_F(SqliteSettingsRepositoryTest, GetEffectiveValue_ResolutionOrder) {
+  const QString contentHash = "hash";
+  const int platformId = 3;
+  const QString key = "aspect-ratio";
+  const QString def = "catalog-default";
+
+  // Nothing set -> catalog default.
+  EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), def);
+
+  // Global set -> global wins over default.
+  repository->setGlobalValue(key.toStdString(), "global");
+  EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
+            "global");
+
+  // Platform set -> platform wins over global.
+  repository->setPlatformValue(platformId, key.toStdString(), "platform");
+  EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
+            "platform");
+
+  // Game set -> game wins over platform.
+  repository->setGameValue(contentHash.toStdString(), key.toStdString(), "game");
+  EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
+            "game");
+
+  // Reset game -> falls back to platform.
+  repository->resetGameValue(contentHash.toStdString(), key.toStdString());
+  EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
+            "platform");
+
+  // Reset platform -> falls back to global.
+  repository->resetPlatformValue(platformId, key.toStdString());
+  EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
+            "global");
+
+  // Reset global -> falls back to default.
+  repository->resetGlobalValue(key.toStdString());
+  EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), def);
+}
+
 } // namespace firelight::settings

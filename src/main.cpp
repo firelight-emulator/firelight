@@ -73,6 +73,8 @@
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include <firelight/input/sdl_input_service.hpp>
+#include <firelight/settings/settings_catalog.hpp>
+#include <firelight/settings/sqlite_core_option_repository.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <input/gui/input_mappings_model.hpp>
@@ -285,6 +287,12 @@ int main(int argc, char *argv[]) {
         (defaultAppDataPathString + "/settings.db").toStdString());
     firelight::ManagerAccessor::setEmulationSettingsManager(
         &emulationSettingsManager);
+
+    // Caches each core's declared options (populated after a core loads) so the
+    // advanced options editor can list them without the core running.
+    firelight::settings::SqliteCoreOptionRepository coreOptionRepository(
+        (defaultAppDataPathString + "/settings.db").toStdString());
+    firelight::ServiceAccessor::setCoreOptionRepository(&coreOptionRepository);
     //   QObject::connect(
     //     &libraryDatabase,
     //     &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
@@ -302,6 +310,14 @@ int main(int argc, char *argv[]) {
         emulationSettingsManager);
 
     firelight::settings::SettingsService::setInstance(&settingsService);
+
+    // Friendly emulation settings + per-core option defaults. Loaded once into
+    // the shared catalog; the emulation path and settings UI read from it.
+    if (!firelight::settings::SettingsCatalog::instance().loadFromFile(
+            "system/settings_catalog.json")) {
+      spdlog::warn("Could not load settings catalog from "
+                   "system/settings_catalog.json; using core defaults only");
+    }
 
     qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
     qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0,

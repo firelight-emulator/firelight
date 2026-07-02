@@ -8,8 +8,10 @@
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/saves/save_manager_impl.hpp>
 #include <firelight/settings/settings_service.hpp>
+#include <firelight/settings/sqlite_core_option_repository.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 #include <manager_accessor.hpp>
+#include <platform_metadata.hpp>
 
 #include <gtest/gtest.h>
 
@@ -29,6 +31,7 @@ protected:
   std::unique_ptr<library::UserLibraryService> m_libraryService;
   std::unique_ptr<library::EntryResolver> m_resolver;
   std::unique_ptr<settings::SettingsService> m_settingsService;
+  std::unique_ptr<settings::SqliteCoreOptionRepository> m_coreOptionRepo;
   std::unique_ptr<FakeUserdataDatabase> m_userdataDb;
   std::unique_ptr<saves::SaveManager> m_saveManager;
   std::unique_ptr<EmulationService> m_emulationService;
@@ -56,11 +59,17 @@ protected:
     m_saveManager->setSaveDirectory(m_saveDir.path());
     ManagerAccessor::setSaveManager(m_saveManager.get());
 
+    m_coreOptionRepo =
+        std::make_unique<settings::SqliteCoreOptionRepository>(":memory:");
+    ServiceAccessor::setCoreOptionRepository(m_coreOptionRepo.get());
+
     CoreFactory factory =
         [this](int, const std::string &,
-               std::shared_ptr<firelight::libretro::IConfigurationProvider>,
+               std::shared_ptr<firelight::libretro::IConfigurationProvider>
+                   configProvider,
                const std::string &) -> std::unique_ptr<::libretro::ICore> {
       auto fake = std::make_unique<FakeCore>();
+      fake->setConfigProvider(std::move(configProvider));
       m_fakeCore = fake.get();
       return fake;
     };
@@ -70,6 +79,8 @@ protected:
 
   void TearDown() override {
     m_emulationService.reset();
+    ServiceAccessor::setCoreOptionRepository(nullptr);
+    m_coreOptionRepo.reset();
     ManagerAccessor::setSaveManager(nullptr);
     m_saveManager.reset();
     m_userdataDb.reset();
@@ -108,6 +119,16 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   ASSERT_TRUE(instance->initialize(nullptr));
   ASSERT_TRUE(instance->isInitialized());
   ASSERT_TRUE(m_fakeCore->initialized());
+
+  // initialize() published EmulationStartedEvent, so the core's declared options
+  // should now be cached (keyed by the platform's core) for the advanced editor.
+  const auto coreName = PlatformMetadata::getCoreName(3);
+  const auto cachedOptions = m_coreOptionRepo->getCoreOptions(coreName);
+  ASSERT_EQ(cachedOptions.size(), 2u);
+  EXPECT_EQ(cachedOptions[0].key, "fake_opt_a");
+  EXPECT_EQ(cachedOptions[0].defaultValue, "on");
+  ASSERT_EQ(cachedOptions[0].values.size(), 2u);
+  EXPECT_EQ(cachedOptions[0].values[1].value, "off");
 
   // Run frames — the fake advances a frame counter and touches SRAM.
   for (int i = 0; i < 5; ++i) {

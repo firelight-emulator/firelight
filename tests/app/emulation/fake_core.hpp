@@ -1,8 +1,10 @@
 #pragma once
 
+#include <firelight/libretro/configuration_provider.hpp>
 #include <firelight/libretro/icore.hpp>
 
 #include <cstring>
+#include <memory>
 #include <vector>
 
 namespace firelight::emulation {
@@ -24,8 +26,35 @@ public:
   }
   void setSystemDirectory(const std::string &) override {}
 
+  // When set, the fake declares a couple of core options on init(), exercising
+  // the frontend's option-capture/persistence path.
+  void setConfigProvider(
+      std::shared_ptr<firelight::libretro::IConfigurationProvider> provider) {
+    m_configProvider = std::move(provider);
+  }
+
   // --- lifecycle ---
-  void init() override { m_inited = true; }
+  void init() override {
+    m_inited = true;
+    if (m_configProvider) {
+      firelight::libretro::IConfigurationProvider::Option a;
+      a.key = "fake_opt_a";
+      a.label = "Fake option A";
+      a.description = "First fake option";
+      a.defaultValueKey = "on";
+      a.possibleValues = {{.key = "on", .label = "On"},
+                          {.key = "off", .label = "Off"}};
+      m_configProvider->registerOption(a);
+
+      firelight::libretro::IConfigurationProvider::Option b;
+      b.key = "fake_opt_b";
+      b.label = "Fake option B";
+      b.description = "Second fake option";
+      b.defaultValueKey = "1";
+      b.possibleValues = {{.key = "1", .label = "One"}};
+      m_configProvider->registerOption(b);
+    }
+  }
   bool loadGame(::libretro::Game *) override {
     m_gameLoaded = true;
     if (m_sram.empty()) {
@@ -89,6 +118,7 @@ private:
   mutable std::vector<char> m_sram;
   bool m_inited = false;
   bool m_gameLoaded = false;
+  std::shared_ptr<firelight::libretro::IConfigurationProvider> m_configProvider;
 };
 
 } // namespace firelight::emulation

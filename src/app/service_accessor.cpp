@@ -5,6 +5,7 @@ namespace firelight {
   input::IControllerRepository *ServiceAccessor::s_controllerProfileRepository;
   platforms::PlatformService *ServiceAccessor::s_platformService;
   settings::SettingsService *ServiceAccessor::s_settingsService;
+  settings::ICoreOptionRepository *ServiceAccessor::s_coreOptionRepository;
   achievements::AchievementService *ServiceAccessor::s_achievementService;
   library::UserLibraryService *ServiceAccessor::s_libraryService;
   activity::IActivityLog *ServiceAccessor::s_activityService;
@@ -24,6 +25,11 @@ namespace firelight {
 
   void ServiceAccessor::setSettingsService(settings::SettingsService *service) {
     s_settingsService = service;
+  }
+
+  void ServiceAccessor::setCoreOptionRepository(
+    settings::ICoreOptionRepository *repository) {
+    s_coreOptionRepository = repository;
   }
 
   void ServiceAccessor::setAchievementService(
@@ -54,6 +60,10 @@ namespace firelight {
 
   settings::SettingsService *ServiceAccessor::getSettingsService() {
     return s_settingsService;
+  }
+
+  settings::ICoreOptionRepository *ServiceAccessor::getCoreOptionRepository() {
+    return s_coreOptionRepository;
   }
 
   achievements::AchievementService *ServiceAccessor::getAchievementService() {

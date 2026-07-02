@@ -11,6 +11,7 @@ namespace firelight {
 
   namespace settings {
     class SettingsService;
+    class ICoreOptionRepository;
   }
 
   namespace platforms {
@@ -37,6 +38,9 @@ namespace firelight {
 
     static void setSettingsService(settings::SettingsService *service);
 
+    static void
+    setCoreOptionRepository(settings::ICoreOptionRepository *repository);
+
     static void setAchievementService(achievements::AchievementService *service);
 
     static void setLibraryService(library::UserLibraryService *service);
@@ -52,6 +56,8 @@ namespace firelight {
 
     static settings::SettingsService *getSettingsService();
 
+    static settings::ICoreOptionRepository *getCoreOptionRepository();
+
     static achievements::AchievementService *getAchievementService();
 
     static library::UserLibraryService *getLibraryService();
@@ -63,6 +69,7 @@ namespace firelight {
     static input::IControllerRepository *s_controllerProfileRepository;
     static platforms::PlatformService *s_platformService;
     static settings::SettingsService *s_settingsService;
+    static settings::ICoreOptionRepository *s_coreOptionRepository;
     static achievements::AchievementService *s_achievementService;
     static library::UserLibraryService *s_libraryService;
     static activity::IActivityLog *s_activityService;
