@@ -27,6 +27,11 @@ struct ContentFile {
   std::string m_archivePathName;
   int m_platformId = -1;
   std::string m_contentHash;
+  // The content directory (content_directoriesv1.id) this file was found under,
+  // resolved by longest path-prefix match. -1 when it belongs to no known
+  // directory (e.g. imported before provenance tracking, and unmatched by the
+  // backfill). This is folder-source provenance for smart folders.
+  int m_contentDirectoryId = -1;
 };
 
 } // namespace firelight::library

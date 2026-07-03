@@ -4,9 +4,11 @@ find_package(Qt6 REQUIRED COMPONENTS Core Concurrent Sql)
 find_package(spdlog REQUIRED)
 find_package(LibArchive REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_library(firelight_library STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_user_library_repository.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/smart_folder.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/library_scanner2.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/archive_reader.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/content_hasher.cpp
@@ -35,6 +37,7 @@ target_link_libraries(firelight_library
         PRIVATE spdlog::spdlog
         PRIVATE LibArchive::LibArchive
         PRIVATE ZLIB::ZLIB
+        PRIVATE nlohmann_json::nlohmann_json
         PRIVATE patching
         PRIVATE rcheevos
 )

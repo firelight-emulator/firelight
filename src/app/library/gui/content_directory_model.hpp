@@ -34,6 +34,6 @@ namespace firelight::gui {
 
   private:
     library::UserLibraryService &m_library;
-    std::vector<library::WatchedDirectory> m_items;
+    std::vector<library::ContentDirectory> m_items;
   };
 } // namespace firelight::gui

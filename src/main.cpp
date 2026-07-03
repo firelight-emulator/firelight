@@ -221,25 +221,25 @@ int main(int argc, char *argv[]) {
 
     firelight::library::LibraryScanner2 libScanner2(userLibrary);
 
-    // Re-watch/re-scan as watched directories come and go. Subscribed before the
+    // Re-watch/re-scan as content directories come and go. Subscribed before the
     // service guarantees the default directory below, so the initial seed of a
     // fresh install is caught here.
-    const auto watchedDirAddedConn = EventDispatcher::instance().subscribe<
-        firelight::library::WatchedDirectoryAddedEvent>(
-        [&](const firelight::library::WatchedDirectoryAddedEvent &e) {
+    const auto contentDirAddedConn = EventDispatcher::instance().subscribe<
+        firelight::library::ContentDirectoryAddedEvent>(
+        [&](const firelight::library::ContentDirectoryAddedEvent &e) {
             libScanner2.watchPath(QString::fromStdString(e.path));
             libScanner2.scanAll();
         });
-    const auto watchedDirUpdatedConn = EventDispatcher::instance().subscribe<
-        firelight::library::WatchedDirectoryUpdatedEvent>(
-        [&](const firelight::library::WatchedDirectoryUpdatedEvent &e) {
+    const auto contentDirUpdatedConn = EventDispatcher::instance().subscribe<
+        firelight::library::ContentDirectoryUpdatedEvent>(
+        [&](const firelight::library::ContentDirectoryUpdatedEvent &e) {
             libScanner2.removePath(QString::fromStdString(e.oldPath));
             libScanner2.watchPath(QString::fromStdString(e.newPath));
             libScanner2.scanAll();
         });
-    const auto watchedDirRemovedConn = EventDispatcher::instance().subscribe<
-        firelight::library::WatchedDirectoryRemovedEvent>(
-        [&](const firelight::library::WatchedDirectoryRemovedEvent &e) {
+    const auto contentDirRemovedConn = EventDispatcher::instance().subscribe<
+        firelight::library::ContentDirectoryRemovedEvent>(
+        [&](const firelight::library::ContentDirectoryRemovedEvent &e) {
             libScanner2.removePath(QString::fromStdString(e.path));
             libScanner2.scanAll();
         });
@@ -318,9 +318,9 @@ int main(int argc, char *argv[]) {
     // Friendly emulation settings + per-core option defaults. Loaded once into
     // the shared catalog; the emulation path and settings UI read from it.
     if (!firelight::settings::SettingsCatalog::instance().loadFromFile(
-            "system/settings_catalog.json")) {
-      spdlog::warn("Could not load settings catalog from "
-                   "system/settings_catalog.json; using core defaults only");
+        "system/settings_catalog.json")) {
+        spdlog::warn("Could not load settings catalog from "
+            "system/settings_catalog.json; using core defaults only");
     }
 
     qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
@@ -397,7 +397,7 @@ int main(int argc, char *argv[]) {
         .saveManager = &saveManager,
         .coreOptionRepository = &coreOptionRepository,
         .coreSystemDirectory =
-            (defaultAppDataPathString + "/core-system").toStdString(),
+        (defaultAppDataPathString + "/core-system").toStdString(),
     };
     firelight::emulation::EmulationService emuService(userLibraryService,
                                                       entryResolver,
@@ -481,7 +481,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
         []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-    engine.loadFromModule("QMLFirelight", "Main3");
+    engine.loadFromModule("QMLFirelight", "Main4");
 
     QObject *rootObject = engine.rootObjects().value(0);
     auto window = qobject_cast<QQuickWindow *>(rootObject);

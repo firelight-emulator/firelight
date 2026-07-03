@@ -12,6 +12,15 @@ SplitView {
 
     clip: true
 
+    CreateFolderDialog {
+        id: createFolderDialog
+        onAccepted: LibraryFolderModel.addFolder(createFolderDialog.folderName)
+    }
+
+    SmartFolderDialog {
+        id: smartFolderDialog
+    }
+
     handle: Item {
         SplitView.fillHeight: true
         implicitWidth: 8
@@ -103,13 +112,38 @@ SplitView {
                         }
 
                         FLIcon {
+                            id: addFolderIcon
                             Layout.fillHeight: true
                             Layout.topMargin: 13
                             icon: "add"
                             size: 26
                             color: "#ffffff"
-                            opacity: 0.8
+                            opacity: newFolderHover.hovered ? 1.0 : 0.8
                             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+
+                            HoverHandler {
+                                id: newFolderHover
+                            }
+
+                            TapHandler {
+                                onTapped: newFolderMenu.popup()
+                            }
+
+                            Menu {
+                                id: newFolderMenu
+
+                                MenuItem {
+                                    text: "New folder"
+                                    onTriggered: createFolderDialog.open()
+                                }
+                                MenuItem {
+                                    text: "New smart folder"
+                                    onTriggered: {
+                                        smartFolderDialog.editFolderId = -1;
+                                        smartFolderDialog.open();
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -285,6 +319,7 @@ SplitView {
 
                                 iconSource: model.icon1x1SourceUrl
                                 displayText: model.displayName
+                                accentColor: model.color
                                 numberOfItems: {
                                     var num = LibraryEntryModel.countByFolderId[model.folderId]
                                     return num !== undefined ? num : 0
@@ -296,14 +331,17 @@ SplitView {
 
                                 onCheckedChanged: {
                                     if (folderMenuItem.checked) {
-                                        gameView.filterByFolderId(model.folderId);
+                                        gameView.filterByFolderId(model.folderId, model.folderType === 1, model.sortRole, model.sortAscending);
                                     }
                                 }
 
+                                // Smart folders compute membership from criteria,
+                                // so dropping a game into one wouldn't stick.
                                 DropArea {
                                     id: dropArea
 
                                     anchors.fill: parent
+                                    enabled: model.folderType !== 1
 
                                     onDropped: function (event) {
                                         var entryId = event.text

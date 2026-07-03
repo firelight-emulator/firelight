@@ -19,6 +19,9 @@ Button {
     required property string displayText
     property var numberOfItems
 
+    // Optional folder accent color (empty = none), shown as a thin left bar.
+    property string accentColor: ""
+
     property bool containsDrag: false
     property bool showGlobalCursor: true
     property real globalCursorSpacing: 2
@@ -52,6 +55,18 @@ Button {
             border.width: 2
             opacity: 1
             radius: 4
+        }
+
+        Rectangle {
+            id: accentBar
+            visible: control.accentColor !== ""
+            color: control.accentColor === "" ? "transparent" : control.accentColor
+            width: 3
+            radius: 1.5
+            anchors.left: parent.left
+            anchors.leftMargin: 2
+            anchors.verticalCenter: parent.verticalCenter
+            height: parent.height - 12
         }
     }
     contentItem: RowLayout {

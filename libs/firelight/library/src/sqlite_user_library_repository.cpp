@@ -6,6 +6,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QThread>
+#include <algorithm>
 #include <qfileinfo.h>
 #include <spdlog/spdlog.h>
 #include <utility>
@@ -25,6 +26,7 @@ namespace firelight::library {
       "platform_id INTEGER NOT NULL,"
       "content_hash TEXT NOT NULL,"
       "content_type INTEGER NOT NULL DEFAULT 0,"
+      "content_directory_id INTEGER NOT NULL DEFAULT -1,"
       "created_at INTEGER NOT NULL);");
 
     if (!createRomFilesTable.exec()) {
@@ -137,6 +139,13 @@ namespace firelight::library {
       "display_name TEXT UNIQUE NOT NULL,"
       "description TEXT,"
       "icon_source_url TEXT,"
+      "type INTEGER NOT NULL DEFAULT 0,"
+      "filter_json TEXT,"
+      "color TEXT,"
+      "sort_role TEXT,"
+      "sort_ascending INTEGER NOT NULL DEFAULT 1,"
+      "parent_id INTEGER NOT NULL DEFAULT -1,"
+      "position INTEGER NOT NULL DEFAULT 0,"
       "created_at INTEGER NOT NULL);");
 
     if (!createFoldersTable.exec()) {
@@ -195,10 +204,91 @@ namespace firelight::library {
       }
     }
 
+    // Migrate databases created before these columns existed. CREATE TABLE IF
+    // NOT EXISTS won't add columns to an existing table, so add them here;
+    // otherwise reads/writes referencing them fail on older databases.
+    ensureColumn("content_files", "content_directory_id",
+                 "INTEGER NOT NULL DEFAULT -1");
+    ensureColumn("folders", "type", "INTEGER NOT NULL DEFAULT 0");
+    ensureColumn("folders", "filter_json", "TEXT");
+    ensureColumn("folders", "color", "TEXT");
+    ensureColumn("folders", "sort_role", "TEXT");
+    ensureColumn("folders", "sort_ascending", "INTEGER NOT NULL DEFAULT 1");
+    ensureColumn("folders", "parent_id", "INTEGER NOT NULL DEFAULT -1");
+    ensureColumn("folders", "position", "INTEGER NOT NULL DEFAULT 0");
+
+    // Give pre-existing content files their directory provenance (new files get
+    // it stamped at insert time in create(ContentFile)).
+    backfillContentDirectoryIds();
+
     // The default content directory is guaranteed by UserLibraryService, not
     // seeded here. The scan-time orchestration (content file -> run
     // configuration -> entry) lives in LibraryIngestService, which subscribes to
     // the events published below.
+  }
+
+  void SqliteUserLibraryRepository::ensureColumn(
+    const QString &table, const QString &column,
+    const QString &definition) const {
+    QSqlQuery info(getDatabase());
+    if (!info.exec(QString("PRAGMA table_info(%1);").arg(table))) {
+      spdlog::error("Failed to read schema for {}: {}", table.toStdString(),
+                    info.lastError().text().toStdString());
+      return;
+    }
+    while (info.next()) {
+      if (info.value("name").toString() == column) {
+        return; // already present
+      }
+    }
+    info.finish();
+
+    QSqlQuery alter(getDatabase());
+    if (!alter.exec(QString("ALTER TABLE %1 ADD COLUMN %2 %3;")
+                    .arg(table, column, definition))) {
+      spdlog::error("Failed to add column {}.{}: {}", table.toStdString(),
+                    column.toStdString(),
+                    alter.lastError().text().toStdString());
+    }
+  }
+
+  int SqliteUserLibraryRepository::resolveContentDirectoryId(
+    const QString &onDiskPath) {
+    int bestId = -1;
+    int bestLen = -1;
+    for (const auto &dir: getContentDirectories()) {
+      if (onDiskPath.startsWith(dir.path) && dir.path.length() > bestLen) {
+        bestId = dir.id;
+        bestLen = dir.path.length();
+      }
+    }
+    return bestId;
+  }
+
+  void SqliteUserLibraryRepository::backfillContentDirectoryIds() {
+    if (getContentDirectories().empty()) {
+      return;
+    }
+    for (const auto &cf: getContentFiles()) {
+      if (cf.m_contentDirectoryId >= 0) {
+        continue; // already stamped
+      }
+      const auto onDisk = QString::fromStdString(
+        cf.m_inArchive ? cf.m_archivePathName : cf.m_filePath);
+      const int dirId = resolveContentDirectoryId(onDisk);
+      if (dirId < 0) {
+        continue;
+      }
+      QSqlQuery upd(getDatabase());
+      upd.prepare("UPDATE content_files SET content_directory_id = :dirId "
+        "WHERE id = :id;");
+      upd.bindValue(":dirId", dirId);
+      upd.bindValue(":id", cf.m_id);
+      if (!upd.exec()) {
+        spdlog::error("Failed to backfill content_directory_id for file {}: {}",
+                      cf.m_id, upd.lastError().text().toStdString());
+      }
+    }
   }
 
   SqliteUserLibraryRepository::~SqliteUserLibraryRepository() {
@@ -210,18 +300,36 @@ namespace firelight::library {
   }
 
   bool SqliteUserLibraryRepository::create(FolderInfo &folder) {
+    // New folders append to the end of their parent's ordering.
+    folder.position = nextFolderPosition(folder.parentId);
+
     QSqlQuery query(getDatabase());
     query.prepare("INSERT INTO folders("
       "display_name, "
       "description, "
       "icon_source_url, "
+      "type, "
+      "filter_json, "
+      "color, "
+      "sort_role, "
+      "sort_ascending, "
+      "parent_id, "
+      "position, "
       "created_at) VALUES"
-      "(:displayName, :description, :iconSourceUrl, :createdAt);");
+      "(:displayName, :description, :iconSourceUrl, :type, :filterJson, "
+      ":color, :sortRole, :sortAscending, :parentId, :position, :createdAt);");
 
     query.bindValue(":displayName", QString::fromStdString(folder.displayName));
     query.bindValue(":description", QString::fromStdString(folder.description));
     query.bindValue(":iconSourceUrl",
                     QString::fromStdString(folder.iconSourceUrl));
+    query.bindValue(":type", folder.type);
+    query.bindValue(":filterJson", QString::fromStdString(folder.filterJson));
+    query.bindValue(":color", QString::fromStdString(folder.color));
+    query.bindValue(":sortRole", QString::fromStdString(folder.sortRole));
+    query.bindValue(":sortAscending", folder.sortAscending ? 1 : 0);
+    query.bindValue(":parentId", folder.parentId);
+    query.bindValue(":position", folder.position);
     query.bindValue(":createdAt", QDateTime::currentSecsSinceEpoch());
 
     if (!query.exec()) {
@@ -233,6 +341,17 @@ namespace firelight::library {
     folder.id = query.lastInsertId().toInt();
 
     return true;
+  }
+
+  int SqliteUserLibraryRepository::nextFolderPosition(int parentId) {
+    QSqlQuery query(getDatabase());
+    query.prepare("SELECT COALESCE(MAX(position), -1) + 1 AS next "
+      "FROM folders WHERE parent_id = :parentId;");
+    query.bindValue(":parentId", parentId);
+    if (query.exec() && query.next()) {
+      return query.value("next").toInt();
+    }
+    return 0;
   }
 
   bool SqliteUserLibraryRepository::create(FolderEntryInfo &folderEntry) {
@@ -259,7 +378,9 @@ namespace firelight::library {
   std::vector<FolderInfo>
   SqliteUserLibraryRepository::listFolders() {
     QSqlQuery query(getDatabase());
-    query.prepare("SELECT * FROM folders");
+    // Order within each parent scope by the manual position, so callers get
+    // folders in user order (and can group by parent_id for the nested tree).
+    query.prepare("SELECT * FROM folders ORDER BY parent_id, position, id");
 
     if (!query.exec()) {
       spdlog::error("Failed to get folders: {}",
@@ -275,6 +396,13 @@ namespace firelight::library {
         .description = query.value("description").toString().toStdString(),
         .iconSourceUrl =
         query.value("icon_source_url").toString().toStdString(),
+        .type = query.value("type").toInt(),
+        .filterJson = query.value("filter_json").toString().toStdString(),
+        .color = query.value("color").toString().toStdString(),
+        .sortRole = query.value("sort_role").toString().toStdString(),
+        .sortAscending = query.value("sort_ascending").toBool(),
+        .parentId = query.value("parent_id").toInt(),
+        .position = query.value("position").toInt(),
         .createdAt = query.value("created_at").toULongLong()
       });
     }
@@ -316,10 +444,17 @@ namespace firelight::library {
     }
 
     QSqlQuery query(getDatabase());
+    // Ordering (parent_id/position) is managed by reorderFolders/setFolderParent,
+    // not here, so a stale FolderInfo can't clobber the user's arrangement.
     query.prepare("UPDATE folders SET "
       "display_name = :displayName, "
       "description = :description, "
-      "icon_source_url = :iconSourceUrl "
+      "icon_source_url = :iconSourceUrl, "
+      "type = :type, "
+      "filter_json = :filterJson, "
+      "color = :color, "
+      "sort_role = :sortRole, "
+      "sort_ascending = :sortAscending "
       "WHERE id = :folderId;");
 
     query.bindValue(":folderId", folder.id);
@@ -327,6 +462,11 @@ namespace firelight::library {
     query.bindValue(":description", QString::fromStdString(folder.description));
     query.bindValue(":iconSourceUrl",
                     QString::fromStdString(folder.iconSourceUrl));
+    query.bindValue(":type", folder.type);
+    query.bindValue(":filterJson", QString::fromStdString(folder.filterJson));
+    query.bindValue(":color", QString::fromStdString(folder.color));
+    query.bindValue(":sortRole", QString::fromStdString(folder.sortRole));
+    query.bindValue(":sortAscending", folder.sortAscending ? 1 : 0);
 
     if (!query.exec() || query.numRowsAffected() == 0) {
       spdlog::error("Failed to update folder with ID {}: {}", folder.id,
@@ -334,6 +474,45 @@ namespace firelight::library {
       return false;
     }
 
+    return true;
+  }
+
+  bool SqliteUserLibraryRepository::reorderFolders(
+    const int parentId, const std::vector<int> &orderedFolderIds) {
+    auto db = getDatabase();
+    db.transaction();
+    for (size_t i = 0; i < orderedFolderIds.size(); ++i) {
+      QSqlQuery query(db);
+      query.prepare("UPDATE folders SET position = :position "
+        "WHERE id = :folderId AND parent_id = :parentId;");
+      query.bindValue(":position", static_cast<int>(i));
+      query.bindValue(":folderId", orderedFolderIds[i]);
+      query.bindValue(":parentId", parentId);
+      if (!query.exec()) {
+        spdlog::error("Failed to reorder folder {}: {}", orderedFolderIds[i],
+                      query.lastError().text().toStdString());
+        db.rollback();
+        return false;
+      }
+    }
+    return db.commit();
+  }
+
+  bool SqliteUserLibraryRepository::setFolderParent(const int folderId,
+                                                    const int newParentId) {
+    QSqlQuery query(getDatabase());
+    // Moving to a new parent appends the folder to the end of that parent's
+    // ordering.
+    query.prepare("UPDATE folders SET parent_id = :parentId, position = :position "
+      "WHERE id = :folderId;");
+    query.bindValue(":parentId", newParentId);
+    query.bindValue(":position", nextFolderPosition(newParentId));
+    query.bindValue(":folderId", folderId);
+    if (!query.exec() || query.numRowsAffected() == 0) {
+      spdlog::error("Failed to set parent of folder {} to {}: {}", folderId,
+                    newParentId, query.lastError().text().toStdString());
+      return false;
+    }
     return true;
   }
 
@@ -412,7 +591,7 @@ namespace firelight::library {
 
       if (romPath.startsWith(path)) {
         auto found = false;
-        auto contentPaths = getWatchedDirectories();
+        auto contentPaths = getContentDirectories();
         for (const auto &contentPath: contentPaths) {
           if (romPath.startsWith(contentPath.path)) {
             found = true;
@@ -427,11 +606,19 @@ namespace firelight::library {
     }
 
     EventDispatcher::instance().publish(
-      WatchedDirectoryRemovedEvent{.id = id, .path = path.toStdString()});
+      ContentDirectoryRemovedEvent{.id = id, .path = path.toStdString()});
     return true;
   }
 
   bool SqliteUserLibraryRepository::create(ContentFile &romFile) {
+    // Stamp folder-source provenance: resolve which content directory this file
+    // lives under (by on-disk path — the archive path for archived content).
+    if (romFile.m_contentDirectoryId < 0) {
+      const auto onDisk = QString::fromStdString(
+        romFile.m_inArchive ? romFile.m_archivePathName : romFile.m_filePath);
+      romFile.m_contentDirectoryId = resolveContentDirectoryId(onDisk);
+    }
+
     const QString queryString = "INSERT INTO content_files ("
         "file_path, "
         "file_size, "
@@ -442,10 +629,11 @@ namespace firelight::library {
         "platform_id, "
         "content_hash, "
         "content_type, "
+        "content_directory_id, "
         "created_at) VALUES"
         "(:filePath, :fileSize, :fileMd5, :fileCrc32, "
         ":inArchive, :archiveFilePath, :platformId, "
-        ":contentHash, :contentType, :createdAt);";
+        ":contentHash, :contentType, :contentDirectoryId, :createdAt);";
     QSqlQuery query(getDatabase());
     query.prepare(queryString);
     query.bindValue(":filePath", QString::fromStdString(romFile.m_filePath));
@@ -459,6 +647,7 @@ namespace firelight::library {
     query.bindValue(":contentHash",
                     QString::fromStdString(romFile.m_contentHash));
     query.bindValue(":contentType", static_cast<int>(romFile.m_type));
+    query.bindValue(":contentDirectoryId", romFile.m_contentDirectoryId);
     query.bindValue(":createdAt",
                     QVariant::fromValue(
                       std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -516,6 +705,8 @@ namespace firelight::library {
         query.value("archive_file_path").toString().toStdString(),
         .m_platformId = query.value("platform_id").toInt(),
         .m_contentHash = query.value("content_hash").toString().toStdString(),
+        .m_contentDirectoryId =
+        query.value("content_directory_id").toInt(),
       }
     };
   }
@@ -641,6 +832,8 @@ namespace firelight::library {
         spdlog::error("Failed to get folder IDs for entry {}: {}", entry.id,
                       folderQuery.lastError().text().toStdString());
       }
+
+      populateEntryProvenance(entry);
     }
 
     return entries;
@@ -703,6 +896,8 @@ namespace firelight::library {
                     folderQuery.lastError().text().toStdString());
     }
 
+    populateEntryProvenance(entry);
+
     return entry;
   }
 
@@ -763,7 +958,33 @@ namespace firelight::library {
                     folderQuery.lastError().text().toStdString());
     }
 
+    populateEntryProvenance(entry);
+
     return entry;
+  }
+
+  void SqliteUserLibraryRepository::populateEntryProvenance(Entry &entry) {
+    QSqlQuery query(getDatabase());
+    query.prepare("SELECT content_directory_id, file_path, in_archive, "
+      "archive_file_path FROM content_files WHERE content_hash = :contentHash;");
+    query.bindValue(":contentHash", entry.contentHash);
+    if (!query.exec()) {
+      spdlog::error("Failed to get content provenance for entry {}: {}",
+                    entry.id, query.lastError().text().toStdString());
+      return;
+    }
+    while (query.next()) {
+      const int dirId = query.value("content_directory_id").toInt();
+      if (dirId >= 0 && std::find(entry.contentDirectoryIds.begin(),
+                                  entry.contentDirectoryIds.end(), dirId) ==
+          entry.contentDirectoryIds.end()) {
+        entry.contentDirectoryIds.push_back(dirId);
+      }
+      const auto path = query.value("in_archive").toBool()
+                          ? query.value("archive_file_path").toString()
+                          : query.value("file_path").toString();
+      entry.contentPaths.push_back(path.toStdString());
+    }
   }
 
   std::vector<RunConfiguration>
@@ -822,6 +1043,8 @@ namespace firelight::library {
         query.value("archive_file_path").toString().toStdString(),
         .m_platformId = query.value("platform_id").toInt(),
         .m_contentHash = query.value("content_hash").toString().toStdString(),
+        .m_contentDirectoryId =
+        query.value("content_directory_id").toInt(),
       });
     }
 
@@ -855,6 +1078,7 @@ namespace firelight::library {
       query.value("archive_file_path").toString().toStdString(),
       .m_platformId = query.value("platform_id").toInt(),
       .m_contentHash = query.value("content_hash").toString().toStdString(),
+      .m_contentDirectoryId = query.value("content_directory_id").toInt(),
     };
   }
 
@@ -943,7 +1167,7 @@ namespace firelight::library {
     }
   }
 
-  std::vector<WatchedDirectory> SqliteUserLibraryRepository::getWatchedDirectories() {
+  std::vector<ContentDirectory> SqliteUserLibraryRepository::getContentDirectories() {
     const QString queryString = "SELECT * FROM content_directoriesv1;";
     QSqlQuery query(getDatabase());
     query.prepare(queryString);
@@ -953,10 +1177,10 @@ namespace firelight::library {
                     query.lastError().text().toStdString());
     }
 
-    std::vector<WatchedDirectory> directories;
+    std::vector<ContentDirectory> directories;
 
     while (query.next()) {
-      directories.emplace_back(WatchedDirectory{
+      directories.emplace_back(ContentDirectory{
         .id = query.value("id").toInt(),
         .path = query.value("path").toString(),
         .numFiles = query.value("num_files").toInt(),
@@ -971,7 +1195,7 @@ namespace firelight::library {
     return directories;
   }
 
-  bool SqliteUserLibraryRepository::create(WatchedDirectory &directory) {
+  bool SqliteUserLibraryRepository::create(ContentDirectory &directory) {
     const QString queryString = "INSERT OR IGNORE INTO content_directoriesv1 ("
         "path, "
         "created_at) VALUES"
@@ -998,12 +1222,12 @@ namespace firelight::library {
 
     directory.id = query.lastInsertId().toInt();
     EventDispatcher::instance().publish(
-      WatchedDirectoryAddedEvent{.id = directory.id,
+      ContentDirectoryAddedEvent{.id = directory.id,
                                  .path = directory.path.toStdString()});
     return true;
   }
 
-  bool SqliteUserLibraryRepository::update(const WatchedDirectory &directory) {
+  bool SqliteUserLibraryRepository::update(const ContentDirectory &directory) {
     QSqlQuery selectQuery(getDatabase());
     selectQuery.prepare("SELECT * FROM content_directoriesv1 WHERE id = :id;");
     selectQuery.bindValue(":id", directory.id);
@@ -1027,13 +1251,13 @@ namespace firelight::library {
     q.bindValue(":id", directory.id);
 
     if (!q.exec()) {
-      spdlog::error("Failed to update watched directory: {}",
+      spdlog::error("Failed to update content directory: {}",
                     q.lastError().text().toStdString());
       return false;
     }
 
     EventDispatcher::instance().publish(
-      WatchedDirectoryUpdatedEvent{.id = directory.id,
+      ContentDirectoryUpdatedEvent{.id = directory.id,
                                    .oldPath = oldPath.toStdString(),
                                    .newPath = directory.path.toStdString()});
     return true;

@@ -1,0 +1,77 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Dialogs
+import Firelight 1.0
+
+// File / folder path setting. `value` is a filesystem path; `directoryMode`
+// picks a folder instead of a file; `extensions` (no dot) filters files. Emits
+// `chosen` when a path is picked or cleared.
+BaseSettingItem {
+    id: root
+
+    property string value: ""
+    property bool directoryMode: false
+    property var extensions: []
+    signal chosen(string path)
+
+    function urlToPath(u) {
+        // file:///C:/x -> C:/x (Windows); file:///home/x -> /home/x (Unix)
+        var s = u.toString().replace(/^file:\/\//, "");
+        if (/^\/[A-Za-z]:/.test(s)) {
+            s = s.substring(1);
+        }
+        return decodeURIComponent(s);
+    }
+
+    function nameFilters() {
+        if (!extensions || extensions.length === 0) {
+            return ["All files (*)"];
+        }
+        var globs = [];
+        for (var i = 0; i < extensions.length; i++) {
+            globs.push("*." + extensions[i]);
+        }
+        return ["Supported files (" + globs.join(" ") + ")", "All files (*)"];
+    }
+
+    control: RowLayout {
+        spacing: 8
+
+        Text {
+            Layout.maximumWidth: 260
+            text: root.value === "" ? qsTr("Not set") : root.value
+            color: root.value === "" ? ColorPalette.neutral400 : "white"
+            elide: Text.ElideMiddle
+            font.family: Constants.regularFontFamily
+            font.pixelSize: 14
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        Button {
+            text: qsTr("Browse…")
+            enabled: root.enabled
+            focusPolicy: Qt.NoFocus
+            onClicked: root.directoryMode ? folderDialog.open() : fileDialog.open()
+        }
+
+        Button {
+            text: qsTr("Clear")
+            visible: root.value !== ""
+            enabled: root.enabled
+            focusPolicy: Qt.NoFocus
+            onClicked: root.chosen("")
+        }
+    }
+
+    FileDialog {
+        id: fileDialog
+        nameFilters: root.nameFilters()
+        onAccepted: root.chosen(root.urlToPath(selectedFile))
+    }
+
+    FolderDialog {
+        id: folderDialog
+        onAccepted: root.chosen(root.urlToPath(selectedFolder))
+    }
+}

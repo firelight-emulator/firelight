@@ -1,6 +1,6 @@
 {
   "_comment": "Friendly emulation settings catalog, keyed by CORE (not platform) because core option keys differ per core. 'common' settings are frontend concepts applied to every core (rewind, aspect ratio, ...). Each 'cores.<coreName>' entry has 'settings' (friendly, shown in the UI) and 'defaults' (Firelight's opinionated overrides of the core's own raw option defaults). A friendly setting with a 'mapping' drives one or more core options ('values' maps friendly value -> core value; omit for identity, and omit 'mapping' entirely when the setting's own key IS the core option key). 'visibleWhen'/'enabledWhen' gate a setting on other settings' values (clauses AND-ed; a clause holds when the named setting is one of 'values').",
-  "_types_comment": "'type' accepts author-friendly aliases: 'boolean'/'toggle' -> BOOLEAN; 'options'/'dropdown' -> OPTIONS (needs 'options'); 'integer'/'slider' -> INTEGER (slider); 'number'/'spinbox' -> INTEGER (spinbox); 'custom' -> CUSTOM (needs an explicit 'widget' naming a QML delegate, e.g. 'gbc-palette'). An explicit 'widget' overrides the derived control. Slider/number settings take 'min', 'max', and 'step' (all numeric). 'step' may be fractional (e.g. 0.25 -> float slider), a whole number other than 1 (e.g. 5 -> increments of 5), and defaults to 1 when omitted.",
+  "_types_comment": "'type' accepts author-friendly aliases: 'boolean'/'toggle' -> BOOLEAN; 'options'/'dropdown' -> OPTIONS (needs 'options'); 'integer'/'slider' -> INTEGER (slider); 'number'/'spinbox' -> INTEGER (spinbox); 'custom' -> CUSTOM (needs an explicit 'widget' naming a QML delegate, e.g. 'gbc-palette'); 'game-picker' -> OPTIONS dropdown whose options are the user's eligible library games (filled in at runtime; the stored value is the chosen game's content hash); 'text' -> STRING free-text field (optional 'placeholder'); 'color' -> STRING hex color (optional 'options' as preset swatches); 'file'/'file-picker' -> STRING filesystem path (optional 'extensions' array, no dot); 'folder'/'folder-picker' -> STRING directory path; 'multi-select' -> OPTIONS checklist over 'options' whose value is a JSON array of selected option values. An explicit 'widget' overrides the derived control. Slider/number settings take 'min', 'max', and 'step' (all numeric). 'step' may be fractional (e.g. 0.25 -> float slider), a whole number other than 1 (e.g. 5 -> increments of 5), and defaults to 1 when omitted. A 'game-picker' takes 'eligiblePlatformIds' (array of platform ids; omit for any platform).",
 
   "common": [
     { "key": "rewind-enabled", "label": "Rewind", "category": "Emulation",
@@ -145,6 +145,16 @@
         "melonds_homebrew_sdcard": "disabled",
         "melonds_number_of_screen_layouts": "8"
       }
+    },
+
+    "mupen64plus_next_libretro": {
+      "_note": "Nintendo 64. 'transfer-pak-game' demonstrates a library-sourced game picker (the value is stored but not yet consumed by emulation).",
+      "settings": [
+        { "key": "transfer-pak-game", "label": "Transfer Pak cartridge",
+          "category": "Hardware",
+          "description": "The Game Boy / Game Boy Color cartridge inserted into the controller's Transfer Pak.",
+          "type": "game-picker", "eligiblePlatformIds": [1, 2], "default": "" }
+      ]
     }
   }
 }

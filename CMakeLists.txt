@@ -379,6 +379,7 @@ add_executable(fl_test
         tests/app/library/archive_reader_test.cpp
         tests/app/library/content_identifier_test.cpp
         tests/app/library/entry_resolver_test.cpp
+        tests/app/library/smart_folder_test.cpp
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
         tests/app/db/sqlite_content_database_test.cpp

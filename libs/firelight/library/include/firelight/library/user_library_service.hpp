@@ -9,7 +9,7 @@ namespace firelight::library {
 // The app-facing curation surface for the user library. A thin, concrete facade
 // over the repository (no Qt, no QObject): it exposes only the operations the GUI
 // and emulation need — browsing/updating entries, managing folders, and managing
-// watched directories — and keeps the full CRUD contract out of the app.
+// content directories — and keeps the full CRUD contract out of the app.
 //
 // It also owns the guarantee that a default content directory always exists: on
 // construction it creates that directory on disk and ensures it is watched, so
@@ -30,13 +30,15 @@ public:
   bool create(FolderInfo &folder);
   bool update(FolderInfo &folder);
   bool deleteFolder(int folderId);
+  bool reorderFolders(int parentId, const std::vector<int> &orderedFolderIds);
+  bool setFolderParent(int folderId, int newParentId);
   bool create(FolderEntryInfo &folderEntry);
   bool deleteFolderEntry(FolderEntryInfo &info);
 
   // Watched directories
-  std::vector<WatchedDirectory> getWatchedDirectories();
-  bool create(WatchedDirectory &directory);
-  bool update(const WatchedDirectory &directory);
+  std::vector<ContentDirectory> getContentDirectories();
+  bool create(ContentDirectory &directory);
+  bool update(const ContentDirectory &directory);
   bool deleteContentDirectory(int id);
 
 private:

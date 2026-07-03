@@ -20,13 +20,13 @@ UserLibraryService::UserLibraryService(IUserLibraryRepository &repository,
                  ec.message());
   }
 
-  for (const auto &watched : m_repository.getWatchedDirectories()) {
-    if (watched.path == defaultContentDirectory) {
+  for (const auto &dir : m_repository.getContentDirectories()) {
+    if (dir.path == defaultContentDirectory) {
       return;
     }
   }
 
-  WatchedDirectory defaultDir{.path = defaultContentDirectory};
+  ContentDirectory defaultDir{.path = defaultContentDirectory};
   m_repository.create(defaultDir);
 }
 
@@ -63,6 +63,15 @@ bool UserLibraryService::deleteFolder(int folderId) {
   return m_repository.deleteFolder(folderId);
 }
 
+bool UserLibraryService::reorderFolders(
+    int parentId, const std::vector<int> &orderedFolderIds) {
+  return m_repository.reorderFolders(parentId, orderedFolderIds);
+}
+
+bool UserLibraryService::setFolderParent(int folderId, int newParentId) {
+  return m_repository.setFolderParent(folderId, newParentId);
+}
+
 bool UserLibraryService::create(FolderEntryInfo &folderEntry) {
   return m_repository.create(folderEntry);
 }
@@ -71,15 +80,15 @@ bool UserLibraryService::deleteFolderEntry(FolderEntryInfo &info) {
   return m_repository.deleteFolderEntry(info);
 }
 
-std::vector<WatchedDirectory> UserLibraryService::getWatchedDirectories() {
-  return m_repository.getWatchedDirectories();
+std::vector<ContentDirectory> UserLibraryService::getContentDirectories() {
+  return m_repository.getContentDirectories();
 }
 
-bool UserLibraryService::create(WatchedDirectory &directory) {
+bool UserLibraryService::create(ContentDirectory &directory) {
   return m_repository.create(directory);
 }
 
-bool UserLibraryService::update(const WatchedDirectory &directory) {
+bool UserLibraryService::update(const ContentDirectory &directory) {
   return m_repository.update(directory);
 }
 

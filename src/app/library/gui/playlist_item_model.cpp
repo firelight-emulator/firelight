@@ -57,6 +57,20 @@ namespace firelight::gui {
         return QString::fromStdString(item.description);
       case Icon1x1SourceUrl:
         return QString::fromStdString(item.iconSourceUrl);
+      case FolderType:
+        return item.type;
+      case FilterJson:
+        return QString::fromStdString(item.filterJson);
+      case Color:
+        return QString::fromStdString(item.color);
+      case SortRole:
+        return QString::fromStdString(item.sortRole);
+      case SortAscending:
+        return item.sortAscending;
+      case ParentId:
+        return item.parentId;
+      case Position:
+        return item.position;
       default:
         return QVariant{};
     }
@@ -68,6 +82,13 @@ namespace firelight::gui {
     roles[DisplayName] = "displayName";
     roles[Description] = "description";
     roles[Icon1x1SourceUrl] = "icon1x1SourceUrl";
+    roles[FolderType] = "folderType";
+    roles[FilterJson] = "filterJson";
+    roles[Color] = "color";
+    roles[SortRole] = "sortRole";
+    roles[SortAscending] = "sortAscending";
+    roles[ParentId] = "parentId";
+    roles[Position] = "position";
     return roles;
   }
 
@@ -85,6 +106,115 @@ namespace firelight::gui {
     }
 
     return false;
+  }
+
+  int LibraryFolderListModel::addSmartFolder(const QString &displayName,
+                                             const QString &filterJson) {
+    auto folder = library::FolderInfo{
+      .displayName = displayName.toStdString(),
+      .type = static_cast<int>(library::FolderType::Smart),
+      .filterJson = filterJson.toStdString()};
+    if (!getLibraryService()->create(folder)) {
+      return -1;
+    }
+
+    beginInsertRows(QModelIndex(), rowCount(QModelIndex()),
+                    rowCount(QModelIndex()));
+    m_items.push_back(folder);
+    endInsertRows();
+    return folder.id;
+  }
+
+  bool LibraryFolderListModel::updateSmartFolder(const int folderId,
+                                                 const QString &filterJson) {
+    for (int i = 0; i < m_items.size(); ++i) {
+      if (m_items[i].id != folderId) {
+        continue;
+      }
+
+      m_items[i].type = static_cast<int>(library::FolderType::Smart);
+      m_items[i].filterJson = filterJson.toStdString();
+      if (!getLibraryService()->update(m_items[i])) {
+        spdlog::warn("Failed to update smart folder with ID {}", folderId);
+        return false;
+      }
+
+      const auto idx = index(i, 0);
+      emit dataChanged(idx, idx, {FilterJson, FolderType});
+      return true;
+    }
+
+    spdlog::warn("No folder with ID {} to update", folderId);
+    return false;
+  }
+
+  bool LibraryFolderListModel::setFolderColor(const int folderId,
+                                              const QString &color) {
+    for (int i = 0; i < m_items.size(); ++i) {
+      if (m_items[i].id != folderId) {
+        continue;
+      }
+      m_items[i].color = color.toStdString();
+      if (!getLibraryService()->update(m_items[i])) {
+        spdlog::warn("Failed to set color of folder {}", folderId);
+        return false;
+      }
+      const auto idx = index(i, 0);
+      emit dataChanged(idx, idx, {Color});
+      return true;
+    }
+    return false;
+  }
+
+  bool LibraryFolderListModel::setFolderSort(const int folderId,
+                                             const QString &sortRole,
+                                             const bool ascending) {
+    for (int i = 0; i < m_items.size(); ++i) {
+      if (m_items[i].id != folderId) {
+        continue;
+      }
+      m_items[i].sortRole = sortRole.toStdString();
+      m_items[i].sortAscending = ascending;
+      if (!getLibraryService()->update(m_items[i])) {
+        spdlog::warn("Failed to set sort of folder {}", folderId);
+        return false;
+      }
+      const auto idx = index(i, 0);
+      emit dataChanged(idx, idx, {SortRole, SortAscending});
+      return true;
+    }
+    return false;
+  }
+
+  bool LibraryFolderListModel::reorderFolders(const int parentId,
+                                              const QVariantList &orderedIds) {
+    std::vector<int> ids;
+    ids.reserve(orderedIds.size());
+    for (const auto &v : orderedIds) {
+      ids.push_back(v.toInt());
+    }
+
+    if (!getLibraryService()->reorderFolders(parentId, ids)) {
+      return false;
+    }
+
+    // Positions changed; re-pull the ordered list so the model reflects it.
+    beginResetModel();
+    m_items = getLibraryService()->listFolders();
+    endResetModel();
+    return true;
+  }
+
+  bool LibraryFolderListModel::setFolderParent(const int folderId,
+                                               const int newParentId) {
+    if (!getLibraryService()->setFolderParent(folderId, newParentId)) {
+      return false;
+    }
+
+    beginResetModel();
+    m_items = getLibraryService()->listFolders();
+    endResetModel();
+    return true;
   }
 
   void LibraryFolderListModel::deleteFolder(const int folderId) {

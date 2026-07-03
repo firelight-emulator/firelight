@@ -11,8 +11,9 @@ namespace firelight::settings {
 
 // Value semantics of a setting. The concrete UI control is chosen separately
 // (see EmulationSetting::widget) so, e.g., an INTEGER can render as a slider or
-// a spinbox and a CUSTOM setting can use a bespoke delegate.
-enum EmulationSettingType { BOOLEAN, OPTIONS, INTEGER, CUSTOM };
+// a spinbox and a CUSTOM setting can use a bespoke delegate. STRING is a
+// free-form string value (text field, color, file/folder path).
+enum EmulationSettingType { BOOLEAN, OPTIONS, INTEGER, STRING, CUSTOM };
 
 struct EmulationSettingOption {
   std::string label;
@@ -76,6 +77,21 @@ struct EmulationSetting {
   // setting whose `key` is itself the core option key (identity). Non-empty =>
   // an explicit friendly->core mapping applied when composing core values.
   std::vector<CoreOptionMapping> mapping;
+  // When true, this setting's `options` are not authored here but built at
+  // runtime from the user's library (the app layer fills them, since the
+  // settings lib has no library dependency). The stored value is the chosen
+  // game's content hash. See `gamePickerPlatformIds`.
+  bool libraryGameSource = false;
+  // Eligible platform ids for a library-game-source setting (empty => any
+  // platform). e.g. {1, 2} for Game Boy / Game Boy Color.
+  std::vector<int> gamePickerPlatformIds;
+  // Placeholder text for a `text` widget (shown when empty).
+  std::string placeholder;
+  // Accepted file extensions for a `file-picker` widget (no dot, e.g. "gba");
+  // empty => any file.
+  std::vector<std::string> fileExtensions;
+  // A `folder-picker` (true) picks a directory rather than a file.
+  bool directoryMode = false;
   // Relationships to other settings. Empty => always visible/enabled.
   std::vector<SettingCondition> visibleWhen;
   std::vector<SettingCondition> enabledWhen;

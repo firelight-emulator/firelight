@@ -210,4 +210,85 @@ TEST(SettingsCatalogTypesTest, ParsesSliderAndCustomWidgets) {
   EXPECT_DOUBLE_EQ(settings[5].stepValue, 1.0);
 }
 
+TEST(SettingsCatalogGamePickerTest, ParsesLibraryGamePicker) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(R"JSON(
+  {
+    "cores": {
+      "mupen64plus_next_libretro": { "settings": [
+        {"key": "transfer-pak-game", "label": "Transfer Pak cartridge",
+         "type": "game-picker", "eligiblePlatformIds": [1, 2], "default": ""}
+      ]}
+    }
+  }
+  )JSON"));
+
+  const auto *picker = find(
+      c.coreSpecificSettings("mupen64plus_next_libretro"), "transfer-pak-game");
+  ASSERT_NE(picker, nullptr);
+  // Value semantics are OPTIONS, rendered by the dropdown widget.
+  EXPECT_EQ(picker->type, OPTIONS);
+  EXPECT_EQ(picker->widget, "dropdown");
+  EXPECT_TRUE(picker->libraryGameSource);
+  // Options are NOT authored in the catalog (the app fills them at runtime).
+  EXPECT_TRUE(picker->options.empty());
+  ASSERT_EQ(picker->gamePickerPlatformIds.size(), 2u);
+  EXPECT_EQ(picker->gamePickerPlatformIds[0], 1);
+  EXPECT_EQ(picker->gamePickerPlatformIds[1], 2);
+}
+
+TEST(SettingsCatalogWidgetTypesTest, ParsesTextColorFileFolderMultiSelect) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(R"JSON(
+  {
+    "cores": {
+      "mgba_libretro": { "settings": [
+        {"key": "title", "label": "Title", "type": "text",
+         "placeholder": "Enter a name", "default": ""},
+        {"key": "tint", "label": "Tint", "type": "color", "default": "#ff8800"},
+        {"key": "bios", "label": "BIOS", "type": "file-picker",
+         "extensions": ["bin", "bios"], "default": ""},
+        {"key": "romdir", "label": "ROM folder", "type": "folder-picker",
+         "default": ""},
+        {"key": "cheats", "label": "Cheats", "type": "multi-select",
+         "default": "[]",
+         "options": [{"label": "A", "value": "a"}, {"label": "B", "value": "b"}]}
+      ]}
+    }
+  }
+  )JSON"));
+
+  const auto &s = c.coreSpecificSettings("mgba_libretro");
+
+  const auto *text = find(s, "title");
+  ASSERT_NE(text, nullptr);
+  EXPECT_EQ(text->type, STRING);
+  EXPECT_EQ(text->widget, "text");
+  EXPECT_EQ(text->placeholder, "Enter a name");
+
+  const auto *color = find(s, "tint");
+  ASSERT_NE(color, nullptr);
+  EXPECT_EQ(color->type, STRING);
+  EXPECT_EQ(color->widget, "color");
+
+  const auto *file = find(s, "bios");
+  ASSERT_NE(file, nullptr);
+  EXPECT_EQ(file->type, STRING);
+  EXPECT_EQ(file->widget, "file-picker");
+  EXPECT_FALSE(file->directoryMode);
+  ASSERT_EQ(file->fileExtensions.size(), 2u);
+  EXPECT_EQ(file->fileExtensions[0], "bin");
+
+  const auto *folder = find(s, "romdir");
+  ASSERT_NE(folder, nullptr);
+  EXPECT_EQ(folder->widget, "folder-picker");
+  EXPECT_TRUE(folder->directoryMode);
+
+  const auto *multi = find(s, "cheats");
+  ASSERT_NE(multi, nullptr);
+  EXPECT_EQ(multi->type, OPTIONS);
+  EXPECT_EQ(multi->widget, "multi-select");
+  ASSERT_EQ(multi->options.size(), 2u);
+}
+
 } // namespace firelight::settings

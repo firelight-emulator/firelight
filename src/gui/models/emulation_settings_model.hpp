@@ -76,7 +76,10 @@ private:
     OverriddenRole,
     VisibleRole,
     EnabledRole,
-    RequiresRestartRole
+    RequiresRestartRole,
+    PlaceholderRole,    // text widget hint
+    FileExtensionsRole, // file-picker filter (QStringList)
+    DirectoryModeRole   // file/folder picker: pick a directory
   };
   struct Item {
     QString label;
@@ -97,6 +100,10 @@ private:
     double stepValue = 1;
     bool requiresRestart = false;
 
+    QString placeholder;          // text widget hint
+    QStringList fileExtensions;   // file-picker filter
+    bool directoryMode = false;   // file/folder picker: pick a directory
+
     bool overridden = false; // has an override at this tier
     bool visible = true;
     bool enabled = true;
@@ -106,6 +113,10 @@ private:
   };
 
   void rebuildItems();
+  // Builds a library-game-picker's options from the user's library (a leading
+  // "None" plus each eligible entry as {label: display name, value: content
+  // hash}). Returns just "None" when no library is wired.
+  QVector<QVariantHash> buildGameOptions(const EmulationSetting &setting) const;
   void refreshValues();
   void recomputeConditions();
   void setItemValue(int itemIndex, Item &item, const std::string &value);

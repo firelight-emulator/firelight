@@ -4,7 +4,7 @@
 #include <QString>
 
 namespace firelight::library {
-    struct WatchedDirectory {
+    struct ContentDirectory {
         int id = -1;
         QString path;
         int numFiles = 0;

@@ -8,7 +8,7 @@ namespace firelight::gui {
     class LibraryPathModel : public QAbstractListModel {
         Q_OBJECT
 
-        std::vector<library::WatchedDirectory> m_items;
+        std::vector<library::ContentDirectory> m_items;
         std::unique_ptr<QSettings> m_settings;
         library::UserLibraryService &m_userLibrary;
 

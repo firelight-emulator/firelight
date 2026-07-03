@@ -27,17 +27,17 @@ struct RunConfigurationDeletedEvent {
   std::string contentHash;
 };
 
-struct WatchedDirectoryAddedEvent {
+struct ContentDirectoryAddedEvent {
   int id = -1;
   std::string path;
 };
 
-struct WatchedDirectoryRemovedEvent {
+struct ContentDirectoryRemovedEvent {
   int id = -1;
   std::string path;
 };
 
-struct WatchedDirectoryUpdatedEvent {
+struct ContentDirectoryUpdatedEvent {
   int id = -1;
   std::string oldPath;
   std::string newPath;

@@ -1,8 +1,10 @@
 #include "entry_list_model.hpp"
 #include <firelight/activity/activity_log.hpp>
+#include <firelight/library/folder_info.hpp>
 
 #include <firelight/platforms/platform_service.hpp>
 
+#include <algorithm>
 #include <emulation/emulation_service.hpp>
 #include <spdlog/spdlog.h>
 
@@ -49,8 +51,11 @@ namespace firelight::library {
     roles[Genres] = "genres";
     roles[RegionIds] = "regionIds";
     roles[FolderIds] = "folderIds";
+    roles[ContentDirectoryIds] = "contentDirectoryIds";
+    roles[ContentPaths] = "contentPaths";
     roles[CreatedAt] = "createdAt";
     roles[LastPlayedAt] = "lastPlayedAt";
+    roles[NumSecondsPlayed] = "numSecondsPlayed";
     return roles;
   }
 
@@ -111,8 +116,20 @@ namespace firelight::library {
         return QVariant::fromValue(item.entry.createdAt);
       case FolderIds:
         return QVariant::fromValue(QList(item.entry.folderIds.begin(), item.entry.folderIds.end()));
+      case ContentDirectoryIds:
+        return QVariant::fromValue(QList(item.entry.contentDirectoryIds.begin(),
+                                         item.entry.contentDirectoryIds.end()));
+      case ContentPaths: {
+        QStringList paths;
+        for (const auto &p: item.entry.contentPaths) {
+          paths.append(QString::fromStdString(p));
+        }
+        return paths;
+      }
       case LastPlayedAt:
         return QVariant::fromValue(item.lastPlayedEpochMillis);
+      case NumSecondsPlayed:
+        return QVariant::fromValue(item.numSecondsPlayed);
       default:
         return QVariant{};
     }
@@ -221,6 +238,8 @@ namespace firelight::library {
 
   QVariantMap EntryListModel::getCountByFolderId() const {
     QVariantMap countByFolderId;
+
+    // Manual folders: count folder_entries membership.
     for (const auto &item: m_items) {
       for (const auto &folderId: item.entry.folderIds) {
         auto current = countByFolderId[QString::number(folderId)].toInt();
@@ -228,23 +247,102 @@ namespace firelight::library {
       }
     }
 
+    // Smart folders: count live matches against the criteria.
+    for (const auto &folder: m_userLibrary.listFolders()) {
+      if (folder.type != static_cast<int>(FolderType::Smart)) {
+        continue;
+      }
+      const auto criteria = SmartFolderCriteria::parse(folder.filterJson);
+      int count = 0;
+      for (const auto &item: m_items) {
+        if (matches(buildEntryFields(item), criteria)) {
+          ++count;
+        }
+      }
+      countByFolderId[QString::number(folder.id)] = count;
+    }
+
     return countByFolderId;
+  }
+
+  EntryFields EntryListModel::buildEntryFields(const Item &item) {
+    EntryFields fields;
+    fields.platformId = static_cast<int>(item.entry.platformId);
+    fields.favorite = item.entry.favorite;
+    fields.genres = item.entry.genres.toStdString();
+    fields.developer = item.entry.developer.toStdString();
+    fields.publisher = item.entry.publisher.toStdString();
+    fields.releaseYear = static_cast<int>(item.entry.releaseYear);
+    fields.contentDirectoryIds = item.entry.contentDirectoryIds;
+    fields.contentPaths = item.entry.contentPaths;
+    fields.lastPlayedMillis = static_cast<int64_t>(item.lastPlayedEpochMillis);
+    fields.secondsPlayed = static_cast<int64_t>(item.numSecondsPlayed);
+    return fields;
+  }
+
+  const SmartFolderCriteria &
+  EntryListModel::criteriaForFolder(int folderId) const {
+    if (const auto it = m_smartFolderCache.find(folderId);
+      it != m_smartFolderCache.end()) {
+      return it->second;
+    }
+
+    SmartFolderCriteria criteria;
+    for (const auto &folder: m_userLibrary.listFolders()) {
+      if (folder.id == folderId) {
+        criteria = SmartFolderCriteria::parse(folder.filterJson);
+        break;
+      }
+    }
+    return m_smartFolderCache.emplace(folderId, std::move(criteria))
+        .first->second;
+  }
+
+  bool EntryListModel::matchesSmartFolder(int folderId, int entryId) {
+    const auto it = m_indexByEntryId.find(entryId);
+    if (it == m_indexByEntryId.end()) {
+      return false;
+    }
+    const auto &criteria = criteriaForFolder(folderId);
+    return matches(buildEntryFields(m_items.at(it->second)), criteria);
+  }
+
+  void EntryListModel::invalidateSmartFolderCache() {
+    m_smartFolderCache.clear();
+    emit countByFolderIdChanged();
   }
 
   void EntryListModel::reset() {
     emit beginResetModel();
     m_items.clear();
-    auto activityLog = &m_activityLog;
+    m_smartFolderCache.clear();
+    m_indexByEntryId.clear();
+
+    // Aggregate play stats for the whole library in a single pass, rather than
+    // a query per entry: total play time (for the "most played" criterion) and
+    // last-played time (for "recently played" + the LastPlayedAt role).
+    struct Stats {
+      uint64_t totalMillis = 0;
+      uint64_t lastEndMillis = 0;
+    };
+    std::unordered_map<std::string, Stats> statsByHash;
+    for (const auto &session: m_activityLog.getPlaySessions()) {
+      auto &s = statsByHash[session.contentHash];
+      s.totalMillis += session.unpausedDurationMillis;
+      s.lastEndMillis = std::max(s.lastEndMillis, session.endTime);
+    }
+
     for (const auto &entry: m_userLibrary.getEntries(0, 0)) {
       if (!entry.hidden) {
         auto item = Item{.entry = entry};
 
-        auto session =
-            activityLog->getLatestPlaySession(entry.contentHash.toStdString());
-        if (session) {
-          item.lastPlayedEpochMillis = session->endTime;
+        if (const auto it = statsByHash.find(entry.contentHash.toStdString());
+          it != statsByHash.end()) {
+          item.numSecondsPlayed = it->second.totalMillis / 1000;
+          item.lastPlayedEpochMillis = it->second.lastEndMillis;
         }
 
+        m_indexByEntryId[item.entry.id] = static_cast<int>(m_items.size());
         m_items.emplace_back(item);
       }
     }

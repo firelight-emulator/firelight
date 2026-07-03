@@ -23,35 +23,67 @@ Item {
 
     property bool showOnlyFavorites: false
     property int filterFolderId: -1
+    // Whether the currently-filtered folder is a smart folder (membership is
+    // computed live via matchesSmartFolder) rather than a manual one.
+    property bool filterFolderIsSmart: false
     property int filterPlatformId: -1
+
+    // Guards the per-folder sort write-back so applying a folder's remembered
+    // sort doesn't immediately persist it back as a "user change".
+    property bool _applyingFolderSort: false
+
+    // Applies a folder's remembered game sort (no-op when the folder has none,
+    // so the current/default sort is kept).
+    function applyFolderSort(sortRole, ascending) {
+        if (sortRole && sortRole.length > 0) {
+            _applyingFolderSort = true;
+            root.sortRole = sortRole;
+            root.sortAscending = ascending;
+            _applyingFolderSort = false;
+        }
+    }
+
+    // Remembers the current sort on the active folder (called when the user
+    // changes sort while viewing a folder).
+    function persistFolderSort() {
+        if (!_applyingFolderSort && filterFolderId !== -1) {
+            LibraryFolderModel.setFolderSort(filterFolderId, sortRole, sortAscending);
+        }
+    }
 
     function clearFilters() {
         showOnlyFavorites = false
         filterFolderId = -1
+        filterFolderIsSmart = false
         filterPlatformId = -1
     }
 
     function showAllGames() {
         showOnlyFavorites = false
         filterFolderId = -1
+        filterFolderIsSmart = false
         filterPlatformId = -1
     }
 
     function filterByFavorites() {
         showOnlyFavorites = true
         filterFolderId = -1
+        filterFolderIsSmart = false
         filterPlatformId = -1
     }
 
-    function filterByFolderId(folderId) {
+    function filterByFolderId(folderId, isSmart, sortRole, sortAscending) {
         showOnlyFavorites = false
+        filterFolderIsSmart = isSmart === true
         filterFolderId = folderId
         filterPlatformId = -1
+        applyFolderSort(sortRole, sortAscending)
     }
 
     function filterByPlatform(platformId) {
         showOnlyFavorites = false
         filterFolderId = -1
+        filterFolderIsSmart = false
         filterPlatformId = platformId
     }
 
@@ -75,14 +107,24 @@ Item {
 
             FunctionFilter {
                 property int folderId: root.filterFolderId
+                property bool isSmart: root.filterFolderIsSmart
                 enabled: folderId !== -1
 
                 function filter(data: RoleData): bool {
+                    // Smart folders compute membership live from criteria;
+                    // manual folders use folder_entries membership.
+                    if (isSmart) {
+                        return LibraryEntryModel.matchesSmartFolder(folderId, data.entryId);
+                    }
                     return data.folderIds.includes(folderId);
                 }
 
                 onFolderIdChanged: {
                     // gameList.currentIndex = -1
+                    invalidate();
+                }
+
+                onIsSmartChanged: {
                     invalidate();
                 }
             },
@@ -216,9 +258,11 @@ Item {
             model: gameModel
             onSortRoleChanged: {
                 root.sortRole = sortRole;
+                root.persistFolderSort();
             }
             onSortAscendingChanged: {
                 root.sortAscending = sortAscending;
+                root.persistFolderSort();
             }
         }
     }
@@ -232,6 +276,7 @@ Item {
     }
 
     component RoleData: QtObject {
+        property int entryId
         property string displayName
         property list<int> folderIds
     }

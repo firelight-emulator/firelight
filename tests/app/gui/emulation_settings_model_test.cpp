@@ -1,9 +1,13 @@
 #include "gui/models/emulation_settings_model.hpp"
+#include "service_accessor.hpp"
 
+#include <firelight/library/sqlite_user_library.hpp>
+#include <firelight/library/user_library_service.hpp>
 #include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
+#include <QDir>
 #include <gtest/gtest.h>
 
 namespace firelight::settings {
@@ -72,6 +76,8 @@ protected:
   void TearDown() override {
     SettingsCatalog::instance().loadFromJson("{}");
     SettingsService::setInstance(nullptr);
+    // Game-picker tests wire a library service; make sure it doesn't leak.
+    ServiceAccessor::setLibraryService(nullptr);
   }
 
   QVariant value(const EmulationSettingsModel &model, int row,
@@ -190,6 +196,132 @@ TEST_F(EmulationSettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
 
   model.setShowAdvanced(false);
   EXPECT_FALSE(value(model, adv, "visible").toBool());
+}
+
+// A game-picker setting sourced from the library: platform 3's core is
+// mgba_libretro (see CoreRegistry), so a game-picker declared there surfaces
+// when the model is scoped to platform 3.
+const char *kGamePickerCatalog = R"JSON(
+{
+  "common": [],
+  "cores": {
+    "mgba_libretro": {
+      "settings": [
+        {"key": "tpak", "label": "Cartridge", "category": "Hardware",
+         "type": "game-picker", "eligiblePlatformIds": [1], "default": ""}
+      ]
+    }
+  }
+}
+)JSON";
+
+TEST_F(EmulationSettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
+  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(kGamePickerCatalog));
+
+  // Seed a library with one eligible (Game Boy, platform 1) and one ineligible
+  // (SNES, platform 4) entry.
+  library::SqliteUserLibraryRepository repo(":memory:");
+  library::UserLibraryService lib(repo, QDir::tempPath() + "/fl_tpak_test");
+  library::Entry gb{.displayName = "Tetris", .contentHash = "gbhash",
+                    .platformId = 1};
+  library::Entry snes{.displayName = "Zelda", .contentHash = "sneshash",
+                      .platformId = 4};
+  ASSERT_TRUE(repo.createEntry(gb));
+  ASSERT_TRUE(repo.createEntry(snes));
+  ServiceAccessor::setLibraryService(&lib);
+
+  EmulationSettingsModel model;
+  model.setPlatformId(kGbaPlatformId); // -> mgba_libretro
+  model.setLevel(Platform);
+
+  const int row = findRow(model, "tpak");
+  ASSERT_NE(row, -1);
+  EXPECT_EQ(value(model, row, "widget").toString(), "dropdown");
+
+  const auto options =
+      value(model, row, "options").value<QVector<QVariantHash>>();
+  // "None" plus only the eligible Game Boy game (SNES filtered out).
+  ASSERT_EQ(options.size(), 2);
+  EXPECT_EQ(options[0].value("label").toString(), "None");
+  EXPECT_EQ(options[0].value("value").toString(), "");
+  EXPECT_EQ(options[1].value("label").toString(), "Tetris");
+  EXPECT_EQ(options[1].value("value").toString(), "gbhash"); // content hash
+}
+
+const char *kNewWidgetsCatalog = R"JSON(
+{
+  "common": [],
+  "cores": {
+    "mgba_libretro": {
+      "settings": [
+        {"key": "title", "label": "Title", "type": "text",
+         "placeholder": "Enter a name", "default": "hi"},
+        {"key": "bios", "label": "BIOS", "type": "file-picker",
+         "extensions": ["bin", "bios"], "default": ""},
+        {"key": "romdir", "label": "ROM folder", "type": "folder-picker",
+         "default": ""},
+        {"key": "cheats", "label": "Cheats", "type": "multi-select",
+         "default": "[]",
+         "options": [{"label": "A", "value": "a"}, {"label": "B", "value": "b"}]}
+      ]
+    }
+  }
+}
+)JSON";
+
+TEST_F(EmulationSettingsModelTest, ExposesNewWidgetRolesAndStringValues) {
+  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(kNewWidgetsCatalog));
+
+  EmulationSettingsModel model;
+  model.setPlatformId(kGbaPlatformId);
+  model.setContentHash("hash1");
+  model.setLevel(Game);
+
+  const int text = findRow(model, "title");
+  ASSERT_NE(text, -1);
+  EXPECT_EQ(value(model, text, "widget").toString(), "text");
+  EXPECT_EQ(value(model, text, "placeholder").toString(), "Enter a name");
+  EXPECT_EQ(value(model, text, "value").toString(), "hi"); // string default
+
+  const int bios = findRow(model, "bios");
+  ASSERT_NE(bios, -1);
+  EXPECT_EQ(value(model, bios, "widget").toString(), "file-picker");
+  EXPECT_FALSE(value(model, bios, "directoryMode").toBool());
+  EXPECT_EQ(value(model, bios, "fileExtensions").toStringList(),
+            (QStringList{"bin", "bios"}));
+
+  const int romdir = findRow(model, "romdir");
+  ASSERT_NE(romdir, -1);
+  EXPECT_EQ(value(model, romdir, "widget").toString(), "folder-picker");
+  EXPECT_TRUE(value(model, romdir, "directoryMode").toBool());
+
+  // Multi-select stores its selection as an opaque (JSON array) string.
+  const int cheats = findRow(model, "cheats");
+  ASSERT_NE(cheats, -1);
+  EXPECT_EQ(value(model, cheats, "widget").toString(), "multi-select");
+  const int valueRole = roleFor(model, "value");
+  ASSERT_TRUE(model.setData(model.index(cheats), R"(["a","b"])", valueRole));
+  EXPECT_EQ(value(model, cheats, "value").toString(), R"(["a","b"])");
+  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", kGbaPlatformId, "cheats")
+                .value_or(""),
+            R"(["a","b"])");
+}
+
+TEST_F(EmulationSettingsModelTest, GamePickerWithoutLibraryHasOnlyNone) {
+  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(kGamePickerCatalog));
+  // No library service wired (TearDown clears it) -> just the "None" option.
+  ServiceAccessor::setLibraryService(nullptr);
+
+  EmulationSettingsModel model;
+  model.setPlatformId(kGbaPlatformId);
+  model.setLevel(Platform);
+
+  const int row = findRow(model, "tpak");
+  ASSERT_NE(row, -1);
+  const auto options =
+      value(model, row, "options").value<QVector<QVariantHash>>();
+  ASSERT_EQ(options.size(), 1);
+  EXPECT_EQ(options[0].value("label").toString(), "None");
 }
 
 } // namespace firelight::settings

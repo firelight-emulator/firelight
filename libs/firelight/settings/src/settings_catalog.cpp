@@ -58,6 +58,32 @@ EmulationSetting parseSetting(const nlohmann::json &j) {
     s.widget = "spinbox";
   } else if (typeStr == "custom") {
     s.type = CUSTOM;
+  } else if (typeStr == "game-picker") {
+    // A dropdown whose options are the user's eligible library games (filled in
+    // by the app layer at runtime); value semantics are OPTIONS (the chosen
+    // game's content hash).
+    s.type = OPTIONS;
+    s.widget = "dropdown";
+    s.libraryGameSource = true;
+  } else if (typeStr == "text") {
+    s.type = STRING;
+    s.widget = "text";
+  } else if (typeStr == "color") {
+    s.type = STRING;
+    s.widget = "color";
+  } else if (typeStr == "file" || typeStr == "file-picker") {
+    s.type = STRING;
+    s.widget = "file-picker";
+  } else if (typeStr == "folder" || typeStr == "folder-picker" ||
+             typeStr == "directory") {
+    s.type = STRING;
+    s.widget = "folder-picker";
+    s.directoryMode = true;
+  } else if (typeStr == "multi-select" || typeStr == "multiselect") {
+    // A checklist over `options`; the value is a JSON array of selected option
+    // values (serialized/parsed in the UI delegate).
+    s.type = OPTIONS;
+    s.widget = "multi-select";
   } else {
     s.type = OPTIONS;
     s.widget = "dropdown";
@@ -73,6 +99,25 @@ EmulationSetting parseSetting(const nlohmann::json &j) {
                            o.value("value", std::string{})});
     }
   }
+
+  if (j.contains("eligiblePlatformIds")) {
+    for (const auto &p : j["eligiblePlatformIds"]) {
+      if (p.is_number_integer()) {
+        s.gamePickerPlatformIds.push_back(p.get<int>());
+      }
+    }
+  }
+
+  s.placeholder = j.value("placeholder", std::string{});
+  if (j.contains("extensions")) {
+    for (const auto &e : j["extensions"]) {
+      if (e.is_string()) {
+        s.fileExtensions.push_back(e.get<std::string>());
+      }
+    }
+  }
+  // A file-picker can opt into directory mode explicitly, too.
+  s.directoryMode = j.value("directory", s.directoryMode);
 
   if (j.contains("mapping")) {
     for (const auto &m : j["mapping"]) {

@@ -22,6 +22,9 @@ public:
   bool deleteFolder(int folderId) override;
 
   bool update(FolderInfo &folder) override;
+  bool reorderFolders(int parentId,
+                      const std::vector<int> &orderedFolderIds) override;
+  bool setFolderParent(int folderId, int newParentId) override;
   bool deleteFolderEntry(FolderEntryInfo &info) override;
 
   bool update(Entry &entry) override;
@@ -56,11 +59,11 @@ public:
 
   void create(PatchFile &file) override;
 
-  std::vector<WatchedDirectory> getWatchedDirectories() override;
+  std::vector<ContentDirectory> getContentDirectories() override;
 
-  bool create(WatchedDirectory &directory) override;
+  bool create(ContentDirectory &directory) override;
 
-  bool update(const WatchedDirectory &directory) override;
+  bool update(const ContentDirectory &directory) override;
 
   bool createEntry(Entry &entry) override;
 
@@ -72,6 +75,27 @@ private:
   static constexpr auto DATABASE_PREFIX = "userlibrary_";
 
   [[nodiscard]] QSqlDatabase getDatabase() const;
+
+  // Adds `column` (with the given SQL type/constraints) to `table` if it does
+  // not already exist, so databases created before a column was introduced pick
+  // it up. No-op on fresh databases where CREATE TABLE already added it.
+  void ensureColumn(const QString &table, const QString &column,
+                    const QString &definition) const;
+
+  // Resolves the content directory (content_directoriesv1.id) an on-disk path
+  // belongs to by longest matching path prefix, or -1 if none matches.
+  [[nodiscard]] int resolveContentDirectoryId(const QString &onDiskPath);
+
+  // Populates entry.contentDirectoryIds + entry.contentPaths from the entry's
+  // content_files (joined by content_hash). Shared by all three entry loaders.
+  void populateEntryProvenance(Entry &entry);
+
+  // One-time backfill of content_files.content_directory_id for rows added
+  // before provenance tracking existed (longest path-prefix wins).
+  void backfillContentDirectoryIds();
+
+  // The next free ordering position within a parent scope (max + 1).
+  int nextFolderPosition(int parentId);
 
   QString m_databasePath;
 };

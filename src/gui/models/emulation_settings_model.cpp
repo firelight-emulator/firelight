@@ -3,6 +3,8 @@
 #include "libretro/core_registry.hpp"
 #include "platform_metadata.hpp"
 
+#include <algorithm>
+#include <firelight/library/user_library_service.hpp>
 #include <firelight/settings/settings_catalog.hpp>
 #include <spdlog/spdlog.h>
 
@@ -20,6 +22,8 @@ QString widgetFor(const EmulationSetting &setting) {
     return "toggle";
   case INTEGER:
     return "slider";
+  case STRING:
+    return "text";
   case CUSTOM:
     return "custom";
   case OPTIONS:
@@ -94,16 +98,59 @@ void EmulationSettingsModel::rebuildItems() {
     item.advanced = setting.advanced;
     item.visibleWhen = setting.visibleWhen;
     item.enabledWhen = setting.enabledWhen;
-    for (const auto &option : setting.options) {
-      item.options.emplace_back(
-          QVariantHash{{"label", QString::fromStdString(option.label)},
-                       {"value", QString::fromStdString(option.value)}});
+    item.placeholder = QString::fromStdString(setting.placeholder);
+    item.directoryMode = setting.directoryMode;
+    for (const auto &ext : setting.fileExtensions) {
+      item.fileExtensions.append(QString::fromStdString(ext));
+    }
+    if (setting.libraryGameSource) {
+      item.options = buildGameOptions(setting);
+    } else {
+      for (const auto &option : setting.options) {
+        item.options.emplace_back(
+            QVariantHash{{"label", QString::fromStdString(option.label)},
+                         {"value", QString::fromStdString(option.value)}});
+      }
     }
     m_items.emplace_back(std::move(item));
   }
 
   endResetModel();
   refreshValues();
+}
+
+QVector<QVariantHash>
+EmulationSettingsModel::buildGameOptions(const EmulationSetting &setting) const {
+  QVector<QVariantHash> options;
+  // A leading "None" (empty value) lets the user clear the choice.
+  options.append(
+      QVariantHash{{"label", QStringLiteral("None")}, {"value", QString()}});
+
+  auto *library = getLibraryService();
+  if (!library) {
+    return options;
+  }
+
+  const auto &ids = setting.gamePickerPlatformIds;
+  const auto isEligible = [&ids](int platformId) {
+    return ids.empty() ||
+           std::find(ids.begin(), ids.end(), platformId) != ids.end();
+  };
+
+  auto entries = library->getEntries();
+  std::sort(entries.begin(), entries.end(),
+            [](const library::Entry &a, const library::Entry &b) {
+              return a.displayName.localeAwareCompare(b.displayName) < 0;
+            });
+
+  for (const auto &entry : entries) {
+    if (!isEligible(static_cast<int>(entry.platformId))) {
+      continue;
+    }
+    options.append(QVariantHash{{"label", entry.displayName},
+                                {"value", entry.contentHash}});
+  }
+  return options;
 }
 
 std::optional<std::string>
@@ -248,6 +295,12 @@ QVariant EmulationSettingsModel::data(const QModelIndex &index,
     return item.enabled;
   case RequiresRestartRole:
     return item.requiresRestart;
+  case PlaceholderRole:
+    return item.placeholder;
+  case FileExtensionsRole:
+    return item.fileExtensions;
+  case DirectoryModeRole:
+    return item.directoryMode;
   default:
     return {};
   }
@@ -268,7 +321,10 @@ QHash<int, QByteArray> EmulationSettingsModel::roleNames() const {
           {OverriddenRole, "overridden"},
           {VisibleRole, "visible"},
           {EnabledRole, "enabled"},
-          {RequiresRestartRole, "requiresRestart"}};
+          {RequiresRestartRole, "requiresRestart"},
+          {PlaceholderRole, "placeholder"},
+          {FileExtensionsRole, "fileExtensions"},
+          {DirectoryModeRole, "directoryMode"}};
 }
 
 Qt::ItemFlags EmulationSettingsModel::flags(const QModelIndex &index) const {

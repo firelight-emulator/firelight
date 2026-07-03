@@ -8,7 +8,7 @@ bool ContentDirectoryModel::setData(const QModelIndex &index,
   if (index.row() < 0 || index.row() >= m_items.size())
     return false;
 
-  library::WatchedDirectory &item = m_items[index.row()];
+  library::ContentDirectory &item = m_items[index.row()];
 
   switch (role) {
   case DirectoryId:
@@ -45,7 +45,7 @@ void ContentDirectoryModel::deleteItem(const int id) {
   }
 }
 void ContentDirectoryModel::addItem(QString path) {
-  library::WatchedDirectory item;
+  library::ContentDirectory item;
   item.path = std::move(path);
 
   if (!m_library.create(item)) {
@@ -59,7 +59,7 @@ void ContentDirectoryModel::addItem(QString path) {
 
 ContentDirectoryModel::ContentDirectoryModel(library::UserLibraryService &library)
     : m_library(library) {
-  m_items = m_library.getWatchedDirectories();
+  m_items = m_library.getContentDirectories();
 }
 
 int ContentDirectoryModel::rowCount(const QModelIndex &parent) const {

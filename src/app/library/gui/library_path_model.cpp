@@ -6,7 +6,7 @@ namespace firelight::gui {
   LibraryPathModel::LibraryPathModel(library::UserLibraryService &userLibrary)
     : m_userLibrary(userLibrary) {
     // m_settings = std::make_unique<QSettings>();
-    m_items = m_userLibrary.getWatchedDirectories();
+    m_items = m_userLibrary.getContentDirectories();
   }
 
   int LibraryPathModel::rowCount(const QModelIndex &parent) const {

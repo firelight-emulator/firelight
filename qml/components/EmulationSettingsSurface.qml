@@ -223,6 +223,26 @@ FocusScope {
                 delegate: paletteDelegate
             }
             DelegateChoice {
+                roleValue: "text"
+                delegate: textDelegate
+            }
+            DelegateChoice {
+                roleValue: "color"
+                delegate: colorDelegate
+            }
+            DelegateChoice {
+                roleValue: "file-picker"
+                delegate: filePathDelegate
+            }
+            DelegateChoice {
+                roleValue: "folder-picker"
+                delegate: filePathDelegate
+            }
+            DelegateChoice {
+                roleValue: "multi-select"
+                delegate: multiSelectDelegate
+            }
+            DelegateChoice {
                 delegate: comboBoxDelegate
             }
         }
@@ -247,6 +267,99 @@ FocusScope {
             onActivated: function (v) {
                 ListView.view.currentIndex = index
                 model.value = v
+            }
+        }
+    }
+
+    Component {
+        id: textDelegate
+        TextSettingItem {
+            required property var model
+            required property var index
+            width: ListView.view.width
+            visible: model.visible
+            height: visible ? implicitHeight : 0
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+            resettable: model.overridden
+            value: model.value
+            placeholder: model.placeholder
+
+            onReset: root.model.resetValue(index)
+            onEdited: function (v) {
+                ListView.view.currentIndex = index
+                model.value = v
+            }
+        }
+    }
+
+    Component {
+        id: colorDelegate
+        ColorSettingItem {
+            required property var model
+            required property var index
+            width: ListView.view.width
+            visible: model.visible
+            height: visible ? implicitHeight : 0
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+            resettable: model.overridden
+            value: model.value
+            presets: model.options
+
+            onReset: root.model.resetValue(index)
+            onPicked: function (hex) {
+                ListView.view.currentIndex = index
+                model.value = hex
+            }
+        }
+    }
+
+    Component {
+        id: filePathDelegate
+        FilePathSettingItem {
+            required property var model
+            required property var index
+            width: ListView.view.width
+            visible: model.visible
+            height: visible ? implicitHeight : 0
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+            resettable: model.overridden
+            value: model.value
+            directoryMode: model.directoryMode
+            extensions: model.fileExtensions
+
+            onReset: root.model.resetValue(index)
+            onChosen: function (path) {
+                ListView.view.currentIndex = index
+                model.value = path
+            }
+        }
+    }
+
+    Component {
+        id: multiSelectDelegate
+        MultiSelectSettingItem {
+            required property var model
+            required property var index
+            width: ListView.view.width
+            visible: model.visible
+            height: visible ? implicitHeight : 0
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+            resettable: model.overridden
+            value: model.value
+            options: model.options
+
+            onReset: root.model.resetValue(index)
+            onChanged: function (jsonValue) {
+                ListView.view.currentIndex = index
+                model.value = jsonValue
             }
         }
     }

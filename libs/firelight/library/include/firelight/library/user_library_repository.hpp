@@ -7,7 +7,7 @@
 #include <firelight/library/folder_info.hpp>
 #include <firelight/library/patch_file.hpp>
 #include <firelight/library/run_configuration.hpp>
-#include <firelight/library/watched_directory.hpp>
+#include <firelight/library/content_directory.hpp>
 
 #include <optional>
 #include <vector>
@@ -29,7 +29,7 @@ public:
   virtual void create(PatchFile &file) = 0;
   virtual bool create(FolderInfo &folder) = 0;
   virtual bool create(FolderEntryInfo &folderEntry) = 0;
-  virtual bool create(WatchedDirectory &directory) = 0;
+  virtual bool create(ContentDirectory &directory) = 0;
   virtual bool create(DiscMember &member) = 0;
 
   // Inserts an entry row (setting entry.id). Distinct from update(Entry&), which
@@ -43,11 +43,18 @@ public:
 
   virtual bool update(FolderInfo &folder) = 0;
   virtual bool update(Entry &entry) = 0;
-  virtual bool update(const WatchedDirectory &directory) = 0;
+  virtual bool update(const ContentDirectory &directory) = 0;
 
   virtual std::vector<FolderInfo> listFolders() = 0;
   virtual bool deleteFolder(int folderId) = 0;
   virtual bool deleteFolderEntry(FolderEntryInfo &info) = 0;
+
+  // Reassigns manual ordering positions (0..n-1) to the given folders within a
+  // parent scope (parentId -1 = root). Ids not under parentId are ignored.
+  virtual bool reorderFolders(int parentId,
+                              const std::vector<int> &orderedFolderIds) = 0;
+  // Moves a folder under a new parent (-1 = root), appended at the end.
+  virtual bool setFolderParent(int folderId, int newParentId) = 0;
 
   virtual bool deleteContentDirectory(int id) = 0;
 
@@ -68,6 +75,6 @@ public:
   virtual std::vector<RunConfiguration>
   getRunConfigurations(const QString &contentHash) = 0;
 
-  virtual std::vector<WatchedDirectory> getWatchedDirectories() = 0;
+  virtual std::vector<ContentDirectory> getContentDirectories() = 0;
 };
 } // namespace firelight::library
