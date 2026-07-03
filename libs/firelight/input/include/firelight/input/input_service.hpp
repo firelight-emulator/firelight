@@ -64,6 +64,13 @@ public:
   // slot order is left as-is.
   virtual void clearGameContext() = 0;
 
+  // Sets a one-shot, non-persisted preferred controller type for a platform
+  // (CLI `--controller`), consulted by the next applyGameContext with higher
+  // priority than the stored platform preference. Not persisted. Default no-op
+  // so non-SDL/test implementations need not care.
+  virtual void setSessionPreferredControllerType(int platformId,
+                                                 int gamepadType) {}
+
   // Sets which shortcuts are currently active (ScopeInGame / ScopeInMenu).
   virtual void setShortcutContext(int scope) = 0;
 };

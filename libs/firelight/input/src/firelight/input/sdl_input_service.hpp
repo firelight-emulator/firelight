@@ -62,6 +62,9 @@ public:
                         int platformId) override;
   void clearGameContext() override;
 
+  void setSessionPreferredControllerType(int platformId,
+                                         int gamepadType) override;
+
   void setShortcutContext(int scope) override;
 
   void setKeyboard(std::shared_ptr<IGamepad> keyboard);
@@ -102,6 +105,9 @@ private:
   // ControllerListModel) call back in to read slots.
   std::shared_mutex m_devicesMutex;
   std::optional<int> m_gameProfileOverride;
+  // CLI `--controller`: platformId -> gamepad type, wins over the stored
+  // platform preference in applyGameContext. Guarded by m_devicesMutex.
+  std::map<int, int> m_sessionPreferredTypes;
   std::vector<std::shared_ptr<IGamepad>> m_gamepads;
   std::map<int, std::shared_ptr<IGamepad>> m_playerSlots;
 

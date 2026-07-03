@@ -1,6 +1,7 @@
 #pragma once
 
 #include <firelight/settings/settings_repository.hpp>
+#include <map>
 #include <optional>
 #include <string>
 
@@ -77,15 +78,26 @@ public:
   bool resetValueAtLevel(SettingsLevel level, const std::string &contentHash,
                          int platformId, const std::string &key);
 
-  // Canonical resolution: game override -> platform override -> global. Returns
-  // nullopt if unset at every level (caller applies the catalog default).
+  // Canonical resolution: session override -> game override -> platform override
+  // -> global. Returns nullopt if unset at every level (caller applies the
+  // catalog default).
   std::optional<std::string> getEffectiveValue(const std::string &contentHash,
                                                int platformId,
                                                const std::string &key);
 
+  // Sets an in-memory, non-persisted override that wins over every stored tier
+  // in getEffectiveValue. Used by the CLI to apply per-launch config (`--set`)
+  // without mutating the saved settings database. Intended to be populated once
+  // at startup (before any game loads) and not mutated afterwards.
+  void setSessionOverride(const std::string &key, const std::string &value);
+  void clearSessionOverrides();
+
 private:
   static SettingsService *s_instance;
   ISettingsRepository &m_settingsRepo;
+
+  // key -> value; content/platform-agnostic (a CLI launch targets one game).
+  std::map<std::string, std::string> m_sessionOverrides;
 };
 
 } // namespace firelight::settings

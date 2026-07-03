@@ -194,10 +194,14 @@ void SDLInputService::applyGameContext(std::optional<std::string> contentHash,
     reapplyDeviceProfiles();
 
     // 2. Preferred controller type for this platform: if a connected controller
-    //    matches, promote it to player one.
+    //    matches, promote it to player one. A CLI `--controller` session
+    //    override for this platform wins over the stored preference.
     if (platformId >= 0) {
-      const auto preferred =
-          m_gamepadRepository.getPlatformPreferredType(platformId);
+      const auto sessionIt = m_sessionPreferredTypes.find(platformId);
+      const std::optional<int> preferred =
+          sessionIt != m_sessionPreferredTypes.end()
+              ? std::optional<int>(sessionIt->second)
+              : m_gamepadRepository.getPlatformPreferredType(platformId);
       if (preferred.has_value()) {
         for (const auto &gamepad : m_gamepads) {
           if (gamepad && static_cast<int>(gamepad->getType()) == *preferred) {
@@ -217,6 +221,16 @@ void SDLInputService::clearGameContext() {
   std::unique_lock lock(m_devicesMutex);
   m_gameProfileOverride = std::nullopt;
   reapplyDeviceProfiles();
+}
+
+void SDLInputService::setSessionPreferredControllerType(const int platformId,
+                                                        const int gamepadType) {
+  std::unique_lock lock(m_devicesMutex);
+  if (gamepadType < 0) {
+    m_sessionPreferredTypes.erase(platformId);
+  } else {
+    m_sessionPreferredTypes[platformId] = gamepadType;
+  }
 }
 
 bool SDLInputService::removeGamepadByInstanceId(int instanceId) {

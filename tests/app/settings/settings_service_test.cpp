@@ -520,4 +520,52 @@ TEST_F(SettingsServiceTest,
   EXPECT_FALSE(retrievedValue.has_value());
 }
 
+// Session Override Tests (CLI --set)
+/**
+ * @brief A session override wins over every stored tier in getEffectiveValue.
+ */
+TEST_F(SettingsServiceTest, SessionOverride_WinsOverAllStoredTiers) {
+  const std::string contentHash = "hash";
+  const int platformId = 1;
+  const std::string key = "rewind-enabled";
+
+  service->setGlobalValue(key, "global");
+  service->setPlatformValue(platformId, key, "platform");
+  service->setGameValue(contentHash, key, "game");
+  EXPECT_EQ(service->getEffectiveValue(contentHash, platformId, key), "game");
+
+  service->setSessionOverride(key, "session");
+  EXPECT_EQ(service->getEffectiveValue(contentHash, platformId, key), "session");
+}
+
+/**
+ * @brief A session override changes the effective value but not the value
+ * stored at any tier (so the settings UI still shows the real stored values).
+ */
+TEST_F(SettingsServiceTest, SessionOverride_DoesNotAffectStoredTierReads) {
+  const std::string contentHash = "hash";
+  const int platformId = 1;
+  const std::string key = "sync-method";
+
+  service->setGameValue(contentHash, key, "audio");
+  service->setSessionOverride(key, "fixed");
+
+  EXPECT_EQ(service->getEffectiveValue(contentHash, platformId, key), "fixed");
+  EXPECT_EQ(service->getValueAtLevel(Game, contentHash, platformId, key),
+            "audio");
+}
+
+/**
+ * @brief Clearing session overrides restores normal tier resolution.
+ */
+TEST_F(SettingsServiceTest, ClearSessionOverrides_RestoresStoredResolution) {
+  const std::string key = "picture-mode";
+  service->setGlobalValue(key, "stretch");
+  service->setSessionOverride(key, "integer-scale");
+  EXPECT_EQ(service->getEffectiveValue("", 0, key), "integer-scale");
+
+  service->clearSessionOverrides();
+  EXPECT_EQ(service->getEffectiveValue("", 0, key), "stretch");
+}
+
 } // namespace firelight::settings

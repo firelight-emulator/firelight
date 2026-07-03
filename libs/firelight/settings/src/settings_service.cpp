@@ -123,6 +123,11 @@ bool SettingsService::resetValueAtLevel(SettingsLevel level,
 std::optional<std::string>
 SettingsService::getEffectiveValue(const std::string &contentHash,
                                    int platformId, const std::string &key) {
+  // Session (CLI) overrides win over every stored tier and are never persisted.
+  if (const auto it = m_sessionOverrides.find(key);
+      it != m_sessionOverrides.end()) {
+    return it->second;
+  }
   if (auto v = getGameValue(contentHash, key)) {
     return v;
   }
@@ -131,5 +136,12 @@ SettingsService::getEffectiveValue(const std::string &contentHash,
   }
   return getGlobalValue(key);
 }
+
+void SettingsService::setSessionOverride(const std::string &key,
+                                         const std::string &value) {
+  m_sessionOverrides[key] = value;
+}
+
+void SettingsService::clearSessionOverrides() { m_sessionOverrides.clear(); }
 
 } // namespace firelight::settings

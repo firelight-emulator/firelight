@@ -54,6 +54,12 @@ public:
   [[nodiscard]] std::string resolveCoreName(int platformId,
                                             const std::string &contentHash) const;
 
+  // Forces a specific core for this session (CLI `--core`), winning over the
+  // stored per-game/per-platform overrides in resolveCoreName. Honored only
+  // where the core actually supports the platform (a mismatched override falls
+  // through to the normal resolution). Empty string clears it. Not persisted.
+  void setSessionCoreOverride(const std::string &coreId);
+
   // Reserved SettingsService key that stores a platform/game core override.
   static constexpr const char *kCoreSettingKey = "core";
 
@@ -63,6 +69,7 @@ private:
 
   std::vector<CoreInfo> m_cores;
   std::map<int, std::string> m_platformDefaults;
+  std::string m_sessionCoreOverride; // CLI `--core`; empty = none.
 };
 
 } // namespace firelight

@@ -46,6 +46,15 @@ struct EmulationStartedEvent {
 
 struct EmulationStoppedEvent {};
 
+// One-shot, per-launch knobs applied to the next loadEntry and then consumed
+// (so later launches use their own defaults). These are transient launch
+// parameters, distinct from the stable service dependencies in EmulationContext.
+// Populated by main.cpp from the CLI; not persisted.
+struct LaunchOverrides {
+  int saveSlot = -1;   // >= 0 replaces the entry's stored active slot
+  bool muted = false;  // start the instance muted (born muted in initialize())
+};
+
 class EmulationService {
 public:
   static EmulationService *getInstance() { return s_emuServiceInstance; }
@@ -64,6 +73,10 @@ public:
   void stopEmulation();
   EmulatorInstance *getCurrentEmulatorInstance();
 
+  // Sets the one-shot launch knobs applied to (and consumed by) the next
+  // loadEntry. See LaunchOverrides. Not persisted.
+  void setPendingLaunchOverrides(LaunchOverrides overrides);
+
   [[nodiscard]] bool isGameRunning() const;
 
   // Information about the currently running game, if any
@@ -81,6 +94,10 @@ private:
   CoreFactory m_coreFactory;
 
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;
+
+  // One-shot per-launch knobs (save slot, muted, ...), applied and cleared in
+  // loadEntry. Distinct from m_context's stable service dependencies.
+  LaunchOverrides m_pendingLaunch;
 
   library::Entry m_currentEntry;
   std::string m_currentContentHash;

@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <qstandardpaths.h>
+#include <set>
 #include <spdlog/spdlog.h>
 
 #include "achievements/gui/retro_achievements_game_item.hpp"
@@ -41,9 +42,13 @@
 #include "cli/cli_app.hpp"
 #include "cli/console.hpp"
 #include "cli/data_dirs.hpp"
+#include "cli/launch_config.hpp"
+#include "cli/list_command.hpp"
+#include "cli/login_command.hpp"
 #include "cli/rom_launch.hpp"
 #include "cli/scan_command.hpp"
 #include "cli/startup_options.hpp"
+#include "libretro/core_registry.hpp"
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/game_image_provider.hpp"
@@ -136,6 +141,15 @@ int main(int argc, char *argv[]) {
     if (cliOptions.action == firelight::cli::CliAction::RunScan) {
         // Headless: no QApplication / QML engine.
         return firelight::cli::runScan(argc, argv, cliOptions);
+    }
+    if (cliOptions.action == firelight::cli::CliAction::Login) {
+        return firelight::cli::runLogin(argc, argv, cliOptions);
+    }
+    if (cliOptions.action == firelight::cli::CliAction::ListSettings) {
+        return firelight::cli::runListSettings(argc, argv);
+    }
+    if (cliOptions.action == firelight::cli::CliAction::ListCores) {
+        return firelight::cli::runListCores(argc, argv);
     }
 
     // QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
@@ -442,6 +456,97 @@ int main(int argc, char *argv[]) {
                                                       emulationContext);
     firelight::emulation::EmulationService::setInstance(&emuService);
 
+    // --- Apply per-launch CLI configuration as session overrides ------------
+    // These affect only this run and are never written to the settings DB.
+    {
+        using firelight::settings::SettingsCatalog;
+
+        // Emulation setting overrides: the bulk --settings-file first, then
+        // inline --set on top (explicit inline wins).
+        std::vector<std::pair<std::string, std::string>> overrides;
+        if (!cliOptions.settingsFile.empty()) {
+            try {
+                const auto fileOverrides =
+                    firelight::cli::loadOverrideFile(cliOptions.settingsFile);
+                overrides.insert(overrides.end(), fileOverrides.begin(),
+                                 fileOverrides.end());
+            } catch (const std::exception &e) {
+                spdlog::error("Ignoring --settings-file {}: {}",
+                              cliOptions.settingsFile, e.what());
+            }
+        }
+        overrides.insert(overrides.end(), cliOptions.sets.begin(),
+                         cliOptions.sets.end());
+
+        if (!overrides.empty()) {
+            // Known friendly keys (common + every core's friendly settings) for a
+            // typo warning. Raw core option keys can't be listed here, so unknown
+            // keys are still applied (they may be valid advanced core options).
+            std::set<std::string> knownKeys;
+            for (const auto &s : SettingsCatalog::instance().commonSettings()) {
+                knownKeys.insert(s.key);
+            }
+            for (const auto &core : firelight::CoreRegistry::instance().cores()) {
+                for (const auto &s :
+                     SettingsCatalog::instance().coreSpecificSettings(core.id)) {
+                    knownKeys.insert(s.key);
+                }
+            }
+            for (const auto &[key, value] : overrides) {
+                if (!knownKeys.contains(key)) {
+                    spdlog::warn("--set: '{}' is not a known friendly setting; "
+                                 "applying as a raw core option",
+                                 key);
+                }
+                settingsService.setSessionOverride(key, value);
+            }
+        }
+
+        // Force a specific core for this launch (guarded by platform support in
+        // CoreRegistry::resolveCoreName).
+        if (!cliOptions.core.empty()) {
+            firelight::CoreRegistry::instance().setSessionCoreOverride(
+                cliOptions.core);
+        }
+
+        // Save slot, muted, and preferred controller apply to the launched game.
+        const bool haveRom = startupLaunchEntryId >= 0;
+        firelight::emulation::LaunchOverrides launch;
+        // Born-muted at instance creation (robust against QML binding timing);
+        // StartupOptions also carries it so the QML muted binding stays true.
+        launch.muted = cliOptions.muted;
+        if (cliOptions.saveSlot >= 0) {
+            if (haveRom) {
+                launch.saveSlot = cliOptions.saveSlot;
+            } else {
+                spdlog::warn("--save-slot ignored: no ROM was given to launch");
+            }
+        }
+        emuService.setPendingLaunchOverrides(launch);
+        if (!cliOptions.controller.empty()) {
+            const auto type =
+                firelight::cli::parseControllerType(cliOptions.controller);
+            if (!type.has_value()) {
+                spdlog::warn("--controller '{}' is not a known type (valid: {})",
+                             cliOptions.controller,
+                             firelight::cli::controllerTypeNames());
+            } else if (!haveRom) {
+                spdlog::warn("--controller ignored: no ROM was given to launch");
+            } else if (const auto entry =
+                           userLibraryService.getEntry(startupLaunchEntryId)) {
+                inputService.setSessionPreferredControllerType(
+                    entry->platformId, static_cast<int>(*type));
+            }
+        }
+
+        if (!cliOptions.raUsername.empty() && cliOptions.raPassword.empty() &&
+            cliOptions.raToken.empty()) {
+            spdlog::warn("--ra-username given without --ra-password or "
+                         "--ra-token; skipping startup login");
+        }
+    }
+    // ------------------------------------------------------------------------
+
     firelight::gui::LibraryFolderListModel libraryFolderListModel;
 
     QObject::connect(&libraryFolderListModel,
@@ -515,11 +620,24 @@ int main(int argc, char *argv[]) {
     app.installNativeEventFilter(frameFilter);
     engine.rootContext()->setContextProperty("WindowFrame", frameFilter);
 
-    // Startup values from the CLI (e.g. a ROM to auto-launch). Registered before
-    // loadFromModule so the root window sees it in Component.onCompleted.
+    // Startup values from the CLI (e.g. a ROM to auto-launch, per-launch window
+    // knobs, a pending RetroAchievements login). Registered before loadFromModule
+    // so the root window sees it in Component.onCompleted.
+    firelight::cli::StartupOptions::Data startupData;
+    startupData.launchEntryId = startupLaunchEntryId;
+    startupData.startMuted = cliOptions.muted;
+    startupData.startPaused = cliOptions.paused;
+    startupData.fullscreenOverride =
+        cliOptions.fullscreen ? 1 : (cliOptions.windowed ? 0 : -1);
+    startupData.raPendingLogin =
+        !cliOptions.raUsername.empty() &&
+        (!cliOptions.raPassword.empty() || !cliOptions.raToken.empty());
+    startupData.raUsername = QString::fromStdString(cliOptions.raUsername);
+    startupData.raPassword = QString::fromStdString(cliOptions.raPassword);
+    startupData.raToken = QString::fromStdString(cliOptions.raToken);
     engine.rootContext()->setContextProperty(
         "StartupOptions",
-        new firelight::cli::StartupOptions(startupLaunchEntryId));
+        new firelight::cli::StartupOptions(std::move(startupData)));
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,

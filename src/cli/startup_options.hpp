@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QString>
 
 namespace firelight::cli {
 
@@ -11,15 +12,55 @@ class StartupOptions : public QObject {
   Q_OBJECT
   // A library entry id to auto-launch on startup, or -1 for none.
   Q_PROPERTY(int launchEntryId READ launchEntryId CONSTANT)
+  // -1 = unset (use the saved preference), 0 = windowed, 1 = fullscreen.
+  Q_PROPERTY(int fullscreenOverride READ fullscreenOverride CONSTANT)
+  // A RetroAchievements login the QML coordinator should perform before the
+  // game launches (from the `--ra-*` startup flags).
+  Q_PROPERTY(bool raPendingLogin READ raPendingLogin CONSTANT)
+  Q_PROPERTY(QString raUsername READ raUsername CONSTANT)
+  Q_PROPERTY(QString raPassword READ raPassword CONSTANT)
+  Q_PROPERTY(QString raToken READ raToken CONSTANT)
 
 public:
-  explicit StartupOptions(int launchEntryId, QObject *parent = nullptr)
-      : QObject(parent), m_launchEntryId(launchEntryId) {}
+  struct Data {
+    int launchEntryId = -1;
+    bool startMuted = false;
+    bool startPaused = false;
+    int fullscreenOverride = -1;
+    bool raPendingLogin = false;
+    QString raUsername;
+    QString raPassword;
+    QString raToken;
+  };
 
-  [[nodiscard]] int launchEntryId() const { return m_launchEntryId; }
+  explicit StartupOptions(Data data, QObject *parent = nullptr)
+      : QObject(parent), m_data(std::move(data)) {}
+
+  [[nodiscard]] int launchEntryId() const { return m_data.launchEntryId; }
+  [[nodiscard]] int fullscreenOverride() const {
+    return m_data.fullscreenOverride;
+  }
+
+  // One-shot getters for the per-game start knobs: they return the requested
+  // value the first time and false afterwards, so only the CLI-launched game
+  // (the first NewEmulatorPage created) picks them up.
+  Q_INVOKABLE bool consumeStartMuted() {
+    const bool v = m_data.startMuted;
+    m_data.startMuted = false;
+    return v;
+  }
+  Q_INVOKABLE bool consumeStartPaused() {
+    const bool v = m_data.startPaused;
+    m_data.startPaused = false;
+    return v;
+  }
+  [[nodiscard]] bool raPendingLogin() const { return m_data.raPendingLogin; }
+  [[nodiscard]] QString raUsername() const { return m_data.raUsername; }
+  [[nodiscard]] QString raPassword() const { return m_data.raPassword; }
+  [[nodiscard]] QString raToken() const { return m_data.raToken; }
 
 private:
-  int m_launchEntryId;
+  Data m_data;
 };
 
 } // namespace firelight::cli

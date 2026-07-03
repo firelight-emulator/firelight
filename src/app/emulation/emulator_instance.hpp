@@ -35,6 +35,12 @@ public:
   void setMuted(bool muted);
   bool isMuted() const;
 
+  // The mute state the AudioManager is born with in initialize(). Lets a CLI
+  // `--muted` launch start muted from the first frame, before the render thread
+  // creates the AudioManager (a QML muted binding fires too early to catch it).
+  // Must be set before initialize().
+  void setStartMuted(bool muted) { m_startMuted = muted; }
+
   // Suspends/resumes audio output when the game is paused/resumed, so buffered
   // audio doesn't keep playing after a pause.
   void setPaused(bool paused);
@@ -91,6 +97,8 @@ private:
   // defaults live in the settings catalog, not here. These initial values are
   // just placeholders.
   bool m_isRewindEnabled = false;
+  // Initial mute state applied when the AudioManager is created in initialize().
+  bool m_startMuted = false;
   std::string m_pictureMode;
   std::string m_aspectRatioMode;
   int m_integerScale = 0;

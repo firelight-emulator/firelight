@@ -48,7 +48,11 @@ ApplicationWindow {
     // }
 
     visible: true
-    visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
+    // A CLI --fullscreen/--windowed override (session-only) wins over the saved
+    // preference; -1 means no override was given.
+    visibility: StartupOptions.fullscreenOverride === 1 ? Window.FullScreen
+              : StartupOptions.fullscreenOverride === 0 ? Window.Windowed
+              : (GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed)
 
     title: qsTr("Firelight")
 
@@ -94,13 +98,63 @@ ApplicationWindow {
         }
     }
 
-    // Auto-launch a game passed on the command line (`firelight <rom>`), once
-    // the window and its content stack have been set up.
-    Component.onCompleted: {
+    // A CLI RetroAchievements login (via --ra-*) runs before the game launches;
+    // the auto-launch waits for the result and a failure surfaces a dialog.
+    property bool raLoginInProgress: false
+
+    function maybeAutoLaunch() {
         if (StartupOptions.launchEntryId >= 0) {
             Qt.callLater(function () {
                 window.startGame(StartupOptions.launchEntryId)
             })
+        }
+    }
+
+    function beginRaLogin() {
+        window.raLoginInProgress = true
+        if (StartupOptions.raToken.length > 0) {
+            achievement_manager.logInUserWithToken(StartupOptions.raUsername, StartupOptions.raToken)
+        } else {
+            achievement_manager.logInUserWithPassword(StartupOptions.raUsername, StartupOptions.raPassword)
+        }
+    }
+
+    function onRaLoginFailed(message) {
+        window.raLoginInProgress = false
+        raLoginDialog.message = message
+        raLoginDialog.open()
+    }
+
+    // Auto-launch a game passed on the command line (`firelight <rom>`), once
+    // the window and its content stack have been set up. If a CLI login was
+    // requested, do that first and gate the launch on its result.
+    Component.onCompleted: {
+        if (StartupOptions.raPendingLogin) {
+            window.beginRaLogin()
+        } else {
+            window.maybeAutoLaunch()
+        }
+    }
+
+    Connections {
+        target: achievement_manager
+        enabled: window.raLoginInProgress
+
+        function onLoginSucceeded() {
+            window.raLoginInProgress = false
+            window.maybeAutoLaunch()
+        }
+        function onLoginFailedWithInvalidCredentials() {
+            window.onRaLoginFailed("Invalid username or password.")
+        }
+        function onLoginFailedWithExpiredToken() {
+            window.onRaLoginFailed("Your saved login token has expired.")
+        }
+        function onLoginFailedWithAccessDenied() {
+            window.onRaLoginFailed("Access was denied.")
+        }
+        function onLoginFailedWithInternalError() {
+            window.onRaLoginFailed("A RetroAchievements server error occurred.")
         }
     }
 
@@ -211,6 +265,95 @@ ApplicationWindow {
         color: "black"
         anchors.fill: parent
         opacity: 0
+    }
+
+    // Shown when a CLI-requested RetroAchievements login (--ra-*) fails. Lets the
+    // user retry with corrected credentials, continue unauthenticated, or quit.
+    Dialog {
+        id: raLoginDialog
+
+        property string message: ""
+
+        modal: true
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        padding: 24
+        closePolicy: Popup.NoAutoClose
+
+        background: Rectangle {
+            color: ColorPalette.neutral900
+            radius: 8
+            border.color: ColorPalette.neutral700
+            border.width: 1
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+
+            Text {
+                text: "RetroAchievements login failed"
+                color: "white"
+                font.family: Constants.regularFontFamily
+                font.pixelSize: 20
+            }
+
+            Text {
+                Layout.preferredWidth: 380
+                text: raLoginDialog.message
+                color: "white"
+                font.family: Constants.regularFontFamily
+                font.pixelSize: 15
+                wrapMode: Text.WordWrap
+            }
+
+            TextField {
+                id: raUsernameField
+                Layout.fillWidth: true
+                placeholderText: "Username"
+                text: StartupOptions.raUsername
+            }
+
+            TextField {
+                id: raPasswordField
+                Layout.fillWidth: true
+                placeholderText: "Password"
+                echoMode: TextInput.Password
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+
+                FirelightButton {
+                    label: "Abort"
+                    onClicked: {
+                        raLoginDialog.close()
+                        Qt.quit()
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                FirelightButton {
+                    label: "Continue without login"
+                    onClicked: {
+                        raLoginDialog.close()
+                        window.maybeAutoLaunch()
+                    }
+                }
+
+                FirelightButton {
+                    label: "Retry"
+                    onClicked: {
+                        raLoginDialog.close()
+                        window.raLoginInProgress = true
+                        achievement_manager.logInUserWithPassword(raUsernameField.text, raPasswordField.text)
+                    }
+                }
+            }
+        }
     }
 
     SequentialAnimation {

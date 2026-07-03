@@ -214,6 +214,9 @@ add_library(firelight_lib
         src/cli/cli_app.cpp
         src/cli/console.cpp
         src/cli/data_dirs.cpp
+        src/cli/launch_config.cpp
+        src/cli/list_command.cpp
+        src/cli/login_command.cpp
         src/cli/rom_launch.cpp
         src/cli/scan_command.cpp
         src/cli/startup_options.hpp
@@ -399,6 +402,7 @@ add_executable(fl_test
         tests/app/gui/core_options_model_test.cpp
         tests/app/gui/emulation_settings_model_test.cpp
         tests/app/cli/cli_app_test.cpp
+        tests/app/cli/launch_config_test.cpp
         tests/app/cli/rom_launch_test.cpp
 
         tests/main.cpp

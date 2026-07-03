@@ -41,10 +41,23 @@ FocusScope {
 
     property bool paused
 
+    // Start muted for this session only (CLI `--mute`); OR-ed into the emulator's
+    // muted state so it doesn't fight the derived pause/fast-forward muting.
+    property bool startMuted: false
+
     signal closing()
     signal aboutToRunFrame()
 
     focus: true
+
+    // Consume any per-launch start knobs (CLI --mute / --pause). These are
+    // one-shot on StartupOptions, so only the CLI-launched game is affected.
+    Component.onCompleted: {
+        root.startMuted = StartupOptions.consumeStartMuted()
+        if (StartupOptions.consumeStartPaused()) {
+            root.paused = true
+        }
+    }
 
     Timer {
         id: ctrlTimer
@@ -147,7 +160,7 @@ FocusScope {
         anchors.centerIn: root
 
         paused: root.paused || root.windowResizing
-        muted: paused || playbackMultiplier !== 1
+        muted: root.startMuted || paused || playbackMultiplier !== 1
 
         layer.enabled: true
 

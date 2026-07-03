@@ -151,10 +151,18 @@ namespace firelight::emulation {
       contentLoader.applyPatch(loaded, contentFile.m_platformId, patch);
     }
 
+    // The one-shot CLI launch overrides apply to this launch only, then are
+    // consumed so later launches use the entry's own defaults.
+    const LaunchOverrides launch = m_pendingLaunch;
+    m_pendingLaunch = {};
+    const int saveSlot = launch.saveSlot >= 0
+                             ? launch.saveSlot
+                             : static_cast<int>(entry->activeSaveSlot);
+
     QByteArray saveDataBytes;
     if (const auto saveManager = m_context.saveManager) {
       const auto saveData = saveManager->readSaveData(
-          QString::fromStdString(loaded.contentHash), entry->activeSaveSlot);
+          QString::fromStdString(loaded.contentHash), saveSlot);
       if (saveData.has_value()) {
         saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
                                    saveData->getSaveRamData().size());
@@ -198,8 +206,12 @@ namespace firelight::emulation {
 
     m_emulatorInstance = std::make_unique<EmulatorInstance>(
       std::move(core), contentFile.m_filePath, m_currentContentHash,
-      entry->platformId, entry->activeSaveSlot, std::move(loaded.contentBytes),
+      entry->platformId, saveSlot, std::move(loaded.contentBytes),
       std::vector<uint8_t>(saveDataBytes.begin(), saveDataBytes.end()), m_context);
+
+    // The instance is born muted (if requested) once initialize() creates its
+    // AudioManager.
+    m_emulatorInstance->setStartMuted(launch.muted);
 
     EventDispatcher::instance().publish(GameLoadedEvent{});
 
@@ -211,6 +223,10 @@ namespace firelight::emulation {
   void EmulationService::stopEmulation() {
     m_emulatorInstance.reset();
     EventDispatcher::instance().publish(EmulationStoppedEvent{});
+  }
+
+  void EmulationService::setPendingLaunchOverrides(LaunchOverrides overrides) {
+    m_pendingLaunch = overrides;
   }
 
   EmulatorInstance *EmulationService::getCurrentEmulatorInstance() {

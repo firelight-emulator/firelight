@@ -1,6 +1,7 @@
 #include "cli/cli_app.hpp"
 
 #include <CLI11.hpp>
+#include <iostream>
 
 namespace firelight::cli {
 
@@ -14,18 +15,70 @@ CliOptions parseCli(int argc, char **argv) {
   app.allow_windows_style_options(false);
   app.set_version_flag("--version", std::string("Firelight ") + "dev");
 
-  app.add_flag("-f,--fullscreen", opts.fullscreen, "Start in fullscreen");
+  auto *fullscreenFlag =
+      app.add_flag("-f,--fullscreen", opts.fullscreen, "Start in fullscreen");
+  app.add_flag("--windowed", opts.windowed,
+               "Start windowed (overrides a saved fullscreen preference)")
+      ->excludes(fullscreenFlag);
   app.add_flag("-v,--verbose", opts.verbose, "Enable debug logging");
   app.add_flag("--portable", opts.portable,
                "Store all data next to the executable");
+  app.add_flag("--muted", opts.muted, "Start with audio muted");
+  app.add_flag("--paused", opts.paused, "Start the game paused");
+  app.add_option("--save-slot", opts.saveSlot,
+                 "Save slot to load for the launched game")
+      ->type_name("N");
+  app.add_option("--controller", opts.controller,
+                 "Preferred controller type for the launched game")
+      ->type_name("NAME");
+  app.add_option("--core", opts.core,
+                 "Force a specific libretro core for the launched game")
+      ->type_name("NAME");
   app.add_option("--config-dir", opts.configDir,
                  "Use this directory for all app data")
       ->type_name("DIR");
+  app.add_option("--settings-file", opts.settingsFile,
+                 "Load emulation setting overrides from a properties or JSON "
+                 "file")
+      ->type_name("FILE");
+
+  // Repeatable inline emulation overrides, collected raw then split below.
+  std::vector<std::string> rawSets;
+  app.add_option("--set", rawSets,
+                 "Override an emulation setting for this launch (key=value; "
+                 "repeatable)")
+      ->type_name("KEY=VALUE");
+
+  // RetroAchievements startup login flags (a GUI launch logs in on start).
+  app.add_option("--ra-username", opts.raUsername,
+                 "RetroAchievements username to log in at startup")
+      ->type_name("USER");
+  app.add_option("--ra-password", opts.raPassword, "RetroAchievements password")
+      ->type_name("PASS");
+  app.add_option("--ra-token", opts.raToken, "RetroAchievements login token")
+      ->type_name("TOKEN");
+
+  bool listSettings = false;
+  bool listCores = false;
+  app.add_flag("--list-settings", listSettings,
+               "List every emulation setting key usable with --set, then exit");
+  app.add_flag("--list-cores", listCores,
+               "List the known libretro cores, then exit");
+
   app.add_option("rom", opts.romPath, "Content file to launch")
       ->type_name("ROM");
 
   auto *scan = app.add_subcommand(
       "scan", "Rescan content directories, update the library, then exit");
+
+  auto *login = app.add_subcommand(
+      "login", "Log in to RetroAchievements (persists a token), then exit");
+  login->add_option("--username", opts.raUsername, "RetroAchievements username")
+      ->type_name("USER");
+  login->add_option("--password", opts.raPassword, "RetroAchievements password")
+      ->type_name("PASS");
+  login->add_option("--token", opts.raToken, "RetroAchievements login token")
+      ->type_name("TOKEN");
 
   try {
     app.parse(argc, argv);
@@ -36,8 +89,27 @@ CliOptions parseCli(int argc, char **argv) {
     return opts;
   }
 
+  // Split inline `--set` items into key/value pairs (a missing '=' or empty key
+  // is a usage error).
+  for (const auto &item : rawSets) {
+    const auto eq = item.find('=');
+    if (eq == std::string::npos || eq == 0) {
+      std::cerr << "Error: --set expects KEY=VALUE, got: " << item << "\n";
+      opts.action = CliAction::Exit;
+      opts.exitCode = 1;
+      return opts;
+    }
+    opts.sets.emplace_back(item.substr(0, eq), item.substr(eq + 1));
+  }
+
   if (scan->parsed()) {
     opts.action = CliAction::RunScan;
+  } else if (login->parsed()) {
+    opts.action = CliAction::Login;
+  } else if (listSettings) {
+    opts.action = CliAction::ListSettings;
+  } else if (listCores) {
+    opts.action = CliAction::ListCores;
   }
   return opts;
 }

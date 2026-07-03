@@ -80,6 +80,9 @@ EmulatorInstance::~EmulatorInstance() {
 bool EmulatorInstance::initialize(
     libretro::IVideoDataReceiver *videoDataReceiver) {
   m_audioManager = std::make_unique<AudioManager>([] {});
+  // Apply the requested initial mute now that the AudioManager exists (a QML
+  // muted binding fires before this and would otherwise be lost).
+  m_audioManager->setMuted(m_startMuted);
 
   m_core->setVideoReceiver(videoDataReceiver);
   m_core->setAudioReceiver(m_audioManager);

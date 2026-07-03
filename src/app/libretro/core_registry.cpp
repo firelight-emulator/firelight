@@ -123,9 +123,20 @@ std::string CoreRegistry::dllPathFor(const std::string &coreId) const {
          PlatformMetadata::getCoreDllExtension();
 }
 
+void CoreRegistry::setSessionCoreOverride(const std::string &coreId) {
+  m_sessionCoreOverride = coreId;
+}
+
 std::string CoreRegistry::resolveCoreName(const int platformId,
                                           const std::string &contentHash) const {
   const auto def = defaultCoreForPlatform(platformId);
+
+  // A CLI `--core` override wins over every stored tier (still guarded by
+  // platform support so a mismatched force can't wedge the launch).
+  if (!m_sessionCoreOverride.empty() &&
+      supportsPlatform(m_sessionCoreOverride, platformId)) {
+    return m_sessionCoreOverride;
+  }
 
   auto *settings = settings::SettingsService::instance();
   if (!settings) {
