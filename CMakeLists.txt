@@ -211,10 +211,16 @@ add_library(firelight_lib
         src/gui/models/activity_buckets_list_model.cpp
         src/gui/models/activity_buckets_list_model.hpp
         src/app/library/gui/library_path_model.cpp
+        src/cli/cli_app.cpp
+        src/cli/console.cpp
+        src/cli/data_dirs.cpp
+        src/cli/rom_launch.cpp
+        src/cli/scan_command.cpp
+        src/cli/startup_options.hpp
 )
 
-target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
-target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src/rcheevos ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src ${CMAKE_SOURCE_DIR}/libs/firelight/input/src ${CMAKE_SOURCE_DIR}/libs/firelight/db/src ${CMAKE_SOURCE_DIR}/libs/firelight/library/src)
+target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CLI11 ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src/rcheevos ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src ${CMAKE_SOURCE_DIR}/libs/firelight/input/src ${CMAKE_SOURCE_DIR}/libs/firelight/db/src ${CMAKE_SOURCE_DIR}/libs/firelight/library/src)
 target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS} ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/lib/debug)
 
 if (WIN32)
@@ -392,6 +398,8 @@ add_executable(fl_test
         tests/app/settings/sqlite_core_option_repository_test.cpp
         tests/app/gui/core_options_model_test.cpp
         tests/app/gui/emulation_settings_model_test.cpp
+        tests/app/cli/cli_app_test.cpp
+        tests/app/cli/rom_launch_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp

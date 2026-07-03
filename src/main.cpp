@@ -38,6 +38,12 @@
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/saves/save_manager.hpp>
 #include <firelight/saves/save_manager_impl.hpp>
+#include "cli/cli_app.hpp"
+#include "cli/console.hpp"
+#include "cli/data_dirs.hpp"
+#include "cli/rom_launch.hpp"
+#include "cli/scan_command.hpp"
+#include "cli/startup_options.hpp"
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/game_image_provider.hpp"
@@ -96,6 +102,10 @@
 int main(int argc, char *argv[]) {
     // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
+    // Make CLI output visible when launched from a terminal (Windows GUI apps
+    // have no console by default).
+    firelight::cli::attachParentConsole();
+
     std::set_terminate([]() {
         spdlog::error("Terminating due to an unhandled exception");
         std::abort();
@@ -112,6 +122,21 @@ int main(int argc, char *argv[]) {
     QApplication::setApplicationName("Firelight");
 
     QSettings::setDefaultFormat(QSettings::Format::IniFormat);
+
+    // Parse the command line before doing any GUI setup: --help/--version and
+    // subcommands short-circuit here. The application/organization names above
+    // are already set (they're static), so path resolution works in both paths.
+    const auto cliOptions = firelight::cli::parseCli(argc, argv);
+    if (cliOptions.action == firelight::cli::CliAction::Exit) {
+        return cliOptions.exitCode;
+    }
+    if (cliOptions.verbose) {
+        spdlog::set_level(spdlog::level::debug);
+    }
+    if (cliOptions.action == firelight::cli::CliAction::RunScan) {
+        // Headless: no QApplication / QML engine.
+        return firelight::cli::runScan(argc, argv, cliOptions);
+    }
 
     // QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     // QSurfaceFormat format;
@@ -130,22 +155,13 @@ int main(int argc, char *argv[]) {
 
     std::signal(SIGINT, [](int signal) { QApplication::quit(); });
 
-    auto docsPath =
-            QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
-            "/Firelight";
-
-    auto defaultAppDataPathString =
-            QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-
-    QFileInfo info(QCoreApplication::applicationDirPath() + "/portable.txt");
-    if (info.exists()) {
-        spdlog::info("Found \"portable.txt\"; Enabling portable mode");
-        docsPath = QCoreApplication::applicationDirPath();
-        defaultAppDataPathString = docsPath + "/appdata";
-    }
-
-    auto savesPath = docsPath + "/saves";
-    auto romsPath = docsPath + "/roms";
+    // Resolve data directories (honors --config-dir / --portable and the legacy
+    // portable.txt marker). Runs after QApplication so applicationDirPath works.
+    const auto dataDirs = firelight::cli::resolveDataDirs(cliOptions);
+    auto docsPath = dataDirs.docsPath;
+    auto defaultAppDataPathString = dataDirs.appDataPath;
+    auto savesPath = dataDirs.savesPath;
+    auto romsPath = dataDirs.romsPath;
 
     QFileInfo savesDirInfo(savesPath);
     if (!savesDirInfo.exists() && QDir().mkpath(savesPath)) {
@@ -181,6 +197,15 @@ int main(int argc, char *argv[]) {
 
     firelight::ServiceAccessor::setCoreSystemDirectory(
         (defaultAppDataPathString + "/core-system").toStdString());
+
+    // Declared early so it outlives the QML engine and its EmulatorItem: those
+    // are destroyed before the objects declared above them, and on exit while a
+    // game is running the EmulatorItem's teardown calls back into the Discord
+    // manager (to clear rich presence). If it were declared later it would be
+    // destroyed first, and that call would hit freed memory (Discord SDK assert
+    // / crash). `initialize()` still runs later, once the window exists.
+    firelight::discord::DiscordManager discordManager;
+    firelight::ServiceAccessor::setDiscordManager(&discordManager);
 
     firelight::input::SqliteControllerRepository controllerRepository(
         baseDir.filePath("controllers.db"));
@@ -252,6 +277,11 @@ int main(int argc, char *argv[]) {
 
     libScanner2.scanAll();
 
+    // A ROM path passed on the command line resolves to a library entry that the
+    // root window auto-launches once loaded (-1 when absent/unresolved).
+    const int startupLaunchEntryId =
+        firelight::cli::resolveRomEntryId(cliOptions.romPath, userLibraryService);
+
     firelight::achievements::SqliteAchievementRepository achievementRepo(
         (defaultAppDataPathString + "/rcheevos3.db").toStdString());
     firelight::achievements::AchievementService achievementService(
@@ -317,10 +347,17 @@ int main(int argc, char *argv[]) {
 
     // Friendly emulation settings + per-core option defaults. Loaded once into
     // the shared catalog; the emulation path and settings UI read from it.
+    // Resolve relative to the executable, not the working directory, so it loads
+    // regardless of where the app is launched from (e.g. `firelight <rom>` from a
+    // terminal in any directory).
+    const auto catalogPath =
+        (QCoreApplication::applicationDirPath() + "/system/settings_catalog.json")
+            .toStdString();
     if (!firelight::settings::SettingsCatalog::instance().loadFromFile(
-        "system/settings_catalog.json")) {
-        spdlog::warn("Could not load settings catalog from "
-            "system/settings_catalog.json; using core defaults only");
+            catalogPath)) {
+        spdlog::warn("Could not load settings catalog from {}; using core "
+                     "defaults only",
+                     catalogPath);
     }
 
     qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
@@ -478,10 +515,16 @@ int main(int argc, char *argv[]) {
     app.installNativeEventFilter(frameFilter);
     engine.rootContext()->setContextProperty("WindowFrame", frameFilter);
 
+    // Startup values from the CLI (e.g. a ROM to auto-launch). Registered before
+    // loadFromModule so the root window sees it in Component.onCompleted.
+    engine.rootContext()->setContextProperty(
+        "StartupOptions",
+        new firelight::cli::StartupOptions(startupLaunchEntryId));
+
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
         []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-    engine.loadFromModule("QMLFirelight", "Main4");
+    engine.loadFromModule("QMLFirelight", "Main3");
 
     QObject *rootObject = engine.rootObjects().value(0);
     auto window = qobject_cast<QQuickWindow *>(rootObject);
@@ -497,9 +540,9 @@ int main(int argc, char *argv[]) {
 
     auto inputLoopFuture = QtConcurrent::run([&] { inputService.run(); });
 
-    firelight::discord::DiscordManager discordManager;
+    // discordManager is declared earlier (so it outlives the engine); just
+    // initialize it now that the window/render loop exists.
     discordManager.initialize();
-    firelight::ServiceAccessor::setDiscordManager(&discordManager);
 
     QObject::connect(window, &QQuickWindow::afterRendering,
                      [&]() { discordManager.runCallbacks(); });
@@ -512,6 +555,13 @@ int main(int argc, char *argv[]) {
     int exitCode = QApplication::exec();
 
     spdlog::info("Exiting QApplication");
+
+    // Stop any running game before the QML engine (and its EmulatorItem, which
+    // is the core's video receiver) is torn down, so the core is destroyed while
+    // the receiver is still alive. This mirrors the in-app "stop game" path;
+    // otherwise the engine is destroyed first and the core's destructor
+    // dereferences the freed receiver (crash on exit while a game is running).
+    emuService.stopEmulation();
 
     inputService.stop();
     inputLoopFuture.waitForFinished();

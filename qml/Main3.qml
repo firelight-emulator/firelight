@@ -94,6 +94,16 @@ ApplicationWindow {
         }
     }
 
+    // Auto-launch a game passed on the command line (`firelight <rom>`), once
+    // the window and its content stack have been set up.
+    Component.onCompleted: {
+        if (StartupOptions.launchEntryId >= 0) {
+            Qt.callLater(function () {
+                window.startGame(StartupOptions.launchEntryId)
+            })
+        }
+    }
+
     StackView {
          id: mainContentStack
          focus: true
