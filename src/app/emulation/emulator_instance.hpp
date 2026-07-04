@@ -1,5 +1,8 @@
 #pragma once
+#include "cheats/cheat.hpp"
+#include "cheats/cheat_engine.hpp"
 #include "emulation_context.hpp"
+#include "libretro/core_registry.hpp"
 
 #include <audio/audio_manager.hpp>
 #include <firelight/event_dispatcher.hpp>
@@ -8,6 +11,7 @@
 #include <memory>
 #include <firelight/saves/suspend_point.hpp>
 #include <string>
+#include <vector>
 
 namespace firelight::emulation {
 
@@ -81,14 +85,46 @@ public:
   [[nodiscard]] unsigned getCurrentDiscIndex() const;
   bool swapDisc(unsigned index);
 
-  // Core input-device (port) options the running core advertises (empty when
-  // there's no choice). Selection is persisted per-game and applied on load.
+  // Raw per-port device options the running core advertises via
+  // SET_CONTROLLER_INFO (empty when there's no choice).
   [[nodiscard]] std::vector<std::vector<::libretro::ICore::ControllerDeviceOption>>
   getControllerDevices() const;
-  // Selects `device` for `port` on the core and persists it for this game.
-  void setPortDevice(unsigned port, unsigned device);
+  // Curated, console-native controller variants selectable for `port` on the
+  // loaded core (default first), cross-referenced with the core's advertisement.
+  [[nodiscard]] std::vector<CoreDeviceVariant>
+  getAvailableControllerVariants(unsigned port) const;
+  // Selects a variant (by its coreDeviceId) for `port`: applies it to the core
+  // live, applies any companion core options, and persists it for this game.
+  void setPortControllerVariant(unsigned port, unsigned coreDeviceId);
+
+  // --- cheats (Game Genie / Action Replay) ---
+  // This game's saved cheats (from the cheat repository).
+  [[nodiscard]] std::vector<cheats::Cheat> getCheats() const;
+  // Toggles a cheat, persists it, and re-applies the active set.
+  void setCheatEnabled(int cheatId, bool enabled);
+  // Adds a fully-formed cheat for this game (the UI / a decoder builds it,
+  // resolving pokes for RAM cheats). Persisted; re-applied.
+  void addCheat(cheats::Cheat cheat);
+  // Persists an edit and re-applies.
+  void updateCheat(const cheats::Cheat &cheat);
+  // Removes a cheat and re-applies.
+  void removeCheat(int cheatId);
 
 private:
+  // Resolves the controller variant selected for a port: the per-game override
+  // (by coreDeviceId) if still valid for the loaded core, else the default.
+  [[nodiscard]] CoreDeviceVariant resolveSelectedVariant(unsigned port) const;
+  // Persists a variant's companion core options as game values so the core
+  // picks them up (e.g. FCEUmm Zapper -> fceumm_zapper_mode=clightgun).
+  void applyCompanionOptions(const CoreDeviceVariant &variant);
+
+  // Rebuilds the active cheat set from the repository: RAM cheats go to the
+  // per-frame engine, Game Genie codes to the core, and any cheat that affects
+  // gameplay is skipped while RA hardcore mode is active. No-op without a repo.
+  void applyCheats();
+
+  cheats::CheatEngine m_cheatEngine;
+
   bool m_initialized = false;
 
   EmulationContext m_context;

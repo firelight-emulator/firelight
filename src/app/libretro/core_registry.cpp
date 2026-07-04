@@ -1,9 +1,23 @@
 #include "core_registry.hpp"
 
+#include <algorithm>
 #include <firelight/settings/settings_service.hpp>
 #include <platform_metadata.hpp>
 
 namespace firelight {
+
+namespace {
+// RETRO_DEVICE_* base classes + the SUBCLASS macro, mirrored here so the
+// catalog reads like the core sources (libretro.h) without pulling that heavy
+// header into this TU. RETRO_DEVICE_SUBCLASS(base, id) = ((id+1) << 8) | base.
+constexpr unsigned kJoypad = 1;
+constexpr unsigned kMouse = 2;
+constexpr unsigned kLightgun = 4;
+constexpr unsigned subclass(const unsigned base, const unsigned id) {
+  return ((id + 1) << 8) | base;
+}
+using Class = input::GamepadInputClass;
+} // namespace
 
 CoreRegistry &CoreRegistry::instance() {
   static CoreRegistry registry;
@@ -62,6 +76,40 @@ CoreRegistry::CoreRegistry() {
       {PM::PLATFORM_ID_WONDERSWAN, "mednafen_wswan_libretro"},
       {PM::PLATFORM_ID_NEOGEO_POCKET, "mednafen_ngp_libretro"},
   };
+
+  // Curated controller variants per core, verified against each core's source
+  // (device subclass values + the input protocol they query). Cores absent
+  // here expose only the standard joypad. The standard joypad is implicit (the
+  // platform's default) and only listed where the core offers a real choice
+  // (Genesis 3- vs 6-button). Cross-referenced at load with the core's runtime
+  // SET_CONTROLLER_INFO advertisement.
+  m_coreDevices = {
+      {"genesis_plus_gx_libretro",
+       {
+           {subclass(kJoypad, 0), Class::Joypad, "Control Pad (3-button)"},
+           {subclass(kJoypad, 1), Class::Joypad, "Control Pad (6-button)", {},
+            true},
+           {kMouse, Class::Mouse, "Mega Mouse"},
+           {subclass(kLightgun, 1), Class::Lightgun, "Menacer"},
+           {subclass(kLightgun, 2), Class::Lightgun, "Justifier"},
+           {subclass(kLightgun, 0), Class::Lightgun, "Light Phaser"},
+       }},
+      {"snes9x_libretro",
+       {
+           {kMouse, Class::Mouse, "Mouse"},
+           {subclass(kLightgun, 0), Class::Lightgun, "Super Scope"},
+           {subclass(kLightgun, 1), Class::Lightgun, "Justifier"},
+       }},
+      {"fceumm_libretro",
+       {
+           // Advertised as a MOUSE subclass, but reads LIGHTGUN ids in
+           // "clightgun" mode (its default) — force it so aim/trigger work.
+           {subclass(kMouse, 0),
+            Class::Lightgun,
+            "Zapper",
+            {{"fceumm_zapper_mode", "clightgun"}}},
+       }},
+  };
 }
 
 const CoreInfo *CoreRegistry::find(const std::string &coreId) const {
@@ -76,6 +124,43 @@ const CoreInfo *CoreRegistry::find(const std::string &coreId) const {
 std::string CoreRegistry::defaultCoreForPlatform(const int platformId) const {
   const auto it = m_platformDefaults.find(platformId);
   return it != m_platformDefaults.end() ? it->second : std::string{};
+}
+
+const std::vector<CoreDeviceVariant> &
+CoreRegistry::deviceCatalogForCore(const std::string &coreId) const {
+  static const std::vector<CoreDeviceVariant> kEmpty;
+  const auto it = m_coreDevices.find(coreId);
+  return it != m_coreDevices.end() ? it->second : kEmpty;
+}
+
+std::vector<CoreDeviceVariant> CoreRegistry::availableControllerVariants(
+    const std::string &coreId,
+    const std::vector<unsigned> &advertisedDeviceIds) const {
+  const auto &catalog = deviceCatalogForCore(coreId);
+  const auto advertised = [&](const unsigned id) {
+    // No SET_CONTROLLER_INFO from the core -> trust the curated catalog.
+    return advertisedDeviceIds.empty() ||
+           std::find(advertisedDeviceIds.begin(), advertisedDeviceIds.end(),
+                     id) != advertisedDeviceIds.end();
+  };
+
+  std::vector<CoreDeviceVariant> result;
+  bool hasJoypad = false;
+  for (const auto &v : catalog) {
+    if (advertised(v.coreDeviceId)) {
+      result.push_back(v);
+      hasJoypad = hasJoypad || v.deviceClass == input::GamepadInputClass::Joypad;
+    }
+  }
+  if (!hasJoypad) {
+    // Every platform has a standard controller; synthesize it as the default
+    // when the catalog doesn't enumerate joypad variants for this core.
+    result.insert(result.begin(), CoreDeviceVariant{.coreDeviceId = kJoypad,
+                                                    .deviceClass = Class::Joypad,
+                                                    .friendlyName = "Controller",
+                                                    .isDefault = true});
+  }
+  return result;
 }
 
 bool CoreRegistry::supportsPlatform(const std::string &coreId,

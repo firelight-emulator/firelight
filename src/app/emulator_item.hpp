@@ -134,6 +134,8 @@ public:
 protected:
   void hoverMoveEvent(QHoverEvent *event) override;
 
+  void hoverLeaveEvent(QHoverEvent *event) override;
+
   void mousePressEvent(QMouseEvent *event) override;
 
   void mouseReleaseEvent(QMouseEvent *event) override;
@@ -207,6 +209,15 @@ private:
   ScopedConnection m_settingChangedConnection;
 
   bool m_mousePressed = false;
+  bool m_mouseRightPressed = false;
+  bool m_mouseMiddlePressed = false;
+  // Last pointer position (item pixels) for computing relative mouse motion.
+  QPointF m_lastMousePos;
+  bool m_hasLastMousePos = false;
+
+  // Normalizes a pointer position, feeds absolute + relative motion to the
+  // input service, and clears the light-gun off-screen flag.
+  void feedPointer(const QPointF &pos);
 
   void updateGeometry(unsigned int width, unsigned int height,
                       float aspectRatio);

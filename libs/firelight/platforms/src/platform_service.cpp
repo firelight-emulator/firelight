@@ -232,6 +232,17 @@ namespace firelight::platforms {
                             {"D-Pad Left", input::GamepadInput::DpadLeft},
                             {"D-Pad Right", input::GamepadInput::DpadRight},
                         }
+                    },
+                    {
+                        .id = 3,
+                        .name = "Zapper",
+                        .imageUrl = "qrc:/images/controllers/placeholder",
+                        .deviceClass = input::GamepadInputClass::Lightgun,
+                        .inputs =
+                        {
+                            {"Trigger", input::GamepadInput::LightgunTrigger},
+                            {"Shoot off-screen", input::GamepadInput::LightgunReload},
+                        }
                     }
                 },
                 .emulationSettings = {}
@@ -263,6 +274,30 @@ namespace firelight::platforms {
                             {"D-Pad Down", input::GamepadInput::DpadDown},
                             {"D-Pad Left", input::GamepadInput::DpadLeft},
                             {"D-Pad Right", input::GamepadInput::DpadRight},
+                        }
+                    },
+                    {
+                        .id = 2,
+                        .name = "Mouse",
+                        .imageUrl = "qrc:/images/controllers/placeholder",
+                        .deviceClass = input::GamepadInputClass::Mouse,
+                        .inputs =
+                        {
+                            {"Left Button", input::GamepadInput::MouseLeft},
+                            {"Right Button", input::GamepadInput::MouseRight},
+                        }
+                    },
+                    {
+                        .id = 3,
+                        .name = "Super Scope",
+                        .imageUrl = "qrc:/images/controllers/placeholder",
+                        .deviceClass = input::GamepadInputClass::Lightgun,
+                        .inputs =
+                        {
+                            {"Fire", input::GamepadInput::LightgunTrigger},
+                            {"Cursor", input::GamepadInput::LightgunAuxA},
+                            {"Turbo", input::GamepadInput::LightgunAuxB},
+                            {"Pause", input::GamepadInput::LightgunStart},
                         }
                     }
                 },
@@ -511,6 +546,16 @@ namespace firelight::platforms {
                             {"D-Pad Left", input::GamepadInput::DpadLeft},
                             {"D-Pad Right", input::GamepadInput::DpadRight},
                         }
+                    },
+                    {
+                        .id = 3,
+                        .name = "Light Phaser",
+                        .imageUrl = "qrc:/images/controllers/placeholder",
+                        .deviceClass = input::GamepadInputClass::Lightgun,
+                        .inputs =
+                        {
+                            {"Trigger", input::GamepadInput::LightgunTrigger},
+                        }
                     }
                 },
                 .emulationSettings = {}
@@ -542,6 +587,31 @@ namespace firelight::platforms {
                             {"D-Pad Down", input::GamepadInput::DpadDown},
                             {"D-Pad Left", input::GamepadInput::DpadLeft},
                             {"D-Pad Right", input::GamepadInput::DpadRight},
+                        }
+                    },
+                    {
+                        .id = 2,
+                        .name = "Mouse",
+                        .imageUrl = "qrc:/images/controllers/placeholder",
+                        .deviceClass = input::GamepadInputClass::Mouse,
+                        .inputs =
+                        {
+                            {"Left Button", input::GamepadInput::MouseLeft},
+                            {"Right Button", input::GamepadInput::MouseRight},
+                            {"Middle Button", input::GamepadInput::MouseMiddle},
+                        }
+                    },
+                    {
+                        .id = 3,
+                        .name = "Light Gun",
+                        .imageUrl = "qrc:/images/controllers/placeholder",
+                        .deviceClass = input::GamepadInputClass::Lightgun,
+                        .inputs =
+                        {
+                            {"Trigger", input::GamepadInput::LightgunTrigger},
+                            {"B", input::GamepadInput::LightgunAuxA},
+                            {"C", input::GamepadInput::LightgunAuxB},
+                            {"Start", input::GamepadInput::LightgunStart},
                         }
                     }
                 },

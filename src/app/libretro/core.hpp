@@ -109,10 +109,19 @@ public:
   getControllerDevices() const override;
   void setControllerPortDevice(unsigned port, unsigned device) override;
 
+  void setCheat(unsigned index, bool enabled, const std::string &code) override;
+  void clearCheats() override;
+
   std::function<void()> destroyContextFunction = nullptr;
 
   retro_system_av_info *retroSystemAVInfo;
   int m_platformId = -1;
+
+  // Snapshots per-frame mouse motion from the pointer provider (called from the
+  // libretro input-poll callback), so a single relative-motion read serves both
+  // the MOUSE_X and MOUSE_Y queries within a frame.
+  void pollInput();
+  std::pair<int16_t, int16_t> m_frameMouseDelta{0, 0};
 
 private:
   std::unique_ptr<QLibrary> coreLib;

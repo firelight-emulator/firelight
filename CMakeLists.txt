@@ -185,6 +185,10 @@ add_library(firelight_lib
         src/app/emulator_vulkan_renderer.cpp
         src/app/emulator_item.cpp
         src/app/media/media_service.cpp
+        src/app/media/clip_recorder.cpp
+        src/app/media/clip_muxer.cpp
+        src/app/cheats/sqlite_cheat_repository.cpp
+        src/app/cheats/cheat_engine.cpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp
         src/app/achievements/gui/AchievementSetItem.cpp
@@ -431,6 +435,9 @@ add_executable(fl_test
         tests/app/cli/rom_launch_test.cpp
         tests/app/cli/single_instance_test.cpp
         tests/app/media/media_service_test.cpp
+        tests/app/media/clip_recorder_test.cpp
+        tests/app/cheats/cheat_repository_test.cpp
+        tests/app/cheats/cheat_engine_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp

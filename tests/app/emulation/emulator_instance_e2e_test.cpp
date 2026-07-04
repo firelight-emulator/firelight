@@ -1,4 +1,5 @@
 #include "../saves/fake_userdata_database.hpp"
+#include "cheats/sqlite_cheat_repository.hpp"
 #include "fake_core.hpp"
 
 #include <emulation/emulation_service.hpp>
@@ -31,6 +32,7 @@ protected:
   std::unique_ptr<library::EntryResolver> m_resolver;
   std::unique_ptr<settings::SettingsService> m_settingsService;
   std::unique_ptr<settings::SqliteCoreOptionRepository> m_coreOptionRepo;
+  std::unique_ptr<cheats::SqliteCheatRepository> m_cheatRepo;
   std::unique_ptr<FakeUserdataDatabase> m_userdataDb;
   std::unique_ptr<saves::SaveManager> m_saveManager;
   std::unique_ptr<EmulationService> m_emulationService;
@@ -59,6 +61,7 @@ protected:
 
     m_coreOptionRepo =
         std::make_unique<settings::SqliteCoreOptionRepository>(":memory:");
+    m_cheatRepo = std::make_unique<cheats::SqliteCheatRepository>(":memory:");
 
     CoreFactory factory =
         [this](int, const std::string &,
@@ -67,6 +70,7 @@ protected:
                const std::string &) -> std::unique_ptr<::libretro::ICore> {
       auto fake = std::make_unique<FakeCore>();
       fake->setConfigProvider(std::move(configProvider));
+      fake->setSystemRamSize(256); // so the cheat engine has RAM to poke
       m_fakeCore = fake.get();
       return fake;
     };
@@ -74,6 +78,7 @@ protected:
     EmulationContext context;
     context.saveManager = m_saveManager.get();
     context.coreOptionRepository = m_coreOptionRepo.get();
+    context.cheatRepository = m_cheatRepo.get();
     m_emulationService = std::make_unique<EmulationService>(
         *m_libraryService, *m_resolver, *m_settingsService, context,
         std::move(factory));
@@ -82,6 +87,7 @@ protected:
   void TearDown() override {
     m_emulationService.reset();
     m_coreOptionRepo.reset();
+    m_cheatRepo.reset();
     m_saveManager.reset();
     m_userdataDb.reset();
     settings::SettingsService::setInstance(nullptr);
@@ -168,6 +174,47 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   // Teardown — destroying the instance must NOT exit the process (no real DLL).
   m_emulationService->stopEmulation();
   EXPECT_EQ(m_emulationService->getCurrentEmulatorInstance(), nullptr);
+}
+
+TEST_F(EmulatorInstanceE2ETest, AppliesTypedCheatsOnLoad) {
+  // A Game Genie cheat (core-applied) + a RAM cheat (Firelight poke) + a
+  // disabled one that should be ignored.
+  cheats::Cheat gg{.contentHash = m_hash,
+                   .name = "Infinite Lives",
+                   .type = cheats::CheatType::GameGenie,
+                   .rawCode = "SXIOPO",
+                   .enabled = true};
+  cheats::Cheat ram{.contentHash = m_hash,
+                    .name = "Max HP",
+                    .type = cheats::CheatType::GameShark,
+                    .pokes = {{0x10u, 0x63u, 1, false}},
+                    .enabled = true};
+  cheats::Cheat off{.contentHash = m_hash,
+                    .name = "Disabled",
+                    .type = cheats::CheatType::GameGenie,
+                    .rawCode = "AAAAAA",
+                    .enabled = false};
+  ASSERT_TRUE(m_cheatRepo->addCheat(gg));
+  ASSERT_TRUE(m_cheatRepo->addCheat(ram));
+  ASSERT_TRUE(m_cheatRepo->addCheat(off));
+
+  const int entryId = ingestEntry();
+  ASSERT_NE(entryId, -1);
+  auto *instance = m_emulationService->loadEntry(entryId).get();
+  ASSERT_NE(instance, nullptr);
+  ASSERT_TRUE(instance->initialize(nullptr));
+
+  // Core-applied cheats: reset + only the enabled Game Genie code handed over.
+  EXPECT_GE(m_fakeCore->cheatsClearedCount(), 1);
+  ASSERT_EQ(m_fakeCore->cheatCalls().size(), 1u);
+  EXPECT_EQ(m_fakeCore->cheatCalls()[0].code, "SXIOPO");
+
+  // The RAM cheat is applied by Firelight each frame.
+  instance->runFrame();
+  ASSERT_GT(m_fakeCore->systemRam().size(), 0x10u);
+  EXPECT_EQ(m_fakeCore->systemRam()[0x10], 0x63);
+
+  m_emulationService->stopEmulation();
 }
 
 } // namespace firelight::emulation

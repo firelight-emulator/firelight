@@ -11,27 +11,48 @@
 #include <firelight/input/input_service.hpp>
 #include "platform_metadata.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <deque>
 #include <firelight/library/content_file.hpp>
 #include <patching/bps_patch.hpp>
 #include <patching/ups_patch.hpp>
 
-void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
-  const auto pos = event->position();
+void EmulatorItem::feedPointer(const QPointF &pos) {
   const auto bounds = boundingRect();
+  // Off-screen is authoritatively derived from whether the cursor is actually
+  // over the game surface (light guns read this; when off-screen some cores —
+  // e.g. FCEUmm's Zapper — zero the aim). Clamp the normalized position to
+  // [-1, 1] so an out-of-bounds drag can't overflow the int16 the core reads.
+  const bool offscreen = !bounds.contains(pos);
+  const auto x = std::clamp(
+      (pos.x() - bounds.width() / 2) / (bounds.width() / 2), -1.0, 1.0);
+  const auto y = std::clamp(
+      (pos.y() - bounds.height() / 2) / (bounds.height() / 2), -1.0, 1.0);
 
-  const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
-  const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
+  auto *input = getInputService();
+  input->updateMouseState(x, y, m_mousePressed);
+  input->updateMouseOffscreen(offscreen);
 
-  getInputService()->updateMouseState(x, y, m_mousePressed);
+  // Relative motion for RETRO_DEVICE_MOUSE: pixel delta since the last event.
+  if (m_hasLastMousePos) {
+    input->updateMouseMotion(
+        static_cast<int>(std::lround(pos.x() - m_lastMousePos.x())),
+        static_cast<int>(std::lround(pos.y() - m_lastMousePos.y())));
+  }
+  m_lastMousePos = pos;
+  m_hasLastMousePos = true;
+}
+
+void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
+  feedPointer(event->position());
 }
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   setFlag(ItemHasContents);
   setAcceptHoverEvents(true);
   setAcceptTouchEvents(true);
-  setAcceptedMouseButtons(Qt::LeftButton);
+  setAcceptedMouseButtons(Qt::LeftButton | Qt::RightButton | Qt::MiddleButton);
 
   m_threadPool.setMaxThreadCount(1);
 
@@ -231,9 +252,18 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 EmulatorItem::~EmulatorItem() {
   m_stopping = true;
   getDiscordManager()->clearActivity();
-  // QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::QueuedConnection);
+
+  // m_emulationTimer was moved to m_emulationThread (see the constructor). Stop
+  // it *on that thread* and wait for the stop to complete before quitting the
+  // thread, so the timer is inactive by the time it's destroyed as a member on
+  // the GUI thread. Otherwise Qt's cross-thread killTimer path runs against the
+  // torn-down thread's timer dispatcher ("Timers cannot be stopped from another
+  // thread") and can fault at shutdown (0xC0000005). A blocking queued call is
+  // safe here: the timeout handler only enqueues render commands (never blocks
+  // on the GUI thread), so it can't deadlock, and the thread is always running.
+  QMetaObject::invokeMethod(&m_emulationTimer, "stop",
+                            Qt::BlockingQueuedConnection);
   m_emulationThread.quit();
-  m_emulationThread.exit();
   m_emulationThread.wait();
 
   m_threadPool.waitForDone();
@@ -469,23 +499,59 @@ void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
 }
 
 void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
-  const auto pos = event->position();
-  const auto bounds = boundingRect();
+  feedPointer(event->position());
+}
 
-  const auto x = (pos.x() - bounds.width() / 2) / (bounds.width() / 2);
-  const auto y = (pos.y() - bounds.height() / 2) / (bounds.height() / 2);
-
-  getInputService()->updateMouseState(x, y, m_mousePressed);
+void EmulatorItem::hoverLeaveEvent(QHoverEvent *event) {
+  // Pointer left the game surface: light guns read this as "off-screen" and
+  // relative motion should not jump across the gap on re-entry. Ignore the
+  // spurious leave Qt emits when a mouse-button grab begins (a button is held
+  // and the cursor is still over the surface) — otherwise pulling the trigger
+  // would momentarily flag off-screen and zero the aim.
+  m_hasLastMousePos = false;
+  if (!m_mousePressed && !m_mouseRightPressed && !m_mouseMiddlePressed) {
+    getInputService()->updateMouseOffscreen(true);
+  }
 }
 
 void EmulatorItem::mousePressEvent(QMouseEvent *event) {
-  m_mousePressed = true;
-  getInputService()->updateMousePressed(m_mousePressed);
+  switch (event->button()) {
+  case Qt::LeftButton:
+    m_mousePressed = true;
+    break;
+  case Qt::RightButton:
+    m_mouseRightPressed = true;
+    break;
+  case Qt::MiddleButton:
+    m_mouseMiddlePressed = true;
+    break;
+  default:
+    break;
+  }
+  // Refresh the aim from the click location (and clear off-screen) so a light
+  // gun fires exactly where the cursor is, even if hover updates were stale.
+  feedPointer(event->position());
+  getInputService()->updateMouseButtons(m_mousePressed, m_mouseRightPressed,
+                                        m_mouseMiddlePressed);
 }
 
 void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
-  m_mousePressed = false;
-  getInputService()->updateMousePressed(m_mousePressed);
+  switch (event->button()) {
+  case Qt::LeftButton:
+    m_mousePressed = false;
+    break;
+  case Qt::RightButton:
+    m_mouseRightPressed = false;
+    break;
+  case Qt::MiddleButton:
+    m_mouseMiddlePressed = false;
+    break;
+  default:
+    break;
+  }
+  feedPointer(event->position());
+  getInputService()->updateMouseButtons(m_mousePressed, m_mouseRightPressed,
+                                        m_mouseMiddlePressed);
 }
 
 void EmulatorItem::startGame() {

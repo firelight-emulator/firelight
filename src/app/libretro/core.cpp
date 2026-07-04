@@ -5,6 +5,7 @@
 #include "virtual_filesystem.hpp"
 #include <cstdarg>
 #include <filesystem>
+#include <firelight/input/gamepad_input.hpp>
 #include <stdexcept>
 #include <vector>
 #include <utility>
@@ -82,6 +83,89 @@ namespace libretro {
       }
     }
 
+    // Mouse / light gun. We branch on the device the core actually queries
+    // (masked) rather than what we set — some cores (e.g. FCEUmm's Zapper,
+    // advertised as a MOUSE subclass) query LIGHTGUN ids. Aim/motion come from
+    // the pointer provider; buttons OR the physical mouse with any mapped
+    // gamepad binding (evaluated for the matching device class).
+    const auto deviceClass = device & RETRO_DEVICE_MASK;
+    if (deviceClass == RETRO_DEVICE_MOUSE ||
+        deviceClass == RETRO_DEVICE_LIGHTGUN) {
+      namespace fi = firelight::input;
+      const auto pointer = currentCore->getPointerInputProvider();
+      const auto provider = currentCore->getRetropadProvider();
+      const auto pad = provider ? provider->getRetropadForPlayerIndex(port)
+                                : nullptr;
+      const int mapClass = static_cast<int>(
+          deviceClass == RETRO_DEVICE_MOUSE ? fi::GamepadInputClass::Mouse
+                                            : fi::GamepadInputClass::Lightgun);
+      const auto mapped = [&](const fi::GamepadInput vi) -> bool {
+        return pad && pad->isVirtualInputActive(currentCore->m_platformId,
+                                                mapClass, static_cast<int>(vi));
+      };
+      const auto mouseBtn = [&](const int btn) -> bool {
+        return pointer && pointer->isMouseButtonPressed(btn);
+      };
+
+      if (deviceClass == RETRO_DEVICE_MOUSE) {
+        switch (id) {
+        case RETRO_DEVICE_ID_MOUSE_X:
+          return currentCore->m_frameMouseDelta.first;
+        case RETRO_DEVICE_ID_MOUSE_Y:
+          return currentCore->m_frameMouseDelta.second;
+        case RETRO_DEVICE_ID_MOUSE_LEFT:
+          return mouseBtn(RETRO_DEVICE_ID_MOUSE_LEFT) || mapped(fi::MouseLeft);
+        case RETRO_DEVICE_ID_MOUSE_RIGHT:
+          return mouseBtn(RETRO_DEVICE_ID_MOUSE_RIGHT) || mapped(fi::MouseRight);
+        case RETRO_DEVICE_ID_MOUSE_MIDDLE:
+          return mouseBtn(RETRO_DEVICE_ID_MOUSE_MIDDLE) ||
+                 mapped(fi::MouseMiddle);
+        default:
+          return 0;
+        }
+      }
+
+      // RETRO_DEVICE_LIGHTGUN
+      switch (id) {
+      case RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X:
+        return pointer ? pointer->getPointerPosition().first : 0;
+      case RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y:
+        return pointer ? pointer->getPointerPosition().second : 0;
+      case RETRO_DEVICE_ID_LIGHTGUN_X: // deprecated relative (snes9x)
+        return currentCore->m_frameMouseDelta.first;
+      case RETRO_DEVICE_ID_LIGHTGUN_Y:
+        return currentCore->m_frameMouseDelta.second;
+      case RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN:
+        return pointer && pointer->isPointerOffscreen();
+      case RETRO_DEVICE_ID_LIGHTGUN_TRIGGER:
+        // Mouse left-click fires; a mapped gamepad binding also fires.
+        return (pointer && pointer->isPressed()) || mapped(fi::LightgunTrigger);
+      case RETRO_DEVICE_ID_LIGHTGUN_RELOAD:
+        // Right-click reloads (shoot off-screen) by convention.
+        return mouseBtn(RETRO_DEVICE_ID_MOUSE_RIGHT) || mapped(fi::LightgunReload);
+      case RETRO_DEVICE_ID_LIGHTGUN_AUX_A:
+        return mapped(fi::LightgunAuxA);
+      case RETRO_DEVICE_ID_LIGHTGUN_AUX_B:
+        return mapped(fi::LightgunAuxB);
+      case RETRO_DEVICE_ID_LIGHTGUN_AUX_C:
+        return mapped(fi::LightgunAuxC);
+      case RETRO_DEVICE_ID_LIGHTGUN_START:
+        return mapped(fi::LightgunStart);
+      case RETRO_DEVICE_ID_LIGHTGUN_SELECT:
+        return mapped(fi::LightgunSelect);
+      case RETRO_DEVICE_ID_LIGHTGUN_DPAD_UP:
+        return mapped(fi::LightgunDpadUp);
+      case RETRO_DEVICE_ID_LIGHTGUN_DPAD_DOWN:
+        return mapped(fi::LightgunDpadDown);
+      case RETRO_DEVICE_ID_LIGHTGUN_DPAD_LEFT:
+        return mapped(fi::LightgunDpadLeft);
+      case RETRO_DEVICE_ID_LIGHTGUN_DPAD_RIGHT:
+        return mapped(fi::LightgunDpadRight);
+      default:
+        return 0;
+      }
+    }
+
     const auto controller =
         currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
     if (!controller) {
@@ -126,7 +210,6 @@ namespace libretro {
   }
 
   bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
-    spdlog::info("Environment call: {}", cmd);
     switch (cmd) {
       case RETRO_ENVIRONMENT_SET_ROTATION: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_ROTATION");
@@ -356,9 +439,10 @@ namespace libretro {
         // RETRO_DEVICE_ANALOG).
 
         // Advertise the device types inputStateCallback actually services
-        // (pointer is handled — used by DS touch).
+        // (pointer for DS touch; mouse + light gun for WS2 device support).
         *ptr = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG) |
-               (1 << RETRO_DEVICE_POINTER);
+               (1 << RETRO_DEVICE_POINTER) | (1 << RETRO_DEVICE_MOUSE) |
+               (1 << RETRO_DEVICE_LIGHTGUN);
         return true;
       }
       case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE: {
@@ -1224,6 +1308,9 @@ namespace libretro {
 
     setAudioSampleBatch(processAudioLambda);
     setInputPoll([] {
+      if (currentCore) {
+        currentCore->pollInput();
+      }
     });
     setInputState(inputStateCallback);
   }
@@ -1414,6 +1501,19 @@ namespace libretro {
     }
   }
 
+  void Core::setCheat(const unsigned index, const bool enabled,
+                      const std::string &code) {
+    if (symRetroCheatSet) {
+      symRetroCheatSet(index, enabled, code.c_str());
+    }
+  }
+
+  void Core::clearCheats() {
+    if (symRetroCheatReset) {
+      symRetroCheatReset();
+    }
+  }
+
   void Core::setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) {
     videoReceiver = receiver;
   }
@@ -1435,6 +1535,16 @@ namespace libretro {
 
   firelight::libretro::IRetropadProvider *Core::getRetropadProvider() const {
     return m_retropadProvider;
+  }
+
+  void Core::pollInput() {
+    // Snapshot the frame's mouse motion once (getRelativeMotion consumes it) so
+    // the MOUSE_X/MOUSE_Y (and deprecated LIGHTGUN_X/Y) reads share one value.
+    if (m_pointerInputProvider) {
+      m_frameMouseDelta = m_pointerInputProvider->getRelativeMotion();
+    } else {
+      m_frameMouseDelta = {0, 0};
+    }
   }
 
   void Core::setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) {

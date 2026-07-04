@@ -1,4 +1,5 @@
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/input/gamepad_input.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
@@ -471,17 +472,22 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
               std::shared_ptr<firelight::libretro::IConfigurationProvider>,
               const std::string &) -> std::unique_ptr<::libretro::ICore> {
         auto core = std::make_unique<FakeCore>();
-        core->setControllerDevices({{{1, "RetroPad"}, {5, "Mouse"}}});
+        // Advertise the ids the snes9x catalog knows (SNES == platform 6):
+        // standard pad, SNES Mouse, Super Scope.
+        core->setControllerDevices(
+            {{{1, "SNES Pad"}, {2, "Mouse"}, {260, "Super Scope"}}});
         fake = core.get();
         return core;
       });
   EmulationService::setInstance(m_emulationService.get());
 
   library::ContentFile info{.m_fileSizeBytes = 16777216,
+                            // A real file must exist on disk (content is ignored
+                            // by the fake core); the platform selects the core.
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = m_testContentHash,
                             .m_inArchive = false,
-                            .m_platformId = 3,
+                            .m_platformId = 6, // SNES -> snes9x catalog
                             .m_contentHash = m_testContentHash};
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
@@ -495,20 +501,37 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   ASSERT_NE(instance, nullptr);
   ASSERT_NE(fake, nullptr);
 
-  // Port 0 advertises two devices.
+  // The core advertised three devices on port 0.
   const auto devices = instance->getControllerDevices();
   ASSERT_EQ(devices.size(), 1u);
-  ASSERT_EQ(devices[0].size(), 2u);
-  EXPECT_EQ(devices[0][1].id, 5u);
-  EXPECT_EQ(devices[0][1].description, "Mouse");
+  ASSERT_EQ(devices[0].size(), 3u);
 
-  // Selecting a device drives the core and persists per-game.
-  instance->setPortDevice(0, 5);
-  ASSERT_EQ(fake->portDeviceCalls().size(), 1u);
-  EXPECT_EQ(fake->portDeviceCalls()[0].first, 0u);
-  EXPECT_EQ(fake->portDeviceCalls()[0].second, 5u);
-  EXPECT_EQ(m_settingsService->getGameValue(m_testContentHash, "port0-device"),
-            "5");
+  // The curated variants are surfaced console-natively (the standard pad plus
+  // the SNES Mouse / Super Scope the snes9x catalog knows, cross-referenced with
+  // the core's advertisement), default first.
+  const auto variants = instance->getAvailableControllerVariants(0);
+  ASSERT_EQ(variants.size(), 3u);
+  EXPECT_TRUE(variants.front().isDefault);
+  EXPECT_EQ(variants.front().deviceClass,
+            firelight::input::GamepadInputClass::Joypad);
+  bool hasSuperScope = false;
+  for (const auto &v : variants) {
+    if (v.coreDeviceId == 260u) {
+      hasSuperScope = true;
+      EXPECT_EQ(v.deviceClass, firelight::input::GamepadInputClass::Lightgun);
+      EXPECT_EQ(v.friendlyName, "Super Scope");
+    }
+  }
+  EXPECT_TRUE(hasSuperScope);
+
+  // Selecting a variant drives the core and persists per-game (by coreDeviceId).
+  instance->setPortControllerVariant(0, 260);
+  ASSERT_FALSE(fake->portDeviceCalls().empty());
+  EXPECT_EQ(fake->portDeviceCalls().back().first, 0u);
+  EXPECT_EQ(fake->portDeviceCalls().back().second, 260u);
+  EXPECT_EQ(m_settingsService->getGameValue(m_testContentHash,
+                                            "port0-controllervariant"),
+            "260");
 }
 
 } // namespace firelight::emulation

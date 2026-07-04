@@ -102,9 +102,21 @@ public:
                   reinterpret_cast<const char *>(data.data()) + data.size());
   }
 
-  // --- RetroAchievements memory access (unused while achievements is null) ---
-  [[nodiscard]] void *getMemoryData(unsigned) const override { return nullptr; }
-  [[nodiscard]] std::size_t getMemorySize(unsigned) const override { return 0; }
+  // --- memory access (SYSTEM_RAM is a test-configurable writable buffer so the
+  //     cheat engine can be exercised; other regions are unmodeled) ---
+  void setSystemRamSize(std::size_t bytes) { m_systemRam.assign(bytes, 0); }
+  [[nodiscard]] const std::vector<uint8_t> &systemRam() const {
+    return m_systemRam;
+  }
+  [[nodiscard]] void *getMemoryData(unsigned id) const override {
+    if (id == ::libretro::SYSTEM_RAM && !m_systemRam.empty()) {
+      return const_cast<uint8_t *>(m_systemRam.data());
+    }
+    return nullptr;
+  }
+  [[nodiscard]] std::size_t getMemorySize(unsigned id) const override {
+    return id == ::libretro::SYSTEM_RAM ? m_systemRam.size() : 0;
+  }
   retro_memory_map *getMemoryMap() override { return nullptr; }
 
   // --- disc control (test-configurable; 0 discs = single-disc content) ---
@@ -134,6 +146,22 @@ public:
     m_portDeviceCalls.emplace_back(port, device);
   }
 
+  // --- cheats (test-configurable) ---
+  struct CheatCall {
+    unsigned index;
+    bool enabled;
+    std::string code;
+  };
+  void setCheat(unsigned index, bool enabled,
+                const std::string &code) override {
+    m_cheatCalls.push_back({index, enabled, code});
+  }
+  void clearCheats() override { ++m_cheatsCleared; }
+  [[nodiscard]] const std::vector<CheatCall> &cheatCalls() const {
+    return m_cheatCalls;
+  }
+  [[nodiscard]] int cheatsClearedCount() const { return m_cheatsCleared; }
+
   // --- test probes ---
   [[nodiscard]] int frameCount() const { return m_frameCount; }
   [[nodiscard]] const std::vector<char> &sram() const { return m_sram; }
@@ -158,6 +186,9 @@ private:
   std::string m_saveDir;
   std::vector<std::vector<ControllerDeviceOption>> m_controllerDevices;
   std::vector<std::pair<unsigned, unsigned>> m_portDeviceCalls;
+  std::vector<CheatCall> m_cheatCalls;
+  int m_cheatsCleared = 0;
+  std::vector<uint8_t> m_systemRam;
   std::shared_ptr<firelight::libretro::IConfigurationProvider> m_configProvider;
 };
 

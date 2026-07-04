@@ -1,5 +1,7 @@
 #pragma once
 
+#include "media/clip_snapshot.hpp"
+
 #include <QImage>
 #include <QString>
 #include <optional>
@@ -18,6 +20,13 @@ public:
   // the image is null, the content hash is empty, or the write failed.
   std::optional<QString> saveScreenshot(const QString &contentHash,
                                         const QImage &image);
+
+  // Muxes an Instant Replay `snapshot` to an mp4 under
+  // <mediaDirectory>/<contentHash>/<epochMs>.mp4 (same per-game layout as
+  // screenshots). Returns the absolute path, or nullopt on empty snapshot /
+  // missing content hash / write failure.
+  std::optional<QString> saveClip(const QString &contentHash,
+                                  const ClipSnapshot &snapshot);
 
 private:
   QString m_mediaDirectory;

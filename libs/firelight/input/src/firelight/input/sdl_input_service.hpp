@@ -47,8 +47,14 @@ public:
 
   [[nodiscard]] std::pair<int16_t, int16_t> getPointerPosition() const override;
   [[nodiscard]] bool isPressed() const override;
+  [[nodiscard]] std::pair<int16_t, int16_t> getRelativeMotion() override;
+  [[nodiscard]] bool isMouseButtonPressed(int retroMouseButtonId) const override;
+  [[nodiscard]] bool isPointerOffscreen() const override;
   void updateMouseState(double x, double y, bool mousePressed) override;
   void updateMousePressed(bool mousePressed) override;
+  void updateMouseButtons(bool left, bool right, bool middle) override;
+  void updateMouseMotion(int dx, int dy) override;
+  void updateMouseOffscreen(bool offscreen) override;
 
   void run();
   void stop();
@@ -126,6 +132,15 @@ private:
   int16_t m_mouseX;
   int16_t m_mouseY;
   bool m_mousePressed = false;
+  // Right/middle buttons, relative motion, and off-screen state for
+  // RETRO_DEVICE_MOUSE and the light gun. Written from the UI thread on mouse
+  // events, read from the render thread via the pointer provider — atomic so
+  // no lock is needed. Relative motion accumulates and is consumed per frame.
+  std::atomic<bool> m_mouseRightPressed{false};
+  std::atomic<bool> m_mouseMiddlePressed{false};
+  std::atomic<int> m_mouseRelX{0};
+  std::atomic<int> m_mouseRelY{0};
+  std::atomic<bool> m_mouseOffscreen{false};
 };
 
 } // namespace firelight::input

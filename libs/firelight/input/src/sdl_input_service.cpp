@@ -3,6 +3,7 @@
 #include "firelight/event_dispatcher.hpp"
 
 #include <SDL_hints.h>
+#include <algorithm>
 #include <spdlog/spdlog.h>
 
 namespace firelight::input {
@@ -322,6 +323,46 @@ void SDLInputService::updateMouseState(double x, double y, bool mousePressed) {
 }
 void SDLInputService::updateMousePressed(bool mousePressed) {
   m_mousePressed = mousePressed;
+}
+
+std::pair<int16_t, int16_t> SDLInputService::getRelativeMotion() {
+  const int dx = m_mouseRelX.exchange(0);
+  const int dy = m_mouseRelY.exchange(0);
+  return {static_cast<int16_t>(std::clamp(dx, -32768, 32767)),
+          static_cast<int16_t>(std::clamp(dy, -32768, 32767))};
+}
+
+bool SDLInputService::isMouseButtonPressed(const int retroMouseButtonId) const {
+  switch (retroMouseButtonId) {
+  case RETRO_DEVICE_ID_MOUSE_LEFT:
+    return m_mousePressed;
+  case RETRO_DEVICE_ID_MOUSE_RIGHT:
+    return m_mouseRightPressed.load();
+  case RETRO_DEVICE_ID_MOUSE_MIDDLE:
+    return m_mouseMiddlePressed.load();
+  default:
+    return false;
+  }
+}
+
+bool SDLInputService::isPointerOffscreen() const {
+  return m_mouseOffscreen.load();
+}
+
+void SDLInputService::updateMouseButtons(const bool left, const bool right,
+                                         const bool middle) {
+  m_mousePressed = left;
+  m_mouseRightPressed.store(right);
+  m_mouseMiddlePressed.store(middle);
+}
+
+void SDLInputService::updateMouseMotion(const int dx, const int dy) {
+  m_mouseRelX.fetch_add(dx);
+  m_mouseRelY.fetch_add(dy);
+}
+
+void SDLInputService::updateMouseOffscreen(const bool offscreen) {
+  m_mouseOffscreen.store(offscreen);
 }
 
 void SDLInputService::run() {

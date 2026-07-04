@@ -163,6 +163,31 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
   }
 }
 
+bool SdlController::isVirtualInputActive(const int platformId,
+                                         int controllerTypeId,
+                                         const int virtualInput) {
+  // Mouse/light-gun buttons are only ever driven by an explicit mapping (a
+  // gamepad button bound to e.g. a light-gun trigger). Unmapped => not active;
+  // the physical mouse is handled by the pointer provider in the core callback.
+  if (m_profile == nullptr) {
+    return false;
+  }
+  const auto mapping =
+      m_profile->getMappingForPlatformAndController(platformId, controllerTypeId);
+  if (mapping == nullptr) {
+    return false;
+  }
+  const auto input = static_cast<GamepadInput>(virtualInput);
+  const auto &bindings = mapping->getBindings(input);
+  bool active = false;
+  for (std::size_t i = 0; i < bindings.size(); ++i) {
+    if (evaluateBindingWithModes(input, i, bindings[i])) {
+      active = true;
+    }
+  }
+  return active;
+}
+
 int16_t SdlController::getLeftStickXPosition(const int platformId,
                                              int controllerTypeId) {
   const auto settings =

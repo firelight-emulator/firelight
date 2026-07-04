@@ -101,7 +101,7 @@ namespace firelight {
         {"fceumm_turbo_delay", "3"},
         {"fceumm_turbo_enable", "None"},
         {"fceumm_up_down_allowed", "disabled"},
-        {"fceumm_zapper_mode", "mouse"},
+        {"fceumm_zapper_mode", "clightgun"},
         {"fceumm_zapper_sensor", "enabled"},
         {"fceumm_zapper_tolerance", "6"},
         {"fceumm_zapper_trigger", "enabled"},
@@ -831,6 +831,46 @@ namespace firelight {
           return "Right Stick Left";
         case input::GamepadInput::RightStickRight:
           return "Right Stick Right";
+        case input::GamepadInput::MouseX:
+          return "Mouse X";
+        case input::GamepadInput::MouseY:
+          return "Mouse Y";
+        case input::GamepadInput::MouseLeft:
+          return "Left Button";
+        case input::GamepadInput::MouseRight:
+          return "Right Button";
+        case input::GamepadInput::MouseMiddle:
+          return "Middle Button";
+        case input::GamepadInput::MouseWheelUp:
+          return "Wheel Up";
+        case input::GamepadInput::MouseWheelDown:
+          return "Wheel Down";
+        case input::GamepadInput::MouseButton4:
+          return "Button 4";
+        case input::GamepadInput::MouseButton5:
+          return "Button 5";
+        case input::GamepadInput::LightgunTrigger:
+          return "Trigger";
+        case input::GamepadInput::LightgunReload:
+          return "Reload";
+        case input::GamepadInput::LightgunAuxA:
+          return "Aux A";
+        case input::GamepadInput::LightgunAuxB:
+          return "Aux B";
+        case input::GamepadInput::LightgunAuxC:
+          return "Aux C";
+        case input::GamepadInput::LightgunStart:
+          return "Start";
+        case input::GamepadInput::LightgunSelect:
+          return "Select";
+        case input::GamepadInput::LightgunDpadUp:
+          return "D-Pad Up";
+        case input::GamepadInput::LightgunDpadDown:
+          return "D-Pad Down";
+        case input::GamepadInput::LightgunDpadLeft:
+          return "D-Pad Left";
+        case input::GamepadInput::LightgunDpadRight:
+          return "D-Pad Right";
         default:
           return "Unknown";
           return "South Face";

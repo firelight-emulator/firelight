@@ -2,6 +2,7 @@
 #include <rcheevos/ra_client.hpp>
 #include <firelight/saves/isave_manager.hpp>
 
+#include "cheats/cheat_repository.hpp"
 #include "emulation_service.hpp"
 #include "firelight/event_dispatcher.hpp"
 #include <firelight/input/input_service.hpp>
@@ -141,27 +142,21 @@ bool EmulatorInstance::initialize(
                          .count = count});
   }
 
-  // Apply any persisted per-port core-device choices, and announce the devices
-  // the core advertises so the input UI can offer a choice.
+  // Resolve + apply the per-port controller variant (the game's default unless
+  // overridden), driving the core device + any companion core options, and
+  // announce availability so the input UI can offer a choice.
   if (const auto controllerDevices = m_core->getControllerDevices();
       !controllerDevices.empty()) {
-    if (auto *settings = settings::SettingsService::instance()) {
-      for (unsigned port = 0; port < controllerDevices.size(); ++port) {
-        const auto key = "port" + std::to_string(port) + "-device";
-        if (const auto v =
-                settings->getEffectiveValue(m_contentHash, m_platformId, key)) {
-          try {
-            m_core->setControllerPortDevice(
-                port, static_cast<unsigned>(std::stoul(*v)));
-          } catch (const std::exception &) {
-            // Ignore a malformed stored value; keep the core default.
-          }
-        }
-      }
+    for (unsigned port = 0; port < controllerDevices.size(); ++port) {
+      const auto variant = resolveSelectedVariant(port);
+      m_core->setControllerPortDevice(port, variant.coreDeviceId);
+      applyCompanionOptions(variant);
     }
     EventDispatcher::instance().publish(
         ControllerDevicesEvent{.contentHash = m_contentHash});
   }
+
+  applyCheats();
   return true;
 }
 bool EmulatorInstance::isInitialized() { return m_initialized; }
@@ -195,17 +190,158 @@ EmulatorInstance::getControllerDevices() const {
                       std::vector<::libretro::ICore::ControllerDeviceOption>>{};
 }
 
-void EmulatorInstance::setPortDevice(const unsigned port,
-                                     const unsigned device) {
+std::vector<CoreDeviceVariant>
+EmulatorInstance::getAvailableControllerVariants(const unsigned port) const {
+  if (!m_core) {
+    return {};
+  }
+  const auto coreId =
+      CoreRegistry::instance().resolveCoreName(m_platformId, m_contentHash);
+  const auto devices = m_core->getControllerDevices();
+  std::vector<unsigned> advertised;
+  if (port < devices.size()) {
+    for (const auto &d : devices[port]) {
+      advertised.push_back(d.id);
+    }
+  }
+  return CoreRegistry::instance().availableControllerVariants(coreId, advertised);
+}
+
+CoreDeviceVariant
+EmulatorInstance::resolveSelectedVariant(const unsigned port) const {
+  const auto variants = getAvailableControllerVariants(port);
+  if (variants.empty()) {
+    return CoreDeviceVariant{}; // standard joypad
+  }
+
+  // Per-game override (a stored coreDeviceId), honored only if still offered by
+  // the loaded core (a stale value from another core falls back to the default).
+  if (auto *settings = settings::SettingsService::instance()) {
+    if (const auto v = settings->getEffectiveValue(
+            m_contentHash, m_platformId,
+            "port" + std::to_string(port) + "-controllervariant")) {
+      try {
+        const auto id = static_cast<unsigned>(std::stoul(*v));
+        for (const auto &variant : variants) {
+          if (variant.coreDeviceId == id) {
+            return variant;
+          }
+        }
+      } catch (const std::exception &) {
+        // Malformed stored value; fall through to the default.
+      }
+    }
+  }
+
+  for (const auto &variant : variants) {
+    if (variant.isDefault) {
+      return variant;
+    }
+  }
+  return variants.front();
+}
+
+void EmulatorInstance::applyCompanionOptions(const CoreDeviceVariant &variant) {
+  auto *settings = settings::SettingsService::instance();
+  if (!settings) {
+    return;
+  }
+  // Companion options take effect when the core reads its options (on init);
+  // the current session already runs the core's default, and the selection
+  // persists for the next launch.
+  for (const auto &[key, value] : variant.companionOptions) {
+    settings->setGameValue(m_contentHash, key, value);
+  }
+}
+
+void EmulatorInstance::setPortControllerVariant(const unsigned port,
+                                                const unsigned coreDeviceId) {
   if (!m_core) {
     return;
   }
-  m_core->setControllerPortDevice(port, device);
+  m_core->setControllerPortDevice(port, coreDeviceId);
   if (auto *settings = settings::SettingsService::instance()) {
-    settings->setGameValue(m_contentHash,
-                           "port" + std::to_string(port) + "-device",
-                           std::to_string(device));
+    settings->setGameValue(
+        m_contentHash, "port" + std::to_string(port) + "-controllervariant",
+        std::to_string(coreDeviceId));
   }
+  for (const auto &variant : getAvailableControllerVariants(port)) {
+    if (variant.coreDeviceId == coreDeviceId) {
+      applyCompanionOptions(variant);
+      break;
+    }
+  }
+}
+
+void EmulatorInstance::applyCheats() {
+  if (!m_core) {
+    return;
+  }
+  m_core->clearCheats();
+  m_cheatEngine.clear();
+  if (!m_context.cheatRepository) {
+    return;
+  }
+
+  // While RA hardcore mode is active, gameplay-affecting cheats are disallowed.
+  const bool hardcore = m_context.achievementManager &&
+                        m_context.achievementManager->hardcoreModeActive();
+
+  std::vector<cheats::CheatPoke> pokes;
+  unsigned coreIndex = 0;
+  for (const auto &cheat : m_context.cheatRepository->getCheats(m_contentHash)) {
+    if (!cheat.enabled || (hardcore && cheat.affectsHardcore)) {
+      continue;
+    }
+    if (cheat.isCoreApplied()) {
+      // Game Genie / emu-handler: the core must decode it (ROM substitution).
+      m_core->setCheat(coreIndex++, true, cheat.rawCode);
+    } else {
+      // RAM cheats: Firelight replays these pokes every frame.
+      pokes.insert(pokes.end(), cheat.pokes.begin(), cheat.pokes.end());
+    }
+  }
+  m_cheatEngine.setActivePokes(std::move(pokes));
+}
+
+std::vector<cheats::Cheat> EmulatorInstance::getCheats() const {
+  if (!m_context.cheatRepository) {
+    return {};
+  }
+  return m_context.cheatRepository->getCheats(m_contentHash);
+}
+
+void EmulatorInstance::setCheatEnabled(const int cheatId, const bool enabled) {
+  if (!m_context.cheatRepository) {
+    return;
+  }
+  m_context.cheatRepository->setEnabled(cheatId, enabled);
+  applyCheats();
+}
+
+void EmulatorInstance::addCheat(cheats::Cheat cheat) {
+  if (!m_context.cheatRepository) {
+    return;
+  }
+  cheat.contentHash = m_contentHash;
+  m_context.cheatRepository->addCheat(cheat);
+  applyCheats();
+}
+
+void EmulatorInstance::updateCheat(const cheats::Cheat &cheat) {
+  if (!m_context.cheatRepository) {
+    return;
+  }
+  m_context.cheatRepository->updateCheat(cheat);
+  applyCheats();
+}
+
+void EmulatorInstance::removeCheat(const int cheatId) {
+  if (!m_context.cheatRepository) {
+    return;
+  }
+  m_context.cheatRepository->removeCheat(cheatId);
+  applyCheats();
 }
 void EmulatorInstance::runFrame() {
   const auto now = std::chrono::steady_clock::now();
@@ -220,6 +356,8 @@ void EmulatorInstance::runFrame() {
   }
 
   m_core->run(0);
+  // Re-apply RAM cheats after each frame so values the game overwrites stick.
+  m_cheatEngine.apply(*m_core);
   if (const auto achievements = m_context.achievementManager) {
     achievements->doFrame(m_core.get());
   }

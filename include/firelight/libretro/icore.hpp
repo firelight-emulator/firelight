@@ -86,6 +86,13 @@ public:
   getControllerDevices() const = 0;
   // Tells the core which device (RETRO_DEVICE_*) is plugged into `port`.
   virtual void setControllerPortDevice(unsigned port, unsigned device) = 0;
+
+  // --- cheats (Game Genie / Action Replay) ---
+  // Applies cheat `code` (passed to the core verbatim; the core decodes the
+  // format) in slot `index`, toggled by `enabled`.
+  virtual void setCheat(unsigned index, bool enabled, const std::string &code) = 0;
+  // Clears all applied cheats.
+  virtual void clearCheats() = 0;
 };
 
 } // namespace libretro

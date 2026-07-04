@@ -32,6 +32,7 @@
 #include "app/input/gui/profile_list_model.hpp"
 #include "app/input/shortcut_catalog.hpp"
 #include <firelight/input/sqlite_controller_repository.hpp>
+#include "app/cheats/sqlite_cheat_repository.hpp"
 #include "app/emulation/emulation_context.hpp"
 #include "app/emulator_config_manager.hpp"
 #include "app/library/gui/content_directory_model.hpp"
@@ -124,7 +125,7 @@ int main(int argc, char *argv[]) {
         spdlog::set_level(spdlog::level::info);
     }
 
-    QApplication::setOrganizationName("BiscuitCakes");
+    // QApplication::setOrganizationName("BiscuitCakes");
     QApplication::setOrganizationDomain("firelight-emulator.com");
     QApplication::setDesktopFileName("firelight");
     QApplication::setApplicationName("Firelight");
@@ -194,7 +195,7 @@ int main(int argc, char *argv[]) {
     // built). The server name is derived from the data dir so distinct
     // --config-dir instances stay independent.
     const auto singleInstanceName =
-        firelight::cli::singleInstanceServerName(defaultAppDataPathString);
+            firelight::cli::singleInstanceServerName(defaultAppDataPathString);
     if (cliOptions.singleInstance &&
         firelight::cli::forwardLaunchToRunningInstance(singleInstanceName,
                                                        cliOptions)) {
@@ -324,7 +325,7 @@ int main(int argc, char *argv[]) {
     // A ROM path passed on the command line resolves to a library entry that the
     // root window auto-launches once loaded (-1 when absent/unresolved).
     const int startupLaunchEntryId =
-        firelight::cli::resolveRomEntryId(cliOptions.romPath, userLibraryService);
+            firelight::cli::resolveRomEntryId(cliOptions.romPath, userLibraryService);
 
     // If we're the primary --single-instance process, start listening for
     // launches forwarded from secondary processes. Exposed to QML below so the
@@ -332,8 +333,8 @@ int main(int argc, char *argv[]) {
     std::unique_ptr<firelight::cli::SingleInstanceServer> singleInstanceServer;
     if (cliOptions.singleInstance) {
         singleInstanceServer =
-            std::make_unique<firelight::cli::SingleInstanceServer>(
-                singleInstanceName, userLibraryService);
+                std::make_unique<firelight::cli::SingleInstanceServer>(
+                    singleInstanceName, userLibraryService);
         singleInstanceServer->start();
     }
 
@@ -382,6 +383,10 @@ int main(int argc, char *argv[]) {
     firelight::settings::SqliteCoreOptionRepository coreOptionRepository(
         (defaultAppDataPathString + "/settings.db").toStdString());
     firelight::ServiceAccessor::setCoreOptionRepository(&coreOptionRepository);
+
+    // Per-game cheats (Game Genie / Action Replay), applied on load.
+    firelight::cheats::SqliteCheatRepository cheatRepository(
+        (defaultAppDataPathString + "/cheats.db").toStdString());
     //   QObject::connect(
     //     &libraryDatabase,
     //     &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
@@ -406,10 +411,10 @@ int main(int argc, char *argv[]) {
     // regardless of where the app is launched from (e.g. `firelight <rom>` from a
     // terminal in any directory).
     const auto catalogPath =
-        (QCoreApplication::applicationDirPath() + "/system/settings_catalog.json")
+            (QCoreApplication::applicationDirPath() + "/system/settings_catalog.json")
             .toStdString();
     if (!firelight::settings::SettingsCatalog::instance().loadFromFile(
-            catalogPath)) {
+        catalogPath)) {
         spdlog::warn("Could not load settings catalog from {}; using core "
                      "defaults only",
                      catalogPath);
@@ -488,6 +493,7 @@ int main(int argc, char *argv[]) {
         .achievementManager = &raClient,
         .saveManager = &saveManager,
         .coreOptionRepository = &coreOptionRepository,
+        .cheatRepository = &cheatRepository,
         .coreSystemDirectory =
         (defaultAppDataPathString + "/core-system").toStdString(),
     };
@@ -504,11 +510,11 @@ int main(int argc, char *argv[]) {
 
         // Emulation setting overrides: the bulk --settings-file first, then
         // inline --set on top (explicit inline wins).
-        std::vector<std::pair<std::string, std::string>> overrides;
+        std::vector<std::pair<std::string, std::string> > overrides;
         if (!cliOptions.settingsFile.empty()) {
             try {
                 const auto fileOverrides =
-                    firelight::cli::loadOverrideFile(cliOptions.settingsFile);
+                        firelight::cli::loadOverrideFile(cliOptions.settingsFile);
                 overrides.insert(overrides.end(), fileOverrides.begin(),
                                  fileOverrides.end());
             } catch (const std::exception &e) {
@@ -524,16 +530,16 @@ int main(int argc, char *argv[]) {
             // typo warning. Raw core option keys can't be listed here, so unknown
             // keys are still applied (they may be valid advanced core options).
             std::set<std::string> knownKeys;
-            for (const auto &s : SettingsCatalog::instance().commonSettings()) {
+            for (const auto &s: SettingsCatalog::instance().commonSettings()) {
                 knownKeys.insert(s.key);
             }
-            for (const auto &core : firelight::CoreRegistry::instance().cores()) {
-                for (const auto &s :
+            for (const auto &core: firelight::CoreRegistry::instance().cores()) {
+                for (const auto &s:
                      SettingsCatalog::instance().coreSpecificSettings(core.id)) {
                     knownKeys.insert(s.key);
                 }
             }
-            for (const auto &[key, value] : overrides) {
+            for (const auto &[key, value]: overrides) {
                 if (!knownKeys.contains(key)) {
                     spdlog::warn("--set: '{}' is not a known friendly setting; "
                                  "applying as a raw core option",
@@ -566,7 +572,7 @@ int main(int argc, char *argv[]) {
         emuService.setPendingLaunchOverrides(launch);
         if (!cliOptions.controller.empty()) {
             const auto type =
-                firelight::cli::parseControllerType(cliOptions.controller);
+                    firelight::cli::parseControllerType(cliOptions.controller);
             if (!type.has_value()) {
                 spdlog::warn("--controller '{}' is not a known type (valid: {})",
                              cliOptions.controller,
@@ -574,7 +580,7 @@ int main(int argc, char *argv[]) {
             } else if (!haveRom) {
                 spdlog::warn("--controller ignored: no ROM was given to launch");
             } else if (const auto entry =
-                           userLibraryService.getEntry(startupLaunchEntryId)) {
+                    userLibraryService.getEntry(startupLaunchEntryId)) {
                 inputService.setSessionPreferredControllerType(
                     entry->platformId, static_cast<int>(*type));
             }
@@ -583,7 +589,7 @@ int main(int argc, char *argv[]) {
         if (!cliOptions.raUsername.empty() && cliOptions.raPassword.empty() &&
             cliOptions.raToken.empty()) {
             spdlog::warn("--ra-username given without --ra-password or "
-                         "--ra-token; skipping startup login");
+                "--ra-token; skipping startup login");
         }
     }
     // ------------------------------------------------------------------------
@@ -669,11 +675,11 @@ int main(int argc, char *argv[]) {
     startupData.startMuted = cliOptions.muted;
     startupData.startPaused = cliOptions.paused;
     startupData.fullscreenOverride =
-        cliOptions.fullscreen ? 1 : (cliOptions.windowed ? 0 : -1);
+            cliOptions.fullscreen ? 1 : (cliOptions.windowed ? 0 : -1);
     startupData.exitOnClose = cliOptions.exitOnClose;
     startupData.raPendingLogin =
-        !cliOptions.raUsername.empty() &&
-        (!cliOptions.raPassword.empty() || !cliOptions.raToken.empty());
+            !cliOptions.raUsername.empty() &&
+            (!cliOptions.raPassword.empty() || !cliOptions.raToken.empty());
     startupData.raUsername = QString::fromStdString(cliOptions.raUsername);
     startupData.raPassword = QString::fromStdString(cliOptions.raPassword);
     startupData.raToken = QString::fromStdString(cliOptions.raToken);

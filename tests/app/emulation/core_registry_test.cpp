@@ -61,6 +61,68 @@ TEST(CoreRegistryTest, SupportsPlatformAndDllPath) {
   EXPECT_TRUE(registry.dllPathFor("does_not_exist").empty());
 }
 
+TEST(CoreRegistryTest, DeviceCatalogClassifiesVariants) {
+  const auto &registry = CoreRegistry::instance();
+
+  // Genesis Plus GX exposes joypad variants + a mouse + light guns.
+  const auto &gpgx = registry.deviceCatalogForCore("genesis_plus_gx_libretro");
+  ASSERT_FALSE(gpgx.empty());
+  bool has6Button = false, hasLightgun = false;
+  for (const auto &v : gpgx) {
+    if (v.friendlyName == "Control Pad (6-button)") {
+      has6Button = true;
+      EXPECT_EQ(v.deviceClass, input::GamepadInputClass::Joypad);
+      EXPECT_TRUE(v.isDefault);
+    }
+    hasLightgun =
+        hasLightgun || v.deviceClass == input::GamepadInputClass::Lightgun;
+  }
+  EXPECT_TRUE(has6Button);
+  EXPECT_TRUE(hasLightgun);
+
+  // FCEUmm's Zapper is modeled as a light gun with a companion core option so
+  // the core queries the light-gun protocol.
+  const auto &fceumm = registry.deviceCatalogForCore("fceumm_libretro");
+  ASSERT_EQ(fceumm.size(), 1u);
+  EXPECT_EQ(fceumm[0].friendlyName, "Zapper");
+  EXPECT_EQ(fceumm[0].deviceClass, input::GamepadInputClass::Lightgun);
+  ASSERT_EQ(fceumm[0].companionOptions.size(), 1u);
+  EXPECT_EQ(fceumm[0].companionOptions[0].first, "fceumm_zapper_mode");
+  EXPECT_EQ(fceumm[0].companionOptions[0].second, "clightgun");
+
+  // Uncatalogued core -> empty (joypad only).
+  EXPECT_TRUE(registry.deviceCatalogForCore("gambatte_libretro").empty());
+}
+
+TEST(CoreRegistryTest, AvailableVariantsCrossReferencesAdvertisement) {
+  const auto &registry = CoreRegistry::instance();
+
+  // snes9x catalog = Mouse(2), Super Scope(260), Justifier(516). The core here
+  // advertises only the pad, mouse, and Super Scope -> Justifier is filtered
+  // out, and a standard joypad is synthesized as the default (first).
+  const auto variants = registry.availableControllerVariants(
+      "snes9x_libretro", {1u, 2u, 260u});
+  ASSERT_EQ(variants.size(), 3u);
+  EXPECT_TRUE(variants.front().isDefault);
+  EXPECT_EQ(variants.front().deviceClass, input::GamepadInputClass::Joypad);
+  bool hasMouse = false, hasScope = false, hasJustifier = false;
+  for (const auto &v : variants) {
+    hasMouse = hasMouse || v.coreDeviceId == 2u;
+    hasScope = hasScope || v.coreDeviceId == 260u;
+    hasJustifier = hasJustifier || v.coreDeviceId == 516u;
+  }
+  EXPECT_TRUE(hasMouse);
+  EXPECT_TRUE(hasScope);
+  EXPECT_FALSE(hasJustifier);
+
+  // An uncatalogued core still yields the synthesized standard controller.
+  const auto gb =
+      registry.availableControllerVariants("gambatte_libretro", {1u});
+  ASSERT_EQ(gb.size(), 1u);
+  EXPECT_TRUE(gb.front().isDefault);
+  EXPECT_EQ(gb.front().deviceClass, input::GamepadInputClass::Joypad);
+}
+
 class CoreRegistryResolveTest : public testing::Test {
 protected:
   settings::SqliteSettingsRepository m_repo{":memory:"};

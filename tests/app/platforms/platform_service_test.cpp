@@ -1,3 +1,4 @@
+#include <firelight/input/gamepad_input.hpp>
 #include <firelight/platforms/platform_service.hpp>
 #include <gtest/gtest.h>
 
@@ -36,7 +37,34 @@ protected:
 
 TEST_F(PlatformServiceTest, AllPlatformsPresent) {
   const auto &service = firelight::platforms::PlatformService::getInstance();
-  EXPECT_EQ(16, service.listPlatforms().size());
+  EXPECT_EQ(17, service.listPlatforms().size());
+}
+
+TEST_F(PlatformServiceTest, MouseAndLightGunDisplayEntriesArePresent) {
+  using firelight::input::GamepadInputClass;
+  const auto &service = firelight::platforms::PlatformService::getInstance();
+
+  int mouse = 0, lightgun = 0, joypad = 0;
+  for (const auto &platform : service.listPlatforms()) {
+    for (const auto &type : platform.controllerTypes) {
+      switch (type.deviceClass) {
+      case GamepadInputClass::Mouse:
+        ++mouse;
+        break;
+      case GamepadInputClass::Lightgun:
+        ++lightgun;
+        break;
+      case GamepadInputClass::Joypad:
+        ++joypad;
+        break;
+      }
+    }
+  }
+  // Every platform still has its standard controller, plus the WS2 mouse/light
+  // gun display entries on the platforms that support them.
+  EXPECT_GE(joypad, 17);
+  EXPECT_GT(mouse, 0);
+  EXPECT_GT(lightgun, 0);
 }
 
 // TEST_F(PlatformServiceTest, PlatformGameboyIsCorrect) {

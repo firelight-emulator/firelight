@@ -27,6 +27,9 @@ public:
   bool isButtonPressed(int platformId, int controllerTypeId,
                        Input t_button) override;
 
+  bool isVirtualInputActive(int platformId, int controllerTypeId,
+                            int virtualInput) override;
+
   int16_t getLeftStickXPosition(int platformId, int controllerTypeId) override;
 
   int16_t getLeftStickYPosition(int platformId, int controllerTypeId) override;

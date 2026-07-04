@@ -54,6 +54,14 @@ public:
   virtual void updateMouseState(double x, double y, bool mousePressed) = 0;
   virtual void updateMousePressed(bool mousePressed) = 0;
 
+  // Additional mouse feed for RETRO_DEVICE_MOUSE / light guns. Default no-ops so
+  // non-SDL/test implementations need not care. `dx/dy` accumulate relative
+  // motion (in mouse units) consumed once per frame by getRelativeMotion();
+  // buttons are the full L/R/M state; offscreen flags the light-gun off-screen.
+  virtual void updateMouseButtons(bool left, bool right, bool middle) {}
+  virtual void updateMouseMotion(int dx, int dy) {}
+  virtual void updateMouseOffscreen(bool offscreen) {}
+
   // Applies the input context for a launched game: any per-game profile
   // override (by content hash) and the platform's preferred controller type
   // (promoting a matching controller to player 1). Pass an empty hash to skip

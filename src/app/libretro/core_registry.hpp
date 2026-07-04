@@ -1,7 +1,10 @@
 #pragma once
 
+#include <firelight/input/gamepad_input.hpp>
+
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace firelight {
@@ -22,6 +25,23 @@ struct PlatformCore {
   std::string id;
   std::string displayName;
   bool isDefault = false;
+};
+
+// A concrete, selectable controller *variant* a specific core can expose on a
+// port (e.g. Genesis Plus GX "6-Button Pad", FCEUmm "Zapper"). This is the
+// curated, friendly catalog; it's cross-referenced at load against the core's
+// runtime SET_CONTROLLER_INFO advertisement (ICore::getControllerDevices) to
+// decide availability + the exact device id, and augmented by any uncatalogued
+// devices the core reports (advanced only). `deviceClass` selects which
+// platform display + bindings apply (Joypad variants share one bindings set).
+struct CoreDeviceVariant {
+  unsigned coreDeviceId = 1; // RETRO_DEVICE_* (possibly a SUBCLASS)
+  input::GamepadInputClass deviceClass = input::GamepadInputClass::Joypad;
+  std::string friendlyName;
+  // Core options to force when this variant is chosen so the core queries the
+  // expected input protocol (e.g. FCEUmm Zapper -> fceumm_zapper_mode=clightgun).
+  std::vector<std::pair<std::string, std::string>> companionOptions;
+  bool isDefault = false; // the port's default device for this core
 };
 
 // The authority on which cores exist, which platforms each can run, and each
@@ -46,6 +66,21 @@ public:
 
   [[nodiscard]] const std::vector<CoreInfo> &cores() const { return m_cores; }
 
+  // The curated controller variants a core can expose (empty = joypad only).
+  // Not filtered by platform/ROM — callers cross-reference the core's runtime
+  // advertisement (ICore::getControllerDevices) to get the game's actual list.
+  [[nodiscard]] const std::vector<CoreDeviceVariant> &
+  deviceCatalogForCore(const std::string &coreId) const;
+
+  // The controller variants actually selectable for a port: the curated catalog
+  // filtered to what the core advertises (`advertisedDeviceIds`, from
+  // getControllerDevices — pass empty to trust the catalog when the core gave no
+  // info), with the standard joypad synthesized as the default when the catalog
+  // offers no joypad variant. Ordered default-first.
+  [[nodiscard]] std::vector<CoreDeviceVariant>
+  availableControllerVariants(const std::string &coreId,
+                              const std::vector<unsigned> &advertisedDeviceIds) const;
+
   // Resolves the effective core for a scope: per-game override -> per-platform
   // override -> platform default. An override is honored only if that core
   // supports the platform (a stale/invalid override falls back). Reads
@@ -69,6 +104,7 @@ private:
 
   std::vector<CoreInfo> m_cores;
   std::map<int, std::string> m_platformDefaults;
+  std::map<std::string, std::vector<CoreDeviceVariant>> m_coreDevices;
   std::string m_sessionCoreOverride; // CLI `--core`; empty = none.
 };
 
