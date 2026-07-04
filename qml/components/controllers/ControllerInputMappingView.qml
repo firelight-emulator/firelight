@@ -128,6 +128,44 @@ FocusScope {
             spacing: 16
             // height: 200
 
+            // Device-class selector (e.g. Gamepad / Mouse / Light Gun): switches
+            // which controller type's bindings this view edits. Hidden when the
+            // platform only has one type. Uses the actual controller-type ids
+            // (they aren't contiguous — NES is 1 and 3, no 2).
+            Flow {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: true
+                spacing: 8
+                visible: root.platformMetadataModel.numControllerTypes > 1
+                Repeater {
+                    model: root.platformMetadataModel.controllerTypeNames
+                    delegate: Rectangle {
+                        id: classTab
+                        required property int index
+                        required property var modelData
+                        property int typeId: root.platformMetadataModel.controllerTypeIds[index]
+                        property bool current: root.controllerType === classTab.typeId
+                        implicitWidth: classTabText.implicitWidth + 28
+                        implicitHeight: 34
+                        radius: 6
+                        color: classTab.current ? ColorPalette.neutral100 : "transparent"
+                        border.color: classTab.current ? ColorPalette.neutral100 : ColorPalette.neutral500
+                        border.width: 1
+                        Text {
+                            id: classTabText
+                            anchors.centerIn: parent
+                            text: classTab.modelData
+                            color: classTab.current ? "black" : "white"
+                            font.pixelSize: 14
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.Medium
+                        }
+                        HoverHandler { cursorShape: Qt.PointingHandCursor }
+                        TapHandler { onTapped: root.controllerType = classTab.typeId }
+                    }
+                }
+            }
+
             // TabBar {
             //     background: Rectangle {
             //         color: ColorPalette.neutral800

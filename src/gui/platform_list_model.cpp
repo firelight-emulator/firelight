@@ -1,6 +1,7 @@
 #include "platform_list_model.hpp"
 
 #include <QJsonObject>
+#include <QVariant>
 #include <firelight/libretro/retropad.hpp>
 
 #include "../app/platform_metadata.hpp"
@@ -39,6 +40,13 @@ namespace firelight::gui {
         }
         return controllerTypeNames;
       }
+      case ControllerTypeIds: {
+        QVariantList controllerTypeIds;
+        for (const auto &controllerType: item.controllerTypes) {
+          controllerTypeIds.append(static_cast<int>(controllerType.id));
+        }
+        return controllerTypeIds;
+      }
       case ControllerImages: {
         QStringList controllerImageUrls;
         for (const auto &controllerType: item.controllerTypes) {
@@ -64,6 +72,7 @@ namespace firelight::gui {
     roles[IconName] = "iconName";
     roles[NumControllerTypes] = "numControllerTypes";
     roles[ControllerTypeNames] = "controllerTypeNames";
+    roles[ControllerTypeIds] = "controllerTypeIds";
     roles[ControllerImages] = "controllerImages";
     return roles;
   }

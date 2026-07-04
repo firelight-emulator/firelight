@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <firelight/libretro/pointer_input_provider.hpp>
 #include <functional>
+#include <map>
 #include <qlibrary.h>
 #include <vector>
 
@@ -108,6 +109,16 @@ public:
   std::vector<std::vector<ControllerDeviceOption>>
   getControllerDevices() const override;
   void setControllerPortDevice(unsigned port, unsigned device) override;
+  void setPortInputDeviceClass(unsigned port, int deviceClass) override;
+  void setAnalogPointerSpeed(double stepPerFrame) override;
+  void setMouseControlsPointerDevices(bool enabled) override;
+  // The user-selected input device class for `port` (GamepadInputClass value;
+  // 1=Joypad when unset). Gates mouse/light-gun handling on the selected device.
+  [[nodiscard]] int getPortInputClass(unsigned port) const;
+  // Whether the physical mouse may drive light-gun / mouse devices (the toggle).
+  [[nodiscard]] bool mouseControlsPointerDevices() const {
+    return m_mouseControlsPointerDevices;
+  }
 
   void setCheat(unsigned index, bool enabled, const std::string &code) override;
   void clearCheats() override;
@@ -124,6 +135,14 @@ public:
   std::pair<int16_t, int16_t> m_frameMouseDelta{0, 0};
 
 private:
+  // Resolved input device class per port (firelight::input::GamepadInputClass
+  // value: 1=Joypad, 2=Mouse, 3=Light Gun) and the analog-stick glide speed.
+  // pollInput() uses these to drive the pointer cursor from a gamepad stick on
+  // Mouse/Light-Gun ports.
+  std::map<unsigned, int> m_portInputClass;
+  double m_analogPointerSpeed = 0.025;
+  bool m_mouseControlsPointerDevices = true;
+
   std::unique_ptr<QLibrary> coreLib;
   std::function<void()> m_destroyContextFunction = nullptr;
 

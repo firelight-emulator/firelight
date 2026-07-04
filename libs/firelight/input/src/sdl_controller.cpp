@@ -179,13 +179,24 @@ bool SdlController::isVirtualInputActive(const int platformId,
   }
   const auto input = static_cast<GamepadInput>(virtualInput);
   const auto &bindings = mapping->getBindings(input);
-  bool active = false;
-  for (std::size_t i = 0; i < bindings.size(); ++i) {
-    if (evaluateBindingWithModes(input, i, bindings[i])) {
-      active = true;
+  if (!bindings.empty()) {
+    bool active = false;
+    for (std::size_t i = 0; i < bindings.size(); ++i) {
+      if (evaluateBindingWithModes(input, i, bindings[i])) {
+        active = true;
+      }
     }
+    return active;
   }
-  return active;
+  // No explicit binding: fall back to the default physical button so a gamepad
+  // can fire a light-gun / mouse button out of the box (mirrors the joypad
+  // identity default). Abstract inputs with no sensible default map to
+  // themselves and are treated as unbound.
+  const auto phys = defaultPhysicalBinding(input);
+  if (phys == input) {
+    return false;
+  }
+  return std::abs(evaluateMapping(phys)) > 16383;
 }
 
 int16_t SdlController::getLeftStickXPosition(const int platformId,

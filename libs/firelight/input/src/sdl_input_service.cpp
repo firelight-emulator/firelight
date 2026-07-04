@@ -313,13 +313,28 @@ SDLInputService::getRetropadForPlayerIndex(const int t_player) {
 }
 
 std::pair<int16_t, int16_t> SDLInputService::getPointerPosition() const {
-  return {m_mouseX, m_mouseY};
+  return {m_mouseX.load(), m_mouseY.load()};
 }
 bool SDLInputService::isPressed() const { return m_mousePressed; }
 void SDLInputService::updateMouseState(double x, double y, bool mousePressed) {
-  m_mouseX = x * 32767;
-  m_mouseY = y * 32767;
+  m_mouseX.store(static_cast<int16_t>(x * 32767));
+  m_mouseY.store(static_cast<int16_t>(y * 32767));
   m_mousePressed = mousePressed;
+}
+void SDLInputService::nudgeCursor(const int dx, const int dy) {
+  if (dx == 0 && dy == 0) {
+    return;
+  }
+  m_mouseX.store(static_cast<int16_t>(
+      std::clamp(m_mouseX.load() + dx, -32767, 32767)));
+  m_mouseY.store(static_cast<int16_t>(
+      std::clamp(m_mouseY.load() + dy, -32767, 32767)));
+  // A gamepad is actively aiming, so the "gun" is on-screen; clear any stale
+  // off-screen flag left by the mouse leaving the game surface.
+  m_mouseOffscreen.store(false);
+  // Feed relative motion too so RETRO_DEVICE_MOUSE devices react to the stick.
+  m_mouseRelX.fetch_add(dx);
+  m_mouseRelY.fetch_add(dy);
 }
 void SDLInputService::updateMousePressed(bool mousePressed) {
   m_mousePressed = mousePressed;

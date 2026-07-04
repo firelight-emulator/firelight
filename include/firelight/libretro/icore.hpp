@@ -87,6 +87,20 @@ public:
   // Tells the core which device (RETRO_DEVICE_*) is plugged into `port`.
   virtual void setControllerPortDevice(unsigned port, unsigned device) = 0;
 
+  // Informs the core of the resolved input device *class* on a port (the
+  // firelight::input::GamepadInputClass value: 1=Joypad, 2=Mouse, 3=Light Gun)
+  // so it can drive the pointer cursor from a gamepad analog stick for Mouse /
+  // Light-Gun ports. Sets the per-frame glide speed (fraction of the full range
+  // travelled per frame at full stick deflection). Default no-ops so test
+  // doubles and pointer-less cores ignore them.
+  virtual void setPortInputDeviceClass(unsigned /*port*/, int /*deviceClass*/) {}
+  virtual void setAnalogPointerSpeed(double /*stepPerFrame*/) {}
+  // When enabled (default), the physical mouse drives any light-gun / mouse
+  // device the core presents, regardless of the port's selected device type —
+  // the mouse "just works" for these games. The gamepad still only drives them
+  // when that device type is selected. Default no-op.
+  virtual void setMouseControlsPointerDevices(bool /*enabled*/) {}
+
   // --- cheats (Game Genie / Action Replay) ---
   // Applies cheat `code` (passed to the core verbatim; the core decodes the
   // format) in slot `index`, toggled by `enabled`.

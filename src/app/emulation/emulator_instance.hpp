@@ -1,6 +1,6 @@
 #pragma once
-#include "cheats/cheat.hpp"
-#include "cheats/cheat_engine.hpp"
+#include <firelight/cheats/cheat.hpp>
+#include <firelight/cheats/cheat_engine.hpp>
 #include "emulation_context.hpp"
 #include "libretro/core_registry.hpp"
 
@@ -93,6 +93,11 @@ public:
   // loaded core (default first), cross-referenced with the core's advertisement.
   [[nodiscard]] std::vector<CoreDeviceVariant>
   getAvailableControllerVariants(unsigned port) const;
+  // Number of controller ports the running core exposes (SET_CONTROLLER_INFO).
+  [[nodiscard]] unsigned getControllerPortCount() const;
+  // The coreDeviceId currently selected for `port` (the per-game override if
+  // still valid, else the default) — lets the UI highlight the active choice.
+  [[nodiscard]] unsigned getSelectedControllerVariant(unsigned port) const;
   // Selects a variant (by its coreDeviceId) for `port`: applies it to the core
   // live, applies any companion core options, and persists it for this game.
   void setPortControllerVariant(unsigned port, unsigned coreDeviceId);

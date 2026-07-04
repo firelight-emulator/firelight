@@ -50,6 +50,12 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
                   emit integerScaleChanged();
                 }
               });
+
+  m_controllerDevicesConnection =
+      EventDispatcher::instance().subscribe<emulation::ControllerDevicesEvent>(
+          [this](const emulation::ControllerDevicesEvent &) {
+            emit controllerDevicesChanged();
+          });
 }
 QtEmulationServiceProxy::~QtEmulationServiceProxy() = default;
 
@@ -147,5 +153,41 @@ void QtEmulationServiceProxy::resetGame() {
   if (instance) {
     instance->reset();
   }
+}
+
+int QtEmulationServiceProxy::controllerPortCount() const {
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
+  return instance ? static_cast<int>(instance->getControllerPortCount()) : 0;
+}
+
+QVariantList
+QtEmulationServiceProxy::controllerVariantsForPort(const int port) const {
+  QVariantList result;
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
+  if (!instance || port < 0) {
+    return result;
+  }
+  const auto p = static_cast<unsigned>(port);
+  const auto selected = instance->getSelectedControllerVariant(p);
+  for (const auto &variant : instance->getAvailableControllerVariants(p)) {
+    QVariantMap entry;
+    entry["coreDeviceId"] = static_cast<int>(variant.coreDeviceId);
+    entry["name"] = QString::fromStdString(variant.friendlyName);
+    entry["deviceClass"] = static_cast<int>(variant.deviceClass);
+    entry["isCurrent"] = variant.coreDeviceId == selected;
+    result.append(entry);
+  }
+  return result;
+}
+
+void QtEmulationServiceProxy::setControllerVariant(const int port,
+                                                   const int coreDeviceId) {
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
+  if (!instance || port < 0) {
+    return;
+  }
+  instance->setPortControllerVariant(static_cast<unsigned>(port),
+                                     static_cast<unsigned>(coreDeviceId));
+  emit controllerDevicesChanged();
 }
 } // namespace firelight::gui

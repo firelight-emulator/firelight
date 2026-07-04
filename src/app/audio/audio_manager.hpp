@@ -6,8 +6,8 @@
 #include <functional>
 #include <memory>
 
-#include "audio_rate_controller.hpp"
-#include "audio_resampler.hpp"
+#include <firelight/audio/audio_rate_controller.hpp>
+#include <firelight/audio/audio_resampler.hpp>
 #include "firelight/libretro/audio_data_receiver.hpp"
 
 class AudioManager : public QObject, public IAudioDataReceiver {

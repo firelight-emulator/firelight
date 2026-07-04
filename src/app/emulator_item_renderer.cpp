@@ -4,7 +4,7 @@
 #include <QJsonObject>
 
 #include "../gui/game_image_provider.hpp"
-#include "media/media_service.hpp"
+#include <firelight/media/media_service.hpp>
 
 #include <QOpenGLPaintDevice>
 #include <QQuickWindow>

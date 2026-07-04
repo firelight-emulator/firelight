@@ -2,7 +2,7 @@
 #include <rcheevos/ra_client.hpp>
 #include <firelight/saves/isave_manager.hpp>
 
-#include "cheats/cheat_repository.hpp"
+#include <firelight/cheats/cheat_repository.hpp>
 #include "emulation_service.hpp"
 #include "firelight/event_dispatcher.hpp"
 #include <firelight/input/input_service.hpp>
@@ -145,11 +145,12 @@ bool EmulatorInstance::initialize(
   // Resolve + apply the per-port controller variant (the game's default unless
   // overridden), driving the core device + any companion core options, and
   // announce availability so the input UI can offer a choice.
-  if (const auto controllerDevices = m_core->getControllerDevices();
-      !controllerDevices.empty()) {
-    for (unsigned port = 0; port < controllerDevices.size(); ++port) {
+  if (const auto portCount = getControllerPortCount(); portCount > 0) {
+    for (unsigned port = 0; port < portCount; ++port) {
       const auto variant = resolveSelectedVariant(port);
       m_core->setControllerPortDevice(port, variant.coreDeviceId);
+      m_core->setPortInputDeviceClass(port,
+                                      static_cast<int>(variant.deviceClass));
       applyCompanionOptions(variant);
     }
     EventDispatcher::instance().publish(
@@ -205,6 +206,32 @@ EmulatorInstance::getAvailableControllerVariants(const unsigned port) const {
     }
   }
   return CoreRegistry::instance().availableControllerVariants(coreId, advertised);
+}
+
+unsigned EmulatorInstance::getControllerPortCount() const {
+  if (!m_core) {
+    return 0;
+  }
+  const auto advertised =
+      static_cast<unsigned>(m_core->getControllerDevices().size());
+  if (advertised > 0) {
+    return advertised;
+  }
+  // The core didn't advertise its ports via SET_CONTROLLER_INFO, but our catalog
+  // may still define alternate devices for it (e.g. FCEUmm's Zapper). Expose a
+  // small default port count so the player can still pick one; the picker hides
+  // ports with no real choice anyway.
+  const auto coreId =
+      CoreRegistry::instance().resolveCoreName(m_platformId, m_contentHash);
+  if (!CoreRegistry::instance().deviceCatalogForCore(coreId).empty()) {
+    return 2;
+  }
+  return 0;
+}
+
+unsigned
+EmulatorInstance::getSelectedControllerVariant(const unsigned port) const {
+  return resolveSelectedVariant(port).coreDeviceId;
 }
 
 CoreDeviceVariant
@@ -267,6 +294,8 @@ void EmulatorInstance::setPortControllerVariant(const unsigned port,
   }
   for (const auto &variant : getAvailableControllerVariants(port)) {
     if (variant.coreDeviceId == coreDeviceId) {
+      m_core->setPortInputDeviceClass(port,
+                                      static_cast<int>(variant.deviceClass));
       applyCompanionOptions(variant);
       break;
     }
@@ -477,6 +506,17 @@ void EmulatorInstance::refreshAllSettings() {
     EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
         .contentHash = m_contentHash, .key = key});
   };
+  // Maps the friendly pointer-speed choice to a per-frame glide step (fraction
+  // of the full ±32767 cursor range moved per frame at full stick deflection).
+  const auto pointerSpeed = [&](const std::string &v) -> double {
+    if (v == "slow") {
+      return 0.015;
+    }
+    if (v == "fast") {
+      return 0.040;
+    }
+    return 0.025; // medium / default
+  };
 
   apply("rewind-enabled",
         [&] { setRewindEnabled(value("rewind-enabled") == "true"); });
@@ -486,5 +526,16 @@ void EmulatorInstance::refreshAllSettings() {
   apply("sync-method", [&] { setSyncMethod(value("sync-method")); });
   apply("target-framerate",
         [&] { setTargetFramerate(intValue("target-framerate")); });
+  apply("analog-pointer-speed", [&] {
+    if (m_core) {
+      m_core->setAnalogPointerSpeed(pointerSpeed(value("analog-pointer-speed")));
+    }
+  });
+  apply("mouse-controls-lightgun", [&] {
+    if (m_core) {
+      m_core->setMouseControlsPointerDevices(
+          value("mouse-controls-lightgun") == "true");
+    }
+  });
 }
 } // namespace firelight::emulation

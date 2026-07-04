@@ -117,8 +117,8 @@ Pane {
 
                         ButtonGroup.group: menuButtonGroup
 
-                         labelText: model.display_name
-                         labelIcon: model.icon_name
+                         labelText: model.displayName
+                         labelIcon: model.iconName
                          property bool showGlobalCursor: true
                          // labelIcon: "\ue40a"
                          height: 54
@@ -129,7 +129,7 @@ Pane {
                          onToggled: {
                              if (checked) {
                                  ListView.view.currentIndex = index
-                                 theStack.replaceCurrentItem(mappingView, {platformId: model.platform_id, profileId: gamepadStatus.profileId, platformMetadataModel: model, gamepad: gamepadStatus, isKeyboard: profile.isKeyboardProfile}, StackView.Immediate)
+                                 theStack.replaceCurrentItem(mappingView, {platformId: model.platformId, profileId: gamepadStatus.profileId, platformMetadataModel: model, gamepad: gamepadStatus, isKeyboard: profile.isKeyboardProfile}, StackView.Immediate)
                              }
                          }
                      }

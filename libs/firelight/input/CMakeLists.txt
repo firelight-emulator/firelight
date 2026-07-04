@@ -16,6 +16,7 @@ add_library(firelight_input STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/keyboard_input_handler.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sdl_controller.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sdl_input_service.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/shortcut_catalog.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/firelight/input/keyboard_input_handler.hpp
 )
 target_include_directories(firelight_input
@@ -47,6 +48,7 @@ add_executable(firelight_input_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/shortcut_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/gamepad_profile_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/shortcut_registry_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/analog_cursor_test.cpp
 )
 target_include_directories(firelight_input_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src

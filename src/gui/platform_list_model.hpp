@@ -30,6 +30,7 @@ private:
     IconName,
     NumControllerTypes,
     ControllerTypeNames,
+    ControllerTypeIds,
     ControllerImages
   };
 

@@ -30,9 +30,9 @@
 #include "app/input/gui/controller_list_model.hpp"
 #include "app/input/gui/platform_input_preferences.hpp"
 #include "app/input/gui/profile_list_model.hpp"
-#include "app/input/shortcut_catalog.hpp"
+#include <firelight/input/shortcut_catalog.hpp>
 #include <firelight/input/sqlite_controller_repository.hpp>
-#include "app/cheats/sqlite_cheat_repository.hpp"
+#include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include "app/emulation/emulation_context.hpp"
 #include "app/emulator_config_manager.hpp"
 #include "app/library/gui/content_directory_model.hpp"
@@ -51,7 +51,7 @@
 #include "cli/single_instance.hpp"
 #include "cli/startup_options.hpp"
 #include "libretro/core_registry.hpp"
-#include "media/media_service.hpp"
+#include <firelight/media/media_service.hpp>
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/game_image_provider.hpp"

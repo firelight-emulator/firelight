@@ -50,6 +50,7 @@ public:
   [[nodiscard]] std::pair<int16_t, int16_t> getRelativeMotion() override;
   [[nodiscard]] bool isMouseButtonPressed(int retroMouseButtonId) const override;
   [[nodiscard]] bool isPointerOffscreen() const override;
+  void nudgeCursor(int dx, int dy) override;
   void updateMouseState(double x, double y, bool mousePressed) override;
   void updateMousePressed(bool mousePressed) override;
   void updateMouseButtons(bool left, bool right, bool middle) override;
@@ -129,8 +130,11 @@ private:
 
   bool m_preferGamepadOverKeyboard = true;
 
-  int16_t m_mouseX;
-  int16_t m_mouseY;
+  // Cursor position (±32767). Written absolutely by the UI thread on mouse
+  // events and incrementally by the emulation thread's analog-stick glide
+  // (nudgeCursor), read from the render thread — atomic so no lock is needed.
+  std::atomic<int16_t> m_mouseX{0};
+  std::atomic<int16_t> m_mouseY{0};
   bool m_mousePressed = false;
   // Right/middle buttons, relative motion, and off-screen state for
   // RETRO_DEVICE_MOUSE and the light gun. Written from the UI thread on mouse

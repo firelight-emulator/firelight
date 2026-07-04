@@ -35,7 +35,18 @@
       "description": "Frames per second to target when using Fixed framerate sync.",
       "type": "spinbox", "default": "60", "min": 30, "max": 240, "step": 1,
       "advanced": true,
-      "enabledWhen": [ { "key": "sync-method", "values": ["fixed"] } ] }
+      "enabledWhen": [ { "key": "sync-method", "values": ["fixed"] } ] },
+    { "key": "analog-pointer-speed", "label": "Pointer speed (gamepad aim)", "category": "Input",
+      "description": "How fast the left analog stick glides the on-screen cursor when a controller is used as a mouse or light gun.",
+      "type": "options", "default": "medium", "advanced": true,
+      "options": [
+        { "label": "Slow", "value": "slow" },
+        { "label": "Medium", "value": "medium" },
+        { "label": "Fast", "value": "fast" }
+      ] },
+    { "key": "mouse-controls-lightgun", "label": "Aim light guns with the mouse", "category": "Input",
+      "description": "When on, the mouse aims and fires any light-gun or mouse device a game uses, even if a gamepad is selected for that player. Turn off to use only the selected controller.",
+      "type": "boolean", "default": "true" }
   ],
 
   "cores": {

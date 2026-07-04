@@ -1,5 +1,5 @@
 #include "../saves/fake_userdata_database.hpp"
-#include "cheats/sqlite_cheat_repository.hpp"
+#include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include "fake_core.hpp"
 
 #include <emulation/emulation_service.hpp>

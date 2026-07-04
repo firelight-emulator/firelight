@@ -82,4 +82,39 @@ constexpr unsigned retroDeviceId(const GamepadInput input) {
   return static_cast<unsigned>(input) & 0xFFu;
 }
 
+// The default *physical* gamepad button a console input binds to when the user
+// hasn't set an explicit binding. For most inputs this is the identity (the
+// input's own value is already a physical button, e.g. NES A == EastFace); the
+// abstract light-gun / mouse buttons default to sensible face buttons / D-pad so
+// a gamepad can fire them out of the box (aim comes from the stick separately).
+constexpr GamepadInput defaultPhysicalBinding(const GamepadInput input) {
+  switch (input) {
+  case LightgunTrigger:
+  case MouseLeft:
+    return SouthFace;
+  case LightgunReload:
+  case MouseRight:
+    return EastFace;
+  case LightgunAuxA:
+  case MouseMiddle:
+    return WestFace;
+  case LightgunAuxB:
+    return NorthFace;
+  case LightgunStart:
+    return Start;
+  case LightgunSelect:
+    return Select;
+  case LightgunDpadUp:
+    return DpadUp;
+  case LightgunDpadDown:
+    return DpadDown;
+  case LightgunDpadLeft:
+    return DpadLeft;
+  case LightgunDpadRight:
+    return DpadRight;
+  default:
+    return input; // identity (joypad inputs are already physical buttons)
+  }
+}
+
 }

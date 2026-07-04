@@ -92,6 +92,25 @@ namespace libretro {
     if (deviceClass == RETRO_DEVICE_MOUSE ||
         deviceClass == RETRO_DEVICE_LIGHTGUN) {
       namespace fi = firelight::input;
+      // Two independent sources can drive a mouse / light gun:
+      //  * the physical mouse — allowed whenever the toggle is on (default), so
+      //    the mouse "just works" for these games regardless of the selected
+      //    device type; and
+      //  * the gamepad (stick aim + mapped buttons) — allowed only when the
+      //    player selected that device type for this port, like the other
+      //    controller types (the core may internally force e.g. FCEUmm's Zapper,
+      //    but a port left on "Gamepad" won't drive it from the pad).
+      // If neither source is allowed, the device is inert.
+      const int selectedClass = currentCore->getPortInputClass(port);
+      const bool gamepadAllowed =
+          (deviceClass == RETRO_DEVICE_MOUSE &&
+           selectedClass == static_cast<int>(fi::GamepadInputClass::Mouse)) ||
+          (deviceClass == RETRO_DEVICE_LIGHTGUN &&
+           selectedClass == static_cast<int>(fi::GamepadInputClass::Lightgun));
+      const bool mouseAllowed = currentCore->mouseControlsPointerDevices();
+      if (!mouseAllowed && !gamepadAllowed) {
+        return 0;
+      }
       const auto pointer = currentCore->getPointerInputProvider();
       const auto provider = currentCore->getRetropadProvider();
       const auto pad = provider ? provider->getRetropadForPlayerIndex(port)
@@ -99,12 +118,15 @@ namespace libretro {
       const int mapClass = static_cast<int>(
           deviceClass == RETRO_DEVICE_MOUSE ? fi::GamepadInputClass::Mouse
                                             : fi::GamepadInputClass::Lightgun);
+      // Gamepad-sourced bindings only count when the gamepad drives this device.
       const auto mapped = [&](const fi::GamepadInput vi) -> bool {
-        return pad && pad->isVirtualInputActive(currentCore->m_platformId,
-                                                mapClass, static_cast<int>(vi));
+        return gamepadAllowed && pad &&
+               pad->isVirtualInputActive(currentCore->m_platformId, mapClass,
+                                         static_cast<int>(vi));
       };
+      // Physical mouse buttons only count when the mouse may drive this device.
       const auto mouseBtn = [&](const int btn) -> bool {
-        return pointer && pointer->isMouseButtonPressed(btn);
+        return mouseAllowed && pointer && pointer->isMouseButtonPressed(btn);
       };
 
       if (deviceClass == RETRO_DEVICE_MOUSE) {
@@ -136,10 +158,14 @@ namespace libretro {
       case RETRO_DEVICE_ID_LIGHTGUN_Y:
         return currentCore->m_frameMouseDelta.second;
       case RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN:
-        return pointer && pointer->isPointerOffscreen();
+        // Only the mouse can be "off screen"; when the gamepad drives the aim
+        // the cursor is always on the surface.
+        return mouseAllowed && pointer && pointer->isPointerOffscreen();
       case RETRO_DEVICE_ID_LIGHTGUN_TRIGGER:
-        // Mouse left-click fires; a mapped gamepad binding also fires.
-        return (pointer && pointer->isPressed()) || mapped(fi::LightgunTrigger);
+        // Mouse left-click fires (when the mouse may drive it); a mapped gamepad
+        // binding fires when the gamepad drives it.
+        return (mouseAllowed && pointer && pointer->isPressed()) ||
+               mapped(fi::LightgunTrigger);
       case RETRO_DEVICE_ID_LIGHTGUN_RELOAD:
         // Right-click reloads (shoot off-screen) by convention.
         return mouseBtn(RETRO_DEVICE_ID_MOUSE_RIGHT) || mapped(fi::LightgunReload);
@@ -1501,6 +1527,25 @@ namespace libretro {
     }
   }
 
+  void Core::setPortInputDeviceClass(const unsigned port, const int deviceClass) {
+    m_portInputClass[port] = deviceClass;
+  }
+
+  void Core::setAnalogPointerSpeed(const double stepPerFrame) {
+    m_analogPointerSpeed = stepPerFrame;
+  }
+
+  void Core::setMouseControlsPointerDevices(const bool enabled) {
+    m_mouseControlsPointerDevices = enabled;
+  }
+
+  int Core::getPortInputClass(const unsigned port) const {
+    const auto it = m_portInputClass.find(port);
+    return it != m_portInputClass.end()
+               ? it->second
+               : static_cast<int>(firelight::input::GamepadInputClass::Joypad);
+  }
+
   void Core::setCheat(const unsigned index, const bool enabled,
                       const std::string &code) {
     if (symRetroCheatSet) {
@@ -1538,6 +1583,37 @@ namespace libretro {
   }
 
   void Core::pollInput() {
+    // Drive the pointer cursor from a gamepad analog stick for any Mouse /
+    // Light-Gun port ("velocity glide": cursor speed proportional to stick
+    // deflection). Runs before the mouse-delta snapshot below so a stick-driven
+    // MOUSE device also sees the motion this frame.
+    if (m_pointerInputProvider && m_retropadProvider) {
+      namespace fi = firelight::input;
+      for (const auto &[port, deviceClass] : m_portInputClass) {
+        if (deviceClass != static_cast<int>(fi::GamepadInputClass::Mouse) &&
+            deviceClass != static_cast<int>(fi::GamepadInputClass::Lightgun)) {
+          continue;
+        }
+        // The controller on that port aims it; fall back to player 0 so a single
+        // controller drives the gun even when the game auto-placed it elsewhere
+        // (e.g. Duck Hunt's Zapper on port 2).
+        auto pad =
+            m_retropadProvider->getRetropadForPlayerIndex(static_cast<int>(port));
+        if (!pad) {
+          pad = m_retropadProvider->getRetropadForPlayerIndex(0);
+        }
+        if (!pad) {
+          continue;
+        }
+        const auto stickX = pad->getLeftStickXPosition(m_platformId, 1);
+        const auto stickY = pad->getLeftStickYPosition(m_platformId, 1);
+        m_pointerInputProvider->nudgeCursor(
+            firelight::libretro::cursorGlideDelta(stickX, m_analogPointerSpeed),
+            firelight::libretro::cursorGlideDelta(stickY, m_analogPointerSpeed));
+        break; // One shared cursor: the first Mouse/Light-Gun port drives it.
+      }
+    }
+
     // Snapshot the frame's mouse motion once (getRelativeMotion consumes it) so
     // the MOUSE_X/MOUSE_Y (and deprecated LIGHTGUN_X/Y) reads share one value.
     if (m_pointerInputProvider) {

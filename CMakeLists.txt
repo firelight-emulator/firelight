@@ -105,6 +105,9 @@ add_subdirectory(libs/firelight/settings)
 add_subdirectory(libs/firelight/platforms)
 add_subdirectory(libs/firelight/mods)
 add_subdirectory(libs/firelight/input)
+add_subdirectory(libs/firelight/cheats)
+add_subdirectory(libs/firelight/audio)
+add_subdirectory(libs/firelight/media)
 add_subdirectory(libs/firelight/db)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
@@ -149,15 +152,12 @@ add_library(firelight_lib
         src/app/libretro/core_registry.cpp
         src/app/libretro/game.cpp
         src/app/audio/audio_manager.cpp
-        src/app/audio/audio_resampler.cpp
-        src/app/audio/audio_rate_controller.cpp
 
         src/app/input/gui/analog_settings_model.cpp
         src/app/input/gui/profile_list_model.cpp
         src/app/input/gui/binding_list_model.cpp
         src/app/input/gui/platform_input_preferences.cpp
         src/app/input/gui/controller_list_model.cpp
-        src/app/input/shortcut_catalog.cpp
         src/gui/models/core_options_model.cpp
         src/gui/models/core_options_model.hpp
         src/gui/models/emulation_settings_model.cpp
@@ -184,11 +184,6 @@ add_library(firelight_lib
         src/app/emulator_item_renderer.cpp
         src/app/emulator_vulkan_renderer.cpp
         src/app/emulator_item.cpp
-        src/app/media/media_service.cpp
-        src/app/media/clip_recorder.cpp
-        src/app/media/clip_muxer.cpp
-        src/app/cheats/sqlite_cheat_repository.cpp
-        src/app/cheats/cheat_engine.cpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp
         src/app/achievements/gui/AchievementSetItem.cpp
@@ -282,6 +277,9 @@ target_link_libraries(firelight_lib PUBLIC
         firelight_platforms
         firelight_mods
         firelight_input
+        firelight_cheats
+        firelight_audio
+        firelight_media
         firelight_db
         firelight_library
         firelight_saves
@@ -386,6 +384,15 @@ file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
 # EmulationService, resolved through CoreConfiguration).
 file(COPY ${CMAKE_SOURCE_DIR}/data/settings_catalog.json DESTINATION ${CMAKE_BINARY_DIR}/system)
 
+# The file(COPY) above only runs at configure time, so edits to the catalog
+# wouldn't reach the running app until a reconfigure. Redeploy it on every build.
+add_custom_command(TARGET firelight POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:firelight>/system
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_SOURCE_DIR}/data/settings_catalog.json
+        $<TARGET_FILE_DIR:firelight>/system/settings_catalog.json
+        COMMENT "Deploying settings_catalog.json")
+
 #if (DISCORD_SDK_RUNTIME_LIBRARY_FILE AND EXISTS "${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
 #    add_custom_command(TARGET firelight POST_BUILD
 #            COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -426,7 +433,6 @@ add_executable(fl_test
         tests/app/settings/settings_service_test.cpp
         tests/app/settings/emulation_setting_test.cpp
         tests/app/settings/settings_catalog_test.cpp
-        tests/app/audio/audio_rate_controller_test.cpp
         tests/app/settings/sqlite_core_option_repository_test.cpp
         tests/app/gui/core_options_model_test.cpp
         tests/app/gui/emulation_settings_model_test.cpp
@@ -434,10 +440,6 @@ add_executable(fl_test
         tests/app/cli/launch_config_test.cpp
         tests/app/cli/rom_launch_test.cpp
         tests/app/cli/single_instance_test.cpp
-        tests/app/media/media_service_test.cpp
-        tests/app/media/clip_recorder_test.cpp
-        tests/app/cheats/cheat_repository_test.cpp
-        tests/app/cheats/cheat_engine_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
@@ -497,6 +499,24 @@ add_dependencies(fl_test copy_resources)
 target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include src libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/activity/src libs/firelight/activity/include)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
+
+# `ninja check` (or `cmake --build . --target check`): build every test
+# executable and then run the whole CTest suite -- all per-module tests + fl_test
+# -- in one command. (`ctest` on its own runs already-built exes; this also
+# builds them first so nothing is stale.)
+add_custom_target(check
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        USES_TERMINAL
+)
+add_dependencies(check
+        fl_test
+        fl_qml_test
+        firelight_input_test
+        firelight_cheats_test
+        firelight_audio_test
+        firelight_media_test
+)
 #ctest_coverage_collect_gcov()
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #

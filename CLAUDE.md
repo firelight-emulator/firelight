@@ -105,14 +105,30 @@ The `firelight_achievements` library (`libs/firelight/achievements/`) is a self-
 
 ## CMake Targets
 
+Domain logic lives in self-contained static libs under `libs/firelight/<name>/` (each with its own
+`include/firelight/<name>/` public headers, `src/`, and a `firelight_<name>_test` GTest target). They
+avoid Qt/sqlite where possible and are linked into `firelight_lib`.
+
 | Target | Type | Purpose |
 |---|---|---|
 | `firelight` | Executable | Main application |
-| `firelight_lib` | Static | All app code except `main.cpp` |
-| `firelight_achievements` | Static | Achievements domain lib |
-| `library` | Static | Library scanning and user library |
+| `firelight_lib` | Static | All app/GUI code except `main.cpp` |
+| `firelight_achievements` | Static | Achievements domain (AchievementService, rcheevos integration) |
+| `firelight_input` | Static | Input: SDL controllers, profiles, shortcuts, mapping |
+| `firelight_cheats` | Static | Typed cheats: `CheatEngine` + `SqliteCheatRepository` |
+| `firelight_media` | Static | Screenshots + clip capture (ffmpeg) + `MediaService` |
+| `firelight_audio` | Static | Audio DSP: rate control (DRC) + resampler (`AudioManager` stays in the app) |
+| `firelight_settings` | Static | Settings service + catalog + core-option resolution |
+| `firelight_platforms` | Static | Platform metadata + `PlatformService` |
+| `firelight_library` | Static | Library scanning and user library |
+| `firelight_saves` | Static | Save manager + suspend points |
+| `firelight_activity` | Static | Play-session activity log |
+| `firelight_mods` | Static | Mod/patch repository |
+| `firelight_db` | Static | SQLite userdata/content databases |
+| `firelight_discord` | Static | Discord rich presence |
 | `patching` | Static | IPS/BPS/UPS/YAY0 patch formats |
-| `rcheevos` | Static | RetroAchievements C library |
-| `discord` | Static | Discord SDK wrapper |
-| `fl_test` | Executable | GTest unit tests |
+| `rcheevos` | Static | RetroAchievements C library (submodule) |
+| `discord` | Static | Discord Social SDK wrapper |
+| `fl_test` | Executable | GTest unit tests (app-level) |
 | `fl_qml_test` | Executable | QML unit tests |
+| `firelight_input_test` / `firelight_cheats_test` / `firelight_audio_test` / `firelight_media_test` | Executable | Per-module GTest unit tests |

@@ -1000,6 +1000,31 @@ Pane {
     Component {
         id: emulationView
         FocusScope {
+            id: emuMenuScope
+
+            // Bumped whenever the running game's device selection changes, to
+            // re-evaluate the invokable-backed properties below.
+            property int deviceRefreshTick: 0
+            // Ports that actually offer a device choice (e.g. Gamepad / Zapper);
+            // empty for standard-controller-only games, so the Controls entry
+            // stays hidden and nothing extra clutters the menu.
+            property var deviceChoicePorts: {
+                emuMenuScope.deviceRefreshTick; // re-evaluate on device changes
+                var list = []
+                var count = EmulationService.controllerPortCount()
+                for (var p = 0; p < count; p++) {
+                    if (EmulationService.controllerVariantsForPort(p).length > 1)
+                        list.push(p)
+                }
+                return list
+            }
+            Connections {
+                target: EmulationService
+                function onControllerDevicesChanged() {
+                    emuMenuScope.deviceRefreshTick++
+                }
+            }
+
             RowLayout {
                 anchors.fill: parent
                 spacing: 32
@@ -1064,7 +1089,7 @@ Pane {
                          id: suspendPointButton
                          labelText: "Suspend Points"
                          Layout.fillWidth: true
-                         KeyNavigation.down: closeGameButton
+                         KeyNavigation.down: controlsButton.visible ? controlsButton : closeGameButton
                          // Layout.preferredWidth: parent.width / 2
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                          Layout.preferredHeight: 40
@@ -1073,6 +1098,23 @@ Pane {
                          // enabled: false
                          onClicked: {
                              quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate)
+                             quickMenuStack.forceActiveFocus()
+                         }
+                     }
+                     FirelightMenuItem {
+                         id: controlsButton
+                         labelText: "Controls"
+                         Layout.fillWidth: true
+                         KeyNavigation.down: closeGameButton
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         Layout.preferredHeight: 40
+                         checkable: false
+                         alignRight: true
+                         // Only when the game offers a real device choice
+                         // (Gamepad / Mouse / Light Gun).
+                         visible: emuMenuScope.deviceChoicePorts.length > 0
+                         onClicked: {
+                             quickMenuStack.replaceCurrentItem(controlsMenu, {}, StackView.Immediate)
                              quickMenuStack.forceActiveFocus()
                          }
                      }
@@ -1120,6 +1162,109 @@ Pane {
             // user switch to the platform tier. (Values inherit at runtime.)
             level: 0
             platformName: EmulationService.currentPlatformName
+        }
+    }
+
+    Component {
+        id: controlsMenu
+        FocusScope {
+            id: controlsScope
+
+            property int refreshTick: 0
+            property var ports: {
+                controlsScope.refreshTick; // re-evaluate on device changes
+                var list = []
+                var count = EmulationService.controllerPortCount()
+                for (var p = 0; p < count; p++) {
+                    if (EmulationService.controllerVariantsForPort(p).length > 1)
+                        list.push(p)
+                }
+                return list
+            }
+            Connections {
+                target: EmulationService
+                function onControllerDevicesChanged() { controlsScope.refreshTick++ }
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 14
+
+                Text {
+                    text: "Controllers"
+                    color: "white"
+                    font.pixelSize: 20
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.DemiBold
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: "Choose the device each player uses. Aim a Mouse or Light Gun with your mouse or the left analog stick; fire with the trigger (A by default)."
+                    color: ColorPalette.neutral300
+                    font.pixelSize: 13
+                    font.family: Constants.regularFontFamily
+                    wrapMode: Text.WordWrap
+                }
+
+                Repeater {
+                    model: controlsScope.ports
+                    delegate: ColumnLayout {
+                        id: portRow
+                        required property var modelData
+                        property int portIndex: modelData
+                        Layout.fillWidth: true
+                        Layout.topMargin: 6
+                        spacing: 6
+
+                        Text {
+                            text: "Player " + (portRow.portIndex + 1)
+                            color: "white"
+                            font.pixelSize: 15
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                        }
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            Repeater {
+                                model: {
+                                    controlsScope.refreshTick;
+                                    EmulationService.controllerVariantsForPort(portRow.portIndex)
+                                }
+                                delegate: Rectangle {
+                                    id: optionButton
+                                    required property var modelData
+                                    property bool current: modelData.isCurrent
+                                    implicitWidth: optionText.implicitWidth + 28
+                                    implicitHeight: 36
+                                    radius: 6
+                                    color: optionButton.current ? ColorPalette.neutral100 : "transparent"
+                                    border.color: optionButton.current ? ColorPalette.neutral100 : ColorPalette.neutral500
+                                    border.width: 1
+                                    Text {
+                                        id: optionText
+                                        anchors.centerIn: parent
+                                        text: optionButton.modelData.name
+                                              + (optionButton.modelData.deviceClass === 3 ? "  (Light Gun)"
+                                                 : optionButton.modelData.deviceClass === 2 ? "  (Mouse)" : "")
+                                        color: optionButton.current ? "black" : "white"
+                                        font.pixelSize: 14
+                                        font.family: Constants.regularFontFamily
+                                        font.weight: Font.Medium
+                                    }
+                                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+                                    TapHandler {
+                                        onTapped: EmulationService.setControllerVariant(
+                                                      portRow.portIndex, optionButton.modelData.coreDeviceId)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Item { Layout.fillHeight: true }
+            }
         }
     }
 

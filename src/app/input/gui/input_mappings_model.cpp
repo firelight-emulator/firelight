@@ -163,7 +163,8 @@ void InputMappingsModel::resetToDefault(int originalInput) {
           item.mappedInput =
               m_isKeyboard
                   ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
-                  : static_cast<int>(input.virtualInput);
+                  : static_cast<int>(defaultPhysicalBinding(
+                        static_cast<GamepadInput>(input.virtualInput)));
 
           if (m_isKeyboard) {
             item.mappedInputName = KeyboardInputHandler::getKeyLabel(
@@ -308,7 +309,8 @@ void InputMappingsModel::refreshMappings() {
     auto value = mapped.has_value() ? mapped.value()
                  : m_isKeyboard
                      ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
-                     : static_cast<int>(input.virtualInput);
+                     : static_cast<int>(defaultPhysicalBinding(
+                           static_cast<GamepadInput>(input.virtualInput)));
 
     if (!mapped.has_value()) {
       item.isDefault = true;
