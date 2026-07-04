@@ -28,6 +28,8 @@ struct CliOptions {
   bool portable = false;
   bool muted = false;  // --muted (start with audio muted)
   bool paused = false; // --paused (start the game paused)
+  bool exitOnClose = false;    // --exit-on-close (quit when the game closes)
+  bool singleInstance = false; // --single-instance (forward to a running app)
   int saveSlot = -1;  // --save-slot N; -1 = use the entry's active slot
   std::string configDir; // --config-dir; empty = platform default
   std::string romPath;   // positional content path; empty = none

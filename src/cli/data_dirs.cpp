@@ -29,6 +29,7 @@ DataDirs resolveDataDirs(const CliOptions &opts) {
 
   dirs.romsPath = dirs.docsPath + "/roms";
   dirs.savesPath = dirs.docsPath + "/saves";
+  dirs.screenshotsPath = dirs.docsPath + "/screenshots";
   return dirs;
 }
 

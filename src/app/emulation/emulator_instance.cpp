@@ -12,6 +12,7 @@
 #include <audio/audio_manager.hpp>
 #include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/settings_service.hpp>
+#include <filesystem>
 #include <utility>
 
 namespace firelight::emulation {
@@ -89,6 +90,22 @@ bool EmulatorInstance::initialize(
   m_core->setRetropadProvider(m_context.inputService);
   m_core->setPointerInputProvider(m_context.inputService);
   m_core->setSystemDirectory(m_context.coreSystemDirectory);
+
+  // Managed, per-game/per-slot save directory: cores that write their own files
+  // (PPSSPP memstick, N64 pak files, DS NAND) get a Firelight-owned path under
+  // the saves tree so those saves are organized/backed up per slot, not dumped
+  // in the system dir.
+  if (const auto saveManager = m_context.saveManager) {
+    const auto base = saveManager->getSaveDirectory().toStdString();
+    if (!base.empty()) {
+      const auto coreSaveDir = base + "/" + m_contentHash + "/slot" +
+                               std::to_string(m_saveSlotNumber) + "/core";
+      std::error_code ec;
+      std::filesystem::create_directories(coreSaveDir, ec);
+      m_core->setSaveDirectory(coreSaveDir);
+    }
+  }
+
   m_core->init();
 
   ::libretro::Game game(m_contentPath, m_gameData);
@@ -114,12 +131,82 @@ bool EmulatorInstance::initialize(
 
   EventDispatcher::instance().publish(EmulationStartedEvent{
       .contentHash = m_contentHash, .saveSlotNumber = m_saveSlotNumber});
+
+  // Announce the disc set for multi-disc content so subscribers (disc UI, etc.)
+  // learn the count without polling.
+  if (const auto count = m_core->getDiskCount(); count > 1) {
+    EventDispatcher::instance().publish(
+        DiscChangedEvent{.contentHash = m_contentHash,
+                         .index = m_core->getCurrentDiskIndex(),
+                         .count = count});
+  }
+
+  // Apply any persisted per-port core-device choices, and announce the devices
+  // the core advertises so the input UI can offer a choice.
+  if (const auto controllerDevices = m_core->getControllerDevices();
+      !controllerDevices.empty()) {
+    if (auto *settings = settings::SettingsService::instance()) {
+      for (unsigned port = 0; port < controllerDevices.size(); ++port) {
+        const auto key = "port" + std::to_string(port) + "-device";
+        if (const auto v =
+                settings->getEffectiveValue(m_contentHash, m_platformId, key)) {
+          try {
+            m_core->setControllerPortDevice(
+                port, static_cast<unsigned>(std::stoul(*v)));
+          } catch (const std::exception &) {
+            // Ignore a malformed stored value; keep the core default.
+          }
+        }
+      }
+    }
+    EventDispatcher::instance().publish(
+        ControllerDevicesEvent{.contentHash = m_contentHash});
+  }
   return true;
 }
 bool EmulatorInstance::isInitialized() { return m_initialized; }
 std::string EmulatorInstance::getContentHash() const { return m_contentHash; }
 int EmulatorInstance::getPlatformId() const { return m_platformId; }
 int EmulatorInstance::getSaveSlotNumber() const { return m_saveSlotNumber; }
+
+unsigned EmulatorInstance::getDiscCount() const {
+  return m_core ? m_core->getDiskCount() : 0;
+}
+
+unsigned EmulatorInstance::getCurrentDiscIndex() const {
+  return m_core ? m_core->getCurrentDiskIndex() : 0;
+}
+
+bool EmulatorInstance::swapDisc(const unsigned index) {
+  if (!m_core || !m_core->setDiskIndex(index)) {
+    return false;
+  }
+  EventDispatcher::instance().publish(
+      DiscChangedEvent{.contentHash = m_contentHash,
+                       .index = index,
+                       .count = m_core->getDiskCount()});
+  return true;
+}
+
+std::vector<std::vector<::libretro::ICore::ControllerDeviceOption>>
+EmulatorInstance::getControllerDevices() const {
+  return m_core ? m_core->getControllerDevices()
+                : std::vector<
+                      std::vector<::libretro::ICore::ControllerDeviceOption>>{};
+}
+
+void EmulatorInstance::setPortDevice(const unsigned port,
+                                     const unsigned device) {
+  if (!m_core) {
+    return;
+  }
+  m_core->setControllerPortDevice(port, device);
+  if (auto *settings = settings::SettingsService::instance()) {
+    settings->setGameValue(m_contentHash,
+                           "port" + std::to_string(port) + "-device",
+                           std::to_string(device));
+  }
+}
 void EmulatorInstance::runFrame() {
   const auto now = std::chrono::steady_clock::now();
   // spdlog::info("Comparing {} and {}: {}", now.time_since_epoch().count(),

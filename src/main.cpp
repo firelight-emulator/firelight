@@ -47,8 +47,10 @@
 #include "cli/login_command.hpp"
 #include "cli/rom_launch.hpp"
 #include "cli/scan_command.hpp"
+#include "cli/single_instance.hpp"
 #include "cli/startup_options.hpp"
 #include "libretro/core_registry.hpp"
+#include "media/media_service.hpp"
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/game_image_provider.hpp"
@@ -122,9 +124,14 @@ int main(int argc, char *argv[]) {
         spdlog::set_level(spdlog::level::info);
     }
 
+    QApplication::setOrganizationName("BiscuitCakes");
     QApplication::setOrganizationDomain("firelight-emulator.com");
     QApplication::setDesktopFileName("firelight");
     QApplication::setApplicationName("Firelight");
+#ifndef FL_VERSION
+#define FL_VERSION "0.0.0"
+#endif
+    QApplication::setApplicationVersion(QStringLiteral(FL_VERSION));
 
     QSettings::setDefaultFormat(QSettings::Format::IniFormat);
 
@@ -167,6 +174,9 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
 
+    // Default icon for every window/dialog (matches the executable's icon).
+    app.setWindowIcon(QIcon(":/images/app-icon"));
+
     std::signal(SIGINT, [](int signal) { QApplication::quit(); });
 
     // Resolve data directories (honors --config-dir / --portable and the legacy
@@ -176,6 +186,20 @@ int main(int argc, char *argv[]) {
     auto defaultAppDataPathString = dataDirs.appDataPath;
     auto savesPath = dataDirs.savesPath;
     auto romsPath = dataDirs.romsPath;
+    auto screenshotsPath = dataDirs.screenshotsPath;
+
+    // Single-instance forwarding (opt-in). If another Firelight (with the same
+    // data dir) is already running, hand it this launch and exit; otherwise we
+    // become the primary and listen for forwards (set up after the library is
+    // built). The server name is derived from the data dir so distinct
+    // --config-dir instances stay independent.
+    const auto singleInstanceName =
+        firelight::cli::singleInstanceServerName(defaultAppDataPathString);
+    if (cliOptions.singleInstance &&
+        firelight::cli::forwardLaunchToRunningInstance(singleInstanceName,
+                                                       cliOptions)) {
+        return 0;
+    }
 
     QFileInfo savesDirInfo(savesPath);
     if (!savesDirInfo.exists() && QDir().mkpath(savesPath)) {
@@ -186,6 +210,12 @@ int main(int argc, char *argv[]) {
     if (!romsDirInfo.exists() && QDir().mkpath(romsPath)) {
         spdlog::info("Created roms directory at {}", romsPath.toStdString());
     }
+
+    QDir().mkpath(screenshotsPath);
+    // Owns writing captured screenshots to disk; reached by the emulator
+    // renderer via ServiceAccessor. Declared here so it outlives the QML engine.
+    firelight::media::MediaService mediaService(screenshotsPath);
+    firelight::ServiceAccessor::setMediaService(&mediaService);
 
     QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope,
                        defaultAppDataPathString);
@@ -295,6 +325,17 @@ int main(int argc, char *argv[]) {
     // root window auto-launches once loaded (-1 when absent/unresolved).
     const int startupLaunchEntryId =
         firelight::cli::resolveRomEntryId(cliOptions.romPath, userLibraryService);
+
+    // If we're the primary --single-instance process, start listening for
+    // launches forwarded from secondary processes. Exposed to QML below so the
+    // root window turns launchRequested into window.startGame(entryId).
+    std::unique_ptr<firelight::cli::SingleInstanceServer> singleInstanceServer;
+    if (cliOptions.singleInstance) {
+        singleInstanceServer =
+            std::make_unique<firelight::cli::SingleInstanceServer>(
+                singleInstanceName, userLibraryService);
+        singleInstanceServer->start();
+    }
 
     firelight::achievements::SqliteAchievementRepository achievementRepo(
         (defaultAppDataPathString + "/rcheevos3.db").toStdString());
@@ -629,6 +670,7 @@ int main(int argc, char *argv[]) {
     startupData.startPaused = cliOptions.paused;
     startupData.fullscreenOverride =
         cliOptions.fullscreen ? 1 : (cliOptions.windowed ? 0 : -1);
+    startupData.exitOnClose = cliOptions.exitOnClose;
     startupData.raPendingLogin =
         !cliOptions.raUsername.empty() &&
         (!cliOptions.raPassword.empty() || !cliOptions.raToken.empty());
@@ -638,6 +680,11 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty(
         "StartupOptions",
         new firelight::cli::StartupOptions(std::move(startupData)));
+
+    // The single-instance listener (null unless --single-instance). The root
+    // window connects to its launchRequested(entryId) to play a forwarded ROM.
+    engine.rootContext()->setContextProperty(
+        "SingleInstance", singleInstanceServer.get());
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
@@ -665,7 +712,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(window, &QQuickWindow::afterRendering,
                      [&]() { discordManager.runCallbacks(); });
 
-    window->setIcon(QIcon("qrc:images/firelight-logo"));
+    window->setIcon(QIcon(":/images/app-icon"));
 
     engine.rootContext()->setContextProperty("sfx_player",
                                              new firelight::audio::SfxPlayer());

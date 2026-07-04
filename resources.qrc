@@ -26,6 +26,7 @@
         <file alias="main">assets/fonts/Lexend-VariableFont_wght.ttf</file>
     </qresource>
     <qresource prefix="/images">
+        <file alias="app-icon">assets/img/icon.ico</file>
         <file alias="retroachievements-banner">assets/img/retroachievements_banner.png</file>
         <file alias="firelight-logo">assets/img/firelight_logo.svg</file>
         <file alias="firelight-logo-inverted">assets/img/white-logo-orange-bg.png</file>

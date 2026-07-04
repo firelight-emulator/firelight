@@ -6,6 +6,15 @@ project(firelight
         LANGUAGES CXX
 )
 
+# Capture the version now: add_subdirectory'd libs call their own project() which
+# resets PROJECT_VERSION in this scope, so we snapshot it into durable vars used
+# by the exe (--version, VERSIONINFO) and CPack.
+set(FL_VER_FULL "${PROJECT_VERSION}")
+set(FL_VER_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(FL_VER_MINOR "${PROJECT_VERSION_MINOR}")
+set(FL_VER_PATCH "${PROJECT_VERSION_PATCH}")
+set(FL_DESCRIPTION "${PROJECT_DESCRIPTION}")
+
 set(QT_QML_GENERATE_QMLLS_INI ON)
 
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
@@ -175,6 +184,7 @@ add_library(firelight_lib
         src/app/emulator_item_renderer.cpp
         src/app/emulator_vulkan_renderer.cpp
         src/app/emulator_item.cpp
+        src/app/media/media_service.cpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp
         src/app/achievements/gui/AchievementSetItem.cpp
@@ -219,8 +229,13 @@ add_library(firelight_lib
         src/cli/login_command.cpp
         src/cli/rom_launch.cpp
         src/cli/scan_command.cpp
+        src/cli/single_instance.cpp
         src/cli/startup_options.hpp
 )
+
+# Single source of truth for the app version, consumed by the CLI --version and
+# QApplication::setApplicationVersion. PUBLIC so the firelight exe inherits it.
+target_compile_definitions(firelight_lib PUBLIC FL_VERSION="${FL_VER_FULL}")
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app ${CMAKE_SOURCE_DIR}/src)
 target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CLI11 ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src/rcheevos ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src ${CMAKE_SOURCE_DIR}/libs/firelight/input/src ${CMAKE_SOURCE_DIR}/libs/firelight/db/src ${CMAKE_SOURCE_DIR}/libs/firelight/library/src)
@@ -275,12 +290,22 @@ target_link_libraries(firelight_lib PUBLIC
 # qt_import_plugins(firelight_lib
 #         INCLUDE QFFmpegMediaPlugin)
 
-set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/app_resources.rc")
+# Windows resource: app icon + embedded manifest + VERSIONINFO, with the version
+# injected from PROJECT_VERSION so there's a single source of truth.
+if (WIN32)
+    configure_file(
+            "${CMAKE_CURRENT_SOURCE_DIR}/app_resources.rc.in"
+            "${CMAKE_CURRENT_BINARY_DIR}/app_resources.rc"
+            @ONLY)
+    set(FL_WINDOWS_RESOURCE "${CMAKE_CURRENT_BINARY_DIR}/app_resources.rc")
+else ()
+    set(FL_WINDOWS_RESOURCE "")
+endif ()
 
 # main code
 qt6_add_executable(firelight
         resources.qrc
-        app_resources.rc
+        ${FL_WINDOWS_RESOURCE}
         src/main.cpp
 )
 
@@ -404,6 +429,8 @@ add_executable(fl_test
         tests/app/cli/cli_app_test.cpp
         tests/app/cli/launch_config_test.cpp
         tests/app/cli/rom_launch_test.cpp
+        tests/app/cli/single_instance_test.cpp
+        tests/app/media/media_service_test.cpp
 
         tests/main.cpp
         tests/app/library/sqlite_user_library_test.cpp
@@ -473,19 +500,33 @@ gtest_discover_tests(fl_test)
 
 set(CPACK_PACKAGE_NAME "Firelight")
 set(CPACK_PACKAGE_VENDOR "BiscuitCakes")
-set(CPACK_PACKAGE_VERSION_MAJOR 0)
-set(CPACK_PACKAGE_VERSION_MINOR 9)
-set(CPACK_PACKAGE_VERSION_PATCH 5)
-set(CPACK_PACKAGE_VERSION "0.12.2")
+# Version derives from the single source of truth (project(... VERSION ...)).
+set(CPACK_PACKAGE_VERSION_MAJOR ${FL_VER_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${FL_VER_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${FL_VER_PATCH})
+set(CPACK_PACKAGE_VERSION "${FL_VER_FULL}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Firelight")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_EXECUTABLES "firelight;Firelight")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${FL_DESCRIPTION}")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://firelight-emulator.com")
+# Publisher/support info surfaced in Add/Remove Programs + the installer.
+set(CPACK_PACKAGE_CONTACT "https://firelight-emulator.com")
 
 set(CPACK_NSIS_DISPLAY_NAME "Firelight")
 set(CPACK_NSIS_PACKAGE_NAME "Firelight")
 set(CPACK_NSIS_UNINSTALL_NAME "Firelight Uninstaller")
 set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/assets/img/icon.ico")
 set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/assets/img/icon.ico")
+# The icon shown in Add/Remove Programs, and a real publisher + support links so
+# the entry looks legitimate (not "Unknown").
+set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\firelight.exe")
+set(CPACK_NSIS_URL_INFO_ABOUT "https://firelight-emulator.com")
+set(CPACK_NSIS_HELP_LINK "https://firelight-emulator.com")
+set(CPACK_NSIS_CONTACT "https://firelight-emulator.com")
+# Offer to launch Firelight when the installer finishes.
+set(CPACK_NSIS_MUI_FINISHPAGE_RUN "firelight.exe")
+set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 
 set(deploy_tool_options_arg "")
 if (APPLE)

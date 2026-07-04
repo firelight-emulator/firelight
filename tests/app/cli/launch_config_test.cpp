@@ -83,6 +83,27 @@ TEST(LaunchConfigTest, MalformedJsonThrows) {
   std::filesystem::remove(path);
 }
 
+TEST(LaunchConfigTest, JsonArrayIsRejected) {
+  // A JSON document that isn't an object of key/value pairs is an error.
+  const auto path = writeTempFile("fl_arr.json", R"(["a", "b"])");
+  EXPECT_THROW(loadOverrideFile(path), std::runtime_error);
+  std::filesystem::remove(path);
+}
+
+TEST(LaunchConfigTest, CommentAndBlankOnlyPropertiesYieldsNothing) {
+  const auto path =
+      writeTempFile("fl_comments.properties", "# just a comment\n\n; and another\n   \n");
+  EXPECT_TRUE(loadOverrideFile(path).empty());
+  std::filesystem::remove(path);
+}
+
+TEST(LaunchConfigTest, PropertiesValueKeepsInnerSpaces) {
+  const auto path = writeTempFile("fl_spaces.properties", "label = hello world\n");
+  const auto map = asMap(loadOverrideFile(path));
+  EXPECT_EQ(map.at("label"), "hello world");
+  std::filesystem::remove(path);
+}
+
 TEST(LaunchConfigTest, ParseControllerTypeKnownNames) {
   EXPECT_EQ(parseControllerType("xbox360"), MICROSOFT_XBOX_360);
   EXPECT_EQ(parseControllerType("dualshock4"), SONY_DUALSHOCK_4);

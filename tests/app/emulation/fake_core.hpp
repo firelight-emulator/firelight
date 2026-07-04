@@ -25,6 +25,7 @@ public:
   setPointerInputProvider(firelight::libretro::IPointerInputProvider *) override {
   }
   void setSystemDirectory(const std::string &) override {}
+  void setSaveDirectory(const std::string &dir) override { m_saveDir = dir; }
 
   // When set, the fake declares a couple of core options on init(), exercising
   // the frontend's option-capture/persistence path.
@@ -106,10 +107,44 @@ public:
   [[nodiscard]] std::size_t getMemorySize(unsigned) const override { return 0; }
   retro_memory_map *getMemoryMap() override { return nullptr; }
 
+  // --- disc control (test-configurable; 0 discs = single-disc content) ---
+  void setDiscCount(const unsigned count) { m_discCount = count; }
+  [[nodiscard]] unsigned getDiskCount() const override { return m_discCount; }
+  [[nodiscard]] unsigned getCurrentDiskIndex() const override {
+    return m_discIndex;
+  }
+  bool setDiskIndex(const unsigned index) override {
+    if (index >= m_discCount) {
+      return false;
+    }
+    m_discIndex = index;
+    return true;
+  }
+
+  // --- controller port devices (test-configurable) ---
+  void setControllerDevices(
+      std::vector<std::vector<ControllerDeviceOption>> devices) {
+    m_controllerDevices = std::move(devices);
+  }
+  [[nodiscard]] std::vector<std::vector<ControllerDeviceOption>>
+  getControllerDevices() const override {
+    return m_controllerDevices;
+  }
+  void setControllerPortDevice(unsigned port, unsigned device) override {
+    m_portDeviceCalls.emplace_back(port, device);
+  }
+
   // --- test probes ---
   [[nodiscard]] int frameCount() const { return m_frameCount; }
   [[nodiscard]] const std::vector<char> &sram() const { return m_sram; }
   [[nodiscard]] bool initialized() const { return m_inited; }
+  [[nodiscard]] const std::string &savedSaveDirectory() const {
+    return m_saveDir;
+  }
+  [[nodiscard]] const std::vector<std::pair<unsigned, unsigned>> &
+  portDeviceCalls() const {
+    return m_portDeviceCalls;
+  }
 
 private:
   // Mutable because ICore::deserializeState is const (matching the real Core's
@@ -118,6 +153,11 @@ private:
   mutable std::vector<char> m_sram;
   bool m_inited = false;
   bool m_gameLoaded = false;
+  unsigned m_discCount = 0;
+  unsigned m_discIndex = 0;
+  std::string m_saveDir;
+  std::vector<std::vector<ControllerDeviceOption>> m_controllerDevices;
+  std::vector<std::pair<unsigned, unsigned>> m_portDeviceCalls;
   std::shared_ptr<firelight::libretro::IConfigurationProvider> m_configProvider;
 };
 

@@ -78,6 +78,7 @@ public:
     LoadSuspendPoint,
     UndoLoadSuspendPoint,
     SetPlaybackMultiplier,
+    CaptureScreenshot,
     RunFrame
   };
 

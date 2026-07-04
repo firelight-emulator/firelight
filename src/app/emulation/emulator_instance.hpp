@@ -75,6 +75,19 @@ public:
   std::vector<uint8_t> serializeState();
   void deserializeState(const std::vector<uint8_t> &state);
 
+  // Multi-disc control. getDiscCount() is 0 for single-disc/cartridge content.
+  // swapDisc publishes a DiscChangedEvent on success.
+  [[nodiscard]] unsigned getDiscCount() const;
+  [[nodiscard]] unsigned getCurrentDiscIndex() const;
+  bool swapDisc(unsigned index);
+
+  // Core input-device (port) options the running core advertises (empty when
+  // there's no choice). Selection is persisted per-game and applied on load.
+  [[nodiscard]] std::vector<std::vector<::libretro::ICore::ControllerDeviceOption>>
+  getControllerDevices() const;
+  // Selects `device` for `port` on the core and persists it for this game.
+  void setPortDevice(unsigned port, unsigned device);
+
 private:
   bool m_initialized = false;
 

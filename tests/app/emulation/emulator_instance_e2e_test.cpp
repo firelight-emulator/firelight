@@ -120,6 +120,14 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   ASSERT_TRUE(instance->isInitialized());
   ASSERT_TRUE(m_fakeCore->initialized());
 
+  // The core was handed a Firelight-managed, per-game/per-slot save directory
+  // (not the system dir) so its own file writes stay organized.
+  const auto expectedSaveDir =
+      (m_saveDir.path() + "/" + QString::fromStdString(m_hash) + "/slot" +
+       QString::number(instance->getSaveSlotNumber()) + "/core")
+          .toStdString();
+  EXPECT_EQ(m_fakeCore->savedSaveDirectory(), expectedSaveDir);
+
   // initialize() published EmulationStartedEvent, so the core's declared options
   // should now be cached (keyed by the platform's core) for the advanced editor.
   const auto coreName = PlatformMetadata::getCoreName(3);

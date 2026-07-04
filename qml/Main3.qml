@@ -77,6 +77,11 @@ ApplicationWindow {
         }
 
         function onEmulationStopped() {
+            // External-launcher mode: the app exists only to run this one game.
+            if (StartupOptions.exitOnClose) {
+                Qt.quit()
+                return
+            }
             content.goToContent("Library", allGamesPage, {}, StackView.Immediate)
             mainContentStack.pushItems([emulatorLoader, content], StackView.Immediate)
             emulatorLoader.source = ""
@@ -133,6 +138,19 @@ ApplicationWindow {
             window.beginRaLogin()
         } else {
             window.maybeAutoLaunch()
+        }
+    }
+
+    // A launch forwarded from a second `--single-instance` process (SingleInstance
+    // is null unless --single-instance was passed).
+    Connections {
+        target: SingleInstance
+        enabled: SingleInstance !== null
+
+        function onLaunchRequested(entryId) {
+            if (entryId >= 0) {
+                window.startGame(entryId)
+            }
         }
     }
 

@@ -224,15 +224,14 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE");
-        // auto ptr = static_cast<retro_disk_control_callback *>(data);
-        // ptr->set_eject_state = nullptr;
-        // ptr->get_eject_state = nullptr;
-        // ptr->get_image_index = nullptr;
-        // ptr->set_image_index = nullptr;
-        // ptr->get_num_images = nullptr;
-        // ptr->replace_image_index = nullptr;
-        // ptr->add_image_index = nullptr;
-        return false;
+        // The core hands us its disk-control callbacks; copy them by value (the
+        // pointed-to struct may not persist) so we can drive disc swaps later.
+        if (const auto *cb =
+                static_cast<const retro_disk_control_callback *>(data)) {
+          m_diskControl = *cb;
+          m_hasDiskControl = true;
+        }
+        return true;
       }
       case RETRO_ENVIRONMENT_SET_HW_RENDER: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_RENDER");
@@ -356,7 +355,10 @@ namespace libretro {
         // * Example bitmask: caps = (1 << RETRO_DEVICE_JOYPAD) | (1 <<
         // RETRO_DEVICE_ANALOG).
 
-        *ptr = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG);
+        // Advertise the device types inputStateCallback actually services
+        // (pointer is handled — used by DS touch).
+        *ptr = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG) |
+               (1 << RETRO_DEVICE_POINTER);
         return true;
       }
       case RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE: {
@@ -369,13 +371,11 @@ namespace libretro {
       case RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE");
 
+        // Camera not supported; hand back no-op callbacks and decline.
         auto ptr = static_cast<retro_camera_callback *>(data);
-        ptr->start = [] {
-          printf("Here's where I WOULD start the camera driver\n");
-          return false;
-        };
-        ptr->stop = [] { printf("Here's where I WOULD stop the camera driver\n"); };
-        return true;
+        ptr->start = [] { return false; };
+        ptr->stop = [] {};
+        return false;
       }
       case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LOG_INTERFACE");
@@ -472,12 +472,14 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY");
-        if (systemDirectory.empty()) {
+        // Hand back the Firelight-managed per-game/per-slot save directory (set
+        // in EmulatorInstance::initialize), NOT the system dir.
+        if (saveDirectory.empty()) {
           return false;
         }
 
         auto ptr = static_cast<const char **>(data);
-        *ptr = strdup(systemDirectory.c_str());
+        *ptr = strdup(saveDirectory.c_str());
         return true;
       }
       case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
@@ -511,31 +513,25 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO");
+        // The core advertises the device types it accepts on each port; store a
+        // copy (strings may be transient) so the UI can offer a per-port device
+        // choice and we can call retro_set_controller_port_device.
         auto ptr = static_cast<retro_controller_info *>(data);
-
-        for (unsigned i = 0; i < 100; ++i) {
-          auto info = ptr[i];
-
+        m_controllerDevices.clear();
+        for (unsigned port = 0; port < 100; ++port) {
+          const auto &info = ptr[port];
           if (!info.types) {
             break;
           }
-
+          std::vector<ControllerDeviceOption> devices;
+          devices.reserve(info.num_types);
           for (unsigned j = 0; j < info.num_types; ++j) {
-            auto type = info.types[j];
-            printf("Type: %d, Value: %s\n", type.id, type.desc);
+            const auto &type = info.types[j];
+            devices.push_back(
+                {type.id, type.desc != nullptr ? type.desc : std::string{}});
           }
+          m_controllerDevices.push_back(std::move(devices));
         }
-        // for (unsigned i = 0; i < ptr->num_types; ++i) {
-        //   auto info = ptr->types[i];
-        //   if (info.desc == nullptr) {
-        //     break;
-        //   }
-        //
-        //   controllerInfo.emplace_back(info);
-        //   if (i == 100) {
-        //     recordPotentialAPIViolation("Over 100 controller infos");
-        //   }
-        // }
         return true;
       }
       case RETRO_ENVIRONMENT_SET_MEMORY_MAPS: {
@@ -617,7 +613,11 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS");
-        spdlog::warn("Ignoring serialization quirks");
+        // Record the quirks the core reports for its savestate format (consulted
+        // when we harden rewind/savestate; we accept the core's set as-is).
+        if (data) {
+          serializationQuirksBitmap = *static_cast<uint64_t *>(data);
+        }
         break;
       case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT");
@@ -625,38 +625,17 @@ namespace libretro {
         return true;
       case RETRO_ENVIRONMENT_GET_VFS_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_VFS_INTERFACE");
-        // TODO: Do something here to ensure this was called before we give the
-        // core any paths
-        auto ptr = static_cast<retro_vfs_interface_info *>(data);
-        printf("Required VFS interface version: %d\n",
-               ptr->required_interface_version);
-        m_vfsInterface.open = vfs::open;
-        m_vfsInterface.close = vfs::close;
-        m_vfsInterface.size = vfs::size;
-        m_vfsInterface.tell = vfs::tell;
-        m_vfsInterface.seek = vfs::seek;
-        m_vfsInterface.read = vfs::read;
-        m_vfsInterface.write = vfs::write;
-        m_vfsInterface.flush = vfs::flush;
-        m_vfsInterface.remove = vfs::remove;
-        m_vfsInterface.rename = vfs::rename;
-        m_vfsInterface.truncate = vfs::truncate;
-        m_vfsInterface.stat = vfs::stat;
-        m_vfsInterface.mkdir = vfs::mkdir;
-        m_vfsInterface.opendir = vfs::opendir;
-        m_vfsInterface.readdir = vfs::readdir;
-        m_vfsInterface.dirent_get_name = vfs::dirent_get_name;
-        m_vfsInterface.dirent_is_dir = vfs::dirent_is_dir;
-        m_vfsInterface.closedir = vfs::closedir;
-
-        ptr->iface = &m_vfsInterface;
+        // Intentionally declined: Firelight does not virtualize core file I/O.
+        // Cores fall back to stdio, which is correct given the managed system +
+        // per-slot save directories we hand them. (A vfs:: impl exists in the
+        // codebase if we ever want to intercept I/O.)
         return false;
       }
       case RETRO_ENVIRONMENT_GET_LED_INTERFACE: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_LED_INTERFACE");
         auto ptr = static_cast<retro_led_interface *>(data);
         ptr->set_led_state = [](int led, int state) {
-          printf("Setting LED %d to state %d\n", led, state);
+          spdlog::trace("Core set LED {} to state {}", led, state);
         };
         return true;
       }
@@ -805,14 +784,24 @@ namespace libretro {
         *static_cast<unsigned *>(data) =
             currentCore->videoReceiver->getPreferredHwRender();
         return true;
-      // case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
-      //   environmentCalls.emplace_back(
-      //     "RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION");
-      //   return false;
-      // case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
-      //   environmentCalls.emplace_back(
-      //     "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE");
-      //   return false;
+      case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION: {
+        environmentCalls.emplace_back(
+          "RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION");
+        *static_cast<unsigned *>(data) = 1;
+        return true;
+      }
+      case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE: {
+        environmentCalls.emplace_back(
+          "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE");
+        // Extended interface (adds disc labels/paths); we use its shared base
+        // functions for index-based swapping. Stored by value like the plain one.
+        if (const auto *cb =
+                static_cast<const retro_disk_control_ext_callback *>(data)) {
+          m_diskControlExt = *cb;
+          m_hasDiskControlExt = true;
+        }
+        return true;
+      }
       case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION");
@@ -1100,7 +1089,11 @@ namespace libretro {
         return false;
       }
       default:
-        printf("Unimplemented env command: %d\n", cmd);
+        // Intentionally unhandled libretro env commands (camera, location,
+        // MIDI, microphone, JIT, device-power, throttle, playlist/file-browser
+        // dirs, proc-address, input-max-users, …): declining is correct — the
+        // core falls back to its defaults.
+        spdlog::debug("Unhandled libretro env command: {}", cmd);
         environmentCalls.emplace_back("UNIMPLEMENTED");
         return false;
     }
@@ -1367,6 +1360,59 @@ namespace libretro {
   }
 
   retro_memory_map *Core::getMemoryMap() { return &memoryMap; }
+
+  unsigned Core::getDiskCount() const {
+    if (m_hasDiskControlExt && m_diskControlExt.get_num_images) {
+      return m_diskControlExt.get_num_images();
+    }
+    if (m_hasDiskControl && m_diskControl.get_num_images) {
+      return m_diskControl.get_num_images();
+    }
+    return 0;
+  }
+
+  unsigned Core::getCurrentDiskIndex() const {
+    if (m_hasDiskControlExt && m_diskControlExt.get_image_index) {
+      return m_diskControlExt.get_image_index();
+    }
+    if (m_hasDiskControl && m_diskControl.get_image_index) {
+      return m_diskControl.get_image_index();
+    }
+    return 0;
+  }
+
+  bool Core::setDiskIndex(const unsigned index) {
+    // Prefer the extended interface's functions when present; both expose the
+    // same base eject/set-index/count callbacks.
+    const auto setEject =
+        m_hasDiskControlExt ? m_diskControlExt.set_eject_state
+                            : (m_hasDiskControl ? m_diskControl.set_eject_state
+                                                : nullptr);
+    const auto setIndex =
+        m_hasDiskControlExt ? m_diskControlExt.set_image_index
+                            : (m_hasDiskControl ? m_diskControl.set_image_index
+                                                : nullptr);
+    if (!setEject || !setIndex || index >= getDiskCount()) {
+      return false;
+    }
+    // A disc swap is eject -> select -> insert.
+    setEject(true);
+    const bool ok = setIndex(index);
+    setEject(false);
+    return ok;
+  }
+
+  std::vector<std::vector<Core::ControllerDeviceOption>>
+  Core::getControllerDevices() const {
+    return m_controllerDevices;
+  }
+
+  void Core::setControllerPortDevice(const unsigned port,
+                                     const unsigned device) {
+    if (symRetroSetControllerPortDevice) {
+      symRetroSetControllerPortDevice(port, device);
+    }
+  }
 
   void Core::setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) {
     videoReceiver = receiver;

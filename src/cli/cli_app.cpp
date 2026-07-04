@@ -13,7 +13,10 @@ CliOptions parseCli(int argc, char **argv) {
   // "/" as a Windows-style option flag and mis-parses POSIX-style ROM paths
   // (e.g. "/roms/game.gba").
   app.allow_windows_style_options(false);
-  app.set_version_flag("--version", std::string("Firelight ") + "dev");
+#ifndef FL_VERSION
+#define FL_VERSION "dev"
+#endif
+  app.set_version_flag("--version", std::string("Firelight ") + FL_VERSION);
 
   auto *fullscreenFlag =
       app.add_flag("-f,--fullscreen", opts.fullscreen, "Start in fullscreen");
@@ -25,6 +28,11 @@ CliOptions parseCli(int argc, char **argv) {
                "Store all data next to the executable");
   app.add_flag("--muted", opts.muted, "Start with audio muted");
   app.add_flag("--paused", opts.paused, "Start the game paused");
+  app.add_flag("--exit-on-close", opts.exitOnClose,
+               "Quit Firelight when the launched game closes");
+  app.add_flag("--single-instance", opts.singleInstance,
+               "Forward the launch to a running Firelight instead of opening a "
+               "second window");
   app.add_option("--save-slot", opts.saveSlot,
                  "Save slot to load for the launched game")
       ->type_name("N");

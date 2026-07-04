@@ -51,6 +51,10 @@ namespace firelight {
     class GameImageProvider;
   }
 
+  namespace media {
+    class MediaService;
+  }
+
   // The one app-wide service locator. Its contract: it exists only for objects
   // the QML engine default-constructs (qmlRegisterType models/items) which
   // cannot receive dependencies via a constructor. Everything we construct
@@ -93,6 +97,8 @@ namespace firelight {
 
     static void setDiscordManager(discord::IDiscordManager *manager);
 
+    static void setMediaService(media::MediaService *service);
+
   protected:
     static input::InputService *getInputService();
 
@@ -126,6 +132,8 @@ namespace firelight {
 
     static discord::IDiscordManager *getDiscordManager();
 
+    static media::MediaService *getMediaService();
+
   private:
     static input::InputService *s_inputService;
     static input::IControllerRepository *s_controllerProfileRepository;
@@ -143,5 +151,6 @@ namespace firelight {
     static mods::IModRepository *s_modRepository;
     static settings::ISettingsRepository *s_emulationSettingsManager;
     static discord::IDiscordManager *s_discordManager;
+    static media::MediaService *s_mediaService;
   };
 } // namespace firelight

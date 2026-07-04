@@ -46,6 +46,21 @@ struct EmulationStartedEvent {
 
 struct EmulationStoppedEvent {};
 
+// Published when the active disc changes (or once on load for multi-disc
+// content), so the disc UI / Discord presence / activity can react.
+struct DiscChangedEvent {
+  std::string contentHash;
+  unsigned index;
+  unsigned count;
+};
+
+// Published once on load when the core advertises selectable port devices, so
+// the input UI can offer a per-port device choice. Query the current instance's
+// getControllerDevices() for the details.
+struct ControllerDevicesEvent {
+  std::string contentHash;
+};
+
 // One-shot, per-launch knobs applied to the next loadEntry and then consumed
 // (so later launches use their own defaults). These are transient launch
 // parameters, distinct from the stable service dependencies in EmulationContext.

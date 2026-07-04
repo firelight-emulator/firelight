@@ -13,6 +13,7 @@ struct DataDirs {
   QString appDataPath;
   QString romsPath;  // the default content directory
   QString savesPath;
+  QString screenshotsPath; // captured screenshots (gallery)
 };
 
 // Resolves the data directories, honoring --config-dir / --portable (and the

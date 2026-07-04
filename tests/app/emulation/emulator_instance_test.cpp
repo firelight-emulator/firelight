@@ -372,4 +372,143 @@ TEST_F(EmulatorInstanceTest, WrongPlatformIdIgnoresPlatformSettings) {
   EXPECT_EQ("emulator-corrected", instance->getAspectRatioMode());
 }
 
+/**
+ * @brief Disc-control passes through to the core and swapDisc publishes an event.
+ *
+ * Uses a FakeCore configured with a 3-disc set: the instance reports the count,
+ * a valid swap changes the current index and emits a DiscChangedEvent, and an
+ * out-of-range swap is rejected without an event.
+ */
+TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
+  // Rebuild the service with a factory that hands out a multi-disc FakeCore.
+  m_emulationService = std::make_unique<EmulationService>(
+      *m_service, *m_resolver, *m_settingsService, EmulationContext{},
+      [](int, const std::string &,
+         std::shared_ptr<firelight::libretro::IConfigurationProvider>,
+         const std::string &) -> std::unique_ptr<::libretro::ICore> {
+        auto core = std::make_unique<FakeCore>();
+        core->setDiscCount(3);
+        return core;
+      });
+  EmulationService::setInstance(m_emulationService.get());
+
+  library::ContentFile info{.m_fileSizeBytes = 16777216,
+                            .m_filePath = "test_resources/testrom.gba",
+                            .m_fileMd5 = m_testContentHash,
+                            .m_inArchive = false,
+                            .m_platformId = 3,
+                            .m_contentHash = m_testContentHash};
+  m_library->create(info);
+  ASSERT_NE(info.m_id, -1);
+
+  auto entry = m_library->getEntryWithContentHash(
+      QString::fromStdString(m_testContentHash));
+  ASSERT_TRUE(entry.has_value());
+  ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
+
+  auto *instance = m_emulationService->getCurrentEmulatorInstance();
+  ASSERT_NE(instance, nullptr);
+
+  EXPECT_EQ(3u, instance->getDiscCount());
+  EXPECT_EQ(0u, instance->getCurrentDiscIndex());
+
+  std::vector<DiscChangedEvent> events;
+  auto conn = EventDispatcher::instance().subscribe<DiscChangedEvent>(
+      [&](const DiscChangedEvent &e) { events.push_back(e); });
+
+  EXPECT_TRUE(instance->swapDisc(2));
+  EXPECT_EQ(2u, instance->getCurrentDiscIndex());
+  ASSERT_EQ(1u, events.size());
+  EXPECT_EQ(2u, events[0].index);
+  EXPECT_EQ(3u, events[0].count);
+  EXPECT_EQ(m_testContentHash, events[0].contentHash);
+
+  // Out of range -> rejected, no new event.
+  EXPECT_FALSE(instance->swapDisc(5));
+  EXPECT_EQ(1u, events.size());
+}
+
+/**
+ * @brief A CLI --save-slot override applies to the next launch, then is consumed.
+ */
+TEST_F(EmulatorInstanceTest, SaveSlotOverrideAppliesOnceThenConsumed) {
+  library::ContentFile info{.m_fileSizeBytes = 16777216,
+                            .m_filePath = "test_resources/testrom.gba",
+                            .m_fileMd5 = m_testContentHash,
+                            .m_inArchive = false,
+                            .m_platformId = 3,
+                            .m_contentHash = m_testContentHash};
+  m_library->create(info);
+  ASSERT_NE(info.m_id, -1);
+
+  auto entry = m_library->getEntryWithContentHash(
+      QString::fromStdString(m_testContentHash));
+  ASSERT_TRUE(entry.has_value());
+
+  // Override the save slot for the next launch.
+  m_emulationService->setPendingLaunchOverrides({.saveSlot = 7});
+  ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
+  auto *first = m_emulationService->getCurrentEmulatorInstance();
+  ASSERT_NE(first, nullptr);
+  EXPECT_EQ(7, first->getSaveSlotNumber());
+
+  // The override is one-shot: a second launch uses the entry's own active slot.
+  ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
+  auto *second = m_emulationService->getCurrentEmulatorInstance();
+  ASSERT_NE(second, nullptr);
+  EXPECT_EQ(static_cast<int>(entry->activeSaveSlot), second->getSaveSlotNumber());
+}
+
+/**
+ * @brief The core's advertised port devices are exposed, and selecting one
+ * calls the core and persists the choice per-game.
+ */
+TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
+  FakeCore *fake = nullptr;
+  m_emulationService = std::make_unique<EmulationService>(
+      *m_service, *m_resolver, *m_settingsService, EmulationContext{},
+      [&fake](int, const std::string &,
+              std::shared_ptr<firelight::libretro::IConfigurationProvider>,
+              const std::string &) -> std::unique_ptr<::libretro::ICore> {
+        auto core = std::make_unique<FakeCore>();
+        core->setControllerDevices({{{1, "RetroPad"}, {5, "Mouse"}}});
+        fake = core.get();
+        return core;
+      });
+  EmulationService::setInstance(m_emulationService.get());
+
+  library::ContentFile info{.m_fileSizeBytes = 16777216,
+                            .m_filePath = "test_resources/testrom.gba",
+                            .m_fileMd5 = m_testContentHash,
+                            .m_inArchive = false,
+                            .m_platformId = 3,
+                            .m_contentHash = m_testContentHash};
+  m_library->create(info);
+  ASSERT_NE(info.m_id, -1);
+
+  auto entry = m_library->getEntryWithContentHash(
+      QString::fromStdString(m_testContentHash));
+  ASSERT_TRUE(entry.has_value());
+  ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
+
+  auto *instance = m_emulationService->getCurrentEmulatorInstance();
+  ASSERT_NE(instance, nullptr);
+  ASSERT_NE(fake, nullptr);
+
+  // Port 0 advertises two devices.
+  const auto devices = instance->getControllerDevices();
+  ASSERT_EQ(devices.size(), 1u);
+  ASSERT_EQ(devices[0].size(), 2u);
+  EXPECT_EQ(devices[0][1].id, 5u);
+  EXPECT_EQ(devices[0][1].description, "Mouse");
+
+  // Selecting a device drives the core and persists per-game.
+  instance->setPortDevice(0, 5);
+  ASSERT_EQ(fake->portDeviceCalls().size(), 1u);
+  EXPECT_EQ(fake->portDeviceCalls()[0].first, 0u);
+  EXPECT_EQ(fake->portDeviceCalls()[0].second, 5u);
+  EXPECT_EQ(m_settingsService->getGameValue(m_testContentHash, "port0-device"),
+            "5");
+}
+
 } // namespace firelight::emulation

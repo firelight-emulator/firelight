@@ -412,6 +412,14 @@ void EmulatorItem::writeSuspendPoint(const int index) {
   }
 }
 
+void EmulatorItem::captureScreenshot() {
+  if (m_renderer) {
+    m_renderer->submitCommand(
+        {.type = EmulatorItemRenderer::CaptureScreenshot});
+    update();
+  }
+}
+
 void EmulatorItem::loadSuspendPoint(const int index) {
   if (m_renderer) {
     m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadSuspendPoint,

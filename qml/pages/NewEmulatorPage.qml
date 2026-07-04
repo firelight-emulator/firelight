@@ -31,6 +31,8 @@ FocusScope {
                 emulator.incrementPlaybackMultiplier()
             } else if (id === "slow_down") {
                 emulator.decrementPlaybackMultiplier()
+            } else if (id === "screenshot") {
+                emulator.captureScreenshot()
             }
         }
     }

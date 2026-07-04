@@ -40,6 +40,9 @@ public:
   virtual void setPointerInputProvider(
       firelight::libretro::IPointerInputProvider *provider) = 0;
   virtual void setSystemDirectory(const std::string &dir) = 0;
+  // Directory the core may read/write its own persistent data in (memstick,
+  // pak files, NAND, …). Firelight hands it a per-game, per-slot managed path.
+  virtual void setSaveDirectory(const std::string &dir) = 0;
 
   // --- lifecycle ---
   virtual void init() = 0;
@@ -59,6 +62,30 @@ public:
   [[nodiscard]] virtual void *getMemoryData(unsigned id) const = 0;
   [[nodiscard]] virtual std::size_t getMemorySize(unsigned id) const = 0;
   virtual retro_memory_map *getMemoryMap() = 0;
+
+  // --- disc control (multi-disc games) ---
+  // Number of disc images the core exposes (0 when the core has no disk-control
+  // interface, i.e. single-disc/cartridge content).
+  [[nodiscard]] virtual unsigned getDiskCount() const = 0;
+  // Index of the currently inserted disc (0-based).
+  [[nodiscard]] virtual unsigned getCurrentDiskIndex() const = 0;
+  // Ejects, selects disc `index`, and re-inserts. Returns false when the core
+  // has no disk control or the index is out of range.
+  virtual bool setDiskIndex(unsigned index) = 0;
+
+  // --- controller port devices ---
+  // One device type a core advertises for a port (from SET_CONTROLLER_INFO),
+  // e.g. {RETRO_DEVICE_JOYPAD, "N64 Controller"} or a lightgun/mouse subclass.
+  struct ControllerDeviceOption {
+    unsigned id;
+    std::string description;
+  };
+  // The devices the core advertises, indexed by port. Empty (or a single entry)
+  // means the port only has the default RetroPad — nothing to choose.
+  [[nodiscard]] virtual std::vector<std::vector<ControllerDeviceOption>>
+  getControllerDevices() const = 0;
+  // Tells the core which device (RETRO_DEVICE_*) is plugged into `port`.
+  virtual void setControllerPortDevice(unsigned port, unsigned device) = 0;
 };
 
 } // namespace libretro

@@ -4,6 +4,7 @@
 #include <QJsonObject>
 
 #include "../gui/game_image_provider.hpp"
+#include "media/media_service.hpp"
 
 #include <QOpenGLPaintDevice>
 #include <QQuickWindow>
@@ -361,6 +362,16 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         sp.saveSlotNumber = m_saveSlotNumber;
         getSaveManager()->writeSuspendPoint(m_contentHash, m_saveSlotNumber,
                                             command.suspendPointIndex, sp);
+      }
+      break;
+
+      case CaptureScreenshot: {
+        // Reuse the current frame image the suspend-point path captures. Copy so
+        // the PNG write doesn't race the next frame's readback.
+        if (const auto mediaService = getMediaService();
+            mediaService && !m_currentImage.isNull()) {
+          mediaService->saveScreenshot(m_contentHash, m_currentImage.copy());
+        }
       }
       break;
 

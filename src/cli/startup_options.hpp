@@ -14,6 +14,8 @@ class StartupOptions : public QObject {
   Q_PROPERTY(int launchEntryId READ launchEntryId CONSTANT)
   // -1 = unset (use the saved preference), 0 = windowed, 1 = fullscreen.
   Q_PROPERTY(int fullscreenOverride READ fullscreenOverride CONSTANT)
+  // Quit the app when the launched game closes (external-launcher mode).
+  Q_PROPERTY(bool exitOnClose READ exitOnClose CONSTANT)
   // A RetroAchievements login the QML coordinator should perform before the
   // game launches (from the `--ra-*` startup flags).
   Q_PROPERTY(bool raPendingLogin READ raPendingLogin CONSTANT)
@@ -27,6 +29,7 @@ public:
     bool startMuted = false;
     bool startPaused = false;
     int fullscreenOverride = -1;
+    bool exitOnClose = false;
     bool raPendingLogin = false;
     QString raUsername;
     QString raPassword;
@@ -40,6 +43,7 @@ public:
   [[nodiscard]] int fullscreenOverride() const {
     return m_data.fullscreenOverride;
   }
+  [[nodiscard]] bool exitOnClose() const { return m_data.exitOnClose; }
 
   // One-shot getters for the per-game start knobs: they return the requested
   // value the first time and false afterwards, so only the CLI-launched game

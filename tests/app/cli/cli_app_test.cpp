@@ -98,6 +98,15 @@ TEST(CliAppTest, MutedWindowedPausedFlags) {
   EXPECT_FALSE(opts.fullscreen);
 }
 
+TEST(CliAppTest, ExitOnCloseAndSingleInstanceFlags) {
+  const auto opts =
+      parseArgs({"firelight", "--exit-on-close", "--single-instance", "game.gba"});
+  EXPECT_TRUE(opts.exitOnClose);
+  EXPECT_TRUE(opts.singleInstance);
+  EXPECT_EQ(opts.romPath, "game.gba");
+  EXPECT_EQ(opts.action, CliAction::RunGui);
+}
+
 TEST(CliAppTest, FullscreenAndWindowedConflict) {
   const auto opts = parseArgs({"firelight", "--fullscreen", "--windowed"});
   EXPECT_EQ(opts.action, CliAction::Exit);

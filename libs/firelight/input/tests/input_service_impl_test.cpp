@@ -77,6 +77,29 @@ TEST_F(InputServiceImplTest, PlatformPreferredControllerPromotedToPlayerOne) {
   ASSERT_EQ(xboxPad->getPlayerIndex(), 1);
 }
 
+TEST_F(InputServiceImplTest, SessionPreferredControllerOverridesStoredPreference) {
+  input::SDLInputService inputService(m_repo);
+
+  auto xboxPad = std::make_shared<input::TestGamepad>(1);
+  xboxPad->setType(MICROSOFT_XBOX_ONE);
+  auto n64Pad = std::make_shared<input::TestGamepad>(2);
+  n64Pad->setType(NINTENDO_NSO_N64);
+
+  inputService.addGamepad(xboxPad); // player 0
+  inputService.addGamepad(n64Pad);  // player 1
+
+  constexpr int platformId = 5;
+  // The stored preference points at the Xbox pad...
+  m_repo.setPlatformPreferredType(platformId, MICROSOFT_XBOX_ONE);
+  // ...but a CLI --controller session override for the N64 pad wins.
+  inputService.setSessionPreferredControllerType(platformId, NINTENDO_NSO_N64);
+
+  inputService.applyGameContext(std::nullopt, platformId);
+
+  ASSERT_EQ(n64Pad->getPlayerIndex(), 0);
+  ASSERT_EQ(xboxPad->getPlayerIndex(), 1);
+}
+
 TEST_F(InputServiceImplTest, AddKeyboardTest) {
   input::SDLInputService inputService(m_repo);
   auto keyboard = std::make_shared<input::TestGamepad>();

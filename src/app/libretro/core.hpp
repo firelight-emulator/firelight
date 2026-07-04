@@ -85,7 +85,7 @@ public:
 
   void setSystemDirectory(const string &) override;
 
-  void setSaveDirectory(const string &);
+  void setSaveDirectory(const string &) override;
 
   [[nodiscard]] std::vector<char>
   getMemoryData(MemoryType memType) const override;
@@ -100,6 +100,14 @@ public:
   size_t getMemorySize(unsigned id) const override;
 
   retro_memory_map *getMemoryMap() override;
+
+  unsigned getDiskCount() const override;
+  unsigned getCurrentDiskIndex() const override;
+  bool setDiskIndex(unsigned index) override;
+
+  std::vector<std::vector<ControllerDeviceOption>>
+  getControllerDevices() const override;
+  void setControllerPortDevice(unsigned port, unsigned device) override;
 
   std::function<void()> destroyContextFunction = nullptr;
 
@@ -143,6 +151,12 @@ private:
   retro_disk_control_callback *diskControlCallback;
   unsigned diskControlInterfaceVersion;
   retro_disk_control_ext_callback *diskControlExtCallback;
+  // The disc-control interface a multi-disc core registers, stored by value
+  // (the struct the core passes via the environment call may be transient).
+  retro_disk_control_callback m_diskControl{};
+  retro_disk_control_ext_callback m_diskControlExt{};
+  bool m_hasDiskControl = false;
+  bool m_hasDiskControlExt = false;
   retro_rumble_interface *rumbleInterface;
   uint64_t serializationQuirksBitmap;
   retro_vfs_interface_info *virtualFileSystemInterfaceInfo;
@@ -179,7 +193,8 @@ private:
 
   unsigned numActiveInputDevices;
   bool supportsInputBitmasks;
-  vector<retro_controller_description> controllerInfo;
+  // Per-port device options the core advertised via SET_CONTROLLER_INFO.
+  std::vector<std::vector<ControllerDeviceOption>> m_controllerDevices;
   uint64_t inputDeviceCapabilitiesBitmask;
   retro_keyboard_callback *keyboardCallback;
 

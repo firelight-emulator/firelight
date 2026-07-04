@@ -17,6 +17,7 @@ namespace firelight {
   mods::IModRepository *ServiceAccessor::s_modRepository;
   settings::ISettingsRepository *ServiceAccessor::s_emulationSettingsManager;
   discord::IDiscordManager *ServiceAccessor::s_discordManager;
+  media::MediaService *ServiceAccessor::s_mediaService;
 
   void ServiceAccessor::setInputService(input::InputService *service) {
     s_inputService = service;
@@ -86,6 +87,10 @@ namespace firelight {
     s_discordManager = manager;
   }
 
+  void ServiceAccessor::setMediaService(media::MediaService *service) {
+    s_mediaService = service;
+  }
+
   input::InputService *ServiceAccessor::getInputService() {
     return s_inputService;
   }
@@ -145,6 +150,10 @@ namespace firelight {
 
   settings::ISettingsRepository *ServiceAccessor::getEmulationSettingsManager() {
     return s_emulationSettingsManager;
+  }
+
+  media::MediaService *ServiceAccessor::getMediaService() {
+    return s_mediaService;
   }
 
   discord::IDiscordManager *ServiceAccessor::getDiscordManager() {
