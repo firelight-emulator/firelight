@@ -40,6 +40,12 @@ public:
   // matched to the paced video. Dynamic rate control still corrects residual drift.
   void setPlaybackRateRatio(double ratio);
 
+  // Enables/disables Dynamic Rate Control: the drift compensation that nudges the
+  // resample rate to keep the sink buffer near 50% full. On by default; exposed
+  // as an advanced setting so users can let the emulation pacer manage the buffer
+  // alone. Thread-safe (read from the audio thread).
+  void setDynamicRateControlEnabled(bool enabled);
+
   ~AudioManager() override;
 
 private:
@@ -57,7 +63,17 @@ private:
   QIODevice *m_audioDevice = nullptr;
 
   bool m_isMuted = false;
-  int m_sampleRate = 0;
+  int m_sampleRate = 0;       // the core's audio rate
+  int m_deviceSampleRate = 0; // the output device's native rate (sink runs here)
+
+  // Dynamic Rate Control on by default; toggled by the "dynamic-rate-control"
+  // advanced setting.
+  std::atomic<bool> m_drcEnabled{true};
+
+  // Pre-buffering. The sink starts suspended so it doesn't drain an empty buffer
+  // (an underrunning, stuttery "skip-ahead" start); receive() fills it and
+  // resumes playback once it's ~half full.
+  bool m_priming = true;
 
   QMediaDevices *m_mediaDevices = nullptr;
 

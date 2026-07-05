@@ -76,6 +76,12 @@ public:
   // resample audio to the display refresh rate.
   void setAudioPlaybackRateRatio(double ratio);
 
+  // Enables/disables audio Dynamic Rate Control (the "dynamic-rate-control"
+  // advanced setting). Stored so it can be applied when the AudioManager is
+  // (re)created, and forwarded live when it already exists.
+  void setDynamicRateControlEnabled(bool enabled);
+  bool getDynamicRateControlEnabled() const;
+
   std::vector<uint8_t> serializeState();
   bool deserializeState(const std::vector<uint8_t> &state);
 
@@ -158,6 +164,7 @@ private:
   int m_integerScale = 0;
   std::string m_syncMethod;
   int m_targetFramerate = 0;
+  bool m_dynamicRateControl = true;
 
   // Settings — resolved by inheritance (game -> platform -> global -> default),
   // so any change at any tier that affects this game triggers a refresh.

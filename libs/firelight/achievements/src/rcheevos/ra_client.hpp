@@ -21,6 +21,10 @@ namespace libretro {
 }
 
 namespace firelight::achievements {
+    struct RichPresenceMessageChangedEvent {
+        std::string newRichPresenceMessage;
+    };
+
     class RAClient : public QObject {
         Q_OBJECT
         Q_PROPERTY(bool connected MEMBER m_connected NOTIFY connectedChanged)
@@ -161,6 +165,10 @@ namespace firelight::achievements {
         bool m_challengeIndicatorsEnabled = true;
         bool m_defaultToHardcore = true;
         bool m_expectToBeLoggedIn = false;
+
+        std::string m_richPresenceMessage;
+
+        bool updateRichPresenceMessage();
 
         RetroAchievementsOfflineClient &m_offlineClient;
 

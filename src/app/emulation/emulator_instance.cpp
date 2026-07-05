@@ -85,6 +85,9 @@ bool EmulatorInstance::initialize(
   // Apply the requested initial mute now that the AudioManager exists (a QML
   // muted binding fires before this and would otherwise be lost).
   m_audioManager->setMuted(m_startMuted);
+  // Apply the resolved DRC setting (refreshAllSettings may have run before the
+  // AudioManager existed, so it only stored the value on this instance).
+  m_audioManager->setDynamicRateControlEnabled(m_dynamicRateControl);
 
   m_core->setVideoReceiver(videoDataReceiver);
   m_core->setAudioReceiver(m_audioManager);
@@ -477,6 +480,15 @@ void EmulatorInstance::setAudioPlaybackRateRatio(const double ratio) {
     m_audioManager->setPlaybackRateRatio(ratio);
   }
 }
+void EmulatorInstance::setDynamicRateControlEnabled(const bool enabled) {
+  m_dynamicRateControl = enabled;
+  if (m_audioManager) {
+    m_audioManager->setDynamicRateControlEnabled(enabled);
+  }
+}
+bool EmulatorInstance::getDynamicRateControlEnabled() const {
+  return m_dynamicRateControl;
+}
 
 std::vector<uint8_t> EmulatorInstance::serializeState() {
   return m_core->serializeState();
@@ -531,6 +543,9 @@ void EmulatorInstance::refreshAllSettings() {
   apply("sync-method", [&] { setSyncMethod(value("sync-method")); });
   apply("target-framerate",
         [&] { setTargetFramerate(intValue("target-framerate")); });
+  apply("dynamic-rate-control", [&] {
+    setDynamicRateControlEnabled(value("dynamic-rate-control") != "false");
+  });
   apply("analog-pointer-speed", [&] {
     if (m_core) {
       m_core->setAnalogPointerSpeed(pointerSpeed(value("analog-pointer-speed")));

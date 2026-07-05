@@ -16,7 +16,12 @@ AudioResampler::~AudioResampler() {
 }
 
 void AudioResampler::initialize(const int sampleRate) {
-  m_sampleRate = sampleRate;
+  initialize(sampleRate, sampleRate);
+}
+
+void AudioResampler::initialize(const int inputRate, const int outputRate) {
+  m_sampleRate = inputRate;
+  m_outputSampleRate = outputRate;
   m_activeRatio = m_requestedRatio.load();
   rebuild();
 }
@@ -29,9 +34,10 @@ void AudioResampler::setPlaybackRateRatio(double ratio) {
 }
 
 void AudioResampler::rebuild() {
-  if (m_sampleRate <= 0) {
+  if (m_sampleRate <= 0 || m_outputSampleRate <= 0) {
     return;
   }
+
   // Safe to call again — free any existing context first so we don't leak it.
   if (m_swrContext) {
     swr_free(&m_swrContext);
@@ -43,9 +49,9 @@ void AudioResampler::rebuild() {
   // Output rate is the device rate divided by the playback-rate ratio: running
   // the game faster (ratio > 1) yields more input samples per real second, so we
   // resample to fewer output samples to keep the device buffer balanced (which
-  // raises pitch proportionally — matching the faster video).
+  // raises pitch proportionally to match the faster video)
   const int outRate =
-      static_cast<int>(std::lround(m_sampleRate / m_activeRatio));
+      static_cast<int>(std::lround(m_outputSampleRate / m_activeRatio));
 
   av_opt_set_chlayout(m_swrContext, "ichl", &m_channelLayout, 0);
   av_opt_set_int(m_swrContext, "in_sample_rate", m_sampleRate, 0);
@@ -65,13 +71,12 @@ void AudioResampler::rebuild() {
 std::vector<int16_t> AudioResampler::process(const int16_t *data,
                                              const size_t numFrames,
                                              const int compensationDelta) {
-  // Apply a pending playback-rate change on this (audio) thread so the context
-  // is never rebuilt from another thread.
   if (const double req = m_requestedRatio.load();
-      std::abs(req - m_activeRatio) > 1e-6 && m_sampleRate > 0) {
+    std::abs(req - m_activeRatio) > 1e-6 && m_sampleRate > 0) {
     m_activeRatio = req;
     rebuild();
   }
+
   if (!m_swrContext) {
     return {};
   }

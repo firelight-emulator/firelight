@@ -5,19 +5,19 @@
 #include <spdlog/spdlog.h>
 
 namespace {
-// The output device the user picked (by description), persisted in QSettings,
-// or the system default if unset / no longer present.
-QAudioDevice selectedOutputDevice() {
-  const QString desc = QSettings().value("audio/outputDevice").toString();
-  if (!desc.isEmpty()) {
-    for (const auto &device : QMediaDevices::audioOutputs()) {
-      if (device.description() == desc) {
-        return device;
+  // The output device the user picked (by description), persisted in QSettings,
+  // or the system default if unset / no longer present.
+  QAudioDevice selectedOutputDevice() {
+    const QString desc = QSettings().value("audio/outputDevice").toString();
+    if (!desc.isEmpty()) {
+      for (const auto &device: QMediaDevices::audioOutputs()) {
+        if (device.description() == desc) {
+          return device;
+        }
       }
     }
+    return QMediaDevices::defaultAudioOutput();
   }
-  return QMediaDevices::defaultAudioOutput();
-}
 } // namespace
 
 AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
@@ -28,9 +28,10 @@ AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
 }
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
-  // TODO: REALLY BAD SOLUTION for mupen sometimes sending very small number of
-  // frames
-  if (numFrames < 30) {
+  // Previously dropped any batch < 30 frames (a hack for mupen's small batches).
+  // Dropping real audio frames leaves a small gap/skip; the resampler buffers
+  // tiny inputs fine, so process them instead of discarding.
+  if (numFrames == 0) {
     return numFrames;
   }
 
@@ -49,12 +50,15 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
       m_onAudioBufferLevelChanged();
     }
 
-    // Steer the buffer toward ~50% full by nudging the resample rate.
-    const int delta = m_rateController.computeCompensation(
-        static_cast<int>(usedBytes), static_cast<int>(bufferTotalCapacity));
+    // Steer the buffer toward ~50% full by nudging the resample rate, unless the
+    // user has disabled Dynamic Rate Control (advanced setting).
+    const int delta =
+        m_drcEnabled.load()
+          ? m_rateController.computeCompensation(
+            static_cast<int>(usedBytes),
+            static_cast<int>(bufferTotalCapacity))
+          : 0;
 
-    // Resample to the device rate. The resampler applies our drift-compensation
-    // delta plus any pending feed-forward playback-rate change.
     std::vector<int16_t> output = m_resampler.process(data, numFrames, delta);
     if (output.empty()) {
       return numFrames; // input consumed, nothing produced this call
@@ -66,27 +70,58 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
     m_audioDevice->write(reinterpret_cast<const char *>(output.data()),
                          output.size() * sizeof(int16_t)); // stereo, s16
+
+    // Once we've pre-buffered ~half the sink, begin playback. Writes above fill
+    // the sink while it's suspended, so playback starts from a healthy buffer.
+    if (m_priming) {
+      const auto filled = bufferTotalCapacity - m_audioSink->bytesFree();
+      if (filled >= bufferTotalCapacity / 2) {
+        m_audioSink->resume();
+        m_priming = false;
+      }
+    }
   }
 
   return numFrames; // Return original number of frames consumed
 }
 
 void AudioManager::openAudioSink() {
+  const QAudioDevice dev = selectedOutputDevice();
+
+  int deviceRate = dev.preferredFormat().sampleRate();
+  if (deviceRate <= 0) {
+    deviceRate = m_sampleRate;
+  }
+
   QAudioFormat format;
   format.setChannelCount(2);
   format.setSampleFormat(QAudioFormat::Int16);
-  format.setSampleRate(m_sampleRate);
+  format.setSampleRate(deviceRate);
 
-  m_audioSink = std::make_unique<QAudioSink>(selectedOutputDevice(), format);
-  // Larger buffer at higher sample rates.
-  const int mult = m_sampleRate > 44000 ? 4 : 2;
-  m_audioSink->setBufferSize(8192 * mult);
+  if (!dev.isFormatSupported(format)) {
+    deviceRate = m_sampleRate;
+    format.setSampleRate(deviceRate);
+  }
+
+  m_deviceSampleRate = deviceRate;
+  spdlog::info("Audio: resampling core {} Hz -> device {} Hz", m_sampleRate,
+               m_deviceSampleRate);
+
+  m_resampler.initialize(m_sampleRate, m_deviceSampleRate);
+
+  m_audioSink = std::make_unique<QAudioSink>(dev, format);
+
+  const int bufferMultiplier = m_deviceSampleRate > 44000 ? 4 : 2;
+  m_audioSink->setBufferSize(8192 * bufferMultiplier);
+
   m_audioDevice = m_audioSink->start();
+
+  m_audioSink->suspend();
+  m_priming = true;
 }
 
 void AudioManager::initialize(const double new_freq) {
-  m_sampleRate = new_freq;
-  m_resampler.initialize(m_sampleRate);
+  m_sampleRate = static_cast<int>(new_freq);
   openAudioSink();
 }
 
@@ -99,7 +134,9 @@ void AudioManager::setPaused(const bool paused) {
   }
   if (paused) {
     m_audioSink->suspend(); // halt playback, keep the buffered audio
-  } else {
+  } else if (!m_priming) {
+    // While priming the sink is intentionally suspended until pre-buffered;
+    // receive() resumes it. Don't let an early unpause start it underrunning.
     m_audioSink->resume();
   }
 }
@@ -121,6 +158,10 @@ float AudioManager::getBufferLevel() const {
 
 void AudioManager::setPlaybackRateRatio(double ratio) {
   m_resampler.setPlaybackRateRatio(ratio);
+}
+
+void AudioManager::setDynamicRateControlEnabled(const bool enabled) {
+  m_drcEnabled.store(enabled);
 }
 
 void AudioManager::reinitializeAudioDevice() {

@@ -249,11 +249,11 @@ int main(int argc, char *argv[]) {
     {
         namespace fs = std::filesystem;
         const fs::path ppssppDest =
-            fs::path(defaultAppDataPathString.toStdString()) / "core-system" /
-            "PPSSPP";
+                fs::path(defaultAppDataPathString.toStdString()) / "core-system" /
+                "PPSSPP";
         const fs::path ppssppSrc =
-            fs::path(QCoreApplication::applicationDirPath().toStdString()) /
-            "system" / "PPSSPP";
+                fs::path(QCoreApplication::applicationDirPath().toStdString()) /
+                "system" / "PPSSPP";
         std::error_code ec;
         if (!fs::exists(ppssppDest / "ppge_atlas.zim", ec) &&
             fs::exists(ppssppSrc / "ppge_atlas.zim", ec)) {
@@ -261,7 +261,7 @@ int main(int argc, char *argv[]) {
                          ppssppDest.string());
             fs::copy(ppssppSrc, ppssppDest,
                      fs::copy_options::recursive |
-                         fs::copy_options::overwrite_existing,
+                     fs::copy_options::overwrite_existing,
                      ec);
             if (ec) {
                 spdlog::warn("Failed to seed PPSSPP assets: {}", ec.message());
@@ -735,33 +735,34 @@ int main(int argc, char *argv[]) {
     // before the window is exposed. Static so it outlives the window.
     static QVulkanInstance vulkanInstance;
     if (window) {
-      vulkanInstance.setApiVersion(QVersionNumber(1, 3));
-      const QByteArrayList wanted = {
-          "VK_KHR_surface",
-          "VK_KHR_win32_surface",
-          "VK_KHR_get_physical_device_properties2",
-          "VK_KHR_external_memory_capabilities",
-          "VK_KHR_external_semaphore_capabilities",
-          "VK_KHR_external_fence_capabilities",
-          "VK_EXT_swapchain_colorspace",
-          "VK_EXT_debug_utils"};
-      const auto supported = vulkanInstance.supportedExtensions();
-      QByteArrayList enable;
-      for (const auto &w : wanted) {
-        for (const auto &s : supported) {
-          if (s.name == w) {
-            enable << w;
-            break;
-          }
+        vulkanInstance.setApiVersion(QVersionNumber(1, 3));
+        const QByteArrayList wanted = {
+            "VK_KHR_surface",
+            "VK_KHR_win32_surface",
+            "VK_KHR_get_physical_device_properties2",
+            "VK_KHR_external_memory_capabilities",
+            "VK_KHR_external_semaphore_capabilities",
+            "VK_KHR_external_fence_capabilities",
+            "VK_EXT_swapchain_colorspace",
+            "VK_EXT_debug_utils"
+        };
+        const auto supported = vulkanInstance.supportedExtensions();
+        QByteArrayList enable;
+        for (const auto &w: wanted) {
+            for (const auto &s: supported) {
+                if (s.name == w) {
+                    enable << w;
+                    break;
+                }
+            }
         }
-      }
-      vulkanInstance.setExtensions(enable);
-      if (!vulkanInstance.create()) {
-        spdlog::error("Failed to create shared QVulkanInstance (VkResult {})",
-                      static_cast<int>(vulkanInstance.errorCode()));
-      } else {
-        window->setVulkanInstance(&vulkanInstance);
-      }
+        vulkanInstance.setExtensions(enable);
+        if (!vulkanInstance.create()) {
+            spdlog::error("Failed to create shared QVulkanInstance (VkResult {})",
+                          static_cast<int>(vulkanInstance.errorCode()));
+        } else {
+            window->setVulkanInstance(&vulkanInstance);
+        }
     }
 
     window->installEventFilter(resizeHandler);
@@ -786,6 +787,12 @@ int main(int argc, char *argv[]) {
 
     engine.rootContext()->setContextProperty("sfx_player",
                                              new firelight::audio::SfxPlayer());
+
+    auto richPresenceMessageChangedSubscriber = EventDispatcher::instance().subscribe<
+        firelight::achievements::RichPresenceMessageChangedEvent>(
+        [&](const firelight::achievements::RichPresenceMessageChangedEvent &e) {
+            discordManager.setRichPresenceMessage(e.newRichPresenceMessage);
+        });
 
     int exitCode = QApplication::exec();
 
