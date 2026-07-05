@@ -75,22 +75,22 @@ TEST(InputModelTest, AnalogSettingsRoundTrip) {
 TEST(InputModelTest, ApplyAxisSettingsZerosInsideDeadzone) {
   AxisSettings settings; // innerDeadzone == 0.25
   // 0.25 * 32767 ~= 8191; matches the previous hardcoded +-8192 behavior.
-  EXPECT_EQ(applyAxisSettings(8000, settings), 0);
-  EXPECT_EQ(applyAxisSettings(-8000, settings), 0);
+  EXPECT_EQ(settings.apply(8000), 0);
+  EXPECT_EQ(settings.apply(-8000), 0);
 }
 
 TEST(InputModelTest, ApplyAxisSettingsPassesFullDeflection) {
   AxisSettings settings;
-  EXPECT_EQ(applyAxisSettings(32767, settings), 32767);
+  EXPECT_EQ(settings.apply(32767), 32767);
   // Negative full deflection stays near the negative extreme.
-  EXPECT_LT(applyAxisSettings(-32767, settings), -32000);
+  EXPECT_LT(settings.apply(-32767), -32000);
 }
 
 TEST(InputModelTest, ApplyAxisSettingsRescalesAfterDeadzone) {
   AxisSettings settings;
   settings.innerDeadzone = 0.5f;
   // Just past the deadzone should be near zero, not a sudden jump to half.
-  const auto justPast = applyAxisSettings(static_cast<int>(0.51f * 32767), settings);
+  const auto justPast = settings.apply(static_cast<int>(0.51f * 32767));
   EXPECT_GT(justPast, 0);
   EXPECT_LT(justPast, 2000);
 }
@@ -98,7 +98,7 @@ TEST(InputModelTest, ApplyAxisSettingsRescalesAfterDeadzone) {
 TEST(InputModelTest, ApplyAxisSettingsNoDeadzoneIsLinear) {
   AxisSettings settings;
   settings.innerDeadzone = 0.0f;
-  const auto half = applyAxisSettings(16383, settings);
+  const auto half = settings.apply(16383);
   EXPECT_NEAR(half, 16383, 2);
 }
 
@@ -199,14 +199,14 @@ TEST(InputModelTest, ApplyAxisSettingsSensitivityClampsToFull) {
   settings.innerDeadzone = 0.0f;
   settings.sensitivity = 2.0f;
   // A half-deflection at 2x gain saturates at full range.
-  EXPECT_EQ(applyAxisSettings(20000, settings), 32767);
+  EXPECT_EQ(settings.apply(20000), 32767);
 }
 
 TEST(InputModelTest, ApplyAxisSettingsOuterDeadzoneReachesFullEarly) {
   AxisSettings settings;
   settings.innerDeadzone = 0.0f;
   settings.outerDeadzone = 0.2f; // top 20% is treated as full
-  EXPECT_EQ(applyAxisSettings(static_cast<int>(0.85f * 32767), settings), 32767);
+  EXPECT_EQ(settings.apply(static_cast<int>(0.85f * 32767)), 32767);
 }
 
 TEST(InputModelTest, ApplyAxisSettingsExponentialLowersMidRange) {
@@ -219,20 +219,20 @@ TEST(InputModelTest, ApplyAxisSettingsExponentialLowersMidRange) {
 
   const auto half = static_cast<int>(0.5f * 32767);
   // An exponential curve pulls mid-range values below the linear response.
-  EXPECT_LT(applyAxisSettings(half, expo), applyAxisSettings(half, linear));
+  EXPECT_LT(expo.apply(half), linear.apply(half));
 }
 
 TEST(InputModelTest, ApplyAxisSettingsAntiDeadzoneLiftsSmallInputs) {
   AxisSettings settings;
   settings.innerDeadzone = 0.0f;
   settings.antiDeadzone = 0.5f; // outputs start at 50% once past the deadzone
-  const auto out = applyAxisSettings(static_cast<int>(0.01f * 32767), settings);
+  const auto out = settings.apply(static_cast<int>(0.01f * 32767));
   EXPECT_GT(out, static_cast<int>(0.45f * 32767));
 }
 
 TEST(InputModelTest, ApplyAxisSettingsPreservesNegativeSign) {
   AxisSettings settings;
-  EXPECT_LT(applyAxisSettings(-20000, settings), 0);
+  EXPECT_LT(settings.apply(-20000), 0);
 }
 
 } // namespace firelight::input

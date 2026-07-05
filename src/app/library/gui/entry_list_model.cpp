@@ -257,7 +257,7 @@ namespace firelight::library {
       const auto criteria = SmartFolderCriteria::parse(folder.filterJson);
       int count = 0;
       for (const auto &item: m_items) {
-        if (matches(buildEntryFields(item), criteria)) {
+        if (criteria.matches(buildEntryFields(item))) {
           ++count;
         }
       }
@@ -306,7 +306,7 @@ namespace firelight::library {
       return false;
     }
     const auto &criteria = criteriaForFolder(folderId);
-    return matches(buildEntryFields(m_items.at(it->second)), criteria);
+    return criteria.matches(buildEntryFields(m_items.at(it->second)));
   }
 
   void EntryListModel::invalidateSmartFolderCache() {

@@ -3,9 +3,10 @@
 #include <cmath>
 
 void AudioRateController::reset() {
-  for (int &v: m_usageBytes) {
-    v = 0;
+  for (int &bytes: m_usageBytes) {
+    bytes = 0;
   }
+
   m_index = 0;
   m_populatedCount = 0;
   m_previousAvgFillRatio = -1.0;
@@ -19,9 +20,9 @@ int AudioRateController::computeCompensation(const int usedBytes,
 
   // Rolling average of recent buffer occupancy
   m_usageBytes[m_index] = usedBytes;
-  m_index = (m_index + 1) % kWindowSize;
+  m_index = (m_index + 1) % WINDOW_SIZE;
 
-  if (m_populatedCount < kWindowSize) {
+  if (m_populatedCount < WINDOW_SIZE) {
     m_populatedCount++;
   }
 
@@ -39,7 +40,7 @@ int AudioRateController::computeCompensation(const int usedBytes,
 
   // Skip adjusting while near the target or already trending back toward it
   bool adjust = true;
-  if (m_previousAvgFillRatio >= 0.0 && m_populatedCount == kWindowSize) {
+  if (m_previousAvgFillRatio >= 0.0 && m_populatedCount == WINDOW_SIZE) {
     const double currentError = avgFillRatio - kTargetFillRatio;
     const double previousError = m_previousAvgFillRatio - kTargetFillRatio;
 
@@ -55,7 +56,7 @@ int AudioRateController::computeCompensation(const int usedBytes,
     }
   }
 
-  if (m_populatedCount == kWindowSize) {
+  if (m_populatedCount == WINDOW_SIZE) {
     m_previousAvgFillRatio = avgFillRatio;
   }
 
@@ -63,21 +64,21 @@ int AudioRateController::computeCompensation(const int usedBytes,
     return 0;
   }
 
-  // Buffer too full, drop samples (negative). Too empty, add samples
+  // Buffer too full, drop samples. Too empty, add samples
   if (deviation > 0.6) {
-    return -5; // >80% full
+    return -5;
   }
   if (deviation > 0.3) {
-    return -4; // >65%
+    return -4;
   }
   if (deviation > 0.1) {
-    return -3; // >55%
+    return -3;
   }
   if (deviation > -0.3) {
-    return 0; // 35%-55% deadband
+    return 0;
   }
   if (deviation > -0.6) {
-    return 1; // 20%-35%
+    return 1;
   }
-  return 2; // <20%
+  return 2;
 }

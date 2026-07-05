@@ -130,7 +130,8 @@ bool SmartFolderCriteria::isEmpty() const {
          !minSecondsPlayed.has_value();
 }
 
-bool matches(const EntryFields &entry, const SmartFolderCriteria &criteria) {
+bool SmartFolderCriteria::matches(const EntryFields &entry) const {
+  const auto &criteria = *this;
   // --- Source: which pool of games this folder draws from ---
   if (!criteria.contentDirectoryIds.empty()) {
     const bool intersects =

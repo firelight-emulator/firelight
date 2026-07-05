@@ -17,8 +17,8 @@ public:
     void reset();
 
 private:
-    static constexpr int kWindowSize = 10;
-    int m_usageBytes[kWindowSize] = {};
+    static constexpr int WINDOW_SIZE = 10;
+    int m_usageBytes[WINDOW_SIZE] = {};
     int m_index = 0;
     int m_populatedCount = 0;
     double m_previousAvgFillRatio = -1.0;

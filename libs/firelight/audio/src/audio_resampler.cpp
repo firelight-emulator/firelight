@@ -38,7 +38,6 @@ void AudioResampler::rebuild() {
     return;
   }
 
-  // Safe to call again — free any existing context first so we don't leak it.
   if (m_swrContext) {
     swr_free(&m_swrContext);
   }
@@ -46,11 +45,11 @@ void AudioResampler::rebuild() {
 
   av_channel_layout_default(&m_channelLayout, 2);
 
-  // Output rate is the device rate divided by the playback-rate ratio: running
+  // Output rate is the device rate divided by the playback-rate ratio. Running
   // the game faster (ratio > 1) yields more input samples per real second, so we
   // resample to fewer output samples to keep the device buffer balanced (which
   // raises pitch proportionally to match the faster video)
-  const int outRate =
+  const int outputRate =
       static_cast<int>(std::lround(m_outputSampleRate / m_activeRatio));
 
   av_opt_set_chlayout(m_swrContext, "ichl", &m_channelLayout, 0);
@@ -58,7 +57,7 @@ void AudioResampler::rebuild() {
   av_opt_set_sample_fmt(m_swrContext, "in_sample_fmt", AV_SAMPLE_FMT_S16, 0);
 
   av_opt_set_chlayout(m_swrContext, "ochl", &m_channelLayout, 0);
-  av_opt_set_int(m_swrContext, "out_sample_rate", outRate, 0);
+  av_opt_set_int(m_swrContext, "out_sample_rate", outputRate, 0);
   av_opt_set_sample_fmt(m_swrContext, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
 
   if (const int rc = swr_init(m_swrContext); rc < 0) {

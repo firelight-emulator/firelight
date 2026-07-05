@@ -31,6 +31,42 @@ struct AxisSettings {
            sensitivity == o.sensitivity && antiDeadzone == o.antiDeadzone &&
            curve == o.curve && curveExponent == o.curveExponent;
   }
+
+  // Maps a raw SDL axis value (-32768..32767) through these settings and returns
+  // a processed value in the same range. Each axis is processed as an
+  // independent scalar, matching the previous per-axis deadzone behavior.
+  [[nodiscard]] int16_t apply(const int rawValue) const {
+    constexpr float AXIS_MAX = 32767.0f;
+    // Smallest allowed gap between the inner and outer bounds, so the rescale
+    // below never divides by (near) zero.
+    constexpr float MIN_DEADZONE_SPAN = 1e-4f;
+
+    const float normalized = std::clamp(rawValue / AXIS_MAX, -1.0f, 1.0f);
+    const float sign = normalized < 0.0f ? -1.0f : 1.0f;
+    float magnitude = std::fabs(normalized);
+
+    const float innerBound = std::clamp(innerDeadzone, 0.0f, 1.0f);
+    const float outerBound =
+        std::clamp(1.0f - outerDeadzone, innerBound + MIN_DEADZONE_SPAN, 1.0f);
+    if (magnitude <= innerBound) {
+      return 0;
+    }
+    // Rescale the live range (innerBound..outerBound) back to a full 0..1.
+    magnitude = std::clamp((magnitude - innerBound) / (outerBound - innerBound),
+                           0.0f, 1.0f);
+
+    if (curve == ResponseCurve::Exponential && curveExponent > 0.0f) {
+      magnitude = std::pow(magnitude, curveExponent);
+    }
+
+    if (antiDeadzone > 0.0f) {
+      magnitude = antiDeadzone + magnitude * (1.0f - antiDeadzone);
+    }
+
+    magnitude = std::clamp(magnitude * sensitivity, 0.0f, 1.0f);
+
+    return static_cast<int16_t>(sign * magnitude * AXIS_MAX);
+  }
 };
 
 inline void to_json(nlohmann::json &j, const AxisSettings &a) {
@@ -101,35 +137,6 @@ inline void from_json(const nlohmann::json &j, AnalogSettings &a) {
   if (j.contains("rightTrigger")) {
     j.at("rightTrigger").get_to(a.rightTrigger);
   }
-}
-
-// Maps a raw SDL axis value (-32768..32767) through the given settings and
-// returns a processed value in the same range. Each axis is processed as an
-// independent scalar, matching the previous per-axis deadzone behavior.
-inline int16_t applyAxisSettings(const int rawValue, const AxisSettings &s) {
-  constexpr float kMax = 32767.0f;
-  const float n = std::clamp(rawValue / kMax, -1.0f, 1.0f);
-  const float sign = n < 0.0f ? -1.0f : 1.0f;
-  float m = std::fabs(n);
-
-  const float lower = std::clamp(s.innerDeadzone, 0.0f, 1.0f);
-  const float upper = std::clamp(1.0f - s.outerDeadzone, lower + 1e-4f, 1.0f);
-  if (m <= lower) {
-    return 0;
-  }
-  m = std::clamp((m - lower) / (upper - lower), 0.0f, 1.0f);
-
-  if (s.curve == ResponseCurve::Exponential && s.curveExponent > 0.0f) {
-    m = std::pow(m, s.curveExponent);
-  }
-
-  if (s.antiDeadzone > 0.0f) {
-    m = s.antiDeadzone + m * (1.0f - s.antiDeadzone);
-  }
-
-  m = std::clamp(m * s.sensitivity, 0.0f, 1.0f);
-
-  return static_cast<int16_t>(sign * m * kMax);
 }
 
 } // namespace firelight::input

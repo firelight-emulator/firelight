@@ -229,7 +229,7 @@ int16_t SdlController::getLeftStickXPosition(const int platformId,
     }
   }
 
-  return applyAxisSettings(rawX, settings.leftStick);
+  return settings.leftStick.apply(rawX);
 }
 
 int16_t SdlController::getLeftStickYPosition(const int platformId,
@@ -261,7 +261,7 @@ int16_t SdlController::getLeftStickYPosition(const int platformId,
     }
   }
 
-  return applyAxisSettings(rawY, settings.leftStick);
+  return settings.leftStick.apply(rawY);
 }
 
 int16_t SdlController::getRightStickXPosition(const int platformId,
@@ -294,7 +294,7 @@ int16_t SdlController::getRightStickXPosition(const int platformId,
     }
   }
 
-  return applyAxisSettings(rawX, settings.rightStick);
+  return settings.rightStick.apply(rawX);
 }
 
 int16_t SdlController::getRightStickYPosition(const int platformId,
@@ -326,7 +326,7 @@ int16_t SdlController::getRightStickYPosition(const int platformId,
     }
   }
 
-  return applyAxisSettings(rawY, settings.rightStick);
+  return settings.rightStick.apply(rawY);
 }
 
 int32_t SdlController::getInstanceId() const { return m_SDLJoystickInstanceId; }

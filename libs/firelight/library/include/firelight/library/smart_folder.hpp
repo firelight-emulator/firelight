@@ -62,10 +62,9 @@ struct SmartFolderCriteria {
 
   // True when no source and no filter is set — the folder matches everything.
   [[nodiscard]] bool isEmpty() const;
-};
 
-// Pure predicate: does the entry satisfy every specified criterion?
-[[nodiscard]] bool matches(const EntryFields &entry,
-                           const SmartFolderCriteria &criteria);
+  // Pure predicate: does the entry satisfy every specified criterion?
+  [[nodiscard]] bool matches(const EntryFields &entry) const;
+};
 
 } // namespace firelight::library
