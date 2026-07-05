@@ -34,7 +34,6 @@
 #include <firelight/input/sqlite_controller_repository.hpp>
 #include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include "app/emulation/emulation_context.hpp"
-#include "app/emulator_config_manager.hpp"
 #include "app/library/gui/content_directory_model.hpp"
 #include "app/library/gui/playlist_item_model.hpp"
 #include <firelight/library/library_scanner2.hpp>
@@ -241,6 +240,34 @@ int main(int argc, char *argv[]) {
         spdlog::warn("Unable to create core-system directory");
     }
 
+    // PPSSPP loads a runtime asset tree (fonts, VFPU tables, texture atlases,
+    // compat db) from <system>/PPSSPP. These aren't part of the core DLL, so the
+    // app can't run PSP games without them. Seed the writable core-system copy
+    // once from the assets bundled next to the executable. Idempotent: keyed on a
+    // marker asset so it only runs when the destination hasn't been seeded yet.
+    {
+        namespace fs = std::filesystem;
+        const fs::path ppssppDest =
+            fs::path(defaultAppDataPathString.toStdString()) / "core-system" /
+            "PPSSPP";
+        const fs::path ppssppSrc =
+            fs::path(QCoreApplication::applicationDirPath().toStdString()) /
+            "system" / "PPSSPP";
+        std::error_code ec;
+        if (!fs::exists(ppssppDest / "ppge_atlas.zim", ec) &&
+            fs::exists(ppssppSrc / "ppge_atlas.zim", ec)) {
+            spdlog::info("Seeding PPSSPP assets: {} -> {}", ppssppSrc.string(),
+                         ppssppDest.string());
+            fs::copy(ppssppSrc, ppssppDest,
+                     fs::copy_options::recursive |
+                         fs::copy_options::overwrite_existing,
+                     ec);
+            if (ec) {
+                spdlog::warn("Failed to seed PPSSPP assets: {}", ec.message());
+            }
+        }
+    }
+
     // Declared early so it outlives the QML engine and its EmulatorItem: those
     // are destroyed before the objects declared above them, and on exit while a
     // game is running the EmulatorItem's teardown calls back into the Discord
@@ -370,9 +397,6 @@ int main(int argc, char *argv[]) {
     firelight::gui::ContentDirectoryModel contentDirectoryModel(userLibraryService);
 
     firelight::ServiceAccessor::setLibraryService(&userLibraryService);
-
-    auto emulatorConfigManager =
-            std::make_shared<EmulatorConfigManager>(userdata_database);
 
     firelight::mods::SqliteModRepository modRepository;
     firelight::ServiceAccessor::setModRepository(&modRepository);
@@ -625,8 +649,6 @@ int main(int argc, char *argv[]) {
         "CoreRegistry", new firelight::gui::QtCoreRegistryProxy());
     engine.rootContext()->setContextProperty("Router",
                                              new firelight::gui::Router());
-    engine.rootContext()->setContextProperty("emulator_config_manager",
-                                             emulatorConfigManager.get());
     engine.rootContext()->setContextProperty("achievement_manager", &raClient);
     engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
     engine.rootContext()->setContextProperty("SaveManager", &saveManagerProxy);

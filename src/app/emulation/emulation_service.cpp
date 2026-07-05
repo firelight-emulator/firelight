@@ -39,12 +39,12 @@ namespace firelight::emulation {
       m_coreFactory =
           [](int platformId, const std::string &corePath,
              std::shared_ptr<firelight::libretro::IConfigurationProvider>
-                 configProvider,
+             configProvider,
              const std::string &systemDirectory)
-          -> std::unique_ptr<::libretro::ICore> {
-        return std::make_unique<::libretro::Core>(
-            platformId, corePath, configProvider, systemDirectory);
-      };
+        -> std::unique_ptr<::libretro::ICore> {
+            return std::make_unique<::libretro::Core>(
+              platformId, corePath, configProvider, systemDirectory);
+          };
     }
 
     // Core options are only known once the core declares them during
@@ -53,7 +53,7 @@ namespace firelight::emulation {
     // advanced editor can list them before the next launch.
     m_emulationStartedConnection =
         EventDispatcher::instance().subscribe<EmulationStartedEvent>(
-            [this](const EmulationStartedEvent &) { persistCoreOptions(); });
+          [this](const EmulationStartedEvent &) { persistCoreOptions(); });
   }
 
   void EmulationService::persistCoreOptions() {
@@ -64,13 +64,13 @@ namespace firelight::emulation {
     // Persist under the core actually resolved for this entry (honors any
     // per-platform / per-game core override), so the cache matches what ran.
     const auto coreName = CoreRegistry::instance().resolveCoreName(
-        m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
+      m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
     if (coreName.empty()) {
       return;
     }
 
     std::vector<settings::CoreOption> definitions;
-    for (const auto &option : m_currentCoreConfig->getOptions()) {
+    for (const auto &option: m_currentCoreConfig->getOptions()) {
       settings::CoreOption def;
       def.key = option.key;
       def.label = option.label;
@@ -78,7 +78,7 @@ namespace firelight::emulation {
       def.defaultValue = option.defaultValueKey;
       def.category = option.category;
       def.categoryLabel = option.categoryLabel;
-      for (const auto &value : option.possibleValues) {
+      for (const auto &value: option.possibleValues) {
         def.values.push_back({value.key, value.label});
       }
       definitions.push_back(std::move(def));
@@ -160,13 +160,13 @@ namespace firelight::emulation {
     const LaunchOverrides launch = m_pendingLaunch;
     m_pendingLaunch = {};
     const int saveSlot = launch.saveSlot >= 0
-                             ? launch.saveSlot
-                             : static_cast<int>(entry->activeSaveSlot);
+                           ? launch.saveSlot
+                           : static_cast<int>(entry->activeSaveSlot);
 
     QByteArray saveDataBytes;
     if (const auto saveManager = m_context.saveManager) {
       const auto saveData = saveManager->readSaveData(
-          loaded.contentHash, saveSlot);
+        loaded.contentHash, saveSlot);
       if (saveData.has_value()) {
         saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
                                    saveData->getSaveRamData().size());
@@ -184,7 +184,7 @@ namespace firelight::emulation {
     // Resolve the core for this entry (default -> per-platform -> per-game
     // override) and locate its DLL.
     const auto coreName = CoreRegistry::instance().resolveCoreName(
-        m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
+      m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
     const std::string corePath = CoreRegistry::instance().dllPathFor(coreName);
     const auto &catalog = settings::SettingsCatalog::instance();
     auto coreConfig = std::make_shared<CoreConfiguration>(
@@ -193,6 +193,10 @@ namespace firelight::emulation {
       m_settingsService);
     m_currentCoreConfig = coreConfig;
 
+    // The core's libretro system directory is the shared core-system dir; cores
+    // that need their own space create/read a subfolder inside it (e.g. PPSSPP,
+    // Mupen64plus, melonDS DS). EmulatorInstance::initialize re-applies this same
+    // path via setSystemDirectory.
     std::unique_ptr<::libretro::ICore> core;
     try {
       core = m_coreFactory(m_currentEntry.platformId, corePath, coreConfig,

@@ -844,6 +844,33 @@ namespace firelight::platforms {
                 },
                 .emulationSettings = {}
             });
+        m_platforms.emplace_back(
+            Platform{
+                .id = PLATFORM_ID_PS1,
+                .name = "PlayStation",
+                .abbreviation = "PS1",
+                .slug = "ps1",
+                .fileAssociations = {"iso", "cue"},
+                .controllerTypes =
+                {
+                    {
+                        .id = 1,
+                        .name = "Retropad",
+                        .imageUrl = "qrc:/images/controllers/ngp",
+                        .inputs =
+                        {
+                            {"A", input::GamepadInput::SouthFace},
+                            {"B", input::GamepadInput::EastFace},
+                            {"Option", input::GamepadInput::Start},
+                            {"D-Pad Up", input::GamepadInput::DpadUp},
+                            {"D-Pad Down", input::GamepadInput::DpadDown},
+                            {"D-Pad Left", input::GamepadInput::DpadLeft},
+                            {"D-Pad Right", input::GamepadInput::DpadRight},
+                        }
+                    }
+                },
+                .emulationSettings = {}
+            });
     }
 
     std::optional<Platform> PlatformService::getPlatform(const unsigned id) const {

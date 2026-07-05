@@ -67,14 +67,14 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 retro_hw_context_type EmulatorItemRenderer::getPreferredHwRender() {
-  // if (m_graphicsApi == QSGRendererInterface::OpenGL) {
-  //   return RETRO_HW_CONTEXT_OPENGL;
-  // }
-  //
-  // if (m_graphicsApi == QSGRendererInterface::Vulkan) {
-  //   return RETRO_HW_CONTEXT_VULKAN;
-  // }
-
+  // NOTE: returning RETRO_HW_CONTEXT_NONE means HW-3D cores (PPSSPP,
+  // mupen64plus_next) never get a Vulkan context and render nothing (black
+  // screen). Advertising Vulkan here makes the core request the negotiation
+  // interface and drives EmulatorVulkanRenderer, but the core's create_device
+  // currently segfaults (emulator_vulkan_renderer.cpp:241) — WIP.
+  //   if (m_graphicsApi == QSGRendererInterface::Vulkan) {
+  //     return RETRO_HW_CONTEXT_VULKAN;
+  //   }
   return RETRO_HW_CONTEXT_NONE;
 }
 

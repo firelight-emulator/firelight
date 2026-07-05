@@ -176,7 +176,6 @@ add_library(firelight_lib
         src/gui/router.cpp
         src/gui/platform_list_model.cpp
         src/app/libretro/core_configuration.cpp
-        src/app/emulator_config_manager.cpp
         src/gui/models/shop/shop_item_model.cpp
         src/app/saves/gui/suspend_point_list_model.cpp
         src/gui/game_image_provider.cpp
@@ -381,6 +380,13 @@ if (UNIX)
 endif (UNIX)
 
 file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
+
+# PPSSPP runtime assets (fonts, VFPU tables, atlases, compat db). The core loads
+# these from <system>/PPSSPP; main.cpp seeds them into the writable core-system
+# dir on first run. Bundled next to the executable here.
+if (EXISTS ${CMAKE_SOURCE_DIR}/_system/PPSSPP)
+    file(COPY ${CMAKE_SOURCE_DIR}/_system/PPSSPP DESTINATION ${CMAKE_BINARY_DIR}/system)
+endif ()
 
 # Friendly emulation settings + per-core option defaults (loaded at runtime by
 # EmulationService, resolved through CoreConfiguration).
@@ -608,6 +614,15 @@ install(
         ${CMAKE_SOURCE_DIR}/data/settings_catalog.json
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
+
+# PPSSPP runtime assets (seeded into core-system on first run by main.cpp).
+if (EXISTS ${CMAKE_SOURCE_DIR}/_system/PPSSPP)
+    install(
+            DIRECTORY
+            ${CMAKE_SOURCE_DIR}/_system/PPSSPP
+            DESTINATION ${CMAKE_INSTALL_BINDIR}/system
+    )
+endif ()
 
 
 if (WIN32)

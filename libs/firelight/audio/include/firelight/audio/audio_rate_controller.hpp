@@ -1,23 +1,26 @@
 #pragma once
 
-// Dynamic rate control for audio: watches the output buffer's occupancy and
-// returns a small resampler compensation (samples to add or drop) that steers
-// the buffer toward ~50% full. It keeps a short moving average of recent
-// occupancy and only intervenes when the buffer is off-target and not already
-// correcting itself, which keeps playback smooth without constant pitch wobble.
+/**
+ * Controls the audio rate compensation for a libretro core based on the fill level of the audio sink buffer
+*/
 class AudioRateController {
 public:
-  // Describe the sink's current fill (`usedBytes` of `bufferCapacityBytes`).
-  // Call once per audio batch; returns the compensation delta for that batch.
-  int computeCompensation(int usedBytes, int bufferCapacityBytes);
+    /**
+     * Calculates the compensation value based on the current fill level of the audio sink buffer.
+     * Can be used with {@link AudioResampler} to adjust the audio rate dynamically to prevent buffer
+     * underruns or overruns
+    */
+    int computeCompensation(int usedBytes, int bufferCapacityBytes);
 
-  // Clear the moving-average window (e.g. after a device change).
-  void reset();
+    /**
+     * Resets the internal state of the audio rate controller, clearing any previous usage data
+     */
+    void reset();
 
 private:
-  static constexpr int kWindowSize = 10;
-  int m_usageBytes[kWindowSize] = {};
-  int m_index = 0;
-  int m_populatedCount = 0;
-  double m_previousAvgFillRatio = -1.0;
+    static constexpr int kWindowSize = 10;
+    int m_usageBytes[kWindowSize] = {};
+    int m_index = 0;
+    int m_populatedCount = 0;
+    double m_previousAvgFillRatio = -1.0;
 };
