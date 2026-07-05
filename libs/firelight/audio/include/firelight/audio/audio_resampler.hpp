@@ -9,46 +9,62 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-// Owns the libswresample context that converts core audio (interleaved stereo
-// S16) to the output device's sample rate. It also applies a feed-forward
-// playback-rate bias (sync-to-monitor resamples audio to the display refresh
-// rate) and a per-call drift-compensation delta (dynamic rate control, decided
-// by the caller from the output buffer's occupancy).
-//
-// The swr context is only ever touched on the thread that calls
-// initialize()/process(); setPlaybackRateRatio() may be called from any thread
-// and is applied lazily on the next process().
+/**
+ * Resamples interleaved stereo S16 audio to a different sample rate, applying a compensation delta for
+ * Dynamic Rate Control (DRC) to keep the audio sink buffer near 50% full.
+ */
 class AudioResampler {
 public:
-  AudioResampler() = default;
-  ~AudioResampler();
+    AudioResampler() = default;
 
-  AudioResampler(const AudioResampler &) = delete;
-  AudioResampler &operator=(const AudioResampler &) = delete;
+    ~AudioResampler();
 
-  // (Re)build the context for the given core sample rate (Hz).
-  void initialize(int sampleRate);
+    AudioResampler(const AudioResampler &) = delete;
 
-  // 1.0 = native; > 1 plays back faster (ratio = refreshHz / coreFps).
-  void setPlaybackRateRatio(double ratio);
+    AudioResampler &operator=(const AudioResampler &) = delete;
 
-  // Resample `numFrames` interleaved stereo S16 frames, nudging the rate by
-  // `compensationDelta` samples over the call. Returns interleaved stereo S16
-  // output (empty on error or when nothing was produced).
-  std::vector<int16_t> process(const int16_t *data, size_t numFrames,
-                               int compensationDelta);
+    /**
+     * Initializes the resampler with the given sample rate. Must be called before processing audio.
+     * @param sampleRate The core's sample rate (in Hz) to resample from.
+     */
+    void initialize(int sampleRate);
 
-  [[nodiscard]] bool isInitialized() const { return m_swrContext != nullptr; }
+    /**
+     * Sets the playback rate ratio, which affects the output sample rate. A ratio greater than 1.0 speeds up
+     * playback, while a ratio less than 1.0 slows it down. This is used to give a baseline for the resampling rate,
+     * which is then adjusted by the compensation delta to keep the audio sink buffer near 50% full.
+     */
+    void setPlaybackRateRatio(double ratio);
+
+    /**
+     * Resamples the given interleaved stereo S16 audio data to the output sample rate, applying the compensation delta.
+     * The compensation delta is typically computed by the AudioRateController based on the current fill level of the
+     * audio sink buffer.
+     *
+     * @param data Pointer to the input audio data (interleaved stereo S16).
+     * @param numFrames Number of frames in the input data (each frame consists of 2 samples: left and right).
+     * @param compensationDelta The number of samples to adjust the output by, to keep the audio sink buffer near 50%
+     *   full. Positive values will reduce the output sample count, while negative values will increase it.
+     *
+     * @return Vector containing the resampled audio data (interleaved stereo S16).
+     */
+    std::vector<int16_t> process(const int16_t *data, size_t numFrames,
+                                 int compensationDelta);
+
+    /**
+     * @return true if the resampler has been initialized with a sample rate, false otherwise.
+     */
+    [[nodiscard]] bool isInitialized() const { return m_swrContext != nullptr; }
 
 private:
-  void rebuild();
+    void rebuild();
 
-  SwrContext *m_swrContext = nullptr;
-  AVChannelLayout m_channelLayout{};
-  int m_sampleRate = 0;
+    SwrContext *m_swrContext = nullptr;
+    AVChannelLayout m_channelLayout{};
+    int m_sampleRate = 0;
 
-  // Requested from any thread; the active value is only changed on the
-  // process()/initialize() thread.
-  std::atomic<double> m_requestedRatio = 1.0;
-  double m_activeRatio = 1.0;
+    // Requested from any thread; the active value is only changed on the
+    // process()/initialize() thread.
+    std::atomic<double> m_requestedRatio = 1.0;
+    double m_activeRatio = 1.0;
 };

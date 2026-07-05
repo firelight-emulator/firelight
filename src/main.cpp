@@ -12,6 +12,7 @@
 #include <QQmlContext>
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQuickWindow>
+#include <QVulkanInstance>
 #include <QWindow>
 #include <csignal>
 #include <cstdlib>
@@ -724,6 +725,44 @@ int main(int argc, char *argv[]) {
 
     QObject *rootObject = engine.rootObjects().value(0);
     auto window = qobject_cast<QQuickWindow *>(rootObject);
+
+    // Give Qt's Vulkan renderer a shared instance that enables the external
+    // memory/semaphore/fence *capabilities* extensions. HW-render cores that
+    // request only Vulkan 1.0 (PPSSPP) resolve their shared-image negotiation
+    // through the KHR entry points and crash if those extensions aren't enabled;
+    // cores that request 1.1+ (parallel-RDP) get them as core functions. The
+    // apiVersion must stay >= 1.1 so those 1.1 cores keep working. Must be set
+    // before the window is exposed. Static so it outlives the window.
+    static QVulkanInstance vulkanInstance;
+    if (window) {
+      vulkanInstance.setApiVersion(QVersionNumber(1, 3));
+      const QByteArrayList wanted = {
+          "VK_KHR_surface",
+          "VK_KHR_win32_surface",
+          "VK_KHR_get_physical_device_properties2",
+          "VK_KHR_external_memory_capabilities",
+          "VK_KHR_external_semaphore_capabilities",
+          "VK_KHR_external_fence_capabilities",
+          "VK_EXT_swapchain_colorspace",
+          "VK_EXT_debug_utils"};
+      const auto supported = vulkanInstance.supportedExtensions();
+      QByteArrayList enable;
+      for (const auto &w : wanted) {
+        for (const auto &s : supported) {
+          if (s.name == w) {
+            enable << w;
+            break;
+          }
+        }
+      }
+      vulkanInstance.setExtensions(enable);
+      if (!vulkanInstance.create()) {
+        spdlog::error("Failed to create shared QVulkanInstance (VkResult {})",
+                      static_cast<int>(vulkanInstance.errorCode()));
+      } else {
+        window->setVulkanInstance(&vulkanInstance);
+      }
+    }
 
     window->installEventFilter(resizeHandler);
     window->installEventFilter(inputMethodDetectionHandler);

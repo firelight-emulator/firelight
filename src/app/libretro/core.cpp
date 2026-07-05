@@ -1345,19 +1345,28 @@ namespace libretro {
 
   Core::~Core() {
     spdlog::info("[Core] Unloading core");
-    // context_destroy and destroy_device must be called while the DLL is loaded.
+    // Teardown order matters for HW-rendered cores (e.g. PPSSPP): the frontend
+    // owns the VkDevice, but the core keeps using it through retro_unload_game /
+    // retro_deinit — PPSSPP's Shutdown() calls vkDeviceWaitIdle, and its own
+    // vkDestroyDevice is a no-op (the frontend must destroy the device). So run
+    // the core's context_destroy, fully deinit the core, and only THEN tear down
+    // the HW context/device — all while the DLL is still loaded, since
+    // destroy_device is invoked from destroyHwContext() and needs the DLL.
     if (m_destroyContextFunction) {
       m_destroyContextFunction();
       m_destroyContextFunction = nullptr;
     }
-    if (videoReceiver) {
-      videoReceiver->destroyHwContext();
-    }
     if (currentCore != nullptr && coreLib != nullptr) {
       unloadGame();
       deinit();
+      if (videoReceiver) {
+        videoReceiver->destroyHwContext();
+      }
       coreLib->unload();
       currentCore = nullptr;
+    } else if (videoReceiver) {
+      // No loaded DLL to deinit, but still release any HW context we created.
+      videoReceiver->destroyHwContext();
     }
   }
 

@@ -23,6 +23,7 @@ public:
   // negotiation must be non-null. resetCallback is called at the end of init.
   bool initialize(QRhi *rhi,
                   const retro_hw_render_context_negotiation_interface_vulkan *negotiation,
+                  VkSurfaceKHR surface,
                   std::function<void()> resetCallback);
 
   // Safe to call multiple times; no-op if already destroyed.

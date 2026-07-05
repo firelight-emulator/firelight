@@ -1,19 +1,18 @@
 #pragma once
 
 /**
- * Controls the audio rate compensation for a libretro core based on the fill level of the audio sink buffer
+ * Controls the audio rate compensation for a libretro core based on the fill level of the audio sink buffer.
 */
 class AudioRateController {
 public:
     /**
      * Calculates the compensation value based on the current fill level of the audio sink buffer.
-     * Can be used with {@link AudioResampler} to adjust the audio rate dynamically to prevent buffer
-     * underruns or overruns
-    */
+     * Can be used with AudioResampler to adjust the audio rate dynamically to prevent buffer underruns or overruns.
+     */
     int computeCompensation(int usedBytes, int bufferCapacityBytes);
 
     /**
-     * Resets the internal state of the audio rate controller, clearing any previous usage data
+     * Resets the internal state of the audio rate controller, clearing any previous usage data.
      */
     void reset();
 

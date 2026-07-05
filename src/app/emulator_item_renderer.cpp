@@ -9,6 +9,7 @@
 #include <QOpenGLPaintDevice>
 #include <QQuickWindow>
 #include <QVulkanDeviceFunctions>
+#include <QVulkanInstance>
 #include <QVulkanFunctions>
 #include <libretro/libretro_vulkan.h>
 #include <rhi/qrhi.h>
@@ -67,14 +68,9 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 retro_hw_context_type EmulatorItemRenderer::getPreferredHwRender() {
-  // NOTE: returning RETRO_HW_CONTEXT_NONE means HW-3D cores (PPSSPP,
-  // mupen64plus_next) never get a Vulkan context and render nothing (black
-  // screen). Advertising Vulkan here makes the core request the negotiation
-  // interface and drives EmulatorVulkanRenderer, but the core's create_device
-  // currently segfaults (emulator_vulkan_renderer.cpp:241) — WIP.
-  //   if (m_graphicsApi == QSGRendererInterface::Vulkan) {
-  //     return RETRO_HW_CONTEXT_VULKAN;
-  //   }
+  if (m_graphicsApi == QSGRendererInterface::Vulkan) {
+    return RETRO_HW_CONTEXT_VULKAN;
+  }
   return RETRO_HW_CONTEXT_NONE;
 }
 
@@ -477,7 +473,16 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   // m_negotiation is available. Runs on the first frame after load
   if (m_vulkanRenderer && !m_vulkanRenderer->isInitialized()) {
     if (m_negotiation) {
-      if (!m_vulkanRenderer->initialize(rhi(), m_negotiation, m_resetContextFunction)) {
+      // Some HW cores (PPSSPP) require a real VkSurfaceKHR passed to
+      // create_device — they query swapchain capabilities from it and crash on
+      // VK_NULL_HANDLE. Others (parallel-RDP) render offscreen and ignore it.
+      // Hand over the window's surface for both.
+      VkSurfaceKHR surface = VK_NULL_HANDLE;
+      if (auto *inst = m_window ? m_window->vulkanInstance() : nullptr) {
+        surface = inst->surfaceForWindow(m_window);
+      }
+      if (!m_vulkanRenderer->initialize(rhi(), m_negotiation, surface,
+                                        m_resetContextFunction)) {
         spdlog::error("EmulatorItemRenderer: Vulkan initialization failed");
         return;
       }

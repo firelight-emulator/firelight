@@ -4,7 +4,9 @@
 #  include <windows.h>
 #  include <vulkan/vulkan_win32.h>
 #endif
+#include <cstring>
 #include <spdlog/spdlog.h>
+#include <vector>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Construction / destruction
@@ -182,6 +184,7 @@ void EmulatorVulkanRenderer::renderFrame(
 bool EmulatorVulkanRenderer::initialize(
   QRhi *rhi,
   const retro_hw_render_context_negotiation_interface_vulkan *negotiation,
+  VkSurfaceKHR surface,
   std::function<void()> resetCallback) {
   const auto *vk =
       static_cast<const QRhiVulkanNativeHandles *>(rhi->nativeHandles());
@@ -238,9 +241,54 @@ bool EmulatorVulkanRenderer::initialize(
   }
   _putenv_s("VK_LOADER_LAYERS_DISABLE", "~implicit~");
 
+  // Device extensions the core must enable so the shared-image path works. The
+  // core creates the VkDevice, and cores that only enable what they need (PPSSPP)
+  // leave vkGetMemoryWin32HandleKHR / vkGetSemaphoreWin32HandleKHR null, crashing
+  // ensureSharedImage. (parallel-RDP/Granite enables these itself.) Filter to
+  // what the physical device actually advertises so create_device can't fail
+  // with VK_ERROR_EXTENSION_NOT_PRESENT.
+  std::vector<const char *> requiredDeviceExts;
+#ifdef _WIN32
+  {
+    static const char *const kCandidates[] = {
+        VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
+        VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,
+        VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
+        VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
+        VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
+        VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+    };
+    auto enumDevExt =
+        reinterpret_cast<PFN_vkEnumerateDeviceExtensionProperties>(globalProcAddr(
+            vk->inst->vkInstance(), "vkEnumerateDeviceExtensionProperties"));
+    if (enumDevExt) {
+      uint32_t count = 0;
+      enumDevExt(vk->physDev, nullptr, &count, nullptr);
+      std::vector<VkExtensionProperties> props(count);
+      if (count)
+        enumDevExt(vk->physDev, nullptr, &count, props.data());
+      for (const char *cand : kCandidates) {
+        for (const auto &p : props) {
+          if (std::strcmp(p.extensionName, cand) == 0) {
+            requiredDeviceExts.push_back(cand);
+            break;
+          }
+        }
+      }
+    }
+  }
+#endif
+
+  // Hand the core Qt's physical device (not VK_NULL_HANDLE): per the libretro
+  // Vulkan spec the core must then use exactly this VkPhysicalDevice, which is
+  // required for the shared-image path (core + Qt must be on the same GPU). The
+  // surface must also be a real VkSurfaceKHR — PPSSPP asserts it and queries
+  // swapchain capabilities from it; VK_NULL_HANDLE crashes it (parallel-RDP
+  // ignores it).
   const bool deviceOk = negotiation->create_device(
-    &ctx, vk->inst->vkInstance(), VK_NULL_HANDLE, VK_NULL_HANDLE,
-    globalProcAddr, nullptr, 0, nullptr, 0, &features);
+    &ctx, vk->inst->vkInstance(), vk->physDev, surface, globalProcAddr,
+    requiredDeviceExts.empty() ? nullptr : requiredDeviceExts.data(),
+    static_cast<unsigned>(requiredDeviceExts.size()), nullptr, 0, &features);
 
   _putenv_s("VK_LOADER_LAYERS_DISABLE",
             savedLayerDisable.empty() ? "" : savedLayerDisable.c_str());
@@ -654,6 +702,11 @@ bool EmulatorVulkanRenderer::ensureSharedImage(QSize targetSize, QRhi *rhi) {
   }
   m_vkfBindImageMemory(m_vkDevice, m_sharedImage, m_sharedImageMem, 0);
 
+  if (!m_vkfGetMemWin32Handle) {
+    spdlog::error("ensureSharedImage: vkGetMemoryWin32HandleKHR unavailable "
+                  "(core device missing VK_KHR_external_memory_win32)");
+    return false;
+  }
   VkMemoryGetWin32HandleInfoKHR getHandle{VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR};
   getHandle.memory = m_sharedImageMem;
   getHandle.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
