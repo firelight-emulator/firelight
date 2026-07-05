@@ -11,8 +11,8 @@ namespace firelight::cli {
 
 namespace {
 // Timeouts for the tiny local handshake; a live instance answers in <1ms.
-constexpr int kConnectTimeoutMs = 300;
-constexpr int kIoTimeoutMs = 300;
+constexpr int CONNECT_TIMEOUT_MS = 300;
+constexpr int IO_TIMEOUT_MS = 300;
 } // namespace
 
 QString singleInstanceServerName(const QString &appDataPath) {
@@ -26,7 +26,7 @@ bool forwardLaunchToRunningInstance(const QString &serverName,
                                     const CliOptions &opts) {
   QLocalSocket socket;
   socket.connectToServer(serverName);
-  if (!socket.waitForConnected(kConnectTimeoutMs)) {
+  if (!socket.waitForConnected(CONNECT_TIMEOUT_MS)) {
     return false; // no primary is listening -> we are it
   }
   // v1 payload: the ROM path (empty just pings the running instance).
@@ -34,7 +34,7 @@ bool forwardLaunchToRunningInstance(const QString &serverName,
   payload.append('\n');
   socket.write(payload);
   socket.flush();
-  socket.waitForBytesWritten(kIoTimeoutMs);
+  socket.waitForBytesWritten(IO_TIMEOUT_MS);
   socket.disconnectFromServer();
   spdlog::info("Forwarded launch to the running Firelight instance");
   return true;
@@ -67,7 +67,7 @@ void SingleInstanceServer::onNewConnection() {
   }
   connect(socket, &QLocalSocket::disconnected, socket, &QObject::deleteLater);
 
-  socket->waitForReadyRead(kIoTimeoutMs);
+  socket->waitForReadyRead(IO_TIMEOUT_MS);
   const auto romPath = QString::fromUtf8(socket->readAll()).trimmed();
   socket->disconnectFromServer();
 

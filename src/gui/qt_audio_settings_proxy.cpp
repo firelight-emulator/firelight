@@ -6,8 +6,8 @@
 namespace firelight::gui {
 
 namespace {
-constexpr auto kSettingsKey = "audio/outputDevice";
-const QString kDefaultLabel = QStringLiteral("System default");
+constexpr auto SETTINGS_KEY = "audio/outputDevice";
+const QString DEFAULT_LABEL = QStringLiteral("System default");
 } // namespace
 
 QtAudioSettingsProxy::QtAudioSettingsProxy(QObject *parent) : QObject(parent) {
@@ -18,7 +18,7 @@ QtAudioSettingsProxy::QtAudioSettingsProxy(QObject *parent) : QObject(parent) {
 
 QStringList QtAudioSettingsProxy::availableDevices() const {
   QStringList devices;
-  devices << kDefaultLabel;
+  devices << DEFAULT_LABEL;
   for (const auto &device : QMediaDevices::audioOutputs()) {
     devices << device.description();
   }
@@ -26,18 +26,18 @@ QStringList QtAudioSettingsProxy::availableDevices() const {
 }
 
 QString QtAudioSettingsProxy::outputDevice() const {
-  const QString description = QSettings().value(kSettingsKey).toString();
-  return description.isEmpty() ? kDefaultLabel : description;
+  const QString description = QSettings().value(SETTINGS_KEY).toString();
+  return description.isEmpty() ? DEFAULT_LABEL : description;
 }
 
 void QtAudioSettingsProxy::setOutputDevice(const QString &description) {
   const QString stored =
-      (description == kDefaultLabel) ? QString() : description;
+      (description == DEFAULT_LABEL) ? QString() : description;
   QSettings settings;
-  if (settings.value(kSettingsKey).toString() == stored) {
+  if (settings.value(SETTINGS_KEY).toString() == stored) {
     return;
   }
-  settings.setValue(kSettingsKey, stored);
+  settings.setValue(SETTINGS_KEY, stored);
   emit outputDeviceChanged();
 }
 

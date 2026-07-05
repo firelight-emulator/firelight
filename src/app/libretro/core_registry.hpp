@@ -101,7 +101,7 @@ public:
   void setSessionCoreOverride(const std::string &coreId);
 
   // Reserved SettingsService key that stores a platform/game core override.
-  static constexpr const char *kCoreSettingKey = "core";
+  static constexpr const char *CORE_SETTING_KEY = "core";
 
 private:
   CoreRegistry();

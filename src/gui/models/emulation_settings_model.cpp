@@ -41,7 +41,7 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
     if (!matches) {
       return;
     }
-    if (key == CoreRegistry::kCoreSettingKey) {
+    if (key == CoreRegistry::CORE_SETTING_KEY) {
       rebuildItems();
     } else {
       refreshValues();

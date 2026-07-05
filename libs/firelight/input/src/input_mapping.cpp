@@ -12,9 +12,9 @@ InputMapping::InputMapping(const int id, const int profileId, int platformId,
 
 const std::vector<Binding> &
 InputMapping::getBindings(const GamepadInput input) const {
-  static const std::vector<Binding> kEmpty;
+  static const std::vector<Binding> EMPTY;
   const auto it = m_bindings.find(input);
-  return it == m_bindings.end() ? kEmpty : it->second;
+  return it == m_bindings.end() ? EMPTY : it->second;
 }
 
 void InputMapping::setBindings(const GamepadInput input,

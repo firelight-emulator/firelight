@@ -15,7 +15,7 @@ namespace firelight::emulation {
 // counter that run() advances, both captured/restored by serialize/deserialize.
 class FakeCore : public ::libretro::ICore {
 public:
-  static constexpr std::size_t kSramSize = 32;
+  static constexpr std::size_t SRAM_SIZE = 32;
 
   // --- wiring (record nothing; the fake ignores real receivers) ---
   void setVideoReceiver(firelight::libretro::IVideoDataReceiver *) override {}
@@ -59,7 +59,7 @@ public:
   bool loadGame(::libretro::Game *) override {
     m_gameLoaded = true;
     if (m_sram.empty()) {
-      m_sram.assign(kSramSize, 0); // simulate a game with battery-backed SRAM
+      m_sram.assign(SRAM_SIZE, 0); // simulate a game with battery-backed SRAM
     }
     return true;
   }

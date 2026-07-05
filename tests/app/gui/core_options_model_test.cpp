@@ -11,8 +11,8 @@ namespace firelight::settings {
 namespace {
 
 // Platform 3 = Game Boy Advance -> core "mgba_libretro" (PlatformMetadata).
-constexpr int kGbaPlatformId = 3;
-const char *kGbaCore = "mgba_libretro";
+constexpr int GBA_PLATFORM_ID = 3;
+const char *GBA_CORE = "mgba_libretro";
 
 CoreOption option(std::string key, std::string defaultValue,
                   std::vector<CoreOptionValue> values,
@@ -49,7 +49,7 @@ protected:
     SettingsService::setInstance(&m_service);
     ServiceAccessor::setCoreOptionRepository(&m_coreOptions);
     m_coreOptions.upsertCoreOptions(
-        kGbaCore,
+        GBA_CORE,
         {option("mgba_color_correction", "OFF",
                 {{"OFF", "Off"}, {"GBA", "Game Boy Advance"}}),
          option("mgba_frameskip", "disabled", {{"disabled", "Disabled"}})});
@@ -69,7 +69,7 @@ protected:
 TEST_F(CoreOptionsModelTest, LoadsCachedOptionsForPlatformCore) {
   CoreOptionsModel model;
   model.setLevel(Global);
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
 
   ASSERT_EQ(model.rowCount({}), 2);
   EXPECT_EQ(value(model, 0, "key").toString(), "mgba_color_correction");
@@ -82,13 +82,13 @@ TEST_F(CoreOptionsModelTest, LoadsCachedOptionsForPlatformCore) {
 
 TEST_F(CoreOptionsModelTest, FiltersByCategoryAndListsCategories) {
   m_coreOptions.upsertCoreOptions(
-      kGbaCore,
+      GBA_CORE,
       {option("top_opt", "a", {{"a", "A"}}),
        option("vid_opt", "x", {{"x", "X"}}, "video", "Video")});
 
   CoreOptionsModel model;
   model.setLevel(Global);
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
 
   // Default filter "" -> only uncategorized options.
   ASSERT_EQ(model.rowCount({}), 1);
@@ -116,7 +116,7 @@ TEST_F(CoreOptionsModelTest, UnknownCoreIsEmpty) {
 TEST_F(CoreOptionsModelTest, SetDataWritesOverrideAtLevel) {
   CoreOptionsModel model;
   model.setLevel(Global);
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
 
   const int valueRole = roleFor(model, "value");
   ASSERT_TRUE(model.setData(model.index(0), "GBA", valueRole));
@@ -124,7 +124,7 @@ TEST_F(CoreOptionsModelTest, SetDataWritesOverrideAtLevel) {
   EXPECT_EQ(value(model, 0, "value").toString(), "GBA");
   EXPECT_TRUE(value(model, 0, "overridden").toBool());
   // Persisted to the global tier.
-  EXPECT_EQ(m_service.getValueAtLevel(Global, "", kGbaPlatformId,
+  EXPECT_EQ(m_service.getValueAtLevel(Global, "", GBA_PLATFORM_ID,
                                       "mgba_color_correction")
                 .value_or(""),
             "GBA");
@@ -135,7 +135,7 @@ TEST_F(CoreOptionsModelTest, GameOverrideShadowsGlobalWhenViewedAtGame) {
   m_service.setGlobalValue("mgba_color_correction", "GBA");
 
   CoreOptionsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setContentHash(QString::fromStdString(hash));
   model.setLevel(Game);
 
@@ -156,7 +156,7 @@ TEST_F(CoreOptionsModelTest, ResetValueFallsBackToInherited) {
   m_service.setGlobalValue("mgba_color_correction", "GBA");
 
   CoreOptionsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setContentHash(QString::fromStdString(hash));
   model.setLevel(Game);
 

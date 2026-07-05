@@ -22,7 +22,7 @@ namespace firelight::cli {
 
 namespace {
 // Login can take a network round trip; give up (as a failure) after this.
-constexpr int kLoginTimeoutMs = 30000;
+constexpr int LOGIN_TIMEOUT_MS = 30000;
 
 std::string promptLine(const char *prompt) {
   std::fputs(prompt, stderr);
@@ -103,7 +103,7 @@ int runLogin(int argc, char **argv, const CliOptions &opts) {
       raClient.logInUserWithPassword(username, password);
     }
   });
-  QTimer::singleShot(kLoginTimeoutMs, &loop, [&] {
+  QTimer::singleShot(LOGIN_TIMEOUT_MS, &loop, [&] {
     if (!done) {
       fail("timed out");
     }

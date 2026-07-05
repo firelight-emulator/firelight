@@ -14,9 +14,9 @@ namespace firelight::settings {
 namespace {
 
 // Platform 3 = Game Boy Advance -> core "mgba_libretro".
-constexpr int kGbaPlatformId = 3;
+constexpr int GBA_PLATFORM_ID = 3;
 
-const char *kCatalog = R"JSON(
+const char *CATALOG = R"JSON(
 {
   "common": [
     {"key": "rewind-enabled", "label": "Rewind", "category": "Emulation",
@@ -70,7 +70,7 @@ protected:
 
   void SetUp() override {
     SettingsService::setInstance(&m_service);
-    ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(kCatalog));
+    ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(CATALOG));
   }
 
   void TearDown() override {
@@ -95,7 +95,7 @@ TEST_F(EmulationSettingsModelTest, GlobalShowsCommonSettingsOnly) {
 
 TEST_F(EmulationSettingsModelTest, PlatformShowsCommonPlusCoreSettings) {
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setLevel(Platform);
   EXPECT_EQ(model.rowCount({}), 5); // 2 common + 3 core (incl. advanced)
   EXPECT_NE(findRow(model, "solar-sensor"), -1);
@@ -103,7 +103,7 @@ TEST_F(EmulationSettingsModelTest, PlatformShowsCommonPlusCoreSettings) {
 
 TEST_F(EmulationSettingsModelTest, ExposesWidgetAndSliderBounds) {
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setLevel(Platform);
 
   const int rewind = findRow(model, "rewind-enabled");
@@ -119,10 +119,10 @@ TEST_F(EmulationSettingsModelTest, ExposesWidgetAndSliderBounds) {
 }
 
 TEST_F(EmulationSettingsModelTest, ShowsInheritedValueThenGameOverride) {
-  m_service.setPlatformValue(kGbaPlatformId, "aspect-ratio", "pixel");
+  m_service.setPlatformValue(GBA_PLATFORM_ID, "aspect-ratio", "pixel");
 
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setContentHash("hash1");
   model.setLevel(Game);
 
@@ -136,17 +136,17 @@ TEST_F(EmulationSettingsModelTest, ShowsInheritedValueThenGameOverride) {
   ASSERT_TRUE(model.setData(model.index(row), "corrected", valueRole));
   EXPECT_EQ(value(model, row, "value").toString(), "corrected");
   EXPECT_TRUE(value(model, row, "overridden").toBool());
-  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", kGbaPlatformId,
+  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", GBA_PLATFORM_ID,
                                       "aspect-ratio")
                 .value_or(""),
             "corrected");
 }
 
 TEST_F(EmulationSettingsModelTest, ResetFallsBackToInherited) {
-  m_service.setPlatformValue(kGbaPlatformId, "aspect-ratio", "pixel");
+  m_service.setPlatformValue(GBA_PLATFORM_ID, "aspect-ratio", "pixel");
 
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setContentHash("hash1");
   model.setLevel(Game);
 
@@ -162,7 +162,7 @@ TEST_F(EmulationSettingsModelTest, ResetFallsBackToInherited) {
 
 TEST_F(EmulationSettingsModelTest, VisibleWhenTracksDependency) {
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setContentHash("hash1");
   model.setLevel(Game);
 
@@ -182,7 +182,7 @@ TEST_F(EmulationSettingsModelTest, VisibleWhenTracksDependency) {
 
 TEST_F(EmulationSettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setLevel(Platform);
 
   const int adv = findRow(model, "adv-opt");
@@ -201,7 +201,7 @@ TEST_F(EmulationSettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
 // A game-picker setting sourced from the library: platform 3's core is
 // mgba_libretro (see CoreRegistry), so a game-picker declared there surfaces
 // when the model is scoped to platform 3.
-const char *kGamePickerCatalog = R"JSON(
+const char *GAME_PICKER_CATALOG = R"JSON(
 {
   "common": [],
   "cores": {
@@ -216,7 +216,7 @@ const char *kGamePickerCatalog = R"JSON(
 )JSON";
 
 TEST_F(EmulationSettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
-  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(kGamePickerCatalog));
+  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(GAME_PICKER_CATALOG));
 
   // Seed a library with one eligible (Game Boy, platform 1) and one ineligible
   // (SNES, platform 4) entry.
@@ -232,7 +232,7 @@ TEST_F(EmulationSettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatfor
   ServiceAccessor::setLibraryService(&lib);
 
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId); // -> mgba_libretro
+  model.setPlatformId(GBA_PLATFORM_ID); // -> mgba_libretro
   model.setLevel(Platform);
 
   const int row = findRow(model, "tpak");
@@ -249,7 +249,7 @@ TEST_F(EmulationSettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatfor
   EXPECT_EQ(options[1].value("value").toString(), "gbhash"); // content hash
 }
 
-const char *kNewWidgetsCatalog = R"JSON(
+const char *NEW_WIDGETS_CATALOG = R"JSON(
 {
   "common": [],
   "cores": {
@@ -271,10 +271,10 @@ const char *kNewWidgetsCatalog = R"JSON(
 )JSON";
 
 TEST_F(EmulationSettingsModelTest, ExposesNewWidgetRolesAndStringValues) {
-  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(kNewWidgetsCatalog));
+  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(NEW_WIDGETS_CATALOG));
 
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setContentHash("hash1");
   model.setLevel(Game);
 
@@ -303,18 +303,18 @@ TEST_F(EmulationSettingsModelTest, ExposesNewWidgetRolesAndStringValues) {
   const int valueRole = roleFor(model, "value");
   ASSERT_TRUE(model.setData(model.index(cheats), R"(["a","b"])", valueRole));
   EXPECT_EQ(value(model, cheats, "value").toString(), R"(["a","b"])");
-  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", kGbaPlatformId, "cheats")
+  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", GBA_PLATFORM_ID, "cheats")
                 .value_or(""),
             R"(["a","b"])");
 }
 
 TEST_F(EmulationSettingsModelTest, GamePickerWithoutLibraryHasOnlyNone) {
-  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(kGamePickerCatalog));
+  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(GAME_PICKER_CATALOG));
   // No library service wired (TearDown clears it) -> just the "None" option.
   ServiceAccessor::setLibraryService(nullptr);
 
   EmulationSettingsModel model;
-  model.setPlatformId(kGbaPlatformId);
+  model.setPlatformId(GBA_PLATFORM_ID);
   model.setLevel(Platform);
 
   const int row = findRow(model, "tpak");

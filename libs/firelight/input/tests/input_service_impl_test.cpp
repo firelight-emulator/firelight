@@ -423,12 +423,12 @@ TEST_F(InputServiceImplTest, UnpluggingGamepadLeavesKeyboardConnected) {
 // ---------------------------------------------------------------------------
 TEST_F(InputServiceImplTest, ConcurrentReadsDuringConnectDisconnectAreSafe) {
   input::SDLInputService inputService(m_repo);
-  constexpr int kSlots = 16;
+  constexpr int SLOTS = 16;
 
   std::atomic<bool> stop{false};
   std::thread reader([&] {
     while (!stop.load(std::memory_order_relaxed)) {
-      for (int i = 0; i < kSlots; ++i) {
+      for (int i = 0; i < SLOTS; ++i) {
         // Non-null check only: don't read mutable per-device fields here.
         (void)(inputService.getPlayerGamepad(i) != nullptr);
         (void)inputService.getRetropadForPlayerIndex(i);
@@ -460,7 +460,7 @@ TEST_F(InputServiceImplTest, ConcurrentReadsDuringConnectDisconnectAreSafe) {
 
   // After the storm every device is gone and the slots are consistent.
   EXPECT_TRUE(inputService.listGamepads().empty());
-  for (int i = 0; i < kSlots; ++i) {
+  for (int i = 0; i < SLOTS; ++i) {
     EXPECT_EQ(inputService.getPlayerGamepad(i), nullptr);
   }
 }

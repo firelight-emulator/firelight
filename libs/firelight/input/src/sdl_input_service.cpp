@@ -9,7 +9,7 @@
 namespace firelight::input {
 // Axis magnitude past which a stick counts as a directional press for menu
 // navigation (25% of the int16 range).
-constexpr int kNavStickThreshold = 8192;
+constexpr int NAV_STICK_THRESHOLD = 8192;
 SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
     : m_gamepadRepository(gamepadRepository) {
   SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
@@ -404,7 +404,7 @@ void SDLInputService::run() {
 
         switch (ev.caxis.axis) {
         case SDL_CONTROLLER_AXIS_LEFTX: {
-          if (ev.caxis.value < kNavStickThreshold && ev.caxis.value > -kNavStickThreshold) {
+          if (ev.caxis.value < NAV_STICK_THRESHOLD && ev.caxis.value > -NAV_STICK_THRESHOLD) {
             if (m_gamepadLastStates[index][LeftStickLeft]) {
               m_gamepadLastStates[index][LeftStickLeft] = false;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -424,7 +424,7 @@ void SDLInputService::run() {
             }
             break;
           }
-          if (ev.caxis.value > kNavStickThreshold) {
+          if (ev.caxis.value > NAV_STICK_THRESHOLD) {
             if (!m_gamepadLastStates[index][LeftStickRight]) {
               m_gamepadLastStates[index][LeftStickRight] = true;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -435,7 +435,7 @@ void SDLInputService::run() {
             }
             break;
           }
-          if (ev.caxis.value < -kNavStickThreshold) {
+          if (ev.caxis.value < -NAV_STICK_THRESHOLD) {
             if (!m_gamepadLastStates[index][LeftStickLeft]) {
               m_gamepadLastStates[index][LeftStickLeft] = true;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -449,7 +449,7 @@ void SDLInputService::run() {
           break;
         }
         case SDL_CONTROLLER_AXIS_LEFTY: {
-          if (ev.caxis.value < kNavStickThreshold && ev.caxis.value > -kNavStickThreshold) {
+          if (ev.caxis.value < NAV_STICK_THRESHOLD && ev.caxis.value > -NAV_STICK_THRESHOLD) {
             if (m_gamepadLastStates[index][LeftStickUp]) {
               m_gamepadLastStates[index][LeftStickUp] = false;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -469,7 +469,7 @@ void SDLInputService::run() {
             }
             break;
           }
-          if (ev.caxis.value > kNavStickThreshold) {
+          if (ev.caxis.value > NAV_STICK_THRESHOLD) {
             if (!m_gamepadLastStates[index][LeftStickDown]) {
               m_gamepadLastStates[index][LeftStickDown] = true;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -480,7 +480,7 @@ void SDLInputService::run() {
             }
             break;
           }
-          if (ev.caxis.value < -kNavStickThreshold) {
+          if (ev.caxis.value < -NAV_STICK_THRESHOLD) {
             if (!m_gamepadLastStates[index][LeftStickUp]) {
               m_gamepadLastStates[index][LeftStickUp] = true;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -494,7 +494,7 @@ void SDLInputService::run() {
           break;
         }
         case SDL_CONTROLLER_AXIS_RIGHTX: {
-          if (ev.caxis.value < kNavStickThreshold && ev.caxis.value > -kNavStickThreshold) {
+          if (ev.caxis.value < NAV_STICK_THRESHOLD && ev.caxis.value > -NAV_STICK_THRESHOLD) {
             if (m_gamepadLastStates[index][RightStickLeft]) {
               m_gamepadLastStates[index][RightStickLeft] = false;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -514,7 +514,7 @@ void SDLInputService::run() {
             }
             break;
           }
-          if (ev.caxis.value > kNavStickThreshold) {
+          if (ev.caxis.value > NAV_STICK_THRESHOLD) {
             if (!m_gamepadLastStates[index][RightStickRight]) {
               m_gamepadLastStates[index][RightStickRight] = true;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -525,7 +525,7 @@ void SDLInputService::run() {
             }
             break;
           }
-          if (ev.caxis.value < -kNavStickThreshold) {
+          if (ev.caxis.value < -NAV_STICK_THRESHOLD) {
             if (!m_gamepadLastStates[index][RightStickLeft]) {
               m_gamepadLastStates[index][RightStickLeft] = true;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -539,7 +539,7 @@ void SDLInputService::run() {
           break;
         }
         case SDL_CONTROLLER_AXIS_RIGHTY: {
-          if (ev.caxis.value < kNavStickThreshold && ev.caxis.value > -kNavStickThreshold) {
+          if (ev.caxis.value < NAV_STICK_THRESHOLD && ev.caxis.value > -NAV_STICK_THRESHOLD) {
             if (m_gamepadLastStates[index][RightStickUp]) {
               m_gamepadLastStates[index][RightStickUp] = false;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -559,7 +559,7 @@ void SDLInputService::run() {
             }
             break;
           }
-          if (ev.caxis.value > kNavStickThreshold) {
+          if (ev.caxis.value > NAV_STICK_THRESHOLD) {
             if (!m_gamepadLastStates[index][RightStickDown]) {
               m_gamepadLastStates[index][RightStickDown] = true;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -570,7 +570,7 @@ void SDLInputService::run() {
             }
             break;
           }
-          if (ev.caxis.value < -kNavStickThreshold) {
+          if (ev.caxis.value < -NAV_STICK_THRESHOLD) {
             if (!m_gamepadLastStates[index][RightStickUp]) {
               m_gamepadLastStates[index][RightStickUp] = true;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -584,7 +584,7 @@ void SDLInputService::run() {
           break;
         }
         case SDL_CONTROLLER_AXIS_TRIGGERLEFT: {
-          if (ev.caxis.value < kNavStickThreshold) {
+          if (ev.caxis.value < NAV_STICK_THRESHOLD) {
             if (m_gamepadLastStates[index][LeftTrigger]) {
               m_gamepadLastStates[index][LeftTrigger] = false;
               EventDispatcher::instance().publish(GamepadInputEvent{
@@ -610,7 +610,7 @@ void SDLInputService::run() {
           break;
         }
         case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: {
-          if (ev.caxis.value < kNavStickThreshold) {
+          if (ev.caxis.value < NAV_STICK_THRESHOLD) {
             if (m_gamepadLastStates[index][RightTrigger]) {
               m_gamepadLastStates[index][RightTrigger] = false;
               EventDispatcher::instance().publish(GamepadInputEvent{

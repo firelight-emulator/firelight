@@ -17,7 +17,7 @@ CoreOptionsModel::CoreOptionsModel(QObject *parent)
       EventDispatcher::instance().subscribe<PlatformSettingChangedEvent>(
           [this](const PlatformSettingChangedEvent &e) {
             if (e.platformId == m_platformId &&
-                e.key == CoreRegistry::kCoreSettingKey) {
+                e.key == CoreRegistry::CORE_SETTING_KEY) {
               rebuild();
               refreshValues();
             }
@@ -26,7 +26,7 @@ CoreOptionsModel::CoreOptionsModel(QObject *parent)
       EventDispatcher::instance().subscribe<GameSettingChangedEvent>(
           [this](const GameSettingChangedEvent &e) {
             if (e.contentHash == m_contentHash.toStdString() &&
-                e.key == CoreRegistry::kCoreSettingKey) {
+                e.key == CoreRegistry::CORE_SETTING_KEY) {
               rebuild();
               refreshValues();
             }

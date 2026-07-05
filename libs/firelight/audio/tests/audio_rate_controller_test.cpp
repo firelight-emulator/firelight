@@ -3,31 +3,31 @@
 #include <gtest/gtest.h>
 
 namespace {
-constexpr int kCapacity = 16384;
+  constexpr int CAPACITY = 16384;
 
-// Feed the same occupancy enough times to fill the moving-average window.
-int settle(AudioRateController &controller, int usedBytes) {
-  int delta = 0;
-  for (int i = 0; i < 15; ++i) {
-    delta = controller.computeCompensation(usedBytes, kCapacity);
+  // Feed the same occupancy enough times to fill the rolling average window
+  int settle(AudioRateController &controller, int usedBytes) {
+    int delta = 0;
+    for (int i = 0; i < 15; ++i) {
+      delta = controller.computeCompensation(usedBytes, CAPACITY);
+    }
+    return delta;
   }
-  return delta;
-}
 } // namespace
 
 TEST(AudioRateControllerTest, DropsSamplesWhenBufferFull) {
   AudioRateController controller;
-  EXPECT_LT(settle(controller, kCapacity), 0); // >target -> drop samples
+  EXPECT_LT(settle(controller, CAPACITY), 0);
 }
 
 TEST(AudioRateControllerTest, AddsSamplesWhenBufferEmpty) {
   AudioRateController controller;
-  EXPECT_GT(settle(controller, 0), 0); // <target -> add samples
+  EXPECT_GT(settle(controller, 0), 0);
 }
 
 TEST(AudioRateControllerTest, NoCompensationNearTarget) {
   AudioRateController controller;
-  EXPECT_EQ(settle(controller, kCapacity / 2), 0); // ~50% full -> leave alone
+  EXPECT_EQ(settle(controller, CAPACITY / 2), 0);
 }
 
 TEST(AudioRateControllerTest, ZeroCapacityIsSafe) {
@@ -37,8 +37,8 @@ TEST(AudioRateControllerTest, ZeroCapacityIsSafe) {
 
 TEST(AudioRateControllerTest, ResetClearsWindow) {
   AudioRateController controller;
-  ASSERT_LT(settle(controller, kCapacity), 0); // full -> negative
+  ASSERT_LT(settle(controller, CAPACITY), 0);
+
   controller.reset();
-  // A fresh window: an empty buffer now reads as low from the first sample.
-  EXPECT_GT(controller.computeCompensation(0, kCapacity), 0);
+  EXPECT_GT(controller.computeCompensation(0, CAPACITY), 0);
 }

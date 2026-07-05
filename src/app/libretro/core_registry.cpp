@@ -9,9 +9,9 @@ namespace firelight {
     // RETRO_DEVICE_* base classes + the SUBCLASS macro, mirrored here so the
     // catalog reads like the core sources (libretro.h) without pulling that heavy
     // header into this TU. RETRO_DEVICE_SUBCLASS(base, id) = ((id+1) << 8) | base.
-    constexpr unsigned kJoypad = 1;
-    constexpr unsigned kMouse = 2;
-    constexpr unsigned kLightgun = 4;
+    constexpr unsigned JOYPAD = 1;
+    constexpr unsigned MOUSE = 2;
+    constexpr unsigned LIGHTGUN = 4;
 
     constexpr unsigned subclass(const unsigned base, const unsigned id) {
       return ((id + 1) << 8) | base;
@@ -106,23 +106,23 @@ namespace firelight {
       {
         "genesis_plus_gx_libretro",
         {
-          {subclass(kJoypad, 0), Class::Joypad, "Control Pad (3-button)"},
+          {subclass(JOYPAD, 0), Class::Joypad, "Control Pad (3-button)"},
           {
-            subclass(kJoypad, 1), Class::Joypad, "Control Pad (6-button)", {},
+            subclass(JOYPAD, 1), Class::Joypad, "Control Pad (6-button)", {},
             true
           },
-          {kMouse, Class::Mouse, "Mega Mouse"},
-          {subclass(kLightgun, 1), Class::Lightgun, "Menacer"},
-          {subclass(kLightgun, 2), Class::Lightgun, "Justifier"},
-          {subclass(kLightgun, 0), Class::Lightgun, "Light Phaser"},
+          {MOUSE, Class::Mouse, "Mega Mouse"},
+          {subclass(LIGHTGUN, 1), Class::Lightgun, "Menacer"},
+          {subclass(LIGHTGUN, 2), Class::Lightgun, "Justifier"},
+          {subclass(LIGHTGUN, 0), Class::Lightgun, "Light Phaser"},
         }
       },
       {
         "snes9x_libretro",
         {
-          {kMouse, Class::Mouse, "Mouse"},
-          {subclass(kLightgun, 0), Class::Lightgun, "Super Scope"},
-          {subclass(kLightgun, 1), Class::Lightgun, "Justifier"},
+          {MOUSE, Class::Mouse, "Mouse"},
+          {subclass(LIGHTGUN, 0), Class::Lightgun, "Super Scope"},
+          {subclass(LIGHTGUN, 1), Class::Lightgun, "Justifier"},
         }
       },
       {
@@ -131,7 +131,7 @@ namespace firelight {
           // Advertised as a MOUSE subclass, but reads LIGHTGUN ids in
           // "clightgun" mode (its default) — force it so aim/trigger work.
           {
-            subclass(kMouse, 0),
+            subclass(MOUSE, 0),
             Class::Lightgun,
             "Zapper",
             {{"fceumm_zapper_mode", "clightgun"}}
@@ -157,9 +157,9 @@ namespace firelight {
 
   const std::vector<CoreDeviceVariant> &
   CoreRegistry::deviceCatalogForCore(const std::string &coreId) const {
-    static const std::vector<CoreDeviceVariant> kEmpty;
+    static const std::vector<CoreDeviceVariant> EMPTY;
     const auto it = m_coreDevices.find(coreId);
-    return it != m_coreDevices.end() ? it->second : kEmpty;
+    return it != m_coreDevices.end() ? it->second : EMPTY;
   }
 
   std::vector<CoreDeviceVariant> CoreRegistry::availableControllerVariants(
@@ -185,7 +185,7 @@ namespace firelight {
       // Every platform has a standard controller; synthesize it as the default
       // when the catalog doesn't enumerate joypad variants for this core.
       result.insert(result.begin(), CoreDeviceVariant{
-                      .coreDeviceId = kJoypad,
+                      .coreDeviceId = JOYPAD,
                       .deviceClass = Class::Joypad,
                       .friendlyName = "Controller",
                       .isDefault = true
@@ -264,13 +264,13 @@ namespace firelight {
     // the platform (a stale override must never wedge the platform).
     if (!contentHash.empty()) {
       if (const auto v = settings->getValueAtLevel(settings::Game, contentHash,
-                                                   platformId, kCoreSettingKey);
+                                                   platformId, CORE_SETTING_KEY);
         v && supportsPlatform(*v, platformId)) {
         return *v;
       }
     }
     if (const auto v = settings->getValueAtLevel(settings::Platform, contentHash,
-                                                 platformId, kCoreSettingKey);
+                                                 platformId, CORE_SETTING_KEY);
       v && supportsPlatform(*v, platformId)) {
       return *v;
     }

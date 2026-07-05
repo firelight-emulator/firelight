@@ -7,7 +7,7 @@
 namespace firelight::settings {
 
 namespace {
-const char *kSampleJson = R"JSON(
+const char *SAMPLE_JSON = R"JSON(
 {
   "common": [
     {"key": "rewind-enabled", "label": "Rewind", "type": "boolean",
@@ -53,7 +53,7 @@ const EmulationSetting *find(const std::vector<EmulationSetting> &v,
 class SettingsCatalogTest : public testing::Test {
 protected:
   SettingsCatalog catalog;
-  void SetUp() override { ASSERT_TRUE(catalog.loadFromJson(kSampleJson)); }
+  void SetUp() override { ASSERT_TRUE(catalog.loadFromJson(SAMPLE_JSON)); }
 };
 
 TEST_F(SettingsCatalogTest, ParsesCommonAndPerCore) {

@@ -140,9 +140,9 @@ public:
   // input callback reads stable input during retro_run() (and each frame is a
   // recordable firelight::input::InputFrame). Ports with no controller are
   // inactive. Public because the static libretro input callback reads them.
-  static constexpr int kMaxInputPorts = 8;
-  std::array<firelight::input::InputFrame, kMaxInputPorts> m_portFrames{};
-  std::array<bool, kMaxInputPorts> m_portActive{};
+  static constexpr int MAX_INPUT_PORTS = 8;
+  std::array<firelight::input::InputFrame, MAX_INPUT_PORTS> m_portFrames{};
+  std::array<bool, MAX_INPUT_PORTS> m_portActive{};
 
 private:
   // Resolved input device class per port (firelight::input::GamepadInputClass

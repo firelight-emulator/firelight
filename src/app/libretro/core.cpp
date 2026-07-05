@@ -196,7 +196,7 @@ namespace libretro {
 
     // Joypad reads come from the per-frame snapshot (Core::pollInput), so input
     // is stable for the whole retro_run() and each frame is a recordable value.
-    if (port >= static_cast<unsigned>(Core::kMaxInputPorts) ||
+    if (port >= static_cast<unsigned>(Core::MAX_INPUT_PORTS) ||
         !currentCore->m_portActive[port]) {
       return 0;
     }
@@ -935,18 +935,8 @@ namespace libretro {
       case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK: {
         environmentCalls.emplace_back(
           "RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK");
-        if (!data) {
-          break;
-        }
-
-        auto ptr = static_cast<retro_audio_buffer_status_callback *>(data);
-
-        ptr->callback = [](bool active, unsigned occupancy, bool underrun_likely) {
-          printf("Active: %d, Occupancy: %d, Underrun Likely: %d\n", active,
-                 occupancy, underrun_likely);
-        };
-
-        break;
+        spdlog::info("Intentionally declining SET_AUDIO_BUFFER_STATUS_CALLBACK since Firelight implements DRC");
+        return false;
       }
       case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY: {
         environmentCalls.emplace_back(
@@ -1649,7 +1639,7 @@ namespace libretro {
     // Snapshot each port's joypad state once, so the input callback reads stable
     // input for the whole frame (buttons/axes can't shift mid-run) and the frame
     // is a recordable InputFrame. Ports with no controller are marked inactive.
-    for (int port = 0; port < kMaxInputPorts; ++port) {
+    for (int port = 0; port < MAX_INPUT_PORTS; ++port) {
       const auto pad =
           m_retropadProvider
             ? m_retropadProvider->getRetropadForPlayerIndex(port)

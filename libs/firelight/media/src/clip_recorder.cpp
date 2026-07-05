@@ -21,7 +21,7 @@ namespace firelight::media {
 namespace {
 // Backpressure: if the encoder falls behind, drop the oldest queued frame
 // rather than let the hand-off queue grow. A handful of small retro frames.
-constexpr std::size_t kMaxQueuedFrames = 8;
+constexpr std::size_t MAX_QUEUED_FRAMES = 8;
 
 struct RawFrame {
   std::vector<uint8_t> rgba;
@@ -205,7 +205,7 @@ void ClipRecorder::Impl::pushVideo(const QImage &frame, const int64_t ptsMs) {
   rf.rgba.assign(img.constBits(), img.constBits() + img.sizeInBytes());
   {
     std::lock_guard<std::mutex> lk(queueMutex);
-    if (queue.size() >= kMaxQueuedFrames) {
+    if (queue.size() >= MAX_QUEUED_FRAMES) {
       queue.pop_front();
     }
     queue.push_back(std::move(rf));

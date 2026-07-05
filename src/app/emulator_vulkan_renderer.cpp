@@ -250,7 +250,7 @@ bool EmulatorVulkanRenderer::initialize(
   std::vector<const char *> requiredDeviceExts;
 #ifdef _WIN32
   {
-    static const char *const kCandidates[] = {
+    static const char *const CANDIDATES[] = {
         VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
         VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,
         VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
@@ -267,7 +267,7 @@ bool EmulatorVulkanRenderer::initialize(
       std::vector<VkExtensionProperties> props(count);
       if (count)
         enumDevExt(vk->physDev, nullptr, &count, props.data());
-      for (const char *cand : kCandidates) {
+      for (const char *cand : CANDIDATES) {
         for (const auto &p : props) {
           if (std::strcmp(p.extensionName, cand) == 0) {
             requiredDeviceExts.push_back(cand);

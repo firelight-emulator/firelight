@@ -37,10 +37,10 @@ struct InputFrame {
   bool operator==(const InputFrame &) const = default;
 
   // Fixed-size little-endian wire encoding: 2 (buttons) + 4*2 (axes) = 10 bytes.
-  static constexpr std::size_t kSerializedSize = 10;
+  static constexpr std::size_t SERIALIZED_SIZE = 10;
 
-  [[nodiscard]] std::array<uint8_t, kSerializedSize> serialize() const {
-    std::array<uint8_t, kSerializedSize> out{};
+  [[nodiscard]] std::array<uint8_t, SERIALIZED_SIZE> serialize() const {
+    std::array<uint8_t, SERIALIZED_SIZE> out{};
     const auto put16 = [&](std::size_t off, uint16_t v) {
       out[off] = static_cast<uint8_t>(v & 0xFF);
       out[off + 1] = static_cast<uint8_t>((v >> 8) & 0xFF);
@@ -54,7 +54,7 @@ struct InputFrame {
   }
 
   [[nodiscard]] static InputFrame
-  deserialize(const std::array<uint8_t, kSerializedSize> &data) {
+  deserialize(const std::array<uint8_t, SERIALIZED_SIZE> &data) {
     const auto get16 = [&](std::size_t off) -> uint16_t {
       return static_cast<uint16_t>(
           data[off] | (static_cast<uint16_t>(data[off + 1]) << 8));

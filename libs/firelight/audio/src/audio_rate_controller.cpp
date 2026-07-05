@@ -34,22 +34,22 @@ int AudioRateController::computeCompensation(const int usedBytes,
   const double avgUsedBytes = static_cast<double>(sum) / m_populatedCount;
   const double avgFillRatio = avgUsedBytes / bufferCapacityBytes;
 
-  constexpr double kTargetFillRatio = 0.5;
-  const double targetFillBytes = bufferCapacityBytes * kTargetFillRatio;
+  constexpr double TARGET_FILL_RATIO = 0.5;
+  const double targetFillBytes = bufferCapacityBytes * TARGET_FILL_RATIO;
   const double deviation = (avgUsedBytes - targetFillBytes) / targetFillBytes;
 
   // Skip adjusting while near the target or already trending back toward it
   bool adjust = true;
   if (m_previousAvgFillRatio >= 0.0 && m_populatedCount == WINDOW_SIZE) {
-    const double currentError = avgFillRatio - kTargetFillRatio;
-    const double previousError = m_previousAvgFillRatio - kTargetFillRatio;
+    const double currentError = avgFillRatio - TARGET_FILL_RATIO;
+    const double previousError = m_previousAvgFillRatio - TARGET_FILL_RATIO;
 
-    constexpr double kWithinTargetTolerance = 0.05; // ~45%-55% fill
-    constexpr double kExtremeDeviation = 0.25; // <25% or >75% fill
+    constexpr double WITHIN_TARGET_TOLERANCE = 0.05; // ~45%-55% fill
+    constexpr double EXTREME_DEVIATION = 0.25; // <25% or >75% fill
 
     const bool trendingWell = std::abs(currentError) < std::abs(previousError);
-    const bool nearTarget = std::abs(currentError) <= kWithinTargetTolerance;
-    const bool extreme = std::abs(currentError) > kExtremeDeviation;
+    const bool nearTarget = std::abs(currentError) <= WITHIN_TARGET_TOLERANCE;
+    const bool extreme = std::abs(currentError) > EXTREME_DEVIATION;
 
     if (nearTarget || (trendingWell && !extreme)) {
       adjust = false;

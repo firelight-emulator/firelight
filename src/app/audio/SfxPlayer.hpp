@@ -21,7 +21,7 @@ namespace firelight::audio {
         // SDL_AudioSpec want, have;
         //
         // SDL_memset(&want, 0, sizeof(want));
-        // want.freq = new_freq; // Sample rate (e.g., 44.1 kHz)
+        // want.freq = new_freq; // Sample rate (e.g., 44.1 HZ)
         // want.format = AUDIO_S16; // Audio format (16-bit signed)
         // want.channels = 2; // Number of audio channels (stereo)
         // want.samples = 128; // Audio buffer size (samples)

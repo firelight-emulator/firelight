@@ -23,7 +23,7 @@ namespace {
 // Upper bound on how much we'll extract from an archive to identify a disc.
 // CD-based systems all fit well under this; oversized DVD images zipped up are
 // skipped rather than risk filling the user's temp drive.
-constexpr int64_t kMaxInArchiveDiscExtractBytes = 2LL * 1024 * 1024 * 1024;
+constexpr int64_t MAX_IN_ARCHIVE_DISC_EXTRACT_BYTES = 2LL * 1024 * 1024 * 1024;
 
 std::string toLower(std::string s) {
   std::transform(s.begin(), s.end(), s.begin(),
@@ -289,10 +289,10 @@ DiscIdentity DiscInspector::inspectArchiveEntry(
   for (const auto &name : wanted) {
     totalBytes += sizeByBase[name];
   }
-  if (totalBytes > kMaxInArchiveDiscExtractBytes) {
+  if (totalBytes > MAX_IN_ARCHIVE_DISC_EXTRACT_BYTES) {
     spdlog::warn("Skipping in-archive disc {}: needs {} bytes extracted, over "
                  "the {} byte cap",
-                 entryName, totalBytes, kMaxInArchiveDiscExtractBytes);
+                 entryName, totalBytes, MAX_IN_ARCHIVE_DISC_EXTRACT_BYTES);
     return {};
   }
 

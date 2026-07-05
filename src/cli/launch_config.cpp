@@ -107,7 +107,7 @@ std::vector<OverridePair> loadOverrideFile(const std::string &path) {
 }
 
 std::optional<GamepadType> parseControllerType(const std::string &name) {
-  static const std::map<std::string, GamepadType> kAliases = {
+  static const std::map<std::string, GamepadType> ALIASES = {
       {"keyboard", KEYBOARD},
       {"xbox360", MICROSOFT_XBOX_360},
       {"xbox-360", MICROSOFT_XBOX_360},
@@ -127,8 +127,8 @@ std::optional<GamepadType> parseControllerType(const std::string &name) {
       {"nso-snes", NINTENDO_NSO_SNES},
       {"nso-genesis", NINTENDO_NSO_GENESIS},
   };
-  const auto it = kAliases.find(toLower(name));
-  if (it == kAliases.end()) {
+  const auto it = ALIASES.find(toLower(name));
+  if (it == ALIASES.end()) {
     return std::nullopt;
   }
   return it->second;

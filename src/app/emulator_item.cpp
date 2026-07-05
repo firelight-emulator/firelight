@@ -376,8 +376,8 @@ double EmulatorItem::monitorPacingRate(const double coreFps,
     return 0.0;
   }
   const double effectiveRate = refreshHz / multiple;
-  constexpr double kTolerance = 0.05; // within 5% of the content rate
-  if (std::abs(effectiveRate - coreFps) / coreFps <= kTolerance) {
+  constexpr double TOLERANCE = 0.05; // within 5% of the content rate
+  if (std::abs(effectiveRate - coreFps) / coreFps <= TOLERANCE) {
     return effectiveRate;
   }
   return 0.0; // display doesn't line up with the content rate

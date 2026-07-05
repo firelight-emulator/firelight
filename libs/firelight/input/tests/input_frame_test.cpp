@@ -50,7 +50,7 @@ TEST(InputFrameTest, SerializeRoundTrip) {
   f.rightStickY = -32768;
 
   const auto bytes = f.serialize();
-  EXPECT_EQ(bytes.size(), InputFrame::kSerializedSize);
+  EXPECT_EQ(bytes.size(), InputFrame::SERIALIZED_SIZE);
   const auto back = InputFrame::deserialize(bytes);
   EXPECT_EQ(back, f);
 }

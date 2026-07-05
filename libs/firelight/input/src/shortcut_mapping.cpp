@@ -10,9 +10,9 @@ ShortcutMapping::ShortcutMapping(
 
 const std::vector<InputSource> &
 ShortcutMapping::getBindings(const ShortcutId &id) const {
-  static const std::vector<InputSource> kEmpty;
+  static const std::vector<InputSource> EMPTY;
   const auto it = m_bindings.find(id);
-  return it == m_bindings.end() ? kEmpty : it->second;
+  return it == m_bindings.end() ? EMPTY : it->second;
 }
 
 void ShortcutMapping::setBindings(const ShortcutId &id,

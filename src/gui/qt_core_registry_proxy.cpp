@@ -33,7 +33,7 @@ QString QtCoreRegistryProxy::coreOverride(const int level, const int platformId,
   }
   const auto value = settings->getValueAtLevel(
       static_cast<settings::SettingsLevel>(level), contentHash.toStdString(),
-      platformId, CoreRegistry::kCoreSettingKey);
+      platformId, CoreRegistry::CORE_SETTING_KEY);
   return value ? QString::fromStdString(*value) : QString{};
 }
 
@@ -43,7 +43,7 @@ void QtCoreRegistryProxy::setCoreOverride(const int level, const int platformId,
   if (auto *settings = settings::SettingsService::instance()) {
     settings->setValueAtLevel(static_cast<settings::SettingsLevel>(level),
                               contentHash.toStdString(), platformId,
-                              CoreRegistry::kCoreSettingKey,
+                              CoreRegistry::CORE_SETTING_KEY,
                               coreId.toStdString());
   }
 }
@@ -54,7 +54,7 @@ void QtCoreRegistryProxy::clearCoreOverride(const int level,
   if (auto *settings = settings::SettingsService::instance()) {
     settings->resetValueAtLevel(static_cast<settings::SettingsLevel>(level),
                                 contentHash.toStdString(), platformId,
-                                CoreRegistry::kCoreSettingKey);
+                                CoreRegistry::CORE_SETTING_KEY);
   }
 }
 
