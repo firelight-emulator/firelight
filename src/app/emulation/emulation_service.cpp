@@ -30,6 +30,10 @@ namespace firelight::emulation {
     : m_settingsService(settingsService), m_library(library),
       m_resolver(entryResolver), m_context(std::move(context)),
       m_coreFactory(std::move(coreFactory)) {
+    // The EmulatorInstance created below inherits this context; make sure it
+    // carries the same settings service the service was constructed with,
+    // regardless of whether the caller pre-populated the field.
+    m_context.settingsService = &m_settingsService;
     // Default factory builds the real dlopen'd Core; tests inject a fake.
     if (!m_coreFactory) {
       m_coreFactory =
@@ -60,7 +64,7 @@ namespace firelight::emulation {
     // Persist under the core actually resolved for this entry (honors any
     // per-platform / per-game core override), so the cache matches what ran.
     const auto coreName = CoreRegistry::instance().resolveCoreName(
-        m_currentEntry.platformId, m_currentContentHash);
+        m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
     if (coreName.empty()) {
       return;
     }
@@ -162,7 +166,7 @@ namespace firelight::emulation {
     QByteArray saveDataBytes;
     if (const auto saveManager = m_context.saveManager) {
       const auto saveData = saveManager->readSaveData(
-          QString::fromStdString(loaded.contentHash), saveSlot);
+          loaded.contentHash, saveSlot);
       if (saveData.has_value()) {
         saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
                                    saveData->getSaveRamData().size());
@@ -180,7 +184,7 @@ namespace firelight::emulation {
     // Resolve the core for this entry (default -> per-platform -> per-game
     // override) and locate its DLL.
     const auto coreName = CoreRegistry::instance().resolveCoreName(
-        m_currentEntry.platformId, m_currentContentHash);
+        m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
     const std::string corePath = CoreRegistry::instance().dllPathFor(coreName);
     const auto &catalog = settings::SettingsCatalog::instance();
     auto coreConfig = std::make_shared<CoreConfiguration>(

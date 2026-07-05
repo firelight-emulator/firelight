@@ -16,8 +16,7 @@ int main(int argc, char **argv) {
 
   firelight::db::SqliteUserdataDatabase userdata(":memory:");
   firelight::ServiceAccessor::setSaveManager(new firelight::saves::SaveManager(
-      QString::fromStdString(std::filesystem::temp_directory_path().string()),
-      userdata));
+      std::filesystem::temp_directory_path().string(), userdata));
 
   firelight::settings::SqliteSettingsRepository settings(":memory:");
   auto settingsService =

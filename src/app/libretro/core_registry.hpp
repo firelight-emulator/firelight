@@ -9,6 +9,10 @@
 
 namespace firelight {
 
+namespace settings {
+class SettingsService;
+}
+
 // A libretro core Firelight knows about. `id` is the DLL base name (e.g.
 // "mupen64plus_libretro"), which is also the key the settings/core-options
 // catalogs use. Bundled cores ship in system/_cores; user-supplied cores
@@ -83,11 +87,12 @@ public:
 
   // Resolves the effective core for a scope: per-game override -> per-platform
   // override -> platform default. An override is honored only if that core
-  // supports the platform (a stale/invalid override falls back). Reads
-  // SettingsService::instance() (the "core" key); returns the default if unset
-  // or the service is unavailable.
-  [[nodiscard]] std::string resolveCoreName(int platformId,
-                                            const std::string &contentHash) const;
+  // supports the platform (a stale/invalid override falls back). The override
+  // tiers come from the passed SettingsService (the "core" key); pass nullptr
+  // (or an unset service) to get just the platform default.
+  [[nodiscard]] std::string
+  resolveCoreName(int platformId, const std::string &contentHash,
+                  settings::SettingsService *settings) const;
 
   // Forces a specific core for this session (CLI `--core`), winning over the
   // stored per-game/per-platform overrides in resolveCoreName. Honored only

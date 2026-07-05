@@ -97,7 +97,7 @@ bool EmulatorInstance::initialize(
   // the saves tree so those saves are organized/backed up per slot, not dumped
   // in the system dir.
   if (const auto saveManager = m_context.saveManager) {
-    const auto base = saveManager->getSaveDirectory().toStdString();
+    const auto base = saveManager->getSaveDirectory();
     if (!base.empty()) {
       const auto coreSaveDir = base + "/" + m_contentHash + "/slot" +
                                std::to_string(m_saveSlotNumber) + "/core";
@@ -197,7 +197,8 @@ EmulatorInstance::getAvailableControllerVariants(const unsigned port) const {
     return {};
   }
   const auto coreId =
-      CoreRegistry::instance().resolveCoreName(m_platformId, m_contentHash);
+      CoreRegistry::instance().resolveCoreName(m_platformId, m_contentHash,
+                                               m_context.settingsService);
   const auto devices = m_core->getControllerDevices();
   std::vector<unsigned> advertised;
   if (port < devices.size()) {
@@ -222,7 +223,8 @@ unsigned EmulatorInstance::getControllerPortCount() const {
   // small default port count so the player can still pick one; the picker hides
   // ports with no real choice anyway.
   const auto coreId =
-      CoreRegistry::instance().resolveCoreName(m_platformId, m_contentHash);
+      CoreRegistry::instance().resolveCoreName(m_platformId, m_contentHash,
+                                               m_context.settingsService);
   if (!CoreRegistry::instance().deviceCatalogForCore(coreId).empty()) {
     return 2;
   }
@@ -243,7 +245,7 @@ EmulatorInstance::resolveSelectedVariant(const unsigned port) const {
 
   // Per-game override (a stored coreDeviceId), honored only if still offered by
   // the loaded core (a stale value from another core falls back to the default).
-  if (auto *settings = settings::SettingsService::instance()) {
+  if (auto *settings = m_context.settingsService) {
     if (const auto v = settings->getEffectiveValue(
             m_contentHash, m_platformId,
             "port" + std::to_string(port) + "-controllervariant")) {
@@ -269,7 +271,7 @@ EmulatorInstance::resolveSelectedVariant(const unsigned port) const {
 }
 
 void EmulatorInstance::applyCompanionOptions(const CoreDeviceVariant &variant) {
-  auto *settings = settings::SettingsService::instance();
+  auto *settings = m_context.settingsService;
   if (!settings) {
     return;
   }
@@ -287,7 +289,7 @@ void EmulatorInstance::setPortControllerVariant(const unsigned port,
     return;
   }
   m_core->setControllerPortDevice(port, coreDeviceId);
-  if (auto *settings = settings::SettingsService::instance()) {
+  if (auto *settings = m_context.settingsService) {
     settings->setGameValue(
         m_contentHash, "port" + std::to_string(port) + "-controllervariant",
         std::to_string(coreDeviceId));
@@ -484,7 +486,10 @@ void EmulatorInstance::deserializeState(const std::vector<uint8_t> &state) {
 }
 
 void EmulatorInstance::refreshAllSettings() {
-  auto *service = settings::SettingsService::instance();
+  auto *service = m_context.settingsService;
+  if (!service) {
+    return;
+  }
   const auto &catalog = settings::SettingsCatalog::instance();
 
   // Effective value for a common setting: the resolved override

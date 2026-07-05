@@ -14,7 +14,7 @@ bool ContentDirectoryModel::setData(const QModelIndex &index,
   case DirectoryId:
     return false;
   case Path:
-    item.path = value.toString();
+    item.path = value.toString().toStdString();
     // TODO: Persist to db
     break;
   default:
@@ -46,7 +46,7 @@ void ContentDirectoryModel::deleteItem(const int id) {
 }
 void ContentDirectoryModel::addItem(QString path) {
   library::ContentDirectory item;
-  item.path = std::move(path);
+  item.path = path.toStdString();
 
   if (!m_library.create(item)) {
     return;
@@ -77,7 +77,7 @@ QVariant ContentDirectoryModel::data(const QModelIndex &index, int role) const {
   case DirectoryId:
     return item.id;
   case Path:
-    return item.path;
+    return QString::fromStdString(item.path);
   default:
     return QVariant{};
   }

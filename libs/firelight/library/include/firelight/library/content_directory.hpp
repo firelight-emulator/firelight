@@ -1,15 +1,17 @@
 #pragma once
 
-#include <QDateTime>
-#include <QString>
+#include <cstdint>
+#include <string>
 
 namespace firelight::library {
     struct ContentDirectory {
         int id = -1;
-        QString path;
+        std::string path;
         int numFiles = 0;
         int numContentFiles = 0;
-        QDateTime lastModified;
+        // Filesystem mtime of the directory (epoch ms). Persisted from the DB;
+        // not currently read back, kept for provenance/future use.
+        uint64_t lastModifiedEpochMs = 0;
         bool recursive = true;
         unsigned createdAt = 0;
     };

@@ -212,8 +212,10 @@ void CoreRegistry::setSessionCoreOverride(const std::string &coreId) {
   m_sessionCoreOverride = coreId;
 }
 
-std::string CoreRegistry::resolveCoreName(const int platformId,
-                                          const std::string &contentHash) const {
+std::string
+CoreRegistry::resolveCoreName(const int platformId,
+                              const std::string &contentHash,
+                              settings::SettingsService *settings) const {
   const auto def = defaultCoreForPlatform(platformId);
 
   // A CLI `--core` override wins over every stored tier (still guarded by
@@ -223,7 +225,6 @@ std::string CoreRegistry::resolveCoreName(const int platformId,
     return m_sessionCoreOverride;
   }
 
-  auto *settings = settings::SettingsService::instance();
   if (!settings) {
     return def;
   }

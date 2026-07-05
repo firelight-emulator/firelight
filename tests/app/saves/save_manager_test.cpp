@@ -23,13 +23,14 @@ protected:
   QTemporaryDir m_tempDir;
   FakeUserdataDatabase m_db;
   std::unique_ptr<SaveManager> m_saveManager;
-  const QString m_hash = "abc123hash";
+  const std::string m_hash = "abc123hash";
 
   void SetUp() override {
     ASSERT_TRUE(m_tempDir.isValid());
-    m_saveManager = std::make_unique<SaveManager>(m_tempDir.path(), m_db);
+    m_saveManager =
+        std::make_unique<SaveManager>(m_tempDir.path().toStdString(), m_db);
     // Force the temp dir regardless of any persisted QSettings value.
-    m_saveManager->setSaveDirectory(m_tempDir.path());
+    m_saveManager->setSaveDirectory(m_tempDir.path().toStdString());
   }
 };
 
@@ -53,8 +54,9 @@ TEST_F(SaveManagerTest, WriteThenReadRoundTrips) {
 TEST_F(SaveManagerTest, WriteCreatesFileAtSlotPath) {
   ASSERT_TRUE(
       m_saveManager->writeSaveData(m_hash, 3, Savefile(bytesOf("x"))).get());
-  const QString expected =
-      m_tempDir.path() + "/" + m_hash + "/slot3/savefile.srm";
+  const QString expected = m_tempDir.path() + "/" +
+                           QString::fromStdString(m_hash) +
+                           "/slot3/savefile.srm";
   EXPECT_TRUE(QFileInfo::exists(expected));
 }
 
@@ -86,7 +88,7 @@ TEST_F(SaveManagerTest, UnchangedDataSkipsRewrite) {
 TEST_F(SaveManagerTest, SetsLastModifiedTimestamp) {
   ASSERT_TRUE(
       m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("data"))).get());
-  const auto md = m_db.getSavefileMetadata(m_hash.toStdString(), 1);
+  const auto md = m_db.getSavefileMetadata(m_hash, 1);
   ASSERT_TRUE(md.has_value());
   EXPECT_GT(md->lastModifiedAt, 0u);
 }

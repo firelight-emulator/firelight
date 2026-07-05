@@ -28,7 +28,8 @@ public:
               }
 
               const auto suspendPoint = getSaveManager()->readSuspendPoint(
-                  m_contentHash, event.saveSlotNumber, event.index);
+                  m_contentHash.toStdString(), event.saveSlotNumber,
+                  event.index);
               if (suspendPoint.has_value()) {
                 m_suspendPointsModel->updateData(event.index, *suspendPoint);
               }
@@ -55,8 +56,8 @@ public:
   [[nodiscard]] SuspendPointListModel *getSuspendPoints() const;
 
   Q_INVOKABLE void deleteSuspendPoint(const int index) {
-    getSaveManager()->deleteSuspendPoint(m_contentHash, m_saveSlotNumber,
-                                         index);
+    getSaveManager()->deleteSuspendPoint(m_contentHash.toStdString(),
+                                         m_saveSlotNumber, index);
   }
 
 signals:

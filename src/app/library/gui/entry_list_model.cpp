@@ -2,6 +2,8 @@
 #include <firelight/activity/activity_log.hpp>
 #include <firelight/library/folder_info.hpp>
 
+#include <QDateTime>
+
 #include <firelight/platforms/platform_service.hpp>
 
 #include <algorithm>

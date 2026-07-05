@@ -15,12 +15,14 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::saves {
-SaveManager::SaveManager(const QString &defaultSaveDir,
+SaveManager::SaveManager(const std::string &defaultSaveDir,
                          db::IUserdataDatabase &userdataDatabase)
     : m_userdataDatabase(userdataDatabase) {
   m_settings.beginGroup("Saves");
   m_saveDirectory =
-      m_settings.value("SaveDirectory", defaultSaveDir).toString();
+      m_settings
+          .value("SaveDirectory", QString::fromStdString(defaultSaveDir))
+          .toString();
 }
 
 SaveManager::~SaveManager() {
@@ -28,12 +30,13 @@ SaveManager::~SaveManager() {
 }
 
 std::vector<SavefileInfo>
-SaveManager::getSaveFileInfoList(const QString &contentHash) const {
+SaveManager::getSaveFileInfoList(const std::string &contentHash) const {
   std::vector<SavefileInfo> result;
+  const auto contentHashQ = QString::fromStdString(contentHash);
 
   for (auto i = 0; i < 8; ++i) {
     auto dir =
-        m_saveDirectory + "/" + contentHash + "/slot" + QString::number(i + 1);
+        m_saveDirectory + "/" + contentHashQ + "/slot" + QString::number(i + 1);
     if (!QDir(dir).exists()) {
       result.emplace_back(SavefileInfo{.hasData = false, .slotNumber = i + 1});
       continue;
@@ -51,7 +54,7 @@ SaveManager::getSaveFileInfoList(const QString &contentHash) const {
 
     SavefileInfo info;
     info.hasData = true;
-    info.contentHash = contentHash.toStdString();
+    info.contentHash = contentHash;
     info.filePath = saveFile.string();
     info.slotNumber = i + 1;
     info.lastModifiedEpochSeconds = fileInfo.lastModified().toSecsSinceEpoch();
@@ -62,22 +65,23 @@ SaveManager::getSaveFileInfoList(const QString &contentHash) const {
   return result;
 }
 
-std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
+std::future<bool> SaveManager::writeSaveData(const std::string &contentHash,
                                              int saveSlotNumber,
                                              const Savefile &saveData) {
   return std::async(std::launch::async, [this, contentHash, saveSlotNumber,
                                          saveData] {
+    const auto contentHashQ = QString::fromStdString(contentHash);
     auto exists = false;
     db::SavefileMetadata metadata;
 
-    auto metadataOpt = m_userdataDatabase.getSavefileMetadata(
-        contentHash.toStdString(), saveSlotNumber);
+    auto metadataOpt =
+        m_userdataDatabase.getSavefileMetadata(contentHash, saveSlotNumber);
 
     if (metadataOpt.has_value()) {
       metadata = metadataOpt.value();
       exists = true;
     } else {
-      metadata.contentId = contentHash.toStdString();
+      metadata.contentId = contentHash;
       metadata.slotNumber = saveSlotNumber;
     }
 
@@ -91,16 +95,16 @@ std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
       return true;
     }
 
-    spdlog::info("Writing updated savefile for {} slot {}",
-                 contentHash.toStdString(), saveSlotNumber);
+    spdlog::info("Writing updated savefile for {} slot {}", contentHash,
+                 saveSlotNumber);
     metadata.savefileMd5 = savefileMd5;
 
-    auto dir = m_saveDirectory + "/" + contentHash + "/slot" +
+    auto dir = m_saveDirectory + "/" + contentHashQ + "/slot" +
                QString::number(saveSlotNumber);
-    if (!QDir(m_saveDirectory + "/" + contentHash)
+    if (!QDir(m_saveDirectory + "/" + contentHashQ)
              .mkpath("slot" + QString::number(saveSlotNumber))) {
       spdlog::error("Failed to create save directory for {} slot {}",
-                    contentHash.toStdString(), saveSlotNumber);
+                    contentHash, saveSlotNumber);
       return false;
     }
 
@@ -117,8 +121,8 @@ std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
       saveFileStream.write(bytes.data(), bytes.size());
       saveFileStream.close();
       if (saveFileStream.fail()) {
-        spdlog::error("Failed to write savefile for {} slot {}",
-                      contentHash.toStdString(), saveSlotNumber);
+        spdlog::error("Failed to write savefile for {} slot {}", contentHash,
+                      saveSlotNumber);
         std::error_code ec;
         std::filesystem::remove(tempSaveFile, ec);
         return false;
@@ -128,9 +132,8 @@ std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
     std::error_code renameEc;
     std::filesystem::rename(tempSaveFile, saveFile, renameEc);
     if (renameEc) {
-      spdlog::error("Failed to replace savefile for {} slot {}: {}",
-                    contentHash.toStdString(), saveSlotNumber,
-                    renameEc.message());
+      spdlog::error("Failed to replace savefile for {} slot {}: {}", contentHash,
+                    saveSlotNumber, renameEc.message());
       std::error_code removeEc;
       std::filesystem::remove(tempSaveFile, removeEc);
       return false;
@@ -145,17 +148,17 @@ std::future<bool> SaveManager::writeSaveData(const QString &contentHash,
       // The save data is safely on disk; only the metadata index failed.
       spdlog::warn(
           "Savefile written but metadata persistence failed for {} slot {}",
-          contentHash.toStdString(), saveSlotNumber);
+          contentHash, saveSlotNumber);
     }
 
     return true;
   });
 }
 
-std::optional<Savefile> SaveManager::readSaveData(const QString &contentHash,
+std::optional<Savefile> SaveManager::readSaveData(const std::string &contentHash,
                                                   int saveSlotNumber) const {
-  auto dir = m_saveDirectory + "/" + contentHash + "/slot" +
-             QString::number(saveSlotNumber);
+  auto dir = m_saveDirectory + "/" + QString::fromStdString(contentHash) +
+             "/slot" + QString::number(saveSlotNumber);
   if (!QDir(dir).exists()) {
     return {};
   }
@@ -186,32 +189,38 @@ std::optional<Savefile> SaveManager::readSaveData(const QString &contentHash,
   return {saveData};
 }
 
-void SaveManager::writeSuspendPoint(const QString &contentHash,
+void SaveManager::writeSuspendPoint(const std::string &contentHash,
                                     int saveSlotNumber, int index,
                                     const SuspendPoint &suspendPoint) {
-  writeSuspendPointToDisk(contentHash, index, suspendPoint);
-  EventDispatcher::instance().publish(SuspendPointUpdatedEvent{
-      contentHash.toStdString(), saveSlotNumber, index});
+  writeSuspendPointToDisk(QString::fromStdString(contentHash), index,
+                          suspendPoint);
+  EventDispatcher::instance().publish(
+      SuspendPointUpdatedEvent{contentHash, saveSlotNumber, index});
 }
 
 std::optional<SuspendPoint>
-SaveManager::readSuspendPoint(const QString &contentHash, int saveSlotNumber,
+SaveManager::readSuspendPoint(const std::string &contentHash, int saveSlotNumber,
                               int index) {
-  return readSuspendPointFromDisk(contentHash, saveSlotNumber, index);
+  return readSuspendPointFromDisk(QString::fromStdString(contentHash),
+                                  saveSlotNumber, index);
 }
 
-void SaveManager::deleteSuspendPoint(const QString &contentHash,
+void SaveManager::deleteSuspendPoint(const std::string &contentHash,
                                      const int saveSlotNumber,
                                      const int index) {
-  deleteSuspendPointFromDisk(contentHash, saveSlotNumber, index);
-  EventDispatcher::instance().publish(SuspendPointDeletedEvent{
-      contentHash.toStdString(), saveSlotNumber, index});
+  deleteSuspendPointFromDisk(QString::fromStdString(contentHash), saveSlotNumber,
+                             index);
+  EventDispatcher::instance().publish(
+      SuspendPointDeletedEvent{contentHash, saveSlotNumber, index});
 }
 
-QString SaveManager::getSaveDirectory() const { return m_saveDirectory; }
+std::string SaveManager::getSaveDirectory() const {
+  return m_saveDirectory.toStdString();
+}
 
-void SaveManager::setSaveDirectory(const QString &saveDirectory) {
-  auto temp = saveDirectory;
+void SaveManager::setSaveDirectory(const std::string &saveDirectory) {
+  const auto raw = QString::fromStdString(saveDirectory);
+  auto temp = raw;
 
   if (temp.startsWith("file://")) {
     temp = temp.remove(0, 7);
@@ -220,7 +229,7 @@ void SaveManager::setSaveDirectory(const QString &saveDirectory) {
     temp = temp.remove(0, 1);
   }
 
-  if (saveDirectory == m_saveDirectory) {
+  if (raw == m_saveDirectory) {
     return;
   }
 

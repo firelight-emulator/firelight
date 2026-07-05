@@ -73,7 +73,7 @@ void CoreOptionsModel::rebuild() {
   m_categories.clear();
 
   const auto coreName = CoreRegistry::instance().resolveCoreName(
-      m_platformId, m_contentHash.toStdString());
+      m_platformId, m_contentHash.toStdString(), m_settingsService);
   const auto repository = getCoreOptionRepository();
   if (!coreName.empty() && repository) {
     const auto filter = m_categoryFilter.toStdString();

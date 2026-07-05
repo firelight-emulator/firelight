@@ -277,7 +277,8 @@ int main(int argc, char *argv[]) {
     firelight::db::SqliteContentDatabase contentDatabase(
         defaultAppDataPathString + "/content.db");
 
-    firelight::saves::SaveManager saveManager(savesPath, userdata_database);
+    firelight::saves::SaveManager saveManager(savesPath.toStdString(),
+                                              userdata_database);
     firelight::ServiceAccessor::setSaveManager(&saveManager);
 
     // Thin QML adapter over the (Qt-notification-free) save manager; exposes the
@@ -320,8 +321,8 @@ int main(int argc, char *argv[]) {
     // The app-facing curation surface; also guarantees the default content
     // directory exists and is watched (fires the add event above when seeding).
     firelight::library::EntryResolver entryResolver(userLibrary);
-    firelight::library::UserLibraryService userLibraryService(userLibrary,
-                                                              romsPath);
+    firelight::library::UserLibraryService userLibraryService(
+        userLibrary, romsPath.toStdString());
 
     libScanner2.scanAll();
 

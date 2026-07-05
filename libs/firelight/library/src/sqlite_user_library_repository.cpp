@@ -257,9 +257,10 @@ namespace firelight::library {
     int bestId = -1;
     int bestLen = -1;
     for (const auto &dir: getContentDirectories()) {
-      if (onDiskPath.startsWith(dir.path) && dir.path.length() > bestLen) {
+      if (onDiskPath.startsWith(QString::fromStdString(dir.path)) &&
+          static_cast<int>(dir.path.length()) > bestLen) {
         bestId = dir.id;
-        bestLen = dir.path.length();
+        bestLen = static_cast<int>(dir.path.length());
       }
     }
     return bestId;
@@ -593,7 +594,7 @@ namespace firelight::library {
         auto found = false;
         auto contentPaths = getContentDirectories();
         for (const auto &contentPath: contentPaths) {
-          if (romPath.startsWith(contentPath.path)) {
+          if (romPath.startsWith(QString::fromStdString(contentPath.path))) {
             found = true;
             break;
           }
@@ -1144,11 +1145,10 @@ namespace firelight::library {
     while (query.next()) {
       directories.emplace_back(ContentDirectory{
         .id = query.value("id").toInt(),
-        .path = query.value("path").toString(),
+        .path = query.value("path").toString().toStdString(),
         .numFiles = query.value("num_files").toInt(),
         .numContentFiles = query.value("num_content_files").toInt(),
-        .lastModified = QDateTime::fromMSecsSinceEpoch(
-          query.value("last_modified").toUInt()),
+        .lastModifiedEpochMs = query.value("last_modified").toULongLong(),
         .recursive = query.value("recursive").toBool(),
         .createdAt = query.value("created_at").toUInt()
       });
@@ -1164,7 +1164,7 @@ namespace firelight::library {
         "(:path, :createdAt);";
     QSqlQuery query(getDatabase());
     query.prepare(queryString);
-    query.bindValue(":path", directory.path);
+    query.bindValue(":path", QString::fromStdString(directory.path));
     query.bindValue(":createdAt",
                     QVariant::fromValue(
                       std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -1172,8 +1172,7 @@ namespace firelight::library {
                       .count()));
 
     if (!query.exec()) {
-      spdlog::error("Failed to add directory with path {}: {}",
-                    directory.path.toStdString(),
+      spdlog::error("Failed to add directory with path {}: {}", directory.path,
                     query.lastError().text().toStdString());
       return false;
     }
@@ -1184,8 +1183,7 @@ namespace firelight::library {
 
     directory.id = query.lastInsertId().toInt();
     EventDispatcher::instance().publish(
-      ContentDirectoryAddedEvent{.id = directory.id,
-                                 .path = directory.path.toStdString()});
+      ContentDirectoryAddedEvent{.id = directory.id, .path = directory.path});
     return true;
   }
 
@@ -1209,7 +1207,7 @@ namespace firelight::library {
 
     QSqlQuery q(getDatabase());
     q.prepare("UPDATE content_directoriesv1 SET path = :path WHERE id = :id");
-    q.bindValue(":path", directory.path);
+    q.bindValue(":path", QString::fromStdString(directory.path));
     q.bindValue(":id", directory.id);
 
     if (!q.exec()) {
@@ -1221,7 +1219,7 @@ namespace firelight::library {
     EventDispatcher::instance().publish(
       ContentDirectoryUpdatedEvent{.id = directory.id,
                                    .oldPath = oldPath.toStdString(),
-                                   .newPath = directory.path.toStdString()});
+                                   .newPath = directory.path});
     return true;
   }
 

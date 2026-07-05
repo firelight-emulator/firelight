@@ -2,7 +2,7 @@
 
 #include <firelight/library/user_library_repository.hpp>
 
-#include <QString>
+#include <string>
 
 namespace firelight::library {
 
@@ -17,7 +17,7 @@ namespace firelight::library {
 class UserLibraryService {
 public:
   UserLibraryService(IUserLibraryRepository &repository,
-                     const QString &defaultContentDirectory);
+                     const std::string &defaultContentDirectory);
 
   // Entries
   std::vector<Entry> getEntries(int offset = 0, int limit = -1);

@@ -12,6 +12,7 @@ class ISaveManager;
 }
 namespace firelight::settings {
 class ICoreOptionRepository;
+class SettingsService;
 }
 namespace firelight::cheats {
 class ICheatRepository;
@@ -27,6 +28,7 @@ struct EmulationContext {
   input::InputService *inputService = nullptr;
   achievements::RAClient *achievementManager = nullptr;
   saves::ISaveManager *saveManager = nullptr;
+  settings::SettingsService *settingsService = nullptr;
   settings::ICoreOptionRepository *coreOptionRepository = nullptr;
   cheats::ICheatRepository *cheatRepository = nullptr;
   std::string coreSystemDirectory;

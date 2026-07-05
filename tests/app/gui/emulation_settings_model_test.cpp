@@ -221,7 +221,8 @@ TEST_F(EmulationSettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatfor
   // Seed a library with one eligible (Game Boy, platform 1) and one ineligible
   // (SNES, platform 4) entry.
   library::SqliteUserLibraryRepository repo(":memory:");
-  library::UserLibraryService lib(repo, QDir::tempPath() + "/fl_tpak_test");
+  library::UserLibraryService lib(
+      repo, (QDir::tempPath() + "/fl_tpak_test").toStdString());
   library::Entry gb{.displayName = "Tetris", .contentHash = "gbhash",
                     .platformId = 1};
   library::Entry snes{.displayName = "Zelda", .contentHash = "sneshash",

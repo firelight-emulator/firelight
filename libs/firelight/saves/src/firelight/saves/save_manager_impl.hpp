@@ -13,32 +13,33 @@ namespace firelight::saves {
 // QObject. Its QSettings/QString/QDir internals are Qt value/utility types.
 class SaveManager final : public ISaveManager {
 public:
-  SaveManager(const QString &defaultSaveDir,
+  SaveManager(const std::string &defaultSaveDir,
               db::IUserdataDatabase &userdataDatabase);
   ~SaveManager() override;
 
   [[nodiscard]] std::vector<SavefileInfo>
-  getSaveFileInfoList(const QString &contentHash) const override;
+  getSaveFileInfoList(const std::string &contentHash) const override;
 
-  std::future<bool> writeSaveData(const QString &contentHash,
+  std::future<bool> writeSaveData(const std::string &contentHash,
                                   int saveSlotNumber,
                                   const Savefile &saveData) override;
 
   [[nodiscard]] std::optional<Savefile>
-  readSaveData(const QString &contentHash, int saveSlotNumber) const override;
+  readSaveData(const std::string &contentHash,
+               int saveSlotNumber) const override;
 
-  void writeSuspendPoint(const QString &contentHash, int saveSlotNumber,
+  void writeSuspendPoint(const std::string &contentHash, int saveSlotNumber,
                          int index, const SuspendPoint &suspendPoint) override;
 
-  std::optional<SuspendPoint> readSuspendPoint(const QString &contentHash,
+  std::optional<SuspendPoint> readSuspendPoint(const std::string &contentHash,
                                                int saveSlotNumber,
                                                int index) override;
 
-  void deleteSuspendPoint(const QString &contentHash, int saveSlotNumber,
+  void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber,
                           int index) override;
 
-  [[nodiscard]] QString getSaveDirectory() const override;
-  void setSaveDirectory(const QString &saveDirectory) override;
+  [[nodiscard]] std::string getSaveDirectory() const override;
+  void setSaveDirectory(const std::string &saveDirectory) override;
 
 private:
   void writeSuspendPointToDisk(const QString &contentHash, int index,

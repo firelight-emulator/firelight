@@ -32,7 +32,8 @@ int runScan(int argc, char **argv, const CliOptions &opts) {
   library::LibraryScanner2 scanner(repository);
   // Guarantees the default content directory exists and is registered before we
   // scan (a fresh install has nothing to scan otherwise).
-  library::UserLibraryService libraryService(repository, dirs.romsPath);
+  library::UserLibraryService libraryService(repository,
+                                             dirs.romsPath.toStdString());
 
   QEventLoop loop;
   QObject::connect(&scanner, &library::LibraryScanner2::scanFinished, &loop,

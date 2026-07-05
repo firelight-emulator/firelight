@@ -14,8 +14,8 @@ namespace {
 // misses and returns -1 regardless of which branch it takes.
 library::UserLibraryService makeService(
     library::SqliteUserLibraryRepository &repo) {
-  return library::UserLibraryService(repo,
-                                      QDir::tempPath() + "/fl_romlaunch_test");
+  return library::UserLibraryService(
+      repo, (QDir::tempPath() + "/fl_romlaunch_test").toStdString());
 }
 
 TEST(RomLaunchTest, EmptyPathReturnsMinusOne) {

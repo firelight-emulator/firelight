@@ -21,7 +21,8 @@ QVariantList QtCoreRegistryProxy::coresForPlatform(const int platformId) const {
 QString QtCoreRegistryProxy::resolvedCore(const int platformId,
                                           const QString &contentHash) const {
   return QString::fromStdString(CoreRegistry::instance().resolveCoreName(
-      platformId, contentHash.toStdString()));
+      platformId, contentHash.toStdString(),
+      settings::SettingsService::instance()));
 }
 
 QString QtCoreRegistryProxy::coreOverride(const int level, const int platformId,

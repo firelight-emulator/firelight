@@ -56,8 +56,9 @@ protected:
 
     m_userdataDb = std::make_unique<FakeUserdataDatabase>();
     m_saveManager =
-        std::make_unique<saves::SaveManager>(m_saveDir.path(), *m_userdataDb);
-    m_saveManager->setSaveDirectory(m_saveDir.path());
+        std::make_unique<saves::SaveManager>(m_saveDir.path().toStdString(),
+                                             *m_userdataDb);
+    m_saveManager->setSaveDirectory(m_saveDir.path().toStdString());
 
     m_coreOptionRepo =
         std::make_unique<settings::SqliteCoreOptionRepository>(":memory:");
@@ -154,7 +155,7 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   ASSERT_TRUE(instance->save().get());
   const auto sramAtSave = m_fakeCore->sram();
   const auto readBack = m_saveManager->readSaveData(
-      QString::fromStdString(m_hash), instance->getSaveSlotNumber());
+      m_hash, instance->getSaveSlotNumber());
   ASSERT_TRUE(readBack.has_value());
   EXPECT_EQ(readBack->getSaveRamData(), sramAtSave);
 

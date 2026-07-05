@@ -75,7 +75,7 @@ void EmulationSettingsModel::rebuildItems() {
   std::vector<EmulationSetting> settings = catalog.commonSettings();
   if (m_platformId != -1) {
     const auto coreName = CoreRegistry::instance().resolveCoreName(
-        m_platformId, m_contentHash.toStdString());
+        m_platformId, m_contentHash.toStdString(), m_settingsService);
     for (const auto &s : catalog.coreSpecificSettings(coreName)) {
       settings.push_back(s);
     }

@@ -11,7 +11,8 @@ void SuspendPointsItem::setContentHash(const QString &contentHash) {
 
   for (auto i = 0; i < 16; ++i) {
     auto point =
-        getSaveManager()->readSuspendPoint(m_contentHash, m_saveSlotNumber, i);
+        getSaveManager()->readSuspendPoint(m_contentHash.toStdString(),
+                                           m_saveSlotNumber, i);
     if (point.has_value()) {
       m_suspendPointsModel->updateData(i, point.value());
     }
@@ -31,7 +32,8 @@ void SuspendPointsItem::setSaveSlotNumber(const int saveSlotNumber) {
 
   for (auto i = 0; i < 16; ++i) {
     auto point =
-        getSaveManager()->readSuspendPoint(m_contentHash, m_saveSlotNumber, i);
+        getSaveManager()->readSuspendPoint(m_contentHash.toStdString(),
+                                           m_saveSlotNumber, i);
     if (point.has_value()) {
       m_suspendPointsModel->updateData(i, point.value());
     }

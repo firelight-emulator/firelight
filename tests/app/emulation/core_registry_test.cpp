@@ -130,9 +130,7 @@ protected:
   const int m_gb = PlatformMetadata::PLATFORM_ID_GAMEBOY;
   const std::string m_hash = "hash1";
 
-  void SetUp() override { settings::SettingsService::setInstance(&m_service); }
   void TearDown() override {
-    settings::SettingsService::setInstance(nullptr);
     // The registry is a singleton; clear the session override so it can't leak
     // into other tests.
     CoreRegistry::instance().setSessionCoreOverride("");
@@ -143,22 +141,22 @@ TEST_F(CoreRegistryResolveTest, ResolvesDefaultThenPlatformThenGame) {
   const auto &registry = CoreRegistry::instance();
 
   // No overrides -> default.
-  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash), "gambatte_libretro");
+  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 
   // Valid platform override wins (mGBA supports Game Boy).
   m_service.setPlatformValue(m_gb, "core", "mgba_libretro");
-  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash), "mgba_libretro");
+  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "mgba_libretro");
 
   // Game override wins over platform.
   m_service.setGameValue(m_hash, "core", "gambatte_libretro");
-  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash), "gambatte_libretro");
+  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 }
 
 TEST_F(CoreRegistryResolveTest, IgnoresOverrideThatDoesNotSupportPlatform) {
   const auto &registry = CoreRegistry::instance();
   // snes9x can't run a Game Boy -> the override is rejected, falls back.
   m_service.setPlatformValue(m_gb, "core", "snes9x_libretro");
-  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash), "gambatte_libretro");
+  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 }
 
 TEST_F(CoreRegistryResolveTest, SessionOverrideBeatsStoredOverrides) {
@@ -167,18 +165,18 @@ TEST_F(CoreRegistryResolveTest, SessionOverrideBeatsStoredOverrides) {
   m_service.setGameValue(m_hash, "core", "gambatte_libretro");
   // ...but a CLI --core session override beats every stored tier (mGBA runs GB).
   registry.setSessionCoreOverride("mgba_libretro");
-  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash), "mgba_libretro");
+  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "mgba_libretro");
 }
 
 TEST_F(CoreRegistryResolveTest, SessionOverrideIgnoredWhenPlatformUnsupported) {
   auto &registry = CoreRegistry::instance();
   // snes9x can't run a Game Boy -> the session override is guarded out.
   registry.setSessionCoreOverride("snes9x_libretro");
-  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash), "gambatte_libretro");
+  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 
   // Clearing it restores normal resolution.
   registry.setSessionCoreOverride("");
-  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash), "gambatte_libretro");
+  EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 }
 
 } // namespace firelight

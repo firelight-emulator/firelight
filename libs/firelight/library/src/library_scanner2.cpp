@@ -28,7 +28,7 @@ void LibraryScanner2::persistDiscMembers(
 LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library) : m_library(library) {
   m_threadPool.setMaxThreadCount(1);
   for (const auto &dir : m_library.getContentDirectories()) {
-    watchPath(dir.path);
+    watchPath(QString::fromStdString(dir.path));
   }
 
   m_scanTimer.setInterval(1000);
@@ -91,7 +91,7 @@ QFuture<bool> LibraryScanner2::startScan() {
 
 void LibraryScanner2::scanAll() {
   for (const auto &dir : m_library.getContentDirectories()) {
-    queueScan(dir.path);
+    queueScan(QString::fromStdString(dir.path));
   }
   startScan();
 }

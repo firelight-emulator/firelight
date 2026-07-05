@@ -22,11 +22,11 @@ namespace firelight::gui {
 
     switch (role) {
       case LocalFilename: {
-        auto val = QUrl::fromUserInput(item.path);
+        auto val = QUrl::fromUserInput(QString::fromStdString(item.path));
         return val;
       }
       case Path: {
-        return item.path;
+        return QString::fromStdString(item.path);
       }
       case NumGameFiles:
         return item.numContentFiles;
@@ -44,7 +44,7 @@ namespace firelight::gui {
     auto &item = m_items.at(index.row());
     switch (role) {
       case Path:
-        item.path = QUrl(value.toString()).toLocalFile();
+        item.path = QUrl(value.toString()).toLocalFile().toStdString();
         m_userLibrary.update(item);
 
         emit dataChanged(index, index, {Path, LocalFilename});

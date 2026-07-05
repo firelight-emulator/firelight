@@ -366,8 +366,9 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         sp.image = m_currentImage;
         sp.timestamp = QDateTime::currentMSecsSinceEpoch();
         sp.saveSlotNumber = m_saveSlotNumber;
-        m_saveManager->writeSuspendPoint(m_contentHash, m_saveSlotNumber,
-                                            command.suspendPointIndex, sp);
+        m_saveManager->writeSuspendPoint(m_contentHash.toStdString(),
+                                         m_saveSlotNumber,
+                                         command.suspendPointIndex, sp);
       }
       break;
 
@@ -383,7 +384,8 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
       case LoadSuspendPoint: {
         const auto point = m_saveManager->readSuspendPoint(
-          m_contentHash, m_saveSlotNumber, command.suspendPointIndex);
+          m_contentHash.toStdString(), m_saveSlotNumber,
+          command.suspendPointIndex);
         if (point.has_value()) {
           SuspendPoint before;
           before.state = m_emulatorInstance->serializeState();
