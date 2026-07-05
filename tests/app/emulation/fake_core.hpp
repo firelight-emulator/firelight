@@ -93,13 +93,17 @@ public:
     out.insert(out.end(), m_sram.begin(), m_sram.end());
     return out;
   }
-  void deserializeState(const std::vector<uint8_t> &data) const override {
-    if (data.size() < sizeof(int)) {
-      return;
+  [[nodiscard]] std::size_t getSerializeSize() const override {
+    return sizeof(int) + m_sram.size();
+  }
+  bool deserializeState(const std::vector<uint8_t> &data) const override {
+    if (data.size() != getSerializeSize()) {
+      return false;
     }
     std::memcpy(&m_frameCount, data.data(), sizeof(int));
     m_sram.assign(reinterpret_cast<const char *>(data.data()) + sizeof(int),
                   reinterpret_cast<const char *>(data.data()) + data.size());
+    return true;
   }
 
   // --- memory access (SYSTEM_RAM is a test-configurable writable buffer so the

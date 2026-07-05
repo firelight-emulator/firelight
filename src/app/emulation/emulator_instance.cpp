@@ -481,8 +481,8 @@ void EmulatorInstance::setAudioPlaybackRateRatio(const double ratio) {
 std::vector<uint8_t> EmulatorInstance::serializeState() {
   return m_core->serializeState();
 }
-void EmulatorInstance::deserializeState(const std::vector<uint8_t> &state) {
-  m_core->deserializeState(state);
+bool EmulatorInstance::deserializeState(const std::vector<uint8_t> &state) {
+  return m_core->deserializeState(state);
 }
 
 void EmulatorInstance::refreshAllSettings() {

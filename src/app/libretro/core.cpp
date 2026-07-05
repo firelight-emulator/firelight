@@ -192,32 +192,32 @@ namespace libretro {
       }
     }
 
-    const auto controller =
-        currentCore->getRetropadProvider()->getRetropadForPlayerIndex(port);
-    if (!controller) {
+    // Joypad reads come from the per-frame snapshot (Core::pollInput), so input
+    // is stable for the whole retro_run() and each frame is a recordable value.
+    if (port >= static_cast<unsigned>(Core::kMaxInputPorts) ||
+        !currentCore->m_portActive[port]) {
       return 0;
     }
+    const auto &frame = currentCore->m_portFrames[port];
 
     if (device == RETRO_DEVICE_ANALOG) {
       if (index == RETRO_DEVICE_INDEX_ANALOG_LEFT) {
         if (id == RETRO_DEVICE_ID_ANALOG_X) {
-          return controller->getLeftStickXPosition(currentCore->m_platformId, 1);
+          return frame.leftStickX;
         }
         if (id == RETRO_DEVICE_ID_ANALOG_Y) {
-          return controller->getLeftStickYPosition(currentCore->m_platformId, 1);
+          return frame.leftStickY;
         }
       } else if (index == RETRO_DEVICE_INDEX_ANALOG_RIGHT) {
         if (id == RETRO_DEVICE_ID_ANALOG_X) {
-          return controller->getRightStickXPosition(currentCore->m_platformId, 1);
+          return frame.rightStickX;
         }
         if (id == RETRO_DEVICE_ID_ANALOG_Y) {
-          return controller->getRightStickYPosition(currentCore->m_platformId, 1);
+          return frame.rightStickY;
         }
       }
     } else if (device == RETRO_DEVICE_JOYPAD) {
-      return controller->isButtonPressed(
-        currentCore->m_platformId, 1,
-        static_cast<firelight::libretro::IRetroPad::Input>(id));
+      return frame.button(id) ? 1 : 0;
     }
 
     return 0;
@@ -1394,24 +1394,33 @@ namespace libretro {
 
     std::vector<uint8_t> data(size);
     if (!symRetroSerialize(data.data(), size)) {
-      printf("Some issue??\n");
+      spdlog::error("[Core] Failed to serialize state ({} bytes)", size);
       return {};
     }
 
     return data;
   }
 
-  void Core::deserializeState(const std::vector<uint8_t> &data) const {
+  bool Core::deserializeState(const std::vector<uint8_t> &data) const {
     const auto size = getSerializeSize();
 
+    // A mismatched size means the state is for a different game/core version;
+    // unserializing it could corrupt the running game, so refuse.
     if (data.size() != size) {
-      printf("um sizes don't match. data: %zu, size: %zu\n", data.size(), size);
+      spdlog::error(
+          "[Core] Refusing to load state: size mismatch (data: {}, expected: {})",
+          data.size(), size);
+      return false;
     }
 
-    symRetroUnserialize(data.data(), size);
+    if (!symRetroUnserialize(data.data(), size)) {
+      spdlog::error("[Core] Core rejected state ({} bytes)", size);
+      return false;
+    }
+    return true;
   }
 
-  size_t Core::getSerializeSize() const { return symRetroSerializeSize(); }
+  std::size_t Core::getSerializeSize() const { return symRetroSerializeSize(); }
 
   void Core::init() {
     symRetroInit();
@@ -1620,6 +1629,23 @@ namespace libretro {
       m_frameMouseDelta = m_pointerInputProvider->getRelativeMotion();
     } else {
       m_frameMouseDelta = {0, 0};
+    }
+
+    // Snapshot each port's joypad state once, so the input callback reads stable
+    // input for the whole frame (buttons/axes can't shift mid-run) and the frame
+    // is a recordable InputFrame. Ports with no controller are marked inactive.
+    for (int port = 0; port < kMaxInputPorts; ++port) {
+      const auto pad =
+          m_retropadProvider
+              ? m_retropadProvider->getRetropadForPlayerIndex(port)
+              : nullptr;
+      if (pad) {
+        m_portFrames[port] =
+            firelight::input::captureJoypadFrame(*pad, m_platformId, 1);
+        m_portActive[port] = true;
+      } else {
+        m_portActive[port] = false;
+      }
     }
   }
 

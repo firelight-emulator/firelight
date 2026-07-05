@@ -77,7 +77,7 @@ public:
   void setAudioPlaybackRateRatio(double ratio);
 
   std::vector<uint8_t> serializeState();
-  void deserializeState(const std::vector<uint8_t> &state);
+  bool deserializeState(const std::vector<uint8_t> &state);
 
   // Multi-disc control. getDiscCount() is 0 for single-disc/cartridge content.
   // swapDisc publishes a DiscChangedEvent on success.

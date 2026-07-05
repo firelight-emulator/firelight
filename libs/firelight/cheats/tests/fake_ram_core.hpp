@@ -41,7 +41,10 @@ public:
   [[nodiscard]] std::vector<uint8_t> serializeState() const override {
     return {};
   }
-  void deserializeState(const std::vector<uint8_t> &) const override {}
+  [[nodiscard]] std::size_t getSerializeSize() const override { return 0; }
+  bool deserializeState(const std::vector<uint8_t> &) const override {
+    return true;
+  }
   void writeMemoryData(::libretro::MemoryType,
                        const std::vector<char> &) override {}
   [[nodiscard]] std::vector<char>

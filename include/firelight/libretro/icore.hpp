@@ -56,7 +56,14 @@ public:
   [[nodiscard]] virtual std::vector<char>
   getMemoryData(MemoryType memType) const = 0;
   [[nodiscard]] virtual std::vector<uint8_t> serializeState() const = 0;
-  virtual void deserializeState(const std::vector<uint8_t> &data) const = 0;
+  // The size of a serialized state for the loaded game (0 if the core has no
+  // savestate support). Lets callers pre-size buffers and detect a state-size
+  // change. Stable while a game is loaded.
+  [[nodiscard]] virtual std::size_t getSerializeSize() const = 0;
+  // Restores a previously serialized state. Returns false (without touching the
+  // core) if the data doesn't match the current serialize size or the core
+  // rejects it.
+  virtual bool deserializeState(const std::vector<uint8_t> &data) const = 0;
 
   // --- RetroAchievements memory access ---
   [[nodiscard]] virtual void *getMemoryData(unsigned id) const = 0;

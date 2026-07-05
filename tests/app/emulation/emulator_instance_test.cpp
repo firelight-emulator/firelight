@@ -534,4 +534,37 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
             "260");
 }
 
+// --- ICore state contract (exercised via FakeCore): getSerializeSize matches
+// the serialized length, a valid state round-trips, and a size mismatch is
+// refused without touching the core. Guards the deserializeState hardening that
+// suspend points / rewind / future rollback rely on. ---
+TEST(CoreStateContractTest, SerializeRoundTripAndRejectsSizeMismatch) {
+  FakeCore core;
+  core.loadGame(nullptr); // seeds SAVE_RAM
+
+  core.run(0);
+  core.run(0);
+  core.run(0);
+  const auto saved = core.serializeState();
+  const int savedFrame = core.frameCount();
+
+  EXPECT_EQ(core.getSerializeSize(), saved.size());
+
+  // Diverge from the snapshot.
+  core.run(0);
+  core.run(0);
+  ASSERT_NE(core.frameCount(), savedFrame);
+
+  // A correctly-sized state restores and reports success.
+  EXPECT_TRUE(core.deserializeState(saved));
+  EXPECT_EQ(core.frameCount(), savedFrame);
+
+  // Wrong-sized states are refused and leave the core untouched.
+  const std::vector<uint8_t> tooLong(saved.size() + 1, 0);
+  EXPECT_FALSE(core.deserializeState(tooLong));
+  EXPECT_EQ(core.frameCount(), savedFrame);
+  EXPECT_FALSE(core.deserializeState({}));
+  EXPECT_EQ(core.frameCount(), savedFrame);
+}
+
 } // namespace firelight::emulation

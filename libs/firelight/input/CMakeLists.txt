@@ -49,6 +49,7 @@ add_executable(firelight_input_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/gamepad_profile_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/shortcut_registry_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/analog_cursor_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/input_frame_test.cpp
 )
 target_include_directories(firelight_input_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src

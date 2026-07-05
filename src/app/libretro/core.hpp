@@ -8,7 +8,9 @@
 #include "game.hpp"
 #include "libretro/libretro.h"
 
+#include <array>
 #include <filesystem>
+#include <firelight/input/input_frame.hpp>
 #include <firelight/libretro/pointer_input_provider.hpp>
 #include <functional>
 #include <map>
@@ -80,9 +82,9 @@ public:
 
   std::vector<uint8_t> serializeState() const override;
 
-  void deserializeState(const std::vector<uint8_t> &data) const override;
+  bool deserializeState(const std::vector<uint8_t> &data) const override;
 
-  size_t getSerializeSize() const;
+  [[nodiscard]] std::size_t getSerializeSize() const override;
 
   void setSystemDirectory(const string &) override;
 
@@ -133,6 +135,14 @@ public:
   // the MOUSE_X and MOUSE_Y queries within a frame.
   void pollInput();
   std::pair<int16_t, int16_t> m_frameMouseDelta{0, 0};
+
+  // Per-port joypad snapshot, captured once per frame in pollInput() so the
+  // input callback reads stable input during retro_run() (and each frame is a
+  // recordable firelight::input::InputFrame). Ports with no controller are
+  // inactive. Public because the static libretro input callback reads them.
+  static constexpr int kMaxInputPorts = 8;
+  std::array<firelight::input::InputFrame, kMaxInputPorts> m_portFrames{};
+  std::array<bool, kMaxInputPorts> m_portActive{};
 
 private:
   // Resolved input device class per port (firelight::input::GamepadInputClass
