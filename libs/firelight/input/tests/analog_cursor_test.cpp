@@ -3,6 +3,7 @@
 #include <firelight/input/gamepad_input.hpp>
 #include <firelight/input/sdl_input_service.hpp>
 #include <firelight/input/sqlite_controller_repository.hpp>
+#include <firelight/platforms/platform_service.hpp>
 #include <firelight/libretro/pointer_input_provider.hpp>
 
 namespace firelight::input {
@@ -50,7 +51,8 @@ TEST(AnalogCursorTest, JoypadInputsDefaultToThemselves) {
 
 class NudgeCursorTest : public testing::Test {
 protected:
-  SqliteControllerRepository m_repo{":memory:"};
+  SqliteControllerRepository m_repo{":memory:",
+                                    platforms::PlatformService::getInstance()};
   SDLInputService m_service{m_repo};
 };
 

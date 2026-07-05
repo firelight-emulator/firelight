@@ -22,7 +22,7 @@ public:
   // Entries
   std::vector<Entry> getEntries(int offset = 0, int limit = -1);
   std::optional<Entry> getEntry(int entryId);
-  std::optional<Entry> getEntryWithContentHash(const QString &contentHash);
+  std::optional<Entry> getEntryWithContentHash(const std::string &contentHash);
   bool update(Entry &entry);
 
   // Folders

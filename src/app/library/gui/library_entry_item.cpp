@@ -16,10 +16,10 @@ void LibraryEntryItem::setEntryId(const int entryId) {
       return;
     }
 
-    m_contentHash = entry->contentHash;
-    m_name = entry->displayName;
+    m_contentHash = QString::fromStdString(entry->contentHash);
+    m_name = QString::fromStdString(entry->displayName);
     m_achievementSetId = entry->retroachievementsSetId;
-    m_icon1x1SourceUrl = entry->icon1x1SourceUrl;
+    m_icon1x1SourceUrl = QString::fromStdString(entry->icon1x1SourceUrl);
     m_platformId = entry->platformId;
 
     auto platform =

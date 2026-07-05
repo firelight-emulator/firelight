@@ -89,6 +89,7 @@
 #include "gui/qt_core_registry_proxy.hpp"
 #include "gui/models/game_activity_list_model.hpp"
 #include "gui/qt_achievement_service_proxy.hpp"
+#include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include <firelight/input/sdl_input_service.hpp>
@@ -240,9 +241,6 @@ int main(int argc, char *argv[]) {
         spdlog::warn("Unable to create core-system directory");
     }
 
-    firelight::ServiceAccessor::setCoreSystemDirectory(
-        (defaultAppDataPathString + "/core-system").toStdString());
-
     // Declared early so it outlives the QML engine and its EmulatorItem: those
     // are destroyed before the objects declared above them, and on exit while a
     // game is running the EmulatorItem's teardown calls back into the Discord
@@ -253,7 +251,8 @@ int main(int argc, char *argv[]) {
     firelight::ServiceAccessor::setDiscordManager(&discordManager);
 
     firelight::input::SqliteControllerRepository controllerRepository(
-        baseDir.filePath("controllers.db"));
+        baseDir.filePath("controllers.db"),
+        firelight::platforms::PlatformService::getInstance());
 
     firelight::input::registerDefaultShortcuts();
 
@@ -266,7 +265,6 @@ int main(int argc, char *argv[]) {
 
     firelight::db::SqliteUserdataDatabase userdata_database(
         defaultAppDataPathString + "/userdata.db");
-    firelight::ServiceAccessor::setUserdataManager(&userdata_database);
 
     firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString +
                                                        "/activity.db");
@@ -281,6 +279,11 @@ int main(int argc, char *argv[]) {
 
     firelight::saves::SaveManager saveManager(savesPath, userdata_database);
     firelight::ServiceAccessor::setSaveManager(&saveManager);
+
+    // Thin QML adapter over the (Qt-notification-free) save manager; exposes the
+    // save directory as a bindable property for the settings UI. Declared here so
+    // it outlives the QML engine registered below.
+    firelight::gui::QtSaveManagerProxy saveManagerProxy(saveManager);
 
     firelight::library::SqliteUserLibraryRepository userLibrary(
         defaultAppDataPathString + "/library.db");
@@ -373,10 +376,11 @@ int main(int argc, char *argv[]) {
     firelight::mods::SqliteModRepository modRepository;
     firelight::ServiceAccessor::setModRepository(&modRepository);
 
+    // Backs SettingsService (below) via the std-typed ISettingsRepository. Not a
+    // QObject and not exposed to QML — the GUI reads settings through
+    // SettingsService, not this repository.
     firelight::settings::SqliteSettingsRepository emulationSettingsManager(
         (defaultAppDataPathString + "/settings.db").toStdString());
-    firelight::ServiceAccessor::setEmulationSettingsManager(
-        &emulationSettingsManager);
 
     // Caches each core's declared options (populated after a core loads) so the
     // advanced options editor can list them without the core running.
@@ -610,8 +614,6 @@ int main(int argc, char *argv[]) {
     // engine.addUrlInterceptor(&imageCacheUrlInterceptor);
     engine.addImageProvider("gameImages", gameImageProvider);
 
-    engine.rootContext()->setContextProperty("EmulationSettingsManager",
-                                             &emulationSettingsManager);
     engine.rootContext()->setContextProperty(
         "FilesystemUtils", new firelight::gui::FilesystemUtils());
     engine.rootContext()->setContextProperty("EventEmitter",
@@ -626,7 +628,7 @@ int main(int argc, char *argv[]) {
                                              emulatorConfigManager.get());
     engine.rootContext()->setContextProperty("achievement_manager", &raClient);
     engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
-    engine.rootContext()->setContextProperty("SaveManager", &saveManager);
+    engine.rootContext()->setContextProperty("SaveManager", &saveManagerProxy);
     engine.rootContext()->setContextProperty("ContentDirectoryModel",
                                              &contentDirectoryModel);
     engine.rootContext()->setContextProperty("LibraryEntryModel",

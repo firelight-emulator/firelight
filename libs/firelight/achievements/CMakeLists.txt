@@ -23,5 +23,5 @@ target_link_libraries(firelight_achievements
         PRIVATE nlohmann_json::nlohmann_json
         PRIVATE SQLiteCpp
         PRIVATE sqlite3
-        PRIVATE Qt6::Gui
+        PRIVATE Qt6::Core
         PRIVATE rcheevos)

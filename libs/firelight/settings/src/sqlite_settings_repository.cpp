@@ -59,8 +59,6 @@ bool SqliteSettingsRepository::setGlobalValue(const std::string &key,
     query.bind(":key", key);
     query.bind(":value", value);
     query.exec();
-    emit globalValueChanged(QString::fromStdString(key),
-                            QString::fromStdString(value));
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to set global value: {}", e.what());
@@ -74,7 +72,6 @@ bool SqliteSettingsRepository::resetGlobalValue(const std::string &key) {
                             "DELETE FROM global_settings WHERE key = :key");
     query.bind(":key", key);
     query.exec();
-    emit globalValueReset(QString::fromStdString(key));
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to reset global value: {}", e.what());
@@ -112,8 +109,6 @@ bool SqliteSettingsRepository::setPlatformValue(int platformId,
     query.bind(":key", key);
     query.bind(":value", value);
     query.exec();
-    emit platformValueChanged(platformId, QString::fromStdString(key),
-                              QString::fromStdString(value));
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to set platform value: {}", e.what());
@@ -130,7 +125,6 @@ bool SqliteSettingsRepository::resetPlatformValue(int platformId,
     query.bind(":platformId", platformId);
     query.bind(":key", key);
     query.exec();
-    emit platformValueReset(platformId, QString::fromStdString(key));
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to reset platform value: {}", e.what());
@@ -171,8 +165,6 @@ bool SqliteSettingsRepository::setGameValue(const std::string &contentHash,
     query.bind(":key", key);
     query.bind(":value", value);
     query.exec();
-    emit gameValueChanged(QString::fromStdString(contentHash), -1,
-                          QString::fromStdString(key), QString::fromStdString(value));
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to set game value: {}", e.what());
@@ -191,8 +183,6 @@ bool SqliteSettingsRepository::resetGameValue(const std::string &contentHash,
     query.bind(":platformId", -1);
     query.bind(":key", key);
     query.exec();
-    emit gameValueReset(QString::fromStdString(contentHash), -1,
-                        QString::fromStdString(key));
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to reset game value: {}", e.what());

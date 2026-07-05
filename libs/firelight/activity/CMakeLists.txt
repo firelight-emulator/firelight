@@ -13,6 +13,5 @@ target_include_directories(firelight_activity
 
 target_link_libraries(firelight_activity
         PRIVATE spdlog::spdlog
-        PRIVATE Qt6::Gui
         PRIVATE Qt6::Sql
 )

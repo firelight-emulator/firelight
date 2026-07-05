@@ -13,10 +13,9 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library)
   m_contentFileAddedConnection =
       EventDispatcher::instance().subscribe<ContentFileAddedEvent>(
           [this](const ContentFileAddedEvent &event) {
-            m_library.createRunConfiguration(
-                event.id, QString::fromStdString(event.filePath),
-                event.platformId,
-                QString::fromStdString(event.contentHash));
+            m_library.createRunConfiguration(event.id, event.filePath,
+                                             event.platformId,
+                                             event.contentHash);
           });
 
   // A run configuration implies a playable entry: create it, or unhide an
@@ -24,17 +23,20 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library)
   m_runConfigurationCreatedConnection =
       EventDispatcher::instance().subscribe<RunConfigurationCreatedEvent>(
           [this](const RunConfigurationCreatedEvent &event) {
-            const auto contentHash = QString::fromStdString(event.contentHash);
-            if (auto entry = m_library.getEntryWithContentHash(contentHash)) {
+            if (auto entry =
+                    m_library.getEntryWithContentHash(event.contentHash)) {
               if (entry->hidden) {
                 entry->hidden = false;
                 m_library.update(*entry);
               }
             } else {
+              // Display name is the final path segment (basename).
+              const auto slash = event.filePath.find_last_of('/');
               auto newEntry = Entry{
-                  .displayName =
-                      QString::fromStdString(event.filePath).split("/").last(),
-                  .contentHash = contentHash,
+                  .displayName = slash == std::string::npos
+                                     ? event.filePath
+                                     : event.filePath.substr(slash + 1),
+                  .contentHash = event.contentHash,
                   .platformId = static_cast<unsigned>(event.platformId),
               };
               m_library.createEntry(newEntry);
@@ -46,11 +48,11 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library)
   m_runConfigurationDeletedConnection =
       EventDispatcher::instance().subscribe<RunConfigurationDeletedEvent>(
           [this](const RunConfigurationDeletedEvent &event) {
-            const auto contentHash = QString::fromStdString(event.contentHash);
             if (const auto runConfigs =
-                    m_library.getRunConfigurations(contentHash);
+                    m_library.getRunConfigurations(event.contentHash);
                 runConfigs.empty()) {
-              if (auto entry = m_library.getEntryWithContentHash(contentHash)) {
+              if (auto entry =
+                      m_library.getEntryWithContentHash(event.contentHash)) {
                 entry->hidden = true;
                 m_library.update(*entry);
               }

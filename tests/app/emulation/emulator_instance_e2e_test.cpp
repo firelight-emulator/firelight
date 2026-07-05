@@ -107,7 +107,7 @@ protected:
                               .m_contentHash = m_hash};
     m_library->create(info);
     const auto entry =
-        m_library->getEntryWithContentHash(QString::fromStdString(m_hash));
+        m_library->getEntryWithContentHash(m_hash);
     return entry.has_value() ? entry->id : -1;
   }
 };

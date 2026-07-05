@@ -183,15 +183,15 @@ namespace firelight::gui {
 
 
                     for (auto it = playtimeByGame.constBegin(); it != playtimeByGame.constEnd(); ++it) {
-                        const auto entry = getLibraryService()->getEntryWithContentHash(it.key());
-                        const auto displayName = entry ? entry->displayName : it.key();
+                        const auto entry = getLibraryService()->getEntryWithContentHash(it.key().toStdString());
+                        const auto displayName = entry ? QString::fromStdString(entry->displayName) : it.key();
                         const auto platform = entry
                                                   ? getPlatformService()->getPlatform(entry->platformId)
                                                   : std::nullopt;
 
                         Thing thing;
                         thing.displayName = displayName;
-                        thing.iconSourceUrl = entry ? entry->icon1x1SourceUrl : "";
+                        thing.iconSourceUrl = entry ? QString::fromStdString(entry->icon1x1SourceUrl) : QString();
                         thing.platformId = entry ? entry->platformId : -1;
                         thing.platformName = platform ? QString::fromStdString(platform->name) : "Unknown";
                         thing.secondsPlayed = static_cast<int>(it.value() / 1000);
@@ -213,15 +213,15 @@ namespace firelight::gui {
 
                 for (auto it = totalBucketPlaytimeByGame.constBegin(); it != totalBucketPlaytimeByGame.constEnd(); ++
                      it) {
-                    const auto entry = getLibraryService()->getEntryWithContentHash(it.key());
-                    const auto displayName = entry ? entry->displayName : it.key();
+                    const auto entry = getLibraryService()->getEntryWithContentHash(it.key().toStdString());
+                    const auto displayName = entry ? QString::fromStdString(entry->displayName) : it.key();
                     const auto platform = entry
                                               ? getPlatformService()->getPlatform(entry->platformId)
                                               : std::nullopt;
 
                     Thing thing;
                     thing.displayName = displayName;
-                    thing.iconSourceUrl = entry ? entry->icon1x1SourceUrl : "";
+                    thing.iconSourceUrl = entry ? QString::fromStdString(entry->icon1x1SourceUrl) : QString();
                     thing.platformId = entry ? entry->platformId : -1;
                     thing.platformName = platform ? QString::fromStdString(platform->name) : "Unknown";
                     thing.secondsPlayed = static_cast<int>(it.value() / 1000);

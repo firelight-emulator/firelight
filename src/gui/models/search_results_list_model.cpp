@@ -51,9 +51,9 @@ namespace firelight::gui {
             if (entry.hidden) continue;
 
             Item item;
-            item.displayName = entry.displayName;
+            item.displayName = QString::fromStdString(entry.displayName);
             item.category = "Games";
-            item.iconSourceUrl = entry.icon1x1SourceUrl;
+            item.iconSourceUrl = QString::fromStdString(entry.icon1x1SourceUrl);
             item.itemType = "LibraryEntry";
             item.platformName = QString::fromStdString(m_platformService->getPlatform(entry.platformId)->name);
             item.platformShortName = QString::fromStdString(m_platformService->getPlatform(entry.platformId)->slug);

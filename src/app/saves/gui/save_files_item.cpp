@@ -23,8 +23,8 @@ void SaveFilesItem::setEntryId(const int entryId) {
 
   setActiveSaveSlotNumber(entry->activeSaveSlot);
 
-  m_saveFilesModel->reset(
-      getSaveManager()->getSaveFileInfoList(entry->contentHash));
+  m_saveFilesModel->reset(getSaveManager()->getSaveFileInfoList(
+      QString::fromStdString(entry->contentHash)));
 }
 
 SavefileListModel *SaveFilesItem::getSaveFiles() const {

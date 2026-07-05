@@ -69,7 +69,7 @@ QString QtEmulationServiceProxy::getCurrentGameName() const {
 QString QtEmulationServiceProxy::getCurrentContentHash() const {
   const auto entry = m_emulationService->getCurrentEntry();
   if (entry.has_value()) {
-    return entry->contentHash;
+    return QString::fromStdString(entry->contentHash);
   }
 
   return "";

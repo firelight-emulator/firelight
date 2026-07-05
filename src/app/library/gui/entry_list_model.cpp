@@ -74,9 +74,9 @@ namespace firelight::library {
       case Id:
         return item.entry.id;
       case DisplayName:
-        return item.entry.displayName;
+        return QString::fromStdString(item.entry.displayName);
       case ContentHash:
-        return item.entry.contentHash;
+        return QString::fromStdString(item.entry.contentHash);
       case PlatformId:
         return item.entry.platformId;
       case PlatformIconName: {
@@ -95,23 +95,23 @@ namespace firelight::library {
       case Favorite:
         return item.entry.favorite;
       case Icon1x1SourceUrl:
-        return item.entry.icon1x1SourceUrl;
+        return QString::fromStdString(item.entry.icon1x1SourceUrl);
       case BoxartFrontSourceUrl:
-        return item.entry.boxartFrontSourceUrl;
+        return QString::fromStdString(item.entry.boxartFrontSourceUrl);
       case BoxartBackSourceUrl:
-        return item.entry.boxartBackSourceUrl;
+        return QString::fromStdString(item.entry.boxartBackSourceUrl);
       case Description:
-        return item.entry.description;
+        return QString::fromStdString(item.entry.description);
       case ReleaseYear:
         return item.entry.releaseYear;
       case Developer:
-        return item.entry.developer;
+        return QString::fromStdString(item.entry.developer);
       case Publisher:
-        return item.entry.publisher;
+        return QString::fromStdString(item.entry.publisher);
       case Genres:
-        return item.entry.genres;
+        return QString::fromStdString(item.entry.genres);
       case RegionIds:
-        return item.entry.regionIds;
+        return QString::fromStdString(item.entry.regionIds);
       case CreatedAt:
         return QVariant::fromValue(item.entry.createdAt);
       case FolderIds:
@@ -145,7 +145,7 @@ namespace firelight::library {
 
     switch (role) {
       case DisplayName:
-        item.entry.displayName = value.toString();
+        item.entry.displayName = value.toString().toStdString();
         break;
       case Favorite:
         spdlog::info("Favorite changed for entry {}: {}", item.entry.id, value.toBool());
@@ -269,9 +269,9 @@ namespace firelight::library {
     EntryFields fields;
     fields.platformId = static_cast<int>(item.entry.platformId);
     fields.favorite = item.entry.favorite;
-    fields.genres = item.entry.genres.toStdString();
-    fields.developer = item.entry.developer.toStdString();
-    fields.publisher = item.entry.publisher.toStdString();
+    fields.genres = item.entry.genres;
+    fields.developer = item.entry.developer;
+    fields.publisher = item.entry.publisher;
     fields.releaseYear = static_cast<int>(item.entry.releaseYear);
     fields.contentDirectoryIds = item.entry.contentDirectoryIds;
     fields.contentPaths = item.entry.contentPaths;
@@ -336,7 +336,7 @@ namespace firelight::library {
       if (!entry.hidden) {
         auto item = Item{.entry = entry};
 
-        if (const auto it = statsByHash.find(entry.contentHash.toStdString());
+        if (const auto it = statsByHash.find(entry.contentHash);
           it != statsByHash.end()) {
           item.numSecondsPlayed = it->second.totalMillis / 1000;
           item.lastPlayedEpochMillis = it->second.lastEndMillis;

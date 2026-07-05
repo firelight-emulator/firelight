@@ -7,7 +7,8 @@ namespace firelight::input {
 
 class ControllerRepositoryTest : public testing::Test {
 protected:
-  SqliteControllerRepository m_repo{":memory:"};
+  SqliteControllerRepository m_repo{":memory:",
+                                    platforms::PlatformService::getInstance()};
 };
 
 TEST_F(ControllerRepositoryTest, CreateAndListProfiles) {

@@ -541,7 +541,7 @@ namespace firelight::library {
       "favorite = :favorite WHERE id = :id;");
 
     query.bindValue(":id", entry.id);
-    query.bindValue(":displayName", entry.displayName);
+    query.bindValue(":displayName", QString::fromStdString(entry.displayName));
     query.bindValue(":activeSaveSlot", entry.activeSaveSlot);
     query.bindValue(":hidden", entry.hidden ? 1 : 0);
     query.bindValue(":favorite", entry.favorite ? 1 : 0);
@@ -671,19 +671,18 @@ namespace firelight::library {
   }
 
   std::optional<ContentFile> SqliteUserLibraryRepository::getContentFileWithPathAndSize(
-    const QString &filePath, const size_t fileSizeBytes, const bool inArchive) {
+    const std::string &filePath, const size_t fileSizeBytes, const bool inArchive) {
     const QString queryString =
         "SELECT * FROM content_files WHERE file_path = :filePath AND file_size = "
         ":fileSize AND in_archive = :inArchive;";
     QSqlQuery query(getDatabase());
     query.prepare(queryString);
-    query.bindValue(":filePath", filePath);
+    query.bindValue(":filePath", QString::fromStdString(filePath));
     query.bindValue(":fileSize", QVariant::fromValue(fileSizeBytes));
     query.bindValue(":inArchive", inArchive);
 
     if (!query.exec()) {
-      spdlog::error("Failed to get rom file with path {}: {}",
-                    filePath.toStdString(),
+      spdlog::error("Failed to get rom file with path {}: {}", filePath,
                     query.lastError().text().toStdString());
     }
 
@@ -766,6 +765,33 @@ namespace firelight::library {
     return true;
   }
 
+  Entry SqliteUserLibraryRepository::deserializeEntry(const QSqlQuery &query) {
+    return Entry{
+      .id = query.value("id").toInt(),
+      .displayName = query.value("display_name").toString().toStdString(),
+      .contentHash = query.value("content_hash").toString().toStdString(),
+      .platformId = query.value("platform_id").toUInt(),
+      .activeSaveSlot = query.value("active_save_slot").toUInt(),
+      .hidden = query.value("hidden").toBool(),
+      .favorite = query.value("favorite").toBool(),
+      .icon1x1SourceUrl =
+      query.value("icon_1x1_source_url").toString().toStdString(),
+      .boxartFrontSourceUrl =
+      query.value("boxart_front_source_url").toString().toStdString(),
+      .boxartBackSourceUrl =
+      query.value("boxart_back_source_url").toString().toStdString(),
+      .description = query.value("description").toString().toStdString(),
+      .releaseYear = query.value("release_year").toUInt(),
+      .developer = query.value("developer").toString().toStdString(),
+      .publisher = query.value("publisher").toString().toStdString(),
+      .genres = query.value("genres").toString().toStdString(),
+      .regionIds = query.value("region_ids").toString().toStdString(),
+      .retroachievementsSetId =
+      query.value("retroachievements_set_id").toUInt(),
+      .createdAt = query.value("created_at").toULongLong()
+    };
+  }
+
   std::vector<Entry> SqliteUserLibraryRepository::getEntries(int offset, int limit) {
     const QString queryString = R"(
             SELECT e.*,
@@ -790,30 +816,7 @@ namespace firelight::library {
     std::vector<Entry> entries;
 
     while (query.next()) {
-      int entryId = query.value("id").toInt();
-
-      entries.emplace_back(Entry{
-        .id = entryId,
-        .displayName = query.value("display_name").toString(),
-        .contentHash = query.value("content_hash").toString(),
-        .platformId = query.value("platform_id").toUInt(),
-        .activeSaveSlot = query.value("active_save_slot").toUInt(),
-        .hidden = query.value("hidden").toBool(),
-        .favorite = query.value("favorite").toBool(),
-        .icon1x1SourceUrl = query.value("icon_1x1_source_url").toString(),
-        .boxartFrontSourceUrl =
-        query.value("boxart_front_source_url").toString(),
-        .boxartBackSourceUrl = query.value("boxart_back_source_url").toString(),
-        .description = query.value("description").toString(),
-        .releaseYear = query.value("release_year").toUInt(),
-        .developer = query.value("developer").toString(),
-        .publisher = query.value("publisher").toString(),
-        .genres = query.value("genres").toString(),
-        .regionIds = query.value("region_ids").toString(),
-        .retroachievementsSetId =
-        query.value("retroachievements_set_id").toUInt(),
-        .createdAt = query.value("created_at").toULongLong()
-      });
+      entries.emplace_back(deserializeEntry(query));
     }
 
     query.finish();
@@ -858,27 +861,7 @@ namespace firelight::library {
       return {};
     }
 
-    auto entry = Entry{
-      .id = query.value("id").toInt(),
-      .displayName = query.value("display_name").toString(),
-      .contentHash = query.value("content_hash").toString(),
-      .platformId = query.value("platform_id").toUInt(),
-      .activeSaveSlot = query.value("active_save_slot").toUInt(),
-      .hidden = query.value("hidden").toBool(),
-      .favorite = query.value("favorite").toBool(),
-      .icon1x1SourceUrl = query.value("icon_1x1_source_url").toString(),
-      .boxartFrontSourceUrl = query.value("boxart_front_source_url").toString(),
-      .boxartBackSourceUrl = query.value("boxart_back_source_url").toString(),
-      .description = query.value("description").toString(),
-      .releaseYear = query.value("release_year").toUInt(),
-      .developer = query.value("developer").toString(),
-      .publisher = query.value("publisher").toString(),
-      .genres = query.value("genres").toString(),
-      .regionIds = query.value("region_ids").toString(),
-      .retroachievementsSetId =
-      query.value("retroachievements_set_id").toUInt(),
-      .createdAt = query.value("created_at").toUInt()
-    };
+    auto entry = deserializeEntry(query);
 
     query.finish();
 
@@ -902,16 +885,15 @@ namespace firelight::library {
   }
 
   std::optional<Entry>
-  SqliteUserLibraryRepository::getEntryWithContentHash(const QString &contentHash) {
+  SqliteUserLibraryRepository::getEntryWithContentHash(const std::string &contentHash) {
     const QString queryString =
         "SELECT * FROM entriesv1 WHERE content_hash = :contentHash LIMIT 1;";
     QSqlQuery query(getDatabase());
     query.prepare(queryString);
-    query.bindValue(":contentHash", contentHash);
+    query.bindValue(":contentHash", QString::fromStdString(contentHash));
 
     if (!query.exec()) {
-      spdlog::error("Failed to get entry with content hash {}: {}",
-                    contentHash.toStdString(),
+      spdlog::error("Failed to get entry with content hash {}: {}", contentHash,
                     query.lastError().text().toStdString());
       return {};
     }
@@ -920,27 +902,7 @@ namespace firelight::library {
       return {};
     }
 
-    auto entry = Entry{
-      .id = query.value("id").toInt(),
-      .displayName = query.value("display_name").toString(),
-      .contentHash = query.value("content_hash").toString(),
-      .platformId = query.value("platform_id").toUInt(),
-      .activeSaveSlot = query.value("active_save_slot").toUInt(),
-      .hidden = query.value("hidden").toBool(),
-      .favorite = query.value("favorite").toBool(),
-      .icon1x1SourceUrl = query.value("icon_1x1_source_url").toString(),
-      .boxartFrontSourceUrl = query.value("boxart_front_source_url").toString(),
-      .boxartBackSourceUrl = query.value("boxart_back_source_url").toString(),
-      .description = query.value("description").toString(),
-      .releaseYear = query.value("release_year").toUInt(),
-      .developer = query.value("developer").toString(),
-      .publisher = query.value("publisher").toString(),
-      .genres = query.value("genres").toString(),
-      .regionIds = query.value("region_ids").toString(),
-      .retroachievementsSetId =
-      query.value("retroachievements_set_id").toUInt(),
-      .createdAt = query.value("created_at").toUInt()
-    };
+    auto entry = deserializeEntry(query);
 
     query.finish();
 
@@ -967,7 +929,7 @@ namespace firelight::library {
     QSqlQuery query(getDatabase());
     query.prepare("SELECT content_directory_id, file_path, in_archive, "
       "archive_file_path FROM content_files WHERE content_hash = :contentHash;");
-    query.bindValue(":contentHash", entry.contentHash);
+    query.bindValue(":contentHash", QString::fromStdString(entry.contentHash));
     if (!query.exec()) {
       spdlog::error("Failed to get content provenance for entry {}: {}",
                     entry.id, query.lastError().text().toStdString());
@@ -988,13 +950,13 @@ namespace firelight::library {
   }
 
   std::vector<RunConfiguration>
-  SqliteUserLibraryRepository::getRunConfigurations(const QString &contentHash) {
+  SqliteUserLibraryRepository::getRunConfigurations(const std::string &contentHash) {
     const auto queryString =
         "SELECT * FROM run_configurations WHERE content_hash = :contentHash;";
     QSqlQuery query(getDatabase());
     query.prepare(queryString);
 
-    query.bindValue(":contentHash", contentHash);
+    query.bindValue(":contentHash", QString::fromStdString(contentHash));
     if (!query.exec()) {
       spdlog::error("Failed to get run configurations: {}",
                     query.lastError().text().toStdString());
@@ -1005,7 +967,7 @@ namespace firelight::library {
       RunConfiguration runConfiguration{
         .id = query.value("id").toInt(),
         .type = query.value("type").toString().toStdString(),
-        .contentHash = contentHash.toStdString(),
+        .contentHash = contentHash,
         .contentFileId = query.value("content_file_id").toInt(),
         .patchId = query.value("patch_id").toInt(),
         .createdAt = query.value("created_at").toUInt()
@@ -1264,9 +1226,9 @@ namespace firelight::library {
   }
 
   void SqliteUserLibraryRepository::createRunConfiguration(const int contentFileId,
-                                                    const QString &path,
+                                                    const std::string &path,
                                                     const int platformId,
-                                                    const QString &contentHash) {
+                                                    const std::string &contentHash) {
     const QString insertQueryString =
         "INSERT OR IGNORE INTO run_configurations "
         "(type, content_hash, content_file_id, created_at) "
@@ -1276,7 +1238,7 @@ namespace firelight::library {
     query.prepare(insertQueryString);
 
     query.bindValue(":type", "rom");
-    query.bindValue(":contentHash", contentHash);
+    query.bindValue(":contentHash", QString::fromStdString(contentHash));
     query.bindValue(":contentFileId", contentFileId);
     query.bindValue(":createdAt", QDateTime::currentSecsSinceEpoch());
 
@@ -1287,19 +1249,19 @@ namespace firelight::library {
 
     EventDispatcher::instance().publish(
       RunConfigurationCreatedEvent{.id = query.lastInsertId().toInt(),
-                                   .filePath = path.toStdString(),
+                                   .filePath = path,
                                    .platformId = platformId,
-                                   .contentHash = contentHash.toStdString()});
+                                   .contentHash = contentHash});
   }
 
   bool SqliteUserLibraryRepository::createEntry(Entry &entry) {
     QSqlQuery selectQuery(getDatabase());
     selectQuery.prepare(
       "SELECT * FROM entriesv1 WHERE content_hash = :contentHash;");
-    selectQuery.bindValue(":contentHash", entry.contentHash);
+    selectQuery.bindValue(":contentHash", QString::fromStdString(entry.contentHash));
     if (!selectQuery.exec()) {
       spdlog::error("Failed to check for existing entry with content hash {}: {}",
-                    entry.contentHash.toStdString(),
+                    entry.contentHash,
                     selectQuery.lastError().text().toStdString());
       return false;
     }
@@ -1307,7 +1269,7 @@ namespace firelight::library {
     if (selectQuery.next()) {
       spdlog::debug(
         "Entry with content hash {} already exists, skipping creation",
-        entry.contentHash.toStdString());
+        entry.contentHash);
       return false;
     }
 
@@ -1320,8 +1282,8 @@ namespace firelight::library {
         "(:displayName, :contentHash, :platformId, :createdAt);";
     QSqlQuery entryQuery(getDatabase());
     entryQuery.prepare(entryQueryString);
-    entryQuery.bindValue(":displayName", entry.displayName);
-    entryQuery.bindValue(":contentHash", entry.contentHash);
+    entryQuery.bindValue(":displayName", QString::fromStdString(entry.displayName));
+    entryQuery.bindValue(":contentHash", QString::fromStdString(entry.contentHash));
     entryQuery.bindValue(":platformId", entry.platformId);
     entryQuery.bindValue(
       ":createdAt", QVariant::fromValue(
@@ -1331,7 +1293,7 @@ namespace firelight::library {
 
     if (!entryQuery.exec()) {
       spdlog::error("Failed to add entry with content hash {}: {}",
-                    entry.contentHash.toStdString(),
+                    entry.contentHash,
                     entryQuery.lastError().text().toStdString());
       return false;
     }

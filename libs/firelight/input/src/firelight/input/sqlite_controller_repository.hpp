@@ -6,10 +6,17 @@
 #include <firelight/input/controller_repository.hpp>
 #include <firelight/input/gamepad_profile.hpp>
 
+namespace firelight::platforms {
+class PlatformService;
+}
+
 namespace firelight::input {
 class SqliteControllerRepository final : public IControllerRepository {
 public:
-  explicit SqliteControllerRepository(QString dbFilePath);
+  // `platformService` supplies the platform list used to seed per-platform
+  // profile mappings (injected rather than reached via a global singleton).
+  SqliteControllerRepository(QString dbFilePath,
+                             platforms::PlatformService &platformService);
 
   ~SqliteControllerRepository() override = default;
 
@@ -44,6 +51,7 @@ public:
 
 private:
   QString m_dbFilePath;
+  platforms::PlatformService &m_platformService;
 
   [[nodiscard]] QSqlDatabase getDatabase() const;
   std::shared_ptr<InputMapping>

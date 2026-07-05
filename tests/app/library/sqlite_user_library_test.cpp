@@ -204,11 +204,11 @@ TEST_F(SqliteUserLibraryTest, AddRomWithNoEntryTest) {
   ASSERT_TRUE(actualRomInfo.has_value());
 
   auto runConfigs = library.getRunConfigurations(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_EQ(runConfigs.size(), 1);
 
   auto entry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
@@ -233,7 +233,7 @@ TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
   ASSERT_TRUE(library.create(romInfo));
 
   auto entry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
@@ -257,11 +257,11 @@ TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
   ASSERT_TRUE(actualRomInfo.has_value());
 
   auto runConfigs = library.getRunConfigurations(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_EQ(runConfigs.size(), 2);
 
   auto actualEntry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_EQ(entry->id, actualEntry->id);
 
   ASSERT_EQ(counters.contentFileAdded, 1);
@@ -317,7 +317,7 @@ TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
   ASSERT_TRUE(library.create(romInfo));
 
   auto entry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
@@ -338,23 +338,23 @@ TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
   ASSERT_TRUE(actualRomInfo.has_value());
 
   auto runConfigs = library.getRunConfigurations(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_EQ(runConfigs.size(), 2);
 
   auto actualEntry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_EQ(entry->id, actualEntry->id);
 
   ASSERT_TRUE(library.deleteContentFile(romInfo.m_id));
 
   // Get run configs again after deletion
   runConfigs = library.getRunConfigurations(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_EQ(runConfigs.size(), 1);
 
   // Get entry again after deleting one rom
   actualEntry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(actualEntry.has_value());
   ASSERT_FALSE(actualEntry->hidden);
 }
@@ -376,19 +376,19 @@ TEST_F(SqliteUserLibraryTest, DeleteRomHidesEntryTest) {
   ASSERT_TRUE(library.create(romInfo));
 
   auto entry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
   auto actualEntry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_EQ(entry->id, actualEntry->id);
 
   ASSERT_TRUE(library.deleteContentFile(romInfo.m_id));
 
   // Get entry again after deleting one rom
   actualEntry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(actualEntry.has_value());
   ASSERT_TRUE(actualEntry->hidden);
 }
@@ -410,25 +410,25 @@ TEST_F(SqliteUserLibraryTest, AddingRomAfterDeletingUnhidesEntryTest) {
   ASSERT_TRUE(library.create(romInfo));
 
   auto entry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
   auto actualEntry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_EQ(entry->id, actualEntry->id);
 
   ASSERT_TRUE(library.deleteContentFile(romInfo.m_id));
 
   actualEntry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(actualEntry.has_value());
   ASSERT_TRUE(actualEntry->hidden);
 
   ASSERT_TRUE(library.create(romInfo));
 
   entry = library.getEntryWithContentHash(
-      QString::fromStdString(romInfo.m_contentHash));
+      romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 }

@@ -4,18 +4,14 @@ namespace firelight {
   input::InputService *ServiceAccessor::s_inputService;
   input::IControllerRepository *ServiceAccessor::s_controllerProfileRepository;
   platforms::PlatformService *ServiceAccessor::s_platformService;
-  settings::SettingsService *ServiceAccessor::s_settingsService;
   settings::ICoreOptionRepository *ServiceAccessor::s_coreOptionRepository;
   achievements::AchievementService *ServiceAccessor::s_achievementService;
   library::UserLibraryService *ServiceAccessor::s_libraryService;
   activity::IActivityLog *ServiceAccessor::s_activityService;
   saves::ISaveManager *ServiceAccessor::s_saveManager;
-  db::IUserdataDatabase *ServiceAccessor::s_userdataDatabase;
   achievements::RAClient *ServiceAccessor::s_achievementManager;
   gui::GameImageProvider *ServiceAccessor::s_gameImageProvider;
-  std::string ServiceAccessor::s_coreSystemDirectory;
   mods::IModRepository *ServiceAccessor::s_modRepository;
-  settings::ISettingsRepository *ServiceAccessor::s_emulationSettingsManager;
   discord::IDiscordManager *ServiceAccessor::s_discordManager;
   media::MediaService *ServiceAccessor::s_mediaService;
 
@@ -30,10 +26,6 @@ namespace firelight {
 
   void ServiceAccessor::setPlatformService(platforms::PlatformService *service) {
     s_platformService = service;
-  }
-
-  void ServiceAccessor::setSettingsService(settings::SettingsService *service) {
-    s_settingsService = service;
   }
 
   void ServiceAccessor::setCoreOptionRepository(
@@ -58,10 +50,6 @@ namespace firelight {
     s_saveManager = manager;
   }
 
-  void ServiceAccessor::setUserdataManager(db::IUserdataDatabase *manager) {
-    s_userdataDatabase = manager;
-  }
-
   void ServiceAccessor::setAchievementManager(achievements::RAClient *manager) {
     s_achievementManager = manager;
   }
@@ -70,18 +58,10 @@ namespace firelight {
     s_gameImageProvider = provider;
   }
 
-  void ServiceAccessor::setCoreSystemDirectory(const std::string &directory) {
-    s_coreSystemDirectory = directory;
-  }
-
   void ServiceAccessor::setModRepository(mods::IModRepository *repository) {
     s_modRepository = repository;
   }
 
-  void ServiceAccessor::setEmulationSettingsManager(
-    settings::ISettingsRepository *repository) {
-    s_emulationSettingsManager = repository;
-  }
 
   void ServiceAccessor::setDiscordManager(discord::IDiscordManager *manager) {
     s_discordManager = manager;
@@ -104,10 +84,6 @@ namespace firelight {
     return s_platformService;
   }
 
-  settings::SettingsService *ServiceAccessor::getSettingsService() {
-    return s_settingsService;
-  }
-
   settings::ICoreOptionRepository *ServiceAccessor::getCoreOptionRepository() {
     return s_coreOptionRepository;
   }
@@ -128,10 +104,6 @@ namespace firelight {
     return s_saveManager;
   }
 
-  db::IUserdataDatabase *ServiceAccessor::getUserdataManager() {
-    return s_userdataDatabase;
-  }
-
   achievements::RAClient *ServiceAccessor::getAchievementManager() {
     return s_achievementManager;
   }
@@ -140,17 +112,10 @@ namespace firelight {
     return s_gameImageProvider;
   }
 
-  std::string ServiceAccessor::getCoreSystemDirectory() {
-    return s_coreSystemDirectory;
-  }
-
   mods::IModRepository *ServiceAccessor::getModRepository() {
     return s_modRepository;
   }
 
-  settings::ISettingsRepository *ServiceAccessor::getEmulationSettingsManager() {
-    return s_emulationSettingsManager;
-  }
 
   media::MediaService *ServiceAccessor::getMediaService() {
     return s_mediaService;

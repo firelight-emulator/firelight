@@ -19,8 +19,6 @@ public:
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
-  Q_INVOKABLE QString getPlatformIconName(int platformId) const;
-
   Q_INVOKABLE QString getPlatformDisplayName(int platformId) const;
 
 private:

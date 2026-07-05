@@ -20,7 +20,6 @@
 #include "emulation/emulator_instance.hpp"
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"
-#include "service_accessor.hpp"
 
 #include <libretro/libretro_vulkan.h>
 #include <memory>
@@ -30,14 +29,33 @@
 
 class EmulatorItem;
 
+namespace firelight {
+  namespace achievements {
+    class RAClient;
+  }
+  namespace gui {
+    class GameImageProvider;
+  }
+  namespace saves {
+    class ISaveManager;
+  }
+  namespace media {
+    class MediaService;
+  }
+} // namespace firelight
+
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
-                             public firelight::libretro::IVideoDataReceiver,
-                             public firelight::ServiceAccessor {
+                             public firelight::libretro::IVideoDataReceiver {
 public:
-  explicit EmulatorItemRenderer(
+  EmulatorItemRenderer(
     QSGRendererInterface::GraphicsApi api, QWindow *window,
-    firelight::emulation::EmulatorInstance *emulatorInstance);
+    firelight::emulation::EmulatorInstance *emulatorInstance,
+    firelight::activity::IActivityLog *activityLog,
+    firelight::achievements::RAClient *achievementManager,
+    firelight::gui::GameImageProvider *gameImageProvider,
+    firelight::saves::ISaveManager *saveManager,
+    firelight::media::MediaService *mediaService);
 
   void setHwRenderInterface(retro_hw_render_callback *iface) override;
 
@@ -105,6 +123,15 @@ private:
   EmulatorItem *m_emulatorItem = nullptr;
   const QSGRendererInterface::GraphicsApi m_graphicsApi;
   firelight::emulation::EmulatorInstance *m_emulatorInstance;
+
+  // Services, injected by EmulatorItem (which is the ServiceAccessor). The
+  // renderer is one level removed from QML, so it takes its dependencies rather
+  // than reaching into the locator itself.
+  firelight::activity::IActivityLog *m_activityLog;
+  firelight::achievements::RAClient *m_achievementManager;
+  firelight::gui::GameImageProvider *m_gameImageProvider;
+  firelight::saves::ISaveManager *m_saveManager;
+  firelight::media::MediaService *m_mediaService;
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;

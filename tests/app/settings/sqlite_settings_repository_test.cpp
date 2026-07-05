@@ -731,41 +731,41 @@ TEST_F(SqliteSettingsRepositoryTest, GlobalValue_IsolatedFromOtherLevels) {
  * @brief getEffectiveValue resolves game -> platform -> global -> default.
  */
 TEST_F(SqliteSettingsRepositoryTest, GetEffectiveValue_ResolutionOrder) {
-  const QString contentHash = "hash";
+  const std::string contentHash = "hash";
   const int platformId = 3;
-  const QString key = "aspect-ratio";
-  const QString def = "catalog-default";
+  const std::string key = "aspect-ratio";
+  const std::string def = "catalog-default";
 
   // Nothing set -> catalog default.
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), def);
 
   // Global set -> global wins over default.
-  repository->setGlobalValue(key.toStdString(), "global");
+  repository->setGlobalValue(key, "global");
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
             "global");
 
   // Platform set -> platform wins over global.
-  repository->setPlatformValue(platformId, key.toStdString(), "platform");
+  repository->setPlatformValue(platformId, key, "platform");
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
             "platform");
 
   // Game set -> game wins over platform.
-  repository->setGameValue(contentHash.toStdString(), key.toStdString(), "game");
+  repository->setGameValue(contentHash, key, "game");
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
             "game");
 
   // Reset game -> falls back to platform.
-  repository->resetGameValue(contentHash.toStdString(), key.toStdString());
+  repository->resetGameValue(contentHash, key);
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
             "platform");
 
   // Reset platform -> falls back to global.
-  repository->resetPlatformValue(platformId, key.toStdString());
+  repository->resetPlatformValue(platformId, key);
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def),
             "global");
 
   // Reset global -> falls back to default.
-  repository->resetGlobalValue(key.toStdString());
+  repository->resetGlobalValue(key);
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), def);
 }
 

@@ -37,9 +37,9 @@ public:
   virtual bool createEntry(Entry &entry) = 0;
   // Inserts a run configuration linking a content file (and optional patch) to a
   // content hash.
-  virtual void createRunConfiguration(int contentFileId, const QString &path,
+  virtual void createRunConfiguration(int contentFileId, const std::string &path,
                                       int platformId,
-                                      const QString &contentHash) = 0;
+                                      const std::string &contentHash) = 0;
 
   virtual bool update(FolderInfo &folder) = 0;
   virtual bool update(Entry &entry) = 0;
@@ -59,7 +59,7 @@ public:
   virtual bool deleteContentDirectory(int id) = 0;
 
   virtual std::optional<ContentFile>
-  getContentFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes,
+  getContentFileWithPathAndSize(const std::string &filePath, size_t fileSizeBytes,
                                 bool inArchive) = 0;
   virtual std::vector<ContentFile> getContentFiles() = 0;
   virtual std::optional<ContentFile> getContentFile(int id) = 0;
@@ -70,10 +70,10 @@ public:
   virtual std::vector<Entry> getEntries(int offset, int limit) = 0;
   virtual std::optional<Entry> getEntry(int entryId) = 0;
   virtual std::optional<Entry>
-  getEntryWithContentHash(const QString &contentHash) = 0;
+  getEntryWithContentHash(const std::string &contentHash) = 0;
 
   virtual std::vector<RunConfiguration>
-  getRunConfigurations(const QString &contentHash) = 0;
+  getRunConfigurations(const std::string &contentHash) = 0;
 
   virtual std::vector<ContentDirectory> getContentDirectories() = 0;
 };

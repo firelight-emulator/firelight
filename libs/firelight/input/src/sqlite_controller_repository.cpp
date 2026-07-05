@@ -30,8 +30,9 @@ AnalogSettings deserializeAnalog(const std::string &data) {
 }
 } // namespace
 
-SqliteControllerRepository::SqliteControllerRepository(QString dbFilePath)
-    : m_dbFilePath(std::move(dbFilePath)) {
+SqliteControllerRepository::SqliteControllerRepository(
+    QString dbFilePath, platforms::PlatformService &platformService)
+    : m_dbFilePath(std::move(dbFilePath)), m_platformService(platformService) {
   const auto db = getDatabase();
 
   const auto exec = [&db](const char *sql) {
@@ -177,7 +178,7 @@ void SqliteControllerRepository::updateDeviceInfo(DeviceIdentifier identifier,
 void SqliteControllerRepository::loadProfileContents(
     const std::shared_ptr<GamepadProfile> &profile) {
   for (const auto &platform :
-       platforms::PlatformService::getInstance().listPlatforms()) {
+       m_platformService.listPlatforms()) {
     for (const auto &controller : platform.controllerTypes) {
       auto mapping =
           getOrCreateMapping(profile->getId(), platform.id, controller.id);
@@ -333,7 +334,7 @@ SqliteControllerRepository::cloneProfile(const int sourceId,
   // Copy each platform's bindings (and any per-platform analog override) by
   // round-tripping the serialized mapping.
   for (const auto &platform :
-       platforms::PlatformService::getInstance().listPlatforms()) {
+       m_platformService.listPlatforms()) {
     for (const auto &controller : platform.controllerTypes) {
       const auto src =
           source->getMappingForPlatformAndController(platform.id, controller.id);
@@ -434,7 +435,7 @@ std::string SqliteControllerRepository::exportProfile(const int id) {
 
   nlohmann::json mappings = nlohmann::json::array();
   for (const auto &platform :
-       platforms::PlatformService::getInstance().listPlatforms()) {
+       m_platformService.listPlatforms()) {
     for (const auto &controller : platform.controllerTypes) {
       const auto mapping =
           profile->getMappingForPlatformAndController(platform.id, controller.id);

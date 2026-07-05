@@ -28,9 +28,17 @@ static QRhi *globalRhi = nullptr;
 
 EmulatorItemRenderer::EmulatorItemRenderer(
   const QSGRendererInterface::GraphicsApi api, QWindow *window,
-  firelight::emulation::EmulatorInstance *emulatorInstance)
+  firelight::emulation::EmulatorInstance *emulatorInstance,
+  firelight::activity::IActivityLog *activityLog,
+  firelight::achievements::RAClient *achievementManager,
+  firelight::gui::GameImageProvider *gameImageProvider,
+  firelight::saves::ISaveManager *saveManager,
+  firelight::media::MediaService *mediaService)
   : m_window(window), m_graphicsApi(api),
-    m_emulatorInstance(emulatorInstance) {
+    m_emulatorInstance(emulatorInstance), m_activityLog(activityLog),
+    m_achievementManager(achievementManager),
+    m_gameImageProvider(gameImageProvider), m_saveManager(saveManager),
+    m_mediaService(mediaService) {
   globalRenderer = this;
 }
 
@@ -41,12 +49,12 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
     m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
 
   m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
-  getActivityService()->createPlaySession(m_playSession);
+  m_activityLog->createPlaySession(m_playSession);
 
-  getAchievementManager()->unloadGame();
+  m_achievementManager->unloadGame();
 
   for (auto &url: m_rewindImageUrls)
-    getGameImageProvider()->removeImageWithUrl(url);
+    m_gameImageProvider->removeImageWithUrl(url);
   m_rewindImageUrls.clear();
 
   if (m_vulkanRenderer) {
@@ -296,7 +304,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         sp.state = m_emulatorInstance->serializeState();
         sp.image = m_currentImage;
         sp.timestamp = QDateTime::currentMSecsSinceEpoch();
-        sp.retroachievementsState = getAchievementManager()->serializeState();
+        sp.retroachievementsState = m_achievementManager->serializeState();
         m_rewindPoints.push_front(sp);
         if (m_rewindPoints.length() > 10)
           m_rewindPoints.pop_back();
@@ -305,7 +313,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
       case EmitRewindPoints: {
         for (auto &url: m_rewindImageUrls)
-          getGameImageProvider()->removeImageWithUrl(url);
+          m_gameImageProvider->removeImageWithUrl(url);
         m_rewindImageUrls.clear();
 
         QList<QJsonObject> points;
@@ -314,7 +322,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
           auto t = QDateTime::fromMSecsSinceEpoch(point.timestamp).time();
           auto diff = t.secsTo(QDateTime::fromMSecsSinceEpoch(now).time());
           QJsonObject obj;
-          auto url = getGameImageProvider()->setImage(point.image);
+          auto url = m_gameImageProvider->setImage(point.image);
           m_rewindImageUrls.append(url);
           obj["image_url"] = url;
           obj["time"] = t.toString();
@@ -323,7 +331,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         }
 
         QJsonObject obj;
-        auto url = getGameImageProvider()->setImage(m_currentImage);
+        auto url = m_gameImageProvider->setImage(m_currentImage);
         m_rewindImageUrls.append(url);
         obj["image_url"] = url;
         obj["time"] = QDateTime::fromMSecsSinceEpoch(now).time().toString();
@@ -338,7 +346,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         const auto &point = m_rewindPoints.at(command.rewindPointIndex - 1);
         m_emulatorInstance->deserializeState(point.state);
         if (!point.retroachievementsState.empty())
-          getAchievementManager()->deserializeState(point.retroachievementsState);
+          m_achievementManager->deserializeState(point.retroachievementsState);
         if (m_paused) {
           m_overlayImage = point.image;
           m_overlayImage.flip(Qt::Vertical);
@@ -354,11 +362,11 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       case WriteSuspendPoint: {
         SuspendPoint sp;
         sp.state = m_emulatorInstance->serializeState();
-        sp.retroachievementsState = getAchievementManager()->serializeState();
+        sp.retroachievementsState = m_achievementManager->serializeState();
         sp.image = m_currentImage;
         sp.timestamp = QDateTime::currentMSecsSinceEpoch();
         sp.saveSlotNumber = m_saveSlotNumber;
-        getSaveManager()->writeSuspendPoint(m_contentHash, m_saveSlotNumber,
+        m_saveManager->writeSuspendPoint(m_contentHash, m_saveSlotNumber,
                                             command.suspendPointIndex, sp);
       }
       break;
@@ -366,7 +374,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       case CaptureScreenshot: {
         // Reuse the current frame image the suspend-point path captures. Copy so
         // the PNG write doesn't race the next frame's readback.
-        if (const auto mediaService = getMediaService();
+        if (const auto mediaService = m_mediaService;
             mediaService && !m_currentImage.isNull()) {
           mediaService->saveScreenshot(m_contentHash, m_currentImage.copy());
         }
@@ -374,12 +382,12 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       break;
 
       case LoadSuspendPoint: {
-        const auto point = getSaveManager()->readSuspendPoint(
+        const auto point = m_saveManager->readSuspendPoint(
           m_contentHash, m_saveSlotNumber, command.suspendPointIndex);
         if (point.has_value()) {
           SuspendPoint before;
           before.state = m_emulatorInstance->serializeState();
-          before.retroachievementsState = getAchievementManager()->serializeState();
+          before.retroachievementsState = m_achievementManager->serializeState();
           before.image = m_currentImage;
           before.timestamp = QDateTime::currentMSecsSinceEpoch();
           before.saveSlotNumber = m_saveSlotNumber;
@@ -389,7 +397,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
           m_emulatorInstance->deserializeState(point->state);
           if (!point->retroachievementsState.empty())
-            getAchievementManager()->deserializeState(point->retroachievementsState);
+            m_achievementManager->deserializeState(point->retroachievementsState);
 
           if (m_paused) {
             m_overlayImage = point->image;
@@ -412,7 +420,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
         m_emulatorInstance->deserializeState(m_beforeLastLoadSuspendPoint.state);
         if (!m_beforeLastLoadSuspendPoint.retroachievementsState.empty())
-          getAchievementManager()->deserializeState(
+          m_achievementManager->deserializeState(
             m_beforeLastLoadSuspendPoint.retroachievementsState);
 
         if (m_paused) {

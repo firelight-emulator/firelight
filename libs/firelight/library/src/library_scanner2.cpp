@@ -186,9 +186,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
               if (PlatformMetadata::isDiscTrackExtension(ext)) {
                 return;
               }
-              if (m_library.getContentFileWithPathAndSize(
-                      QString::fromStdString(entry.pathName), entry.size,
-                      true)) {
+              if (m_library.getContentFileWithPathAndSize(entry.pathName,
+                                                          entry.size, true)) {
                 return;
               }
 
@@ -215,9 +214,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
             }
 
             if (PlatformMetadata::isPossibleRomFileExtension(ext)) {
-              if (m_library.getContentFileWithPathAndSize(
-                      QString::fromStdString(entry.pathName), entry.size,
-                      true)) {
+              if (m_library.getContentFileWithPathAndSize(entry.pathName,
+                                                          entry.size, true)) {
                 return;
               }
 
@@ -289,8 +287,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
         }
       }
 
-      if (m_library.getContentFileWithPathAndSize(fileInfo.filePath(),
-                                              fileInfo.size(), false)) {
+      if (m_library.getContentFileWithPathAndSize(
+              fileInfo.filePath().toStdString(), fileInfo.size(), false)) {
         spdlog::debug("Skipping known file: {}",
                       fileInfo.filePath().toStdString());
         continue;

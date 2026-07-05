@@ -39,7 +39,7 @@ std::optional<Entry> UserLibraryService::getEntry(int entryId) {
 }
 
 std::optional<Entry>
-UserLibraryService::getEntryWithContentHash(const QString &contentHash) {
+UserLibraryService::getEntryWithContentHash(const std::string &contentHash) {
   return m_repository.getEntryWithContentHash(contentHash);
 }
 

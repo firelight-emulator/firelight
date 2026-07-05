@@ -140,15 +140,18 @@ EmulationSettingsModel::buildGameOptions(const EmulationSetting &setting) const 
   auto entries = library->getEntries();
   std::sort(entries.begin(), entries.end(),
             [](const library::Entry &a, const library::Entry &b) {
-              return a.displayName.localeAwareCompare(b.displayName) < 0;
+              return QString::fromStdString(a.displayName)
+                         .localeAwareCompare(
+                             QString::fromStdString(b.displayName)) < 0;
             });
 
   for (const auto &entry : entries) {
     if (!isEligible(static_cast<int>(entry.platformId))) {
       continue;
     }
-    options.append(QVariantHash{{"label", entry.displayName},
-                                {"value", entry.contentHash}});
+    options.append(
+        QVariantHash{{"label", QString::fromStdString(entry.displayName)},
+                     {"value", QString::fromStdString(entry.contentHash)}});
   }
   return options;
 }

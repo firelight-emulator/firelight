@@ -21,13 +21,22 @@ FocusScope {
         controllerTypeId: root.controllerType
     }
 
+    // Image for the currently-selected controller type. controllerImages is
+    // aligned 1:1 with controllerTypeIds, so look up by the type's position
+    // rather than assuming contiguous 1-based ids (e.g. NES = 1, 3).
+    readonly property string controllerImageUrl: {
+        const ids = platformMetadataModel ? platformMetadataModel.controllerTypeIds : undefined
+        const idx = ids ? ids.indexOf(root.controllerType) : -1
+        return (idx >= 0 && platformMetadataModel) ? platformMetadataModel.controllerImages[idx] : ""
+    }
+
     FirelightDialog {
         id: confirmDialog
         text: {
             if (!root.isKeyboard) {
-                return "You're about to walk through assigning an input on your controller to each " + platformMetadataModel.display_name + " input.\n\n Continue?"
+                return "You're about to walk through assigning an input on your controller to each " + platformMetadataModel.displayName + " input.\n\n Continue?"
             } else {
-                return "You're about to walk through assigning a key on your keyboard to each " + platformMetadataModel.display_name + " input.\n\n Continue?"
+                return "You're about to walk through assigning a key on your keyboard to each " + platformMetadataModel.displayName + " input.\n\n Continue?"
             }
         }
 
@@ -61,8 +70,8 @@ FocusScope {
     InputPromptDialog {
         id: dialog
         // imageSourceUrl: platformList.currentItem.model.icon_url
-        imageSourceUrl: platformMetadataModel.controller_images[root.controllerType - 1]
-        platformName: platformMetadataModel.display_name
+        imageSourceUrl: root.controllerImageUrl
+        platformName: platformMetadataModel.displayName
         gamepad: root.gamepad
         isKeyboard: root.isKeyboard
 
@@ -243,7 +252,7 @@ FocusScope {
                 // Layout.preferredWidth: 420
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 // source: root.platformMetadataModel.icon_url
-                source: platformMetadataModel.controller_images[root.controllerType - 1]
+                source: root.controllerImageUrl
                 sourceSize.height: 360
                 mipmap: true
                 fillMode: Image.PreserveAspectFit

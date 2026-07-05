@@ -56,7 +56,7 @@ ResolvedContent EntryResolver::resolve(const Entry &entry) const {
 
   if (!best) {
     spdlog::warn("[EntryResolver] No usable content for entry {} ({})", entry.id,
-                 entry.contentHash.toStdString());
+                 entry.contentHash);
     return {};
   }
 

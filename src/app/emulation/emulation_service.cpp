@@ -170,7 +170,7 @@ namespace firelight::emulation {
     }
 
     m_currentEntry = entry.value();
-    m_currentContentHash = m_currentEntry.contentHash.toStdString();
+    m_currentContentHash = m_currentEntry.contentHash;
 
     if (auto platform = platforms::PlatformService::getInstance().getPlatform(
       m_currentEntry.platformId)) {
@@ -184,7 +184,7 @@ namespace firelight::emulation {
     const std::string corePath = CoreRegistry::instance().dllPathFor(coreName);
     const auto &catalog = settings::SettingsCatalog::instance();
     auto coreConfig = std::make_shared<CoreConfiguration>(
-      m_currentEntry.contentHash.toStdString(), m_currentEntry.platformId,
+      m_currentEntry.contentHash, m_currentEntry.platformId,
       catalog.settingsForCore(coreName), catalog.coreDefaults(coreName),
       m_settingsService);
     m_currentCoreConfig = coreConfig;
@@ -238,7 +238,7 @@ namespace firelight::emulation {
   }
 
   std::optional<std::string> EmulationService::getCurrentGameName() const {
-    return isGameRunning() ? m_currentEntry.displayName.toStdString() : "";
+    return isGameRunning() ? m_currentEntry.displayName : "";
   }
 
   std::optional<library::Entry> EmulationService::getCurrentEntry() {

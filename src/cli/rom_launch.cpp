@@ -28,8 +28,7 @@ int resolveRomEntryId(const std::string &romPath,
     return -1;
   }
 
-  const auto entry = library.getEntryWithContentHash(
-      QString::fromStdString(identified.contentHash));
+  const auto entry = library.getEntryWithContentHash(identified.contentHash);
   if (!entry) {
     spdlog::warn("ROM is not in the library yet (scan or import it first): {}",
                  romPath);

@@ -4,13 +4,14 @@
 #include <firelight/userdata_database.hpp>
 
 #include <QSettings>
-#include <QThreadPool>
 #include <memory>
 
 namespace firelight::saves {
+// Sqlite/filesystem-backed implementation of the ISaveManager domain contract.
+// Announces suspend-point changes through the EventDispatcher (see
+// save_events.hpp) rather than Qt signals, so it is a plain class, not a
+// QObject. Its QSettings/QString/QDir internals are Qt value/utility types.
 class SaveManager final : public ISaveManager {
-  Q_OBJECT
-
 public:
   SaveManager(const QString &defaultSaveDir,
               db::IUserdataDatabase &userdataDatabase);
@@ -26,9 +27,8 @@ public:
   [[nodiscard]] std::optional<Savefile>
   readSaveData(const QString &contentHash, int saveSlotNumber) const override;
 
-  QFuture<bool> writeSuspendPoint(const QString &contentHash, int saveSlotNumber,
-                                  int index,
-                                  const SuspendPoint &suspendPoint) override;
+  void writeSuspendPoint(const QString &contentHash, int saveSlotNumber,
+                         int index, const SuspendPoint &suspendPoint) override;
 
   std::optional<SuspendPoint> readSuspendPoint(const QString &contentHash,
                                                int saveSlotNumber,
@@ -39,9 +39,6 @@ public:
 
   [[nodiscard]] QString getSaveDirectory() const override;
   void setSaveDirectory(const QString &saveDirectory) override;
-
-public slots:
-  void handleUpdatedSuspendPoint(int index);
 
 private:
   void writeSuspendPointToDisk(const QString &contentHash, int index,
@@ -57,6 +54,5 @@ private:
   QSettings m_settings;
   db::IUserdataDatabase &m_userdataDatabase;
   QString m_saveDirectory;
-  std::unique_ptr<QThreadPool> m_ioThreadPool = nullptr;
 };
 } // namespace firelight::saves

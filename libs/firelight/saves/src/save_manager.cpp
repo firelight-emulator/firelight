@@ -1,5 +1,8 @@
 #include <firelight/saves/save_manager_impl.hpp>
 
+#include <firelight/event_dispatcher.hpp>
+#include <firelight/saves/save_events.hpp>
+
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -8,7 +11,6 @@
 #include <qdatetime.h>
 #include <qfile.h>
 #include <qfileinfo.h>
-#include <qfuture.h>
 #include <qsavefile.h>
 #include <spdlog/spdlog.h>
 
@@ -16,9 +18,6 @@ namespace firelight::saves {
 SaveManager::SaveManager(const QString &defaultSaveDir,
                          db::IUserdataDatabase &userdataDatabase)
     : m_userdataDatabase(userdataDatabase) {
-  m_ioThreadPool = std::make_unique<QThreadPool>();
-  m_ioThreadPool->setMaxThreadCount(1);
-
   m_settings.beginGroup("Saves");
   m_saveDirectory =
       m_settings.value("SaveDirectory", defaultSaveDir).toString();
@@ -187,12 +186,12 @@ std::optional<Savefile> SaveManager::readSaveData(const QString &contentHash,
   return {saveData};
 }
 
-QFuture<bool> SaveManager::writeSuspendPoint(const QString &contentHash,
-                                             int saveSlotNumber, int index,
-                                             const SuspendPoint &suspendPoint) {
+void SaveManager::writeSuspendPoint(const QString &contentHash,
+                                    int saveSlotNumber, int index,
+                                    const SuspendPoint &suspendPoint) {
   writeSuspendPointToDisk(contentHash, index, suspendPoint);
-  emit suspendPointUpdated(contentHash, saveSlotNumber, index);
-  return {};
+  EventDispatcher::instance().publish(SuspendPointUpdatedEvent{
+      contentHash.toStdString(), saveSlotNumber, index});
 }
 
 std::optional<SuspendPoint>
@@ -205,7 +204,8 @@ void SaveManager::deleteSuspendPoint(const QString &contentHash,
                                      const int saveSlotNumber,
                                      const int index) {
   deleteSuspendPointFromDisk(contentHash, saveSlotNumber, index);
-  emit suspendPointDeleted(contentHash, saveSlotNumber, index);
+  EventDispatcher::instance().publish(SuspendPointDeletedEvent{
+      contentHash.toStdString(), saveSlotNumber, index});
 }
 
 QString SaveManager::getSaveDirectory() const { return m_saveDirectory; }
@@ -226,11 +226,6 @@ void SaveManager::setSaveDirectory(const QString &saveDirectory) {
 
   m_saveDirectory = temp;
   m_settings.setValue("SaveDirectory", m_saveDirectory);
-  emit saveDirectoryChanged(m_saveDirectory);
-}
-
-void SaveManager::handleUpdatedSuspendPoint(int index) {
-  // intentionally empty - stub for future suspend point list UI
 }
 
 void SaveManager::writeSuspendPointToDisk(const QString &contentHash,

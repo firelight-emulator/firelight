@@ -29,8 +29,8 @@ GameActivityListModel::GameActivityListModel(QObject *parent)
       newItem.contentHash = QString::fromStdString(session.contentHash);
       newItem.numSecondsPlayed = session.unpausedDurationMillis / 1000;
 
-      auto entry = getLibraryService()->getEntryWithContentHash(
-          QString::fromStdString(session.contentHash));
+      auto entry =
+          getLibraryService()->getEntryWithContentHash(session.contentHash);
       if (entry) {
         auto platform = platforms::PlatformService::getInstance().getPlatform(
             entry->platformId);
@@ -42,8 +42,8 @@ GameActivityListModel::GameActivityListModel(QObject *parent)
           newItem.platformName = "Unknown Platform";
         }
 
-        newItem.displayName = entry->displayName;
-        newItem.iconUrl1x1 = entry->icon1x1SourceUrl;
+        newItem.displayName = QString::fromStdString(entry->displayName);
+        newItem.iconUrl1x1 = QString::fromStdString(entry->icon1x1SourceUrl);
       } else {
         spdlog::info("Didn't find entry for content hash {}",
                      session.contentHash);

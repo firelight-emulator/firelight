@@ -1,6 +1,8 @@
 #pragma once
 #include <service_accessor.hpp>
+#include <firelight/event_dispatcher.hpp>
 #include <firelight/saves/isave_manager.hpp>
+#include <firelight/saves/save_events.hpp>
 #include "suspend_point_list_model.hpp"
 
 namespace firelight::saves {
@@ -17,28 +19,30 @@ public:
   explicit SuspendPointsItem(QObject *parent = nullptr) : QObject(parent) {
     m_suspendPointsModel = new SuspendPointListModel(*getGameImageProvider());
 
-    connect(getSaveManager(), &ISaveManager::suspendPointUpdated, this,
-            [this](const QString &contentHash, int saveSlotNumber, int index) {
-              if (contentHash != m_contentHash ||
-                  saveSlotNumber != m_saveSlotNumber) {
+    m_suspendPointUpdatedConnection =
+        EventDispatcher::instance().subscribe<SuspendPointUpdatedEvent>(
+            [this](const SuspendPointUpdatedEvent &event) {
+              if (QString::fromStdString(event.contentHash) != m_contentHash ||
+                  event.saveSlotNumber != m_saveSlotNumber) {
                 return;
               }
 
               const auto suspendPoint = getSaveManager()->readSuspendPoint(
-                  contentHash, saveSlotNumber, index);
+                  m_contentHash, event.saveSlotNumber, event.index);
               if (suspendPoint.has_value()) {
-                m_suspendPointsModel->updateData(index, *suspendPoint);
+                m_suspendPointsModel->updateData(event.index, *suspendPoint);
               }
             });
 
-    connect(getSaveManager(), &ISaveManager::suspendPointDeleted, this,
-            [this](const QString &contentHash, int saveSlotNumber, int index) {
-              if (contentHash != m_contentHash ||
-                  saveSlotNumber != m_saveSlotNumber) {
+    m_suspendPointDeletedConnection =
+        EventDispatcher::instance().subscribe<SuspendPointDeletedEvent>(
+            [this](const SuspendPointDeletedEvent &event) {
+              if (QString::fromStdString(event.contentHash) != m_contentHash ||
+                  event.saveSlotNumber != m_saveSlotNumber) {
                 return;
               }
 
-              m_suspendPointsModel->deleteData(index);
+              m_suspendPointsModel->deleteData(event.index);
             });
   }
 
@@ -65,6 +69,9 @@ private:
   int m_saveSlotNumber = -1;
 
   SuspendPointListModel *m_suspendPointsModel;
+
+  ScopedConnection m_suspendPointUpdatedConnection;
+  ScopedConnection m_suspendPointDeletedConnection;
 };
 
 } // namespace firelight::saves

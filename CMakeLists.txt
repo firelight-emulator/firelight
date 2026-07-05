@@ -166,6 +166,8 @@ add_library(firelight_lib
         src/gui/qt_audio_settings_proxy.hpp
         src/gui/qt_core_registry_proxy.cpp
         src/gui/qt_core_registry_proxy.hpp
+        src/gui/qt_save_manager_proxy.cpp
+        src/gui/qt_save_manager_proxy.hpp
         src/app/saves/gui/savefile_list_model.cpp
         libs/firelight/achievements/src/rcheevos/ra_client.cpp
         src/gui/eventhandlers/window_resize_handler.cpp

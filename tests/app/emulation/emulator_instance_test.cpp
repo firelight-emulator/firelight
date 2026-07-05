@@ -80,7 +80,7 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
   ASSERT_NE(info.m_id, -1);
 
   auto entry = m_library->getEntryWithContentHash(
-      QString::fromStdString(m_testContentHash));
+      m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -117,7 +117,7 @@ TEST_F(EmulatorInstanceTest, SyncSettingsUpdateInstance) {
   ASSERT_NE(info.m_id, -1);
 
   auto entry = m_library->getEntryWithContentHash(
-      QString::fromStdString(m_testContentHash));
+      m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -157,7 +157,7 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
   ASSERT_NE(info.m_id, -1);
 
   auto entry = m_library->getEntryWithContentHash(
-      QString::fromStdString(m_testContentHash));
+      m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -403,7 +403,7 @@ TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
   ASSERT_NE(info.m_id, -1);
 
   auto entry = m_library->getEntryWithContentHash(
-      QString::fromStdString(m_testContentHash));
+      m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -443,7 +443,7 @@ TEST_F(EmulatorInstanceTest, SaveSlotOverrideAppliesOnceThenConsumed) {
   ASSERT_NE(info.m_id, -1);
 
   auto entry = m_library->getEntryWithContentHash(
-      QString::fromStdString(m_testContentHash));
+      m_testContentHash);
   ASSERT_TRUE(entry.has_value());
 
   // Override the save slot for the next launch.
@@ -493,7 +493,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   ASSERT_NE(info.m_id, -1);
 
   auto entry = m_library->getEntryWithContentHash(
-      QString::fromStdString(m_testContentHash));
+      m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 

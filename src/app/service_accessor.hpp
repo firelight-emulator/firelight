@@ -69,8 +69,6 @@ namespace firelight {
 
     static void setPlatformService(platforms::PlatformService *service);
 
-    static void setSettingsService(settings::SettingsService *service);
-
     static void
     setCoreOptionRepository(settings::ICoreOptionRepository *repository);
 
@@ -82,18 +80,11 @@ namespace firelight {
 
     static void setSaveManager(saves::ISaveManager *manager);
 
-    static void setUserdataManager(db::IUserdataDatabase *manager);
-
     static void setAchievementManager(achievements::RAClient *manager);
 
     static void setGameImageProvider(gui::GameImageProvider *provider);
 
-    static void setCoreSystemDirectory(const std::string &directory);
-
     static void setModRepository(mods::IModRepository *repository);
-
-    static void
-    setEmulationSettingsManager(settings::ISettingsRepository *repository);
 
     static void setDiscordManager(discord::IDiscordManager *manager);
 
@@ -106,8 +97,6 @@ namespace firelight {
 
     static platforms::PlatformService *getPlatformService();
 
-    static settings::SettingsService *getSettingsService();
-
     static settings::ICoreOptionRepository *getCoreOptionRepository();
 
     static achievements::AchievementService *getAchievementService();
@@ -118,17 +107,11 @@ namespace firelight {
 
     static saves::ISaveManager *getSaveManager();
 
-    static db::IUserdataDatabase *getUserdataManager();
-
     static achievements::RAClient *getAchievementManager();
 
     static gui::GameImageProvider *getGameImageProvider();
 
-    static std::string getCoreSystemDirectory();
-
     static mods::IModRepository *getModRepository();
-
-    static settings::ISettingsRepository *getEmulationSettingsManager();
 
     static discord::IDiscordManager *getDiscordManager();
 
@@ -138,18 +121,14 @@ namespace firelight {
     static input::InputService *s_inputService;
     static input::IControllerRepository *s_controllerProfileRepository;
     static platforms::PlatformService *s_platformService;
-    static settings::SettingsService *s_settingsService;
     static settings::ICoreOptionRepository *s_coreOptionRepository;
     static achievements::AchievementService *s_achievementService;
     static library::UserLibraryService *s_libraryService;
     static activity::IActivityLog *s_activityService;
     static saves::ISaveManager *s_saveManager;
-    static db::IUserdataDatabase *s_userdataDatabase;
     static achievements::RAClient *s_achievementManager;
     static gui::GameImageProvider *s_gameImageProvider;
-    static std::string s_coreSystemDirectory;
     static mods::IModRepository *s_modRepository;
-    static settings::ISettingsRepository *s_emulationSettingsManager;
     static discord::IDiscordManager *s_discordManager;
     static media::MediaService *s_mediaService;
   };

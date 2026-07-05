@@ -3,6 +3,7 @@
 #include <firelight/library/content_file.hpp>
 #include <firelight/library/user_library_repository.hpp>
 #include <QSqlDatabase>
+#include <QSqlQuery>
 #include <QString>
 
 namespace firelight::library {
@@ -34,7 +35,7 @@ public:
   bool create(ContentFile &romFile) override;
 
   std::optional<ContentFile>
-  getContentFileWithPathAndSize(const QString &filePath, size_t fileSizeBytes,
+  getContentFileWithPathAndSize(const std::string &filePath, size_t fileSizeBytes,
                                 bool inArchive) override;
 
   bool deleteContentFile(int id) override;
@@ -44,10 +45,10 @@ public:
   std::optional<Entry> getEntry(int entryId) override;
 
   std::optional<Entry>
-  getEntryWithContentHash(const QString &contentHash) override;
+  getEntryWithContentHash(const std::string &contentHash) override;
 
   std::vector<RunConfiguration>
-  getRunConfigurations(const QString &contentHash) override;
+  getRunConfigurations(const std::string &contentHash) override;
 
   std::vector<ContentFile> getContentFiles() override;
 
@@ -67,14 +68,19 @@ public:
 
   bool createEntry(Entry &entry) override;
 
-  void createRunConfiguration(int contentFileId, const QString &path,
+  void createRunConfiguration(int contentFileId, const std::string &path,
                               int platformId,
-                              const QString &contentHash) override;
+                              const std::string &contentHash) override;
 
 private:
   static constexpr auto DATABASE_PREFIX = "userlibrary_";
 
   [[nodiscard]] QSqlDatabase getDatabase() const;
+
+  // Builds an Entry from the current row of a `SELECT * FROM entriesv1` query.
+  // Shared by all three entry loaders (getEntries / getEntry /
+  // getEntryWithContentHash); does not read folder ids or provenance.
+  static Entry deserializeEntry(const QSqlQuery &query);
 
   // Adds `column` (with the given SQL type/constraints) to `table` if it does
   // not already exist, so databases created before a column was introduced pick

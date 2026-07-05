@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <firelight/input/sqlite_controller_repository.hpp>
 #include <firelight/input/sdl_input_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 #include <atomic>
 #include <thread>
@@ -31,8 +32,8 @@ protected:
             });
   }
 
-  input::SqliteControllerRepository m_repo =
-      input::SqliteControllerRepository(":memory:");
+  input::SqliteControllerRepository m_repo = input::SqliteControllerRepository(
+      ":memory:", platforms::PlatformService::getInstance());
 
   ScopedConnection m_connectedHandler;
   ScopedConnection m_disconnectedHandler;

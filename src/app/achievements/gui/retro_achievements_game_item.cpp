@@ -17,7 +17,8 @@ void RetroAchievementsGameItem::setContentHash(const QString &contentHash) {
     return;
   }
 
-  const auto entry = getLibraryService()->getEntryWithContentHash(contentHash);
+  const auto entry =
+      getLibraryService()->getEntryWithContentHash(contentHash.toStdString());
   if (!entry) {
     m_achievementSets.clear();
     return;

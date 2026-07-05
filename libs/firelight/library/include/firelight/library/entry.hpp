@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QString>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -8,21 +7,21 @@
 namespace firelight::library {
   struct Entry {
     int id = -1;
-    QString displayName;
-    QString contentHash;
+    std::string displayName;
+    std::string contentHash;
     unsigned platformId = 0;
     unsigned activeSaveSlot = 1;
     bool hidden = false;
     bool favorite = false;
-    QString icon1x1SourceUrl;
-    QString boxartFrontSourceUrl;
-    QString boxartBackSourceUrl;
-    QString description;
+    std::string icon1x1SourceUrl;
+    std::string boxartFrontSourceUrl;
+    std::string boxartBackSourceUrl;
+    std::string description;
     unsigned releaseYear = 0;
-    QString developer;
-    QString publisher;
-    QString genres;
-    QString regionIds;
+    std::string developer;
+    std::string publisher;
+    std::string genres;
+    std::string regionIds;
     unsigned retroachievementsSetId = 0;
 
     std::vector<int> folderIds{};

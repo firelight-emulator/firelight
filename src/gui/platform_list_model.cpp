@@ -48,11 +48,12 @@ namespace firelight::gui {
         return controllerTypeIds;
       }
       case ControllerImages: {
+        // Aligned 1:1 with ControllerTypeIds / ControllerTypeNames: index i is
+        // the image for controllerTypes[i]. Types without an image get an empty
+        // placeholder so callers can index via controllerTypeIds.indexOf(type)
+        // instead of assuming contiguous 1-based ids.
         QStringList controllerImageUrls;
         for (const auto &controllerType: item.controllerTypes) {
-          if (controllerType.imageUrl.empty()) {
-            continue;
-          }
           controllerImageUrls.append(
             QString::fromStdString(controllerType.imageUrl));
         }
@@ -77,22 +78,10 @@ namespace firelight::gui {
     return roles;
   }
 
-  Q_INVOKABLE QString
-  PlatformListModel::getPlatformIconName(int platformId) const {
+  QString PlatformListModel::getPlatformDisplayName(int platformId) const {
     for (const auto &item: m_items) {
       if (item.id == platformId) {
-        // return item.iconName;
-      }
-    }
-
-    return {};
-  }
-
-  Q_INVOKABLE QString
-  PlatformListModel::getPlatformDisplayName(int platformId) const {
-    for (const auto &item: m_items) {
-      if (item.id == platformId) {
-        // return item.displayName;
+        return QString::fromStdString(item.name);
       }
     }
 
