@@ -77,6 +77,12 @@
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
+#include <firelight/metadata/sqlite_game_metadata_source.hpp>
+#include <firelight/metadata/sqlite_media_asset_repository.hpp>
+#include <firelight/metadata/steamgriddb_art_provider.hpp>
+#include "metadata/cpr_http_client.hpp"
+#include "metadata/metadata_service.hpp"
+#include "gui/qt_game_art_proxy.hpp"
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/mods/sqlite_mod_repository.hpp>
 #include "app/mods/gui/ModInfoItem.hpp"
@@ -185,35 +191,30 @@ int main(int argc, char *argv[]) {
                        defaultAppDataPathString);
 
     // Create directories if they don't exist
-    QFileInfo appDataDirInfo(defaultAppDataPathString);
-    if (!appDataDirInfo.exists() && QDir().mkpath(defaultAppDataPathString)) {
+    if (!QFileInfo::exists(defaultAppDataPathString) && QDir().mkpath(defaultAppDataPathString)) {
         spdlog::info("[Startup] App data directory does not exist; creating: {}",
                      defaultAppDataPathString.toStdString());
     }
 
-    QFileInfo coreSystemDirInfo(coreSystemPath);
-    if (!coreSystemDirInfo.exists() && QDir().mkpath(coreSystemPath)) {
+    if (!QFileInfo::exists(coreSystemPath) && QDir().mkpath(coreSystemPath)) {
         spdlog::info("[Startup] Core system directory does not exist; creating: {}",
                      coreSystemPath.toStdString());
     }
 
-    if (!QFileInfo(docsPath).exists() && QDir().mkpath(docsPath)) {
+    if (!QFileInfo::exists(docsPath) && QDir().mkpath(docsPath)) {
         spdlog::info("[Startup] Documents directory does not exist; creating: {}",
                      docsPath.toStdString());
     }
 
-    QFileInfo savesDirInfo(savesPath);
-    if (!savesDirInfo.exists() && QDir().mkpath(savesPath)) {
+    if (!QFileInfo::exists(savesPath) && QDir().mkpath(savesPath)) {
         spdlog::info("[Startup] Saves directory does not exist; creating: {}", savesPath.toStdString());
     }
 
-    QFileInfo romsDirInfo(romsPath);
-    if (!romsDirInfo.exists() && QDir().mkpath(romsPath)) {
+    if (!QFileInfo::exists(romsPath) && QDir().mkpath(romsPath)) {
         spdlog::info("[Startup] Content directory does not exist; creating: {}", romsPath.toStdString());
     }
 
-    QFileInfo screenshotsDirInfo(screenshotsPath);
-    if (!screenshotsDirInfo.exists() && QDir().mkpath(screenshotsPath)) {
+    if (!QFileInfo::exists(screenshotsPath) && QDir().mkpath(screenshotsPath)) {
         spdlog::info("[Startup] Media directory does not exist; creating: {}", screenshotsPath.toStdString());
     }
 
@@ -279,6 +280,27 @@ int main(int argc, char *argv[]) {
     // repository's events. Must outlive scanning.
     firelight::library::LibraryIngestService libIngestService(userLibrary);
 
+    // Auto-populates entry name/metadata/art from the shipped offline metadata
+    // DB when a game is added (and backfills existing entries). Constructed
+    // before scanning so it catches the initial scan's new entries; the read-only
+    // metadata source tolerates a missing shipped DB.
+    firelight::metadata::SqliteGameMetadataSource gameMetadataSource(
+        (defaultAppDataPathString + "/metadata.db").toStdString());
+    firelight::metadata::SqliteMediaAssetRepository mediaAssetRepository(
+        (defaultAppDataPathString + "/media.db").toStdString());
+    firelight::metadata::MetadataService metadataService(
+        userLibrary, gameMetadataSource, mediaAssetRepository,
+        (defaultAppDataPathString + "/media").toStdString());
+    metadataService.backfillMissing();
+
+    // Optional online art provider backing the "Change artwork" picker. The key
+    // is a user setting (empty until supplied); the provider stays unconfigured
+    // and no-ops until then. cpr lives here in the app so the metadata module
+    // stays HTTP-dependency-free.
+    firelight::metadata::CprHttpClient cprHttpClient;
+    firelight::metadata::SteamGridDbArtProvider steamGridDbArtProvider(
+        cprHttpClient, "");
+
     firelight::library::LibraryScanner2 libScanner2(userLibrary,
                                                     platformService);
 
@@ -297,6 +319,31 @@ int main(int argc, char *argv[]) {
     firelight::ServiceAccessor::setInputService(&inputService);
     firelight::ServiceAccessor::setControllerProfileRepository(
         &controllerRepository);
+
+    // Settings service
+    firelight::settings::SqliteSettingsRepository settingsRepository(
+        (defaultAppDataPathString + "/settings.db").toStdString());
+
+    firelight::settings::SettingsService settingsService(
+        settingsRepository);
+    firelight::settings::SettingsService::setInstance(&settingsService);
+
+    // Caches each core's declared options (populated after a core loads) so the
+    // advanced options editor can list them without the core running.
+    firelight::settings::SqliteCoreOptionRepository coreOptionRepository(
+        (defaultAppDataPathString + "/settings.db").toStdString());
+    firelight::ServiceAccessor::setCoreOptionRepository(&coreOptionRepository);
+
+    // Cheat service
+    firelight::cheats::SqliteCheatRepository cheatRepository(
+        (defaultAppDataPathString + "/cheats.db").toStdString());
+
+    // ===== Create Qt proxy (glue) services =====================================================
+    firelight::gui::QtSaveManagerProxy saveManagerProxy(saveManager);
+    firelight::gui::QtInputServiceProxy inputServiceProxy(inputService);
+    firelight::gui::QtAchievementServiceProxy achievementServiceProxy(achievementService);
+    firelight::gui::QtGameArtProxy gameArtProxy(
+        metadataService, steamGridDbArtProvider, mediaAssetRepository);
 
     // PPSSPP loads a runtime asset tree (fonts, VFPU tables, texture atlases,
     // compat db) from <system>/PPSSPP. These aren't part of the core DLL, so the
@@ -345,7 +392,6 @@ int main(int argc, char *argv[]) {
     // Thin QML adapter over the (Qt-notification-free) save manager; exposes the
     // save directory as a bindable property for the settings UI. Declared here so
     // it outlives the QML engine registered below.
-    firelight::gui::QtSaveManagerProxy saveManagerProxy(saveManager);
 
     // TODO: Move this to before service?
     // Re-watch/re-scan as content directories come and go. Subscribed before the
@@ -428,18 +474,8 @@ int main(int argc, char *argv[]) {
     // Backs SettingsService (below) via the std-typed ISettingsRepository. Not a
     // QObject and not exposed to QML — the GUI reads settings through
     // SettingsService, not this repository.
-    firelight::settings::SqliteSettingsRepository emulationSettingsManager(
-        (defaultAppDataPathString + "/settings.db").toStdString());
-
-    // Caches each core's declared options (populated after a core loads) so the
-    // advanced options editor can list them without the core running.
-    firelight::settings::SqliteCoreOptionRepository coreOptionRepository(
-        (defaultAppDataPathString + "/settings.db").toStdString());
-    firelight::ServiceAccessor::setCoreOptionRepository(&coreOptionRepository);
 
     // Per-game cheats (Game Genie / Action Replay), applied on load.
-    firelight::cheats::SqliteCheatRepository cheatRepository(
-        (defaultAppDataPathString + "/cheats.db").toStdString());
     //   QObject::connect(
     //     &libraryDatabase,
     //     &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
@@ -452,11 +488,6 @@ int main(int argc, char *argv[]) {
     //   libraryManager.startScan();
 
     //   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
-
-    firelight::settings::SettingsService settingsService(
-        emulationSettingsManager);
-
-    firelight::settings::SettingsService::setInstance(&settingsService);
 
     // Friendly emulation settings + per-core option defaults. Loaded once into
     // the shared catalog; the emulation path and settings UI read from it.
@@ -539,8 +570,7 @@ int main(int argc, char *argv[]) {
         .coreOptionRepository = &coreOptionRepository,
         .cheatRepository = &cheatRepository,
         .platformService = &platformService,
-        .coreSystemDirectory =
-        (defaultAppDataPathString + "/core-system").toStdString(),
+        .coreSystemDirectory = dataDirs.coreSystemPath.toStdString()
     };
     firelight::emulation::EmulationService emuService(userLibraryService,
                                                       entryResolver,
@@ -684,13 +714,11 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("SearchResultsModel", searchResultsModel);
 
 
-    engine.rootContext()->setContextProperty(
-        "InputService", new firelight::gui::QtInputServiceProxy(inputService));
+    engine.rootContext()->setContextProperty("InputService", &inputServiceProxy);
     engine.rootContext()->setContextProperty(
         "EmulationService", new firelight::gui::QtEmulationServiceProxy());
-    engine.rootContext()->setContextProperty(
-        "AchievementService",
-        new firelight::gui::QtAchievementServiceProxy(achievementService));
+    engine.rootContext()->setContextProperty("AchievementService", &achievementServiceProxy);
+    engine.rootContext()->setContextProperty("GameArtService", &gameArtProxy);
 
     engine.rootContext()->setContextProperty("LibraryFolderModel",
                                              &libraryFolderListModel);

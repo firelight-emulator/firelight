@@ -135,6 +135,18 @@
         <file alias="undo">assets/img/icons/notfilled-rounded/undo-notfilled.svg</file>
         <file alias="power">assets/img/icons/notfilled-rounded/power.svg</file>
     </qresource>
+    <qresource prefix="/help">
+        <file alias="getting-started.md">assets/help/getting-started.md</file>
+        <file alias="the-library.md">assets/help/the-library.md</file>
+        <file alias="playing-games.md">assets/help/playing-games.md</file>
+        <file alias="controllers.md">assets/help/controllers.md</file>
+        <file alias="achievements.md">assets/help/achievements.md</file>
+        <file alias="artwork-and-metadata.md">assets/help/artwork-and-metadata.md</file>
+        <file alias="cheats.md">assets/help/cheats.md</file>
+        <file alias="captures.md">assets/help/captures.md</file>
+        <file alias="settings.md">assets/help/settings.md</file>
+        <file alias="troubleshooting.md">assets/help/troubleshooting.md</file>
+    </qresource>
     <qresource prefix="/images/platform-icons">
         <file alias="nes">assets/img/nes.svg</file>
         <file alias="snes">assets/img/SNES.svg</file>

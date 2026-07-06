@@ -1,0 +1,46 @@
+import QtQuick
+import QtQuick.Controls
+import Firelight 1.0
+
+// Renders a bundled Markdown help article. `source` is a qrc:/help/*.md URL;
+// the file is read into a string and shown with Qt's native Markdown rendering.
+// In-app route links (e.g. /settings) navigate via the Router; web links open
+// in the browser.
+Flickable {
+    id: root
+
+    property url source
+
+    contentWidth: width
+    contentHeight: article.implicitHeight + 32
+    clip: true
+    boundsBehavior: Flickable.StopAtBounds
+
+    ScrollBar.vertical: ScrollBar {
+        width: 8
+    }
+
+    Text {
+        id: article
+        x: 4
+        y: 8
+        width: Math.min(root.width - 32, 820)
+
+        textFormat: Text.MarkdownText
+        text: String(root.source) !== "" ? FilesystemUtils.readTextFile(root.source) : ""
+        wrapMode: Text.WordWrap
+        color: "white"
+        font.family: Constants.regularFontFamily
+        font.pixelSize: 15
+        lineHeight: 1.3
+        linkColor: ColorPalette.hyperlinkColor
+
+        onLinkActivated: function (link) {
+            if (link.startsWith("http://") || link.startsWith("https://")) {
+                Qt.openUrlExternally(link);
+            } else {
+                Router.navigateTo(link);
+            }
+        }
+    }
+}

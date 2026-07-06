@@ -1,5 +1,7 @@
 #include "filesystem_utils.hpp"
 
+#include <QFile>
+#include <QUrl>
 #include <qdir.h>
 #include <qprocess.h>
 
@@ -12,6 +14,23 @@ QString FilesystemUtils::getFileURI() {
 #elif _WIN32
   return "file:///";
 #endif
+}
+
+QString FilesystemUtils::readTextFile(const QString &url) {
+  // Resolve qrc:/ and file:// URLs to something QFile understands; a plain path
+  // (including a ":/..." resource path) is used as-is.
+  QString path = url;
+  if (const QUrl parsed(url); parsed.scheme() == "qrc") {
+    path = ":" + parsed.path();
+  } else if (parsed.isLocalFile()) {
+    path = parsed.toLocalFile();
+  }
+
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    return {};
+  }
+  return QString::fromUtf8(file.readAll());
 }
 
 bool FilesystemUtils::isFile(const QString &path) {

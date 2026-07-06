@@ -186,7 +186,7 @@ Pane {
             label: "Settings"
             iconName: "settings"
 
-            KeyNavigation.down: powerButton
+            KeyNavigation.down: helpButton
 
             Layout.fillWidth: true
 
@@ -199,6 +199,23 @@ Pane {
             onToggled: {
                 if (toggled) {
                     Router.navigateTo("/settings")
+                }
+            }
+        }
+
+        LeftNavigationItem {
+            id: helpButton
+            label: "Help"
+            iconName: "info"
+
+            KeyNavigation.down: powerButton
+
+            Layout.fillWidth: true
+
+            checked: Router.currentRoute.startsWith("/help")
+            onToggled: {
+                if (toggled) {
+                    Router.navigateTo("/help")
                 }
             }
         }
