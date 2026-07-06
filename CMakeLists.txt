@@ -433,6 +433,7 @@ add_executable(fl_test
         tests/app/library/content_identifier_test.cpp
         tests/app/library/content_extensions_test.cpp
         tests/app/library/content_loader_test.cpp
+        tests/app/library/entry_list_model_test.cpp
         tests/app/library/library_ingest_service_test.cpp
         tests/app/library/library_scanner_test.cpp
         tests/app/library/entry_resolver_test.cpp

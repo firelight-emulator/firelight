@@ -1107,6 +1107,7 @@ bool SqliteUserLibraryRepository::createEntry(Entry &entry) {
   }
 
   entry.id = static_cast<int>(m_db->getLastInsertRowid());
+  EventDispatcher::instance().publish(EntryCreatedEvent{.entryId = entry.id});
   return true;
 }
 } // namespace firelight::library

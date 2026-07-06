@@ -63,20 +63,57 @@ protected:
 
   QString path(const QString &rel) { return tempDir.filePath(rel); }
 
-  // Registers the temp dir as a content directory and runs one full scan,
-  // blocking on a local event loop until the scanner reports completion.
+  // Runs a scan and blocks until the worker goes idle, whether or not it changed
+  // anything. scanFinished only fires on changes, so wait on the scanning flag
+  // returning to false instead (the worker's DB writes are complete by then).
+  static void waitForScanIdle(LibraryScanner2 &scanner) {
+    QEventLoop loop;
+    QObject::connect(&scanner, &LibraryScanner2::scanningChanged, &loop, [&] {
+      if (!scanner.isScanning()) {
+        loop.quit();
+      }
+    });
+    // Safety valve so a hung scan fails the test instead of blocking forever.
+    QTimer::singleShot(20000, &loop, &QEventLoop::quit);
+    scanner.scanAll();
+    loop.exec();
+  }
+
+  // Registers the temp dir as a content directory and runs one full scan.
   void scanTempDir() {
     ContentDirectory dir;
     dir.path = tempDir.path().toStdString();
     ASSERT_TRUE(m_repo->create(dir));
 
     LibraryScanner2 scanner(*m_repo, m_platformService);
+    waitForScanIdle(scanner);
+  }
+
+  // Registers the temp dir as a content directory and returns a scanner over it,
+  // for tests that need to drive the scanner across multiple scans.
+  std::unique_ptr<LibraryScanner2> makeScanner() {
+    ContentDirectory dir;
+    dir.path = tempDir.path().toStdString();
+    m_repo->create(dir);
+    return std::make_unique<LibraryScanner2>(*m_repo, m_platformService);
+  }
+
+  // Runs a scan and blocks until scanFinished (which only fires when the scan
+  // changed something). Use only when the scan is expected to add/remove content.
+  static void waitForScanFinished(LibraryScanner2 &scanner) {
     QEventLoop loop;
     QObject::connect(&scanner, &LibraryScanner2::scanFinished, &loop,
                      &QEventLoop::quit);
-    // Safety valve so a hung scan fails the test instead of blocking forever.
     QTimer::singleShot(20000, &loop, &QEventLoop::quit);
     scanner.scanAll();
+    loop.exec();
+  }
+
+  // Pumps the event loop for a fixed spell (to let a background scan run when we
+  // expect it NOT to emit scanFinished, or not to run at all).
+  static void pumpEvents(int ms) {
+    QEventLoop loop;
+    QTimer::singleShot(ms, &loop, &QEventLoop::quit);
     loop.exec();
   }
 
@@ -169,6 +206,86 @@ TEST_F(LibraryScannerTest, IgnoresUnknownAndPatchFiles) {
   scanTempDir();
 
   EXPECT_TRUE(m_repo->getContentFiles().empty());
+}
+
+// Nested folders that hold games are watched (so future adds/removes there are
+// caught instantly), along with the content root -- but folders with no games
+// are not, so the watch count scales with game folders, not the whole tree.
+TEST_F(LibraryScannerTest, WatchesGameFoldersAndRootButNotEmptyFolders) {
+  ASSERT_TRUE(tempDir.isValid());
+  ASSERT_TRUE(QDir(tempDir.path()).mkpath("snes"));
+  writeFile(path("snes/game.sfc"), romBytes(1024, 1));
+  ASSERT_TRUE(QDir(tempDir.path()).mkpath("empty/sub")); // holds no games
+
+  auto scanner = makeScanner();
+  waitForScanFinished(*scanner); // adds a ROM -> fires after watches are applied
+
+  const auto watched = scanner->watchedDirectories();
+  bool rootWatched = false, snesWatched = false, emptyWatched = false;
+  for (const auto &d : watched) {
+    if (d == tempDir.path()) {
+      rootWatched = true;
+    }
+    if (endsWith(d.toStdString(), "/snes")) {
+      snesWatched = true;
+    }
+    if (d.contains("/empty")) {
+      emptyWatched = true;
+    }
+  }
+  EXPECT_TRUE(rootWatched);
+  EXPECT_TRUE(snesWatched);
+  EXPECT_FALSE(emptyWatched);
+}
+
+// A rescan with no filesystem change must not report a change: scanFinished
+// (which refreshes/resets the library UI) stays silent, and nothing is
+// duplicated. This is what keeps the periodic safety scan from flickering the UI.
+TEST_F(LibraryScannerTest, NoOpRescanDoesNotEmitScanFinished) {
+  ASSERT_TRUE(tempDir.isValid());
+  writeFile(path("game.gb"), romBytes(1024, 4));
+
+  auto scanner = makeScanner();
+  waitForScanFinished(*scanner); // first scan catalogs the ROM
+  ASSERT_EQ(m_repo->getContentFiles().size(), 1u);
+
+  bool finishedAgain = false;
+  QObject::connect(scanner.get(), &LibraryScanner2::scanFinished,
+                   [&] { finishedAgain = true; });
+  scanner->scanAll();
+  pumpEvents(1500);
+
+  EXPECT_FALSE(finishedAgain);
+  EXPECT_EQ(m_repo->getContentFiles().size(), 1u);
+}
+
+// While suspended (e.g. a game is running) no scan runs, even if directories
+// change; resuming processes the deferred work.
+TEST_F(LibraryScannerTest, SuspendedScannerDefersUntilResumed) {
+  ASSERT_TRUE(tempDir.isValid());
+  writeFile(path("game.gb"), romBytes(1024, 6));
+
+  auto scanner = makeScanner();
+  scanner->setScanningSuspended(true);
+  scanner->scanAll();
+  pumpEvents(500);
+
+  EXPECT_TRUE(m_repo->getContentFiles().empty());
+  EXPECT_FALSE(scanner->isScanning());
+
+  // Resume -> the deferred scan runs and finds the ROM.
+  bool finished = false;
+  QObject::connect(scanner.get(), &LibraryScanner2::scanFinished,
+                   [&] { finished = true; });
+  QEventLoop loop;
+  QObject::connect(scanner.get(), &LibraryScanner2::scanFinished, &loop,
+                   &QEventLoop::quit);
+  QTimer::singleShot(20000, &loop, &QEventLoop::quit);
+  scanner->setScanningSuspended(false);
+  loop.exec();
+
+  EXPECT_TRUE(finished);
+  EXPECT_EQ(m_repo->getContentFiles().size(), 1u);
 }
 
 } // namespace firelight::library

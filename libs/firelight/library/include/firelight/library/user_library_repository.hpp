@@ -14,6 +14,13 @@
 
 namespace firelight::library {
 
+// A brand-new entry was inserted (a newly-discovered game). Distinct from
+// EntryUpdatedEvent, which fires when an existing entry's fields change
+// (including `hidden` toggling as content comes and goes).
+struct EntryCreatedEvent {
+  int entryId;
+};
+
 struct EntryUpdatedEvent {
   int entryId;
 };

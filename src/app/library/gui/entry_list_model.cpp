@@ -30,6 +30,34 @@ namespace firelight::library {
               }
             }
           });
+
+    // Keep the model in sync with the library incrementally (no full reset, so
+    // scroll/selection are preserved and periodic scans never flicker the list).
+    // These events are published on the scan worker thread, so marshal to this
+    // object's (GUI) thread before touching the model.
+    m_countsChangedTimer.setSingleShot(true);
+    m_countsChangedTimer.setInterval(0);
+    connect(&m_countsChangedTimer, &QTimer::timeout, this, [this] {
+      emit countChanged();
+      emit numFavoritesChanged();
+      emit countByFolderIdChanged();
+    });
+
+    m_entryCreatedConnection =
+        EventDispatcher::instance().subscribe<EntryCreatedEvent>(
+          [this](const EntryCreatedEvent &event) {
+            const int id = event.entryId;
+            QMetaObject::invokeMethod(
+                this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
+          });
+    m_entryUpdatedConnection =
+        EventDispatcher::instance().subscribe<EntryUpdatedEvent>(
+          [this](const EntryUpdatedEvent &event) {
+            const int id = event.entryId;
+            QMetaObject::invokeMethod(
+                this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
+          });
+
     reset();
   }
 
@@ -363,5 +391,66 @@ namespace firelight::library {
       }
     }
     endResetModel();
+  }
+
+  void EntryListModel::applyPlayStats(Item &item) const {
+    uint64_t totalMillis = 0;
+    uint64_t lastEndMillis = 0;
+    for (const auto &session :
+         m_activityLog.getPlaySessions(item.entry.contentHash)) {
+      totalMillis += session.unpausedDurationMillis;
+      lastEndMillis = std::max(lastEndMillis, session.endTime);
+    }
+    item.numSecondsPlayed = totalMillis / 1000;
+    item.lastPlayedEpochMillis = lastEndMillis;
+  }
+
+  void EntryListModel::rebuildIndex() {
+    m_indexByEntryId.clear();
+    for (int i = 0; i < m_items.size(); ++i) {
+      m_indexByEntryId[m_items[i].entry.id] = i;
+    }
+  }
+
+  void EntryListModel::scheduleCountsChanged() { m_countsChangedTimer.start(); }
+
+  void EntryListModel::syncEntry(int entryId) {
+    const auto entry = m_userLibrary.getEntry(entryId);
+    const auto it = m_indexByEntryId.find(entryId);
+    const bool present = it != m_indexByEntryId.end();
+    const bool visible = entry.has_value() && !entry->hidden;
+
+    // Gone or hidden: drop it from the model (if it's currently shown).
+    if (!visible) {
+      if (present) {
+        const int row = it->second;
+        beginRemoveRows(QModelIndex(), row, row);
+        m_items.removeAt(row);
+        rebuildIndex(); // keep the id->row map consistent before the proxy reads
+        endRemoveRows();
+        scheduleCountsChanged();
+      }
+      return;
+    }
+
+    Item item{.entry = *entry};
+    applyPlayStats(item);
+
+    if (present) {
+      // Update in place; the proxy re-sorts/re-filters off the changed roles.
+      const int row = it->second;
+      m_items[row] = item;
+      emit dataChanged(createIndex(row, 0), createIndex(row, 0), {});
+      scheduleCountsChanged();
+      return;
+    }
+
+    // New (or newly-unhidden): append -- the proxy sorts it into place.
+    const int row = static_cast<int>(m_items.size());
+    beginInsertRows(QModelIndex(), row, row);
+    m_items.append(item);
+    m_indexByEntryId[entryId] = row;
+    endInsertRows();
+    scheduleCountsChanged();
   }
 } // namespace firelight::library

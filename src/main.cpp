@@ -35,6 +35,7 @@
 #include <firelight/input/sqlite_controller_repository.hpp>
 #include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include "app/emulation/emulation_context.hpp"
+#include "app/emulation/emulation_service.hpp"
 #include "app/library/gui/content_directory_model.hpp"
 #include "app/library/gui/playlist_item_model.hpp"
 #include <firelight/library/library_scanner2.hpp>
@@ -346,6 +347,19 @@ int main(int argc, char *argv[]) {
             libScanner2.scanAll();
         });
 
+    // Pause library scanning while a game is running so background hashing/IO
+    // never contends with the emulator; resume (and catch up) when it stops.
+    const auto scanSuspendConn = EventDispatcher::instance().subscribe<
+        firelight::emulation::EmulationStartedEvent>(
+        [&](const firelight::emulation::EmulationStartedEvent &) {
+            libScanner2.setScanningSuspended(true);
+        });
+    const auto scanResumeConn = EventDispatcher::instance().subscribe<
+        firelight::emulation::EmulationStoppedEvent>(
+        [&](const firelight::emulation::EmulationStoppedEvent &) {
+            libScanner2.setScanningSuspended(false);
+        });
+
     // The app-facing curation surface; also guarantees the default content
     // directory exists and is watched (fires the add event above when seeding).
     firelight::library::EntryResolver entryResolver(userLibrary);
@@ -388,10 +402,9 @@ int main(int argc, char *argv[]) {
     firelight::library::EntryListModel entryListModel(
         userLibraryService, activityLog, platformService);
 
-    QObject::connect(&libScanner2,
-                     &firelight::library::LibraryScanner2::scanFinished,
-                     &entryListModel, &firelight::library::EntryListModel::reset,
-                     Qt::QueuedConnection);
+    // No scanFinished -> reset: the model keeps itself in sync incrementally via
+    // EntryCreatedEvent/EntryUpdatedEvent (see EntryListModel), so scans update
+    // the list in place without a full reset (no flicker / scroll loss).
 
     firelight::gui::PlatformListModel platformListModel(platformService);
     firelight::shop::ShopItemModel shopItemModel(contentDatabase);

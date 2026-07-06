@@ -3,6 +3,7 @@
 #include <firelight/library/smart_folder.hpp>
 #include <firelight/library/user_library_service.hpp>
 #include <QAbstractListModel>
+#include <QTimer>
 #include <firelight/event_dispatcher.hpp>
 #include <unordered_map>
 
@@ -110,6 +111,22 @@ namespace firelight::library {
     void countByFolderIdChanged();
 
   private:
+    // Reconciles a single entry with the model after a create/update event:
+    // inserts a newly-visible entry, removes one that became hidden/deleted, or
+    // updates one in place (the QML SortFilterProxyModel re-sorts/re-filters, so
+    // the source order doesn't matter). Runs on the GUI thread only.
+    void syncEntry(int entryId);
+
+    // Fills an item's play stats (total + last-played) from the activity log.
+    void applyPlayStats(Item &item) const;
+
+    // Rebuilds m_indexByEntryId to match m_items (after a structural change).
+    void rebuildIndex();
+
+    // Coalesces the count-property change notifications so a burst of syncEntry
+    // calls (e.g. a scan importing several games) recomputes the counts once.
+    void scheduleCountsChanged();
+
     UserLibraryService &m_userLibrary;
     activity::IActivityLog &m_activityLog;
     platforms::IPlatformService &m_platformService;
@@ -129,5 +146,11 @@ namespace firelight::library {
     std::unordered_map<int, int> m_indexByEntryId;
 
     ScopedConnection m_gamePlayedConnection;
+    ScopedConnection m_entryCreatedConnection;
+    ScopedConnection m_entryUpdatedConnection;
+
+    // Fires once (single-shot, 0ms) after a burst of syncEntry calls to emit the
+    // count-property change signals a single time.
+    QTimer m_countsChangedTimer;
   };
 } // namespace firelight::library

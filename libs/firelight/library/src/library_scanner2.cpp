@@ -1,6 +1,7 @@
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/library/archive_reader.hpp>
 #include <firelight/library/content_identifier.hpp>
+#include <QDateTime>
 #include <QDir>
 #include <QtConcurrent>
 #include <qcryptographichash.h>
@@ -38,6 +39,17 @@ LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library,
   m_scanTimer.setSingleShot(true);
   m_scanTimer.callOnTimeout([&] { startScan(); });
 
+  // Safety net: a low-frequency full rescan catches anything the watcher missed
+  // (network/removable drives, watch-limit overflow, dropped events). Cheap
+  // thanks to the per-directory mtime short-circuit, and skipped during gameplay.
+  m_periodicScanTimer.setInterval(PERIODIC_SCAN_INTERVAL_MS);
+  m_periodicScanTimer.callOnTimeout([this] {
+    if (!m_suspended) {
+      scanAll();
+    }
+  });
+  m_periodicScanTimer.start();
+
   connect(&m_watcher, &QFileSystemWatcher::directoryChanged,
           [&](const QString &path) {
             queueScan(path);
@@ -48,20 +60,61 @@ LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library,
 LibraryScanner2::~LibraryScanner2() { m_shuttingDown = true; }
 
 void LibraryScanner2::watchPath(const QString &path) {
-  m_watcher.addPath(path);
+  if (path.isEmpty() || m_watchedDirs.contains(path)) {
+    return;
+  }
+  if (m_watchedDirs.size() >= MAX_WATCHED_DIRECTORIES) {
+    if (!m_watchCapLogged) {
+      spdlog::warn("Library watch limit ({}) reached; relying on periodic "
+                   "rescans for the remaining folders",
+                   MAX_WATCHED_DIRECTORIES);
+      m_watchCapLogged = true;
+    }
+    return;
+  }
+  if (m_watcher.addPath(path)) {
+    m_watchedDirs.insert(path);
+  }
 }
+
 void LibraryScanner2::removePath(const QString &path) {
   m_watcher.removePath(path);
+  m_watchedDirs.remove(path);
+}
+
+QStringList LibraryScanner2::watchedDirectories() const {
+  return m_watcher.directories();
+}
+
+bool LibraryScanner2::isScanning() const { return m_scanRunning; }
+
+void LibraryScanner2::scheduleWatch(const QString &path) {
+  // QFileSystemWatcher must only be touched on the thread the scanner lives on
+  // (the main thread); scanDirectory runs on a worker, so hop back via the
+  // event loop.
+  QMetaObject::invokeMethod(
+      this, [this, path] { watchPath(path); }, Qt::QueuedConnection);
+}
+
+void LibraryScanner2::setScanningSuspended(const bool suspended) {
+  m_suspended = suspended;
+  if (!suspended) {
+    // Resume: process anything that changed (or was queued) while suspended.
+    QMetaObject::invokeMethod(
+        this, [this] { scanAll(); }, Qt::QueuedConnection);
+  }
 }
 
 QFuture<bool> LibraryScanner2::startScan() {
-  if (m_scanRunning) {
+  if (m_scanRunning || m_suspended) {
     return QtConcurrent::run([] { return false; });
   }
 
   return QtConcurrent::run(&m_threadPool, [this] {
-    QThread::currentThread()->setPriority(QThread::NormalPriority);
+    // Scanning is best-effort background work; never contend with the emulator.
+    QThread::currentThread()->setPriority(QThread::LowPriority);
     m_scanRunning = true;
+    m_changesInScan = 0;
     emit scanningChanged();
 
     while (auto nextDirectory = getNextDirectory()) {
@@ -81,13 +134,18 @@ QFuture<bool> LibraryScanner2::startScan() {
       if (!QFileInfo::exists(QString::fromStdString(filePath))) {
         spdlog::debug("Removing missing file: {}", filePath);
         m_library.deleteContentFile(romFile.m_id);
+        ++m_changesInScan;
       }
     }
 
     m_scanRunning = false;
-    emit scanFinished();
+    // Only refresh the library UI when the scan actually changed something, so a
+    // periodic no-op scan doesn't reset the list (losing scroll/selection).
+    if (m_changesInScan > 0) {
+      emit scanFinished();
+    }
     emit scanningChanged();
-    spdlog::info("Scan complete");
+    spdlog::info("Scan complete ({} change(s))", m_changesInScan.load());
     return true;
   });
 }
@@ -127,13 +185,21 @@ std::optional<QString> LibraryScanner2::getNextDirectory() {
 
 void LibraryScanner2::scanDirectory(const QString &path) {
   const ContentIdentifier identifier(m_platformService);
+
+  const QFileInfo dirInfo(path);
+  const int64_t dirMtime = dirInfo.lastModified().toMSecsSinceEpoch();
+  // If this directory is unchanged since we last scanned it, nothing was added,
+  // removed, or renamed directly in it. We still re-descend into subdirectories
+  // (their mtimes are checked independently), but skip the per-file DB lookups
+  // and identification here -- that is what keeps periodic rescans cheap.
+  const auto mtimeIt = m_dirMtimeByPath.find(path.toStdString());
+  const bool unchanged =
+      mtimeIt != m_dirMtimeByPath.end() && mtimeIt->second == dirMtime;
+
+  // Whether this directory holds at least one game (so it's worth watching).
+  bool dirHasContent = false;
+
   QDirIterator iter(path, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
-
-  auto dirInfo = QFileInfo(path);
-  spdlog::debug("Scanning directory: {} (last modified: {})",
-                dirInfo.filePath().toStdString(),
-                dirInfo.lastModified().toString().toStdString());
-
   while (iter.hasNext()) {
     if (m_shuttingDown) {
       return;
@@ -146,6 +212,11 @@ void LibraryScanner2::scanDirectory(const QString &path) {
     const auto fileInfo = iter.nextFileInfo();
     if (fileInfo.isDir()) {
       queueScan(fileInfo.filePath());
+      continue;
+    }
+
+    // An unchanged directory only needed a walk to discover its subdirectories.
+    if (unchanged) {
       continue;
     }
 
@@ -191,6 +262,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
               }
               if (m_library.getContentFileWithPathAndSize(entry.pathName,
                                                           entry.size, true)) {
+                dirHasContent = true;
                 return;
               }
 
@@ -212,6 +284,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
                     .m_contentHash = identified.contentHash};
                 m_library.create(romInfo);
                 persistDiscMembers(romInfo.m_id, identified.discMembers);
+                dirHasContent = true;
+                ++m_changesInScan;
               }
               return;
             }
@@ -221,6 +295,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
                 firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN) {
               if (m_library.getContentFileWithPathAndSize(entry.pathName,
                                                           entry.size, true)) {
+                dirHasContent = true;
                 return;
               }
 
@@ -239,6 +314,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
                     .m_platformId = identified.platformId,
                     .m_contentHash = identified.contentHash};
                 m_library.create(romInfo);
+                dirHasContent = true;
+                ++m_changesInScan;
               }
             }
           });
@@ -299,6 +376,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
               fileInfo.filePath().toStdString(), fileInfo.size(), false)) {
         spdlog::debug("Skipping known file: {}",
                       fileInfo.filePath().toStdString());
+        dirHasContent = true;
         continue;
       }
 
@@ -318,8 +396,17 @@ void LibraryScanner2::scanDirectory(const QString &path) {
             .m_contentHash = identified.contentHash};
         m_library.create(romInfo);
         persistDiscMembers(romInfo.m_id, identified.discMembers);
+        dirHasContent = true;
+        ++m_changesInScan;
       }
     }
+  }
+
+  // Remember this directory's mtime so an unchanged rescan can skip it, and watch
+  // it if it holds games so future adds/removes here are caught instantly.
+  m_dirMtimeByPath[path.toStdString()] = dirMtime;
+  if (dirHasContent) {
+    scheduleWatch(path);
   }
 }
 
