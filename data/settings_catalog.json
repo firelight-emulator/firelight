@@ -157,6 +157,7 @@
       ],
       "defaults": {
         "melonds_homebrew_sdcard": "disabled",
+        "melonds_sysfile_mode": "builtin",
         "melonds_number_of_screen_layouts": "8"
       }
     },

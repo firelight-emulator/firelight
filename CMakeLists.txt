@@ -108,6 +108,7 @@ add_subdirectory(libs/firelight/input)
 add_subdirectory(libs/firelight/cheats)
 add_subdirectory(libs/firelight/audio)
 add_subdirectory(libs/firelight/media)
+add_subdirectory(libs/firelight/metadata)
 add_subdirectory(libs/firelight/db)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
@@ -152,6 +153,11 @@ add_library(firelight_lib
         src/app/libretro/core_registry.cpp
         src/app/libretro/game.cpp
         src/app/audio/audio_manager.cpp
+        src/app/metadata/metadata_service.cpp
+        src/app/metadata/cpr_http_client.cpp
+        src/app/metadata/cpr_http_client.hpp
+        src/gui/qt_game_art_proxy.cpp
+        src/gui/qt_game_art_proxy.hpp
 
         src/app/input/gui/analog_settings_model.cpp
         src/app/input/gui/profile_list_model.cpp
@@ -281,6 +287,7 @@ target_link_libraries(firelight_lib PUBLIC
         firelight_cheats
         firelight_audio
         firelight_media
+        firelight_metadata
         firelight_db
         firelight_library
         firelight_saves
@@ -436,6 +443,8 @@ add_executable(fl_test
         tests/app/library/entry_list_model_test.cpp
         tests/app/library/library_ingest_service_test.cpp
         tests/app/library/library_scanner_test.cpp
+        tests/app/metadata/metadata_service_test.cpp
+        tests/app/gui/filesystem_utils_test.cpp
         tests/app/library/entry_resolver_test.cpp
         tests/app/library/smart_folder_test.cpp
         tests/app/db/daos/savefile_metadata_test.cpp
@@ -529,6 +538,7 @@ add_dependencies(check
         firelight_cheats_test
         firelight_audio_test
         firelight_media_test
+        firelight_metadata_test
 )
 #ctest_coverage_collect_gcov()
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
