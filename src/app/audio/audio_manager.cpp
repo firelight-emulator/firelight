@@ -5,8 +5,6 @@
 #include <spdlog/spdlog.h>
 
 namespace {
-  // The output device the user picked (by description), persisted in QSettings,
-  // or the system default if unset / no longer present.
   QAudioDevice selectedOutputDevice() {
     const QString desc = QSettings().value("audio/outputDevice").toString();
     if (!desc.isEmpty()) {
@@ -28,9 +26,6 @@ AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
 }
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
-  // Previously dropped any batch < 30 frames (a hack for mupen's small batches).
-  // Dropping real audio frames leaves a small gap/skip; the resampler buffers
-  // tiny inputs fine, so process them instead of discarding.
   if (numFrames == 0) {
     return numFrames;
   }
@@ -82,7 +77,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
   }
 
-  return numFrames; // Return original number of frames consumed
+  return numFrames;
 }
 
 void AudioManager::openAudioSink() {
@@ -107,15 +102,18 @@ void AudioManager::openAudioSink() {
   spdlog::info("Audio: resampling core {} Hz -> device {} Hz", m_sampleRate,
                m_deviceSampleRate);
 
+  // Initialize the resampler to convert from the core's sample rate to the device's sample rate
   m_resampler.initialize(m_sampleRate, m_deviceSampleRate);
 
   m_audioSink = std::make_unique<QAudioSink>(dev, format);
 
+  // Set a larger buffer for higher sample rates
   const int bufferMultiplier = m_deviceSampleRate > 44000 ? 4 : 2;
   m_audioSink->setBufferSize(8192 * bufferMultiplier);
 
   m_audioDevice = m_audioSink->start();
 
+  // Suspend the sink until we've pre-buffered to around 50% full
   m_audioSink->suspend();
   m_priming = true;
 }

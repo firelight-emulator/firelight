@@ -91,7 +91,6 @@ CliOptions parseCli(int argc, char **argv) {
   try {
     app.parse(argc, argv);
   } catch (const CLI::ParseError &e) {
-    // Prints help/version/error text and yields the process exit code.
     opts.action = CliAction::Exit;
     opts.exitCode = app.exit(e);
     return opts;

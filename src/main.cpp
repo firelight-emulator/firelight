@@ -138,9 +138,7 @@ int main(int argc, char *argv[]) {
 
     QSettings::setDefaultFormat(QSettings::Format::IniFormat);
 
-    // Parse the command line before doing any GUI setup: --help/--version and
-    // subcommands short-circuit here. The application/organization names above
-    // are already set (they're static), so path resolution works in both paths.
+    // ===== CLI parsing ===============================================================
     const auto cliOptions = firelight::cli::parseCli(argc, argv);
     if (cliOptions.action == firelight::cli::CliAction::Exit) {
         return cliOptions.exitCode;
@@ -148,12 +146,13 @@ int main(int argc, char *argv[]) {
     if (cliOptions.verbose) {
         spdlog::set_level(spdlog::level::debug);
     }
+
+    // Handle subcommands that don't need GUI and exit immediately
     if (cliOptions.action == firelight::cli::CliAction::RunScan) {
-        // Headless: no QApplication / QML engine.
-        return firelight::cli::runScan(argc, argv, cliOptions);
+        return runScan(argc, argv, cliOptions);
     }
     if (cliOptions.action == firelight::cli::CliAction::Login) {
-        return firelight::cli::runLogin(argc, argv, cliOptions);
+        return runLogin(argc, argv, cliOptions);
     }
     if (cliOptions.action == firelight::cli::CliAction::ListSettings) {
         return firelight::cli::runListSettings(argc, argv);
@@ -162,85 +161,142 @@ int main(int argc, char *argv[]) {
         return firelight::cli::runListCores(argc, argv);
     }
 
-    // QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-    // QSurfaceFormat format;
-    // format.setProfile(QSurfaceFormat::OpenGLContextProfile::CompatibilityProfile);
-    // format.setVersion(4, 1);
-    // QSurfaceFormat::setDefaultFormat(format);
-
-    firelight::platforms::PlatformService platformService;
-    firelight::ServiceAccessor::setPlatformService(&platformService);
-
+    // ===== Set up QApplication ===============================================================
     QSurfaceFormat format;
     format.setSwapInterval(0);
     QSurfaceFormat::setDefaultFormat(format);
 
     QApplication app(argc, argv);
-
-    // Default icon for every window/dialog (matches the executable's icon).
     app.setWindowIcon(QIcon(":/images/app-icon"));
 
     std::signal(SIGINT, [](int signal) { QApplication::quit(); });
 
-    // Resolve data directories (honors --config-dir / --portable and the legacy
-    // portable.txt marker). Runs after QApplication so applicationDirPath works.
-    const auto dataDirs = firelight::cli::resolveDataDirs(cliOptions);
+    // ===== Resolve data directories ===============================================================
+    const auto dataDirs = resolveDataDirs(cliOptions);
     auto docsPath = dataDirs.docsPath;
     auto defaultAppDataPathString = dataDirs.appDataPath;
     auto savesPath = dataDirs.savesPath;
     auto romsPath = dataDirs.romsPath;
     auto screenshotsPath = dataDirs.screenshotsPath;
+    auto coreSystemPath = dataDirs.coreSystemPath;
 
-    // Single-instance forwarding (opt-in). If another Firelight (with the same
-    // data dir) is already running, hand it this launch and exit; otherwise we
-    // become the primary and listen for forwards (set up after the library is
-    // built). The server name is derived from the data dir so distinct
-    // --config-dir instances stay independent.
-    const auto singleInstanceName =
-            firelight::cli::singleInstanceServerName(defaultAppDataPathString);
-    if (cliOptions.singleInstance &&
-        firelight::cli::forwardLaunchToRunningInstance(singleInstanceName,
-                                                       cliOptions)) {
-        return 0;
+    // Set path to settings file
+    QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope,
+                       defaultAppDataPathString);
+
+    // Create directories if they don't exist
+    QFileInfo appDataDirInfo(defaultAppDataPathString);
+    if (!appDataDirInfo.exists() && QDir().mkpath(defaultAppDataPathString)) {
+        spdlog::info("[Startup] App data directory does not exist; creating: {}",
+                     defaultAppDataPathString.toStdString());
+    }
+
+    QFileInfo coreSystemDirInfo(coreSystemPath);
+    if (!coreSystemDirInfo.exists() && QDir().mkpath(coreSystemPath)) {
+        spdlog::info("[Startup] Core system directory does not exist; creating: {}",
+                     coreSystemPath.toStdString());
+    }
+
+    if (!QFileInfo(docsPath).exists() && QDir().mkpath(docsPath)) {
+        spdlog::info("[Startup] Documents directory does not exist; creating: {}",
+                     docsPath.toStdString());
     }
 
     QFileInfo savesDirInfo(savesPath);
     if (!savesDirInfo.exists() && QDir().mkpath(savesPath)) {
-        spdlog::info("Created saves directory at {}", savesPath.toStdString());
+        spdlog::info("[Startup] Saves directory does not exist; creating: {}", savesPath.toStdString());
     }
 
     QFileInfo romsDirInfo(romsPath);
     if (!romsDirInfo.exists() && QDir().mkpath(romsPath)) {
-        spdlog::info("Created roms directory at {}", romsPath.toStdString());
+        spdlog::info("[Startup] Content directory does not exist; creating: {}", romsPath.toStdString());
     }
 
-    QDir().mkpath(screenshotsPath);
-    // Owns writing captured screenshots to disk; reached by the emulator
-    // renderer via ServiceAccessor. Declared here so it outlives the QML engine.
+    QFileInfo screenshotsDirInfo(screenshotsPath);
+    if (!screenshotsDirInfo.exists() && QDir().mkpath(screenshotsPath)) {
+        spdlog::info("[Startup] Media directory does not exist; creating: {}", screenshotsPath.toStdString());
+    }
+
+    // ===== Check for single-instance mode =======================================================
+    // If the user requested single-instance mode, check if another instance is already running.
+    // If so, forward the launch request to that instance and exit. Otherwise, continue launching
+    // this instance and a little bit later we'll start listening for incoming launch requests from
+    // future instances.
+    // ============================================================================================
+    const auto singleInstanceName =
+            firelight::cli::singleInstanceServerName(defaultAppDataPathString);
+    if (cliOptions.singleInstance &&
+        forwardLaunchToRunningInstance(singleInstanceName, cliOptions)) {
+        return 0;
+    }
+
+    // ===== Create and register services ===========================================================
+
+    // Platform service
+    firelight::platforms::PlatformService platformService;
+    firelight::ServiceAccessor::setPlatformService(&platformService);
+
+    // Media service
     firelight::media::MediaService mediaService(screenshotsPath);
     firelight::ServiceAccessor::setMediaService(&mediaService);
 
-    QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope,
-                       defaultAppDataPathString);
-    // TODO:
-    //  Roms
+    // Discord service
+    firelight::discord::DiscordManager discordManager(platformService);
+    firelight::ServiceAccessor::setDiscordManager(&discordManager);
 
-    // images
-    // auto cachePath =
-    //     QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    // "C:/Users/<USER>/AppData/Local/Firelight/cache/"
+    // Activity service
+    const auto activityDbPath = defaultAppDataPathString + "/activity.db";
+    firelight::activity::SqliteActivityLog activityLog(activityDbPath);
+    firelight::ServiceAccessor::setActivityService(&activityLog);
 
-    // auto patchesDir = appDataDir / "patches";
+    // TODO: Not sure we really need this.
+    const auto userdataDbPath = defaultAppDataPathString + "/userdata.db";
+    firelight::db::SqliteUserdataDatabase userdata_database(userdataDbPath);
 
-    // If missing system directory, throw an error
-    // TODO
+    // Save data service
+    firelight::saves::SaveManager saveManager(savesPath.toStdString(),
+                                              userdata_database);
+    firelight::ServiceAccessor::setSaveManager(&saveManager);
 
-    // **** Make sure all directories are good ****
+    // Achievement service
+    const auto achievementDbPath = (defaultAppDataPathString + "/rcheevos3.db").toStdString();
+    firelight::achievements::SqliteAchievementRepository achievementRepo(achievementDbPath);
+    firelight::achievements::AchievementService achievementService(
+        achievementRepo);
 
-    QDir baseDir(defaultAppDataPathString);
-    if (!baseDir.mkpath("core-system")) {
-        spdlog::warn("Unable to create core-system directory");
-    }
+    firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(
+        achievementService);
+    firelight::achievements::RAClient raClient(offlineRaClient,
+                                               achievementService);
+    firelight::ServiceAccessor::setAchievementManager(&raClient);
+    firelight::ServiceAccessor::setAchievementService(&achievementService);
+
+    // Library service
+    const auto libraryDbPath = defaultAppDataPathString + "/library.db";
+    firelight::library::SqliteUserLibraryRepository userLibrary(libraryDbPath);
+
+    // Drives content-file -> run-configuration -> entry orchestration off the
+    // repository's events. Must outlive scanning.
+    firelight::library::LibraryIngestService libIngestService(userLibrary);
+
+    firelight::library::LibraryScanner2 libScanner2(userLibrary,
+                                                    platformService);
+
+    firelight::library::EntryResolver entryResolver(userLibrary);
+    firelight::library::UserLibraryService userLibraryService(
+        userLibrary, romsPath.toStdString());
+
+    // Input service
+    const auto controllerRepositoryDbPath = defaultAppDataPathString + "/controllers.db";
+    firelight::input::SqliteControllerRepository controllerRepository(
+        controllerRepositoryDbPath, platformService);
+
+    firelight::input::registerDefaultShortcuts();
+
+    firelight::input::SDLInputService inputService(controllerRepository);
+    firelight::ServiceAccessor::setInputService(&inputService);
+    firelight::ServiceAccessor::setControllerProfileRepository(
+        &controllerRepository);
 
     // PPSSPP loads a runtime asset tree (fonts, VFPU tables, texture atlases,
     // compat db) from <system>/PPSSPP. These aren't part of the core DLL, so the
@@ -276,27 +332,8 @@ int main(int argc, char *argv[]) {
     // manager (to clear rich presence). If it were declared later it would be
     // destroyed first, and that call would hit freed memory (Discord SDK assert
     // / crash). `initialize()` still runs later, once the window exists.
-    firelight::discord::DiscordManager discordManager(platformService);
-    firelight::ServiceAccessor::setDiscordManager(&discordManager);
-
-    firelight::input::SqliteControllerRepository controllerRepository(
-        baseDir.filePath("controllers.db"), platformService);
-
-    firelight::input::registerDefaultShortcuts();
-
-    firelight::input::SDLInputService inputService(controllerRepository);
-    firelight::ServiceAccessor::setInputService(&inputService);
-    firelight::ServiceAccessor::setControllerProfileRepository(
-        &controllerRepository);
 
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
-
-    firelight::db::SqliteUserdataDatabase userdata_database(
-        defaultAppDataPathString + "/userdata.db");
-
-    firelight::activity::SqliteActivityLog activityLog(defaultAppDataPathString +
-                                                       "/activity.db");
-    firelight::ServiceAccessor::setActivityService(&activityLog);
 
     auto gameImageProvider = new firelight::gui::GameImageProvider();
     firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);
@@ -305,25 +342,12 @@ int main(int argc, char *argv[]) {
     firelight::db::SqliteContentDatabase contentDatabase(
         defaultAppDataPathString + "/content.db");
 
-    firelight::saves::SaveManager saveManager(savesPath.toStdString(),
-                                              userdata_database);
-    firelight::ServiceAccessor::setSaveManager(&saveManager);
-
     // Thin QML adapter over the (Qt-notification-free) save manager; exposes the
     // save directory as a bindable property for the settings UI. Declared here so
     // it outlives the QML engine registered below.
     firelight::gui::QtSaveManagerProxy saveManagerProxy(saveManager);
 
-    firelight::library::SqliteUserLibraryRepository userLibrary(
-        defaultAppDataPathString + "/library.db");
-
-    // Drives content-file -> run-configuration -> entry orchestration off the
-    // repository's events. Must outlive scanning.
-    firelight::library::LibraryIngestService libIngestService(userLibrary);
-
-    firelight::library::LibraryScanner2 libScanner2(userLibrary,
-                                                    platformService);
-
+    // TODO: Move this to before service?
     // Re-watch/re-scan as content directories come and go. Subscribed before the
     // service guarantees the default directory below, so the initial seed of a
     // fresh install is caught here.
@@ -362,9 +386,6 @@ int main(int argc, char *argv[]) {
 
     // The app-facing curation surface; also guarantees the default content
     // directory exists and is watched (fires the add event above when seeding).
-    firelight::library::EntryResolver entryResolver(userLibrary);
-    firelight::library::UserLibraryService userLibraryService(
-        userLibrary, romsPath.toStdString());
 
     libScanner2.scanAll();
 
@@ -384,18 +405,6 @@ int main(int argc, char *argv[]) {
                     singleInstanceName, userLibraryService, platformService);
         singleInstanceServer->start();
     }
-
-    firelight::achievements::SqliteAchievementRepository achievementRepo(
-        (defaultAppDataPathString + "/rcheevos3.db").toStdString());
-    firelight::achievements::AchievementService achievementService(
-        achievementRepo);
-
-    firelight::achievements::RetroAchievementsOfflineClient offlineRaClient(
-        achievementService);
-    firelight::achievements::RAClient raClient(offlineRaClient,
-                                               achievementService);
-    firelight::ServiceAccessor::setAchievementManager(&raClient);
-    firelight::ServiceAccessor::setAchievementService(&achievementService);
 
     // Set up the models for QML
     // ***********************************************
@@ -522,15 +531,6 @@ int main(int argc, char *argv[]) {
                 raClient.m_connected = false;
             }
         });
-
-    // QQmlNetworkAccessManagerFactory::create();
-    // QNetworkAccessManager *manager = new QNetworkAccessManager();
-    // QNetworkDiskCache *diskCache = new QNetworkDiskCache();
-    // QString directory =
-    // QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
-    //         + QLatin1StringView("/cacheDir/");
-    // diskCache->setCacheDirectory(directory);
-    // manager->setCache(diskCache);
 
     firelight::emulation::EmulationContext emulationContext{
         .inputService = &inputService,
@@ -803,7 +803,7 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("sfx_player",
                                              new firelight::audio::SfxPlayer());
 
-    auto richPresenceMessageChangedSubscriber = EventDispatcher::instance().subscribe<
+    const auto richPresenceMessageChangedSubscriber = EventDispatcher::instance().subscribe<
         firelight::achievements::RichPresenceMessageChangedEvent>(
         [&](const firelight::achievements::RichPresenceMessageChangedEvent &e) {
             discordManager.setRichPresenceMessage(e.newRichPresenceMessage);
