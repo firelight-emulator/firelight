@@ -457,6 +457,12 @@ ApplicationWindow {
     }
 
     Component {
+        id: helpScreen
+
+        HelpScreen {}
+    }
+
+    Component {
         id: controllersPage
 
         ControllersPage {
@@ -529,6 +535,8 @@ ApplicationWindow {
                     content.goToContent("Mod Details", shopItemPage, {modId: things[3]}, StackView.PushTransition)
                 } else if (route === "/settings") {
                     content.goToContent("Settings", settingsScreen, {}, StackView.ReplaceTransition)
+                } else if (route === "/help") {
+                    content.goToContent("Help", helpScreen, {}, StackView.ReplaceTransition)
                 } else if (route === "/controllers") {
                     content.goToContent("Controllers", controllersPage, {}, StackView.ReplaceTransition)
                 } else if (route.startsWith("/controllers/keyboard/")) {
