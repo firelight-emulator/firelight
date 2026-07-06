@@ -9,110 +9,94 @@
 #include <mutex>
 #include <string>
 
-// Held only behind a unique_ptr whose destructor is defined out-of-line (in the
-// .cpp, where the full definition is available), so a forward declaration keeps
-// the SQLiteCpp include private to the implementation.
 namespace SQLite {
-class Database;
+    class Database;
 }
 
 namespace firelight::library {
-// Persistence for the user library: owns the schema and implements all CRUD over
-// its tables. Announces changes through the EventDispatcher (see
-// library_events.hpp) rather than Qt signals, so it is a plain class, not a
-// QObject.
-//
-// Backed by SQLiteCpp (SQLite::Database), like the other repositories. A single
-// connection is guarded by a recursive mutex that serializes access across the
-// UI thread and the library-scanner worker thread. The mutex is *recursive*
-// because create()/update() publish EventDispatcher events whose handlers
-// (LibraryIngestService) synchronously re-enter this repository on the same
-// thread (e.g. create(ContentFile) -> createRunConfiguration -> createEntry).
-class SqliteUserLibraryRepository final : public IUserLibraryRepository {
-public:
-  explicit SqliteUserLibraryRepository(QString path);
+    class SqliteUserLibraryRepository final : public IUserLibraryRepository {
+    public:
+        explicit SqliteUserLibraryRepository(QString path);
 
-  ~SqliteUserLibraryRepository() override;
+        ~SqliteUserLibraryRepository() override;
 
-  bool create(FolderInfo &folder) override;
-  bool create(FolderEntryInfo &folderEntry) override;
-  std::vector<FolderInfo> listFolders() override;
-  bool deleteFolder(int folderId) override;
+        bool create(FolderInfo &folder) override;
 
-  bool update(FolderInfo &folder) override;
-  bool reorderFolders(int parentId,
-                      const std::vector<int> &orderedFolderIds) override;
-  bool setFolderParent(int folderId, int newParentId) override;
-  bool deleteFolderEntry(FolderEntryInfo &info) override;
+        bool create(FolderEntryInfo &folderEntry) override;
 
-  bool update(Entry &entry) override;
+        std::vector<FolderInfo> listFolders() override;
 
-  bool deleteContentDirectory(int id) override;
+        bool deleteFolder(int folderId) override;
 
-  bool create(ContentFile &romFile) override;
+        bool update(FolderInfo &folder) override;
 
-  std::optional<ContentFile>
-  getContentFileWithPathAndSize(const std::string &filePath, size_t fileSizeBytes,
-                                bool inArchive) override;
+        bool reorderFolders(int parentId,
+                            const std::vector<int> &orderedFolderIds) override;
 
-  bool deleteContentFile(int id) override;
+        bool setFolderParent(int folderId, int newParentId) override;
 
-  std::vector<Entry> getEntries(int offset, int limit) override;
+        bool deleteFolderEntry(FolderEntryInfo &info) override;
 
-  std::optional<Entry> getEntry(int entryId) override;
+        bool update(Entry &entry) override;
 
-  std::optional<Entry>
-  getEntryWithContentHash(const std::string &contentHash) override;
+        bool updateEntryMetadata(const Entry &entry) override;
 
-  std::vector<RunConfiguration>
-  getRunConfigurations(const std::string &contentHash) override;
+        bool deleteContentDirectory(int id) override;
 
-  std::vector<ContentFile> getContentFiles() override;
+        bool create(ContentFile &romFile) override;
 
-  std::optional<ContentFile> getContentFile(int id) override;
+        std::optional<ContentFile>
+        getContentFileWithPathAndSize(const std::string &filePath, size_t fileSizeBytes,
+                                      bool inArchive) override;
 
-  std::optional<PatchFile> getPatchFile(int id) override;
+        bool deleteContentFile(int id) override;
 
-  bool create(DiscMember &member) override;
+        std::vector<Entry> getEntries(int offset, int limit) override;
 
-  void create(PatchFile &file) override;
+        std::optional<Entry> getEntry(int entryId) override;
 
-  std::vector<ContentDirectory> getContentDirectories() override;
+        std::optional<Entry>
+        getEntryWithContentHash(const std::string &contentHash) override;
 
-  bool create(ContentDirectory &directory) override;
+        std::vector<RunConfiguration>
+        getRunConfigurations(const std::string &contentHash) override;
 
-  bool update(const ContentDirectory &directory) override;
+        std::vector<ContentFile> getContentFiles() override;
 
-  bool createEntry(Entry &entry) override;
+        std::optional<ContentFile> getContentFile(int id) override;
 
-  void createRunConfiguration(int contentFileId, const std::string &path,
-                              int platformId,
-                              const std::string &contentHash) override;
+        std::optional<PatchFile> getPatchFile(int id) override;
 
-private:
-  // Adds `column` (with the given SQL type/constraints) to `table` if it does
-  // not already exist, so databases created before a column was introduced pick
-  // it up. No-op on fresh databases where CREATE TABLE already added it.
-  void ensureColumn(const std::string &table, const std::string &column,
-                    const std::string &definition);
+        bool create(DiscMember &member) override;
 
-  // Resolves the content directory (content_directoriesv1.id) an on-disk path
-  // belongs to by longest matching path prefix, or -1 if none matches.
-  [[nodiscard]] int resolveContentDirectoryId(const std::string &onDiskPath);
+        void create(PatchFile &file) override;
 
-  // Populates entry.contentDirectoryIds + entry.contentPaths from the entry's
-  // content_files (joined by content_hash). Shared by all three entry loaders.
-  void populateEntryProvenance(Entry &entry);
+        std::vector<ContentDirectory> getContentDirectories() override;
 
-  // One-time backfill of content_files.content_directory_id for rows added
-  // before provenance tracking existed (longest path-prefix wins).
-  void backfillContentDirectoryIds();
+        bool create(ContentDirectory &directory) override;
 
-  // The next free ordering position within a parent scope (max + 1).
-  int nextFolderPosition(int parentId);
+        bool update(const ContentDirectory &directory) override;
 
-  std::string m_databasePath;
-  std::unique_ptr<SQLite::Database> m_db;
-  mutable std::recursive_mutex m_mutex;
-};
+        bool createEntry(Entry &entry) override;
+
+        void createRunConfiguration(int contentFileId, const std::string &path,
+                                    int platformId,
+                                    const std::string &contentHash) override;
+
+    private:
+        void ensureColumnExists(const std::string &table, const std::string &column,
+                          const std::string &definition);
+
+        [[nodiscard]] int resolveContentDirectoryId(const std::string &onDiskPath);
+
+        void populateEntrySource(Entry &entry);
+
+        void backfillContentDirectoryIds();
+
+        int nextFolderPosition(int parentId);
+
+        std::string m_databasePath;
+        std::unique_ptr<SQLite::Database> m_db;
+        mutable std::recursive_mutex m_mutex;
+    };
 } // namespace firelight::library

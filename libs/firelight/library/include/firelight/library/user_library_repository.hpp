@@ -13,75 +13,82 @@
 #include <vector>
 
 namespace firelight::library {
+  struct EntryCreatedEvent {
+    int entryId;
+  };
 
-// A brand-new entry was inserted (a newly-discovered game). Distinct from
-// EntryUpdatedEvent, which fires when an existing entry's fields change
-// (including `hidden` toggling as content comes and goes).
-struct EntryCreatedEvent {
-  int entryId;
-};
+  struct EntryUpdatedEvent {
+    int entryId;
+  };
 
-struct EntryUpdatedEvent {
-  int entryId;
-};
 
-// The user library's persistence contract: all CRUD over the library's tables.
-// Implemented by SqliteUserLibraryRepository and consumed by the library's own
-// collaborators (scanner, ingest, resolver) and the UserLibraryService.
-class IUserLibraryRepository {
-public:
-  virtual ~IUserLibraryRepository() = default;
+  class IUserLibraryRepository {
+  public:
+    virtual ~IUserLibraryRepository() = default;
 
-  virtual bool create(ContentFile &contentFile) = 0;
-  virtual void create(PatchFile &file) = 0;
-  virtual bool create(FolderInfo &folder) = 0;
-  virtual bool create(FolderEntryInfo &folderEntry) = 0;
-  virtual bool create(ContentDirectory &directory) = 0;
-  virtual bool create(DiscMember &member) = 0;
+    virtual bool create(ContentFile &contentFile) = 0;
 
-  // Inserts an entry row (setting entry.id). Distinct from update(Entry&), which
-  // mutates an existing row.
-  virtual bool createEntry(Entry &entry) = 0;
-  // Inserts a run configuration linking a content file (and optional patch) to a
-  // content hash.
-  virtual void createRunConfiguration(int contentFileId, const std::string &path,
-                                      int platformId,
-                                      const std::string &contentHash) = 0;
+    virtual void create(PatchFile &file) = 0;
 
-  virtual bool update(FolderInfo &folder) = 0;
-  virtual bool update(Entry &entry) = 0;
-  virtual bool update(const ContentDirectory &directory) = 0;
+    virtual bool create(FolderInfo &folder) = 0;
 
-  virtual std::vector<FolderInfo> listFolders() = 0;
-  virtual bool deleteFolder(int folderId) = 0;
-  virtual bool deleteFolderEntry(FolderEntryInfo &info) = 0;
+    virtual bool create(FolderEntryInfo &folderEntry) = 0;
 
-  // Reassigns manual ordering positions (0..n-1) to the given folders within a
-  // parent scope (parentId -1 = root). Ids not under parentId are ignored.
-  virtual bool reorderFolders(int parentId,
-                              const std::vector<int> &orderedFolderIds) = 0;
-  // Moves a folder under a new parent (-1 = root), appended at the end.
-  virtual bool setFolderParent(int folderId, int newParentId) = 0;
+    virtual bool create(ContentDirectory &directory) = 0;
 
-  virtual bool deleteContentDirectory(int id) = 0;
+    virtual bool create(DiscMember &member) = 0;
 
-  virtual std::optional<ContentFile>
-  getContentFileWithPathAndSize(const std::string &filePath, size_t fileSizeBytes,
-                                bool inArchive) = 0;
-  virtual std::vector<ContentFile> getContentFiles() = 0;
-  virtual std::optional<ContentFile> getContentFile(int id) = 0;
-  virtual bool deleteContentFile(int id) = 0;
 
-  virtual std::optional<PatchFile> getPatchFile(int id) = 0;
+    virtual bool createEntry(Entry &entry) = 0;
 
-  virtual std::vector<Entry> getEntries(int offset, int limit) = 0;
-  virtual std::optional<Entry> getEntry(int entryId) = 0;
-  virtual std::optional<Entry>
-  getEntryWithContentHash(const std::string &contentHash) = 0;
+    virtual void createRunConfiguration(int contentFileId, const std::string &path,
+                                        int platformId,
+                                        const std::string &contentHash) = 0;
 
-  virtual std::vector<RunConfiguration>
-  getRunConfigurations(const std::string &contentHash) = 0;
+    virtual bool update(FolderInfo &folder) = 0;
 
-  virtual std::vector<ContentDirectory> getContentDirectories() = 0;
-};
+    virtual bool update(Entry &entry) = 0;
+
+    virtual bool update(const ContentDirectory &directory) = 0;
+
+    virtual bool updateEntryMetadata(const Entry &entry) = 0;
+
+    virtual std::vector<FolderInfo> listFolders() = 0;
+
+    virtual bool deleteFolder(int folderId) = 0;
+
+    virtual bool deleteFolderEntry(FolderEntryInfo &info) = 0;
+
+    virtual bool reorderFolders(int parentId,
+                                const std::vector<int> &orderedFolderIds) = 0;
+
+    // Moves a folder under a new parent (-1 = root), appended at the end.
+    virtual bool setFolderParent(int folderId, int newParentId) = 0;
+
+    virtual bool deleteContentDirectory(int id) = 0;
+
+    virtual std::optional<ContentFile>
+    getContentFileWithPathAndSize(const std::string &filePath, size_t fileSizeBytes,
+                                  bool inArchive) = 0;
+
+    virtual std::vector<ContentFile> getContentFiles() = 0;
+
+    virtual std::optional<ContentFile> getContentFile(int id) = 0;
+
+    virtual bool deleteContentFile(int id) = 0;
+
+    virtual std::optional<PatchFile> getPatchFile(int id) = 0;
+
+    virtual std::vector<Entry> getEntries(int offset, int limit) = 0;
+
+    virtual std::optional<Entry> getEntry(int entryId) = 0;
+
+    virtual std::optional<Entry>
+    getEntryWithContentHash(const std::string &contentHash) = 0;
+
+    virtual std::vector<RunConfiguration>
+    getRunConfigurations(const std::string &contentHash) = 0;
+
+    virtual std::vector<ContentDirectory> getContentDirectories() = 0;
+  };
 } // namespace firelight::library

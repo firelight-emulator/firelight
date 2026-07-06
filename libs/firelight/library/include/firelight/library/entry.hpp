@@ -8,6 +8,7 @@ namespace firelight::library {
   struct Entry {
     int id = -1;
     std::string displayName;
+    bool nameUserSet = false; // So we don't overwrite a user-edited name with metadata
     std::string contentHash;
     unsigned platformId = 0;
     unsigned activeSaveSlot = 1;
@@ -26,11 +27,8 @@ namespace firelight::library {
 
     std::vector<int> folderIds{};
 
-    // Filesystem provenance, joined from the entry's content_files (by
-    // content_hash). Populated when loading an Entry; drive the two smart-folder
-    // source modes. contentDirectoryIds holds the distinct content directories
-    // (>= 0) the entry's files live under; contentPaths holds their on-disk
-    // paths (the archive path for archived content) for "path contains" matching.
+    // The content directories that contain this entry's content file(s). Used for smart filtering and for
+    // determining whether an entry is in any content directories.
     std::vector<int> contentDirectoryIds{};
     std::vector<std::string> contentPaths{};
 

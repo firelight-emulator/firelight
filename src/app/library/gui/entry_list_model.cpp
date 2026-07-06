@@ -31,10 +31,6 @@ namespace firelight::library {
             }
           });
 
-    // Keep the model in sync with the library incrementally (no full reset, so
-    // scroll/selection are preserved and periodic scans never flicker the list).
-    // These events are published on the scan worker thread, so marshal to this
-    // object's (GUI) thread before touching the model.
     m_countsChangedTimer.setSingleShot(true);
     m_countsChangedTimer.setInterval(0);
     connect(&m_countsChangedTimer, &QTimer::timeout, this, [this] {
@@ -48,14 +44,14 @@ namespace firelight::library {
           [this](const EntryCreatedEvent &event) {
             const int id = event.entryId;
             QMetaObject::invokeMethod(
-                this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
+              this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
           });
     m_entryUpdatedConnection =
         EventDispatcher::instance().subscribe<EntryUpdatedEvent>(
           [this](const EntryUpdatedEvent &event) {
             const int id = event.entryId;
             QMetaObject::invokeMethod(
-                this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
+              this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
           });
 
     reset();
@@ -63,7 +59,6 @@ namespace firelight::library {
 
   QHash<int, QByteArray> EntryListModel::roleNames() const {
     QHash<int, QByteArray> roles;
-    // roles[Qt::DisplayRole] = "displayName";
     roles[Id] = "entryId";
     roles[DisplayName] = "displayName";
     roles[ContentHash] = "contentHash";
@@ -176,6 +171,7 @@ namespace firelight::library {
     switch (role) {
       case DisplayName:
         item.entry.displayName = value.toString().toStdString();
+        item.entry.nameUserSet = true;
         break;
       case Favorite:
         spdlog::info("Favorite changed for entry {}: {}", item.entry.id, value.toBool());
@@ -259,7 +255,7 @@ namespace firelight::library {
   QVariantMap EntryListModel::getCountByPlatform() const {
     QVariantMap countByPlatform;
     for (const auto &item: m_items) {
-      auto current = countByPlatform[QString::number(item.entry.platformId)].toInt();
+      const auto current = countByPlatform[QString::number(item.entry.platformId)].toInt();
       countByPlatform[QString::number(item.entry.platformId)] = current + 1;
     }
 
@@ -269,7 +265,7 @@ namespace firelight::library {
   QVariantMap EntryListModel::getCountByFolderId() const {
     QVariantMap countByFolderId;
 
-    // Manual folders: count folder_entries membership.
+    // Manual folders
     for (const auto &item: m_items) {
       for (const auto &folderId: item.entry.folderIds) {
         auto current = countByFolderId[QString::number(folderId)].toInt();
@@ -277,13 +273,14 @@ namespace firelight::library {
       }
     }
 
-    // Smart folders: count live matches against the criteria.
+    // Smart folders
     for (const auto &folder: m_userLibrary.listFolders()) {
       if (folder.type != static_cast<int>(FolderType::Smart)) {
         continue;
       }
       const auto criteria = SmartFolderCriteria::parse(folder.filterJson);
       int count = 0;
+
       for (const auto &item: m_items) {
         if (criteria.matches(buildEntryFields(item))) {
           ++count;
@@ -348,13 +345,12 @@ namespace firelight::library {
     m_smartFolderCache.clear();
     m_indexByEntryId.clear();
 
-    // Aggregate play stats for the whole library in a single pass, rather than
-    // a query per entry: total play time (for the "most played" criterion) and
-    // last-played time (for "recently played" + the LastPlayedAt role).
+    // Aggregate play stats for the whole library
     struct Stats {
       uint64_t totalMillis = 0;
       uint64_t lastEndMillis = 0;
     };
+
     std::unordered_map<std::string, Stats> statsByHash;
     for (const auto &session: m_activityLog.getPlaySessions()) {
       auto &s = statsByHash[session.contentHash];
@@ -376,13 +372,14 @@ namespace firelight::library {
         m_items.emplace_back(item);
       }
     }
+
     emit endResetModel();
     emit countChanged();
     emit numFavoritesChanged();
     emit countByFolderIdChanged();
   }
 
-  void EntryListModel::removeFolderId(int folderId) {
+  void EntryListModel::removeFolderId(const int folderId) {
     beginResetModel();
     for (auto &item: m_items) {
       auto it = std::ranges::find(item.entry.folderIds, folderId);
@@ -396,7 +393,7 @@ namespace firelight::library {
   void EntryListModel::applyPlayStats(Item &item) const {
     uint64_t totalMillis = 0;
     uint64_t lastEndMillis = 0;
-    for (const auto &session :
+    for (const auto &session:
          m_activityLog.getPlaySessions(item.entry.contentHash)) {
       totalMillis += session.unpausedDurationMillis;
       lastEndMillis = std::max(lastEndMillis, session.endTime);
@@ -414,13 +411,13 @@ namespace firelight::library {
 
   void EntryListModel::scheduleCountsChanged() { m_countsChangedTimer.start(); }
 
-  void EntryListModel::syncEntry(int entryId) {
+  void EntryListModel::syncEntry(const int entryId) {
     const auto entry = m_userLibrary.getEntry(entryId);
     const auto it = m_indexByEntryId.find(entryId);
     const bool present = it != m_indexByEntryId.end();
     const bool visible = entry.has_value() && !entry->hidden;
 
-    // Gone or hidden: drop it from the model (if it's currently shown).
+    // If gone or hidden, drop it from the model if necessary
     if (!visible) {
       if (present) {
         const int row = it->second;
@@ -436,8 +433,8 @@ namespace firelight::library {
     Item item{.entry = *entry};
     applyPlayStats(item);
 
+    // Update the entry in place if it's already present in the model
     if (present) {
-      // Update in place; the proxy re-sorts/re-filters off the changed roles.
       const int row = it->second;
       m_items[row] = item;
       emit dataChanged(createIndex(row, 0), createIndex(row, 0), {});
@@ -445,7 +442,7 @@ namespace firelight::library {
       return;
     }
 
-    // New (or newly-unhidden): append -- the proxy sorts it into place.
+    // Just append new ones
     const int row = static_cast<int>(m_items.size());
     beginInsertRows(QModelIndex(), row, row);
     m_items.append(item);
