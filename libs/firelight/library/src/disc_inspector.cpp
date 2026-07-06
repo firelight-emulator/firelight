@@ -5,7 +5,8 @@
 
 #include <rcheevos/rc_hash.h>
 
-#include <platform_metadata.hpp>
+#include <firelight/platforms/platform_service.hpp>
+#include <firelight/library/content_extensions.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -18,6 +19,10 @@
 #include <unordered_map>
 
 namespace firelight::library {
+
+DiscInspector::DiscInspector(platforms::IPlatformService &platformService)
+    : m_platformService(platformService) {}
+
 namespace {
 
 // Upper bound on how much we'll extract from an archive to identify a disc.
@@ -167,7 +172,7 @@ DiscInspector::sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes) {
 }
 
 std::string DiscInspector::roleForBaseName(const std::string &baseNameLower) {
-  return PlatformMetadata::isDiscSheetExtension(suffixOf(baseNameLower)) ? "disc"
+  return firelight::library::isDiscSheetExtension(suffixOf(baseNameLower)) ? "disc"
                                                                         : "track";
 }
 
@@ -184,12 +189,12 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
   char hash[33];
   while (rc_hash_iterate(hash, &iterator)) {
     const int rcConsole = iterator.consoles[iterator.index - 1];
-    int platformId = PlatformMetadata::getIdFromRcConsoleId(rcConsole);
-    if (platformId != PlatformMetadata::PLATFORM_ID_UNKNOWN) {
+    int platformId = m_platformService.platformIdForRcConsole(rcConsole);
+    if (platformId != firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN) {
       // rcheevos uses the Sega CD console as an umbrella that also matches Sega
       // Saturn discs; disambiguate via the sector-0 magic.
       if (rcConsole == RC_CONSOLE_SEGA_CD && isSaturn(iterator)) {
-        platformId = PlatformMetadata::PLATFORM_ID_SEGA_SATURN;
+        platformId = firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN;
       }
 
       identity.valid = true;
@@ -242,7 +247,7 @@ DiscIdentity
 DiscInspector::inspectFile(const std::string &path,
                            std::vector<IdentifiedDiscMember> &outMembers) const {
   const DiscIdentity identity = detect(path);
-  if (identity.valid && PlatformMetadata::isDiscSheetExtension(suffixOf(path))) {
+  if (identity.valid && firelight::library::isDiscSheetExtension(suffixOf(path))) {
     outMembers = collectLooseMembers(path);
   }
   return identity;
@@ -274,7 +279,7 @@ DiscIdentity DiscInspector::inspectArchiveEntry(
     }
     wanted.insert(name);
 
-    if (PlatformMetadata::isDiscSheetExtension(suffixOf(name))) {
+    if (firelight::library::isDiscSheetExtension(suffixOf(name))) {
       for (const auto &token :
            sheetFilenameCandidates(reader.readEntryByBaseName(name))) {
         const std::string candidate = toLower(baseNameOf(token));

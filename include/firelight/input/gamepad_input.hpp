@@ -115,4 +115,102 @@ namespace firelight::input {
         return input; // identity (joypad inputs are already physical buttons)
     }
   }
+
+  // Device-neutral display name for an input (e.g. "South Face", "D-Pad Up").
+  // Platforms provide their own per-button labels ("A", "B", …) in their
+  // controller definitions; this is the generic fallback used by input UIs.
+  inline const char *displayName(const GamepadInput input) {
+    switch (input) {
+      case SouthFace:
+        return "South Face";
+      case EastFace:
+        return "East Face";
+      case WestFace:
+        return "West Face";
+      case NorthFace:
+        return "North Face";
+      case LeftBumper:
+        return "Left Bumper";
+      case RightBumper:
+        return "Right Bumper";
+      case LeftTrigger:
+        return "Left Trigger";
+      case RightTrigger:
+        return "Right Trigger";
+      case L3:
+        return "L3";
+      case R3:
+        return "R3";
+      case Start:
+        return "Start";
+      case Select:
+        return "Select";
+      case DpadUp:
+        return "D-Pad Up";
+      case DpadDown:
+        return "D-Pad Down";
+      case DpadLeft:
+        return "D-Pad Left";
+      case DpadRight:
+        return "D-Pad Right";
+      case LeftStickUp:
+        return "Left Stick Up";
+      case LeftStickDown:
+        return "Left Stick Down";
+      case LeftStickLeft:
+        return "Left Stick Left";
+      case LeftStickRight:
+        return "Left Stick Right";
+      case RightStickUp:
+        return "Right Stick Up";
+      case RightStickDown:
+        return "Right Stick Down";
+      case RightStickLeft:
+        return "Right Stick Left";
+      case RightStickRight:
+        return "Right Stick Right";
+      case MouseX:
+        return "Mouse X";
+      case MouseY:
+        return "Mouse Y";
+      case MouseLeft:
+        return "Left Button";
+      case MouseRight:
+        return "Right Button";
+      case MouseMiddle:
+        return "Middle Button";
+      case MouseWheelUp:
+        return "Wheel Up";
+      case MouseWheelDown:
+        return "Wheel Down";
+      case MouseButton4:
+        return "Button 4";
+      case MouseButton5:
+        return "Button 5";
+      case LightgunTrigger:
+        return "Trigger";
+      case LightgunReload:
+        return "Reload";
+      case LightgunAuxA:
+        return "Aux A";
+      case LightgunAuxB:
+        return "Aux B";
+      case LightgunAuxC:
+        return "Aux C";
+      case LightgunStart:
+        return "Start";
+      case LightgunSelect:
+        return "Select";
+      case LightgunDpadUp:
+        return "D-Pad Up";
+      case LightgunDpadDown:
+        return "D-Pad Down";
+      case LightgunDpadLeft:
+        return "D-Pad Left";
+      case LightgunDpadRight:
+        return "D-Pad Right";
+      default:
+        return "Unknown";
+    }
+  }
 }

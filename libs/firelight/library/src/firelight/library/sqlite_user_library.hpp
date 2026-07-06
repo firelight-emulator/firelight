@@ -2,15 +2,32 @@
 
 #include <firelight/library/content_file.hpp>
 #include <firelight/library/user_library_repository.hpp>
-#include <QSqlDatabase>
-#include <QSqlQuery>
+
 #include <QString>
+
+#include <memory>
+#include <mutex>
+#include <string>
+
+// Held only behind a unique_ptr whose destructor is defined out-of-line (in the
+// .cpp, where the full definition is available), so a forward declaration keeps
+// the SQLiteCpp include private to the implementation.
+namespace SQLite {
+class Database;
+}
 
 namespace firelight::library {
 // Persistence for the user library: owns the schema and implements all CRUD over
 // its tables. Announces changes through the EventDispatcher (see
 // library_events.hpp) rather than Qt signals, so it is a plain class, not a
-// QObject. Its QSqlDatabase/QString internals are Qt Core value types.
+// QObject.
+//
+// Backed by SQLiteCpp (SQLite::Database), like the other repositories. A single
+// connection is guarded by a recursive mutex that serializes access across the
+// UI thread and the library-scanner worker thread. The mutex is *recursive*
+// because create()/update() publish EventDispatcher events whose handlers
+// (LibraryIngestService) synchronously re-enter this repository on the same
+// thread (e.g. create(ContentFile) -> createRunConfiguration -> createEntry).
 class SqliteUserLibraryRepository final : public IUserLibraryRepository {
 public:
   explicit SqliteUserLibraryRepository(QString path);
@@ -73,24 +90,15 @@ public:
                               const std::string &contentHash) override;
 
 private:
-  static constexpr auto DATABASE_PREFIX = "userlibrary_";
-
-  [[nodiscard]] QSqlDatabase getDatabase() const;
-
-  // Builds an Entry from the current row of a `SELECT * FROM entriesv1` query.
-  // Shared by all three entry loaders (getEntries / getEntry /
-  // getEntryWithContentHash); does not read folder ids or provenance.
-  static Entry deserializeEntry(const QSqlQuery &query);
-
   // Adds `column` (with the given SQL type/constraints) to `table` if it does
   // not already exist, so databases created before a column was introduced pick
   // it up. No-op on fresh databases where CREATE TABLE already added it.
-  void ensureColumn(const QString &table, const QString &column,
-                    const QString &definition) const;
+  void ensureColumn(const std::string &table, const std::string &column,
+                    const std::string &definition);
 
   // Resolves the content directory (content_directoriesv1.id) an on-disk path
   // belongs to by longest matching path prefix, or -1 if none matches.
-  [[nodiscard]] int resolveContentDirectoryId(const QString &onDiskPath);
+  [[nodiscard]] int resolveContentDirectoryId(const std::string &onDiskPath);
 
   // Populates entry.contentDirectoryIds + entry.contentPaths from the entry's
   // content_files (joined by content_hash). Shared by all three entry loaders.
@@ -103,6 +111,8 @@ private:
   // The next free ordering position within a parent scope (max + 1).
   int nextFolderPosition(int parentId);
 
-  QString m_databasePath;
+  std::string m_databasePath;
+  std::unique_ptr<SQLite::Database> m_db;
+  mutable std::recursive_mutex m_mutex;
 };
 } // namespace firelight::library

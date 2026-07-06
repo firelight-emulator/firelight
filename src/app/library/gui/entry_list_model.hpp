@@ -9,6 +9,9 @@
 namespace firelight::activity {
   class IActivityLog;
 }
+namespace firelight::platforms {
+  class IPlatformService;
+}
 
 namespace firelight::library {
   class EntryListModel : public QAbstractListModel {
@@ -57,6 +60,7 @@ namespace firelight::library {
 
     EntryListModel(UserLibraryService &userLibrary,
                    activity::IActivityLog &activityLog,
+                   platforms::IPlatformService &platformService,
                    QObject *parent = nullptr);
 
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
@@ -108,6 +112,7 @@ namespace firelight::library {
   private:
     UserLibraryService &m_userLibrary;
     activity::IActivityLog &m_activityLog;
+    platforms::IPlatformService &m_platformService;
     QList<Item> m_items{};
 
     // Flattens an item (entry attributes + joined play stats) into the Qt-free

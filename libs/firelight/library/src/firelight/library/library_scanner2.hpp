@@ -10,13 +10,18 @@
 #include <QReadWriteLock>
 #include <QTimer>
 
+namespace firelight::platforms {
+class IPlatformService;
+}
+
 namespace firelight::library {
 class LibraryScanner2 : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool scanning MEMBER m_scanRunning NOTIFY scanningChanged)
 
 public:
-  explicit LibraryScanner2(IUserLibraryRepository &library);
+  LibraryScanner2(IUserLibraryRepository &library,
+                  platforms::IPlatformService &platformService);
 
   ~LibraryScanner2() override;
 
@@ -40,6 +45,7 @@ signals:
 private:
   QTimer m_scanTimer;
   IUserLibraryRepository &m_library;
+  platforms::IPlatformService &m_platformService;
   bool m_shuttingDown = false;
   QFileSystemWatcher m_watcher;
   std::map<QString, bool> m_scanQueuedByPath;

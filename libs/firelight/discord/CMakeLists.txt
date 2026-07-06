@@ -17,4 +17,5 @@ target_include_directories(firelight_discord
 target_link_libraries(firelight_discord
         PUBLIC discord
         PRIVATE spdlog::spdlog
+        PRIVATE firelight_platforms
 )

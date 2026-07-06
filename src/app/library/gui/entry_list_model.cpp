@@ -13,9 +13,10 @@
 namespace firelight::library {
   EntryListModel::EntryListModel(UserLibraryService &userLibrary,
                                  activity::IActivityLog &activityLog,
+                                 platforms::IPlatformService &platformService,
                                  QObject *parent)
     : QAbstractListModel(parent), m_userLibrary(userLibrary),
-      m_activityLog(activityLog) {
+      m_activityLog(activityLog), m_platformService(platformService) {
     m_gamePlayedConnection =
         EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
           [this](const emulation::EmulationStartedEvent &event) {
@@ -82,8 +83,7 @@ namespace firelight::library {
       case PlatformId:
         return item.entry.platformId;
       case PlatformIconName: {
-        auto platform = platforms::PlatformService::getInstance().getPlatform(
-          item.entry.platformId);
+        auto platform = m_platformService.getPlatform(item.entry.platformId);
         if (!platform.has_value()) {
           return {};
         }

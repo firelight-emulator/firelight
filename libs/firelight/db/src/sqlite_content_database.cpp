@@ -252,76 +252,6 @@ namespace firelight::db {
     return patches;
   }
 
-  std::optional<Platform> SqliteContentDatabase::getPlatform(const int id) {
-    QSqlQuery query(getDatabase());
-    query.prepare(
-      "SELECT platforms.id, platforms.name, platforms.abbreviation, "
-      "platforms.slug, platform_external_ids.external_id FROM platforms "
-      "JOIN platform_external_ids ON platforms.id = "
-      "platform_external_ids.platform_id "
-      "AND platform_external_ids.external_system_name = retroachievements "
-      "WHERE id = :id");
-    query.bindValue(":id", id);
-
-    if (!query.exec()) {
-      spdlog::error("Failed to get platform: {}",
-                    query.lastError().text().toStdString());
-      return std::nullopt;
-    }
-
-    if (!query.next()) {
-      return std::nullopt;
-    }
-
-    return createPlatformFromQuery(query);
-  }
-
-  std::vector<Platform>
-  SqliteContentDatabase::getMatchingPlatforms(const Platform &platform) {
-    const auto ext = platform.supportedExtensions.at(0);
-
-    if (ext == ".n64" || ext == ".v64" || ext == ".z64") {
-      return {Platform{.id = 7}};
-    }
-    if (ext == ".smc" || ext == ".sfc") {
-      return {Platform{.id = 6}};
-    }
-    if (ext == ".gbc") {
-      return {Platform{.id = 2}};
-    }
-    if (ext == ".gb") {
-      return {Platform{.id = 1}};
-    }
-    if (ext == ".gba") {
-      return {Platform{.id = 3}};
-    }
-    if (ext == ".nds") {
-      return {Platform{.id = 10}};
-    }
-
-    if (ext == ".md") {
-      return {Platform{.id = 13}};
-    }
-
-    if (ext == ".nes") {
-      return {Platform{.id = 5}};
-    }
-
-    if (ext == ".iso") {
-      return {Platform{.id = 20}};
-    }
-
-    if (ext == ".sms") {
-      return {Platform{.id = 12}};
-    }
-
-    if (ext == ".gg") {
-      return {Platform{.id = 14}};
-    }
-
-    return {};
-  }
-
   std::optional<Region> SqliteContentDatabase::getRegion(const int id) {
     QSqlQuery query(getDatabase());
     query.prepare("SELECT * FROM regions WHERE id = :id");
@@ -411,17 +341,6 @@ namespace firelight::db {
     patch.crc32 = query.value(8).toString().toStdString();
 
     return patch;
-  }
-
-  Platform
-  SqliteContentDatabase::createPlatformFromQuery(const QSqlQuery &query) {
-    Platform platform;
-    platform.id = query.value(0).toInt();
-    platform.name = query.value(1).toString().toStdString();
-    platform.abbreviation = query.value(2).toString().toStdString();
-    platform.slug = query.value(3).toString().toStdString();
-
-    return platform;
   }
 
   Region SqliteContentDatabase::createRegionFromQuery(const QSqlQuery &query) {

@@ -1,7 +1,6 @@
 #include "emulation_settings_model.hpp"
 
 #include "libretro/core_registry.hpp"
-#include "platform_metadata.hpp"
 
 #include <algorithm>
 #include <firelight/library/user_library_service.hpp>

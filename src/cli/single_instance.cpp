@@ -40,10 +40,11 @@ bool forwardLaunchToRunningInstance(const QString &serverName,
   return true;
 }
 
-SingleInstanceServer::SingleInstanceServer(QString serverName,
-                                           library::UserLibraryService &library,
-                                           QObject *parent)
-    : QObject(parent), m_serverName(std::move(serverName)), m_library(library) {
+SingleInstanceServer::SingleInstanceServer(
+    QString serverName, library::UserLibraryService &library,
+    platforms::IPlatformService &platformService, QObject *parent)
+    : QObject(parent), m_serverName(std::move(serverName)), m_library(library),
+      m_platformService(platformService) {
   connect(&m_server, &QLocalServer::newConnection, this,
           &SingleInstanceServer::onNewConnection);
 }
@@ -74,7 +75,8 @@ void SingleInstanceServer::onNewConnection() {
   if (romPath.isEmpty()) {
     return; // a bare ping with no ROM to launch
   }
-  const int entryId = resolveRomEntryId(romPath.toStdString(), m_library);
+  const int entryId =
+      resolveRomEntryId(romPath.toStdString(), m_library, m_platformService);
   if (entryId >= 0) {
     emit launchRequested(entryId);
   } else {

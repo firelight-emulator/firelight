@@ -7,7 +7,8 @@
 #include <qdiriterator.h>
 #include <spdlog/spdlog.h>
 
-#include <platform_metadata.hpp>
+#include <firelight/platforms/platform_service.hpp>
+#include <firelight/library/content_extensions.hpp>
 
 #include <zlib.h>
 
@@ -25,7 +26,9 @@ void LibraryScanner2::persistDiscMembers(
   }
 }
 
-LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library) : m_library(library) {
+LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library,
+                                 platforms::IPlatformService &platformService)
+    : m_library(library), m_platformService(platformService) {
   m_threadPool.setMaxThreadCount(1);
   for (const auto &dir : m_library.getContentDirectories()) {
     watchPath(QString::fromStdString(dir.path));
@@ -123,7 +126,7 @@ std::optional<QString> LibraryScanner2::getNextDirectory() {
 }
 
 void LibraryScanner2::scanDirectory(const QString &path) {
-  const ContentIdentifier identifier;
+  const ContentIdentifier identifier(m_platformService);
   QDirIterator iter(path, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
 
   auto dirInfo = QFileInfo(path);
@@ -151,7 +154,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
     const bool isArchive = extension == "zip" || extension == "7z" ||
                            extension == "tar" || extension == "rar";
     const bool isDisc =
-        PlatformMetadata::isPossibleDiscExtension(extensionStd);
+        firelight::library::isDiscExtension(extensionStd);
 
     // Disc images (and archives that may contain them) routinely exceed 1 GB,
     // so the size cap only applies to other files.
@@ -180,10 +183,10 @@ void LibraryScanner2::scanDirectory(const QString &path) {
                     .toLower()
                     .toStdString();
 
-            if (PlatformMetadata::isPossibleDiscExtension(ext)) {
+            if (firelight::library::isDiscExtension(ext)) {
               // Raw track files are pulled in via their cue/gdi sheet, so don't
               // classify them on their own.
-              if (PlatformMetadata::isDiscTrackExtension(ext)) {
+              if (firelight::library::isDiscTrackExtension(ext)) {
                 return;
               }
               if (m_library.getContentFileWithPathAndSize(entry.pathName,
@@ -213,7 +216,9 @@ void LibraryScanner2::scanDirectory(const QString &path) {
               return;
             }
 
-            if (PlatformMetadata::isPossibleRomFileExtension(ext)) {
+            if (m_platformService
+                    .platformIdForExtension(ext) !=
+                firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN) {
               if (m_library.getContentFileWithPathAndSize(entry.pathName,
                                                           entry.size, true)) {
                 return;
@@ -276,10 +281,13 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       continue;
     }
 
-    if (PlatformMetadata::isPossibleRomOrDiscExtension(extensionStd)) {
+    if (m_platformService
+                .platformIdForExtension(extensionStd) !=
+            firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN ||
+        firelight::library::isDiscExtension(extensionStd)) {
       // A raw disc track (bin/img/...) is classified via its sibling cue/gdi
       // sheet; skip the lone track when such a sheet exists in the directory.
-      if (PlatformMetadata::isDiscTrackExtension(extensionStd)) {
+      if (firelight::library::isDiscTrackExtension(extensionStd)) {
         const auto sheets = fileInfo.absoluteDir().entryList(
             {"*.cue", "*.gdi", "*.ccd", "*.m3u"}, QDir::Files);
         if (!sheets.isEmpty()) {

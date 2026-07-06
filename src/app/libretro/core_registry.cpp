@@ -1,8 +1,8 @@
 #include "core_registry.hpp"
 
 #include <algorithm>
+#include <firelight/platforms/platform_service.hpp>
 #include <firelight/settings/settings_service.hpp>
-#include <platform_metadata.hpp>
 
 namespace firelight {
   namespace {
@@ -18,6 +18,29 @@ namespace firelight {
     }
 
     using Class = input::GamepadInputClass;
+
+    // Where bundled cores live and their dll suffix, per OS. Cores are shipped
+    // under system/_cores/<os>/.
+    std::string coreDirectoryPath() {
+#if defined(_WIN32)
+      return "./system/_cores/windows/";
+#elif defined(__linux__)
+      return "./system/_cores/linux/";
+#else
+      return "";
+#endif
+    }
+    std::string coreDllExtension() {
+#if defined(_WIN32)
+      return ".dll";
+#elif defined(__APPLE__)
+      return ".dylib";
+#elif defined(__linux__)
+      return ".so";
+#else
+      return "";
+#endif
+    }
   } // namespace
 
   CoreRegistry &CoreRegistry::instance() {
@@ -26,7 +49,7 @@ namespace firelight {
   }
 
   CoreRegistry::CoreRegistry() {
-    using PM = PlatformMetadata;
+    using PM = platforms::PlatformService;
 
     // Bundled cores + the platforms each can run. Where a core can run several
     // platforms, its default platforms are those it's listed as the default for
@@ -235,8 +258,7 @@ namespace firelight {
     if (coreId.empty() || !find(coreId)) {
       return {};
     }
-    return PlatformMetadata::getCoreDirectoryPath() + coreId +
-           PlatformMetadata::getCoreDllExtension();
+    return coreDirectoryPath() + coreId + coreDllExtension();
   }
 
   void CoreRegistry::setSessionCoreOverride(const std::string &coreId) {

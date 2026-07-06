@@ -3,7 +3,7 @@
 #include <md5.h>
 #include <rcheevos/rc_hash.h>
 
-#include <platform_metadata.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 #include <algorithm>
 #include <cstring>
@@ -31,50 +31,50 @@ bool startsWith(const std::vector<uint8_t> &bytes, const uint8_t *signature,
 // content hashing of cartridge systems that rcheevos handles directly.
 uint32_t rcConsoleForPlatform(int platformId) {
   switch (platformId) {
-  case PlatformMetadata::PLATFORM_ID_GAMEBOY:
+  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY:
     return RC_CONSOLE_GAMEBOY;
-  case PlatformMetadata::PLATFORM_ID_GAMEBOY_COLOR:
+  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_COLOR:
     return RC_CONSOLE_GAMEBOY_COLOR;
-  case PlatformMetadata::PLATFORM_ID_GAMEBOY_ADVANCE:
+  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE:
     return RC_CONSOLE_GAMEBOY_ADVANCE;
-  case PlatformMetadata::PLATFORM_ID_VIRTUAL_BOY:
+  case firelight::platforms::PlatformService::PLATFORM_ID_VIRTUAL_BOY:
     return RC_CONSOLE_VIRTUAL_BOY;
-  case PlatformMetadata::PLATFORM_ID_NES:
+  case firelight::platforms::PlatformService::PLATFORM_ID_NES:
     return RC_CONSOLE_NINTENDO;
-  case PlatformMetadata::PLATFORM_ID_SNES:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SNES:
     return RC_CONSOLE_SUPER_NINTENDO;
-  case PlatformMetadata::PLATFORM_ID_N64:
+  case firelight::platforms::PlatformService::PLATFORM_ID_N64:
     return RC_CONSOLE_NINTENDO_64;
-  case PlatformMetadata::PLATFORM_ID_NINTENDO_DS:
+  case firelight::platforms::PlatformService::PLATFORM_ID_NINTENDO_DS:
     return RC_CONSOLE_NINTENDO_DS;
-  case PlatformMetadata::PLATFORM_ID_SEGA_MASTER_SYSTEM:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_MASTER_SYSTEM:
     return RC_CONSOLE_MASTER_SYSTEM;
-  case PlatformMetadata::PLATFORM_ID_SEGA_GENESIS:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS:
     return RC_CONSOLE_MEGA_DRIVE;
-  case PlatformMetadata::PLATFORM_ID_SEGA_GAMEGEAR:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GAMEGEAR:
     return RC_CONSOLE_GAME_GEAR;
-  case PlatformMetadata::PLATFORM_ID_SEGA_SATURN:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN:
     return RC_CONSOLE_SATURN;
-  case PlatformMetadata::PLATFORM_ID_SEGA_32X:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_32X:
     return RC_CONSOLE_SEGA_32X;
-  case PlatformMetadata::PLATFORM_ID_SEGA_CD:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_CD:
     return RC_CONSOLE_SEGA_CD;
-  case PlatformMetadata::PLATFORM_ID_PS1:
+  case firelight::platforms::PlatformService::PLATFORM_ID_PS1:
     return RC_CONSOLE_PLAYSTATION;
-  case PlatformMetadata::PLATFORM_ID_PS2:
+  case firelight::platforms::PlatformService::PLATFORM_ID_PS2:
     return RC_CONSOLE_PLAYSTATION_2;
-  case PlatformMetadata::PLATFORM_ID_PLAYSTATION_PORTABLE:
+  case firelight::platforms::PlatformService::PLATFORM_ID_PLAYSTATION_PORTABLE:
     return RC_CONSOLE_PSP;
-  case PlatformMetadata::PLATFORM_ID_SUPERGRAFX:
-  case PlatformMetadata::PLATFORM_ID_TURBOGRAFX16:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SUPERGRAFX:
+  case firelight::platforms::PlatformService::PLATFORM_ID_TURBOGRAFX16:
     return RC_CONSOLE_PC_ENGINE;
-  case PlatformMetadata::PLATFORM_ID_POKEMON_MINI:
+  case firelight::platforms::PlatformService::PLATFORM_ID_POKEMON_MINI:
     return RC_CONSOLE_POKEMON_MINI;
-  case PlatformMetadata::PLATFORM_ID_WONDERSWAN:
+  case firelight::platforms::PlatformService::PLATFORM_ID_WONDERSWAN:
     return RC_CONSOLE_WONDERSWAN;
-  case PlatformMetadata::PLATFORM_ID_SG1000:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SG1000:
     return RC_CONSOLE_SG1000;
-  case PlatformMetadata::PLATFORM_ID_NEOGEO_POCKET:
+  case firelight::platforms::PlatformService::PLATFORM_ID_NEOGEO_POCKET:
     return RC_CONSOLE_NEOGEO_POCKET;
   default:
     return RC_CONSOLE_UNKNOWN;
@@ -103,7 +103,7 @@ HashedContent ContentHasher::hash(const int platformId,
   HashedContent result;
 
   switch (platformId) {
-  case PlatformMetadata::PLATFORM_ID_NES: {
+  case firelight::platforms::PlatformService::PLATFORM_ID_NES: {
     static const uint8_t NES_SIGNATURE[4] = {'N', 'E', 'S', 0x1A};
     result.contentBytes = fileBytes;
     if (startsWith(fileBytes, NES_SIGNATURE, 4)) {
@@ -115,7 +115,7 @@ HashedContent ContentHasher::hash(const int platformId,
     return result;
   }
 
-  case PlatformMetadata::PLATFORM_ID_SNES:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SNES:
     result.contentBytes = fileBytes;
     if (fileBytes.size() % 1024 == 512) {
       result.contentHash =
@@ -125,7 +125,7 @@ HashedContent ContentHasher::hash(const int platformId,
     }
     return result;
 
-  case PlatformMetadata::PLATFORM_ID_N64: {
+  case firelight::platforms::PlatformService::PLATFORM_ID_N64: {
     static const uint8_t Z64_SIGNATURE[4] = {0x80, 0x37, 0x12, 0x40};
     static const uint8_t V64_SIGNATURE[4] = {0x37, 0x80, 0x40, 0x12};
     static const uint8_t N64_SIGNATURE[4] = {0x40, 0x12, 0x37, 0x80};
@@ -155,12 +155,12 @@ HashedContent ContentHasher::hash(const int platformId,
     return result;
   }
 
-  case PlatformMetadata::PLATFORM_ID_GAMEBOY:
-  case PlatformMetadata::PLATFORM_ID_GAMEBOY_COLOR:
-  case PlatformMetadata::PLATFORM_ID_GAMEBOY_ADVANCE:
-  case PlatformMetadata::PLATFORM_ID_SEGA_GENESIS:
-  case PlatformMetadata::PLATFORM_ID_SEGA_GAMEGEAR:
-  case PlatformMetadata::PLATFORM_ID_SEGA_MASTER_SYSTEM:
+  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY:
+  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_COLOR:
+  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GAMEGEAR:
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_MASTER_SYSTEM:
     result.contentBytes = fileBytes;
     result.contentHash = md5(fileBytes.data(), fileBytes.size());
     return result;

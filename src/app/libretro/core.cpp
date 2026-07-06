@@ -1177,9 +1177,10 @@ namespace libretro {
         return false;
       }
       case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE: {
-        environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE");
-        auto ptr = static_cast<retro_microphone_interface *>(data);
-        ptr->interface_version = 0;
+        environmentCalls.emplace_back(
+            "RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE");
+        // Firelight does not provide a microphone interface; decline so the core
+        // falls back to running without one.
         return false;
       }
       case RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE:

@@ -3,14 +3,17 @@
 #include <firelight/platforms/platform.hpp>
 
 #include <QAbstractListModel>
-#include <firelight/db/platform.hpp>
+
+namespace firelight::platforms {
+class IPlatformService;
+}
 
 namespace firelight::gui {
 class PlatformListModel : public QAbstractListModel {
   Q_OBJECT
 
 public:
-  PlatformListModel();
+  explicit PlatformListModel(platforms::IPlatformService &platformService);
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
 

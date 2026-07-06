@@ -7,13 +7,14 @@
 #include <archive_entry.h>
 #include <gtest/gtest.h>
 
-#include <platform_metadata.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::library {
 class ContentIdentifierTest : public testing::Test {
 protected:
   QTemporaryDir tempDir;
-  ContentIdentifier identifier;
+  platforms::PlatformService platformService;
+  ContentIdentifier identifier{platformService};
 
   // Writes a synthetic single-track .iso whose first sector begins with the
   // given 16-byte magic, padded out so the disc readers have data to work with.
@@ -66,7 +67,7 @@ TEST_F(ContentIdentifierTest, DetectsSegaCdFromMagic) {
   const auto result = identifier.identify(path.toStdString());
 
   ASSERT_TRUE(result.valid);
-  ASSERT_EQ(result.platformId, PlatformMetadata::PLATFORM_ID_SEGA_CD);
+  ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_CD);
   ASSERT_FALSE(result.contentHash.empty());
 }
 
@@ -79,7 +80,7 @@ TEST_F(ContentIdentifierTest, DetectsSaturnFromMagic) {
   const auto result = identifier.identify(path.toStdString());
 
   ASSERT_TRUE(result.valid);
-  ASSERT_EQ(result.platformId, PlatformMetadata::PLATFORM_ID_SEGA_SATURN);
+  ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN);
   ASSERT_FALSE(result.contentHash.empty());
 }
 
@@ -96,7 +97,7 @@ TEST_F(ContentIdentifierTest, DetectsDiscInsideArchive) {
       identifier.identifyInArchive("saturn.iso", {}, 0, zipPath.toStdString());
 
   ASSERT_TRUE(result.valid);
-  ASSERT_EQ(result.platformId, PlatformMetadata::PLATFORM_ID_SEGA_SATURN);
+  ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN);
   ASSERT_FALSE(result.contentHash.empty());
 }
 
@@ -117,7 +118,7 @@ TEST_F(ContentIdentifierTest, ReportsDiscMembersForCueBinSet) {
   const auto result = identifier.identify(cuePath.toStdString());
 
   ASSERT_TRUE(result.valid);
-  ASSERT_EQ(result.platformId, PlatformMetadata::PLATFORM_ID_SEGA_SATURN);
+  ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN);
   ASSERT_EQ(result.discMembers.size(), 1u);
   ASSERT_TRUE(result.discMembers[0].path.ends_with("game.bin"));
   ASSERT_EQ(result.discMembers[0].role, "track");

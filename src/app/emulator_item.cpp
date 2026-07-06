@@ -9,7 +9,6 @@
 #include "emulation/emulation_service.hpp"
 #include "emulator_item_renderer.hpp"
 #include <firelight/input/input_service.hpp>
-#include "platform_metadata.hpp"
 
 #include <algorithm>
 #include <cmath>

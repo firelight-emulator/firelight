@@ -33,10 +33,6 @@ namespace firelight::db {
 
     std::vector<Patch> getMatchingPatches(const Patch &patch) override;
 
-    std::optional<Platform> getPlatform(int id) override;
-
-    std::vector<Platform> getMatchingPlatforms(const Platform &platform) override;
-
     std::optional<Region> getRegion(int id) override;
 
   private:
@@ -51,8 +47,6 @@ namespace firelight::db {
     static ROM createRomFromQuery(const QSqlQuery &query);
 
     static Patch createPatchFromQuery(const QSqlQuery &query);
-
-    static Platform createPlatformFromQuery(const QSqlQuery &query);
 
     static Region createRegionFromQuery(const QSqlQuery &query);
   };

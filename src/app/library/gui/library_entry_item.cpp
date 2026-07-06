@@ -23,7 +23,7 @@ void LibraryEntryItem::setEntryId(const int entryId) {
     m_platformId = entry->platformId;
 
     auto platform =
-        platforms::PlatformService::getInstance().getPlatform(m_platformId);
+        getPlatformService()->getPlatform(m_platformId);
     if (platform.has_value()) {
       m_platformIconName = QString::fromStdString(platform.value().slug);
       emit platformIconNameChanged();

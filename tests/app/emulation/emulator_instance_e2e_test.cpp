@@ -11,7 +11,7 @@
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_core_option_repository.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
-#include <platform_metadata.hpp>
+#include <libretro/core_registry.hpp>
 
 #include <gtest/gtest.h>
 
@@ -137,7 +137,7 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
 
   // initialize() published EmulationStartedEvent, so the core's declared options
   // should now be cached (keyed by the platform's core) for the advanced editor.
-  const auto coreName = PlatformMetadata::getCoreName(3);
+  const auto coreName = CoreRegistry::instance().defaultCoreForPlatform(3);
   const auto cachedOptions = m_coreOptionRepo->getCoreOptions(coreName);
   ASSERT_EQ(cachedOptions.size(), 2u);
   EXPECT_EQ(cachedOptions[0].key, "fake_opt_a");

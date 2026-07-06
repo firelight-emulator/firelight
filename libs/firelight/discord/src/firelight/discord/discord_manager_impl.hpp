@@ -2,9 +2,15 @@
 #include <discordpp.h>
 #include <firelight/discord/idiscord_manager.hpp>
 
+namespace firelight::platforms {
+    class IPlatformService;
+}
+
 namespace firelight::discord {
     class DiscordManager final : public IDiscordManager {
     public:
+        explicit DiscordManager(platforms::IPlatformService &platformService);
+
         void initialize() override;
 
         void runCallbacks() override;
@@ -18,6 +24,7 @@ namespace firelight::discord {
         void setRichPresenceMessage(const std::string &message) override;
 
     private:
+        platforms::IPlatformService &m_platformService;
         discordpp::Client m_client;
         discordpp::Activity m_defaultActivity{};
 

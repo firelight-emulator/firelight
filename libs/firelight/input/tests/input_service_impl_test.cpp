@@ -32,8 +32,9 @@ protected:
             });
   }
 
-  input::SqliteControllerRepository m_repo = input::SqliteControllerRepository(
-      ":memory:", platforms::PlatformService::getInstance());
+  platforms::PlatformService m_platformService;
+  input::SqliteControllerRepository m_repo =
+      input::SqliteControllerRepository(":memory:", m_platformService);
 
   ScopedConnection m_connectedHandler;
   ScopedConnection m_disconnectedHandler;

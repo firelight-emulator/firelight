@@ -12,6 +12,7 @@
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::cli {
 
@@ -29,7 +30,8 @@ int runScan(int argc, char **argv, const CliOptions &opts) {
   // Turns scanned content files into run configurations + entries; must outlive
   // the scan.
   library::LibraryIngestService ingest(repository);
-  library::LibraryScanner2 scanner(repository);
+  platforms::PlatformService platformService;
+  library::LibraryScanner2 scanner(repository, platformService);
   // Guarantees the default content directory exists and is registered before we
   // scan (a fresh install has nothing to scan otherwise).
   library::UserLibraryService libraryService(repository,

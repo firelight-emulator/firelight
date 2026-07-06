@@ -6,6 +6,10 @@
 
 struct rc_hash_iterator;
 
+namespace firelight::platforms {
+class IPlatformService;
+}
+
 namespace firelight::library {
 
 // A member file of a multi-file disc set: a cue/gdi track or an .m3u-listed
@@ -19,7 +23,7 @@ struct IdentifiedDiscMember {
 // The platform + canonical content hash determined by inspecting disc contents.
 struct DiscIdentity {
   bool valid = false;
-  int platformId = -1; // PlatformMetadata::PLATFORM_ID_UNKNOWN
+  int platformId = -1; // PlatformService::PLATFORM_ID_UNKNOWN
   std::string contentHash;
 };
 
@@ -28,6 +32,8 @@ struct DiscIdentity {
 // disc-specific counterpart that ContentIdentifier delegates to.
 class DiscInspector {
 public:
+  explicit DiscInspector(platforms::IPlatformService &platformService);
+
   // Inspects a loose disc image; for cue/gdi/m3u sheets, fills outMembers.
   DiscIdentity inspectFile(const std::string &path,
                            std::vector<IdentifiedDiscMember> &outMembers) const;
@@ -55,6 +61,8 @@ private:
   sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes);
 
   static std::string roleForBaseName(const std::string &baseNameLower);
+
+  platforms::IPlatformService &m_platformService;
 };
 
 } // namespace firelight::library

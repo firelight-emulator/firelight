@@ -2,7 +2,7 @@
 
 #include <firelight/input/keyboard_input_handler.hpp>
 #include <firelight/input/shortcut_registry.hpp>
-#include <platform_metadata.hpp>
+#include <firelight/input/gamepad_input.hpp>
 
 #include <algorithm>
 #include <utility>
@@ -23,7 +23,7 @@ QString ShortcutsModel::labelForBindings(
     return m_isKeyboard
                ? input::KeyboardInputHandler::getKeyLabel(
                      static_cast<Qt::Key>(code))
-               : QString::fromStdString(PlatformMetadata::getInputName(
+               : QString::fromStdString(firelight::input::displayName(
                      static_cast<input::GamepadInput>(code)));
   };
 

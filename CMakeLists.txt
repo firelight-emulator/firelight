@@ -431,6 +431,10 @@ add_executable(fl_test
         tests/app/saves/save_manager_test.cpp
         tests/app/library/archive_reader_test.cpp
         tests/app/library/content_identifier_test.cpp
+        tests/app/library/content_extensions_test.cpp
+        tests/app/library/content_loader_test.cpp
+        tests/app/library/library_ingest_service_test.cpp
+        tests/app/library/library_scanner_test.cpp
         tests/app/library/entry_resolver_test.cpp
         tests/app/library/smart_folder_test.cpp
         tests/app/db/daos/savefile_metadata_test.cpp

@@ -17,6 +17,9 @@ class SettingsService;
 namespace firelight::cheats {
 class ICheatRepository;
 }
+namespace firelight::platforms {
+class IPlatformService;
+}
 
 namespace firelight::emulation {
 
@@ -31,6 +34,7 @@ struct EmulationContext {
   settings::SettingsService *settingsService = nullptr;
   settings::ICoreOptionRepository *coreOptionRepository = nullptr;
   cheats::ICheatRepository *cheatRepository = nullptr;
+  platforms::IPlatformService *platformService = nullptr;
   std::string coreSystemDirectory;
 };
 

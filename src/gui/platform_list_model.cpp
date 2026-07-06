@@ -4,13 +4,12 @@
 #include <QVariant>
 #include <firelight/libretro/retropad.hpp>
 
-#include "../app/platform_metadata.hpp"
 #include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::gui {
-  PlatformListModel::PlatformListModel() {
-    auto platforms = platforms::PlatformService::getInstance().listPlatforms();
-    for (const auto &platform: platforms) {
+  PlatformListModel::PlatformListModel(
+      platforms::IPlatformService &platformService) {
+    for (const auto &platform: platformService.listPlatforms()) {
       m_items.push_back(platform);
     }
   }

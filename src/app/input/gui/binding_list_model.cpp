@@ -1,7 +1,7 @@
 #include "binding_list_model.hpp"
 
 #include <firelight/input/controller_repository.hpp>
-#include <platform_metadata.hpp>
+#include <firelight/input/gamepad_input.hpp>
 
 namespace firelight::input {
 
@@ -22,7 +22,7 @@ QVariant BindingListModel::data(const QModelIndex &index, int role) const {
   const auto &binding = m_bindings.at(index.row());
   switch (role) {
   case SourceLabel:
-    return QString::fromStdString(PlatformMetadata::getInputName(
+    return QString::fromStdString(firelight::input::displayName(
         static_cast<GamepadInput>(binding.source.code)));
   case SourceCode:
     return binding.source.code;

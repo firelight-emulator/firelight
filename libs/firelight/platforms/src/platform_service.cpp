@@ -1,6 +1,85 @@
 #include <firelight/platforms/platform_service.hpp>
 
+#include <algorithm>
+#include <array>
+#include <cctype>
+
+#include <rcheevos/rc_consoles.h>
+
 namespace firelight::platforms {
+namespace {
+// RA-supported consoles Firelight does not fully model (no controller/extension
+// data). Each becomes an identity-only Platform (id = 1000 + rcheevos console
+// id) so its name still renders in the library. Names mirror the previous
+// PlatformMetadata::getPlatformName mapping.
+struct RaCoverageConsole {
+  int rcConsoleId;
+  const char *name;
+};
+constexpr std::array RA_COVERAGE_CONSOLES = {
+    RaCoverageConsole{RC_CONSOLE_ATARI_LYNX, "Atari Lynx"},
+    RaCoverageConsole{RC_CONSOLE_GAMECUBE, "Nintendo GameCube"},
+    RaCoverageConsole{RC_CONSOLE_ATARI_JAGUAR, "Atari Jaguar"},
+    RaCoverageConsole{RC_CONSOLE_WII, "Nintendo Wii"},
+    RaCoverageConsole{RC_CONSOLE_WII_U, "Nintendo Wii U"},
+    RaCoverageConsole{RC_CONSOLE_XBOX, "Xbox"},
+    RaCoverageConsole{RC_CONSOLE_MAGNAVOX_ODYSSEY2, "Magnavox Odyssey 2"},
+    RaCoverageConsole{RC_CONSOLE_ATARI_2600, "Atari 2600"},
+    RaCoverageConsole{RC_CONSOLE_MS_DOS, "MS-DOS"},
+    RaCoverageConsole{RC_CONSOLE_ARCADE, "Arcade"},
+    RaCoverageConsole{RC_CONSOLE_MSX, "MSX"},
+    RaCoverageConsole{RC_CONSOLE_COMMODORE_64, "Commodore 64"},
+    RaCoverageConsole{RC_CONSOLE_ZX81, "ZX81"},
+    RaCoverageConsole{RC_CONSOLE_ORIC, "Oric"},
+    RaCoverageConsole{RC_CONSOLE_VIC20, "Commodore VIC-20"},
+    RaCoverageConsole{RC_CONSOLE_AMIGA, "Amiga"},
+    RaCoverageConsole{RC_CONSOLE_ATARI_ST, "Atari ST"},
+    RaCoverageConsole{RC_CONSOLE_AMSTRAD_PC, "Amstrad CPC"},
+    RaCoverageConsole{RC_CONSOLE_APPLE_II, "Apple II"},
+    RaCoverageConsole{RC_CONSOLE_DREAMCAST, "Sega Dreamcast"},
+    RaCoverageConsole{RC_CONSOLE_CDI, "Philips CD-i"},
+    RaCoverageConsole{RC_CONSOLE_3DO, "3DO Interactive Multiplayer"},
+    RaCoverageConsole{RC_CONSOLE_COLECOVISION, "ColecoVision"},
+    RaCoverageConsole{RC_CONSOLE_INTELLIVISION, "Intellivision"},
+    RaCoverageConsole{RC_CONSOLE_VECTREX, "Vectrex"},
+    RaCoverageConsole{RC_CONSOLE_PC8800, "PC-8800"},
+    RaCoverageConsole{RC_CONSOLE_PC9800, "PC-9800"},
+    RaCoverageConsole{RC_CONSOLE_PCFX, "PC-FX"},
+    RaCoverageConsole{RC_CONSOLE_ATARI_5200, "Atari 5200"},
+    RaCoverageConsole{RC_CONSOLE_ATARI_7800, "Atari 7800"},
+    RaCoverageConsole{RC_CONSOLE_X68K, "Sharp X68000"},
+    RaCoverageConsole{RC_CONSOLE_CASSETTEVISION, "Cassette Vision"},
+    RaCoverageConsole{RC_CONSOLE_SUPER_CASSETTEVISION, "Super Cassette Vision"},
+    RaCoverageConsole{RC_CONSOLE_NEO_GEO_CD, "Neo Geo CD"},
+    RaCoverageConsole{RC_CONSOLE_FAIRCHILD_CHANNEL_F, "Fairchild Channel F"},
+    RaCoverageConsole{RC_CONSOLE_FM_TOWNS, "FM Towns"},
+    RaCoverageConsole{RC_CONSOLE_ZX_SPECTRUM, "ZX Spectrum"},
+    RaCoverageConsole{RC_CONSOLE_GAME_AND_WATCH, "Game & Watch"},
+    RaCoverageConsole{RC_CONSOLE_NOKIA_NGAGE, "Nokia N-Gage"},
+    RaCoverageConsole{RC_CONSOLE_NINTENDO_3DS, "Nintendo 3DS"},
+    RaCoverageConsole{RC_CONSOLE_SUPERVISION, "Watara Supervision"},
+    RaCoverageConsole{RC_CONSOLE_SHARPX1, "Sharp X1"},
+    RaCoverageConsole{RC_CONSOLE_TIC80, "TIC-80"},
+    RaCoverageConsole{RC_CONSOLE_THOMSONTO8, "Thomson TO8"},
+    RaCoverageConsole{RC_CONSOLE_PC6000, "PC-6000"},
+    RaCoverageConsole{RC_CONSOLE_PICO, "Sega Pico"},
+    RaCoverageConsole{RC_CONSOLE_MEGADUCK, "Mega Duck"},
+    RaCoverageConsole{RC_CONSOLE_ZEEBO, "Zeebo"},
+    RaCoverageConsole{RC_CONSOLE_ARDUBOY, "Arduboy"},
+    RaCoverageConsole{RC_CONSOLE_WASM4, "WASM-4"},
+    RaCoverageConsole{RC_CONSOLE_ARCADIA_2001, "Arcadia 2001"},
+    RaCoverageConsole{RC_CONSOLE_INTERTON_VC_4000, "Interton VC 4000"},
+    RaCoverageConsole{RC_CONSOLE_ELEKTOR_TV_GAMES_COMPUTER,
+                      "Elektor TV Games Computer"},
+    RaCoverageConsole{RC_CONSOLE_PC_ENGINE_CD, "PC Engine CD/TurboGrafx-CD"},
+    RaCoverageConsole{RC_CONSOLE_ATARI_JAGUAR_CD, "Atari Jaguar CD"},
+    RaCoverageConsole{RC_CONSOLE_NINTENDO_DSI, "Nintendo DSi"},
+    RaCoverageConsole{RC_CONSOLE_TI83, "TI-83"},
+    RaCoverageConsole{RC_CONSOLE_UZEBOX, "Uzebox"},
+    RaCoverageConsole{RC_CONSOLE_FAMICOM_DISK_SYSTEM, "Famicom Disk System"},
+};
+} // namespace
+
     PlatformService::PlatformService() {
         m_platforms.emplace_back(Platform{
             .id = PLATFORM_ID_GAMEBOY,
@@ -347,6 +426,7 @@ namespace firelight::platforms {
             .abbreviation = "NDS",
             .slug = "nds",
             .fileAssociations = {"nds"},
+            .discordImage = "ds",
             .controllerTypes =
             {
                 {
@@ -871,6 +951,44 @@ namespace firelight::platforms {
                 },
                 .emulationSettings = {}
             });
+
+        // Modeled with legacy ids but without full controller/extension data yet
+        // (identity only, so names/abbreviations still render).
+        m_platforms.emplace_back(Platform{.id = PLATFORM_ID_VIRTUAL_BOY,
+                                          .name = "Virtual Boy",
+                                          .abbreviation = "Virtual Boy",
+                                          .retroAchievementsId =
+                                              RC_CONSOLE_VIRTUAL_BOY});
+        m_platforms.emplace_back(Platform{.id = PLATFORM_ID_SEGA_SATURN,
+                                          .name = "Sega Saturn",
+                                          .abbreviation = "Saturn",
+                                          .retroAchievementsId =
+                                              RC_CONSOLE_SATURN});
+        m_platforms.emplace_back(Platform{.id = PLATFORM_ID_SEGA_32X,
+                                          .name = "Sega 32X",
+                                          .abbreviation = "32X",
+                                          .retroAchievementsId =
+                                              RC_CONSOLE_SEGA_32X});
+        m_platforms.emplace_back(Platform{.id = PLATFORM_ID_SEGA_CD,
+                                          .name = "Sega CD/Mega CD",
+                                          .abbreviation = "Sega CD",
+                                          .retroAchievementsId =
+                                              RC_CONSOLE_SEGA_CD});
+        m_platforms.emplace_back(Platform{.id = PLATFORM_ID_PS2,
+                                          .name = "PlayStation 2",
+                                          .abbreviation = "PS2",
+                                          .retroAchievementsId =
+                                              RC_CONSOLE_PLAYSTATION_2});
+
+        // RA-coverage consoles Firelight doesn't fully model: id = 1000 + rc id.
+        for (const auto &console : RA_COVERAGE_CONSOLES) {
+            m_platforms.emplace_back(Platform{
+                .id = static_cast<unsigned>(1000 + console.rcConsoleId),
+                .name = console.name,
+                .abbreviation = console.name,
+                .retroAchievementsId =
+                    static_cast<unsigned>(console.rcConsoleId)});
+        }
     }
 
     std::optional<Platform> PlatformService::getPlatform(const unsigned id) const {
@@ -884,5 +1002,75 @@ namespace firelight::platforms {
 
     std::vector<Platform> PlatformService::listPlatforms() const {
         return m_platforms;
+    }
+
+    int PlatformService::platformIdForExtension(
+        const std::string &extension) const {
+        std::string lower = extension;
+        std::transform(lower.begin(), lower.end(), lower.begin(),
+                       [](const unsigned char c) { return std::tolower(c); });
+        for (const auto &platform : m_platforms) {
+            for (const auto &association : platform.fileAssociations) {
+                if (association == lower) {
+                    return static_cast<int>(platform.id);
+                }
+            }
+        }
+        return PLATFORM_ID_UNKNOWN;
+    }
+
+    int PlatformService::platformIdForRcConsole(const int rcConsoleId) const {
+        // Consoles Firelight modeled with legacy ids keep them; every other
+        // RA-supported console maps to its provisional id (1000 + rc id).
+        switch (rcConsoleId) {
+        case RC_CONSOLE_GAMEBOY:
+            return PLATFORM_ID_GAMEBOY;
+        case RC_CONSOLE_GAMEBOY_COLOR:
+            return PLATFORM_ID_GAMEBOY_COLOR;
+        case RC_CONSOLE_GAMEBOY_ADVANCE:
+            return PLATFORM_ID_GAMEBOY_ADVANCE;
+        case RC_CONSOLE_VIRTUAL_BOY:
+            return PLATFORM_ID_VIRTUAL_BOY;
+        case RC_CONSOLE_NINTENDO:
+            return PLATFORM_ID_NES;
+        case RC_CONSOLE_SUPER_NINTENDO:
+            return PLATFORM_ID_SNES;
+        case RC_CONSOLE_NINTENDO_64:
+            return PLATFORM_ID_N64;
+        case RC_CONSOLE_NINTENDO_DS:
+            return PLATFORM_ID_NINTENDO_DS;
+        case RC_CONSOLE_MASTER_SYSTEM:
+            return PLATFORM_ID_SEGA_MASTER_SYSTEM;
+        case RC_CONSOLE_MEGA_DRIVE:
+            return PLATFORM_ID_SEGA_GENESIS;
+        case RC_CONSOLE_GAME_GEAR:
+            return PLATFORM_ID_SEGA_GAMEGEAR;
+        case RC_CONSOLE_SATURN:
+            return PLATFORM_ID_SEGA_SATURN;
+        case RC_CONSOLE_SEGA_32X:
+            return PLATFORM_ID_SEGA_32X;
+        case RC_CONSOLE_SEGA_CD:
+            return PLATFORM_ID_SEGA_CD;
+        case RC_CONSOLE_PLAYSTATION:
+            return PLATFORM_ID_PS1;
+        case RC_CONSOLE_PLAYSTATION_2:
+            return PLATFORM_ID_PS2;
+        case RC_CONSOLE_PSP:
+            return PLATFORM_ID_PLAYSTATION_PORTABLE;
+        case RC_CONSOLE_PC_ENGINE:
+            return PLATFORM_ID_TURBOGRAFX16;
+        case RC_CONSOLE_POKEMON_MINI:
+            return PLATFORM_ID_POKEMON_MINI;
+        case RC_CONSOLE_WONDERSWAN:
+            return PLATFORM_ID_WONDERSWAN;
+        case RC_CONSOLE_SG1000:
+            return PLATFORM_ID_SG1000;
+        case RC_CONSOLE_NEOGEO_POCKET:
+            return PLATFORM_ID_NEOGEO_POCKET;
+        case RC_CONSOLE_UNKNOWN:
+            return PLATFORM_ID_UNKNOWN;
+        default:
+            return 1000 + rcConsoleId;
+        }
     }
 } // namespace firelight::platforms

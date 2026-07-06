@@ -7,7 +7,7 @@
 #include <firelight/platforms/platform_service.hpp>
 
 #include <firelight/input/keyboard_input_handler.hpp>
-#include <platform_metadata.hpp>
+#include <firelight/input/gamepad_input.hpp>
 
 namespace firelight::input {
 InputMappingsModel::InputMappingsModel(QObject *parent)
@@ -115,7 +115,7 @@ void InputMappingsModel::setMapping(const int originalInput, int mappedInput) {
       item.isDefault = false;
     } else {
       item.mappedInputName =
-          QString::fromStdString(PlatformMetadata::getInputName(
+          QString::fromStdString(firelight::input::displayName(
               static_cast<GamepadInput>(item.mappedInput)));
       item.isDefault = item.originalInput == item.mappedInput;
     }
@@ -135,7 +135,7 @@ void InputMappingsModel::resetToDefault(int originalInput) {
   }
 
   auto platform =
-      platforms::PlatformService::getInstance().getPlatform(m_platformId);
+      getPlatformService()->getPlatform(m_platformId);
   if (!platform.has_value()) {
     spdlog::warn("Platform with ID {} not found", m_platformId);
     return;
@@ -171,7 +171,7 @@ void InputMappingsModel::resetToDefault(int originalInput) {
                 static_cast<Qt::Key>(item.mappedInput));
           } else {
             item.mappedInputName =
-                QString::fromStdString(PlatformMetadata::getInputName(
+                QString::fromStdString(firelight::input::displayName(
                     static_cast<GamepadInput>(item.mappedInput)));
           }
           item.isDefault = true;
@@ -194,7 +194,7 @@ void InputMappingsModel::resetAllToDefault() {
   }
 
   auto platform =
-      platforms::PlatformService::getInstance().getPlatform(m_platformId);
+      getPlatformService()->getPlatform(m_platformId);
   if (!platform.has_value()) {
     spdlog::warn("Platform with ID {} not found", m_platformId);
     return;
@@ -272,7 +272,7 @@ void InputMappingsModel::refreshMappings() {
   }
 
   auto platform =
-      platforms::PlatformService::getInstance().getPlatform(m_platformId);
+      getPlatformService()->getPlatform(m_platformId);
   if (!platform.has_value()) {
     spdlog::warn("Platform with ID {} not found", m_platformId);
     return;
@@ -323,7 +323,7 @@ void InputMappingsModel::refreshMappings() {
           static_cast<Qt::Key>(item.mappedInput));
     } else {
       item.mappedInputName = QString::fromStdString(
-          PlatformMetadata::getInputName(static_cast<GamepadInput>(value)));
+          firelight::input::displayName(static_cast<GamepadInput>(value)));
     }
 
     m_items.append(item);

@@ -1,13 +1,18 @@
 #include <firelight/library/content_identifier.hpp>
 
 #include <firelight/library/file_bytes.hpp>
-#include <platform_metadata.hpp>
+#include <firelight/platforms/platform_service.hpp>
+#include <firelight/library/content_extensions.hpp>
 
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
 
 namespace firelight::library {
+
+ContentIdentifier::ContentIdentifier(
+    platforms::IPlatformService &platformService)
+    : m_platformService(platformService), m_discInspector(platformService) {}
 
 std::string ContentIdentifier::suffixOf(const std::string &name) {
   const auto dot = name.find_last_of('.');
@@ -26,7 +31,7 @@ IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
 
   // Disc images share extensions across many consoles, so the platform can only
   // be determined from the contents (delegated to DiscInspector).
-  if (PlatformMetadata::isPossibleDiscExtension(suffix)) {
+  if (firelight::library::isDiscExtension(suffix)) {
     content.isDisc = true;
     std::error_code ec;
     const auto size = std::filesystem::file_size(path, ec);
@@ -40,8 +45,8 @@ IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
     return content;
   }
 
-  content.platformId = PlatformMetadata::getIdFromFileExtension(suffix);
-  if (content.platformId == PlatformMetadata::PLATFORM_ID_UNKNOWN) {
+  content.platformId = m_platformService.platformIdForExtension(suffix);
+  if (content.platformId == firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN) {
     return content;
   }
 
@@ -63,7 +68,7 @@ IdentifiedContent ContentIdentifier::identifyInArchive(
   IdentifiedContent content;
   const std::string suffix = suffixOf(entryName);
 
-  if (PlatformMetadata::isPossibleDiscExtension(suffix)) {
+  if (firelight::library::isDiscExtension(suffix)) {
     content.isDisc = true;
     content.fileSizeBytes = sizeBytes;
 
@@ -78,7 +83,7 @@ IdentifiedContent ContentIdentifier::identifyInArchive(
     return content;
   }
 
-  content.platformId = PlatformMetadata::getIdFromFileExtension(suffix);
+  content.platformId = m_platformService.platformIdForExtension(suffix);
 
   content.fileSizeBytes = data.size();
   content.fileMd5 = ContentHasher::md5(data.data(), data.size());

@@ -1,7 +1,6 @@
 #include "core_options_model.hpp"
 
 #include "libretro/core_registry.hpp"
-#include "platform_metadata.hpp"
 
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/settings/core_option_repository.hpp>

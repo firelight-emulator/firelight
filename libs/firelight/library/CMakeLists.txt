@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 set(CMAKE_CXX_STANDARD 20)
-find_package(Qt6 REQUIRED COMPONENTS Core Concurrent Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Concurrent)
 find_package(spdlog REQUIRED)
 find_package(LibArchive REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -27,17 +27,19 @@ target_include_directories(firelight_library
         PRIVATE ${CMAKE_SOURCE_DIR}/src/app
         PRIVATE ${CMAKE_SOURCE_DIR}/src
         PRIVATE ${CMAKE_SOURCE_DIR}/libs/rcheevos/src/rhash
+        PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp/include
         PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
 )
 
 target_link_libraries(firelight_library
         PUBLIC Qt6::Core
         PRIVATE Qt6::Concurrent
-        PRIVATE Qt6::Sql
+        PRIVATE SQLiteCpp
         PRIVATE spdlog::spdlog
         PRIVATE LibArchive::LibArchive
         PRIVATE ZLIB::ZLIB
         PRIVATE nlohmann_json::nlohmann_json
         PRIVATE patching
         PRIVATE rcheevos
+        PRIVATE firelight_platforms
 )

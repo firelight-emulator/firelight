@@ -5,7 +5,6 @@
 #include "db/patch.hpp"
 #include "db/region.hpp"
 #include "db/rom.hpp"
-#include "firelight/db/platform.hpp"
 
 #include <memory>
 #include <optional>
@@ -37,11 +36,6 @@ namespace firelight::db {
         virtual std::optional<Patch> getPatch(int id) = 0;
 
         virtual std::vector<Patch> getMatchingPatches(const Patch &patch) = 0;
-
-        virtual std::optional<Platform> getPlatform(int id) = 0;
-
-        virtual std::vector<Platform>
-        getMatchingPlatforms(const Platform &platform) = 0;
 
         virtual std::optional<Region> getRegion(int id) = 0;
     };

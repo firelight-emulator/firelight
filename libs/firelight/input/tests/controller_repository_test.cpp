@@ -7,8 +7,8 @@ namespace firelight::input {
 
 class ControllerRepositoryTest : public testing::Test {
 protected:
-  SqliteControllerRepository m_repo{":memory:",
-                                    platforms::PlatformService::getInstance()};
+  platforms::PlatformService m_platformService;
+  SqliteControllerRepository m_repo{":memory:", m_platformService};
 };
 
 TEST_F(ControllerRepositoryTest, CreateAndListProfiles) {
@@ -70,8 +70,7 @@ TEST_F(ControllerRepositoryTest, ExportImportRoundTrip) {
   settings.leftStick.innerDeadzone = 0.17f;
   m_repo.setProfileAnalogSettings(src->getId(), settings);
 
-  const auto platforms =
-      platforms::PlatformService::getInstance().listPlatforms();
+  const auto platforms = m_platformService.listPlatforms();
   ASSERT_FALSE(platforms.empty());
   ASSERT_FALSE(platforms.front().controllerTypes.empty());
   const auto platformId = platforms.front().id;
@@ -188,8 +187,7 @@ TEST_F(ControllerRepositoryTest, GetProfileReturnsCachedInstance) {
 }
 
 TEST_F(ControllerRepositoryTest, CloneCopiesPerPlatformBindings) {
-  const auto platforms =
-      platforms::PlatformService::getInstance().listPlatforms();
+  const auto platforms = m_platformService.listPlatforms();
   ASSERT_FALSE(platforms.empty());
   ASSERT_FALSE(platforms.front().controllerTypes.empty());
   const auto platformId = platforms.front().id;

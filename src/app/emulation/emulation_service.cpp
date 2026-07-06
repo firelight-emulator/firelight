@@ -15,7 +15,6 @@
 #include <libretro/core.hpp>
 #include <libretro/core_configuration.hpp>
 #include <libretro/core_registry.hpp>
-#include <platform_metadata.hpp>
 #include <spdlog/spdlog.h>
 
 firelight::emulation::EmulationService
@@ -176,9 +175,11 @@ namespace firelight::emulation {
     m_currentEntry = entry.value();
     m_currentContentHash = m_currentEntry.contentHash;
 
-    if (auto platform = platforms::PlatformService::getInstance().getPlatform(
-      m_currentEntry.platformId)) {
-      m_currentPlatform = platform.value();
+    if (m_context.platformService) {
+      if (auto platform = m_context.platformService->getPlatform(
+              m_currentEntry.platformId)) {
+        m_currentPlatform = platform.value();
+      }
     }
 
     // Resolve the core for this entry (default -> per-platform -> per-game

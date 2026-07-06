@@ -10,6 +10,10 @@ namespace firelight::library {
 class UserLibraryService;
 }
 
+namespace firelight::platforms {
+class IPlatformService;
+}
+
 namespace firelight::cli {
 
 // Derives the per-user QLocalServer name from the resolved app-data dir so
@@ -30,6 +34,7 @@ class SingleInstanceServer : public QObject {
 public:
   SingleInstanceServer(QString serverName,
                        library::UserLibraryService &library,
+                       platforms::IPlatformService &platformService,
                        QObject *parent = nullptr);
 
   // Starts listening (clearing any stale socket first). Returns false if the
@@ -45,6 +50,7 @@ private:
   QString m_serverName;
   QLocalServer m_server;
   library::UserLibraryService &m_library;
+  platforms::IPlatformService &m_platformService;
 };
 
 } // namespace firelight::cli

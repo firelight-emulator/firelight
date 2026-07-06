@@ -1,7 +1,7 @@
 #include "ModInfoItem.hpp"
 #include <firelight/mods/mod_repository.hpp>
 
-#include <platform_metadata.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::mods {
 ModInfoItem::ModInfoItem(const QObject *parent) {
@@ -70,7 +70,10 @@ void ModInfoItem::setModId(int modId) {
   m_targetContentHash = QString::fromStdString(mod->targetContentHash);
   emit targetContentHashChanged(m_targetContentHash);
 
-  m_platformName = QString::fromStdString(PlatformMetadata::getPlatformName(mod->platformId));
+  const auto platform =
+      getPlatformService()->getPlatform(mod->platformId);
+  m_platformName =
+      QString::fromStdString(platform ? platform->name : "Unknown");
   emit platformNameChanged(m_platformName);
 
   m_tagline = QString::fromStdString(mod->tagline);

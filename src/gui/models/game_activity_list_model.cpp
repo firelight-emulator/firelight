@@ -32,7 +32,7 @@ GameActivityListModel::GameActivityListModel(QObject *parent)
       auto entry =
           getLibraryService()->getEntryWithContentHash(session.contentHash);
       if (entry) {
-        auto platform = platforms::PlatformService::getInstance().getPlatform(
+        auto platform = getPlatformService()->getPlatform(
             entry->platformId);
         if (platform) {
           newItem.platformName = QString::fromStdString(platform->name);

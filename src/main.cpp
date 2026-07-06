@@ -167,8 +167,8 @@ int main(int argc, char *argv[]) {
     // format.setVersion(4, 1);
     // QSurfaceFormat::setDefaultFormat(format);
 
-    firelight::ServiceAccessor::setPlatformService(
-        &firelight::platforms::PlatformService::getInstance());
+    firelight::platforms::PlatformService platformService;
+    firelight::ServiceAccessor::setPlatformService(&platformService);
 
     QSurfaceFormat format;
     format.setSwapInterval(0);
@@ -275,12 +275,11 @@ int main(int argc, char *argv[]) {
     // manager (to clear rich presence). If it were declared later it would be
     // destroyed first, and that call would hit freed memory (Discord SDK assert
     // / crash). `initialize()` still runs later, once the window exists.
-    firelight::discord::DiscordManager discordManager;
+    firelight::discord::DiscordManager discordManager(platformService);
     firelight::ServiceAccessor::setDiscordManager(&discordManager);
 
     firelight::input::SqliteControllerRepository controllerRepository(
-        baseDir.filePath("controllers.db"),
-        firelight::platforms::PlatformService::getInstance());
+        baseDir.filePath("controllers.db"), platformService);
 
     firelight::input::registerDefaultShortcuts();
 
@@ -321,7 +320,8 @@ int main(int argc, char *argv[]) {
     // repository's events. Must outlive scanning.
     firelight::library::LibraryIngestService libIngestService(userLibrary);
 
-    firelight::library::LibraryScanner2 libScanner2(userLibrary);
+    firelight::library::LibraryScanner2 libScanner2(userLibrary,
+                                                    platformService);
 
     // Re-watch/re-scan as content directories come and go. Subscribed before the
     // service guarantees the default directory below, so the initial seed of a
@@ -357,7 +357,8 @@ int main(int argc, char *argv[]) {
     // A ROM path passed on the command line resolves to a library entry that the
     // root window auto-launches once loaded (-1 when absent/unresolved).
     const int startupLaunchEntryId =
-            firelight::cli::resolveRomEntryId(cliOptions.romPath, userLibraryService);
+            firelight::cli::resolveRomEntryId(cliOptions.romPath, userLibraryService,
+                                              platformService);
 
     // If we're the primary --single-instance process, start listening for
     // launches forwarded from secondary processes. Exposed to QML below so the
@@ -366,7 +367,7 @@ int main(int argc, char *argv[]) {
     if (cliOptions.singleInstance) {
         singleInstanceServer =
                 std::make_unique<firelight::cli::SingleInstanceServer>(
-                    singleInstanceName, userLibraryService);
+                    singleInstanceName, userLibraryService, platformService);
         singleInstanceServer->start();
     }
 
@@ -384,15 +385,15 @@ int main(int argc, char *argv[]) {
 
     // Set up the models for QML
     // ***********************************************
-    firelight::library::EntryListModel entryListModel(userLibraryService,
-                                                      activityLog);
+    firelight::library::EntryListModel entryListModel(
+        userLibraryService, activityLog, platformService);
 
     QObject::connect(&libScanner2,
                      &firelight::library::LibraryScanner2::scanFinished,
                      &entryListModel, &firelight::library::EntryListModel::reset,
                      Qt::QueuedConnection);
 
-    firelight::gui::PlatformListModel platformListModel;
+    firelight::gui::PlatformListModel platformListModel(platformService);
     firelight::shop::ShopItemModel shopItemModel(contentDatabase);
 
     firelight::gui::ContentDirectoryModel contentDirectoryModel(userLibraryService);
@@ -524,6 +525,7 @@ int main(int argc, char *argv[]) {
         .saveManager = &saveManager,
         .coreOptionRepository = &coreOptionRepository,
         .cheatRepository = &cheatRepository,
+        .platformService = &platformService,
         .coreSystemDirectory =
         (defaultAppDataPathString + "/core-system").toStdString(),
     };
@@ -665,7 +667,7 @@ int main(int argc, char *argv[]) {
                                              activityBucketsModel);
 
     const auto searchResultsModel = new firelight::gui::SearchResultsListModel(
-        userLibraryService, firelight::platforms::PlatformService::getInstance());
+        userLibraryService, platformService);
     engine.rootContext()->setContextProperty("SearchResultsModel", searchResultsModel);
 
 

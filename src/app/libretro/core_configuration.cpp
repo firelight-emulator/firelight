@@ -1,9 +1,10 @@
 #include "core_configuration.hpp"
 
 #include <algorithm>
-#include <platform_metadata.hpp>
 #include <spdlog/spdlog.h>
 #include <utility>
+
+#include "platform_core_defaults.hpp"
 
 CoreConfiguration::CoreConfiguration(
     std::string contentHash, const int platformId,
@@ -104,8 +105,7 @@ CoreConfiguration::getOptionValue(const std::string &key) {
   }
 
   // 5b. Legacy hardcoded per-platform default (cores not yet in the catalog).
-  if (auto def =
-          firelight::PlatformMetadata::getDefaultConfigValue(m_platformId, key)) {
+  if (auto def = firelight::defaultCoreOptionForPlatform(m_platformId, key)) {
     return def;
   }
 

@@ -10,7 +10,8 @@
 namespace firelight::cli {
 
 int resolveRomEntryId(const std::string &romPath,
-                      library::UserLibraryService &library) {
+                      library::UserLibraryService &library,
+                      platforms::IPlatformService &platformService) {
   if (romPath.empty()) {
     return -1;
   }
@@ -21,7 +22,7 @@ int resolveRomEntryId(const std::string &romPath,
     return -1;
   }
 
-  const library::ContentIdentifier identifier;
+  const library::ContentIdentifier identifier(platformService);
   const auto identified = identifier.identify(romPath);
   if (!identified.valid) {
     spdlog::warn("Could not identify content at: {}", romPath);

@@ -2,6 +2,7 @@
 
 #include <firelight/platforms/platform.hpp>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace firelight::platforms {
@@ -11,6 +12,13 @@ public:
   virtual ~IPlatformService() = default;
   [[nodiscard]] virtual std::optional<Platform> getPlatform(unsigned id) const = 0;
   [[nodiscard]] virtual std::vector<Platform> listPlatforms() const = 0;
+  // The platform whose file associations include `extension` (lowercase, no
+  // dot), or PLATFORM_ID_UNKNOWN. Cartridge extensions only; ambiguous disc
+  // extensions are identified by content, not extension.
+  [[nodiscard]] virtual int
+  platformIdForExtension(const std::string &extension) const = 0;
+  // Maps an rcheevos console id (RC_CONSOLE_*) to a Firelight platform id.
+  [[nodiscard]] virtual int platformIdForRcConsole(int rcConsoleId) const = 0;
 };
 
 class PlatformService : public IPlatformService {
@@ -19,6 +27,7 @@ public:
   static constexpr int PLATFORM_ID_GAMEBOY = 1;
   static constexpr int PLATFORM_ID_GAMEBOY_COLOR = 2;
   static constexpr int PLATFORM_ID_GAMEBOY_ADVANCE = 3;
+  static constexpr int PLATFORM_ID_VIRTUAL_BOY = 4;
   static constexpr int PLATFORM_ID_NES = 5;
   static constexpr int PLATFORM_ID_SNES = 6;
   static constexpr int PLATFORM_ID_N64 = 7;
@@ -39,19 +48,17 @@ public:
   static constexpr int PLATFORM_ID_SG1000 = 25;
   static constexpr int PLATFORM_ID_NEOGEO_POCKET = 27;
 
-  static PlatformService &getInstance() {
-    static PlatformService instance;
-    return instance;
-  }
+  PlatformService();
+  PlatformService(PlatformService const &) = delete;
 
   [[nodiscard]] std::optional<Platform> getPlatform(unsigned id) const override;
   [[nodiscard]] std::vector<Platform> listPlatforms() const override;
-
-  PlatformService(PlatformService const &) = delete;
+  [[nodiscard]] int
+  platformIdForExtension(const std::string &extension) const override;
+  [[nodiscard]] int platformIdForRcConsole(int rcConsoleId) const override;
 
 private:
   std::vector<Platform> m_platforms;
-  PlatformService();
 };
 
 } // namespace firelight::platforms

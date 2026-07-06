@@ -2,6 +2,7 @@
 
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 #include <QDir>
 #include <QFile>
@@ -9,6 +10,8 @@
 
 namespace firelight::cli {
 namespace {
+
+platforms::PlatformService platformService;
 
 // A UserLibraryService over an in-memory library (empty), so every resolution
 // misses and returns -1 regardless of which branch it takes.
@@ -21,13 +24,13 @@ library::UserLibraryService makeService(
 TEST(RomLaunchTest, EmptyPathReturnsMinusOne) {
   library::SqliteUserLibraryRepository repo(":memory:");
   auto svc = makeService(repo);
-  EXPECT_EQ(resolveRomEntryId("", svc), -1);
+  EXPECT_EQ(resolveRomEntryId("", svc, platformService), -1);
 }
 
 TEST(RomLaunchTest, NonexistentPathReturnsMinusOne) {
   library::SqliteUserLibraryRepository repo(":memory:");
   auto svc = makeService(repo);
-  EXPECT_EQ(resolveRomEntryId("/definitely/not/a/real/path.gba", svc), -1);
+  EXPECT_EQ(resolveRomEntryId("/definitely/not/a/real/path.gba", svc, platformService), -1);
 }
 
 TEST(RomLaunchTest, FileNotInLibraryReturnsMinusOne) {
@@ -40,7 +43,7 @@ TEST(RomLaunchTest, FileNotInLibraryReturnsMinusOne) {
 
   library::SqliteUserLibraryRepository repo(":memory:");
   auto svc = makeService(repo);
-  EXPECT_EQ(resolveRomEntryId(path.toStdString(), svc), -1);
+  EXPECT_EQ(resolveRomEntryId(path.toStdString(), svc, platformService), -1);
 
   QFile::remove(path);
 }

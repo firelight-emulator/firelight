@@ -51,8 +51,8 @@ TEST(AnalogCursorTest, JoypadInputsDefaultToThemselves) {
 
 class NudgeCursorTest : public testing::Test {
 protected:
-  SqliteControllerRepository m_repo{":memory:",
-                                    platforms::PlatformService::getInstance()};
+  platforms::PlatformService m_platformService;
+  SqliteControllerRepository m_repo{":memory:", m_platformService};
   SDLInputService m_service{m_repo};
 };
 

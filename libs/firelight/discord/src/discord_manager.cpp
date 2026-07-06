@@ -2,10 +2,13 @@
 
 #include <firelight/discord/discord_manager_impl.hpp>
 
-#include <platform_metadata.hpp>
+#include <firelight/platforms/platform_service.hpp>
 #include <spdlog/spdlog.h>
 
 namespace firelight::discord {
+  DiscordManager::DiscordManager(platforms::IPlatformService &platformService)
+      : m_platformService(platformService) {}
+
   void DiscordManager::initialize() {
     m_client.SetApplicationId(1208162396921929739);
     m_client.AddLogCallback(
@@ -58,8 +61,12 @@ namespace firelight::discord {
     if (iconUrl != "" && iconUrl.starts_with("http://") || iconUrl.starts_with("https://")) {
       assets.SetLargeImage(iconUrl);
     } else {
-      assets.SetLargeImage(
-        PlatformMetadata::getDiscordLargeImageName(platformId));
+      const auto platform = m_platformService.getPlatform(platformId);
+      const std::string image =
+          platform && !platform->discordImageOrSlug().empty()
+              ? platform->discordImageOrSlug()
+              : "firelight-logo-white";
+      assets.SetLargeImage(image);
     }
 
     assets.SetSmallImage("firelight-logo-white");
