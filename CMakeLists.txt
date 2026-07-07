@@ -221,6 +221,7 @@ add_library(firelight_lib
         src/app/audio/SfxPlayer.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/library/gui/entry_list_model.cpp
+        src/app/media/gui/capture_list_model.cpp
         src/app/emulator_item_renderer.cpp
         src/app/emulator_vulkan_renderer.cpp
         src/app/emulator_item.cpp
@@ -497,6 +498,7 @@ add_executable(fl_test
         tests/main.cpp
         tests/app/event_dispatcher_test.cpp
         tests/app/migrations/migration_runner_test.cpp
+        tests/app/media/capture_list_model_test.cpp
         tests/app/library/sqlite_user_library_test.cpp
         tests/app/platforms/platform_service_test.cpp
         tests/app/emulation/emulation_service_test.cpp

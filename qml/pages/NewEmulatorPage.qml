@@ -33,6 +33,8 @@ FocusScope {
                 emulator.decrementPlaybackMultiplier()
             } else if (id === "screenshot") {
                 emulator.captureScreenshot()
+            } else if (id === "capture_clip") {
+                emulator.captureVideoClip()
             }
         }
     }
@@ -52,9 +54,19 @@ FocusScope {
 
     focus: true
 
+    // In-game shortcut scope while this page is the active stack item; an
+    // overlay pushed on top (or leaving) drops back to menu scope. Without this
+    // the engine stays in menu scope and only ScopeAlways shortcuts (e.g.
+    // screenshot) fire — in-game ones like capture_clip never trigger.
+    property bool shortcutsInGame:
+        root.parent && root.parent.StackView.status === StackView.Active
+    onShortcutsInGameChanged: InputService.setShortcutsInGame(shortcutsInGame)
+    Component.onDestruction: InputService.setShortcutsInGame(false)
+
     // Consume any per-launch start knobs (CLI --mute / --pause). These are
     // one-shot on StartupOptions, so only the CLI-launched game is affected.
     Component.onCompleted: {
+        InputService.setShortcutsInGame(shortcutsInGame)
         root.startMuted = StartupOptions.consumeStartMuted()
         if (StartupOptions.consumeStartPaused()) {
             root.paused = true

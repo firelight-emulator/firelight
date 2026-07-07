@@ -107,6 +107,8 @@ public:
   // Captures the current frame to disk (bound to the "screenshot" shortcut).
   Q_INVOKABLE void captureScreenshot();
 
+  Q_INVOKABLE void captureVideoClip();
+
   Q_INVOKABLE void loadSuspendPoint(int index);
 
   Q_INVOKABLE void undoLastLoadSuspendPoint();

@@ -55,6 +55,8 @@
 #include "cli/startup_options.hpp"
 #include "libretro/core_registry.hpp"
 #include <firelight/media/media_service.hpp>
+#include <firelight/media/sqlite_game_capture_repository.hpp>
+#include "app/media/gui/capture_list_model.hpp"
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/game_image_provider.hpp"
@@ -239,9 +241,15 @@ int main(int argc, char *argv[]) {
     firelight::platforms::PlatformService platformService;
     firelight::ServiceAccessor::setPlatformService(&platformService);
 
-    // Media service
-    firelight::media::MediaService mediaService(capturesPath);
+    // Media service (writes captures to disk + indexes them in captures.db)
+    firelight::media::SqliteGameCaptureRepository gameCaptureRepository(
+        (defaultAppDataPathString + "/captures.db").toStdString());
+    firelight::media::MediaService mediaService(capturesPath,
+                                                gameCaptureRepository);
     firelight::ServiceAccessor::setMediaService(&mediaService);
+    // Sync the index with the captures folder (picks up files added/removed
+    // outside the app; regenerates any missing clip posters).
+    mediaService.reconcile();
 
     // Discord service
     firelight::discord::DiscordManager discordManager(platformService);
@@ -458,6 +466,10 @@ int main(int argc, char *argv[]) {
     // ***********************************************
     firelight::library::EntryListModel entryListModel(
         userLibraryService, activityLog, platformService);
+
+    // Gallery model over the capture index (screenshots + clips).
+    firelight::gui::CaptureListModel captureListModel(gameCaptureRepository,
+                                                      userLibraryService);
 
     // No scanFinished -> reset: the model keeps itself in sync incrementally via
     // EntryCreatedEvent/EntryUpdatedEvent (see EntryListModel), so scans update
@@ -707,6 +719,7 @@ int main(int argc, char *argv[]) {
                                              &contentDirectoryModel);
     engine.rootContext()->setContextProperty("LibraryEntryModel",
                                              &entryListModel);
+    engine.rootContext()->setContextProperty("CaptureModel", &captureListModel);
     engine.rootContext()->setContextProperty("PlatformModel",
                                              &platformListModel);
 

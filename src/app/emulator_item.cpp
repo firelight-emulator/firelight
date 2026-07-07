@@ -449,6 +449,14 @@ void EmulatorItem::captureScreenshot() {
   }
 }
 
+void EmulatorItem::captureVideoClip() {
+  if (m_renderer) {
+    m_renderer->submitCommand(
+        {.type = EmulatorItemRenderer::CaptureVideoClip});
+    update();
+  }
+}
+
 void EmulatorItem::loadSuspendPoint(const int index) {
   if (m_renderer) {
     m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadSuspendPoint,

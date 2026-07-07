@@ -186,7 +186,7 @@ Pane {
             label: "Settings"
             iconName: "settings"
 
-            KeyNavigation.down: helpButton
+            KeyNavigation.down: mediaButton
 
             Layout.fillWidth: true
 
@@ -199,6 +199,23 @@ Pane {
             onToggled: {
                 if (toggled) {
                     Router.navigateTo("/settings")
+                }
+            }
+        }
+
+        LeftNavigationItem {
+            id: mediaButton
+            label: "Media"
+            iconName: "photo-library"
+
+            KeyNavigation.down: helpButton
+
+            Layout.fillWidth: true
+
+            checked: Router.currentRoute.startsWith("/gallery")
+            onToggled: {
+                if (toggled) {
+                    Router.navigateTo("/gallery")
                 }
             }
         }

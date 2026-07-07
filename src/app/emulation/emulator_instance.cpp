@@ -479,6 +479,14 @@ namespace firelight::emulation {
     return m_dynamicRateControl;
   }
 
+  void EmulatorInstance::setInstantReplayEnabled(const bool enabled) {
+    m_instantReplayEnabled = enabled;
+  }
+
+  bool EmulatorInstance::getInstantReplayEnabled() const {
+    return m_instantReplayEnabled;
+  }
+
   std::vector<uint8_t> EmulatorInstance::serializeState() {
     return m_core->serializeState();
   }

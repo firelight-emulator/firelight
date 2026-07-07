@@ -97,6 +97,9 @@ void CoreSettingsApplier::refresh() {
     m_instance.setDynamicRateControlEnabled(
       value("dynamic-rate-control") != "false");
   });
+  apply("instant-replay-enabled", [&] {
+    m_instance.setInstantReplayEnabled(value("instant-replay-enabled") == "true");
+  });
   apply("analog-pointer-speed", [&] {
     m_instance.setAnalogPointerSpeed(pointerSpeed(value("analog-pointer-speed")));
   });

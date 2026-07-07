@@ -5,6 +5,7 @@
 
 #include "../gui/game_image_provider.hpp"
 #include "../gui/image_qt.hpp"
+#include <firelight/media/clip_recorder.hpp>
 #include <firelight/media/media_service.hpp>
 
 #include <QOpenGLPaintDevice>
@@ -42,10 +43,14 @@ EmulatorItemRenderer::EmulatorItemRenderer(
     m_gameImageProvider(gameImageProvider), m_saveManager(saveManager),
     m_mediaService(mediaService) {
   globalRenderer = this;
+  m_clipRecorder = std::make_unique<firelight::media::ClipRecorder>();
 }
 
 EmulatorItemRenderer::~EmulatorItemRenderer() {
   m_quitting = true;
+
+  if (m_clipRecorder)
+    m_clipRecorder->stop();
 
   if (!m_paused && m_playSessionTimer.isValid())
     m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
@@ -95,6 +100,8 @@ void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
   m_coreAspectRatio = info->geometry.aspect_ratio;
   m_calculatedAspectRatio =
       static_cast<float>(m_coreBaseWidth) / static_cast<float>(m_coreBaseHeight);
+  if (info->timing.fps > 0)
+    m_clipFps = info->timing.fps;
 
   if (m_geometryChangedCallback)
     m_geometryChangedCallback(m_coreBaseWidth, m_coreBaseHeight,
@@ -183,9 +190,7 @@ void EmulatorItemRenderer::getHwRenderInterface(
   *reinterpret_cast<retro_hw_render_interface_vulkan **>(iface) = m_vulkanRenderer->hwRenderInterface();
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// IVideoDataReceiver â€” per-frame video
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// IVideoDataReceiver - per-frame video
 
 void EmulatorItemRenderer::receive(const void *data, const unsigned width,
                                    const unsigned height, const size_t pitch) {
@@ -210,12 +215,54 @@ void EmulatorItemRenderer::receive(const void *data, const unsigned width,
       newImage = newImage.transformed(QTransform().rotate(m_screenRotation * 90.0));
 
     m_currentUpdateBatch->uploadTexture(colorTexture(), newImage);
+    feedClipRecorder(newImage);
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Keeps the rolling instant-replay window fed with the latest frame. newImage is
+// a deep copy (from convertToFormat), so ClipRecorder can hand it to its encoder
+// worker safely. The pts is core-frame-based (not wall clock), so the window is
+// N seconds of gameplay regardless of fast-forward.
+void EmulatorItemRenderer::feedClipRecorder(const QImage &frame) {
+  if (!m_clipRecorder)
+    return;
+
+  // Gated by the "instant-replay-enabled" setting (resolved on the instance).
+  // When off, tear down the recorder so it isn't burning CPU encoding.
+  if (!m_emulatorInstance || !m_emulatorInstance->getInstantReplayEnabled()) {
+    if (m_clipRecorder->isRecording()) {
+      m_clipRecorder->stop();
+      spdlog::info("Clip recorder stopped (instant-replay setting off)");
+    }
+    return;
+  }
+
+  const int width = frame.width();
+  const int height = frame.height();
+  if (width <= 0 || height <= 0)
+    return;
+
+  const int fps = m_clipFps >= 1.0 ? static_cast<int>(m_clipFps + 0.5) : 60;
+
+  // (Re)start when the source geometry changes (some cores switch resolution).
+  if (!m_clipRecorder->isRecording() || width != m_clipWidth ||
+      height != m_clipHeight) {
+    if (!m_clipRecorder->start(width, height, fps, 48000, 2)) {
+      spdlog::warn("Clip recorder failed to start ({}x{}@{}fps)", width, height,
+                   fps);
+      return;
+    }
+    spdlog::info("Clip recorder started ({}x{}@{}fps)", width, height, fps);
+    m_clipWidth = width;
+    m_clipHeight = height;
+    m_clipFrameIndex = 0;
+  }
+
+  m_clipRecorder->pushVideoFrame(frame, m_clipFrameIndex * 1000 / fps);
+  m_clipFrameIndex++;
+}
+
 // QQuickRhiItemRenderer overrides
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
   if (globalRhi == nullptr) {
@@ -228,7 +275,7 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
       m_openGlInitialized = true;
     }
 
-    // context_reset for OpenGL â€” must be called inside the GL context,
+    // context_reset for OpenGL, must be called inside the GL context,
     // which the QRhi render thread provides here
     if (m_resetContextFunction) {
       QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
@@ -373,8 +420,30 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         // Reuse the current frame image the suspend-point path captures. Copy so
         // the PNG write doesn't race the next frame's readback.
         if (const auto mediaService = m_mediaService;
-            mediaService && !m_currentImage.isNull()) {
+          mediaService && !m_currentImage.isNull()) {
           mediaService->saveScreenshot(m_contentHash, m_currentImage.copy());
+        }
+      }
+      break;
+
+      case CaptureVideoClip: {
+        // Flush the encoder so the snapshot includes the most recent gameplay,
+        // then mux the rolling window to an mp4.
+        if (const auto mediaService = m_mediaService;
+          mediaService && m_clipRecorder) {
+          m_clipRecorder->flush();
+          const auto snapshot = m_clipRecorder->snapshot();
+          spdlog::info("Clip capture requested: recording={}, {} packets, {}x{}",
+                       m_clipRecorder->isRecording(), snapshot.video.size(),
+                       snapshot.width, snapshot.height);
+          if (!snapshot.empty()) {
+            mediaService->saveClip(m_contentHash, snapshot);
+          } else {
+            spdlog::warn("Clip capture: empty window — is instant replay turned "
+              "on, and is this a software-rendered core?");
+          }
+        } else {
+          spdlog::warn("Clip capture: media service or recorder missing");
         }
       }
       break;

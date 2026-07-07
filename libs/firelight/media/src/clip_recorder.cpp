@@ -3,6 +3,7 @@
 #include <QImage>
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <deque>
@@ -92,11 +93,16 @@ bool ClipRecorder::Impl::start(const int w, const int h, const int f,
   fps = f > 0 ? f : 60;
   sampleRate = sr > 0 ? sr : 48000;
   channels = ch > 0 ? ch : 2;
-  encWidth = w & ~1; // even dims for YUV420
-  encHeight = h & ~1;
-  if (encWidth <= 0 || encHeight <= 0) {
+  if (w <= 0 || h <= 0) {
     return false;
   }
+  // Retro frames are tiny; a raw native-res encode looks soft once a player
+  // upscales it. Integer-upscale (nearest-neighbor, done in encodeFrame) to
+  // roughly 720 lines so the clip stays pixel-sharp on playback.
+  constexpr int targetHeight = 720;
+  const int scale = std::clamp(targetHeight / h, 1, 6);
+  encWidth = (w * scale) & ~1; // even dims for YUV420
+  encHeight = (h * scale) & ~1;
 
   const AVCodec *codec = avcodec_find_encoder_by_name("libx264");
   if (!codec) {
@@ -119,9 +125,9 @@ bool ClipRecorder::Impl::start(const int w, const int h, const int f,
   enc->gop_size = fps;    // ~1s keyframe interval -> tight rolling trim
   enc->max_b_frames = 0;  // no reordering: pts==dts, simplest mux
   enc->flags |= AV_CODEC_FLAG_GLOBAL_HEADER; // SPS/PPS in extradata for mp4
-  av_opt_set(enc->priv_data, "preset", "ultrafast", 0);
+  av_opt_set(enc->priv_data, "preset", "veryfast", 0);
   av_opt_set(enc->priv_data, "tune", "zerolatency", 0);
-  av_opt_set(enc->priv_data, "crf", "20", 0);
+  av_opt_set(enc->priv_data, "crf", "18", 0);
 
   if (avcodec_open2(enc, codec, nullptr) < 0) {
     spdlog::warn("[ClipRecorder] failed to open H.264 encoder");
@@ -265,8 +271,9 @@ void ClipRecorder::Impl::flush() {
 
 void ClipRecorder::Impl::encodeFrame(const RawFrame &f) {
   if (!sws || swsSrcW != f.width || swsSrcH != f.height) {
+    // SWS_POINT = nearest-neighbor: keeps upscaled pixels sharp (no blur).
     sws = sws_getCachedContext(sws, f.width, f.height, AV_PIX_FMT_RGBA, encWidth,
-                               encHeight, AV_PIX_FMT_YUV420P, SWS_BILINEAR,
+                               encHeight, AV_PIX_FMT_YUV420P, SWS_POINT,
                                nullptr, nullptr, nullptr);
     swsSrcW = f.width;
     swsSrcH = f.height;

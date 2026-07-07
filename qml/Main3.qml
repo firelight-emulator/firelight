@@ -463,6 +463,12 @@ ApplicationWindow {
     }
 
     Component {
+        id: galleryPage
+
+        GalleryPage {}
+    }
+
+    Component {
         id: controllersPage
 
         ControllersPage {
@@ -537,6 +543,15 @@ ApplicationWindow {
                     content.goToContent("Settings", settingsScreen, {}, StackView.ReplaceTransition)
                 } else if (route === "/help") {
                     content.goToContent("Help", helpScreen, {}, StackView.ReplaceTransition)
+                } else if (route === "/gallery") {
+                    content.goToContent("Media", galleryPage, {}, StackView.ReplaceTransition)
+                } else if (route.startsWith("/gallery/games/")) {
+                    let things = route.split("/")
+                    if (things.length === 4) {
+                        content.goToContent("Media", galleryPage, {gameContentHash: things[3]}, StackView.PushTransition)
+                    } else {
+                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
+                    }
                 } else if (route === "/controllers") {
                     content.goToContent("Controllers", controllersPage, {}, StackView.ReplaceTransition)
                 } else if (route.startsWith("/controllers/keyboard/")) {

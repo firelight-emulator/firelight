@@ -33,14 +33,18 @@ namespace firelight {
   namespace achievements {
     class RAClient;
   }
+
   namespace gui {
     class GameImageProvider;
   }
+
   namespace saves {
     class ISaveManager;
   }
+
   namespace media {
     class MediaService;
+    class ClipRecorder;
   }
 } // namespace firelight
 
@@ -102,6 +106,7 @@ public:
     UndoLoadSuspendPoint,
     SetPlaybackMultiplier,
     CaptureScreenshot,
+    CaptureVideoClip,
     RunFrame
   };
 
@@ -137,6 +142,15 @@ private:
   firelight::gui::GameImageProvider *m_gameImageProvider;
   firelight::saves::ISaveManager *m_saveManager;
   firelight::media::MediaService *m_mediaService;
+
+  // Instant-replay recorder: fed the software-rendered frames in receive(); its
+  // rolling window is snapshotted + muxed to mp4 on CaptureVideoClip. Software
+  // cores only — HW (Vulkan) cores don't deliver pixels to receive().
+  std::unique_ptr<firelight::media::ClipRecorder> m_clipRecorder;
+  double m_clipFps = 60.0;
+  int m_clipWidth = 0;
+  int m_clipHeight = 0;
+  int64_t m_clipFrameIndex = 0;
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;
@@ -201,6 +215,9 @@ private:
   void initializeEmulatorInstance(QRhiCommandBuffer *cb);
 
   void displayPauseImage(QRhiCommandBuffer *cb);
+
+  // Pushes the latest software frame into the instant-replay recorder.
+  void feedClipRecorder(const QImage &frame);
 
   bool m_usingHardwareRenderer = false;
 

@@ -49,8 +49,11 @@ TEST(ClipRecorderTest, RollingWindowStaysBoundedAndStartsOnKeyframe) {
   const auto snap = recorder.snapshot();
   ASSERT_FALSE(snap.empty());
   EXPECT_TRUE(snap.video.front().keyframe); // window begins on a keyframe
-  EXPECT_EQ(snap.width, 64);
-  EXPECT_EQ(snap.height, 64);
+  // Small sources are integer-upscaled toward ~720 lines for a crisp clip:
+  // a whole multiple of the source, aspect preserved (square stays square).
+  EXPECT_EQ(snap.width, snap.height);
+  EXPECT_GT(snap.height, 64);
+  EXPECT_EQ(snap.width % 64, 0);
 
   // Fed 5 seconds but configured for 2 -> the retained span is bounded to the
   // window (plus at most one GOP), never the full runtime.

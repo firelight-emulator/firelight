@@ -88,6 +88,12 @@ public:
   void setDynamicRateControlEnabled(bool enabled);
   bool getDynamicRateControlEnabled() const;
 
+  // Whether the instant-replay recorder should keep a rolling window while this
+  // game runs (the "instant-replay-enabled" advanced setting). Stored here as the
+  // resolved value; the renderer reads it to gate its ClipRecorder.
+  void setInstantReplayEnabled(bool enabled);
+  [[nodiscard]] bool getInstantReplayEnabled() const;
+
   // Forward the two core-side input settings (glide speed for stick-driven
   // pointer devices; whether the physical mouse drives mouse/light-gun devices).
   void setAnalogPointerSpeed(double stepPerFrame);
@@ -176,6 +182,9 @@ private:
   std::string m_syncMethod;
   int m_targetFramerate = 0;
   bool m_dynamicRateControl = true;
+  // Read from the render thread (renderer's clip feed); written from the GUI
+  // thread when settings change. A bool toggle, so a benign 1-frame-stale read.
+  bool m_instantReplayEnabled = false;
 
   // Observes setting changes and applies this game's resolved common settings.
   std::unique_ptr<CoreSettingsApplier> m_settingsApplier;

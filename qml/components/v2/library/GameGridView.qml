@@ -72,6 +72,10 @@ Item {
                         text: "Change artwork"
                         onTriggered: artPicker.openFor(gameDelegate.model.contentHash, gameDelegate.model.displayName, gameDelegate.model.platformId)
                     }
+                    RightClickMenuItem {
+                        text: "View media"
+                        onTriggered: Router.navigateTo("/gallery/games/" + gameDelegate.model.contentHash)
+                    }
                 }
 
                 scale: hovered ? 1.05 : 1

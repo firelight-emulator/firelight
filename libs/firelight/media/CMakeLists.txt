@@ -11,17 +11,22 @@ pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
 add_library(firelight_media STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/clip_muxer.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/clip_recorder.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/clip_thumbnailer.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/media_service.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_game_capture_repository.cpp
 )
 target_include_directories(firelight_media
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
         PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
         PUBLIC ${CMAKE_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp/include
 )
 target_link_libraries(firelight_media
         PUBLIC Qt6::Core
         PUBLIC Qt6::Gui
         PRIVATE spdlog::spdlog
+        PRIVATE SQLiteCpp
+        PRIVATE sqlite3
         PRIVATE PkgConfig::AVCODEC
         PRIVATE PkgConfig::AVFORMAT
         PRIVATE PkgConfig::AVUTIL
@@ -37,18 +42,24 @@ add_executable(firelight_media_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/main.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/media_service_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/clip_recorder_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/game_capture_repository_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/clip_thumbnailer_test.cpp
 )
 target_include_directories(firelight_media_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests
         PRIVATE ${CMAKE_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp/include
 )
 target_link_libraries(firelight_media_test
         PRIVATE firelight_media
         PRIVATE Qt6::Core
         PRIVATE Qt6::Gui
         PRIVATE GTest::gtest
+        PRIVATE SQLiteCpp
+        PRIVATE sqlite3
         PRIVATE PkgConfig::AVFORMAT
         PRIVATE PkgConfig::AVCODEC
         PRIVATE PkgConfig::AVUTIL
+        PRIVATE PkgConfig::SWSCALE
 )
 gtest_discover_tests(firelight_media_test)
