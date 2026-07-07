@@ -1,4 +1,5 @@
 #include "emulation_service.hpp"
+#include "game_loader.hpp"
 #include <firelight/saves/isave_manager.hpp>
 
 #include <qfile.h>
@@ -26,8 +27,7 @@ namespace firelight::emulation {
                                      settings::SettingsService &settingsService,
                                      EmulationContext context,
                                      CoreFactory coreFactory)
-    : m_settingsService(settingsService), m_library(library),
-      m_resolver(entryResolver), m_context(std::move(context)),
+    : m_settingsService(settingsService), m_context(std::move(context)),
       m_coreFactory(std::move(coreFactory)) {
     // The EmulatorInstance created below inherits this context; make sure it
     // carries the same settings service the service was constructed with,
@@ -35,16 +35,14 @@ namespace firelight::emulation {
     m_context.settingsService = &m_settingsService;
     // Default factory builds the real dlopen'd Core; tests inject a fake.
     if (!m_coreFactory) {
-      m_coreFactory =
-          [](int platformId, const std::string &corePath,
-             std::shared_ptr<firelight::libretro::IConfigurationProvider>
-             configProvider,
-             const std::string &systemDirectory, const std::string &saveDirectory)
+      m_coreFactory = [](const firelight::libretro::CoreRunConfig &config)
         -> std::unique_ptr<::libretro::ICore> {
-            return std::make_unique<::libretro::Core>(
-              platformId, corePath, configProvider, systemDirectory, saveDirectory);
+            return std::make_unique<::libretro::Core>(config);
           };
     }
+
+    m_loader = std::make_unique<GameLoader>(library, entryResolver,
+                                            m_settingsService, m_context);
 
     // Core options are only known once the core declares them during
     // EmulatorInstance::initialize (render thread). That publishes
@@ -107,132 +105,23 @@ namespace firelight::emulation {
       stopEmulation();
     }
 
-    spdlog::info("[EmulationService] Loading entry with id {}", entryId);
-
-    auto entry = m_library.getEntry(entryId);
-
-    if (!entry.has_value()) {
-      spdlog::warn("[EmulationService] Entry with id {} does not exist", entryId);
-      return failed();
-    }
-
-    // Pick the most correct content (ROM/disc + optional patch) for this entry.
-    const auto resolved = m_resolver.resolve(*entry);
-    if (!resolved.valid) {
-      spdlog::warn("[EmulationService] No usable content for entry with id {}",
-                   entryId);
-      return failed();
-    }
-
-    const auto &contentFile = resolved.contentFile;
-
-    const auto contentPath =
-        contentFile.m_inArchive ? contentFile.m_archivePathName : contentFile.m_filePath;
-    if (!std::filesystem::exists(contentPath)) {
-      spdlog::error("[EmulationService] Content path doesn't exist: {}",
-                    contentPath);
-      return failed();
-    }
-
-    library::ContentLoader contentLoader;
-    auto loaded = contentLoader.load(contentFile);
-    if (!loaded.valid) {
-      spdlog::error("[EmulationService] Failed to load content for entry {}",
-                    entryId);
-      return failed();
-    }
-
-    if (resolved.patch.has_value()) {
-      auto patch = *resolved.patch;
-      if (!patch.load()) {
-        // The entry resolved to a patched version; running it unpatched would be
-        // wrong (and could corrupt saves), so treat this as a load failure.
-        spdlog::error("[EmulationService] Failed to load patch {} for entry {}",
-                      patch.m_filePath, entryId);
-        return failed();
-      }
-      contentLoader.applyPatch(loaded, contentFile.m_platformId, patch);
-    }
-
     // The one-shot CLI launch overrides apply to this launch only, then are
     // consumed so later launches use the entry's own defaults.
     const LaunchOverrides launch = m_pendingLaunch;
     m_pendingLaunch = {};
-    const int saveSlot = launch.saveSlot >= 0
-                           ? launch.saveSlot
-                           : static_cast<int>(entry->activeSaveSlot);
 
-    QByteArray saveDataBytes;
-    if (const auto saveManager = m_context.saveManager) {
-      const auto saveData = saveManager->readSaveData(
-        loaded.contentHash, saveSlot);
-      if (saveData.has_value()) {
-        saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                   saveData->getSaveRamData().size());
-      }
-    }
-
-    m_currentEntry = entry.value();
-    m_currentContentHash = m_currentEntry.contentHash;
-
-    if (m_context.platformService) {
-      if (auto platform = m_context.platformService->getPlatform(
-        m_currentEntry.platformId)) {
-        m_currentPlatform = platform.value();
-      }
-    }
-
-    // Resolve the core for this entry (default -> per-platform -> per-game
-    // override) and locate its DLL.
-    const auto coreName = CoreRegistry::instance().resolveCoreName(
-      m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
-    const std::string corePath = CoreRegistry::instance().dllPathFor(coreName);
-    const auto &catalog = settings::SettingsCatalog::instance();
-    auto coreConfig = std::make_shared<CoreConfiguration>(
-      m_currentEntry.contentHash, m_currentEntry.platformId,
-      catalog.settingsForCore(coreName), catalog.coreDefaults(coreName),
-      m_settingsService);
-    m_currentCoreConfig = coreConfig;
-
-    std::string saveDirectory;
-    if (const auto saveManager = m_context.saveManager) {
-      const auto base = saveManager->getSaveDirectory();
-      if (!base.empty()) {
-        const auto coreSaveDir = base + "/" + m_currentEntry.contentHash + "/slot" +
-                                 std::to_string(m_currentEntry.activeSaveSlot) + "/core";
-        std::error_code ec;
-        std::filesystem::create_directories(coreSaveDir, ec);
-        saveDirectory = coreSaveDir;
-      }
-    }
-
-    // The core's libretro system directory is the shared core-system dir; cores
-    // that need their own space create/read a subfolder inside it (e.g. PPSSPP,
-    // Mupen64plus, melonDS DS). EmulatorInstance::initialize re-applies this same
-    // path via setSystemDirectory.
-    std::unique_ptr<::libretro::ICore> core;
-    try {
-      core = m_coreFactory(m_currentEntry.platformId, corePath, coreConfig,
-                           m_context.coreSystemDirectory, saveDirectory);
-    } catch (const std::exception &e) {
-      spdlog::error("[EmulationService] Failed to load core for entry {}: {}",
-                    entryId, e.what());
-      return failed();
-    }
-    if (!core) {
-      spdlog::error("[EmulationService] Core factory returned null for entry {}",
-                    entryId);
+    auto result = m_loader->load(entryId, launch, m_coreFactory);
+    if (!result.success) {
       return failed();
     }
 
-    m_emulatorInstance = std::make_unique<EmulatorInstance>(
-      std::move(core), contentFile.m_filePath, m_currentContentHash,
-      entry->platformId, saveSlot, std::move(loaded.contentBytes),
-      std::vector<uint8_t>(saveDataBytes.begin(), saveDataBytes.end()), m_context);
-
-    // The instance is born muted (if requested) once initialize() creates its
-    // AudioManager.
-    m_emulatorInstance->setStartMuted(launch.muted);
+    m_currentEntry = result.entry;
+    m_currentContentHash = result.contentHash;
+    if (result.platform) {
+      m_currentPlatform = *result.platform;
+    }
+    m_currentCoreConfig = result.coreConfig;
+    m_emulatorInstance = std::move(result.instance);
 
     EventDispatcher::instance().publish(GameLoadedEvent{});
 

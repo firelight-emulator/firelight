@@ -150,6 +150,9 @@ set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLET
 
 add_library(firelight_lib
         src/app/libretro/core.cpp
+        src/app/libretro/core_environment.cpp
+        src/app/libretro/libretro_dll.cpp
+        src/app/libretro/core_input_router.cpp
         src/app/libretro/core_registry.cpp
         src/app/libretro/game.cpp
         src/app/audio/audio_manager.cpp
@@ -214,6 +217,8 @@ add_library(firelight_lib
         src/gui/qt_emulation_service_proxy.hpp
         src/image_cache.cpp
         src/app/emulation/emulation_service.cpp
+        src/app/emulation/game_loader.cpp
+        src/app/emulation/core_settings_applier.cpp
         src/app/emulation/emulator_instance.cpp
         src/gui/models/game_activity_list_model.cpp
         src/gui/models/game_activity_list_model.hpp
@@ -473,6 +478,7 @@ add_executable(fl_test
         tests/app/emulation/emulator_instance_e2e_test.cpp
         tests/app/emulation/core_configuration_test.cpp
         tests/app/emulation/core_registry_test.cpp
+        tests/app/libretro/core_input_router_test.cpp
         tests/app/achievements/sqlite_achievement_repository_test.cpp
         tests/app/achievements/achievement_service_test.cpp
         tests/app/activity/sqlite_activity_log_test.cpp

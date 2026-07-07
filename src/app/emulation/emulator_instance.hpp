@@ -16,6 +16,8 @@
 
 namespace firelight::emulation {
 
+class CoreSettingsApplier;
+
 class EmulatorInstance {
 public:
   EmulatorInstance(std::unique_ptr<::libretro::ICore>, std::string contentPath,
@@ -82,6 +84,11 @@ public:
   // (re)created, and forwarded live when it already exists.
   void setDynamicRateControlEnabled(bool enabled);
   bool getDynamicRateControlEnabled() const;
+
+  // Forward the two core-side input settings (glide speed for stick-driven
+  // pointer devices; whether the physical mouse drives mouse/light-gun devices).
+  void setAnalogPointerSpeed(double stepPerFrame);
+  void setMouseControlsPointerDevices(bool enabled);
 
   std::vector<uint8_t> serializeState();
   bool deserializeState(const std::vector<uint8_t> &state);
@@ -155,9 +162,8 @@ private:
   int m_platformId;
   int m_saveSlotNumber;
 
-  // Populated by refreshAllSettings() (called in the constructor); the declared
-  // defaults live in the settings catalog, not here. These initial values are
-  // just placeholders.
+  // Applied by m_settingsApplier (in the constructor); the declared defaults live
+  // in the settings catalog, not here. These initial values are just placeholders.
   bool m_isRewindEnabled = false;
   // Initial mute state applied when the AudioManager is created in initialize().
   bool m_startMuted = false;
@@ -168,13 +174,8 @@ private:
   int m_targetFramerate = 0;
   bool m_dynamicRateControl = true;
 
-  // Settings — resolved by inheritance (game -> platform -> global -> default),
-  // so any change at any tier that affects this game triggers a refresh.
-  void refreshAllSettings();
-
-  ScopedConnection m_platformSettingChangedConnection;
-  ScopedConnection m_gameSettingChangedConnection;
-  ScopedConnection m_globalSettingChangedConnection;
+  // Observes setting changes and applies this game's resolved common settings.
+  std::unique_ptr<CoreSettingsApplier> m_settingsApplier;
 };
 
 } // namespace firelight::emulation

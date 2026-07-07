@@ -1,4 +1,5 @@
 #include "emulator_instance.hpp"
+#include "core_settings_applier.hpp"
 #include <rcheevos/ra_client.hpp>
 #include <firelight/saves/isave_manager.hpp>
 
@@ -29,48 +30,18 @@ namespace firelight::emulation {
       m_saveSlotNumber(saveSlotNumber) {
     m_lastSaveTime = std::chrono::steady_clock::now();
 
-    // Settings resolve by inheritance (game -> platform -> global -> default), so
-    // a change at ANY tier can alter this game's effective value: refresh on a
-    // platform change for our platform, a game change for our hash, or any global
-    // change.
-    m_platformSettingChangedConnection =
-        EventDispatcher::instance()
-        .subscribe<settings::PlatformSettingChangedEvent>(
-          [this](const settings::PlatformSettingChangedEvent &e) {
-            if (e.platformId != m_platformId) {
-              return;
-            }
-            refreshAllSettings();
-          });
-
-    m_gameSettingChangedConnection =
-        EventDispatcher::instance().subscribe<settings::GameSettingChangedEvent>(
-          [this](const settings::GameSettingChangedEvent &e) {
-            if (e.contentHash != m_contentHash) {
-              return;
-            }
-            refreshAllSettings();
-          });
-
-    m_globalSettingChangedConnection =
-        EventDispatcher::instance()
-        .subscribe<settings::GlobalSettingChangedEvent>(
-          [this](const settings::GlobalSettingChangedEvent &) {
-            refreshAllSettings();
-          });
-
-    refreshAllSettings();
+    // Subscribes to setting changes and applies this game's resolved common
+    // settings now (all members it touches are initialized above).
+    m_settingsApplier = std::make_unique<CoreSettingsApplier>(
+      *this, m_context, m_contentHash, m_platformId);
   }
 
   EmulatorInstance::~EmulatorInstance() {
     spdlog::info("[EmulatorInstance] Shutting down");
 
-    // Unsubscribe first: the settings callbacks capture `this` and touch members
-    // (m_core, ...). Disconnecting before we tear anything down ensures a
-    // late-arriving settings event can't fire into a partially-destroyed instance.
-    m_platformSettingChangedConnection = {};
-    m_gameSettingChangedConnection = {};
-    m_globalSettingChangedConnection = {};
+    // Destroy the settings applier first: its subscriptions capture `this` and
+    // touch members, so a late event mustn't fire into a half-torn-down instance.
+    m_settingsApplier.reset();
 
     // Restore device-default controller profiles when the game unloads.
     if (const auto inputService = m_context.inputService) {
@@ -512,66 +483,15 @@ namespace firelight::emulation {
     return m_core->deserializeState(state);
   }
 
-  void EmulatorInstance::refreshAllSettings() {
-    auto *service = m_context.settingsService;
-    if (!service) {
-      return;
+  void EmulatorInstance::setAnalogPointerSpeed(const double stepPerFrame) {
+    if (m_core) {
+      m_core->setAnalogPointerSpeed(stepPerFrame);
     }
-    const auto &catalog = settings::SettingsCatalog::instance();
+  }
 
-    // Effective value for a common setting: the resolved override
-    // (game -> platform -> global), else the catalog-declared default. The catalog
-    // JSON is the single source of truth for these defaults.
-    const auto value = [&](const std::string &key) {
-      return service->getEffectiveValue(m_contentHash, m_platformId, key)
-          .value_or(catalog.defaultForCommonKey(key));
-    };
-    const auto intValue = [&](const std::string &key) {
-      try {
-        return std::stoi(value(key));
-      } catch (const std::exception &) {
-        return 0; // missing/non-numeric (e.g. catalog not loaded) -> neutral
-      }
-    };
-    const auto apply = [&](const std::string &key, auto &&setter) {
-      setter();
-      EventDispatcher::instance().publish(settings::EmulationSettingChangedEvent{
-        .contentHash = m_contentHash, .key = key
-      });
-    };
-    // Maps the friendly pointer-speed choice to a per-frame glide step (fraction
-    // of the full ±32767 cursor range moved per frame at full stick deflection).
-    const auto pointerSpeed = [&](const std::string &v) -> double {
-      if (v == "slow") {
-        return 0.015;
-      }
-      if (v == "fast") {
-        return 0.040;
-      }
-      return 0.025; // medium / default
-    };
-
-    apply("rewind-enabled",
-          [&] { setRewindEnabled(value("rewind-enabled") == "true"); });
-    apply("picture-mode", [&] { setPictureMode(value("picture-mode")); });
-    apply("aspect-ratio", [&] { setAspectRatioMode(value("aspect-ratio")); });
-    apply("integer-scale", [&] { setIntegerScale(intValue("integer-scale")); });
-    apply("sync-method", [&] { setSyncMethod(value("sync-method")); });
-    apply("target-framerate",
-          [&] { setTargetFramerate(intValue("target-framerate")); });
-    apply("dynamic-rate-control", [&] {
-      setDynamicRateControlEnabled(value("dynamic-rate-control") != "false");
-    });
-    apply("analog-pointer-speed", [&] {
-      if (m_core) {
-        m_core->setAnalogPointerSpeed(pointerSpeed(value("analog-pointer-speed")));
-      }
-    });
-    apply("mouse-controls-lightgun", [&] {
-      if (m_core) {
-        m_core->setMouseControlsPointerDevices(
-          value("mouse-controls-lightgun") == "true");
-      }
-    });
+  void EmulatorInstance::setMouseControlsPointerDevices(const bool enabled) {
+    if (m_core) {
+      m_core->setMouseControlsPointerDevices(enabled);
+    }
   }
 } // namespace firelight::emulation

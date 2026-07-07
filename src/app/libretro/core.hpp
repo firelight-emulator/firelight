@@ -1,7 +1,9 @@
 #pragma once
 
+#include "core_input_router.hpp"
 #include "firelight/libretro/audio_data_receiver.hpp"
 #include "firelight/libretro/configuration_provider.hpp"
+#include "firelight/libretro/core_run_config.hpp"
 #include "firelight/libretro/icore.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
 #include "firelight/libretro/video_data_receiver.hpp"
@@ -15,6 +17,7 @@
 #include <functional>
 #include <map>
 #include <qlibrary.h>
+#include <unordered_map>
 #include <vector>
 
 using std::array;
@@ -38,14 +41,26 @@ namespace libretro {
 
     typedef void (*RetroRunFunc)();
 
+    class Core;
+    class LibretroDll;
+
+    // What the libretro C callbacks (video/audio/input/env/mic/rumble) reach the
+    // active core through, without exposing Core's members. Populated by Core as
+    // receivers/providers are set; read by the callbacks via a file-scope pointer.
+    struct CoreCallbackContext {
+        Core *core = nullptr;
+        firelight::libretro::CoreInputRouter *input = nullptr;
+        firelight::libretro::IVideoDataReceiver *video = nullptr;
+        IAudioDataReceiver *audio = nullptr;
+        firelight::libretro::IAudioInputProvider *audioInput = nullptr;
+        int platformId = -1;
+    };
+
     class Core : public ICore {
     public:
         std::basic_string<char> dumpJson();
 
-        Core(int platformId, const std::string &libPath,
-             const std::shared_ptr<firelight::libretro::IConfigurationProvider>
-             &configProvider,
-             std::string systemDirectory, std::string saveDirectory);
+        explicit Core(firelight::libretro::CoreRunConfig config);
 
         virtual ~Core();
 
@@ -58,17 +73,8 @@ namespace libretro {
         void setPointerInputProvider(
             firelight::libretro::IPointerInputProvider *provider) override;
 
-        [[nodiscard]] firelight::libretro::IPointerInputProvider *
-        getPointerInputProvider() const;
-
-        [[nodiscard]] firelight::libretro::IRetropadProvider *
-        getRetropadProvider() const;
-
         void setAudioInputProvider(
             firelight::libretro::IAudioInputProvider *provider) override;
-
-        [[nodiscard]] firelight::libretro::IAudioInputProvider *
-        getAudioInputProvider() const;
 
         void setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) override;
 
@@ -102,8 +108,6 @@ namespace libretro {
         void writeMemoryData(MemoryType memType,
                              const std::vector<char> &data) override;
 
-        firelight::libretro::IVideoDataReceiver *videoReceiver;
-
         void *getMemoryData(unsigned id) const override;
 
         size_t getMemorySize(unsigned id) const override;
@@ -133,7 +137,7 @@ namespace libretro {
 
         // Whether the physical mouse may drive light-gun / mouse devices (the toggle).
         [[nodiscard]] bool mouseControlsPointerDevices() const {
-            return m_mouseControlsPointerDevices;
+            return m_input.mouseControlsPointerDevices();
         }
 
         void setCheat(unsigned index, bool enabled, const std::string &code) override;
@@ -145,45 +149,34 @@ namespace libretro {
         retro_system_av_info *retroSystemAVInfo;
         int m_platformId = -1;
 
-        // Snapshots per-frame mouse motion from the pointer provider (called from the
-        // libretro input-poll callback), so a single relative-motion read serves both
-        // the MOUSE_X and MOUSE_Y queries within a frame.
-        void pollInput();
-
-        std::pair<int16_t, int16_t> m_frameMouseDelta{0, 0};
-
-        // Per-port joypad snapshot, captured once per frame in pollInput() so the
-        // input callback reads stable input during retro_run() (and each frame is a
-        // recordable firelight::input::InputFrame). Ports with no controller are
-        // inactive. Public because the static libretro input callback reads them.
-        static constexpr int MAX_INPUT_PORTS = 8;
-        std::array<firelight::input::InputFrame, MAX_INPUT_PORTS> m_portFrames{};
-        std::array<bool, MAX_INPUT_PORTS> m_portActive{};
-
     private:
-        // Resolved input device class per port (firelight::input::GamepadInputClass
-        // value: 1=Joypad, 2=Mouse, 3=Light Gun) and the analog-stick glide speed.
-        // pollInput() uses these to drive the pointer cursor from a gamepad stick on
-        // Mouse/Light-Gun ports.
-        std::map<unsigned, int> m_portInputClass;
-        double m_analogPointerSpeed = 0.025;
-        bool m_mouseControlsPointerDevices = true;
-
-        std::unique_ptr<QLibrary> coreLib;
         std::function<void()> m_destroyContextFunction = nullptr;
 
         Game *game;
 
-        firelight::libretro::IRetropadProvider *m_retropadProvider;
+        firelight::libretro::IVideoDataReceiver *videoReceiver = nullptr;
+        firelight::libretro::CoreInputRouter m_input;
+        // Backs the file-scope pointer the C callbacks read; kept current by the
+        // receiver/provider setters.
+        CoreCallbackContext m_callbackContext;
+
         std::shared_ptr<IAudioDataReceiver> audioReceiver;
         std::shared_ptr<firelight::libretro::IConfigurationProvider>
         m_configurationProvider;
-        firelight::libretro::IPointerInputProvider *m_pointerInputProvider;
         firelight::libretro::IAudioInputProvider *m_audioInputProvider = nullptr;
 
         retro_vfs_interface m_vfsInterface;
 
         vector<string> environmentCalls;
+
+        // One environment-call handler: its debug name + the body that services it.
+        struct EnvHandler {
+            const char *name;
+            std::function<bool(void *data)> handler;
+        };
+        // cmd -> handler, built once (lazily) and dispatched by handleEnvironmentCall.
+        std::unordered_map<unsigned, EnvHandler> m_envHandlers;
+        void buildEnvironmentHandlers();
 
         retro_system_info *retroSystemInfo;
 
@@ -255,44 +248,7 @@ namespace libretro {
 
         void recordPotentialAPIViolation(const string &msg);
 
-        void *dll;
-
-        void (*symRetroInit)();
-
-        void (*symRetroDeinit)();
-
-        unsigned (*symRetroApiVersion)();
-
-        void (*symRetroGetSystemInfo)(retro_system_info *);
-
-        void (*symRetroGetSystemAVInfo)(retro_system_av_info *);
-
-        void (*symRetroSetControllerPortDevice)(unsigned, unsigned);
-
-        void (*symRetroReset)();
-
-        RetroRunFunc symRetroRun;
-
-        size_t (*symRetroSerializeSize)();
-
-        bool (*symRetroSerialize)(void *, size_t);
-
-        bool (*symRetroUnserialize)(const void *, size_t);
-
-        void (*symRetroCheatReset)();
-
-        void (*symRetroCheatSet)(unsigned, bool, const char *);
-
-        bool (*symRetroLoadGame)(const retro_game_info *);
-
-        bool (*symRetroLoadGameSpecial)(unsigned, const retro_game_info *, size_t);
-
-        void (*symRetroUnloadGame)();
-
-        unsigned int (*symRetroGetRegion)();
-
-        void *(*symRetroGetMemoryData)(unsigned);
-
-        size_t (*symRetroGetMemoryDataSize)(unsigned);
+        // The loaded core DLL + its resolved retro_* entry points.
+        std::unique_ptr<LibretroDll> m_dll;
     };
 } // namespace libretro

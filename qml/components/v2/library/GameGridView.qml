@@ -4,7 +4,22 @@ import QtQuick.Window
 import Firelight 1.0
 
 Item {
+    id: gridRoot
     property alias model: root.model
+
+    // A remote URL passes through; a local file path (user-imported art) becomes
+    // a file:// URL so Image can load it.
+    function iconSource(u) {
+        if (!u)
+            return ""
+        if (u.indexOf("://") >= 0)
+            return u
+        return "file:///" + u.replace(/\\/g, "/")
+    }
+
+    GameArtPickerDialog {
+        id: artPicker
+    }
 
     GridView {
         id: root
@@ -40,6 +55,7 @@ Item {
          boundsBehavior: Flickable.StopAtBounds
 
         delegate: Item {
+            id: gameDelegate
             required property var model
             width: root.cellWidth
             height: root.cellHeight
@@ -50,6 +66,13 @@ Item {
                 anchors.margins: 4
                 padding: 0
                 hoverEnabled: true
+
+                ContextMenu.menu: RightClickMenu {
+                    RightClickMenuItem {
+                        text: "Change artwork"
+                        onTriggered: artPicker.openFor(gameDelegate.model.contentHash, gameDelegate.model.displayName, gameDelegate.model.platformId)
+                    }
+                }
 
                 scale: hovered ? 1.05 : 1
                 Behavior on scale {
@@ -67,10 +90,12 @@ Item {
                 contentItem: Item {
                     Image {
                         anchors.fill: parent
-                        sourceSize.width: 128
-                        sourceSize.height: 128
-                        source: model.icon1x1SourceUrl
+                        sourceSize.width: 256
+                        sourceSize.height: 256
+                        source: gridRoot.iconSource(model.icon1x1SourceUrl)
                         fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
                         visible: model.icon1x1SourceUrl !== undefined && model.icon1x1SourceUrl !== ""
                     }
 

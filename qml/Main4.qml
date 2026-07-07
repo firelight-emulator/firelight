@@ -218,21 +218,42 @@ MainWindow {
             anchors.fill: parent
 
             onMaximizeClicked: {
-                if (window.visibility === Window.Maximized) {
-                    window.showNormal()
-                    WindowFrame.setNativePosition(window.previousX, window.previousY)
-                    window.width = window.previousWidth
-                    window.height = window.previousHeight
-                } else {
-                    window.previousX = WindowFrame.nativeX()
-                    window.previousY = WindowFrame.nativeY()
-                    window.previousWidth = window.width
-                    window.previousHeight = window.height
-                    window.showMaximized()
-                }
+                // if (window.visibility === Window.Maximized) {
+                //     window.showNormal()
+                //     WindowFrame.setNativePosition(window.previousX, window.previousY)
+                //     window.width = window.previousWidth
+                //     window.height = window.previousHeight
+                // } else {
+                //     window.previousX = WindowFrame.nativeX()
+                //     window.previousY = WindowFrame.nativeY()
+                //     window.previousWidth = window.width
+                //     window.previousHeight = window.height
+                //     window.showMaximized()
+                // }
+                emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: contentStack})
             }
             onMinimizeClicked: window.showMinimized()
             onCloseClicked: window.close()
+        }
+    }
+
+    StackView {
+        id: contentStack
+
+        padding: 0
+
+        anchors.bottom: nowPlayingBar.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: titleBar.bottom
+        anchors.leftMargin: 8
+        anchors.rightMargin: 8
+        anchors.bottomMargin: 8
+
+        initialItem: LibraryPageV2 {}
+
+        Keys.onEscapePressed: function(event) {
+            emulatorLoader.setSource("NewEmulatorPage.qml", {})
         }
     }
 
@@ -242,7 +263,7 @@ MainWindow {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        height: 0
+        height: 64
 
         background: Rectangle {
             color: "transparent"
@@ -257,23 +278,50 @@ MainWindow {
         }
     }
 
+    EmulatorLoader {
+        id: emulatorLoader
+        anchors.fill: parent
+
+        onLoaded: {
+            EmulationService.loadEntry(25)
+        }
+
+        // onSuspended: {
+        //     // content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber}, StackView.Immediate)
+        //     Router.navigateTo("/quick-menu")
+        //     mainContentStack.pushItems([emulatorLoader, content], StackView.PushTransition)
+        // }
+    }
+
+    Connections {
+        target: EmulationService
+
+        function onGameLoaded() {
+            emulatorLoader.startGame()
+        }
+
+        function onEmulationStopped() {
+            // External-launcher mode: the app exists only to run this one game.
+            if (StartupOptions.exitOnClose) {
+                Qt.quit()
+                return
+            }
+            content.goToContent("Library", allGamesPage, {}, StackView.Immediate)
+            mainContentStack.pushItems([emulatorLoader, content], StackView.Immediate)
+            emulatorLoader.source = ""
+            content.forceActiveFocus()
+        }
+    }
+
+
+
     // Rectangle {
     //     anchors.fill: splitView
     //     color: "#1b1d27"
     //     radius: 8
     // }
 
-    ActivityPageV2 {
-        anchors.bottom: nowPlayingBar.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: titleBar.bottom
-        anchors.leftMargin: 8
-        anchors.rightMargin: 8
-        anchors.bottomMargin: 8
-    }
-
-    // LibraryPageV2 {
+    // ActivityPageV2 {
     //     anchors.bottom: nowPlayingBar.top
     //     anchors.left: parent.left
     //     anchors.right: parent.right

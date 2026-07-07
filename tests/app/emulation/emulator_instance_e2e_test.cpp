@@ -65,12 +65,11 @@ protected:
     m_cheatRepo = std::make_unique<cheats::SqliteCheatRepository>(":memory:");
 
     CoreFactory factory =
-        [this](int, const std::string &,
-               std::shared_ptr<firelight::libretro::IConfigurationProvider>
-                   configProvider,
-               const std::string &) -> std::unique_ptr<::libretro::ICore> {
+        [this](const firelight::libretro::CoreRunConfig &config)
+        -> std::unique_ptr<::libretro::ICore> {
       auto fake = std::make_unique<FakeCore>();
-      fake->setConfigProvider(std::move(configProvider));
+      fake->setConfigProvider(config.configProvider);
+      fake->setSaveDirectory(config.saveDirectory); // the real Core takes it in its ctor
       fake->setSystemRamSize(256); // so the cheat engine has RAM to poke
       m_fakeCore = fake.get();
       return fake;

@@ -19,7 +19,7 @@ Item {
 
     // Sorting and filtering properties
     property string sortRole: "displayName"
-    property string viewMode: "list" // "list", "grid"
+    property string viewMode: "grid" // "list", "grid"
 
     property bool showOnlyFavorites: false
     property int filterFolderId: -1

@@ -41,9 +41,8 @@ protected:
     settings::SettingsService::setInstance(m_settingsService.get());
     m_emulationService = std::make_unique<EmulationService>(
         *m_service, *m_resolver, *m_settingsService, EmulationContext{},
-        [](int, const std::string &,
-           std::shared_ptr<firelight::libretro::IConfigurationProvider>,
-           const std::string &) -> std::unique_ptr<::libretro::ICore> {
+        [](const firelight::libretro::CoreRunConfig &)
+            -> std::unique_ptr<::libretro::ICore> {
           return std::make_unique<FakeCore>();
         });
   }

@@ -5,6 +5,7 @@
 
 #include <firelight/library/entry.hpp>
 #include <firelight/libretro/configuration_provider.hpp>
+#include <firelight/libretro/core_run_config.hpp>
 #include <functional>
 #include <memory>
 #include <string>
@@ -23,13 +24,13 @@ class CoreConfiguration;
 
 namespace firelight::emulation {
 
+class GameLoader;
+
 // Builds the ICore for a loaded entry. Injectable so tests can supply a fake
 // core instead of dlopen'ing a real libretro DLL. A null factory uses the
 // default (real Core).
 using CoreFactory = std::function<std::unique_ptr<::libretro::ICore>(
-    int platformId, const std::string &corePath,
-    std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider,
-    const std::string &systemDirectory, const std::string &saveDirectory)>;
+    const firelight::libretro::CoreRunConfig &config)>;
 
 struct GameLoadStarted {};
 struct GameLoadedEvent {};
@@ -103,10 +104,9 @@ private:
   static EmulationService *s_emuServiceInstance;
 
   settings::SettingsService &m_settingsService;
-  library::UserLibraryService &m_library;
-  library::EntryResolver &m_resolver;
   EmulationContext m_context;
   CoreFactory m_coreFactory;
+  std::unique_ptr<GameLoader> m_loader;
 
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;
 

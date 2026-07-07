@@ -42,9 +42,8 @@ protected:
         *new settings::SqliteSettingsRepository(":memory:"));
     m_emulationService = std::make_unique<EmulationService>(
         *m_service, *m_resolver, *m_settingsService, EmulationContext{},
-        [](int, const std::string &,
-           std::shared_ptr<firelight::libretro::IConfigurationProvider>,
-           const std::string &) -> std::unique_ptr<::libretro::ICore> {
+        [](const firelight::libretro::CoreRunConfig &)
+            -> std::unique_ptr<::libretro::ICore> {
           return std::make_unique<FakeCore>();
         });
 
@@ -384,9 +383,8 @@ TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
   // Rebuild the service with a factory that hands out a multi-disc FakeCore.
   m_emulationService = std::make_unique<EmulationService>(
       *m_service, *m_resolver, *m_settingsService, EmulationContext{},
-      [](int, const std::string &,
-         std::shared_ptr<firelight::libretro::IConfigurationProvider>,
-         const std::string &) -> std::unique_ptr<::libretro::ICore> {
+      [](const firelight::libretro::CoreRunConfig &)
+          -> std::unique_ptr<::libretro::ICore> {
         auto core = std::make_unique<FakeCore>();
         core->setDiscCount(3);
         return core;
@@ -468,9 +466,8 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   FakeCore *fake = nullptr;
   m_emulationService = std::make_unique<EmulationService>(
       *m_service, *m_resolver, *m_settingsService, EmulationContext{},
-      [&fake](int, const std::string &,
-              std::shared_ptr<firelight::libretro::IConfigurationProvider>,
-              const std::string &) -> std::unique_ptr<::libretro::ICore> {
+      [&fake](const firelight::libretro::CoreRunConfig &)
+          -> std::unique_ptr<::libretro::ICore> {
         auto core = std::make_unique<FakeCore>();
         // Advertise the ids the snes9x catalog knows (SNES == platform 6):
         // standard pad, SNES Mouse, Super Scope.
