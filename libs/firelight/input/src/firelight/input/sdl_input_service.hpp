@@ -31,6 +31,10 @@ const static std::map<int, GamepadInput> sdlToGamepadInputs = {
     {SDL_CONTROLLER_BUTTON_RIGHTSTICK, R3},
     {SDL_CONTROLLER_BUTTON_GUIDE, Home}};
 
+// Threading: run() is a blocking SDL event loop on its own thread (device
+// add/remove, button/axis updates). The emulation/render thread reads pad and
+// pointer state each frame, and the GUI thread pushes mouse updates — shared
+// state is guarded by the mutexes/atomics below.
 class SDLInputService final : public InputService {
 public:
   explicit SDLInputService(IControllerRepository &gamepadRepository);
@@ -135,7 +139,7 @@ private:
   // (nudgeCursor), read from the render thread — atomic so no lock is needed.
   std::atomic<int16_t> m_mouseX{0};
   std::atomic<int16_t> m_mouseY{0};
-  bool m_mousePressed = false;
+  std::atomic<bool> m_mousePressed{false};
   // Right/middle buttons, relative motion, and off-screen state for
   // RETRO_DEVICE_MOUSE and the light gun. Written from the UI thread on mouse
   // events, read from the render thread via the pointer provider — atomic so

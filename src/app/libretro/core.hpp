@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core_input_router.hpp"
-#include "firelight/libretro/audio_data_receiver.hpp"
+#include "firelight/libretro/audio_output.hpp"
 #include "firelight/libretro/configuration_provider.hpp"
 #include "firelight/libretro/core_run_config.hpp"
 #include "firelight/libretro/icore.hpp"
@@ -51,7 +51,7 @@ namespace libretro {
         Core *core = nullptr;
         firelight::libretro::CoreInputRouter *input = nullptr;
         firelight::libretro::IVideoDataReceiver *video = nullptr;
-        IAudioDataReceiver *audio = nullptr;
+        IAudioOutput *audio = nullptr;
         firelight::libretro::IAudioInputProvider *audioInput = nullptr;
         int platformId = -1;
     };
@@ -76,7 +76,7 @@ namespace libretro {
         void setAudioInputProvider(
             firelight::libretro::IAudioInputProvider *provider) override;
 
-        void setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) override;
+        void setAudioReceiver(std::shared_ptr<IAudioOutput> receiver) override;
 
         bool handleEnvironmentCall(unsigned cmd, void *data);
 
@@ -160,7 +160,7 @@ namespace libretro {
         // receiver/provider setters.
         CoreCallbackContext m_callbackContext;
 
-        std::shared_ptr<IAudioDataReceiver> audioReceiver;
+        std::shared_ptr<IAudioOutput> audioReceiver;
         std::shared_ptr<firelight::libretro::IConfigurationProvider>
         m_configurationProvider;
         firelight::libretro::IAudioInputProvider *m_audioInputProvider = nullptr;

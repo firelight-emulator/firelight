@@ -9,8 +9,8 @@
 
 namespace firelight::media {
 
-MediaService::MediaService(QString mediaDirectory)
-    : m_mediaDirectory(std::move(mediaDirectory)) {}
+MediaService::MediaService(QString capturesDirectory)
+    : m_capturesDirectory(std::move(capturesDirectory)) {}
 
 std::optional<QString> MediaService::saveScreenshot(const QString &contentHash,
                                                     const QImage &image) {
@@ -18,7 +18,7 @@ std::optional<QString> MediaService::saveScreenshot(const QString &contentHash,
     return std::nullopt;
   }
 
-  const QString dir = m_mediaDirectory + "/" + contentHash;
+  const QString dir = m_capturesDirectory + "/screenshots/" + contentHash;
   if (!QDir().mkpath(dir)) {
     spdlog::warn("Could not create screenshot directory {}", dir.toStdString());
     return std::nullopt;
@@ -42,7 +42,7 @@ std::optional<QString> MediaService::saveClip(const QString &contentHash,
     return std::nullopt;
   }
 
-  const QString dir = m_mediaDirectory + "/" + contentHash;
+  const QString dir = m_capturesDirectory + "/clips/" + contentHash;
   if (!QDir().mkpath(dir)) {
     spdlog::warn("Could not create clip directory {}", dir.toStdString());
     return std::nullopt;

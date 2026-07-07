@@ -30,7 +30,7 @@ namespace firelight::cli {
 
     dirs.romsPath = dirs.docsPath + "/roms";
     dirs.savesPath = dirs.docsPath + "/saves";
-    dirs.screenshotsPath = dirs.docsPath + "/screenshots";
+    dirs.capturesPath = dirs.docsPath + "/captures";
     return dirs;
   }
 } // namespace firelight::cli

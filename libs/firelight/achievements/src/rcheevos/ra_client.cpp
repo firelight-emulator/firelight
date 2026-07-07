@@ -249,7 +249,7 @@ namespace firelight::achievements {
     }
   }
 
-  void RAClient::loadGame(int platformId, const QString &contentMd5) {
+  void RAClient::loadGame(int platformId, const std::string &contentMd5) {
     if (!m_loggedIn) {
       return;
     }
@@ -311,7 +311,7 @@ namespace firelight::achievements {
     }
 
     rc_client_begin_load_game(
-      m_client, contentMd5.toStdString().c_str(),
+      m_client, contentMd5.c_str(),
       [](int result, const char *error_message, rc_client_t *client,
          void *userdata) {
         const auto theThing =

@@ -9,22 +9,29 @@ ControllerListModel::ControllerListModel(QObject *parent)
     : QAbstractListModel(parent) {
   m_inputService = getInputService();
 
+  // These events are published on the SDL input thread; refreshControllerList
+  // resets the model, so hop to the GUI thread first.
+  const auto refreshOnGuiThread = [this] {
+    QMetaObject::invokeMethod(
+        this, [this] { refreshControllerList(); }, Qt::QueuedConnection);
+  };
+
   m_connectedHandler =
       EventDispatcher::instance().subscribe<input::GamepadConnectedEvent>(
-          [this](const input::GamepadConnectedEvent &event) {
-            this->refreshControllerList();
+          [refreshOnGuiThread](const input::GamepadConnectedEvent &) {
+            refreshOnGuiThread();
           });
 
   m_disconnectedHandler =
       EventDispatcher::instance().subscribe<input::GamepadDisconnectedEvent>(
-          [this](const input::GamepadDisconnectedEvent &event) {
-            this->refreshControllerList();
+          [refreshOnGuiThread](const input::GamepadDisconnectedEvent &) {
+            refreshOnGuiThread();
           });
 
   m_gamepadOrderChangedHandler =
       EventDispatcher::instance().subscribe<input::GamepadOrderChangedEvent>(
-          [this](const input::GamepadOrderChangedEvent &) {
-            this->refreshControllerList();
+          [refreshOnGuiThread](const input::GamepadOrderChangedEvent &) {
+            refreshOnGuiThread();
           });
 
   refreshControllerList();

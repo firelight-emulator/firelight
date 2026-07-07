@@ -1,9 +1,8 @@
 #pragma once
 
-#include <QImage>
-#include <QUrl>
+#include "firelight/image.hpp"
+
 #include <cstdint>
-#include <qbuffer.h>
 #include <string>
 #include <vector>
 
@@ -12,7 +11,7 @@ struct SuspendPoint {
   std::vector<uint8_t> state;
   std::vector<uint8_t> retroachievementsState;
   long long timestamp;
-  QImage image;
+  firelight::Image image;
   bool locked = false;
   int saveSlotNumber;
 };

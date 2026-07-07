@@ -269,8 +269,12 @@ void SaveManager::writeSuspendPointToDisk(const QString &contentHash,
   }
 
   if (!suspendPoint.image.isNull()) {
-    auto imageFilename = dir + "/screenshot.png";
-    if (!suspendPoint.image.save(imageFilename, "PNG")) {
+    QSaveFile imageFile(dir + "/screenshot.png");
+    imageFile.open(QIODeviceBase::WriteOnly);
+    imageFile.write(
+        reinterpret_cast<const char *>(suspendPoint.image.pngData.data()),
+        static_cast<qint64>(suspendPoint.image.pngData.size()));
+    if (!imageFile.commit()) {
       spdlog::warn("Could not save suspend point image");
     }
   }
@@ -337,9 +341,12 @@ SaveManager::readSuspendPointFromDisk(const QString &contentHash,
   stateFile.read(reinterpret_cast<char *>(data.data()), stateFile.size());
   stateFile.close();
 
-  QImage image;
-  if (QFile(dir + "/screenshot.png").exists()) {
-    image.load(dir + "/screenshot.png");
+  firelight::Image image;
+  if (QFile imageFile(dir + "/screenshot.png"); imageFile.exists()) {
+    if (imageFile.open(QIODeviceBase::ReadOnly)) {
+      const auto bytes = imageFile.readAll();
+      image.pngData.assign(bytes.begin(), bytes.end());
+    }
   }
 
   std::vector<uint8_t> rcheevosData;

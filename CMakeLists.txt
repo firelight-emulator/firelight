@@ -148,13 +148,42 @@ set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TR
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
-add_library(firelight_lib
+# The libretro/emulation core: the ABI wrapper + emulation lifecycle. Depends
+# only on domain interfaces (audio/mic/achievement clients are injected), so it
+# is free of Qt Quick and Qt Multimedia — a headless/CLI frontend can reuse it.
+# firelight_lib links it and supplies the Qt implementations. (It still links
+# Qt6::Core directly, and Qt6::Gui transitively via firelight_input.)
+add_library(firelight_emulation_lib
         src/app/libretro/core.cpp
         src/app/libretro/core_environment.cpp
         src/app/libretro/libretro_dll.cpp
         src/app/libretro/core_input_router.cpp
         src/app/libretro/core_registry.cpp
+        src/app/libretro/core_configuration.cpp
         src/app/libretro/game.cpp
+        src/app/emulation/emulation_service.cpp
+        src/app/emulation/game_loader.cpp
+        src/app/emulation/core_settings_applier.cpp
+        src/app/emulation/emulator_instance.cpp
+)
+
+target_include_directories(firelight_emulation_lib PUBLIC
+        ${SDL2_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app ${CMAKE_SOURCE_DIR}/src)
+
+target_link_libraries(firelight_emulation_lib PUBLIC
+        Qt6::Core
+        SDL2::SDL2
+        spdlog::spdlog
+        nlohmann_json::nlohmann_json
+        firelight_input
+        firelight_saves
+        firelight_settings
+        firelight_platforms
+        firelight_cheats
+        firelight_library
+)
+
+add_library(firelight_lib
         src/app/audio/audio_manager.cpp
         src/app/audio/qt_microphone.cpp
         src/app/audio/qt_microphone.hpp
@@ -186,7 +215,6 @@ add_library(firelight_lib
         src/app/achievements/gui/achievement_list_sort_filter_model.cpp
         src/gui/router.cpp
         src/gui/platform_list_model.cpp
-        src/app/libretro/core_configuration.cpp
         src/gui/models/shop/shop_item_model.cpp
         src/app/saves/gui/suspend_point_list_model.cpp
         src/gui/game_image_provider.cpp
@@ -216,10 +244,6 @@ add_library(firelight_lib
         src/gui/qt_emulation_service_proxy.cpp
         src/gui/qt_emulation_service_proxy.hpp
         src/image_cache.cpp
-        src/app/emulation/emulation_service.cpp
-        src/app/emulation/game_loader.cpp
-        src/app/emulation/core_settings_applier.cpp
-        src/app/emulation/emulator_instance.cpp
         src/gui/models/game_activity_list_model.cpp
         src/gui/models/game_activity_list_model.hpp
         src/app/service_accessor.cpp
@@ -285,6 +309,7 @@ target_link_libraries(firelight_lib PUBLIC
         LibArchive::LibArchive
         spdlog::spdlog
         cpr::cpr
+        firelight_emulation_lib
         firelight_achievements
         firelight_activity
         firelight_settings
@@ -440,7 +465,6 @@ add_executable(fl_test
         tests/app/patching/ups_patch_test.cpp
         tests/app/patching/bps_patch_test.cpp
         tests/app/patching/util_test.cpp
-        tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
         tests/app/saves/save_manager_test.cpp
         tests/app/library/archive_reader_test.cpp
@@ -471,6 +495,8 @@ add_executable(fl_test
         tests/app/cli/single_instance_test.cpp
 
         tests/main.cpp
+        tests/app/event_dispatcher_test.cpp
+        tests/app/migrations/migration_runner_test.cpp
         tests/app/library/sqlite_user_library_test.cpp
         tests/app/platforms/platform_service_test.cpp
         tests/app/emulation/emulation_service_test.cpp

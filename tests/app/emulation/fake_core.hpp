@@ -19,7 +19,7 @@ public:
 
   // --- wiring (record nothing; the fake ignores real receivers) ---
   void setVideoReceiver(firelight::libretro::IVideoDataReceiver *) override {}
-  void setAudioReceiver(std::shared_ptr<IAudioDataReceiver>) override {}
+  void setAudioReceiver(std::shared_ptr<IAudioOutput>) override {}
   void setRetropadProvider(firelight::libretro::IRetropadProvider *) override {}
   void
   setPointerInputProvider(firelight::libretro::IPointerInputProvider *) override {

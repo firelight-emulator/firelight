@@ -20,15 +20,22 @@ namespace firelight::library {
     m_gamePlayedConnection =
         EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
           [this](const emulation::EmulationStartedEvent &event) {
-            for (auto i = 0; i < m_items.size(); ++i) {
-              auto &item = m_items[i];
-              if (item.entry.contentHash == event.contentHash) {
-                item.lastPlayedEpochMillis =
-                    QDateTime::currentMSecsSinceEpoch();
-                emit dataChanged(createIndex(i, 0), createIndex(i, 0),
-                                 {LastPlayedAt});
-              }
-            }
+            // Published on the render thread; hop to the GUI thread before
+            // touching the model.
+            const auto contentHash = event.contentHash;
+            QMetaObject::invokeMethod(
+              this, [this, contentHash] {
+                for (auto i = 0; i < m_items.size(); ++i) {
+                  auto &item = m_items[i];
+                  if (item.entry.contentHash == contentHash) {
+                    item.lastPlayedEpochMillis =
+                        QDateTime::currentMSecsSinceEpoch();
+                    emit dataChanged(createIndex(i, 0), createIndex(i, 0),
+                                     {LastPlayedAt});
+                  }
+                }
+              },
+              Qt::QueuedConnection);
           });
 
     m_countsChangedTimer.setSingleShot(true);

@@ -403,7 +403,6 @@ TEST_F(SqliteAchievementRepositoryTest, CreateAchievementSet_UpsertBehavior) {
       repository->getAchievementSetsByGameId(achievementSet.gameId);
   ASSERT_TRUE(retrieved.size() == 1);
   EXPECT_EQ(retrieved[0].title, "Updated Game Achievements");
-  EXPECT_EQ(retrieved[0].totalPoints, 200);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_ExistingSet) {
@@ -416,9 +415,10 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_ExistingSet) {
   EXPECT_EQ(result[0].id, achievementSet.id);
   EXPECT_EQ(result[0].title, achievementSet.title);
   EXPECT_EQ(result[0].imageIconUrl, achievementSet.imageIconUrl);
-  EXPECT_EQ(result[0].numAchievements, achievementSet.numAchievements);
-  EXPECT_EQ(result[0].totalPoints, achievementSet.totalPoints);
-  EXPECT_TRUE(result[0].achievements.empty()); // No achievements added yet
+  // numAchievements/totalPoints are computed from active achievement rows.
+  EXPECT_EQ(result[0].numAchievements, 0);
+  EXPECT_EQ(result[0].totalPoints, 0);
+  EXPECT_TRUE(result[0].achievements.empty());
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_NonExistentSet) {
@@ -443,7 +443,6 @@ TEST_F(SqliteAchievementRepositoryTest, UpdateAchievementSet_Success) {
       repository->getAchievementSetsByGameId(achievementSet.gameId);
   ASSERT_TRUE(retrieved.size() == 1);
   EXPECT_EQ(retrieved[0].title, "Updated Achievement Set");
-  EXPECT_EQ(retrieved[0].totalPoints, 300);
   EXPECT_EQ(retrieved[0].imageIconUrl, "https://example.com/new-icon.png");
 }
 
@@ -892,9 +891,15 @@ TEST_F(SqliteAchievementRepositoryTest, GetUserUnlock_ExistingUnlock) {
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetUserUnlock_NonExistentUnlock) {
+  // A missing unlock is auto-created as a default (unearned, already synced).
   auto result = repository->getUserUnlock("nonexistent", 999);
 
-  EXPECT_FALSE(result.has_value());
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result->username, "nonexistent");
+  EXPECT_EQ(result->achievementId, 999);
+  EXPECT_FALSE(result->earned);
+  EXPECT_FALSE(result->earnedHardcore);
+  EXPECT_TRUE(result->synced);
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetAllUserUnlocks_EmptySet) {
@@ -1039,29 +1044,15 @@ TEST_F(SqliteAchievementRepositoryTest, SetGameHash_Success) {
 }
 
 TEST_F(SqliteAchievementRepositoryTest, SetGameHash_UpsertBehavior) {
-  AchievementSet achievementSet1 = createTestAchievementSet();
-  achievementSet1.id = 1;
-  repository->create(achievementSet1);
-
-  AchievementSet achievementSet2 = createTestAchievementSet();
-  achievementSet2.id = 2;
-  achievementSet2.gameId = 2;
-  achievementSet2.title = "Second Achievement Set";
-  repository->create(achievementSet2);
-
   const std::string contentHash = "abc123def456";
 
-  // Initially map hash to first set
-  EXPECT_TRUE(repository->setGameId(contentHash, achievementSet1.id));
+  // A content hash maps to a single game; re-setting it upserts (game_hashes).
+  EXPECT_TRUE(repository->setGameId(contentHash, 1));
+  EXPECT_TRUE(repository->setGameId(contentHash, 2));
 
-  // Update mapping to second set (upsert behavior)
-  EXPECT_TRUE(repository->setGameId(contentHash, achievementSet2.id));
-
-  // Verify the hash now points to the second set
-  auto result = repository->getAchievementSetByContentHash(contentHash);
+  auto result = repository->getGameId(contentHash);
   ASSERT_TRUE(result.has_value());
-  EXPECT_EQ(result->id, achievementSet2.id);
-  EXPECT_EQ(result->title, "Second Achievement Set");
+  EXPECT_EQ(result.value(), 2);
 }
 
 TEST_F(SqliteAchievementRepositoryTest,
@@ -1074,14 +1065,14 @@ TEST_F(SqliteAchievementRepositoryTest,
   repository->create(achievement);
 
   const std::string contentHash = "abc123def456";
-  repository->setGameId(contentHash, achievementSet.id);
+  repository->setAchievementSetHash(achievementSet.id, contentHash);
 
   auto result = repository->getAchievementSetByContentHash(contentHash);
 
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(result->id, achievementSet.id);
   EXPECT_EQ(result->title, achievementSet.title);
-  EXPECT_EQ(result->numAchievements, achievementSet.numAchievements);
+  EXPECT_EQ(result->numAchievements, 1); // Computed from achievement rows
   EXPECT_EQ(result->achievements.size(),
             1); // Only achievements with flags == 3 are included
   EXPECT_EQ(result->totalPoints,
@@ -1112,7 +1103,7 @@ TEST_F(SqliteAchievementRepositoryTest,
   repository->create(inactiveAchievement);
 
   const std::string contentHash = "abc123def456";
-  repository->setGameId(contentHash, achievementSet.id);
+  repository->setAchievementSetHash(achievementSet.id, contentHash);
 
   auto result = repository->getAchievementSetByContentHash(contentHash);
 
@@ -1229,6 +1220,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetGameId_IntegrationWithSetAndGet) {
   EXPECT_EQ(retrievedGameId.value(), achievementSet.id);
 
   // Verify we can also get the achievement set by content hash
+  repository->setAchievementSetHash(achievementSet.id, contentHash);
   auto achievementSetByHash =
       repository->getAchievementSetByContentHash(contentHash);
   ASSERT_TRUE(achievementSetByHash.has_value());
@@ -1498,6 +1490,8 @@ TEST_F(SqliteAchievementRepositoryTest, CompleteWorkflow_CreateRetrieveUpdate) {
   // Set hash mapping
   const std::string contentHash = "integration_test_hash";
   EXPECT_TRUE(repository->setGameId(contentHash, achievementSet.id));
+  EXPECT_TRUE(
+      repository->setAchievementSetHash(achievementSet.id, contentHash));
 
   // Add progress
   AchievementProgress progress1 = createTestProgress("user1", 101);

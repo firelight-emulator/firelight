@@ -4,9 +4,9 @@
 #include "emulation_context.hpp"
 #include "libretro/core_registry.hpp"
 
-#include <audio/audio_manager.hpp>
-#include <audio/qt_microphone.hpp>
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/libretro/audio_input_provider.hpp>
+#include <firelight/libretro/audio_output.hpp>
 #include <firelight/libretro/icore.hpp>
 #include <future>
 #include <memory>
@@ -18,6 +18,9 @@ namespace firelight::emulation {
 
 class CoreSettingsApplier;
 
+// Threading: owned by EmulatorItemRenderer and confined to the render thread —
+// initialize()/runFrame()/state calls all run there. getAudioBufferLevel() is
+// the exception: it's read from the pacing thread (backed by an atomic).
 class EmulatorInstance {
 public:
   EmulatorInstance(std::unique_ptr<::libretro::ICore>, std::string contentPath,
@@ -148,8 +151,8 @@ private:
 
   EmulationContext m_context;
   std::unique_ptr<::libretro::ICore> m_core;
-  std::shared_ptr<AudioManager> m_audioManager;
-  std::unique_ptr<firelight::audio::QtMicrophone> m_microphone;
+  std::shared_ptr<IAudioOutput> m_audioOutput;
+  std::unique_ptr<libretro::IAudioInputProvider> m_audioInput;
   std::vector<uint8_t> m_gameData;
   std::vector<uint8_t> m_saveData;
 

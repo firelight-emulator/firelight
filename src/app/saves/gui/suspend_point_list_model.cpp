@@ -1,6 +1,7 @@
 #include "suspend_point_list_model.hpp"
 
 #include "../../../gui/game_image_provider.hpp"
+#include "../../../gui/image_qt.hpp"
 
 namespace firelight::saves {
 SuspendPointListModel::SuspendPointListModel(
@@ -74,7 +75,7 @@ void SuspendPointListModel::updateData(const int index,
     m_items.append({QDateTime::fromMSecsSinceEpoch(suspendPoint.timestamp)
                         .toString("yyyy-MM-dd hh:mm:ss"),
                     suspendPoint.locked,
-                    m_imageProvider.setImage(suspendPoint.image), true});
+                    m_imageProvider.setImage(firelight::gui::toQImage(suspendPoint.image)), true});
     endInsertRows();
     return;
   }
@@ -84,7 +85,7 @@ void SuspendPointListModel::updateData(const int index,
     m_imageProvider.removeImageWithUrl(item.imageUrl);
   }
 
-  const auto url = m_imageProvider.setImage(suspendPoint.image);
+  const auto url = m_imageProvider.setImage(firelight::gui::toQImage(suspendPoint.image));
 
   item.locked = suspendPoint.locked;
   item.hasData = true;

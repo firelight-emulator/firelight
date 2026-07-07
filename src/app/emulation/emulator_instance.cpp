@@ -1,6 +1,6 @@
 #include "emulator_instance.hpp"
 #include "core_settings_applier.hpp"
-#include <rcheevos/ra_client.hpp>
+#include <firelight/achievements/iachievement_client.hpp>
 #include <firelight/saves/isave_manager.hpp>
 
 #include <firelight/cheats/cheat_repository.hpp>
@@ -11,7 +11,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include <audio/audio_manager.hpp>
 #include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <filesystem>
@@ -52,21 +51,27 @@ namespace firelight::emulation {
 
   bool EmulatorInstance::initialize(
     libretro::IVideoDataReceiver *videoDataReceiver) {
-    m_audioManager = std::make_unique<AudioManager>([] {
-    });
-    // Apply the requested initial mute now that the AudioManager exists (a QML
-    // muted binding fires before this and would otherwise be lost).
-    m_audioManager->setMuted(m_startMuted);
-    // Apply the resolved DRC setting (refreshAllSettings may have run before the
-    // AudioManager existed, so it only stored the value on this instance).
-    m_audioManager->setDynamicRateControlEnabled(m_dynamicRateControl);
+    // Audio output + microphone are injected as factories (main.cpp supplies the
+    // Qt-Multimedia impls); both are created here on the render thread for Qt
+    // audio thread-affinity. Null in headless/tests -> no audio.
+    if (m_context.audioOutputFactory) {
+      m_audioOutput = m_context.audioOutputFactory();
+      // Apply the requested initial mute now that the output exists (a QML muted
+      // binding fires before this and would otherwise be lost).
+      m_audioOutput->setMuted(m_startMuted);
+      // Apply the resolved DRC setting (refreshAllSettings may have run before
+      // the output existed, so it only stored the value on this instance).
+      m_audioOutput->setDynamicRateControlEnabled(m_dynamicRateControl);
+      m_core->setAudioReceiver(m_audioOutput);
+    }
 
     m_core->setVideoReceiver(videoDataReceiver);
-    m_core->setAudioReceiver(m_audioManager);
     m_core->setRetropadProvider(m_context.inputService);
     m_core->setPointerInputProvider(m_context.inputService);
-    m_microphone = std::make_unique<audio::QtMicrophone>();
-    m_core->setAudioInputProvider(m_microphone.get());
+    if (m_context.audioInputFactory) {
+      m_audioInput = m_context.audioInputFactory();
+      m_core->setAudioInputProvider(m_audioInput.get());
+    }
     m_core->setSystemDirectory(m_context.coreSystemDirectory);
 
     m_core->init();
@@ -81,8 +86,7 @@ namespace firelight::emulation {
     }
 
     if (const auto achievements = m_context.achievementManager) {
-      achievements->loadGame(m_platformId,
-                             QString::fromStdString(m_contentHash));
+      achievements->loadGame(m_platformId, m_contentHash);
     }
 
     // Apply per-game controller profile override + platform preferred controller.
@@ -385,24 +389,24 @@ namespace firelight::emulation {
   }
 
   void EmulatorInstance::setMuted(const bool muted) {
-    if (!m_audioManager) {
+    if (!m_audioOutput) {
       return;
     }
-    m_audioManager->setMuted(muted);
+    m_audioOutput->setMuted(muted);
   }
 
   void EmulatorInstance::setPaused(const bool paused) {
-    if (!m_audioManager) {
+    if (!m_audioOutput) {
       return;
     }
-    m_audioManager->setPaused(paused);
+    m_audioOutput->setPaused(paused);
   }
 
   bool EmulatorInstance::isMuted() const {
-    if (!m_audioManager) {
+    if (!m_audioOutput) {
       return false;
     }
-    return m_audioManager->isMuted();
+    return m_audioOutput->isMuted();
   }
 
   void EmulatorInstance::setRewindEnabled(const bool enabled) {
@@ -455,19 +459,19 @@ namespace firelight::emulation {
   int EmulatorInstance::getTargetFramerate() const { return m_targetFramerate; }
 
   float EmulatorInstance::getAudioBufferLevel() const {
-    return m_audioManager ? m_audioManager->getBufferLevel() : -1.0f;
+    return m_audioOutput ? m_audioOutput->getBufferLevel() : -1.0f;
   }
 
   void EmulatorInstance::setAudioPlaybackRateRatio(const double ratio) {
-    if (m_audioManager) {
-      m_audioManager->setPlaybackRateRatio(ratio);
+    if (m_audioOutput) {
+      m_audioOutput->setPlaybackRateRatio(ratio);
     }
   }
 
   void EmulatorInstance::setDynamicRateControlEnabled(const bool enabled) {
     m_dynamicRateControl = enabled;
-    if (m_audioManager) {
-      m_audioManager->setDynamicRateControlEnabled(enabled);
+    if (m_audioOutput) {
+      m_audioOutput->setDynamicRateControlEnabled(enabled);
     }
   }
 

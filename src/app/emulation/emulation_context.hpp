@@ -1,11 +1,19 @@
 #pragma once
+#include <functional>
+#include <memory>
 #include <string>
+
+class IAudioOutput;
+
+namespace firelight::libretro {
+class IAudioInputProvider;
+}
 
 namespace firelight::input {
 class InputService;
 }
 namespace firelight::achievements {
-class RAClient;
+class IAchievementClient;
 }
 namespace firelight::saves {
 class ISaveManager;
@@ -29,13 +37,20 @@ namespace firelight::emulation {
 // null-guard the optional services (input, achievements, save manager).
 struct EmulationContext {
   input::InputService *inputService = nullptr;
-  achievements::RAClient *achievementManager = nullptr;
+  achievements::IAchievementClient *achievementManager = nullptr;
   saves::ISaveManager *saveManager = nullptr;
   settings::SettingsService *settingsService = nullptr;
   settings::ICoreOptionRepository *coreOptionRepository = nullptr;
   cheats::ICheatRepository *cheatRepository = nullptr;
   platforms::IPlatformService *platformService = nullptr;
   std::string coreSystemDirectory;
+
+  // Audio output + microphone are created on the render thread inside
+  // EmulatorInstance::initialize(); main.cpp injects the Qt-Multimedia impls
+  // (AudioManager / QtMicrophone). Null in headless/tests -> no audio.
+  std::function<std::shared_ptr<IAudioOutput>()> audioOutputFactory;
+  std::function<std::unique_ptr<libretro::IAudioInputProvider>()>
+      audioInputFactory;
 };
 
 } // namespace firelight::emulation

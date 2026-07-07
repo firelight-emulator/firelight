@@ -12,7 +12,7 @@ namespace firelight::cli {
     QString appDataPath;
     QString romsPath; // the default content directory
     QString savesPath;
-    QString screenshotsPath; // captured screenshots (gallery)
+    QString capturesPath; // gameplay captures: screenshots/ + clips/ subdirs
     QString coreSystemPath; // shared core-system directory (PPSSPP, etc.)
   };
 

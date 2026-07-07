@@ -1,7 +1,7 @@
 #pragma once
 
-#include "firelight/libretro/audio_data_receiver.hpp"
 #include "firelight/libretro/audio_input_provider.hpp"
+#include "firelight/libretro/audio_output.hpp"
 #include "firelight/libretro/pointer_input_provider.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
 #include "firelight/libretro/video_data_receiver.hpp"
@@ -35,7 +35,7 @@ public:
   // --- wiring (set before init/loadGame) ---
   virtual void
   setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) = 0;
-  virtual void setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) = 0;
+  virtual void setAudioReceiver(std::shared_ptr<IAudioOutput> receiver) = 0;
   virtual void
   setRetropadProvider(firelight::libretro::IRetropadProvider *provider) = 0;
   virtual void setPointerInputProvider(

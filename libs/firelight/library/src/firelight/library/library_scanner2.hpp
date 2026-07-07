@@ -20,6 +20,10 @@ class IPlatformService;
 }
 
 namespace firelight::library {
+// Threading: a QObject on the GUI thread; QFileSystemWatcher/QTimer callbacks
+// arrive there. A scan runs on a worker thread (startScan returns a QFuture), so
+// scan state is guarded (QReadWriteLock/atomics); setScanningSuspended() is safe
+// from any thread.
 class LibraryScanner2 : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool scanning MEMBER m_scanRunning NOTIFY scanningChanged)

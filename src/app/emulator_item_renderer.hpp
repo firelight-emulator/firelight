@@ -44,6 +44,11 @@ namespace firelight {
   }
 } // namespace firelight
 
+// Threading: created, used, and destroyed on the QML render thread — Qt drives
+// initialize()/synchronize()/render() there, which is also where the
+// EmulatorCommand queue (incl. RunFrame -> EmulatorInstance) is drained.
+// submitCommand() enqueues from the GUI and pacing threads (the QQueue itself is
+// not synchronized).
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver {

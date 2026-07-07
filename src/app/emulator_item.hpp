@@ -13,6 +13,10 @@
 #include <qchronotimer.h>
 #include <string>
 
+// Threading: a QML item — constructed and driven (properties/slots) on the GUI
+// thread. Owns the frame-pacing thread (m_emulationThread), whose timer fires
+// there and enqueues RunFrame onto the renderer (drained on the render thread).
+// m_paused is atomic because the pacing thread reads it each tick.
 class EmulatorItem : public QQuickRhiItem,
                      public firelight::ServiceAccessor {
 protected:
@@ -70,8 +74,9 @@ public:
 
   bool m_canUndoLoadSuspendPoint = false;
 
-  // Emulator state
-  bool m_paused = false;
+  // Emulator state. Atomic: written on the GUI thread (setPaused), read on the
+  // frame-pacing thread.
+  std::atomic<bool> m_paused = false;
 
   uint m_coreBaseWidth = 0;
   uint m_coreBaseHeight = 0;

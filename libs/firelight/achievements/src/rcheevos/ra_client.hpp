@@ -14,6 +14,7 @@
 #include <utility>
 
 #include <achievements/gui/achievement_list_sort_filter_model.hpp>
+#include <firelight/achievements/iachievement_client.hpp>
 #include "regular_http_client.hpp"
 
 namespace libretro {
@@ -25,7 +26,7 @@ namespace firelight::achievements {
         std::string newRichPresenceMessage;
     };
 
-    class RAClient : public QObject {
+    class RAClient : public QObject, public IAchievementClient {
         Q_OBJECT
         Q_PROPERTY(bool connected MEMBER m_connected NOTIFY connectedChanged)
         Q_PROPERTY(
@@ -62,13 +63,13 @@ namespace firelight::achievements {
 
         bool expectToBeLoggedIn() const;
 
-        bool loggedIn() const { return m_loggedIn; }
+        bool loggedIn() const override { return m_loggedIn; }
 
-        void doFrame(::libretro::ICore *core);
+        void doFrame(::libretro::ICore *core) override;
 
         std::vector<uint8_t> serializeState();
 
-        void reset();
+        void reset() override;
 
         void deserializeState(const std::vector<uint8_t> &state);
 
@@ -93,7 +94,7 @@ namespace firelight::achievements {
 
         std::optional<User> getCurrentUser() const;
 
-        bool hardcoreModeActive() const { return m_defaultToHardcore; }
+        bool hardcoreModeActive() const override { return m_defaultToHardcore; }
 
         // bool gameLoaded() const;
 
@@ -152,7 +153,7 @@ namespace firelight::achievements {
 
         void logInUserWithToken(const QString &username, const QString &token);
 
-        void loadGame(int platformId, const QString &contentMd5);
+        void loadGame(int platformId, const std::string &contentMd5) override;
 
         void unloadGame();
 

@@ -7,7 +7,6 @@
 #include <firelight/input/input_service.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
-#include <audio/audio_manager.hpp>
 #include <firelight/library/content_loader.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/user_library_service.hpp>

@@ -24,6 +24,8 @@
 #include "achievements/gui/retro_achievements_game_item.hpp"
 #include "activity/gui/game_activity_item.hpp"
 #include "app/audio/SfxPlayer.hpp"
+#include "app/audio/audio_manager.hpp"
+#include "app/audio/qt_microphone.hpp"
 #include <firelight/db/sqlite_content_database.hpp>
 #include <firelight/db/sqlite_userdata_database.hpp>
 #include "app/input/gui/analog_settings_model.hpp"
@@ -183,7 +185,7 @@ int main(int argc, char *argv[]) {
     auto defaultAppDataPathString = dataDirs.appDataPath;
     auto savesPath = dataDirs.savesPath;
     auto romsPath = dataDirs.romsPath;
-    auto screenshotsPath = dataDirs.screenshotsPath;
+    auto capturesPath = dataDirs.capturesPath;
     auto coreSystemPath = dataDirs.coreSystemPath;
 
     // Set path to settings file
@@ -214,8 +216,8 @@ int main(int argc, char *argv[]) {
         spdlog::info("[Startup] Content directory does not exist; creating: {}", romsPath.toStdString());
     }
 
-    if (!QFileInfo::exists(screenshotsPath) && QDir().mkpath(screenshotsPath)) {
-        spdlog::info("[Startup] Media directory does not exist; creating: {}", screenshotsPath.toStdString());
+    if (!QFileInfo::exists(capturesPath) && QDir().mkpath(capturesPath)) {
+        spdlog::info("[Startup] Captures directory does not exist; creating: {}", capturesPath.toStdString());
     }
 
     // ===== Check for single-instance mode =======================================================
@@ -238,7 +240,7 @@ int main(int argc, char *argv[]) {
     firelight::ServiceAccessor::setPlatformService(&platformService);
 
     // Media service
-    firelight::media::MediaService mediaService(screenshotsPath);
+    firelight::media::MediaService mediaService(capturesPath);
     firelight::ServiceAccessor::setMediaService(&mediaService);
 
     // Discord service
@@ -570,7 +572,10 @@ int main(int argc, char *argv[]) {
         .coreOptionRepository = &coreOptionRepository,
         .cheatRepository = &cheatRepository,
         .platformService = &platformService,
-        .coreSystemDirectory = dataDirs.coreSystemPath.toStdString()
+        .coreSystemDirectory = dataDirs.coreSystemPath.toStdString(),
+        .audioOutputFactory = [] { return std::make_shared<AudioManager>(); },
+        .audioInputFactory =
+            [] { return std::make_unique<firelight::audio::QtMicrophone>(); }
     };
     firelight::emulation::EmulationService emuService(userLibraryService,
                                                       entryResolver,

@@ -458,9 +458,12 @@ TEST_F(AchievementServiceTest, UpdateAchievementProgress_Success) {
 // }
 
 TEST_F(AchievementServiceTest, GetUserUnlock_NotFound) {
+  // A missing unlock is auto-created as a default (unearned, already synced).
   auto result = service->getUserUnlock("nonexistent", 999);
 
-  EXPECT_FALSE(result.has_value());
+  ASSERT_TRUE(result.has_value());
+  EXPECT_FALSE(result->earned);
+  EXPECT_TRUE(result->synced);
 }
 
 // TEST_F(AchievementServiceTest, GetPatchResponse_ExistingResponse) {
@@ -507,6 +510,7 @@ TEST_F(AchievementServiceTest, GetUserUnlock_NotFound) {
 // }
 
 TEST_F(AchievementServiceTest, ProcessStartSessionResponse_CreatesNewUnlocks) {
+  setupAchievementHierarchy(1, 10, {999});
   std::vector<Unlock> unlocks = {createTestUnlock(999, 1609459200)};
   auto startSessionResponse = createTestStartSessionResponse(unlocks, {});
 
@@ -525,6 +529,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_CreatesNewUnlocks) {
 
 TEST_F(AchievementServiceTest,
        ProcessStartSessionResponse_HandlesUnsupportedEmulatorId) {
+  setupAchievementHierarchy(1, 10, {1});
   std::vector<Unlock> unlocks = {
       createTestUnlock(1, 1609459200),
       createTestUnlock(UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID, 1609459200)};
@@ -781,13 +786,15 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_NonExistentSetId) {
   // Should still succeed even if set doesn't exist
   EXPECT_TRUE(result);
 
-  // Unlock should still be created
+  // With no hierarchy for game 999, the achievement isn't reconciled, so its
+  // auto-created unlock stays unearned.
   auto unlock = service->getUserUnlock("testuser", 1);
   ASSERT_TRUE(unlock.has_value());
-  EXPECT_TRUE(unlock->earned);
+  EXPECT_FALSE(unlock->earned);
 }
 
 TEST_F(AchievementServiceTest, ProcessStartSessionResponse_ZeroTimestamps) {
+  setupAchievementHierarchy(1, 10, {1});
   std::vector<Unlock> unlocks = {createTestUnlock(1, 0)};
   auto startSessionResponse = createTestStartSessionResponse(unlocks, {});
 

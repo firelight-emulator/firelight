@@ -4,6 +4,7 @@
 #include <QJsonObject>
 
 #include "../gui/game_image_provider.hpp"
+#include "../gui/image_qt.hpp"
 #include <firelight/media/media_service.hpp>
 
 #include <QOpenGLPaintDevice>
@@ -298,7 +299,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
           break;
         SuspendPoint sp;
         sp.state = m_emulatorInstance->serializeState();
-        sp.image = m_currentImage;
+        sp.image = firelight::gui::toImage(m_currentImage);
         sp.timestamp = QDateTime::currentMSecsSinceEpoch();
         sp.retroachievementsState = m_achievementManager->serializeState();
         m_rewindPoints.push_front(sp);
@@ -318,7 +319,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
           auto t = QDateTime::fromMSecsSinceEpoch(point.timestamp).time();
           auto diff = t.secsTo(QDateTime::fromMSecsSinceEpoch(now).time());
           QJsonObject obj;
-          auto url = m_gameImageProvider->setImage(point.image);
+          auto url = m_gameImageProvider->setImage(firelight::gui::toQImage(point.image));
           m_rewindImageUrls.append(url);
           obj["image_url"] = url;
           obj["time"] = t.toString();
@@ -344,7 +345,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         if (!point.retroachievementsState.empty())
           m_achievementManager->deserializeState(point.retroachievementsState);
         if (m_paused) {
-          m_overlayImage = point.image;
+          m_overlayImage = firelight::gui::toQImage(point.image);
           m_overlayImage.flip(Qt::Vertical);
           m_overlayImage =
               m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
@@ -359,7 +360,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         SuspendPoint sp;
         sp.state = m_emulatorInstance->serializeState();
         sp.retroachievementsState = m_achievementManager->serializeState();
-        sp.image = m_currentImage;
+        sp.image = firelight::gui::toImage(m_currentImage);
         sp.timestamp = QDateTime::currentMSecsSinceEpoch();
         sp.saveSlotNumber = m_saveSlotNumber;
         m_saveManager->writeSuspendPoint(m_contentHash.toStdString(),
@@ -386,7 +387,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
           SuspendPoint before;
           before.state = m_emulatorInstance->serializeState();
           before.retroachievementsState = m_achievementManager->serializeState();
-          before.image = m_currentImage;
+          before.image = firelight::gui::toImage(m_currentImage);
           before.timestamp = QDateTime::currentMSecsSinceEpoch();
           before.saveSlotNumber = m_saveSlotNumber;
           m_beforeLastLoadSuspendPoint = before;
@@ -398,7 +399,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
             m_achievementManager->deserializeState(point->retroachievementsState);
 
           if (m_paused) {
-            m_overlayImage = point->image;
+            m_overlayImage = firelight::gui::toQImage(point->image);
             m_overlayImage.flip(Qt::Vertical);
             m_overlayImage =
                 m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
@@ -422,7 +423,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
             m_beforeLastLoadSuspendPoint.retroachievementsState);
 
         if (m_paused) {
-          m_overlayImage = m_beforeLastLoadSuspendPoint.image;
+          m_overlayImage = firelight::gui::toQImage(m_beforeLastLoadSuspendPoint.image);
           m_overlayImage.flip(Qt::Vertical);
           m_overlayImage =
               m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);

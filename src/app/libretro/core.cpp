@@ -374,7 +374,7 @@ namespace libretro {
     m_callbackContext.audioInput = provider;
   }
 
-  void Core::setAudioReceiver(std::shared_ptr<IAudioDataReceiver> receiver) {
+  void Core::setAudioReceiver(std::shared_ptr<IAudioOutput> receiver) {
     audioReceiver = std::move(receiver);
     m_callbackContext.audio = audioReceiver.get();
   }
