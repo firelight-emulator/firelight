@@ -7,7 +7,8 @@
 
 namespace firelight::discord {
   DiscordManager::DiscordManager(platforms::IPlatformService &platformService)
-      : m_platformService(platformService) {}
+    : m_platformService(platformService) {
+  }
 
   void DiscordManager::initialize() {
     m_client.SetApplicationId(1208162396921929739);
@@ -58,14 +59,14 @@ namespace firelight::discord {
     m_currentActivity.SetTimestamps(timestamps);
 
     discordpp::ActivityAssets assets;
-    if (iconUrl != "" && iconUrl.starts_with("http://") || iconUrl.starts_with("https://")) {
+    if (!iconUrl.empty() && iconUrl.starts_with("http://") || iconUrl.starts_with("https://")) {
       assets.SetLargeImage(iconUrl);
     } else {
       const auto platform = m_platformService.getPlatform(platformId);
       const std::string image =
           platform && !platform->discordImageOrSlug().empty()
-              ? platform->discordImageOrSlug()
-              : "firelight-logo-white";
+            ? platform->discordImageOrSlug()
+            : "firelight-logo-white";
       assets.SetLargeImage(image);
     }
 
@@ -100,9 +101,9 @@ namespace firelight::discord {
     m_client.UpdateRichPresence(
       m_currentActivity, [](const discordpp::ClientResult &result) {
         if (result.Successful()) {
-          spdlog::info("Rich presence updated");
+          spdlog::info("[Discord] Rich presence updated");
         } else {
-          spdlog::error("Failed to update rich presence: {}", static_cast<int>(result));
+          spdlog::error("[Discord] Failed to update rich presence: {}", static_cast<int>(result));
         }
       });
   }
