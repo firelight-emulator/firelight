@@ -25,6 +25,11 @@ struct InputFrame {
   [[nodiscard]] bool button(unsigned id) const {
     return id < 16 && ((buttons >> id) & 1u) != 0;
   }
+
+  // Value for a RETRO_DEVICE_ID_JOYPAD_MASK read.
+  [[nodiscard]] int16_t buttonMask() const {
+    return static_cast<int16_t>(buttons);
+  }
   void setButton(unsigned id, bool pressed) {
     if (id >= 16) {
       return;

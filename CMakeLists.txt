@@ -153,6 +153,8 @@ add_library(firelight_lib
         src/app/libretro/core_registry.cpp
         src/app/libretro/game.cpp
         src/app/audio/audio_manager.cpp
+        src/app/audio/qt_microphone.cpp
+        src/app/audio/qt_microphone.hpp
         src/app/metadata/metadata_service.cpp
         src/app/metadata/cpr_http_client.cpp
         src/app/metadata/cpr_http_client.hpp

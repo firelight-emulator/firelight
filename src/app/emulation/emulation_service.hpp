@@ -29,7 +29,7 @@ namespace firelight::emulation {
 using CoreFactory = std::function<std::unique_ptr<::libretro::ICore>(
     int platformId, const std::string &corePath,
     std::shared_ptr<firelight::libretro::IConfigurationProvider> configProvider,
-    const std::string &systemDirectory)>;
+    const std::string &systemDirectory, const std::string &saveDirectory)>;
 
 struct GameLoadStarted {};
 struct GameLoadedEvent {};

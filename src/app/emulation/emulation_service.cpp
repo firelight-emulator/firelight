@@ -39,10 +39,10 @@ namespace firelight::emulation {
           [](int platformId, const std::string &corePath,
              std::shared_ptr<firelight::libretro::IConfigurationProvider>
              configProvider,
-             const std::string &systemDirectory)
+             const std::string &systemDirectory, const std::string &saveDirectory)
         -> std::unique_ptr<::libretro::ICore> {
             return std::make_unique<::libretro::Core>(
-              platformId, corePath, configProvider, systemDirectory);
+              platformId, corePath, configProvider, systemDirectory, saveDirectory);
           };
     }
 
@@ -177,7 +177,7 @@ namespace firelight::emulation {
 
     if (m_context.platformService) {
       if (auto platform = m_context.platformService->getPlatform(
-              m_currentEntry.platformId)) {
+        m_currentEntry.platformId)) {
         m_currentPlatform = platform.value();
       }
     }
@@ -194,6 +194,18 @@ namespace firelight::emulation {
       m_settingsService);
     m_currentCoreConfig = coreConfig;
 
+    std::string saveDirectory;
+    if (const auto saveManager = m_context.saveManager) {
+      const auto base = saveManager->getSaveDirectory();
+      if (!base.empty()) {
+        const auto coreSaveDir = base + "/" + m_currentEntry.contentHash + "/slot" +
+                                 std::to_string(m_currentEntry.activeSaveSlot) + "/core";
+        std::error_code ec;
+        std::filesystem::create_directories(coreSaveDir, ec);
+        saveDirectory = coreSaveDir;
+      }
+    }
+
     // The core's libretro system directory is the shared core-system dir; cores
     // that need their own space create/read a subfolder inside it (e.g. PPSSPP,
     // Mupen64plus, melonDS DS). EmulatorInstance::initialize re-applies this same
@@ -201,7 +213,7 @@ namespace firelight::emulation {
     std::unique_ptr<::libretro::ICore> core;
     try {
       core = m_coreFactory(m_currentEntry.platformId, corePath, coreConfig,
-                           m_context.coreSystemDirectory);
+                           m_context.coreSystemDirectory, saveDirectory);
     } catch (const std::exception &e) {
       spdlog::error("[EmulationService] Failed to load core for entry {}: {}",
                     entryId, e.what());

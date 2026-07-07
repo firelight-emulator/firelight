@@ -219,6 +219,9 @@ namespace libretro {
         }
       }
     } else if (device == RETRO_DEVICE_JOYPAD) {
+      if (id == RETRO_DEVICE_ID_JOYPAD_MASK) {
+        return frame.buttonMask();
+      }
       return frame.button(id) ? 1 : 0;
     }
 
@@ -235,6 +238,40 @@ namespace libretro {
 
   static bool envCallback(unsigned cmd, void *data) {
     return currentCore->handleEnvironmentCall(cmd, data);
+  }
+
+  static retro_microphone_t *RETRO_CALLCONV
+  micOpen(const retro_microphone_params_t * /*params*/) {
+    auto *p = currentCore->getAudioInputProvider();
+    return p ? p->openMicrophone() : nullptr;
+  }
+
+  static void RETRO_CALLCONV micClose(retro_microphone_t *mic) {
+    if (auto *p = currentCore->getAudioInputProvider()) {
+      p->closeMicrophone(mic);
+    }
+  }
+
+  static bool RETRO_CALLCONV micGetParams(const retro_microphone_t *mic,
+                                          retro_microphone_params_t *params) {
+    auto *p = currentCore->getAudioInputProvider();
+    return p && p->getMicrophoneParameters(mic, params);
+  }
+
+  static bool RETRO_CALLCONV micSetState(retro_microphone_t *mic, bool state) {
+    auto *p = currentCore->getAudioInputProvider();
+    return p && p->setMicrophoneState(mic, state);
+  }
+
+  static bool RETRO_CALLCONV micGetState(const retro_microphone_t *mic) {
+    auto *p = currentCore->getAudioInputProvider();
+    return p && p->getMicrophoneState(mic);
+  }
+
+  static int RETRO_CALLCONV micRead(retro_microphone_t *mic, int16_t *samples,
+                                    size_t num_samples) {
+    auto *p = currentCore->getAudioInputProvider();
+    return p ? p->readMicrophone(mic, samples, num_samples) : 0;
   }
 
   bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
@@ -587,12 +624,12 @@ namespace libretro {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY");
         // Hand back the Firelight-managed per-game/per-slot save directory (set
         // in EmulatorInstance::initialize), NOT the system dir.
-        if (saveDirectory.empty()) {
+        if (m_saveDirectory.empty()) {
           return false;
         }
 
         auto ptr = static_cast<const char **>(data);
-        *ptr = strdup(saveDirectory.c_str());
+        *ptr = strdup(m_saveDirectory.c_str());
         return true;
       }
       case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
@@ -772,8 +809,7 @@ namespace libretro {
         break;
       case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_INPUT_BITMASKS");
-      // TODO: Implement
-        return false;
+        return true;
       case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION: {
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION");
         auto ptr = static_cast<unsigned *>(data);
@@ -1178,10 +1214,19 @@ namespace libretro {
       }
       case RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE: {
         environmentCalls.emplace_back(
-            "RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE");
-        // Firelight does not provide a microphone interface; decline so the core
-        // falls back to running without one.
-        return false;
+          "RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE");
+        auto *iface = static_cast<retro_microphone_interface *>(data);
+        if (!m_audioInputProvider || !iface) {
+          return false;
+        }
+        iface->interface_version = RETRO_MICROPHONE_INTERFACE_VERSION;
+        iface->open_mic = micOpen;
+        iface->close_mic = micClose;
+        iface->get_params = micGetParams;
+        iface->set_mic_state = micSetState;
+        iface->get_mic_state = micGetState;
+        iface->read_mic = micRead;
+        return true;
       }
       case RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE:
         environmentCalls.emplace_back("RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE");
@@ -1217,9 +1262,9 @@ namespace libretro {
   Core::Core(int platformId, const std::string &libPath,
              const std::shared_ptr<firelight::libretro::IConfigurationProvider>
              &configProvider,
-             std::string systemDirectory)
+             std::string systemDirectory, std::string saveDirectory)
     : m_platformId(platformId), m_configurationProvider(configProvider),
-      systemDirectory(std::move(systemDirectory)) {
+      systemDirectory(std::move(systemDirectory)), m_saveDirectory(std::move(saveDirectory)) {
     coreLib = std::make_unique<QLibrary>(QString::fromStdString(libPath));
 
     // dll = SDL_LoadObject(libPath.c_str());
@@ -1447,7 +1492,7 @@ namespace libretro {
   }
 
   void Core::setSaveDirectory(const string &frontendSaveDirectory) {
-    saveDirectory = frontendSaveDirectory;
+    m_saveDirectory = frontendSaveDirectory;
   }
 
   void Core::recordPotentialAPIViolation(const std::string &msg) {
@@ -1591,6 +1636,16 @@ namespace libretro {
   firelight::libretro::IPointerInputProvider *
   Core::getPointerInputProvider() const {
     return m_pointerInputProvider;
+  }
+
+  void Core::setAudioInputProvider(
+    firelight::libretro::IAudioInputProvider *provider) {
+    m_audioInputProvider = provider;
+  }
+
+  firelight::libretro::IAudioInputProvider *
+  Core::getAudioInputProvider() const {
+    return m_audioInputProvider;
   }
 
   firelight::libretro::IRetropadProvider *Core::getRetropadProvider() const {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "firelight/libretro/audio_data_receiver.hpp"
+#include "firelight/libretro/audio_input_provider.hpp"
 #include "firelight/libretro/pointer_input_provider.hpp"
 #include "firelight/libretro/retropad_provider.hpp"
 #include "firelight/libretro/video_data_receiver.hpp"
@@ -39,6 +40,8 @@ public:
   setRetropadProvider(firelight::libretro::IRetropadProvider *provider) = 0;
   virtual void setPointerInputProvider(
       firelight::libretro::IPointerInputProvider *provider) = 0;
+  virtual void setAudioInputProvider(
+      firelight::libretro::IAudioInputProvider *provider) = 0;
   virtual void setSystemDirectory(const std::string &dir) = 0;
   // Directory the core may read/write its own persistent data in (memstick,
   // pak files, NAND, …). Firelight hands it a per-game, per-slot managed path.

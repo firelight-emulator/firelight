@@ -32,6 +32,8 @@ public:
   void setRetropadProvider(firelight::libretro::IRetropadProvider *) override {}
   void setPointerInputProvider(
       firelight::libretro::IPointerInputProvider *) override {}
+  void setAudioInputProvider(
+      firelight::libretro::IAudioInputProvider *) override {}
   void setSystemDirectory(const std::string &) override {}
   void setSaveDirectory(const std::string &) override {}
   void init() override {}

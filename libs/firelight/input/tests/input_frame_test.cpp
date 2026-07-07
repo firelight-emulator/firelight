@@ -40,6 +40,15 @@ TEST(InputFrameTest, ButtonBitmaskAccessors) {
   EXPECT_FALSE(f.button(20));
 }
 
+TEST(InputFrameTest, ButtonMaskMatchesButtons) {
+  InputFrame f;
+  EXPECT_EQ(f.buttonMask(), 0);
+  f.setButton(0, true);
+  f.setButton(4, true);
+  EXPECT_EQ(f.buttonMask(), static_cast<int16_t>((1u << 0) | (1u << 4)));
+  EXPECT_EQ(f.buttonMask(), static_cast<int16_t>(f.buttons));
+}
+
 TEST(InputFrameTest, SerializeRoundTrip) {
   InputFrame f;
   f.setButton(0, true);

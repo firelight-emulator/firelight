@@ -5,6 +5,7 @@
 #include "libretro/core_registry.hpp"
 
 #include <audio/audio_manager.hpp>
+#include <audio/qt_microphone.hpp>
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/libretro/icore.hpp>
 #include <future>
@@ -141,6 +142,7 @@ private:
   EmulationContext m_context;
   std::unique_ptr<::libretro::ICore> m_core;
   std::shared_ptr<AudioManager> m_audioManager;
+  std::unique_ptr<firelight::audio::QtMicrophone> m_microphone;
   std::vector<uint8_t> m_gameData;
   std::vector<uint8_t> m_saveData;
 
