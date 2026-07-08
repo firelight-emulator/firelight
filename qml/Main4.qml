@@ -200,6 +200,113 @@ MainWindow {
     //     }
     // }
 
+    Popup {
+        id: navigationPane
+        height: window.height
+        width: 300
+        parent: Overlay.overlay
+
+        background: Rectangle {
+            color: "#1e1e1e"
+            radius: 8
+        }
+
+        modal: true
+        Overlay.modal: Rectangle {
+            color: "black"
+            opacity: visible ? 0.7 : 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 160
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
+        ListView {
+            id: navList
+            anchors.fill: parent
+            model: [
+                { displayName: "Home", iconName: "home" },
+                { displayName: "Library", iconName: "browse" },
+                { displayName: "Gallery", iconName: "photo-library" },
+                { displayName: "Activity", iconName: "bar-chart" }
+            ]
+
+            ButtonGroup {
+                id: navButtonGroup
+                exclusive: true
+            }
+
+            delegate: MainNavigationMenuItem {
+                id: menuItem
+                required property var model
+
+                ButtonGroup.group: navButtonGroup
+
+                iconSource: "qrc:/icons/" + model.iconName
+                displayText: model.displayName
+
+                width: ListView.view.width
+
+                onCheckedChanged: {
+                    if (menuItem.checked) {
+                        if (model.displayName === "Home") {
+
+                        } else if (model.displayName === "Library") {
+                            contentStack.push(libraryPage, StackView.Immediate)
+                        } else if (model.displayName === "Gallery") {
+                            contentStack.push(galleryPage, StackView.Immediate)
+                        } else if (model.displayName === "Activity") {
+                            contentStack.push(activityPage, StackView.Immediate)
+                        }
+                        navigationPane.close()
+                    }
+                }
+            }
+
+
+        }
+
+        enter: Transition {
+            NumberAnimation {
+                duration: 160
+                easing.type: Easing.InOutBounce
+                from: -300
+                property: "x"
+                to: 0
+            }
+        }
+
+        exit: Transition {
+            NumberAnimation {
+                duration: 160
+                easing.type: Easing.InOutBounce
+                from: 0
+                property: "x"
+                to: -300
+            }
+        }
+    }
+
+    Component {
+        id: libraryPage
+        LibraryPageV2 {}
+    }
+
+    Component {
+        id: activityPage
+
+        ActivityPageV2 {}
+    }
+
+    Component {
+        id: galleryPage
+
+        GalleryPage {}
+    }
+
     Pane {
         id: titleBar
         anchors.top: parent.top
@@ -217,20 +324,13 @@ MainWindow {
             id: actualTitleBar
             anchors.fill: parent
 
+            onMenuButtonClicked: {
+                navigationPane.open()
+            }
+
             onMaximizeClicked: {
-                // if (window.visibility === Window.Maximized) {
-                //     window.showNormal()
-                //     WindowFrame.setNativePosition(window.previousX, window.previousY)
-                //     window.width = window.previousWidth
-                //     window.height = window.previousHeight
-                // } else {
-                //     window.previousX = WindowFrame.nativeX()
-                //     window.previousY = WindowFrame.nativeY()
-                //     window.previousWidth = window.width
-                //     window.previousHeight = window.height
-                //     window.showMaximized()
-                // }
-                emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: contentStack})
+                window.maximize()
+                // emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: contentStack})
             }
             onMinimizeClicked: window.showMinimized()
             onCloseClicked: window.close()

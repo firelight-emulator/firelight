@@ -4,7 +4,9 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(spdlog REQUIRED)
 
 add_library(firelight_discord STATIC
+        ${CMAKE_CURRENT_LIST_DIR}/src/discord_lobby_backend.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/discord_manager.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/file_token_store.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/firelight/discord/discord_manager_impl.hpp
 )
 
@@ -16,6 +18,7 @@ target_include_directories(firelight_discord
 
 target_link_libraries(firelight_discord
         PUBLIC discord
+        PUBLIC firelight_netplay
         PRIVATE spdlog::spdlog
         PRIVATE firelight_platforms
 )

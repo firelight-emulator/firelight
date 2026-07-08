@@ -12,6 +12,7 @@
 #include <QQmlContext>
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQuickWindow>
+#include <QTimer>
 #include <QVulkanInstance>
 #include <QWindow>
 #include <csignal>
@@ -57,6 +58,10 @@
 #include <firelight/media/media_service.hpp>
 #include <firelight/media/sqlite_game_capture_repository.hpp>
 #include "app/media/gui/capture_list_model.hpp"
+#include "app/netplay/gui/netplay_chat_model.hpp"
+#include "app/netplay/gui/netplay_slots_model.hpp"
+#include "app/netplay/gui/netplay_stream_item.hpp"
+#include "app/netplay/netplay_service.hpp"
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/game_image_provider.hpp"
@@ -103,6 +108,7 @@
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
+#include "gui/qt_network_service_proxy.hpp"
 #include <firelight/input/sdl_input_service.hpp>
 #include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/sqlite_core_option_repository.hpp>
@@ -117,7 +123,10 @@
 #include "gui/eventhandlers/windows_frame_filter.hpp"
 #include "gui/models/activity_buckets_list_model.hpp"
 #include "gui/models/search_results_list_model.hpp"
+#include "app/netplay/direct_lobby_backend.hpp"
+#include "app/netplay/tee_audio_output.hpp"
 #include <firelight/discord/discord_manager_impl.hpp>
+#include <firelight/netplay/rtc_transport.hpp>
 
 int main(int argc, char *argv[]) {
     // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
@@ -330,6 +339,16 @@ int main(int argc, char *argv[]) {
     firelight::ServiceAccessor::setControllerProfileRepository(
         &controllerRepository);
 
+    // Online play: direct-connection lobby (host shares their IP) + WebRTC
+    // data plane + session. DiscordLobbyBackend can swap back in here once the
+    // app's OAuth client is configured in the Discord developer portal.
+    firelight::netplay::DirectLobbyBackend netplayLobbyBackend;
+    firelight::netplay::RtcTransport netplayTransport;
+    firelight::netplay::NetplayService netplayService(
+        netplayLobbyBackend, netplayTransport, userLibraryService, FL_VERSION,
+        &raClient, &inputService,
+        [] { return std::make_shared<AudioManager>(); });
+
     // Settings service
     firelight::settings::SqliteSettingsRepository settingsRepository(
         (defaultAppDataPathString + "/settings.db").toStdString());
@@ -519,6 +538,8 @@ int main(int argc, char *argv[]) {
     }
 
     qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
+    qmlRegisterType<firelight::gui::NetplayStreamItem>("Firelight", 1, 0,
+                                                       "NetplayStreamItem");
     qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0,
                                                          "GamepadStatus");
     qmlRegisterType<firelight::gui::GamepadProfileItem>("Firelight", 1, 0,
@@ -585,9 +606,18 @@ int main(int argc, char *argv[]) {
         .cheatRepository = &cheatRepository,
         .platformService = &platformService,
         .coreSystemDirectory = dataDirs.coreSystemPath.toStdString(),
-        .audioOutputFactory = [] { return std::make_shared<AudioManager>(); },
+        .retropadProvider = &netplayService.retropadProvider(),
+        .netplayStreamSink = &netplayService.streamSender(),
+        // The tee mirrors PCM into the netplay stream (a no-op unless a host
+        // stream is armed) on its way to the real output.
+        .audioOutputFactory =
+        [&netplayService] {
+            return std::make_shared<firelight::netplay::TeeAudioOutput>(
+                std::make_shared<AudioManager>(),
+                &netplayService.streamSender());
+        },
         .audioInputFactory =
-            [] { return std::make_unique<firelight::audio::QtMicrophone>(); }
+        [] { return std::make_unique<firelight::audio::QtMicrophone>(); }
     };
     firelight::emulation::EmulationService emuService(userLibraryService,
                                                       entryResolver,
@@ -723,6 +753,28 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("PlatformModel",
                                              &platformListModel);
 
+    firelight::gui::QtNetworkServiceProxy networkServiceProxy(netplayService);
+    firelight::gui::NetplaySlotsModel netplaySlotsModel(netplayService);
+    firelight::gui::NetplayChatModel netplayChatModel(netplayService);
+    QObject::connect(&networkServiceProxy,
+                     &firelight::gui::QtNetworkServiceProxy::slotsChanged,
+                     &netplaySlotsModel,
+                     &firelight::gui::NetplaySlotsModel::refresh);
+    QObject::connect(&networkServiceProxy,
+                     &firelight::gui::QtNetworkServiceProxy::lobbyStateChanged,
+                     &netplaySlotsModel,
+                     &firelight::gui::NetplaySlotsModel::refresh);
+    QObject::connect(&networkServiceProxy,
+                     &firelight::gui::QtNetworkServiceProxy::chatChanged,
+                     &netplayChatModel,
+                     &firelight::gui::NetplayChatModel::refresh);
+    engine.rootContext()->setContextProperty("NetworkService",
+                                             &networkServiceProxy);
+    engine.rootContext()->setContextProperty("NetplaySlotsModel",
+                                             &netplaySlotsModel);
+    engine.rootContext()->setContextProperty("NetplayChatModel",
+                                             &netplayChatModel);
+
     const auto activityBucketsModel = new firelight::gui::ActivityBucketsListModel();
     engine.rootContext()->setContextProperty("ActivityBucketsModel",
                                              activityBucketsModel);
@@ -782,7 +834,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
         []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-    engine.loadFromModule("QMLFirelight", "Main3");
+    engine.loadFromModule("QMLFirelight", "Main4");
 
     QObject *rootObject = engine.rootObjects().value(0);
     auto window = qobject_cast<QQuickWindow *>(rootObject);
@@ -841,8 +893,13 @@ int main(int argc, char *argv[]) {
     // initialize it now that the window/render loop exists.
     discordManager.initialize();
 
-    QObject::connect(window, &QQuickWindow::afterRendering,
-                     [&]() { discordManager.runCallbacks(); });
+    // Pump SDK callbacks on the main thread. A render-driven pump would stall
+    // on static scenes, freezing lobby/chat events while idling in menus.
+    QTimer discordCallbackTimer;
+    discordCallbackTimer.setInterval(16);
+    QObject::connect(&discordCallbackTimer, &QTimer::timeout,
+                     [&] { discordManager.runCallbacks(); });
+    discordCallbackTimer.start();
 
     window->setIcon(QIcon(":/images/app-icon"));
 

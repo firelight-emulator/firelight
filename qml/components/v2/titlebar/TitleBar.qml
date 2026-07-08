@@ -9,6 +9,7 @@ FocusScope {
     signal closeClicked()
     signal maximizeClicked()
     signal minimizeClicked()
+    signal menuButtonClicked()
 
     function activateSearch() {
         searchBar.forceActiveFocus()
@@ -53,17 +54,15 @@ FocusScope {
                 Layout.leftMargin: 6
                 // tooltipText: "Open menu"
                 opacity: 0.7
+
+                onClicked: {
+                    root.menuButtonClicked()
+                }
             }
 
-            Text {
-                text: "Library"
-                font.family: Constants.regularFontFamily
+            Item {
+                Layout.fillWidth: true
                 Layout.fillHeight: true
-                verticalAlignment: Text.AlignVCenter
-                font.pointSize: 14
-                font.weight: Font.DemiBold
-                color: "white"
-                opacity: 0.9
             }
         }
 

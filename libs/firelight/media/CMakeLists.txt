@@ -7,6 +7,7 @@ pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
 pkg_check_modules(AVFORMAT REQUIRED IMPORTED_TARGET libavformat)
 pkg_check_modules(AVUTIL REQUIRED IMPORTED_TARGET libavutil)
 pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
+pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 
 add_library(firelight_media STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/clip_muxer.cpp
@@ -14,6 +15,8 @@ add_library(firelight_media STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/clip_thumbnailer.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/media_service.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_game_capture_repository.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/stream_decoder.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/stream_encoder.cpp
 )
 target_include_directories(firelight_media
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
@@ -31,6 +34,7 @@ target_link_libraries(firelight_media
         PRIVATE PkgConfig::AVFORMAT
         PRIVATE PkgConfig::AVUTIL
         PRIVATE PkgConfig::SWSCALE
+        PRIVATE PkgConfig::SWRESAMPLE
 )
 
 # --- Unit tests (self-contained: link only firelight_media) ---
@@ -44,6 +48,7 @@ add_executable(firelight_media_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/clip_recorder_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/game_capture_repository_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/clip_thumbnailer_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/stream_codec_test.cpp
 )
 target_include_directories(firelight_media_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests
@@ -61,5 +66,6 @@ target_link_libraries(firelight_media_test
         PRIVATE PkgConfig::AVCODEC
         PRIVATE PkgConfig::AVUTIL
         PRIVATE PkgConfig::SWSCALE
+        PRIVATE PkgConfig::SWRESAMPLE
 )
 gtest_discover_tests(firelight_media_test)

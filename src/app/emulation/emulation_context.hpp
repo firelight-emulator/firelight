@@ -7,6 +7,11 @@ class IAudioOutput;
 
 namespace firelight::libretro {
 class IAudioInputProvider;
+class IRetropadProvider;
+}
+
+namespace firelight::media {
+class IClipSink;
 }
 
 namespace firelight::input {
@@ -44,6 +49,13 @@ struct EmulationContext {
   cheats::ICheatRepository *cheatRepository = nullptr;
   platforms::IPlatformService *platformService = nullptr;
   std::string coreSystemDirectory;
+
+  // Netplay seams. retropadProvider (when set) answers the core's per-port
+  // reads instead of inputService directly, so remote players can occupy
+  // ports. netplayStreamSink receives every rendered frame + audio while a
+  // host stream is armed (a cheap no-op otherwise).
+  libretro::IRetropadProvider *retropadProvider = nullptr;
+  media::IClipSink *netplayStreamSink = nullptr;
 
   // Audio output + microphone are created on the render thread inside
   // EmulatorInstance::initialize(); main.cpp injects the Qt-Multimedia impls

@@ -30,6 +30,21 @@ ApplicationWindow {
         frameReady = true
     }
 
+    function maximize() {
+        if (visibility === Window.Maximized) {
+            visibility = Window.Windowed
+            WindowFrame.setNativePosition(previousX, previousY)
+            width = previousWidth
+            height = previousHeight
+        } else {
+            previousX = WindowFrame.nativeX()
+            previousY = WindowFrame.nativeY()
+            previousWidth = width
+            previousHeight = height
+            visibility = Window.Maximized
+        }
+    }
+
     onHeightChanged: {
         GeneralSettings.mainWindowHeight = height;
     }

@@ -94,6 +94,12 @@ public:
   void setInstantReplayEnabled(bool enabled);
   [[nodiscard]] bool getInstantReplayEnabled() const;
 
+  // Sink for the host game stream (null when netplay isn't wired); the
+  // renderer pushes each frame into it.
+  [[nodiscard]] media::IClipSink *getNetplayStreamSink() const {
+    return m_context.netplayStreamSink;
+  }
+
   // Forward the two core-side input settings (glide speed for stick-driven
   // pointer devices; whether the physical mouse drives mouse/light-gun devices).
   void setAnalogPointerSpeed(double stepPerFrame);

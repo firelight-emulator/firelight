@@ -164,7 +164,7 @@ Pane {
             label: "Activity"
             iconName: "bar-chart"
 
-            KeyNavigation.down: settingsButton
+            KeyNavigation.down: netplayButton
 
             Layout.fillWidth: true
 
@@ -172,6 +172,23 @@ Pane {
             onToggled: {
                 if (toggled) {
                     Router.navigateTo("/activity")
+                }
+            }
+        }
+
+        LeftNavigationItem {
+            id: netplayButton
+            label: "Online"
+            iconName: "controller"
+
+            KeyNavigation.down: settingsButton
+
+            Layout.fillWidth: true
+
+            checked: Router.currentRoute.startsWith("/netplay")
+            onToggled: {
+                if (toggled) {
+                    Router.navigateTo("/netplay")
                 }
             }
         }

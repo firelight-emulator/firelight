@@ -109,6 +109,7 @@ add_subdirectory(libs/firelight/cheats)
 add_subdirectory(libs/firelight/audio)
 add_subdirectory(libs/firelight/media)
 add_subdirectory(libs/firelight/metadata)
+add_subdirectory(libs/firelight/netplay)
 add_subdirectory(libs/firelight/db)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
@@ -222,6 +223,14 @@ add_library(firelight_lib
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/library/gui/entry_list_model.cpp
         src/app/media/gui/capture_list_model.cpp
+        src/app/netplay/direct_lobby_backend.cpp
+        src/app/netplay/guest_stream_receiver.cpp
+        src/app/netplay/host_stream_sender.cpp
+        src/app/netplay/netplay_service.cpp
+        src/app/netplay/gui/netplay_chat_model.cpp
+        src/app/netplay/gui/netplay_slots_model.cpp
+        src/app/netplay/gui/netplay_stream_item.cpp
+        src/gui/qt_network_service_proxy.cpp
         src/app/emulator_item_renderer.cpp
         src/app/emulator_vulkan_renderer.cpp
         src/app/emulator_item.cpp
@@ -497,6 +506,8 @@ add_executable(fl_test
 
         tests/main.cpp
         tests/app/event_dispatcher_test.cpp
+        tests/app/netplay/direct_lobby_backend_test.cpp
+        tests/app/netplay/netplay_service_test.cpp
         tests/app/migrations/migration_runner_test.cpp
         tests/app/media/capture_list_model_test.cpp
         tests/app/library/sqlite_user_library_test.cpp

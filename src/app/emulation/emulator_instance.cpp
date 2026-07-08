@@ -66,7 +66,11 @@ namespace firelight::emulation {
     }
 
     m_core->setVideoReceiver(videoDataReceiver);
-    m_core->setRetropadProvider(m_context.inputService);
+    m_core->setRetropadProvider(
+        m_context.retropadProvider
+            ? m_context.retropadProvider
+            : static_cast<libretro::IRetropadProvider *>(
+                  m_context.inputService));
     m_core->setPointerInputProvider(m_context.inputService);
     if (m_context.audioInputFactory) {
       m_audioInput = m_context.audioInputFactory();

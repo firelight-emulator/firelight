@@ -216,7 +216,23 @@ void EmulatorItemRenderer::receive(const void *data, const unsigned width,
 
     m_currentUpdateBatch->uploadTexture(colorTexture(), newImage);
     feedClipRecorder(newImage);
+    feedNetplayStream(newImage);
   }
+}
+
+// Same core-frame pts scheme as the clip recorder; the sink no-ops unless a
+// host stream is armed.
+void EmulatorItemRenderer::feedNetplayStream(const QImage &frame) {
+  if (!m_emulatorInstance) {
+    return;
+  }
+  auto *sink = m_emulatorInstance->getNetplayStreamSink();
+  if (!sink) {
+    return;
+  }
+  const int fps = m_clipFps >= 1.0 ? static_cast<int>(m_clipFps + 0.5) : 60;
+  sink->pushVideoFrame(frame, m_streamFrameIndex * 1000 / fps);
+  m_streamFrameIndex++;
 }
 
 // Keeps the rolling instant-replay window fed with the latest frame. newImage is

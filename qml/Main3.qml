@@ -90,6 +90,26 @@ ApplicationWindow {
     }
 
     function startGame(entryId) {
+        // In a lobby, launching becomes a ready check: the host announces the
+        // game (from anywhere in the app) and launches from the toast; guests
+        // can't start games.
+        if (NetworkService.inLobby) {
+            if (!NetworkService.isHost) {
+                netplayMessageToast.show("Only the host can start games")
+                return
+            }
+            if (NetworkService.sessionPhase !== "idle") {
+                netplayMessageToast.show("End the current game first")
+                return
+            }
+            NetworkService.selectGame(entryId)
+            NetworkService.startSession()
+            return
+        }
+        reallyStartGame(entryId)
+    }
+
+    function reallyStartGame(entryId) {
         if (EmulationService.isGameRunning) {
             closeGameDialog.openAndDoOnAccepted(function () {
                 EmulationService.stopEmulation()
@@ -403,6 +423,80 @@ ApplicationWindow {
         z: 1000
     }
 
+    LobbyChip {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: 16
+        z: 900
+    }
+
+    ReadyCheckToast {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 24
+        z: 950
+        onHostLaunchRequested: {
+            const entryId = NetworkService.selectedGameEntryId()
+            if (entryId >= 0) {
+                NetworkService.confirmLaunch()
+                window.reallyStartGame(entryId)
+            }
+        }
+    }
+
+    // Guests are brought to the stream when the host's game goes live.
+    Connections {
+        target: NetworkService
+        function onPhaseChanged() {
+            if (NetworkService.inLobby && !NetworkService.isHost
+                    && NetworkService.sessionPhase === "in-game") {
+                Router.navigateTo("/netplay")
+            }
+        }
+    }
+
+    Rectangle {
+        id: netplayMessageToast
+
+        function show(message) {
+            messageText.text = message
+            opacity = 1
+            hideTimer.restart()
+        }
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 96
+        width: messageText.implicitWidth + 32
+        height: 40
+        radius: 20
+        color: "#2b3341"
+        border.color: "#4a5568"
+        opacity: 0
+        visible: opacity > 0
+        z: 951
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+            }
+        }
+
+        Text {
+            id: messageText
+            anchors.centerIn: parent
+            color: "#dddddd"
+            font.pixelSize: 13
+        }
+
+        Timer {
+            id: hideTimer
+            interval: 2500
+            onTriggered: netplayMessageToast.opacity = 0
+        }
+    }
+
+
     Component {
         id: quickMenuPage
         QuickMenu {
@@ -466,6 +560,12 @@ ApplicationWindow {
         id: galleryPage
 
         GalleryPage {}
+    }
+
+    Component {
+        id: netplayPage
+
+        NetplayPage {}
     }
 
     Component {
@@ -543,6 +643,8 @@ ApplicationWindow {
                     content.goToContent("Settings", settingsScreen, {}, StackView.ReplaceTransition)
                 } else if (route === "/help") {
                     content.goToContent("Help", helpScreen, {}, StackView.ReplaceTransition)
+                } else if (route === "/netplay") {
+                    content.goToContent("Online", netplayPage, {}, StackView.ReplaceTransition)
                 } else if (route === "/gallery") {
                     content.goToContent("Media", galleryPage, {}, StackView.ReplaceTransition)
                 } else if (route.startsWith("/gallery/games/")) {

@@ -151,6 +151,7 @@ private:
   int m_clipWidth = 0;
   int m_clipHeight = 0;
   int64_t m_clipFrameIndex = 0;
+  int64_t m_streamFrameIndex = 0;
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;
@@ -218,6 +219,8 @@ private:
 
   // Pushes the latest software frame into the instant-replay recorder.
   void feedClipRecorder(const QImage &frame);
+  // Pushes the latest software frame into the netplay host stream.
+  void feedNetplayStream(const QImage &frame);
 
   bool m_usingHardwareRenderer = false;
 
