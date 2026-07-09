@@ -11,7 +11,7 @@ Pane {
     property int currentIndex: 0
 
     background: Rectangle {
-        color: "#1b1d27"
+        color: Theme.glass
         radius: 8
     }
 
@@ -32,7 +32,7 @@ Pane {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     background: Rectangle {
-                        color: Qt.darker("#1b1d27", 1.25)
+                        color: Theme.surface
                         radius: 8
                     }
 
@@ -47,7 +47,7 @@ Pane {
                                 Layout.leftMargin: 8
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                 text: "Activity"
-                                color: "white"
+                                color: Theme.textPrimary
                                 font.pointSize: 13
                                 font.weight: Font.DemiBold
                                 verticalAlignment: Text.AlignVCenter
@@ -81,9 +81,9 @@ Pane {
                                 enabled: root.currentIndex > 0
 
                                 background: Rectangle {
-                                    color: Qt.darker("#1b1d27", 1.12)
+                                    color: Theme.surfaceElevated
                                     radius: 8
-                                    border.color: Qt.lighter("#1b1d27", 1.3)
+                                    border.color: Theme.border
                                     border.width: 1
                                 }
 
@@ -112,7 +112,7 @@ Pane {
                                 anchors.centerIn: parent
                                 width: 180
                                 text: ActivityBucketsModel.get(root.currentIndex).label ?? ""
-                                color: "white"
+                                color: Theme.textPrimary
                                 font.pointSize: 13
                                 font.weight: Font.Medium
                                 verticalAlignment: Text.AlignVCenter
@@ -128,9 +128,9 @@ Pane {
                                 enabled: root.currentIndex < ActivityBucketsModel.count - 1
 
                                 background: Rectangle {
-                                    color: Qt.darker("#1b1d27", 1.12)
+                                    color: Theme.surfaceElevated
                                     radius: 8
-                                    border.color: Qt.lighter("#1b1d27", 1.3)
+                                    border.color: Theme.border
                                     border.width: 1
                                 }
 
@@ -191,7 +191,7 @@ Pane {
                                             anchors.leftMargin: 4
                                             anchors.bottom: parent.top
                                             anchors.bottomMargin: 4
-                                            color: "white"
+                                            color: Theme.textPrimary
                                             opacity: 0.5
                                             font.family: Constants.regularFontFamily
                                             font.weight: Font.Normal
@@ -235,7 +235,7 @@ Pane {
                                         Text {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             anchors.top: parent.bottom
-                                            color: "white"
+                                            color: Theme.textPrimary
                                             text: modelData.label
                                         }
 
@@ -252,9 +252,9 @@ Pane {
                                             y: barHoverHandler.point.scenePosition.y + 16
 
                                             background: Rectangle {
-                                                color: Qt.lighter("#12131A", 1.4)
+                                                color: Theme.surfaceElevated
                                                 radius: 4
-                                                border.color: Qt.lighter("#12131A", 2)
+                                                border.color: Theme.border
                                                 border.width: 1
                                                 // bottomRightRadius: 8
                                                 // bottomLeftRadius: 8
@@ -264,7 +264,7 @@ Pane {
                                                     // autoPaddingEnabled: false
                                                     // paddingRect: Qt.rect(-16, -16, 32, 32)
                                                     shadowEnabled: true
-                                                    shadowColor: Qt.darker("#12131A", 2)
+                                                    shadowColor: Theme.background
                                                     shadowBlur: 1.0
                                                     shadowVerticalOffset: 4.0
                                                     shadowHorizontalOffset: 4.0
@@ -282,7 +282,7 @@ Pane {
                                                     font.family: Constants.regularFontFamily
                                                     font.weight: Font.DemiBold
                                                     verticalAlignment: Text.AlignVCenter
-                                                    color: "white"
+                                                    color: Theme.textPrimary
                                                     Layout.fillWidth: true
                                                     Layout.bottomMargin: 8
                                                 }
@@ -300,7 +300,7 @@ Pane {
                                                             font.family: Constants.regularFontFamily
                                                             font.weight: Font.DemiBold
                                                             verticalAlignment: Text.AlignVCenter
-                                                            color: "white"
+                                                            color: Theme.textPrimary
                                                             Layout.fillHeight: true
                                                             Layout.preferredWidth: 24
                                                         }
@@ -331,7 +331,7 @@ Pane {
                                                                 font.family: Constants.regularFontFamily
                                                                 font.weight: Font.DemiBold
                                                                 verticalAlignment: Text.AlignVCenter
-                                                                color: "white"
+                                                                color: Theme.textPrimary
                                                                 Layout.fillHeight: true
                                                                 Layout.fillWidth: true
                                                                 Layout.verticalStretchFactor: 1
@@ -343,7 +343,7 @@ Pane {
                                                                 font.family: Constants.regularFontFamily
                                                                 font.weight: Font.Medium
                                                                 verticalAlignment: Text.AlignVCenter
-                                                                color: "#9e9e9e"
+                                                                color: Theme.textMuted
                                                                 Layout.fillHeight: true
                                                                 Layout.fillWidth: true
                                                                 Layout.verticalStretchFactor: 1
@@ -372,7 +372,7 @@ Pane {
                                                             font.family: Constants.regularFontFamily
                                                             font.weight: Font.DemiBold
                                                             verticalAlignment: Text.AlignVCenter
-                                                            color: "white"
+                                                            color: Theme.textPrimary
                                                             Layout.fillHeight: true
                                                         }
 
@@ -457,7 +457,7 @@ Pane {
                     Layout.minimumWidth: 400
                     Layout.fillHeight: true
                     background: Rectangle {
-                        color: Qt.darker("#1b1d27", 1.25)
+                        color: Theme.surface
                         radius: 8
                     }
 
@@ -487,7 +487,7 @@ Pane {
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
                                     text: modelData.displayName + " (" + modelData.platformName + ")"
-                                    color: "white"
+                                    color: Theme.textPrimary
                                     font.pointSize: 12
                                     font.family: Constants.regularFontFamily
                                     font.weight: Font.Medium
@@ -513,7 +513,7 @@ Pane {
                                         }
                                         return result;
                                     }
-                                    color: "white"
+                                    color: Theme.textPrimary
                                     font.pointSize: 12
                                     font.family: Constants.regularFontFamily
                                     font.weight: Font.Medium

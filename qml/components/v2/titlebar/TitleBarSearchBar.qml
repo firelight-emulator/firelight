@@ -28,7 +28,7 @@ FocusScope {
         focus: true
 
         background: Rectangle {
-            color: Qt.lighter("#12131A", searchField.activeFocus || searchPopup.activeFocus ? 1.4 : 1.32)
+            color: searchField.activeFocus || searchPopup.activeFocus ? Theme.glassElevated : Theme.glass
             bottomLeftRadius: height / 2
             bottomRightRadius: height / 2
             topLeftRadius: height / 2
@@ -195,9 +195,9 @@ FocusScope {
         visible: searchField.activeFocus || searchPopup.activeFocus
 
         background: Rectangle {
-            color: Qt.lighter("#12131A", 1.4)
+            color: Theme.surfaceElevated
             radius: 8
-            border.color: Qt.lighter("#12131A", 2)
+            border.color: Theme.border
             border.width: 1
             // bottomRightRadius: 8
             // bottomLeftRadius: 8
@@ -207,7 +207,7 @@ FocusScope {
                 // autoPaddingEnabled: false
                 // paddingRect: Qt.rect(-16, -16, 32, 32)
                 shadowEnabled: true
-                shadowColor: Qt.darker("#12131A", 2)
+                shadowColor: Theme.background
                 shadowBlur: 1.0
                 shadowVerticalOffset: 4.0
                 shadowHorizontalOffset: 4.0
@@ -249,7 +249,7 @@ FocusScope {
                             font.pointSize: 12
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
-                            color: "#dddddd"
+                            color: Theme.textMuted
                             Layout.fillHeight: true
                         }
                         Text {
@@ -319,7 +319,7 @@ FocusScope {
                         y: section === "Games" ? 0 : 8
                         width: parent.width
                         height: 32
-                        color: Qt.lighter("#12131A", 1.7)
+                        color: Theme.surfaceHover
 
                         Text {
                             text: section

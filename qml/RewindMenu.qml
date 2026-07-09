@@ -170,7 +170,7 @@ FocusScope {
         height: root.barHeight
         y: parent.height - root.barHeight
         background: Rectangle {
-            color: ColorPalette.neutral1000
+            color: Theme.surface
         }
 
         contentItem: RewindList {

@@ -34,14 +34,14 @@ FocusScope {
             Layout.fillWidth: true
             Text {
                 text: ts.label
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.pixelSize: 15
                 Layout.fillWidth: true
             }
             Text {
                 text: ts.percent ? Math.round(ts.value * 100) + "%" : ts.value.toFixed(2)
-                color: ColorPalette.neutral300
+                color: Theme.textMuted
                 font.family: Constants.regularFontFamily
                 font.pixelSize: 15
             }
@@ -138,7 +138,7 @@ FocusScope {
 
             Text {
                 text: panel.title
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 font.pixelSize: 17
@@ -172,7 +172,7 @@ FocusScope {
                 Layout.fillWidth: true
                 Text {
                     text: "Response curve"
-                    color: ColorPalette.neutral100
+                    color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
                     font.pixelSize: 15
                     Layout.fillWidth: true
@@ -213,7 +213,7 @@ FocusScope {
 
             Text {
                 text: "Analog Tuning"
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 font.pixelSize: 22
@@ -254,7 +254,7 @@ FocusScope {
 
             Text {
                 text: "Triggers"
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 font.pixelSize: 17

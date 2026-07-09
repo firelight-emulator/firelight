@@ -20,12 +20,12 @@ Item {
 
             Text {
                 text: "Lobby"
-                color: "white"
+                color: Theme.textPrimary
                 font.pixelSize: 24
                 font.weight: Font.DemiBold
             }
             Rectangle {
-                color: "#2a2a2a"
+                color: Theme.surface
                 radius: 6
                 implicitWidth: codeRow.implicitWidth + 20
                 implicitHeight: 32
@@ -36,7 +36,7 @@ Item {
                     spacing: 8
                     Text {
                         text: NetworkService.joinCode
-                        color: "#dddddd"
+                        color: Theme.textPrimary
                         font.family: "Consolas"
                         font.pixelSize: 14
                     }
@@ -78,7 +78,7 @@ Item {
                 spacing: 12
 
                 Rectangle {
-                    color: "#222222"
+                    color: Theme.surface
                     radius: 8
                     Layout.fillWidth: true
                     implicitHeight: 96
@@ -102,7 +102,7 @@ Item {
                                 text: NetworkService.hasGame
                                       ? NetworkService.gameName
                                       : "No game selected"
-                                color: "white"
+                                color: Theme.textPrimary
                                 font.pixelSize: 17
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
@@ -110,7 +110,7 @@ Item {
                             Text {
                                 visible: !NetworkService.isHost && !NetworkService.hasGame
                                 text: "Waiting for the host to pick a game"
-                                color: "#888888"
+                                color: Theme.textMuted
                                 font.pixelSize: 13
                             }
                         }
@@ -124,7 +124,7 @@ Item {
 
                 Text {
                     text: "Players"
-                    color: "#aaaaaa"
+                    color: Theme.textMuted
                     font.pixelSize: 14
                 }
 
@@ -197,7 +197,7 @@ Item {
 
             Text {
                 text: "Player " + (root.pickingSlot + 1)
-                color: "white"
+                color: Theme.textPrimary
                 font.pixelSize: 16
             }
 

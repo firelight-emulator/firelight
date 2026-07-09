@@ -77,14 +77,14 @@ FocusScope {
                         filled: true
                         Layout.fillHeight: true
                         size: height * 2 / 3
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                     }
                     Text {
                         text: model.path
                         font.pixelSize: 17
                         font.family: Constants.regularFontFamily
                         font.weight: Font.DemiBold
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
                         Layout.fillHeight: true
                         Layout.fillWidth: true
@@ -178,7 +178,7 @@ FocusScope {
             font.pixelSize: 15
             font.family: Constants.regularFontFamily
             font.weight: Font.Medium
-            color: ColorPalette.neutral100
+            color: Theme.textPrimary
             text: "This is where Firelight will save your save files and Suspend Point data."
             leftPadding: 12
             Layout.bottomMargin: 20

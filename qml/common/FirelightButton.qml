@@ -91,7 +91,7 @@ Button {
         font.pixelSize: 15
         font.family: Constants.regularFontFamily
         font.weight: Font.Normal
-        color: "white"
+        color: Theme.textPrimary
         anchors {
             top: control.tooltipOnTop || control.tooltipOnRight ? undefined : parent.bottom
             topMargin: control.tooltipOnTop || control.tooltipOnRight ? 0 : 4

@@ -64,7 +64,7 @@ FocusScope {
                 contentItem:
                     Text {
                         text: "Welcome"
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         font.pixelSize: 16
                         font.weight: root.currentIndex === 0 ? Font.DemiBold : Font.Medium
                         opacity: root.currentIndex === 0 ? 1.0 : 0.5
@@ -95,7 +95,7 @@ FocusScope {
                 contentItem:
                     Text {
                         text: "Directories"
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         font.weight: root.currentIndex === 1 ? Font.DemiBold : Font.Medium
                         opacity: root.currentIndex === 1 ? 1.0 : 0.5
                         font.pixelSize: 16
@@ -125,7 +125,7 @@ FocusScope {
                 contentItem:
                     Text {
                         text: "Achievements"
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         font.weight: root.currentIndex === 2 ? Font.DemiBold : Font.Medium
                         opacity: root.currentIndex === 2 ? 1.0 : 0.5
                         font.pixelSize: 16
@@ -154,7 +154,7 @@ FocusScope {
                 contentItem:
                     Text {
                         text: "Ready to play!"
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         font.weight: root.currentIndex === 3 ? Font.DemiBold : Font.Medium
                         opacity: root.currentIndex === 3 ? 1.0 : 0.5
                         font.pixelSize: 16
@@ -186,7 +186,7 @@ FocusScope {
                 Text {
                     Layout.topMargin: 24
                     text: "Welcome to"
-                    color: ColorPalette.neutral300
+                    color: Theme.textMuted
                     font.pixelSize: 18
                     font.weight: Font.Normal
 
@@ -197,7 +197,7 @@ FocusScope {
                 }
                 Text {
                     text: "Firelight"
-                    color: ColorPalette.neutral100
+                    color: Theme.textPrimary
                     Layout.topMargin: 4
                     font.pixelSize: 48
                     font.weight: Font.Bold
@@ -347,7 +347,7 @@ FocusScope {
                     text: "You're ready to go!"
                     Layout.topMargin: 36
                     Layout.alignment: Qt.AlignHCenter
-                    color: ColorPalette.neutral200
+                    color: Theme.textPrimary
                     font.pixelSize: 22
                     font.weight: Font.Normal
                     font.family: Constants.regularFontFamily

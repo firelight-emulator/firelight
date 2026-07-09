@@ -1,26 +1,34 @@
 import QtQuick
 import QtQuick.Effects
 
+// App background. Renders a solid color, a two-color gradient, or an image
+// (animated ok), with an optional blur and dim. Driven by AppearanceSettings via
+// its host (see Main4).
 Rectangle {
     id: root
 
+    // "solid" | "gradient" | "image"
+    property string mode: "gradient"
+
+    property color color1: defaultColor
+    property color color2: Qt.lighter(defaultColor, 1.5)
+
     property bool usingCustomBackground: false
     property var backgroundFile: ""
+
     property bool blur: false
     property color defaultColor: "black"
 
-    property real blurAmount: root.blur ? 0.5 : 0
+    // 0..1. Legacy `blur` bool maps to a default level; hosts can set it directly.
+    property real blurAmount: root.blur ? 0.6 : 0
     property real dimAmount: 0
 
-    // color: defaultColor
-
+    color: root.color1
+    // Solid mode collapses the two stops to the same color; gradient mode uses
+    // both. Image mode is covered by the AnimatedImage below.
     gradient: Gradient {
-        GradientStop {
-            position: 0.0; color: defaultColor
-        }
-        GradientStop {
-            position: 1.0; color: Qt.lighter(defaultColor, 1.5)
-        }
+        GradientStop { position: 0.0; color: root.color1 }
+        GradientStop { position: 1.0; color: root.mode === "gradient" ? root.color2 : root.color1 }
     }
 
     Behavior on blurAmount {
@@ -32,8 +40,6 @@ Rectangle {
 
     layer.enabled: blurAmount !== 0
     layer.effect: MultiEffect {
-        // enabled: root.blurAmount !== 0
-
         source: root
         anchors.fill: root
         blurEnabled: true
@@ -43,10 +49,10 @@ Rectangle {
         autoPaddingEnabled: false
     }
 
-
     Item {
         anchors.fill: parent
-        visible: root.usingCustomBackground && root.backgroundFile !== ""
+        visible: root.mode === "image" && root.backgroundFile !== ""
+
         AnimatedImage {
             id: customBackground
             source: root.backgroundFile
@@ -98,6 +104,5 @@ Rectangle {
                 }
             }
         }
-
     }
 }

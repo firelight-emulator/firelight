@@ -84,7 +84,7 @@ Pane {
                         font.pixelSize: 18
                         font.family: Constants.regularFontFamily
                         // font.weight: Font.DemiBold
-                        color: ColorPalette.neutral200
+                        color: Theme.textPrimary
                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter

@@ -11,8 +11,8 @@ Rectangle {
     width: chipRow.implicitWidth + 24
     height: 34
     radius: 17
-    color: "#2b3341"
-    border.color: "#4a5568"
+    color: Theme.surface
+    border.color: Theme.border
     border.width: 1
 
     RowLayout {
@@ -24,7 +24,7 @@ Rectangle {
             width: 8
             height: 8
             radius: 4
-            color: "#66cc66"
+            color: Theme.success
         }
         Text {
             text: {
@@ -34,7 +34,7 @@ Rectangle {
                 return "Lobby · " + NetworkService.memberCount + " player"
                        + (NetworkService.memberCount === 1 ? "" : "s")
             }
-            color: "#dddddd"
+            color: Theme.textPrimary
             font.pixelSize: 13
         }
     }

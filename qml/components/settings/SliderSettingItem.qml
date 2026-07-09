@@ -36,7 +36,7 @@ BaseSettingItem {
         Text {
             Layout.preferredWidth: 40
             text: theControl.value
-            color: ColorPalette.neutral100
+            color: Theme.textPrimary
             horizontalAlignment: Text.AlignRight
             verticalAlignment: Text.AlignVCenter
             font.pixelSize: 16

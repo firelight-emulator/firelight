@@ -13,12 +13,13 @@ MainWindow {
     }
 
     background: FLUserBackground {
-        // blur: window.blur
-        blurAmount: 0
-        dimAmount: 0
-        defaultColor: "#12131A"
-        usingCustomBackground: false
+        mode: AppearanceSettings.backgroundMode
+        color1: AppearanceSettings.backgroundColor
+        color2: AppearanceSettings.backgroundColor2
         backgroundFile: AppearanceSettings.backgroundFile
+        blurAmount: AppearanceSettings.backgroundBlur
+        dimAmount: AppearanceSettings.backgroundDim
+        defaultColor: "#12131A"
     }
 
     // Hosts overlay routes (e.g. /settings) as a popup over the current view.
@@ -103,7 +104,7 @@ MainWindow {
         parent: Overlay.overlay
 
         background: Rectangle {
-            color: "#1e1e1e"
+            color: Theme.surfaceElevated
             radius: 8
         }
 
@@ -211,7 +212,7 @@ MainWindow {
                     { displayName: "Controllers", iconName: "controller", route: "/controllers" },
                     { displayName: "Gallery", iconName: "photo-library", route: "/gallery" },
                     { displayName: "Activity", iconName: "bar-chart", route: "/activity" },
-                    { displayName: "Settings", iconName: "settings", route: "/settings" }
+                    { displayName: "Online Lobby", iconName: "online", route: "/netplay" }
                 ]
 
                 delegate: IconButton {

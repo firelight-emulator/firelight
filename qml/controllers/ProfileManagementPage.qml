@@ -34,7 +34,7 @@ FocusScope {
             Layout.fillWidth: true
             Text {
                 text: "Controller Profiles"
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 font.pixelSize: 22
@@ -66,7 +66,7 @@ FocusScope {
                 width: ListView.view.width
                 height: 56
                 radius: 4
-                color: ColorPalette.neutral800
+                color: Theme.surface
 
                 RowLayout {
                     anchors.fill: parent
@@ -76,7 +76,7 @@ FocusScope {
 
                     Text {
                         text: name
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         font.family: Constants.regularFontFamily
                         font.pixelSize: 16
                         Layout.fillWidth: true
@@ -85,7 +85,7 @@ FocusScope {
                     Text {
                         visible: builtin
                         text: "Built-in"
-                        color: ColorPalette.neutral400
+                        color: Theme.textMuted
                         font.family: Constants.regularFontFamily
                         font.pixelSize: 12
                     }
@@ -159,7 +159,7 @@ FocusScope {
 
         Text {
             text: "Delete this profile? This cannot be undone."
-            color: ColorPalette.neutral100
+            color: Theme.textPrimary
             font.family: Constants.regularFontFamily
         }
 

@@ -39,7 +39,7 @@ FocusScope {
             Text {
                 Layout.fillHeight: true
                 text: root.title
-                color: "#a1a1a1"
+                color: Theme.textMuted
                 font.family: Constants.regularFontFamily
                 font.pointSize: 12
                 font.weight: Font.DemiBold
@@ -56,7 +56,7 @@ FocusScope {
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 size: 22
                 icon: "arrow-down"
-                color: "#a1a1a1"
+                color: Theme.textMuted
                 rotation: contentContainer.collapsed ? 360 : 180
 
                 Behavior on rotation {

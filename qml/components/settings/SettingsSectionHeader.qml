@@ -20,14 +20,14 @@ Pane {
         Rectangle {
             width: 4
             implicitHeight: 24
-            color: ColorPalette.neutral300
+            color: Theme.textMuted
         }
         Text {
             Layout.preferredHeight: 23
             font.pixelSize: 16
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
-            color: ColorPalette.neutral300
+            color: Theme.textPrimary
             verticalAlignment: Text.AlignVCenter
             text: root.sectionName
         }

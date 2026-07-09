@@ -68,7 +68,7 @@ FocusScope {
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Medium
                 Layout.fillWidth: true
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 text: "When you connect a controller, replace the keyboard in the first available player number. \nFor example, connecting a controller while a keyboard is player one will push the keyboard to player two and the controller will be player one."
                 leftPadding: 12
                 lineHeight: 1.2
@@ -121,7 +121,7 @@ FocusScope {
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Medium
                 Layout.fillWidth: true
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 text: "When this is enabled, only the controller in the player one slot will be able to navigate menus. \nNote: The keyboard is always able to navigate menus, regardless of this setting."
                 leftPadding: 12
                 lineHeight: 1.2
@@ -145,14 +145,14 @@ FocusScope {
                 font.pixelSize: 15
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 Layout.fillWidth: true
             }
             Text {
                 text: "When a controller of the chosen type is connected, it becomes player one whenever a game for that platform launches."
                 font.pixelSize: 13
                 font.family: Constants.regularFontFamily
-                color: ColorPalette.neutral400
+                color: Theme.textMuted
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.bottomMargin: 8
@@ -168,7 +168,7 @@ FocusScope {
 
                     Text {
                         text: displayName
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         font.pixelSize: 14
                         font.family: Constants.regularFontFamily
                         Layout.fillWidth: true

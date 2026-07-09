@@ -152,6 +152,7 @@ set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TR
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 # The libretro/emulation core: the ABI wrapper + emulation lifecycle. Depends
 # only on domain interfaces (audio/mic/achievement clients are injected), so it
@@ -246,6 +247,8 @@ add_library(firelight_lib
         src/app/activity/gui/play_session_list_model.cpp
         src/app/library/gui/playlist_item_model.cpp
         src/gui/filesystem_utils.cpp
+        src/gui/image_utils.cpp
+        src/gui/image_utils.hpp
         src/app/saves/gui/save_files_item.cpp
         src/app/library/gui/content_directory_model.cpp
         src/app/input/gui/input_mappings_model.cpp

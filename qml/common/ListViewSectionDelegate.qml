@@ -9,7 +9,7 @@ Pane {
 
     Text {
         id: label
-        color: "#ececec"
+        color: Theme.textPrimary
         font.family: Constants.regularFontFamily
         font.pointSize: 12
         font.weight: Font.DemiBold

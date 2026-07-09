@@ -34,7 +34,7 @@ Button {
                 id: labelText
                 Layout.fillWidth: true
                 text: root.label
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.pixelSize: 16
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
@@ -52,7 +52,7 @@ Button {
                 font.family: Constants.regularFontFamily
                 // font.weight: Font.
                 wrapMode: Text.WordWrap
-                color: ColorPalette.neutral300
+                color: Theme.textMuted
             }
         }
 

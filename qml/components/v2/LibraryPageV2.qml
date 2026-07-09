@@ -53,7 +53,7 @@ SplitView {
         SplitView.preferredWidth: 280
 
         background: Rectangle {
-            color: Qt.lighter("#1b1d27", 1.15)
+            color: Theme.glassElevated
             topLeftRadius: 8
             bottomLeftRadius: 8
         }
@@ -207,7 +207,7 @@ SplitView {
                         Layout.rightMargin: 8
                         implicitHeight: 36
                         radius: 4
-                        color: Qt.lighter("#1b1d27", 1.6)
+                        color: Qt.rgba(1, 1, 1, 0.04)
                     }
                 }
                 Rectangle {
@@ -218,7 +218,7 @@ SplitView {
                     gradient: Gradient {
                         orientation: Gradient.Vertical
                         GradientStop {
-                            position: 0.0; color: Qt.darker("#1b1d27", 1.2)
+                            position: 0.0; color: Theme.surface
                         }
                         GradientStop {
                             position: 1.0; color: "transparent"
@@ -378,7 +378,7 @@ SplitView {
         // clip: true
 
         background: Rectangle {
-            color: "#1b1d27"
+            color: Theme.glass
             topRightRadius: detailsPanel.width > 0 ? 0 : 8
             bottomRightRadius: detailsPanel.width > 0 ? 0 : 8
         }
@@ -402,7 +402,7 @@ SplitView {
         clip: true
 
         background: Rectangle {
-            color: Qt.darker("#1b1d27", 1.2)
+            color: Theme.glassElevated
             topRightRadius: 8
             bottomRightRadius: 8
         }

@@ -97,6 +97,7 @@
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "gui/EventEmitter.h"
 #include "gui/filesystem_utils.hpp"
+#include "gui/image_utils.hpp"
 #include "gui/gamepad_profile_item.hpp"
 #include "gui/models/core_options_model.hpp"
 #include "gui/models/emulation_settings_model.hpp"
@@ -733,6 +734,8 @@ int main(int argc, char *argv[]) {
 
     engine.rootContext()->setContextProperty(
         "FilesystemUtils", new firelight::gui::FilesystemUtils());
+    engine.rootContext()->setContextProperty(
+        "ImageUtils", new firelight::gui::ImageUtils());
     engine.rootContext()->setContextProperty("EventEmitter",
                                              new firelight::gui::EventEmitter());
     engine.rootContext()->setContextProperty(

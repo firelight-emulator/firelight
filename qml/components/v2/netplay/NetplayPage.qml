@@ -26,7 +26,7 @@ Item {
 
                 Text {
                     text: "Play online"
-                    color: "white"
+                    color: Theme.textPrimary
                     font.pixelSize: 28
                     font.weight: Font.DemiBold
                     Layout.alignment: Qt.AlignHCenter
@@ -36,7 +36,7 @@ Item {
                     text: "Host a lobby and share your IP address, or enter a " +
                           "host's IP to join them. Friends can join and leave " +
                           "any time."
-                    color: "#aaaaaa"
+                    color: Theme.textMuted
                     font.pixelSize: 14
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter
@@ -60,7 +60,7 @@ Item {
                     Text {
                         visible: NetworkService.signInState === "failed"
                         text: "Sign-in didn't go through. Give it another try."
-                        color: "#e08080"
+                        color: Theme.danger
                         font.pixelSize: 13
                         Layout.alignment: Qt.AlignHCenter
                     }
@@ -74,7 +74,7 @@ Item {
                     Text {
                         visible: NetworkService.providerName.length > 0
                         text: "Signed in as " + NetworkService.playerName
-                        color: "#aaaaaa"
+                        color: Theme.textMuted
                         font.pixelSize: 13
                         Layout.alignment: Qt.AlignHCenter
                     }
@@ -86,7 +86,7 @@ Item {
 
                         Text {
                             text: "Your name"
-                            color: "#aaaaaa"
+                            color: Theme.textMuted
                             font.pixelSize: 13
                         }
                         TextField {
@@ -133,7 +133,7 @@ Item {
                     id: errorLabel
                     text: ""
                     visible: text.length > 0
-                    color: "#e08080"
+                    color: Theme.danger
                     font.pixelSize: 13
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter

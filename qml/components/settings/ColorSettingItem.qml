@@ -53,16 +53,16 @@ BaseSettingItem {
             implicitWidth: 90
             enabled: root.enabled
             placeholderText: "#rrggbb"
-            color: "white"
+            color: Theme.textPrimary
             font.family: Constants.regularFontFamily
             font.pixelSize: 14
             inputMask: "\\#HHHHHH"
 
             background: Rectangle {
                 radius: 4
-                color: ColorPalette.neutral800
+                color: Theme.surface
                 border.width: hexField.activeFocus ? 2 : 0
-                border.color: ColorPalette.neutral500
+                border.color: Theme.border
             }
 
             Component.onCompleted: text = root.value

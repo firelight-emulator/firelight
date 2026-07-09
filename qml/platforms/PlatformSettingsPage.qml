@@ -29,7 +29,7 @@ FocusScope {
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Bold
                 Layout.bottomMargin: 8
-                color: "white"
+                color: Theme.textPrimary
             }
 
             Text {
@@ -40,7 +40,7 @@ FocusScope {
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Normal
                 wrapMode: Text.WordWrap
-                color: ColorPalette.neutral300
+                color: Theme.textMuted
                 Layout.bottomMargin: 8
             }
 
@@ -49,7 +49,7 @@ FocusScope {
                 Layout.bottomMargin: 8
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
-                color: "#333333"
+                color: Theme.border
             }
 
             Button {
@@ -81,7 +81,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -116,7 +116,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -151,7 +151,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -186,7 +186,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -223,7 +223,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -259,7 +259,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -295,7 +295,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -331,7 +331,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -367,7 +367,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }
@@ -403,7 +403,7 @@ FocusScope {
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                        color: Theme.textPrimary
                     }
 
                 }

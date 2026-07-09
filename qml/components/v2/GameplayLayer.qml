@@ -106,7 +106,7 @@ Item {
     // Dark backdrop so the shrunk game reads as a bar.
     Rectangle {
         anchors.fill: parent
-        color: "#12131A"
+        color: Theme.background
     }
 
     EmulatorLoader {

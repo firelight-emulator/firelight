@@ -125,7 +125,7 @@ Dialog {
             Layout.leftMargin: 20
             Layout.rightMargin: 20
             text: "Change artwork"
-            color: "white"
+            color: Theme.textPrimary
             font.family: Constants.regularFontFamily
             font.pixelSize: 19
             elide: Text.ElideRight
@@ -136,7 +136,7 @@ Dialog {
             Layout.rightMargin: 20
             Layout.bottomMargin: 6
             text: control.gameName
-            color: ColorPalette.neutral400
+            color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: 14
             elide: Text.ElideRight
@@ -246,14 +246,14 @@ Dialog {
                 // ---- Your artwork -------------------------------------------
                 Text {
                     text: "Your artwork"
-                    color: ColorPalette.neutral300
+                    color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
                     font.pixelSize: 14
                 }
                 Text {
                     visible: control.storedList.length === 0
                     text: "No artwork yet for this game."
-                    color: ColorPalette.neutral500
+                    color: Theme.textMuted
                     font.family: Constants.regularFontFamily
                     font.pixelSize: 13
                 }
@@ -285,7 +285,7 @@ Dialog {
                     spacing: 10
                     Text {
                         text: "SteamGridDB"
-                        color: ColorPalette.neutral300
+                        color: Theme.textPrimary
                         font.family: Constants.regularFontFamily
                         font.pixelSize: 14
                     }
@@ -311,7 +311,7 @@ Dialog {
                         Layout.fillWidth: true
                         text: control.searchTerm
                         placeholderText: "Search term"
-                        color: "white"
+                        color: Theme.textPrimary
                         font.family: Constants.regularFontFamily
                         selectByMouse: true
                         onTextEdited: control.searchTerm = text
@@ -340,7 +340,7 @@ Dialog {
                     Text {
                         Layout.fillWidth: true
                         text: "Add your SteamGridDB API key to search for artwork."
-                        color: ColorPalette.neutral400
+                        color: Theme.textMuted
                         font.family: Constants.regularFontFamily
                         font.pixelSize: 13
                         wrapMode: Text.WordWrap
@@ -353,7 +353,7 @@ Dialog {
                             Layout.fillWidth: true
                             placeholderText: "SteamGridDB API key"
                             echoMode: TextInput.Password
-                            color: "white"
+                            color: Theme.textPrimary
                             font.family: Constants.regularFontFamily
                             background: Rectangle {
                                 color: ColorPalette.textFieldColor

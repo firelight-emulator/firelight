@@ -17,7 +17,7 @@ Item {
             // Layout.topMargin: 30
             Layout.fillWidth: true
             text: qsTr("Game directory")
-            color: "white"
+            color: Theme.textPrimary
             font.pointSize: 12
             // font.pointSize: 11
             font.family: Constants.regularFontFamily
@@ -28,7 +28,7 @@ Item {
         Text {
             Layout.fillWidth: true
             text: qsTr("Firelight will automatically watch this directory for game files and update your library accordingly. Later you'll be able to add more!")
-            color: "#c1c1c1"
+            color: Theme.textMuted
             wrapMode: Text.WordWrap
             font.pointSize: 11
             font.family: Constants.regularFontFamily
@@ -62,7 +62,7 @@ Item {
                         text: model.path
                         font.family: Constants.regularFontFamily
                         font.pointSize: 12
-                        color: "white"
+                        color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
                         readOnly: true
                     }

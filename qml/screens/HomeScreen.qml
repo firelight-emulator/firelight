@@ -25,11 +25,11 @@ FocusScope {
         x: (parent.width - width) / 2
         y: parent.height - height - 20
         background: Rectangle {
-            color: ColorPalette.neutral800
+            color: Theme.surface
         }
         contentItem: Text {
             text: "Updating library..."
-            color: "white"
+            color: Theme.textPrimary
             font.pixelSize: 16
             font.family: Constants.regularFontFamily
             horizontalAlignment: Text.AlignHCenter
@@ -92,7 +92,7 @@ FocusScope {
                 }
                 contentItem: Text {
                     text: "Library"
-                    color: ColorPalette.neutral100
+                    color: Theme.textPrimary
                     opacity: libraryButton.checked ? 1 : 0.5
                     font.pixelSize: 24
                     font.weight: Font.Normal
@@ -121,7 +121,7 @@ FocusScope {
                 }
                 contentItem: Text {
                     text: "Mod Shop"
-                    color: ColorPalette.neutral100
+                    color: Theme.textPrimary
                     opacity: modShopButton.checked ? 1 : 0.5
                     font.pixelSize: 24
                     font.weight: Font.Normal
@@ -216,7 +216,7 @@ FocusScope {
                     // console.log("tick")
                 }
                 text: ""
-                color: "white"
+                color: Theme.textPrimary
                 font.pixelSize: 18
                 horizontalAlignment: Text.AlignRight
                 verticalAlignment: Text.AlignVCenter

@@ -11,9 +11,9 @@ Pane {
     implicitHeight: 36
 
     background: Rectangle {
-        color: Qt.darker("#1b1d27", 1.2)
+        color: Theme.surface
         radius: 8
-        border.color: Qt.lighter("#1b1d27", 1.3)
+        border.color: Theme.border
         border.width: 1
     }
 

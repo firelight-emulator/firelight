@@ -95,9 +95,9 @@ FocusScope {
         padding: 0
 
         background: Rectangle {
-            color: ColorPalette.neutral900
+            color: Theme.surface
             radius: 8
-            border.color: ColorPalette.neutral600
+            border.color: Theme.border
         }
 
         contentItem: BindingOptionsPage {
@@ -379,7 +379,7 @@ FocusScope {
                     Layout.alignment: Qt.AlignLeft
                     Layout.fillHeight: true
                     text: model.originalInputName
-                    color: "white"
+                    color: Theme.textPrimary
                     font.pixelSize: 15
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
@@ -397,7 +397,7 @@ FocusScope {
                         // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
                         // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
                         font.pixelSize: 15
-                        color: model.hasConflict ? "yellow" : (!model.hasMapping ? ColorPalette.neutral400 : "white")
+                        color: model.hasConflict ? Theme.warning : (!model.hasMapping ? Theme.textMuted : Theme.textPrimary)
                         text: model.hasMapping ? model.mappedInputName : "(Not mapped)"
 
                         font.family: Constants.regularFontFamily
@@ -409,7 +409,7 @@ FocusScope {
                         height: parent.height
                         visible: model.isDefault
                         font.pixelSize: 15
-                        color: ColorPalette.neutral400
+                        color: Theme.textMuted
                         text: " (Default)"
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Medium

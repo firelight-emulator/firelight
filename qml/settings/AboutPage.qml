@@ -8,7 +8,7 @@ Item {
         text: "Firelight Emulator\nv0.12.2"
         font.pointSize: 12
         font.family: Constants.regularFontFamily
-        color: "white"
+        color: Theme.textPrimary
         width: parent.width
         font.weight: Font.DemiBold
         font.pixelSize: 18

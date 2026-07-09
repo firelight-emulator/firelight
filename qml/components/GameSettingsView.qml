@@ -41,7 +41,7 @@ FocusScope {
             font.pixelSize: 15
             font.family: Constants.regularFontFamily
             font.weight: Font.Medium
-            color: ColorPalette.neutral100
+            color: Theme.textPrimary
             text: root.level === 0 ? "Settings are applied only to the current game" : "Settings are applied to all " + root.platformName + " games"
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap

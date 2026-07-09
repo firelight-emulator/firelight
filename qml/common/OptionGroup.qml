@@ -24,7 +24,7 @@ FocusScope {
         font.weight: Font.Normal
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
-        color: ColorPalette.neutral400
+        color: Theme.textMuted
         Layout.bottomMargin: 4
     }
 
@@ -41,7 +41,7 @@ FocusScope {
 
         background: Rectangle {
             radius: 8
-            color: ColorPalette.neutral800
+            color: Theme.surface
         }
 
         contentItem: ColumnLayout {

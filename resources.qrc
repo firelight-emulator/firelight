@@ -87,6 +87,7 @@
         <file alias="more-vertical">assets/img/icons/filled-rounded/more-vertical.svg</file>
         <file alias="more-horizontal">assets/img/icons/filled-rounded/more-horizontal.svg</file>
         <file alias="new-folder">assets/img/icons/filled-rounded/new-folder.svg</file>
+        <file alias="online">assets/img/icons/filled-rounded/online.svg</file>
         <file alias="photo-library">assets/img/icons/filled-rounded/photo-library.svg</file>
         <file alias="search">assets/img/icons/filled-rounded/search.svg</file>
         <file alias="settings">assets/img/icons/filled-rounded/settings.svg</file>

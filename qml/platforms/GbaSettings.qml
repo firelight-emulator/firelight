@@ -36,7 +36,7 @@ FocusScope {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 24
-                        color: ColorPalette.neutral400
+                        color: Theme.textMuted
                     }
 
                     checkable: false
@@ -55,7 +55,7 @@ FocusScope {
                     font.weight: Font.Bold
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
-                    color: ColorPalette.neutral100
+                    color: Theme.textPrimary
                 }
                 Layout.bottomMargin: 8
             }
@@ -65,7 +65,7 @@ FocusScope {
                 Layout.bottomMargin: 8
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
-                color: "#333333"
+                color: Theme.border
             }
 
             OptionGroup {

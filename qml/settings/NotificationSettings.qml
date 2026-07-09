@@ -23,7 +23,7 @@ Flickable {
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
             Layout.bottomMargin: 8
-            color: "#a6a6a6"
+            color: Theme.textMuted
         }
 
 
@@ -41,7 +41,7 @@ Flickable {
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
             Layout.bottomMargin: 8
-            color: "#a6a6a6"
+            color: Theme.textMuted
         }
 
         ToggleOption {

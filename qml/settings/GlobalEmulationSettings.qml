@@ -19,7 +19,7 @@ FocusScope {
             font.pixelSize: 26
             font.family: Constants.regularFontFamily
             font.weight: Font.Bold
-            color: "white"
+            color: Theme.textPrimary
         }
 
         Text {
@@ -29,7 +29,7 @@ FocusScope {
             font.family: Constants.regularFontFamily
             font.weight: Font.Normal
             wrapMode: Text.WordWrap
-            color: ColorPalette.neutral300
+            color: Theme.textMuted
             Layout.bottomMargin: 8
         }
 

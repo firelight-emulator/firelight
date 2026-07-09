@@ -46,7 +46,7 @@ ListView {
         padding: 0
         width: ListView.view.width
         background: Rectangle {
-            color: "#121010"
+            color: Theme.surface
             topLeftRadius: 8
             topRightRadius: 8
             opacity: root.contentY > 0 ? 1 : 0
@@ -85,7 +85,7 @@ ListView {
                      icon.source: "qrc:/icons/favorite"
                      icon.width: 24
                      icon.height: 24
-                     icon.color: "#9c9c9c"
+                     icon.color: Theme.textMuted
                      background: Item {}
                  }
 

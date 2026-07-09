@@ -8,7 +8,7 @@ Item {
         text: "System settings will go here"
         font.pointSize: 12
         font.family: Constants.regularFontFamily
-        color: "#b3b3b3"
+        color: Theme.textMuted
         anchors.centerIn: parent
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

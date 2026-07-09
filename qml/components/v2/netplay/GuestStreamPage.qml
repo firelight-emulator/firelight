@@ -34,7 +34,7 @@ Rectangle {
         visible: streamItem.frameWidth === 0
         anchors.centerIn: parent
         text: "Waiting for the host's stream..."
-        color: "#888888"
+        color: Theme.textMuted
         font.pixelSize: 16
     }
 
@@ -46,7 +46,7 @@ Rectangle {
 
         Text {
             text: NetworkService.gameName
-            color: "#aaaaaa"
+            color: Theme.textMuted
             font.pixelSize: 13
             Layout.alignment: Qt.AlignVCenter
         }

@@ -56,7 +56,7 @@ Item {
 
             Text {
                 text: "Media"
-                color: "white"
+                color: Theme.textPrimary
                 font.pointSize: 18
                 font.weight: Font.Bold
                 font.family: Constants.regularFontFamily
@@ -107,7 +107,7 @@ Item {
         visible: captureProxy.count === 0
         text: root.gameContentHash !== "" ? "No media for this game yet."
                                           : "No screenshots or clips yet."
-        color: "#919191"
+        color: Theme.textMuted
         font.pointSize: 13
         font.family: Constants.regularFontFamily
     }

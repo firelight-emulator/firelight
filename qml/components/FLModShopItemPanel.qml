@@ -18,7 +18,7 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        color: ColorPalette.neutral100
+        color: Theme.textPrimary
         font.family: Constants.regularFontFamily
         font.pixelSize: 36
         font.weight: Font.Black
@@ -31,7 +31,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         Layout.bottomMargin: 12
-        color: ColorPalette.neutral300
+        color: Theme.textMuted
         font.family: Constants.regularFontFamily
         font.pixelSize: 15
         font.weight: Font.Normal
@@ -52,7 +52,7 @@ ColumnLayout {
         Text {
             Layout.fillWidth: true
             Layout.topMargin: 16
-            color: ColorPalette.neutral400
+            color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: 15
             font.weight: Font.DemiBold
@@ -64,11 +64,11 @@ ColumnLayout {
             Layout.fillWidth: true
 
             background: Rectangle {
-                color: ColorPalette.neutral800
+                color: Theme.surface
                 radius: 12
             }
             contentItem: Text {
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.pixelSize: 16
                 text: modInfo.authorName
@@ -88,7 +88,7 @@ ColumnLayout {
         Text {
             Layout.fillWidth: true
             bottomPadding: 24
-            color: "white"
+            color: Theme.textPrimary
             font.family: Constants.regularFontFamily
             font.pixelSize: 20
             font.weight: Font.DemiBold
@@ -99,7 +99,7 @@ ColumnLayout {
         }
         Text {
             Layout.fillWidth: true
-            color: ColorPalette.neutral400
+            color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: 16
             font.weight: Font.DemiBold
@@ -131,7 +131,7 @@ ColumnLayout {
             Text {
                 Layout.fillWidth: true
                 bottomPadding: 24
-                color: "white"
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.pixelSize: 20
                 font.weight: Font.DemiBold
@@ -142,7 +142,7 @@ ColumnLayout {
             }
             Text {
                 Layout.fillWidth: true
-                color: ColorPalette.neutral400
+                color: Theme.textMuted
                 font.family: Constants.regularFontFamily
                 font.pixelSize: 16
                 font.weight: Font.DemiBold
@@ -179,7 +179,7 @@ ColumnLayout {
             Text {
                 Layout.fillWidth: true
                 Layout.topMargin: 16
-                color: ColorPalette.neutral400
+                color: Theme.textMuted
                 font.family: Constants.regularFontFamily
                 font.pixelSize: 15
                 font.weight: Font.DemiBold
@@ -191,11 +191,11 @@ ColumnLayout {
                 Layout.fillWidth: true
 
                 background: Rectangle {
-                    color: ColorPalette.neutral800
+                    color: Theme.surface
                     radius: 12
                 }
                 contentItem: Text {
-                    color: ColorPalette.neutral100
+                    color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
                     font.pixelSize: 16
                     text: modInfo.authorName
@@ -218,7 +218,7 @@ ColumnLayout {
         background: Item {
         }
         contentItem: Text {
-            color: ColorPalette.neutral400
+            color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: 14
             font.weight: Font.DemiBold

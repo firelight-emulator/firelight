@@ -31,7 +31,7 @@ Pane {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             font.pixelSize: 24
-            color: ColorPalette.neutral600
+            color: Theme.textMuted
         }
 
         ColumnLayout {
@@ -42,7 +42,7 @@ Pane {
             Text {
                 Layout.fillWidth: true
                 text: root.label
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.pixelSize: 15
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
@@ -58,7 +58,7 @@ Pane {
                 font.family: Constants.regularFontFamily
                 // font.weight: Font.
                 wrapMode: Text.WordWrap
-                color: ColorPalette.neutral300
+                color: Theme.textMuted
             }
         }
 

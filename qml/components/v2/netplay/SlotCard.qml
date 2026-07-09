@@ -20,7 +20,7 @@ Rectangle {
             Layout.fillWidth: true
             Text {
                 text: "P" + model.slotNumber
-                color: "#888888"
+                color: Theme.textMuted
                 font.pixelSize: 12
                 font.weight: Font.DemiBold
             }
@@ -38,7 +38,7 @@ Rectangle {
 
         Text {
             text: model.occupied ? model.displayName : "Empty"
-            color: model.occupied ? "white" : "#666666"
+            color: model.occupied ? Theme.textPrimary : "#666666"
             font.pixelSize: 14
             elide: Text.ElideRight
             Layout.fillWidth: true
@@ -47,7 +47,7 @@ Rectangle {
         Text {
             visible: model.occupied && model.isHostMember
             text: "Host"
-            color: "#888888"
+            color: Theme.textMuted
             font.pixelSize: 11
         }
     }

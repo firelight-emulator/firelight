@@ -5,7 +5,7 @@ import QtQuick.Layouts
 Rectangle {
     id: root
 
-    color: "#1c1c1c"
+    color: Theme.surface
     radius: 8
 
     ColumnLayout {
@@ -15,7 +15,7 @@ Rectangle {
 
         Text {
             text: "Chat"
-            color: "#aaaaaa"
+            color: Theme.textMuted
             font.pixelSize: 14
         }
 
@@ -39,7 +39,7 @@ Rectangle {
                 }
                 Text {
                     text: model.text
-                    color: "#dddddd"
+                    color: Theme.textPrimary
                     font.pixelSize: 13
                     wrapMode: Text.Wrap
                     Layout.fillWidth: true

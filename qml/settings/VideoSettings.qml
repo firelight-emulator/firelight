@@ -35,14 +35,14 @@ FocusScope {
                 spacing: 2
                 Text {
                     text: "Audio output device"
-                    color: ColorPalette.neutral100
+                    color: Theme.textPrimary
                     font.pixelSize: 16
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                 }
                 Text {
                     text: "Applies the next time a game starts."
-                    color: ColorPalette.neutral300
+                    color: Theme.textMuted
                     font.pixelSize: 14
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Medium

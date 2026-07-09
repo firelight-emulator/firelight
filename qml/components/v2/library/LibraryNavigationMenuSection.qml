@@ -38,7 +38,7 @@ FocusScope {
             Layout.fillWidth: true
             Layout.preferredHeight: 32
             background: Rectangle {
-                color: Qt.lighter("#1b1d27", 1.4)
+                color: Theme.surfaceHover
             }
             visible: root.title !== ""
 
@@ -53,7 +53,7 @@ FocusScope {
                     Layout.fillHeight: true
                     size: 15
                     visible: root.title !== ""
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     opacity: 0.8
                     rotation: contentContainer.collapsed ? 180 : 270
                     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -69,7 +69,7 @@ FocusScope {
                 Text {
                     Layout.fillHeight: true
                     text: root.title
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     opacity: 0.8
                     font.family: Constants.regularFontFamily
                     font.pointSize: 11

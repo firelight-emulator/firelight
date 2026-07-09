@@ -113,7 +113,7 @@ FirelightDialog {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: parent.width * 5 / 6
 
-            color: "white"
+            color: Theme.textPrimary
             font.family: Constants.regularFontFamily
             font.weight: Font.Normal
             horizontalAlignment: Text.AlignHCenter
@@ -125,7 +125,7 @@ FirelightDialog {
             text: root.visible ? root.numButtons > 0 && dialog.currentIndex < root.numButtons ? dialog.buttons[dialog.currentIndex].display_name : "Nothing" : "Nothing"
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            color: ColorPalette.neutral200
+            color: Theme.textPrimary
             font.pixelSize: 20
             font.weight: Font.Bold
             font.family: Constants.regularFontFamily

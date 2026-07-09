@@ -18,16 +18,16 @@ BaseSettingItem {
         implicitWidth: 260
         enabled: root.enabled
         placeholderText: root.placeholder
-        color: "white"
+        color: Theme.textPrimary
         font.family: Constants.regularFontFamily
         font.pixelSize: 15
         focusPolicy: Qt.ClickFocus
 
         background: Rectangle {
             radius: 4
-            color: ColorPalette.neutral800
+            color: Theme.surface
             border.width: field.activeFocus ? 2 : 0
-            border.color: ColorPalette.neutral500
+            border.color: Theme.border
         }
 
         Component.onCompleted: text = root.value

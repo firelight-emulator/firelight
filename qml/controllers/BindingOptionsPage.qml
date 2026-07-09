@@ -51,7 +51,7 @@ FocusScope {
 
         Text {
             text: "Bindings for " + root.targetLabel
-            color: ColorPalette.neutral100
+            color: Theme.textPrimary
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
             font.pixelSize: 20
@@ -60,7 +60,7 @@ FocusScope {
         Text {
             visible: bindings.count === 0 && !root.capturing
             text: "No custom bindings — the default mapping is used."
-            color: ColorPalette.neutral400
+            color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: 14
         }
@@ -83,7 +83,7 @@ FocusScope {
                 width: ListView.view.width
                 implicitHeight: 92
                 radius: 4
-                color: ColorPalette.neutral800
+                color: Theme.surface
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -96,7 +96,7 @@ FocusScope {
 
                         Text {
                             text: sourceLabel
-                            color: ColorPalette.neutral100
+                            color: Theme.textPrimary
                             font.family: Constants.regularFontFamily
                             font.pixelSize: 16
                             Layout.fillWidth: true
@@ -104,7 +104,7 @@ FocusScope {
 
                         Text {
                             text: "Toggle"
-                            color: ColorPalette.neutral300
+                            color: Theme.textMuted
                             font.family: Constants.regularFontFamily
                             font.pixelSize: 13
                         }
@@ -115,7 +115,7 @@ FocusScope {
 
                         Text {
                             text: "Turbo"
-                            color: ColorPalette.neutral300
+                            color: Theme.textMuted
                             font.family: Constants.regularFontFamily
                             font.pixelSize: 13
                         }
@@ -137,7 +137,7 @@ FocusScope {
 
                         Text {
                             text: "Rate"
-                            color: ColorPalette.neutral300
+                            color: Theme.textMuted
                             font.family: Constants.regularFontFamily
                             font.pixelSize: 13
                         }
@@ -152,7 +152,7 @@ FocusScope {
                         }
                         Text {
                             text: Math.round(turboRate) + " Hz"
-                            color: ColorPalette.neutral300
+                            color: Theme.textMuted
                             font.family: Constants.regularFontFamily
                             font.pixelSize: 13
                         }
@@ -166,7 +166,7 @@ FocusScope {
             Text {
                 visible: root.capturing
                 text: "Press a button on player " + root.capturePlayerNumber + "…"
-                color: "#d14c20"
+                color: Theme.accent
                 font.family: Constants.regularFontFamily
                 font.pixelSize: 15
                 Layout.fillWidth: true

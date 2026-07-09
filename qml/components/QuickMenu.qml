@@ -58,7 +58,7 @@ Pane {
                               font.family: Constants.mainFontFamily
                               font.pixelSize: 16
                               font.weight: Font.Medium
-                              color: ColorPalette.neutral100
+                              color: Theme.textPrimary
                               verticalAlignment: Text.AlignVCenter
                               horizontalAlignment: Text.AlignHCenter
                           }
@@ -207,7 +207,7 @@ Pane {
                 visible: AchievementService.loggedIn && rcheevosGame.achievementSets.length === 0
                 anchors.centerIn: parent
                 text: "No achievements found for this game"
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 font.family: Constants.mainFontFamily
                 font.pixelSize: 18
                 horizontalAlignment: Text.AlignHCenter
@@ -281,7 +281,7 @@ Pane {
 
                                       Text {
                                           text: model.name
-                                          color: ColorPalette.neutral100
+                                          color: Theme.textPrimary
                                           font.family: Constants.mainFontFamily
                                           font.pixelSize: 16
                                           horizontalAlignment: Text.AlignLeft
@@ -302,7 +302,7 @@ Pane {
 
                                       Text {
                                           text: (AchievementService.inHardcoreSession ? model.numEarnedHardcore : model.numEarned) + "/" + model.numAchievements + " earned"
-                                          color: ColorPalette.neutral400
+                                          color: Theme.textMuted
                                           font.family: Constants.mainFontFamily
                                           font.pixelSize: 14
                                           horizontalAlignment: Text.AlignLeft
@@ -316,7 +316,7 @@ Pane {
                                   }
 
                                   Rectangle {
-                                      color: "#1e1e1e"
+                                      color: Theme.surfaceElevated
                                       implicitHeight: 14
                                       Layout.fillWidth: true
                                       radius: 4

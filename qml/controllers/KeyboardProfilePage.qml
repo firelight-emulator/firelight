@@ -162,7 +162,7 @@ FocusScope {
                     Layout.alignment: Qt.AlignLeft
                     Layout.fillHeight: true
                     text: platformList.currentItem.model.display_name + " controls"
-                    color: ColorPalette.neutral200
+                    color: Theme.textPrimary
                     font.pixelSize: 16
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
@@ -176,7 +176,7 @@ FocusScope {
                     Layout.fillHeight: true
                     Layout.leftMargin: 12
                     text: "Key"
-                    color: ColorPalette.neutral200
+                    color: Theme.textPrimary
                     font.pixelSize: 16
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
@@ -195,7 +195,7 @@ FocusScope {
                 Layout.maximumHeight: 1
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
-                color: ColorPalette.neutral600
+                color: Theme.border
             }
 
             Item {
@@ -241,7 +241,7 @@ FocusScope {
                             Layout.alignment: Qt.AlignLeft
                             Layout.fillHeight: true
                             text: modelData.display_name
-                            color: "white"
+                            color: Theme.textPrimary
                             font.pixelSize: 16
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
@@ -460,7 +460,7 @@ FocusScope {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: parent.width * 5 / 6
 
-                color: "white"
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -471,7 +471,7 @@ FocusScope {
                 text: dialog.buttons.length > 0 && dialog.currentIndex < dialog.buttons.length ? dialog.buttons[dialog.currentIndex].display_name : "Nothing"
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                color: ColorPalette.neutral200
+                color: Theme.textPrimary
                 font.pixelSize: 20
                 font.weight: Font.Bold
                 font.family: Constants.regularFontFamily

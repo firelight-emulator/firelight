@@ -28,7 +28,7 @@ MenuItem {
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
         text: "\ue89e"
-        color: "white"
+        color: Theme.textPrimary
     }
 
     arrow: Canvas {

@@ -78,7 +78,7 @@ Button {
         }
         Text {
             Layout.leftMargin: 8
-            color: "#dddddd"
+            color: Theme.textPrimary
             font.family: Constants.regularFontFamily
             font.pointSize: 11
             font.weight: Font.DemiBold
@@ -90,7 +90,7 @@ Button {
             Layout.fillWidth: true
         }
         Text {
-            color: "#676767"
+            color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pointSize: 10
             font.weight: Font.DemiBold

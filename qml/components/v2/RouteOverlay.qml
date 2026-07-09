@@ -30,9 +30,9 @@ Popup {
     property string _loadedPattern: ""
 
     background: Rectangle {
-        color: Qt.lighter("#12131A", 1.3)
+        color: Theme.surfaceElevated
         radius: 8
-        border.color: Qt.lighter("#12131A", 1.8)
+        border.color: Theme.border
         border.width: 1
         // bottomRightRadius: 8
         // bottomLeftRadius: 8
@@ -42,7 +42,7 @@ Popup {
             // autoPaddingEnabled: false
             // paddingRect: Qt.rect(-16, -16, 32, 32)
             shadowEnabled: true
-            shadowColor: Qt.darker("#12131A", 2)
+            shadowColor: Theme.background
             shadowBlur: 1.0
             shadowVerticalOffset: 4.0
             shadowHorizontalOffset: 4.0

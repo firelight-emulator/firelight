@@ -165,7 +165,7 @@ FirelightDialog {
         implicitHeight: 40
         padding: 0
         background: Rectangle {
-            color: ColorPalette.neutral800
+            color: Theme.surface
             radius: 4
         }
         contentItem: Item {
@@ -174,7 +174,7 @@ FirelightDialog {
                 anchors.leftMargin: 10
                 font.pixelSize: 14
                 font.family: Constants.regularFontFamily
-                color: ColorPalette.neutral500
+                color: Theme.textMuted
                 text: fieldPane.placeholder
                 verticalAlignment: Text.AlignVCenter
                 visible: fieldInput.length === 0
@@ -188,7 +188,7 @@ FirelightDialog {
                 inputMethodHints: fieldPane.inputHints
                 font.family: Constants.regularFontFamily
                 font.pixelSize: 14
-                color: "white"
+                color: Theme.textPrimary
                 verticalAlignment: Text.AlignVCenter
             }
         }
@@ -197,14 +197,14 @@ FirelightDialog {
     component SectionLabel: Text {
         Layout.fillWidth: true
         Layout.topMargin: 8
-        color: "white"
+        color: Theme.textPrimary
         font.family: Constants.regularFontFamily
         font.pixelSize: 13
         font.weight: Font.DemiBold
     }
 
     component FieldLabel: Text {
-        color: ColorPalette.neutral400
+        color: Theme.textMuted
         font.family: Constants.regularFontFamily
         font.pixelSize: 12
     }
@@ -257,7 +257,7 @@ FirelightDialog {
                         contentItem: Text {
                             leftPadding: 28
                             text: model.path
-                            color: "white"
+                            color: Theme.textPrimary
                             elide: Text.ElideMiddle
                             font.family: Constants.regularFontFamily
                             font.pixelSize: 13
@@ -278,7 +278,7 @@ FirelightDialog {
                 contentItem: Text {
                     leftPadding: 28
                     text: "Only favorites"
-                    color: "white"
+                    color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
                     font.pixelSize: 13
                     verticalAlignment: Text.AlignVCenter
@@ -303,7 +303,7 @@ FirelightDialog {
                         contentItem: Text {
                             leftPadding: 28
                             text: model.displayName
-                            color: "white"
+                            color: Theme.textPrimary
                             font.family: Constants.regularFontFamily
                             font.pixelSize: 13
                             verticalAlignment: Text.AlignVCenter
@@ -406,7 +406,7 @@ FirelightDialog {
                             width: parent.width - 8
                             height: 2
                             radius: 1
-                            color: ColorPalette.neutral500
+                            color: Theme.textMuted
                             anchors.centerIn: parent
                             rotation: 45
                         }

@@ -78,7 +78,7 @@ Pane {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 1
-                    color: ColorPalette.neutral600
+                    color: Theme.border
                 }
                 ListView {
                      id: platformList
@@ -144,7 +144,7 @@ Pane {
             // anchors.leftMargin: 8
             width: 1
             anchors.left: menuPane.right
-            color: ColorPalette.neutral600
+            color: Theme.border
         }
 
         StackView {
@@ -190,7 +190,7 @@ Pane {
                 }
                 header: Text {
                     text: "Shortcuts"
-                    color: "white"
+                    color: Theme.textPrimary
                     font.pixelSize: 20
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
@@ -271,7 +271,7 @@ Pane {
                           Layout.alignment: Qt.AlignLeft
                           Layout.fillHeight: true
                           text: model.name
-                          color: "white"
+                          color: Theme.textPrimary
                           font.pixelSize: 15
                           font.family: Constants.regularFontFamily
                           font.weight: Font.DemiBold

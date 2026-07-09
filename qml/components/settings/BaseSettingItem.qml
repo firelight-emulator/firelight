@@ -75,7 +75,7 @@ FocusScope {
                         id: labelText
                         Layout.fillWidth: true
                         text: root.label
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 16
                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -105,7 +105,7 @@ FocusScope {
 
                         contentItem: Text {
                             text: qsTr("Reset")
-                            color: ColorPalette.neutral300
+                            color: Theme.textMuted
                             font.pixelSize: 14
                             font.family: Constants.regularFontFamily
                             font.weight: Font.Medium
@@ -142,7 +142,7 @@ FocusScope {
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Medium
                 lineHeight: 1.2
-                color: ColorPalette.neutral100
+                color: Theme.textMuted
                 text: root.description
                 wrapMode: Text.WordWrap
             }

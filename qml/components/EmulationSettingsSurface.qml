@@ -73,13 +73,13 @@ FocusScope {
                 Layout.fillWidth: true
                 Layout.topMargin: 16
                 Layout.preferredHeight: 1
-                color: "#333333"
+                color: Theme.border
             }
 
             Text {
                 Layout.fillWidth: true
                 text: qsTr("Advanced core options")
-                color: ColorPalette.neutral100
+                color: Theme.textPrimary
                 leftPadding: 8
                 topPadding: 8
                 font.pixelSize: 16
@@ -92,7 +92,7 @@ FocusScope {
                 leftPadding: 8
                 visible: root.advancedOpen && coreOptionsModel.categories.length === 0
                 text: qsTr("These are the core's raw options. They appear after a game on this console has run at least once.")
-                color: ColorPalette.neutral300
+                color: Theme.textMuted
                 wrapMode: Text.WordWrap
                 font.pixelSize: 14
                 font.family: Constants.regularFontFamily
@@ -114,7 +114,7 @@ FocusScope {
                 contentItem: Text {
                     text: "‹  " + qsTr("All categories")
                     leftPadding: 8
-                    color: ColorPalette.neutral100
+                    color: Theme.textPrimary
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 15
                     font.family: Constants.regularFontFamily
@@ -143,7 +143,7 @@ FocusScope {
                             Layout.fillWidth: true
                             leftPadding: 8
                             text: modelData.label
-                            color: ColorPalette.neutral100
+                            color: Theme.textPrimary
                             verticalAlignment: Text.AlignVCenter
                             font.pixelSize: 16
                             font.family: Constants.regularFontFamily
@@ -152,7 +152,7 @@ FocusScope {
                         Text {
                             rightPadding: 8
                             text: "›"
-                            color: ColorPalette.neutral300
+                            color: Theme.textMuted
                             font.pixelSize: 20
                         }
                     }

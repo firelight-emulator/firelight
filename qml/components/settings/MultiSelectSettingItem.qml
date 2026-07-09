@@ -62,14 +62,14 @@ BaseSettingItem {
 
         background: Rectangle {
             radius: 4
-            color: ColorPalette.neutral800
+            color: Theme.surface
         }
 
         contentItem: Text {
             text: root.summary()
             leftPadding: 8
             rightPadding: 8
-            color: "white"
+            color: Theme.textPrimary
             elide: Text.ElideRight
             font.family: Constants.regularFontFamily
             font.pixelSize: 14
@@ -86,8 +86,8 @@ BaseSettingItem {
 
             background: Rectangle {
                 radius: 6
-                color: ColorPalette.neutral900
-                border.color: ColorPalette.neutral700
+                color: Theme.surfaceElevated
+                border.color: Theme.border
                 border.width: 1
             }
 
@@ -104,7 +104,7 @@ BaseSettingItem {
                         contentItem: Text {
                             leftPadding: 28
                             text: modelData.label
-                            color: "white"
+                            color: Theme.textPrimary
                             font.family: Constants.regularFontFamily
                             font.pixelSize: 14
                             verticalAlignment: Text.AlignVCenter

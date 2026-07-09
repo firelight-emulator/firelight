@@ -8,9 +8,9 @@ ToolTip {
     verticalPadding: 6
 
     background: Rectangle {
-        color: ColorPalette.neutral900
+        color: Theme.surfaceElevated
         radius: 4
-        border.color: ColorPalette.neutral700
+        border.color: Theme.border
         border.width: 1
     }
 
@@ -18,7 +18,7 @@ ToolTip {
         text: root.text
         font.pixelSize: 16
         font.family: Constants.mainFontFamily
-        color: ColorPalette.neutral100
+        color: Theme.textPrimary
     }
 
     enter: Transition {

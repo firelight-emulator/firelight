@@ -27,7 +27,7 @@ Item {
         font.pointSize: 11
         font.weight: root.selected ? Font.Bold : Font.DemiBold
         font.family: Constants.regularFontFamily
-        color: root.selected ? "#dddddd" : "#919191"
+        color: root.selected ? Theme.textPrimary : Theme.textMuted
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         TapHandler {
@@ -48,6 +48,6 @@ Item {
         visible: root.selected
         icon: root.sortAscending ? "arrow-down" : "arrow-up"
         size: 22
-        color: "#dddddd"
+        color: Theme.textPrimary
     }
 }

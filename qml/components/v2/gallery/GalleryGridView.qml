@@ -48,7 +48,7 @@ Item {
                 }
 
                 background: Rectangle {
-                    color: "#1e1e1e"
+                    color: Theme.surfaceElevated
                     radius: 4
                     border.width: 2
                     border.color: control.hovered ? "#4a90d9" : "transparent"

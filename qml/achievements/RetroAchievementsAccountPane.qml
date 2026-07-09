@@ -38,7 +38,7 @@ FocusScope {
                 focus: true
                 background: Rectangle {
                     radius: 4
-                    color: ColorPalette.neutral900
+                    color: Theme.surface
                 }
 
                 contentItem: RowLayout {
@@ -56,7 +56,7 @@ FocusScope {
                         Layout.alignment: Qt.AlignTop
                         Text {
                             text: achievement_manager.displayName
-                            color: ColorPalette.neutral200
+                            color: Theme.textPrimary
                             font.pixelSize: 22
                             font.weight: Font.DemiBold
 
@@ -66,7 +66,7 @@ FocusScope {
                         }
                         Text {
                             text: achievement_manager.points
-                            color: ColorPalette.neutral300
+                            color: Theme.textMuted
                             font.pixelSize: 16
                             font.weight: Font.Normal
 
@@ -140,7 +140,7 @@ FocusScope {
                         text: "Login"
                         Layout.topMargin: 24
                         Layout.alignment: Qt.AlignHCenter
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         font.pixelSize: 18
                         font.weight: Font.Normal
                         font.family: Constants.regularFontFamily
@@ -155,7 +155,7 @@ FocusScope {
                         Layout.preferredWidth: 280
                         Layout.preferredHeight: 48
                         background: Rectangle {
-                            color: ColorPalette.neutral800
+                            color: Theme.surface
                             radius: 4
                         }
 
@@ -171,7 +171,7 @@ FocusScope {
                                 anchors.fill: parent
                                 font.pointSize: 12
                                 font.family: Constants.regularFontFamily
-                                color: ColorPalette.neutral500
+                                color: Theme.textMuted
                                 text: "Username"
                                 verticalAlignment: Text.AlignVCenter
                                 visible: usernameTextInput.length === 0
@@ -186,7 +186,7 @@ FocusScope {
                                 font.family: Constants.regularFontFamily
                                 focus: true
                                 font.pointSize: 12
-                                color: "white"
+                                color: Theme.textPrimary
                                 verticalAlignment: Text.AlignVCenter
 
                                 onAccepted: {
@@ -204,7 +204,7 @@ FocusScope {
                         Layout.preferredWidth: 280
                         Layout.preferredHeight: 48
                         background: Rectangle {
-                            color: ColorPalette.neutral800
+                            color: Theme.surface
                             radius: 4
                         }
 
@@ -218,7 +218,7 @@ FocusScope {
                                 anchors.fill: parent
                                 font.pointSize: 12
                                 font.family: Constants.regularFontFamily
-                                color: ColorPalette.neutral500
+                                color: Theme.textMuted
                                 text: "Password"
                                 verticalAlignment: Text.AlignVCenter
                                 visible: passwordTextInput.length === 0
@@ -233,7 +233,7 @@ FocusScope {
                                 property var globalCursorProxy: theOtherPane
                                 font.family: Constants.regularFontFamily
                                 font.pointSize: 12
-                                color: "white"
+                                color: Theme.textPrimary
                                 verticalAlignment: Text.AlignVCenter
 
                                 onAccepted: {
@@ -289,7 +289,7 @@ FocusScope {
                         text: "Don't have an account?"
                         Layout.topMargin: 48
                         Layout.alignment: Qt.AlignHCenter
-                        color: ColorPalette.neutral100
+                        color: Theme.textPrimary
                         font.pixelSize: 18
                         font.weight: Font.Normal
                         font.family: Constants.regularFontFamily
@@ -300,7 +300,7 @@ FocusScope {
                     Text {
                         text: "This button will take you to the RetroAchievements website to create one"
                         Layout.alignment: Qt.AlignHCenter
-                        color: ColorPalette.neutral300
+                        color: Theme.textMuted
                         font.pixelSize: 16
                         font.weight: Font.Normal
                         font.family: Constants.regularFontFamily

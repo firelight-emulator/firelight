@@ -19,8 +19,8 @@ Rectangle {
     width: Math.min(420, parent.width - 32)
     height: content.implicitHeight + 24
     radius: 10
-    color: "#2b3341"
-    border.color: "#4a5568"
+    color: Theme.surfaceElevated
+    border.color: Theme.border
     border.width: 1
 
     ColumnLayout {
@@ -47,12 +47,12 @@ Rectangle {
 
                 Text {
                     text: NetworkService.isHost ? "Ready check" : "The host wants to play"
-                    color: "#aaaaaa"
+                    color: Theme.textMuted
                     font.pixelSize: 12
                 }
                 Text {
                     text: NetworkService.gameName
-                    color: "white"
+                    color: Theme.textPrimary
                     font.pixelSize: 16
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight

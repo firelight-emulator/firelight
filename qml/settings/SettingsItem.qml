@@ -16,7 +16,7 @@ Rectangle {
             Layout.fillHeight: true
             Text {
                 text: control.label
-                color: "white"
+                color: Theme.textPrimary
                 font.pointSize: 12
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
@@ -30,7 +30,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 wrapMode: Text.WordWrap
-                color: "#c1c1c1"
+                color: Theme.textMuted
             }
         }
         Item {

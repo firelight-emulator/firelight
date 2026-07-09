@@ -16,7 +16,7 @@ Button {
     contentItem: Text {
         font.family: Constants.symbolFontFamily
         text: "\ue5d4"
-        color: "white"
+        color: Theme.textPrimary
         font.pointSize: 16
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

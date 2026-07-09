@@ -65,7 +65,7 @@ Button {
             Layout.fillWidth: true
             Layout.preferredHeight: 44
             text: root.label
-            color: ColorPalette.neutral100
+            color: Theme.textPrimary
             font.pixelSize: 16
             verticalAlignment: Text.AlignVCenter
             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -91,7 +91,7 @@ Button {
             Layout.leftMargin: 32
             horizontalAlignment: Text.AlignRight
             verticalAlignment: Text.AlignVCenter
-            color: ColorPalette.neutral400
+            color: Theme.textMuted
         }
 
         // Switch {
