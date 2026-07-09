@@ -1,0 +1,4 @@
+# Built test binaries (regenerable via build.sh)
+*.exe
+*.o
+*.obj

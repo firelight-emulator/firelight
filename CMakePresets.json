@@ -37,6 +37,20 @@
             }
         },
         {
+            "name": "mingw64-debug",
+            "displayName": "MinGW64 Debug (MSYS2)",
+            "generator": "Ninja",
+            "binaryDir": "cmake-build-debug",
+            "environment": {
+                "PATH": "C:/msys64/mingw64/bin;$penv{PATH}"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "C:/msys64/mingw64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "C:/msys64/mingw64/bin/g++.exe"
+            }
+        },
+        {
             "name": "xcode",
             "displayName": "XCode",
             "generator": "Xcode",
