@@ -239,7 +239,7 @@ bool EmulatorVulkanRenderer::initialize(
     const char *v = getenv("VK_LOADER_LAYERS_DISABLE");
     if (v) savedLayerDisable = v;
   }
-  _putenv_s("VK_LOADER_LAYERS_DISABLE", "~implicit~");
+  qputenv("VK_LOADER_LAYERS_DISABLE", "~implicit~");
 
   // Device extensions the core must enable so the shared-image path works. The
   // core creates the VkDevice, and cores that only enable what they need (PPSSPP)
@@ -290,8 +290,10 @@ bool EmulatorVulkanRenderer::initialize(
     requiredDeviceExts.empty() ? nullptr : requiredDeviceExts.data(),
     static_cast<unsigned>(requiredDeviceExts.size()), nullptr, 0, &features);
 
-  _putenv_s("VK_LOADER_LAYERS_DISABLE",
-            savedLayerDisable.empty() ? "" : savedLayerDisable.c_str());
+  if (savedLayerDisable.empty())
+    qunsetenv("VK_LOADER_LAYERS_DISABLE");
+  else
+    qputenv("VK_LOADER_LAYERS_DISABLE", savedLayerDisable.c_str());
 
   if (!deviceOk) {
     spdlog::error("EmulatorVulkanRenderer: create_device failed");

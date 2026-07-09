@@ -41,11 +41,11 @@
             "displayName": "XCode",
             "generator": "Xcode",
             "binaryDir": "build/xcode",
-            "toolchainFile": "/Users/alexcharles/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++"
+                "CMAKE_CXX_COMPILER": "clang++",
+                "LibArchive_ROOT": "/opt/homebrew/opt/libarchive"
             }
         }
     ]

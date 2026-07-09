@@ -6,11 +6,13 @@
 #include <vector>
 
 namespace firelight::activity {
+/**
+ * Stores play session data :)
+ */
 class IActivityLog {
 public:
   virtual ~IActivityLog() = default;
 
-public:
   virtual bool createPlaySession(PlaySession &session) = 0;
 
   virtual std::optional<PlaySession>

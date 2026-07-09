@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QAbstractListModel>
-#include <firelight/content_database.hpp>
 
 namespace firelight::shop {
   class ShopItemModel final : public QAbstractListModel {
@@ -29,7 +28,7 @@ namespace firelight::shop {
       ScreenshotUrls
     };
 
-    explicit ShopItemModel(db::IContentDatabase &contentDatabase);
+    explicit ShopItemModel();
 
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
@@ -60,7 +59,6 @@ namespace firelight::shop {
       QStringList screenshotUrls;
     };
 
-    db::IContentDatabase &m_contentDatabase;
     QList<Item> m_items;
   };
 }

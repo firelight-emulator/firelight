@@ -1,6 +1,6 @@
 #pragma once
 #include <discordpp.h>
-#include <firelight/discord/idiscord_manager.hpp>
+#include <firelight/discord/discord_manager.hpp>
 
 namespace firelight::platforms {
     class IPlatformService;

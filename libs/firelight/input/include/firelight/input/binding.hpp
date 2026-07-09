@@ -30,7 +30,7 @@ struct Binding {
   InputSource source;
   bool toggle = false;    // press latches the emulated input on/off
   TurboOptions turbo;     // autofire while the source is held
-  float threshold = 0.5f; // analog source -> digital target (fraction 0..1)
+  float threshold = 0.5f; // analog source -> digital target (such as stick pushed halfway to trigger button press)
   bool invert = false;    // axis source -> axis target
   float scale = 1.0f;     // axis source -> axis target sensitivity
 

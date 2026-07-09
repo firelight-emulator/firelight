@@ -5,8 +5,6 @@ find_package(spdlog REQUIRED)
 
 add_library(firelight_db STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_userdata_database.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_content_database.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/firelight/db/sqlite_content_database.hpp
 )
 
 target_include_directories(firelight_db

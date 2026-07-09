@@ -1,5 +1,5 @@
 #include "emulator_item.hpp"
-#include <firelight/discord/idiscord_manager.hpp>
+#include <firelight/discord/discord_manager.hpp>
 #include <QQuickWindow>
 #include <QScreen>
 #include <firelight/settings/settings_service.hpp>

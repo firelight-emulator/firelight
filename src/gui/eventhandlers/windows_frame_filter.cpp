@@ -1,10 +1,13 @@
 #include "windows_frame_filter.hpp"
 #include <QWindow>
+#ifdef _WIN32
 #include <dwmapi.h>
+#endif
 
 WindowsFrameFilter::WindowsFrameFilter(QObject *parent) : QObject(parent) {
 }
 
+#ifdef _WIN32
 void WindowsFrameFilter::setWindow(QWindow *window) {
     m_hwnd = reinterpret_cast<HWND>(window->winId());
     m_dpr = window->devicePixelRatio();
@@ -144,3 +147,27 @@ bool WindowsFrameFilter::nativeEventFilter(const QByteArray &eventType,
 
     return false;
 }
+
+#else // !_WIN32
+
+// Non-Windows platforms use the compositor's native title bar, so there's no
+// custom non-client hit-testing to do. We keep the class (and the WindowFrame
+// QML API) alive with Qt-based equivalents so MainWindow.qml still works: the
+// window position save/restore is driven through QWindow instead of Win32.
+
+void WindowsFrameFilter::setWindow(QWindow *window) { m_window = window; }
+
+int WindowsFrameFilter::nativeX() const { return m_window ? m_window->x() : 0; }
+
+int WindowsFrameFilter::nativeY() const { return m_window ? m_window->y() : 0; }
+
+void WindowsFrameFilter::setNativePosition(int logicalX, int logicalY) {
+    if (m_window)
+        m_window->setPosition(logicalX, logicalY);
+}
+
+bool WindowsFrameFilter::nativeEventFilter(const QByteArray &, void *, qintptr *) {
+    return false;
+}
+
+#endif // _WIN32

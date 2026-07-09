@@ -45,10 +45,7 @@ void AudioResampler::rebuild() {
 
   av_channel_layout_default(&m_channelLayout, 2);
 
-  // Output rate is the device rate divided by the playback-rate ratio. Running
-  // the game faster (ratio > 1) yields more input samples per real second, so we
-  // resample to fewer output samples to keep the device buffer balanced (which
-  // raises pitch proportionally to match the faster video)
+  // If the game is running faster or slower, we resample to accomodate
   const int outputRate =
       static_cast<int>(std::lround(m_outputSampleRate / m_activeRatio));
 

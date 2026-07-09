@@ -82,6 +82,7 @@ public:
   [[nodiscard]] std::optional<int>
   getGameId(const std::string &contentHash) const;
 
+
   std::optional<Game> getGameForHash(const std::string &contentHash) const;
 
   [[nodiscard]] std::optional<UserUnlock>
@@ -94,14 +95,25 @@ public:
   processStartSessionResponse(const std::string &username, unsigned gameId,
                               const StartSessionResponse &startSessionResponse);
 
+  /**
+   * Attempts to send an unlock request for every unsynced achievement unlock.
+   */
   void syncOfflineAchievements();
 
   void startSession(const std::string &username, unsigned gameId,
                     bool hardcore);
   void endSession();
 
+  /**
+   * @return True if there's an active hardcore session, otherwise false.
+   */
   [[nodiscard]] bool inHardcoreSession() const;
 
+  /**
+   *
+   * @return The number of achievements the user has unlocked in hardcore mode
+   *   during the current session.
+   */
   [[nodiscard]] unsigned getNumCurrentSessionHardcoreUnlocks() const;
 
   void setLoggedInUsername(const std::string &username);

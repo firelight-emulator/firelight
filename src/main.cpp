@@ -27,7 +27,6 @@
 #include "app/audio/SfxPlayer.hpp"
 #include "app/audio/audio_manager.hpp"
 #include "app/audio/qt_microphone.hpp"
-#include <firelight/db/sqlite_content_database.hpp>
 #include <firelight/db/sqlite_userdata_database.hpp>
 #include "app/input/gui/analog_settings_model.hpp"
 #include "app/input/gui/binding_list_model.hpp"
@@ -409,14 +408,10 @@ int main(int argc, char *argv[]) {
     // destroyed first, and that call would hit freed memory (Discord SDK assert
     // / crash). `initialize()` still runs later, once the window exists.
 
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+    // QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
     auto gameImageProvider = new firelight::gui::GameImageProvider();
     firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);
-
-    //   **** Load Content Database ****
-    firelight::db::SqliteContentDatabase contentDatabase(
-        defaultAppDataPathString + "/content.db");
 
     // Thin QML adapter over the (Qt-notification-free) save manager; exposes the
     // save directory as a bindable property for the settings UI. Declared here so
@@ -495,7 +490,7 @@ int main(int argc, char *argv[]) {
     // the list in place without a full reset (no flicker / scroll loss).
 
     firelight::gui::PlatformListModel platformListModel(platformService);
-    firelight::shop::ShopItemModel shopItemModel(contentDatabase);
+    // firelight::shop::ShopItemModel shopItemModel(contentDatabase);
 
     firelight::gui::ContentDirectoryModel contentDirectoryModel(userLibraryService);
 
@@ -743,7 +738,7 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty(
         "CoreRegistry", new firelight::gui::QtCoreRegistryProxy());
     engine.rootContext()->setContextProperty("achievement_manager", &raClient);
-    engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
+    // engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
     engine.rootContext()->setContextProperty("SaveManager", &saveManagerProxy);
     engine.rootContext()->setContextProperty("ContentDirectoryModel",
                                              &contentDirectoryModel);
@@ -846,37 +841,37 @@ int main(int argc, char *argv[]) {
     // cores that request 1.1+ (parallel-RDP) get them as core functions. The
     // apiVersion must stay >= 1.1 so those 1.1 cores keep working. Must be set
     // before the window is exposed. Static so it outlives the window.
-    static QVulkanInstance vulkanInstance;
-    if (window) {
-        vulkanInstance.setApiVersion(QVersionNumber(1, 3));
-        const QByteArrayList wanted = {
-            "VK_KHR_surface",
-            "VK_KHR_win32_surface",
-            "VK_KHR_get_physical_device_properties2",
-            "VK_KHR_external_memory_capabilities",
-            "VK_KHR_external_semaphore_capabilities",
-            "VK_KHR_external_fence_capabilities",
-            "VK_EXT_swapchain_colorspace",
-            "VK_EXT_debug_utils"
-        };
-        const auto supported = vulkanInstance.supportedExtensions();
-        QByteArrayList enable;
-        for (const auto &w: wanted) {
-            for (const auto &s: supported) {
-                if (s.name == w) {
-                    enable << w;
-                    break;
-                }
-            }
-        }
-        vulkanInstance.setExtensions(enable);
-        if (!vulkanInstance.create()) {
-            spdlog::error("Failed to create shared QVulkanInstance (VkResult {})",
-                          static_cast<int>(vulkanInstance.errorCode()));
-        } else {
-            window->setVulkanInstance(&vulkanInstance);
-        }
-    }
+    // static QVulkanInstance vulkanInstance;
+    // if (window) {
+    //     vulkanInstance.setApiVersion(QVersionNumber(1, 3));
+    //     const QByteArrayList wanted = {
+    //         "VK_KHR_surface",
+    //         "VK_KHR_win32_surface",
+    //         "VK_KHR_get_physical_device_properties2",
+    //         "VK_KHR_external_memory_capabilities",
+    //         "VK_KHR_external_semaphore_capabilities",
+    //         "VK_KHR_external_fence_capabilities",
+    //         "VK_EXT_swapchain_colorspace",
+    //         "VK_EXT_debug_utils"
+    //     };
+    //     const auto supported = vulkanInstance.supportedExtensions();
+    //     QByteArrayList enable;
+    //     for (const auto &w: wanted) {
+    //         for (const auto &s: supported) {
+    //             if (s.name == w) {
+    //                 enable << w;
+    //                 break;
+    //             }
+    //         }
+    //     }
+    //     vulkanInstance.setExtensions(enable);
+    //     if (!vulkanInstance.create()) {
+    //         spdlog::error("Failed to create shared QVulkanInstance (VkResult {})",
+    //                       static_cast<int>(vulkanInstance.errorCode()));
+    //     } else {
+    //         window->setVulkanInstance(&vulkanInstance);
+    //     }
+    // }
 
     window->installEventFilter(resizeHandler);
     window->installEventFilter(inputMethodDetectionHandler);

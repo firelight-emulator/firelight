@@ -159,6 +159,7 @@ RetroAchievementsOfflineClient::handleStartSessionRequest(
   return rcResponse;
 }
 
+// TODO: MAKE SURE ALL THIS LOGIC IS RIGHT - requires its own pass
 rc_api_server_response_t
 RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     const std::string &username, const std::string &token,

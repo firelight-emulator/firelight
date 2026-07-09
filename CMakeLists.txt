@@ -86,6 +86,17 @@ if (Qt6_VERSION VERSION_GREATER_EQUAL 6.10.0)
 endif ()
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
+
+# Discover GoogleTest cases at test time rather than at build time. A freshly
+# linked test binary can take several seconds to launch on its first run (macOS
+# Gatekeeper validation + cold dyld closure over Qt/ffmpeg/openssl/etc.), which
+# blows gtest_discover_tests' default 5s POST_BUILD timeout on a clean build and
+# fails the build even though every binary compiled and linked fine. PRE_TEST
+# defers enumeration to ctest, so the build never launches the test executables.
+# Set before the add_subdirectory() calls below so the per-module test targets
+# inherit it. Platform-neutral.
+set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
+
 find_package(nlohmann_json REQUIRED)
 find_package(LibArchive REQUIRED)
 #find_package(PkgConfig REQUIRED)
@@ -372,6 +383,16 @@ if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
     set_target_properties(firelight PROPERTIES
             MACOSX_BUNDLE ON
+            # Runtime data (system/: content.db, _cores, settings_catalog.json)
+            # is staged next to the executable, which inside a .app bundle means
+            # Contents/MacOS/. macOS codesign rejects non-code files placed there
+            # ("code object is not signed at all / In subcomponent
+            # .../system/settings_catalog.json"), failing the Xcode build even
+            # though everything compiled and linked. A dev/Debug build doesn't
+            # need a signed bundle, so skip bundle signing; the linker still
+            # ad-hoc-signs the Mach-O itself so it runs on Apple Silicon. This
+            # XCODE_ATTRIBUTE_* is a no-op for the Ninja/Makefile/Windows builds.
+            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
     )
 endif ()
 
@@ -496,7 +517,6 @@ add_executable(fl_test
         tests/app/library/smart_folder_test.cpp
         tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
-        tests/app/db/sqlite_content_database_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
         tests/app/settings/sqlite_settings_repository_test.cpp
         tests/app/settings/settings_service_test.cpp

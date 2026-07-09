@@ -17,7 +17,22 @@ FetchContent_Declare(libdatachannel
         GIT_TAG v0.22.5
         GIT_SHALLOW ON
 )
+# libdatachannel and its vendored C deps (usrsctp, libjuice) contain no Qt code,
+# but they'd otherwise inherit the global CMAKE_AUTOMOC/AUTOUIC/AUTORCC. Under the
+# Xcode generator that attaches a moc autogen phase to usrsctp, which aborts
+# scanning a generated header it can't find ("netinet/sctp.h does not exist"),
+# failing the whole build. Disable Qt autogen while the fetched targets are
+# created, then restore the prior setting for our own targets. Generator-agnostic.
+set(_fl_saved_automoc ${CMAKE_AUTOMOC})
+set(_fl_saved_autouic ${CMAKE_AUTOUIC})
+set(_fl_saved_autorcc ${CMAKE_AUTORCC})
+set(CMAKE_AUTOMOC OFF)
+set(CMAKE_AUTOUIC OFF)
+set(CMAKE_AUTORCC OFF)
 FetchContent_MakeAvailable(libdatachannel)
+set(CMAKE_AUTOMOC ${_fl_saved_automoc})
+set(CMAKE_AUTOUIC ${_fl_saved_autouic})
+set(CMAKE_AUTORCC ${_fl_saved_autorcc})
 
 add_library(firelight_netplay STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/messages.cpp
