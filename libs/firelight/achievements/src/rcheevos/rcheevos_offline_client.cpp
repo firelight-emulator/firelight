@@ -278,7 +278,7 @@ rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(
   }
 
   auto user = User{
-      .username = username, .token = token, .softcoreScore = 0, .score = 0};
+      .username = username, .token = token, .score = 0, .softcoreScore = 0};
   auto userOpt = m_achievementService.getUser(username);
   if (!userOpt.has_value()) {
     m_achievementService.create(user);
@@ -352,8 +352,8 @@ void RetroAchievementsOfflineClient::processAchievementSetsResponse(
   auto i = 0;
   for (const auto &set : setResponse.Sets) {
     AchievementSet achievementSet{.id = set.id,
-                                  .title = set.title,
                                   .gameId = game.id,
+                                  .title = set.title,
                                   .type = set.type,
                                   .imageIconUrl = set.imageIconUrl};
 
