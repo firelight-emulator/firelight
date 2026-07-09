@@ -5,8 +5,13 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
 CXX="${CXX:-C:/msys64/mingw64/bin/g++.exe}"
-# g++ spawns cc1plus/as, which need the mingw64 runtime DLLs on PATH.
+# g++ spawns cc1plus/as, which need the mingw64 runtime DLLs on PATH. Under a
+# POSIX shell (Git Bash / MSYS2) the PATH entry must be in Unix form (/c/...)
+# or the child process can't resolve its DLLs.
 CXX_DIR="$(dirname "$CXX")"
+if command -v cygpath >/dev/null 2>&1; then
+  CXX_DIR="$(cygpath -u "$CXX_DIR")"
+fi
 export PATH="$CXX_DIR:$PATH"
 
 "$CXX" -std=c++20 -O2 -Wall -Wextra \
