@@ -13,12 +13,32 @@ RoundButton {
 
     property string tooltipText: ""
 
+    property real xOffset: 0
+
     hoverEnabled: true
 
     property bool showGlobalCursor: true
     property int globalCursorSpacing: 1
 
     flat: true
+
+    contentItem: Image {
+        id: iconImage
+        anchors.centerIn: parent
+        source: control.icon.source
+        sourceSize.width: control.icon.width
+        sourceSize.height: control.icon.height
+        fillMode: Image.PreserveAspectFit
+        opacity: control.enabled ? 1 : 0.5
+
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            source: iconImage
+            colorization: 1
+            colorizationColor: "white"
+        }
+        // transform: Translate { x: control.xOffset }
+    }
 
     background: Rectangle {
         color: control.pressed || control.hovered ? ColorPalette.neutral100 : "transparent"

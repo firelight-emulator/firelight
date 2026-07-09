@@ -19,7 +19,7 @@ Rectangle {
             position: 0.0; color: defaultColor
         }
         GradientStop {
-            position: 1.0; color: Qt.lighter(defaultColor, 1.2)
+            position: 1.0; color: Qt.lighter(defaultColor, 1.5)
         }
     }
 

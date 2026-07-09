@@ -38,6 +38,7 @@ public:
 
   void pushVideoFrame(const QImage &frame, int64_t ptsMs) override;
   void pushAudio(const int16_t *data, std::size_t numFrames) override;
+  [[nodiscard]] bool wantsFrames() const override { return m_armed.load(); }
 
 private:
   void onVideoPacket(std::vector<uint8_t> data, int64_t ptsMs, bool keyframe);

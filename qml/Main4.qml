@@ -21,113 +21,9 @@ MainWindow {
         backgroundFile: AppearanceSettings.backgroundFile
     }
 
-    Popup {
-        id: settingsModal
-
-        anchors.centerIn: parent
-        height: window.height - 120
-        modal: true
-        padding: 0
-        parent: window
-        width: window.width - 160
-
-        Overlay.modal: Rectangle {
-            color: "black"
-            opacity: visible ? 0.7 : 0
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 160
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-        background: Rectangle {
-            color: "#1e1e1e"
-            radius: 8
-        }
-        contentItem: Item {
-            Pane {
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.top: parent.top
-                bottomPadding: 0
-                padding: 12
-                width: 260
-
-                background: Rectangle {
-                    bottomLeftRadius: 8
-                    color: Qt.darker("#1e1e1e", 1.25)
-                    topLeftRadius: 8
-                }
-                contentItem: ColumnLayout {
-                    Rectangle {
-                        Layout.fillWidth: true
-                        color: "red"
-                        implicitHeight: 72
-                    }
-                    ListView {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        boundsBehavior: ListView.StopAtBounds
-                        clip: true
-                        model: 20
-
-                        delegate: Button {
-                            height: 40
-                            hoverEnabled: true
-                            padding: 8
-                            width: ListView.view.width
-
-                            background: Rectangle {
-                                color: hovered ? "#FFFFFF" : "transparent"
-                                opacity: hovered ? 0.08 : 0
-                                radius: 4
-                            }
-                            contentItem: Text {
-                                color: "#bababa"
-                                font.family: Constants.regularFontFamily
-                                font.pointSize: 12
-                                font.weight: Font.DemiBold
-                                text: "Setting " + (index + 1)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        enter: Transition {
-            NumberAnimation {
-                duration: 160
-                easing.type: Easing.InOutQuad
-                from: 0.0
-                property: "opacity"
-                to: 1.0
-            }
-            NumberAnimation {
-                duration: 160
-                easing.type: Easing.InOutQuad
-                from: 1.0
-                property: "scale"
-                to: 1.03
-            }
-        }
-        exit: Transition {
-            NumberAnimation {
-                duration: 160
-                easing.type: Easing.InOutQuad
-                from: 1.0
-                property: "opacity"
-                to: 0.0
-            }
-            NumberAnimation {
-                duration: 160
-                easing.type: Easing.InOutQuad
-                from: 1.03
-                property: "scale"
-                to: 1.0
-            }
-        }
+    // Hosts overlay routes (e.g. /settings) as a popup over the current view.
+    RouteOverlay {
+        id: routeOverlay
     }
 
     Action {
@@ -224,50 +120,7 @@ MainWindow {
             }
         }
 
-        ListView {
-            id: navList
-            anchors.fill: parent
-            model: [
-                { displayName: "Home", iconName: "home" },
-                { displayName: "Library", iconName: "browse" },
-                { displayName: "Gallery", iconName: "photo-library" },
-                { displayName: "Activity", iconName: "bar-chart" }
-            ]
 
-            ButtonGroup {
-                id: navButtonGroup
-                exclusive: true
-            }
-
-            delegate: MainNavigationMenuItem {
-                id: menuItem
-                required property var model
-
-                ButtonGroup.group: navButtonGroup
-
-                iconSource: "qrc:/icons/" + model.iconName
-                displayText: model.displayName
-
-                width: ListView.view.width
-
-                onCheckedChanged: {
-                    if (menuItem.checked) {
-                        if (model.displayName === "Home") {
-
-                        } else if (model.displayName === "Library") {
-                            contentStack.push(libraryPage, StackView.Immediate)
-                        } else if (model.displayName === "Gallery") {
-                            contentStack.push(galleryPage, StackView.Immediate)
-                        } else if (model.displayName === "Activity") {
-                            contentStack.push(activityPage, StackView.Immediate)
-                        }
-                        navigationPane.close()
-                    }
-                }
-            }
-
-
-        }
 
         enter: Transition {
             NumberAnimation {
@@ -337,80 +190,89 @@ MainWindow {
         }
     }
 
-    StackView {
+    Pane {
+        id: navRail
+        anchors.top: titleBar.bottom
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        width: 58
+
+        background: Item {}
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 6
+            spacing: 16
+
+            Repeater {
+                model: [
+                    { displayName: "Library", iconName: "browse", route: "/library" },
+                    { displayName: "Mod Shop", iconName: "shopping-bag", route: "/shop" },
+                    { displayName: "Controllers", iconName: "controller", route: "/controllers" },
+                    { displayName: "Gallery", iconName: "photo-library", route: "/gallery" },
+                    { displayName: "Activity", iconName: "bar-chart", route: "/activity" },
+                    { displayName: "Settings", iconName: "settings", route: "/settings" }
+                ]
+
+                delegate: IconButton {
+                    id: menuItem
+                    required property var model
+
+                    checkable: false
+                    checked: Router.isActive(model.route)
+                    icon.width: 24
+                    icon.height: 24
+
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    icon.source: "qrc:/icons/" + model.iconName
+
+                    onClicked: {
+                        Router.navigate(model.route)
+                        navigationPane.close()
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
+        }
+    }
+
+    RouteView {
         id: contentStack
 
-        padding: 0
-
-        anchors.bottom: nowPlayingBar.top
-        anchors.left: parent.left
+        anchors.bottom: gameplay.top
+        anchors.left: navRail.right
         anchors.right: parent.right
         anchors.top: titleBar.bottom
         anchors.leftMargin: 8
         anchors.rightMargin: 8
         anchors.bottomMargin: 8
 
-        initialItem: LibraryPageV2 {}
-
-        Keys.onEscapePressed: function(event) {
-            emulatorLoader.setSource("NewEmulatorPage.qml", {})
-        }
+        Component.onCompleted: Router.navigate("/library")
     }
 
-    Pane {
-        id: nowPlayingBar
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        height: 64
-
-        background: Rectangle {
-            color: "transparent"
-        }
-
-        Text {
-            anchors.centerIn: parent
-            color: "#FFFFFF"
-            font.family: Constants.regularFontFamily
-            font.pointSize: 14
-            text: "Now playing or something idk"
-        }
+    // Shown while an uncached page is being built asynchronously.
+    BusyIndicator {
+        anchors.centerIn: contentStack
+        implicitWidth: 48
+        implicitHeight: 48
+        running: contentStack.loading
+        visible: running
+        z: 10
     }
 
-    EmulatorLoader {
-        id: emulatorLoader
-        anchors.fill: parent
-
-        onLoaded: {
-            EmulationService.loadEntry(25)
-        }
-
-        // onSuspended: {
-        //     // content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber}, StackView.Immediate)
-        //     Router.navigateTo("/quick-menu")
-        //     mainContentStack.pushItems([emulatorLoader, content], StackView.PushTransition)
-        // }
-    }
-
-    Connections {
-        target: EmulationService
-
-        function onGameLoaded() {
-            emulatorLoader.startGame()
-        }
-
-        function onEmulationStopped() {
-            // External-launcher mode: the app exists only to run this one game.
-            if (StartupOptions.exitOnClose) {
-                Qt.quit()
-                return
-            }
-            content.goToContent("Library", allGamesPage, {}, StackView.Immediate)
-            mainContentStack.pushItems([emulatorLoader, content], StackView.Immediate)
-            emulatorLoader.source = ""
-            content.forceActiveFocus()
-        }
+    // The running game + quick menu, layered above the router. It grows to full
+    // screen when foregrounded and shrinks into a bottom bar when backgrounded —
+    // the game render itself becomes the "now playing" bar.
+    GameplayLayer {
+        id: gameplay
+        z: 90
     }
 
 

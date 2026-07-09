@@ -63,6 +63,7 @@ public:
   Q_INVOKABLE void setControllerVariant(int port, int coreDeviceId);
 
 signals:
+  void gameLoadStarted();
   void gameLoaded();
   void emulationStopped();
   void gameRunningChanged(bool isGameRunning);

@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-
+import QtQuick.Effects
 
 Menu {
     id: control
@@ -8,6 +8,8 @@ Menu {
 
     padding: 6
     // horizontalPadding: 8
+
+    overlap: 4
 
     implicitWidth: {
         var maxWidth = 0
@@ -66,12 +68,34 @@ Menu {
     // implicitContentWidth: 260
     // // implicitContentHeight: control.count * Constants.rightClickMenuItem_DefaultHeight
 
+
+
     background: Rectangle {
-        color: ColorPalette.neutral900
+        color: Qt.lighter("#12131A", 1.3)
         radius: 8
-        border.color: ColorPalette.neutral700
+        border.color: Qt.lighter("#12131A", 1.8)
         border.width: 1
+        // bottomRightRadius: 8
+        // bottomLeftRadius: 8
+
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            // autoPaddingEnabled: false
+            // paddingRect: Qt.rect(-16, -16, 32, 32)
+            shadowEnabled: true
+            shadowColor: Qt.darker("#12131A", 2)
+            shadowBlur: 1.0
+            shadowVerticalOffset: 4.0
+            shadowHorizontalOffset: 4.0
+        }
     }
+
+    // background: Rectangle {
+    //     color: ColorPalette.neutral900
+    //     radius: 8
+    //     border.color: ColorPalette.neutral700
+    //     border.width: 1
+    // }
 
     delegate: RightClickMenuItem {
         id: delegate

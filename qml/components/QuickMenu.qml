@@ -11,6 +11,7 @@ Pane {
     signal resetGame()
     signal rewindPressed()
     signal closeGame()
+    signal backToMenu()
 
     LibraryEntry {
         id: entry
@@ -1089,7 +1090,7 @@ Pane {
                          id: suspendPointButton
                          labelText: "Suspend Points"
                          Layout.fillWidth: true
-                         KeyNavigation.down: controlsButton.visible ? controlsButton : closeGameButton
+                         KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
                          // Layout.preferredWidth: parent.width / 2
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                          Layout.preferredHeight: 40
@@ -1105,7 +1106,7 @@ Pane {
                          id: controlsButton
                          labelText: "Controls"
                          Layout.fillWidth: true
-                         KeyNavigation.down: closeGameButton
+                         KeyNavigation.down: backToMenuButton
                          Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                          Layout.preferredHeight: 40
                          checkable: false
@@ -1116,6 +1117,19 @@ Pane {
                          onClicked: {
                              quickMenuStack.replaceCurrentItem(controlsMenu, {}, StackView.Immediate)
                              quickMenuStack.forceActiveFocus()
+                         }
+                     }
+                     FirelightMenuItem {
+                         id: backToMenuButton
+                         labelText: "Back to Menu"
+                         Layout.fillWidth: true
+                         KeyNavigation.down: closeGameButton
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         Layout.preferredHeight: 40
+                         checkable: false
+                         alignRight: true
+                         onClicked: {
+                             root.backToMenu()
                          }
                      }
                      FirelightMenuItem {

@@ -67,7 +67,6 @@
 #include "gui/game_image_provider.hpp"
 #include "gui/models/shop/shop_item_model.hpp"
 #include "gui/platform_list_model.hpp"
-#include "gui/router.hpp"
 #include "network_cache.hpp"
 #include <firelight/achievement_service.hpp>
 #include <rcheevos/ra_client.hpp>
@@ -740,8 +739,6 @@ int main(int argc, char *argv[]) {
         "AudioSettings", new firelight::gui::QtAudioSettingsProxy());
     engine.rootContext()->setContextProperty(
         "CoreRegistry", new firelight::gui::QtCoreRegistryProxy());
-    engine.rootContext()->setContextProperty("Router",
-                                             new firelight::gui::Router());
     engine.rootContext()->setContextProperty("achievement_manager", &raClient);
     engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
     engine.rootContext()->setContextProperty("SaveManager", &saveManagerProxy);

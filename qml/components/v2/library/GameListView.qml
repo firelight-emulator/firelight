@@ -229,6 +229,18 @@ ListView {
          padding: 8
          hoverEnabled: true
 
+         TapHandler {
+             acceptedButtons: Qt.LeftButton
+             onDoubleTapped: EmulationService.loadEntry(delegateButton.model.entryId)
+         }
+
+         Keys.onPressed: function (event) {
+             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Select) {
+                 EmulationService.loadEntry(delegateButton.model.entryId)
+                 event.accepted = true
+             }
+         }
+
          Drag.dragType: Drag.Automatic
          Drag.supportedActions: Qt.CopyAction
          Drag.mimeData: {

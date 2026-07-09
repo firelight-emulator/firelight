@@ -46,6 +46,7 @@ FocusScope {
             spacing: 16
 
             IconButton {
+                id: menuButton
                 icon.width: 24
                 icon.height: 24
                 icon.source: "qrc:/icons/menu"
@@ -53,11 +54,107 @@ FocusScope {
                 Layout.topMargin: 2
                 Layout.leftMargin: 6
                 // tooltipText: "Open menu"
-                opacity: 0.7
+
+                RightClickMenu {
+                    id: contextMenu
+                    x: menuButton.width * 1 / 4
+                    y: menuButton.height + 8
+
+                    RightClickMenu {
+                        title: qsTr("File")
+                        // iconSource: "qrc:/icons/bar-chart"
+                        RightClickMenuItem {
+                            text: qsTr("Add ROM or Folder")
+                            // iconSource: "qrc:/icons/bar-chart"
+                            minWidth: 260
+                            onTriggered: { /* ... */ }
+                        }
+                        RightClickMenuItem {
+                            text: qsTr("New Folder")
+                            // iconSource: "qrc:/icons/bar-chart"
+                            minWidth: 260
+                            onTriggered: { /* ... */ }
+                        }
+                        RightClickMenuItem {
+                            text: qsTr("New Smart Folder")
+                            // iconSource: "qrc:/icons/bar-chart"
+                            minWidth: 260
+                            onTriggered: { /* ... */ }
+                        }
+                    }
+                    RightClickMenuItem {
+                        text: qsTr("Edit")
+                        // iconSource: "qrc:/icons/bar-chart"
+                        minWidth: 260
+                        onTriggered: { /* ... */ }
+                    }
+                    RightClickMenuItem {
+                        text: qsTr("View")
+                        // iconSource: "qrc:/icons/bar-chart"
+                        minWidth: 260
+                        onTriggered: { /* ... */ }
+                    }
+                    RightClickMenuItem {
+                        text: qsTr("RetroAchievements")
+                        // iconSource: "qrc:/icons/bar-chart"
+                        minWidth: 260
+                        onTriggered: { /* ... */ }
+                    }
+                    RightClickMenu {
+                        title: qsTr("Help")
+                        // iconSource: "qrc:/icons/bar-chart"
+                        RightClickMenuItem {
+                            text: qsTr("Settings")
+                            // iconSource: "qrc:/icons/bar-chart"
+                            minWidth: 260
+                            onTriggered: { /* ... */ }
+                        }
+                        RightClickMenuItem {
+                            text: qsTr("Troubleshooting")
+                            // iconSource: "qrc:/icons/bar-chart"
+                            minWidth: 260
+                            onTriggered: { /* ... */ }
+                        }
+                        RightClickMenuItem {
+                            text: qsTr("User Guide")
+                            // iconSource: "qrc:/icons/bar-chart"
+                            minWidth: 260
+                            onTriggered: { /* ... */ }
+                        }
+                        RightClickMenuItem {
+                            text: qsTr("About Firelight")
+                            // iconSource: "qrc:/icons/bar-chart"
+                            minWidth: 260
+                            onTriggered: { /* ... */ }
+                        }
+                    }
+                }
 
                 onClicked: {
-                    root.menuButtonClicked()
+                    contextMenu.open()
                 }
+            }
+
+            IconButton {
+                xOffset: 1
+                icon.width: 22
+                icon.height: 22
+                icon.source: "qrc:/icons/chevron-back"
+                Layout.alignment: Qt.AlignVCenter
+                Layout.topMargin: 2
+                onClicked: Router.back()
+                enabled: Router.canGoBack
+            }
+
+            IconButton {
+                xOffset: -1
+                icon.width: 22
+                icon.height: 22
+                icon.source: "qrc:/icons/chevron-forward"
+                Layout.alignment: Qt.AlignVCenter
+                Layout.topMargin: 2
+                enabled: Router.canGoForward
+                onClicked: Router.forward()
             }
 
             Item {
@@ -93,6 +190,7 @@ FocusScope {
                 Layout.topMargin: 2
                 // tooltipText: "Open menu"
                 opacity: 0.7
+                onClicked: Router.navigate("/settings")
             }
 
             TitleBarProfileButton {

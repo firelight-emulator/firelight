@@ -22,6 +22,11 @@ public:
 
   // Interleaved stereo int16 audio (numFrames frames == 2*numFrames samples).
   virtual void pushAudio(const int16_t *data, std::size_t numFrames) = 0;
+
+  // Whether the sink currently wants frames. Producers may skip expensive work
+  // (e.g. a GPU framebuffer readback) when this is false. Defaults to always
+  // wanting frames; the netplay sender returns false until armed.
+  [[nodiscard]] virtual bool wantsFrames() const { return true; }
 };
 
 } // namespace firelight::media

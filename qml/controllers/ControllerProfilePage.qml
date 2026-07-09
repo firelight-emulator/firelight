@@ -96,11 +96,11 @@ Pane {
                      KeyNavigation.right: theStack
 
                      Keys.onBackPressed: {
-                         root.StackView.view.popCurrentItem(StackView.PopTransition)
+                         Router.back()
                      }
 
                      Keys.onEscapePressed: {
-                         root.StackView.view.popCurrentItem(StackView.PopTransition)
+                         Router.back()
                      }
 
                      currentIndex: 0

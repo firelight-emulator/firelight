@@ -67,6 +67,18 @@ Item {
                 padding: 0
                 hoverEnabled: true
 
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    onDoubleTapped: EmulationService.loadEntry(gameDelegate.model.entryId)
+                }
+
+                Keys.onPressed: function (event) {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Select) {
+                        EmulationService.loadEntry(gameDelegate.model.entryId)
+                        event.accepted = true
+                    }
+                }
+
                 ContextMenu.menu: RightClickMenu {
                     RightClickMenuItem {
                         text: "Change artwork"

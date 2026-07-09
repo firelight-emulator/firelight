@@ -115,6 +115,9 @@ public:
     int suspendPointIndex;
     int rewindPointIndex;
     float playbackMultiplier;
+    // Set when a capture command was held back a frame to force a fresh
+    // framebuffer readback (HW cores that were idle). Prevents re-deferral.
+    bool deferred = false;
   };
 
   void submitCommand(EmulatorCommand command);
@@ -155,6 +158,10 @@ private:
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;
+  // Capture commands deferred one frame to wait for a fresh readback.
+  QQueue<EmulatorCommand> m_deferredCommands;
+  // Forces a single framebuffer readback next frame (idle HW cores).
+  bool m_captureNextFrame = false;
 
   QImage m_overlayImage;
   QImage m_currentImage;
@@ -217,9 +224,23 @@ private:
 
   void displayPauseImage(QRhiCommandBuffer *cb);
 
-  // Pushes the latest software frame into the instant-replay recorder.
+  // Reads the composited colorTexture() back to a CPU QImage (m_currentImage)
+  // and feeds it to the clip recorder and netplay stream. Works for software
+  // and hardware cores alike, since both fill colorTexture().
+  void scheduleFrameReadback(QRhiResourceUpdateBatch *batch);
+
+  // Whether anything needs a per-frame CPU copy right now (instant replay on,
+  // host stream armed, or a one-shot capture pending). HW cores skip the
+  // readback when nothing does.
+  [[nodiscard]] bool anyFrameConsumerActive() const;
+
+  // Holds a capture command back one frame so a fresh readback can land first
+  // (HW cores that were idle). Returns true if the command was deferred.
+  bool deferCaptureUntilFrameReady(const EmulatorCommand &command);
+
+  // Pushes the latest frame into the instant-replay recorder.
   void feedClipRecorder(const QImage &frame);
-  // Pushes the latest software frame into the netplay host stream.
+  // Pushes the latest frame into the netplay host stream.
   void feedNetplayStream(const QImage &frame);
 
   bool m_usingHardwareRenderer = false;

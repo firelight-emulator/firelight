@@ -11,6 +11,18 @@ FocusScope {
     property var menuItems: []
     property var pages: []
 
+    // Optional URL section name per menu item (parallel to menuItems), so a menu
+    // can be driven by / reflected into a route like /settings/appearance.
+    property var routeNames: []
+    readonly property string currentSection: (currentIndex >= 0 && currentIndex < routeNames.length) ? routeNames[currentIndex] : ""
+
+    function selectSection(name) {
+        var i = routeNames.indexOf(name);
+        if (i >= 0 && i !== currentIndex) {
+            currentIndex = i;
+        }
+    }
+
     SwipeView {
         id: portraitContent
 
@@ -53,7 +65,7 @@ FocusScope {
 
                 onToggled: {
                     if (checked) {
-                        ListView.view.currentIndex = index;
+                        root.currentIndex = index;
                     }
                 }
             }
@@ -134,7 +146,7 @@ FocusScope {
                 }
                 onToggled: {
                     if (checked) {
-                        ListView.view.currentIndex = index;
+                        root.currentIndex = index;
                     }
                 }
             }

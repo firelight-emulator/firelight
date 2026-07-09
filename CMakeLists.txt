@@ -138,6 +138,9 @@ file(GLOB QML_FILES
         qml/**/*.qml
 )
 
+# JS libraries aren't matched by the .qml glob above; add them explicitly.
+list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/routing.js)
+
 foreach (QML_FILE ${QML_FILES})
     get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
     set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
@@ -148,6 +151,7 @@ set_source_files_properties(qml/ColorPalette.qml PROPERTIES QT_QML_SINGLETON_TYP
 set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 # The libretro/emulation core: the ABI wrapper + emulation lifecycle. Depends
 # only on domain interfaces (audio/mic/achievement clients are injected), so it
@@ -214,7 +218,6 @@ add_library(firelight_lib
         src/gui/eventhandlers/window_resize_handler.cpp
         src/app/achievements/gui/achievement_list_model.cpp
         src/app/achievements/gui/achievement_list_sort_filter_model.cpp
-        src/gui/router.cpp
         src/gui/platform_list_model.cpp
         src/gui/models/shop/shop_item_model.cpp
         src/app/saves/gui/suspend_point_list_model.cpp
@@ -527,6 +530,8 @@ file(GLOB QML_TEST_FILES
         qml/ColorPalette.qml
         qml/Constants.qml
         qml/AppStyle.qml
+        qml/routing.js
+        qml_tests/tst_routing.qml
         #        qml/components/IconButton.qml
         qml/components/FLFocusHighlight.qml
         qml_tests/components/tst_FLFocusHighlight.qml

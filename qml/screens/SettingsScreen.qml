@@ -7,10 +7,27 @@ Pane {
 
     property bool gameRunning: false
     property bool movingDown: true
-    property string section
 
-    Component.onCompleted: {
-        sectionChanged();
+    Component.onCompleted: syncFromRoute()
+
+    // Keep the selected sub-page and the /settings/<section> URL in sync.
+    function syncFromRoute() {
+        if (!Router.isActive("/settings")) {
+            return;
+        }
+        var m = Router.match(Router.path, ["/settings/:section"]);
+        if (m.matched) {
+            menu.selectSection(m.params.section);
+        } else if (Router.path === "/settings" && menu.currentSection) {
+            Router.replace("/settings/" + menu.currentSection);
+        }
+    }
+
+    Connections {
+        target: Router
+        function onPathChanged() {
+            root.syncFromRoute();
+        }
     }
 
     background: Item{}
@@ -18,16 +35,20 @@ Pane {
     verticalPadding: 16
 
     FLTwoColumnMenu {
-        // KeyNavigation.up: closeButton
-        // anchors.bottom: parent.bottom
-        // anchors.left: parent.left
-        // anchors.leftMargin: 40
-        // anchors.right: parent.right
-        // anchors.rightMargin: 40
-        // anchors.top: headerBar.bottom
+        id: menu
         anchors.fill: parent
         menuItems: ["Appearance", "Directories", "Controllers", "Achievements", "Audio / Video", "Emulation", "Platforms", "About"]
+        routeNames: ["appearance", "directories", "controllers", "achievements", "av", "emulation", "platforms", "about"]
         pages: [appearanceSettings, directorySettings, controllerSettings, retroAchievementSettings, videoSettings, emulationSettings, platformSettings, about]
+
+        onCurrentSectionChanged: {
+            if (currentSection && Router.isActive("/settings")) {
+                var target = "/settings/" + currentSection;
+                if (Router.path !== target) {
+                    Router.replace(target);
+                }
+            }
+        }
     }
 
     Component {

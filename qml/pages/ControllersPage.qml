@@ -187,11 +187,8 @@ FocusScope {
                 label: "Edit profile"
 
                 onClicked: function () {
-                    // profileDialog.open()
-                    root.StackView.view.pushItem(profilePage, {playerNumber: content.index, profileId: content.model.profile_id}, StackView.PushTransition)
-                    // editProfileButtonClicked(model.model_name, content.index + 1)
-                    // Router.doSomethingWith(editProfileButton, {playerNumber: content.index + 1})
-                    // screenStack.pushItem(profileEditor, {playerNumber: content.index + 1}, StackView.PushTransition)
+                    Router.navigate("/controllers/profiles/" + content.index
+                                    + "?profileId=" + encodeURIComponent(content.model.profile_id))
                 }
             }
 
@@ -410,7 +407,7 @@ FocusScope {
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
                     onClicked: function () {
-                        root.StackView.view.pushItem(profileManagementPage, {}, StackView.PushTransition)
+                        Router.navigate("/controllers/manage")
                     }
                 }
             }
@@ -456,18 +453,6 @@ FocusScope {
             Layout.horizontalStretchFactor: 1
         }
     }
-
-        Component {
-            id: profilePage
-            ControllerProfilePage {
-            }
-        }
-
-        Component {
-            id: profileManagementPage
-            ProfileManagementPage {
-            }
-        }
 
     // FirelightDialog {
     //     id: profileDialog

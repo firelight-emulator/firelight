@@ -17,7 +17,7 @@ FocusScope {
         target: InputService
 
         function onShortcutTriggered(player, id, phase) {
-            if (root.parent.StackView.status !== StackView.Active) {
+            if (!root.shortcutsInGame) {
                 return
             }
             // 0 = Started (see input::ShortcutPhase); act on the press only.
@@ -39,8 +39,6 @@ FocusScope {
         }
     }
 
-    required property StackView stackView
-
     property alias audioBufferLevel: emulator.audioBufferLevel
 
     property bool paused
@@ -58,8 +56,10 @@ FocusScope {
     // overlay pushed on top (or leaving) drops back to menu scope. Without this
     // the engine stays in menu scope and only ScopeAlways shortcuts (e.g.
     // screenshot) fire — in-game ones like capture_clip never trigger.
-    property bool shortcutsInGame:
-        root.parent && root.parent.StackView.status === StackView.Active
+    // In-game shortcut scope: only while the game is actually the live, focused
+    // thing — not while paused (quick menu / backgrounded) or under an in-game
+    // overlay (e.g. the rewind menu on overlayStack).
+    property bool shortcutsInGame: !root.paused && overlayStack.depth === 0
     onShortcutsInGameChanged: InputService.setShortcutsInGame(shortcutsInGame)
     Component.onDestruction: InputService.setShortcutsInGame(false)
 
@@ -257,11 +257,11 @@ FocusScope {
         }
 
         onRewindPointsReady: function (points) {
-            root.stackView.pushItem(rewindPage, {
+            overlayStack.pushItem(rewindPage, {
                 model: points,
                 aspectRatio: emulator.aspectRatio
             }, StackView.Immediate)
-            // root.rewindPointsReady(points)
+            overlayStack.forceActiveFocus()
         }
 
         onPlaybackMultiplierChanged: function() {
@@ -463,12 +463,21 @@ FocusScope {
         anchors.rightMargin: 12
     }
 
+    // Transient in-game overlays (e.g. the rewind menu) live here, so the page is
+    // self-contained and needs no external stack. Empty (depth 0) while playing.
+    StackView {
+        id: overlayStack
+        anchors.fill: parent
+        visible: depth > 0
+    }
+
     Component {
         id: rewindPage
         RewindMenu {
             onRewindPointSelected: function(index) {
                 emulator.loadRewindPoint(index)
-                root.stackView.popCurrentItem()
+                overlayStack.popCurrentItem()
+                root.forceActiveFocus()
             }
         }
     }

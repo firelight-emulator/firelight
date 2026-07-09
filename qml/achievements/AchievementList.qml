@@ -120,7 +120,7 @@ FocusScope {
                 font.pointSize: 12
             }
             onClicked: {
-                Router.navigateTo("settings/achievements")
+                Router.navigate("/settings/achievements")
             }
         }
         Item {

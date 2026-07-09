@@ -1,106 +1,59 @@
 import QtQuick
 import QtQuick.Controls
-// import QtQuick.Controls.Material
-import QtQuick.Dialogs
-import QtQuick.Window
-import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
+// Hosts the emulator page. Pause and blur are owned by the host (GameplayLayer):
+// it drives `blurAmount` when something is layered over the game and toggles the
+// page's `paused`. This just loads/unloads the page, applies the blur/dim, and
+// reports the Esc/Home "suspend" key.
 Loader {
-        id: emulatorLoader
-        StackView.visible: true
+    id: emulatorLoader
 
-        signal suspended()
+    signal suspended()
 
-        states: [
-            State {
-                name: "inactive"
-                when: emulatorLoader.status != Loader.Ready
-                PropertyChanges {
-                    emulatorLoader.focus: false
-                    emulatorLoader.blurAmount: 0
-                }
-            },
-            State {
-                name: "unfocused"
-                when: emulatorLoader.status == Loader.Ready && mainContentStack.currentItem != emulatorLoader
-                PropertyChanges {
-                    emulatorLoader.focus: false
-                    emulatorLoader.blurAmount: 1
-                }
-            },
-             State {
-                 name: "focused"
-                 when: mainContentStack.currentItem == emulatorLoader
-                 PropertyChanges {
-                     emulatorLoader.focus: true
-                     emulatorLoader.blurAmount: 0
-                 }
-             }
-        ]
+    // 0 = clear, 1 = fully blurred+dimmed (game behind the quick menu).
+    property real blurAmount: 0
 
-        transitions: [
-            Transition {
-                from: "focused"
-                to: "unfocused"
-                reversible: true
-                NumberAnimation {
-                    target: emulatorLoader
-                    property: "blurAmount"
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        ]
-
-        function startGame() {
-            item.startGame()
-        }
-
-        property real blurAmount: 0
-
-        layer.enabled: blurAmount !== 0
-        layer.effect: MultiEffect {
-            // enabled: root.blurAmount !== 0
-            source: emulatorLoader
-            anchors.fill: emulatorLoader
-            blurEnabled: true
-            blurMultiplier: 2
-            blurMax: 64
-            autoPaddingEnabled: false
-            blur: emulatorLoader.blurAmount
-        }
-
-        Rectangle {
-            id: dimmer
-            color: "black"
-            visible: emulatorLoader.status === Loader.Ready
-            opacity: emulatorLoader.blurAmount * 0.55
-            anchors.fill: parent
-
-            z: 10
-        }
-
-        Keys.onPressed: function(event) {
-            if (event.key === Qt.Key_Home || event.key === Qt.Key_Escape) {
-                emulatorLoader.suspended()
-                event.accepted = true
-                return
-            }
-
-            event.accepted = false
-        }
-
-        StackView.onActivated: {
-            if (emulatorLoader.item) {
-                emulatorLoader.item.paused = false
-            }
-        }
-
-        StackView.onDeactivating: {
-            if (emulatorLoader.item) {
-                emulatorLoader.item.paused = true
-            }
+    Behavior on blurAmount {
+        NumberAnimation {
+            duration: 250
+            easing.type: Easing.InOutQuad
         }
     }
+
+    function startGame() {
+        if (item) {
+            item.startGame()
+        }
+    }
+
+    layer.enabled: blurAmount !== 0
+    layer.effect: MultiEffect {
+        source: emulatorLoader
+        anchors.fill: emulatorLoader
+        blurEnabled: true
+        blurMultiplier: 2
+        blurMax: 64
+        autoPaddingEnabled: false
+        blur: emulatorLoader.blurAmount
+    }
+
+    Rectangle {
+        id: dimmer
+        color: "black"
+        visible: emulatorLoader.status === Loader.Ready
+        opacity: emulatorLoader.blurAmount * 0.55
+        anchors.fill: parent
+        z: 10
+    }
+
+    Keys.onPressed: function (event) {
+        if (event.key === Qt.Key_Home || event.key === Qt.Key_Escape) {
+            emulatorLoader.suspended()
+            event.accepted = true
+            return
+        }
+        event.accepted = false
+    }
+}

@@ -215,9 +215,62 @@ void EmulatorItemRenderer::receive(const void *data, const unsigned width,
       newImage = newImage.transformed(QTransform().rotate(m_screenRotation * 90.0));
 
     m_currentUpdateBatch->uploadTexture(colorTexture(), newImage);
-    feedClipRecorder(newImage);
-    feedNetplayStream(newImage);
   }
+}
+
+// Reads the composited frame back off the GPU and fans it out to every CPU-side
+// capture consumer. colorTexture() is filled by both the software path
+// (uploadTexture) and the hardware path (copyTexture), so this is the one place
+// frames are captured regardless of how the core rendered.
+void EmulatorItemRenderer::scheduleFrameReadback(QRhiResourceUpdateBatch *batch) {
+  auto *rbResult = new QRhiReadbackResult;
+  rbResult->completed = [this, rbResult] {
+    if (!rbResult->data.isEmpty()) {
+      const auto *pixels =
+          reinterpret_cast<const uchar *>(rbResult->data.constData());
+      // Own the pixels: the readback buffer is freed when this callback returns.
+      QImage frame = QImage(pixels, rbResult->pixelSize.width(),
+                            rbResult->pixelSize.height(),
+                            QImage::Format_RGBA8888_Premultiplied)
+                         .copy();
+      // OpenGL's default framebuffer is bottom-up.
+      if (m_graphicsApi == QSGRendererInterface::OpenGL)
+        frame.flip(Qt::Vertical);
+      m_currentImage = frame;
+      feedClipRecorder(m_currentImage);
+      feedNetplayStream(m_currentImage);
+    }
+    delete rbResult;
+  };
+  batch->readBackTexture(QRhiReadbackDescription(colorTexture()), rbResult);
+  m_captureNextFrame = false;
+}
+
+bool EmulatorItemRenderer::anyFrameConsumerActive() const {
+  if (m_captureNextFrame)
+    return true;
+  if (!m_emulatorInstance)
+    return false;
+  if (m_emulatorInstance->getInstantReplayEnabled())
+    return true;
+  if (auto *sink = m_emulatorInstance->getNetplayStreamSink())
+    return sink->wantsFrames();
+  return false;
+}
+
+bool EmulatorItemRenderer::deferCaptureUntilFrameReady(
+    const EmulatorCommand &command) {
+  // Only HW cores idle enough to skip readback need this; software cores and
+  // active HW cores already have a fresh m_currentImage. Paused cores never run
+  // a frame, so deferring would never resolve — capture the pause image instead.
+  if (!m_usingHardwareRenderer || m_paused || command.deferred ||
+      anyFrameConsumerActive())
+    return false;
+  m_captureNextFrame = true;
+  EmulatorCommand deferred = command;
+  deferred.deferred = true;
+  m_deferredCommands.enqueue(deferred);
+  return true;
 }
 
 // Same core-frame pts scheme as the clip recorder; the sink no-ops unless a
@@ -227,7 +280,7 @@ void EmulatorItemRenderer::feedNetplayStream(const QImage &frame) {
     return;
   }
   auto *sink = m_emulatorInstance->getNetplayStreamSink();
-  if (!sink) {
+  if (!sink || !sink->wantsFrames()) {
     return;
   }
   const int fps = m_clipFps >= 1.0 ? static_cast<int>(m_clipFps + 0.5) : 60;
@@ -350,6 +403,11 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     }
   }
 
+  // Capture commands held back a frame (waiting for a fresh HW readback) run now
+  // that m_currentImage has been refreshed.
+  while (!m_deferredCommands.isEmpty())
+    m_commandQueue.enqueue(m_deferredCommands.dequeue());
+
   while (!m_commandQueue.isEmpty()) {
     const auto command = m_commandQueue.dequeue();
     switch (command.type) {
@@ -359,6 +417,8 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
       case WriteRewindPoint: {
         if (m_paused)
+          break;
+        if (deferCaptureUntilFrameReady(command))
           break;
         SuspendPoint sp;
         sp.state = m_emulatorInstance->serializeState();
@@ -420,6 +480,8 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       break;
 
       case WriteSuspendPoint: {
+        if (deferCaptureUntilFrameReady(command))
+          break;
         SuspendPoint sp;
         sp.state = m_emulatorInstance->serializeState();
         sp.retroachievementsState = m_achievementManager->serializeState();
@@ -433,6 +495,8 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       break;
 
       case CaptureScreenshot: {
+        if (deferCaptureUntilFrameReady(command))
+          break;
         // Reuse the current frame image the suspend-point path captures. Copy so
         // the PNG write doesn't race the next frame's readback.
         if (const auto mediaService = m_mediaService;
@@ -616,17 +680,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     }
     cb->endExternal();
 
-    auto *rbResult = new QRhiReadbackResult;
-    rbResult->completed = [this, rbResult] {
-      const auto *p = reinterpret_cast<const uchar *>(rbResult->data.constData());
-      m_currentImage = QImage(p, rbResult->pixelSize.width(),
-                              rbResult->pixelSize.height(),
-                              QImage::Format_RGBA8888_Premultiplied);
-      if (m_graphicsApi == QSGRendererInterface::OpenGL)
-        m_currentImage.flip(Qt::Vertical);
-      delete rbResult;
-    };
-    batch->readBackTexture(QRhiReadbackDescription(colorTexture()), rbResult);
+    // Software cores always read back — the cost is small at native resolution
+    // and it keeps m_currentImage fresh for instant screenshots.
+    scheduleFrameReadback(batch);
 
     m_currentUpdateBatch = nullptr;
     cb->endPass(batch);
@@ -647,6 +703,10 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
       QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
       batch->copyTexture(colorTexture(), m_vulkanRenderer->sharedTexture());
+      // Read the composited frame back only when something needs it, so an
+      // idle HW core doesn't pay for a per-frame GPU->CPU copy.
+      if (anyFrameConsumerActive())
+        scheduleFrameReadback(batch);
       cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
       cb->endPass(batch);
     } else {
