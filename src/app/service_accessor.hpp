@@ -55,6 +55,10 @@ namespace firelight {
     class MediaService;
   }
 
+  namespace graphics {
+    class ShaderLibrary;
+  }
+
   // The one app-wide service locator. Its contract: it exists only for objects
   // the QML engine default-constructs (qmlRegisterType models/items) which
   // cannot receive dependencies via a constructor. Everything we construct
@@ -90,6 +94,8 @@ namespace firelight {
 
     static void setMediaService(media::MediaService *service);
 
+    static void setShaderLibrary(graphics::ShaderLibrary *library);
+
   protected:
     static input::InputService *getInputService();
 
@@ -117,6 +123,8 @@ namespace firelight {
 
     static media::MediaService *getMediaService();
 
+    static graphics::ShaderLibrary *getShaderLibrary();
+
   private:
     static input::InputService *s_inputService;
     static input::IControllerRepository *s_controllerProfileRepository;
@@ -131,5 +139,6 @@ namespace firelight {
     static mods::IModRepository *s_modRepository;
     static discord::IDiscordManager *s_discordManager;
     static media::MediaService *s_mediaService;
+    static graphics::ShaderLibrary *s_shaderLibrary;
   };
 } // namespace firelight

@@ -26,6 +26,10 @@
 #include <qchronotimer.h>
 
 #include "emulator_vulkan_renderer.hpp"
+#include "graphics/shader_chain.hpp"
+
+#include <QJsonObject>
+#include <optional>
 
 class EmulatorItem;
 
@@ -46,6 +50,10 @@ namespace firelight {
     class MediaService;
     class ClipRecorder;
   }
+
+  namespace graphics {
+    class ShaderLibrary;
+  }
 } // namespace firelight
 
 // Threading: created, used, and destroyed on the QML render thread — Qt drives
@@ -64,7 +72,8 @@ public:
     firelight::achievements::RAClient *achievementManager,
     firelight::gui::GameImageProvider *gameImageProvider,
     firelight::saves::ISaveManager *saveManager,
-    firelight::media::MediaService *mediaService);
+    firelight::media::MediaService *mediaService,
+    firelight::graphics::ShaderLibrary *shaderLibrary);
 
   void setHwRenderInterface(retro_hw_render_callback *iface) override;
 
@@ -145,6 +154,26 @@ private:
   firelight::gui::GameImageProvider *m_gameImageProvider;
   firelight::saves::ISaveManager *m_saveManager;
   firelight::media::MediaService *m_mediaService;
+  firelight::graphics::ShaderLibrary *m_shaderLibrary = nullptr;
+
+  // ── Video shader chain ───────────────────────────────────────────────────
+  // Resolved (in synchronize()) from the instance's "shader" setting: the preset
+  // + its ordered parameter values. Empty when no shader is active.
+  firelight::graphics::ShaderChain m_shaderChain;
+  std::optional<firelight::graphics::ShaderPreset> m_activeShaderPreset;
+  QVector<float> m_shaderParams;
+  QString m_activeShaderValue;
+  quint64 m_shaderFrameCount = 0;
+  // Intermediate texture the software frame is uploaded into before shading.
+  std::unique_ptr<QRhiTexture> m_shaderSourceTexture;
+
+  // Reads the instance's shader setting and (re)resolves m_activeShaderPreset /
+  // m_shaderParams. Returns true when a shader is active. Called from
+  // synchronize() (GUI thread blocked) so it can read instance state safely.
+  bool resolveActiveShader();
+  // Runs the shader chain, sampling `source` into colorTexture(). On any failure
+  // it blits `source` straight to colorTexture() so the frame still shows.
+  void applyShaderChain(QRhiCommandBuffer *cb, QRhiTexture *source);
 
   // Instant-replay recorder: fed the software-rendered frames in receive(); its
   // rolling window is snapshotted + muxed to mp4 on CaptureVideoClip. Software
@@ -157,6 +186,9 @@ private:
   int64_t m_streamFrameIndex = 0;
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
+  // Where receive() uploads the software frame. Normally colorTexture(); redirected
+  // to m_shaderSourceTexture when a shader is active so the chain can post-process.
+  QRhiTexture *m_uploadTarget = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;
   // Capture commands deferred one frame to wait for a fresh readback.
   QQueue<EmulatorCommand> m_deferredCommands;

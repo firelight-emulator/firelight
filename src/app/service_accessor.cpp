@@ -14,6 +14,7 @@ namespace firelight {
   mods::IModRepository *ServiceAccessor::s_modRepository;
   discord::IDiscordManager *ServiceAccessor::s_discordManager;
   media::MediaService *ServiceAccessor::s_mediaService;
+  graphics::ShaderLibrary *ServiceAccessor::s_shaderLibrary;
 
   void ServiceAccessor::setInputService(input::InputService *service) {
     s_inputService = service;
@@ -71,6 +72,10 @@ namespace firelight {
     s_mediaService = service;
   }
 
+  void ServiceAccessor::setShaderLibrary(graphics::ShaderLibrary *library) {
+    s_shaderLibrary = library;
+  }
+
   input::InputService *ServiceAccessor::getInputService() {
     return s_inputService;
   }
@@ -119,6 +124,10 @@ namespace firelight {
 
   media::MediaService *ServiceAccessor::getMediaService() {
     return s_mediaService;
+  }
+
+  graphics::ShaderLibrary *ServiceAccessor::getShaderLibrary() {
+    return s_shaderLibrary;
   }
 
   discord::IDiscordManager *ServiceAccessor::getDiscordManager() {

@@ -1,0 +1,6 @@
+{
+  "name": "Sharp Bilinear",
+  "passes": [
+    { "fragment": "shader.frag", "scale": 1.0, "filter": "linear", "wrap": "clamp" }
+  ]
+}

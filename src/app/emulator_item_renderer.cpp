@@ -21,6 +21,9 @@
 #include <spdlog/spdlog.h>
 
 #include "emulator_item.hpp"
+#include "graphics/shader_library.hpp"
+
+#include <QJsonDocument>
 
 static EmulatorItemRenderer *globalRenderer = nullptr;
 static QRhi *globalRhi = nullptr;
@@ -36,12 +39,13 @@ EmulatorItemRenderer::EmulatorItemRenderer(
   firelight::achievements::RAClient *achievementManager,
   firelight::gui::GameImageProvider *gameImageProvider,
   firelight::saves::ISaveManager *saveManager,
-  firelight::media::MediaService *mediaService)
+  firelight::media::MediaService *mediaService,
+  firelight::graphics::ShaderLibrary *shaderLibrary)
   : m_window(window), m_graphicsApi(api),
     m_emulatorInstance(emulatorInstance), m_activityLog(activityLog),
     m_achievementManager(achievementManager),
     m_gameImageProvider(gameImageProvider), m_saveManager(saveManager),
-    m_mediaService(mediaService) {
+    m_mediaService(mediaService), m_shaderLibrary(shaderLibrary) {
   globalRenderer = this;
   m_clipRecorder = std::make_unique<firelight::media::ClipRecorder>();
 }
@@ -214,7 +218,10 @@ void EmulatorItemRenderer::receive(const void *data, const unsigned width,
     if (m_screenRotation != 0)
       newImage = newImage.transformed(QTransform().rotate(m_screenRotation * 90.0));
 
-    m_currentUpdateBatch->uploadTexture(colorTexture(), newImage);
+    // Normally colorTexture(); when a shader is active it is the chain's source
+    // texture, and the shader pass writes colorTexture() afterwards.
+    QRhiTexture *target = m_uploadTarget ? m_uploadTarget : colorTexture();
+    m_currentUpdateBatch->uploadTexture(target, newImage);
   }
 }
 
@@ -386,6 +393,10 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   m_paused = emulatorItem->paused();
   m_contentHash = emulatorItem->m_contentHash;
   m_saveSlotNumber = emulatorItem->m_saveSlotNumber;
+
+  // Resolve the active video shader here (GUI thread blocked) so render() only
+  // touches GPU state. Cheap when the setting hasn't changed.
+  resolveActiveShader();
 
   // Apply video-callback render dimensions to colorTexture.
   // synchronize() runs with the main thread blocked, so setFixed* is safe here.
@@ -598,6 +609,96 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   }
 }
 
+// Reads the instance's "shader" setting (a bare preset id, or a JSON blob
+// {"preset":id,"params":{...}}) and resolves it to a preset + ordered parameter
+// values. Called from synchronize() so it can read instance state safely.
+bool EmulatorItemRenderer::resolveActiveShader() {
+  if (!m_shaderLibrary || !m_emulatorInstance) {
+    m_activeShaderPreset.reset();
+    m_activeShaderValue.clear();
+    return false;
+  }
+  const QString value = QString::fromStdString(m_emulatorInstance->getShader());
+  if (value == m_activeShaderValue) {
+    return m_activeShaderPreset.has_value();
+  }
+  m_activeShaderValue = value;
+  m_activeShaderPreset.reset();
+  m_shaderParams.clear();
+
+  const QString trimmed = value.trimmed();
+  if (trimmed.isEmpty()) {
+    return false;
+  }
+
+  QString id;
+  QJsonObject params;
+  if (trimmed.startsWith('{')) {
+    const auto doc = QJsonDocument::fromJson(trimmed.toUtf8());
+    if (doc.isObject()) {
+      id = doc.object().value("preset").toString();
+      params = doc.object().value("params").toObject();
+    }
+  } else {
+    id = trimmed;
+  }
+  if (id.isEmpty()) {
+    return false;
+  }
+
+  auto preset = m_shaderLibrary->presetById(id);
+  if (!preset) {
+    spdlog::warn("Shader preset '{}' not found", id.toStdString());
+    return false;
+  }
+
+  QVector<float> vals;
+  vals.reserve(preset->parameters.size());
+  for (const auto &p : preset->parameters) {
+    float v = p.defaultValue;
+    if (params.contains(p.key)) {
+      v = static_cast<float>(params.value(p.key).toDouble(p.defaultValue));
+    }
+    vals.push_back(v);
+  }
+  m_activeShaderPreset = std::move(preset);
+  m_shaderParams = std::move(vals);
+  return true;
+}
+
+// Post-processes the software frame in `source` into colorTexture() via the
+// shader chain. Fails open: on any error it blits the frame through unshaded so
+// the game never disappears because of a bad shader.
+void EmulatorItemRenderer::applyShaderChain(QRhiCommandBuffer *cb,
+                                            QRhiTexture *source) {
+  const QSize sz = colorTexture()->pixelSize();
+  QString err;
+  const bool ok =
+      m_activeShaderPreset &&
+      m_shaderChain.ensureBuilt(rhi(), renderTarget()->renderPassDescriptor(),
+                                *m_activeShaderPreset, m_shaderParams, source, sz,
+                                sz, &err);
+  if (ok) {
+    m_shaderChain.setParams(m_shaderParams);
+    m_shaderChain.render(cb, renderTarget(), m_shaderFrameCount++);
+  } else {
+    if (!err.isEmpty()) {
+      spdlog::warn("Shader chain unavailable; showing unshaded frame: {}",
+                   err.toStdString());
+    }
+    QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
+    batch->copyTexture(colorTexture(), source);
+    cb->resourceUpdate(batch);
+  }
+
+  // Refresh the CPU capture image from the now-final colorTexture().
+  if (anyFrameConsumerActive()) {
+    QRhiResourceUpdateBatch *rb = rhi()->nextResourceUpdateBatch();
+    scheduleFrameReadback(rb);
+    cb->resourceUpdate(rb);
+  }
+}
+
 void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   if (m_quitting) {
     return;
@@ -667,10 +768,32 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   emit m_emulatorItem->aboutToRunFrame();
 
   if (!m_usingHardwareRenderer) {
+    // When a shader is active, the frame is uploaded into an intermediate
+    // texture and the shader chain writes colorTexture() afterwards. Otherwise
+    // the frame goes straight into colorTexture() (original path).
+    bool shade = m_activeShaderPreset.has_value();
+    QRhiTexture *frameTarget = colorTexture();
+    if (shade) {
+      const QSize sz = colorTexture()->pixelSize();
+      if (!m_shaderSourceTexture || m_shaderSourceTexture->pixelSize() != sz) {
+        m_shaderSourceTexture.reset(rhi()->newTexture(
+            QRhiTexture::RGBA8, sz, 1, QRhiTexture::UsedAsTransferSource));
+        if (!m_shaderSourceTexture->create()) {
+          m_shaderSourceTexture.reset();
+        }
+      }
+      if (m_shaderSourceTexture) {
+        frameTarget = m_shaderSourceTexture.get();
+      } else {
+        shade = false; // allocation failed — fall back to the direct path
+      }
+    }
+
     QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
     cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
                   QRhiCommandBuffer::ExternalContent);
     m_currentUpdateBatch = batch;
+    m_uploadTarget = frameTarget;
     cb->beginExternal();
     if (m_playbackMultiplier > 1) {
       for (int i = 0; i < static_cast<int>(m_playbackMultiplier); i++)
@@ -680,12 +803,20 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     }
     cb->endExternal();
 
-    // Software cores always read back — the cost is small at native resolution
-    // and it keeps m_currentImage fresh for instant screenshots.
-    scheduleFrameReadback(batch);
+    // Without a shader, software cores read back here — the cost is small at
+    // native resolution and it keeps m_currentImage fresh for screenshots. With
+    // a shader, the readback happens after the chain writes colorTexture().
+    if (!shade) {
+      scheduleFrameReadback(batch);
+    }
 
     m_currentUpdateBatch = nullptr;
+    m_uploadTarget = nullptr;
     cb->endPass(batch);
+
+    if (shade) {
+      applyShaderChain(cb, m_shaderSourceTexture.get());
+    }
   } else if (m_vulkanRenderer) {
     m_vulkanRenderer->renderFrame(m_emulatorInstance, m_playbackMultiplier,
                                   colorTexture()->pixelSize(), rhi());

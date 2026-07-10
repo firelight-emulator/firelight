@@ -1,0 +1,10 @@
+{
+  "name": "CRT Scanlines",
+  "parameters": [
+    { "key": "strength", "label": "Scanline strength", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.4 },
+    { "key": "brightboost", "label": "Brightness boost", "min": 1.0, "max": 2.0, "step": 0.05, "default": 1.15 }
+  ],
+  "passes": [
+    { "fragment": "shader.frag", "scale": 1.0, "filter": "linear", "wrap": "clamp" }
+  ]
+}

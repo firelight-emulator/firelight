@@ -811,6 +811,8 @@ int main(int argc, char *argv[]) {
         systemDir + "/shaders", shadersPath, &app);
     engine.rootContext()->setContextProperty("BorderStore", borderStore);
     engine.rootContext()->setContextProperty("ShaderStore", shaderStore);
+    // The renderer resolves the selected shader id -> preset through this store.
+    firelight::ServiceAccessor::setShaderLibrary(shaderStore);
 
     auto resizeHandler = new firelight::gui::WindowResizeHandler();
     engine.rootContext()->setContextProperty("window_resize_handler",

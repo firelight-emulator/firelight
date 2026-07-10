@@ -78,7 +78,7 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
 # find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
-find_package(Qt6 6.11 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
+find_package(Qt6 6.11 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg ShaderTools REQUIRED)
 if (Qt6_VERSION VERSION_GREATER_EQUAL 6.10.0)
     find_package(Qt6 OPTIONAL_COMPONENTS
             GuiPrivate
@@ -255,6 +255,10 @@ add_library(firelight_lib
         src/app/graphics/shader_preset.hpp
         src/app/graphics/shader_library.cpp
         src/app/graphics/shader_library.hpp
+        src/app/graphics/shader_compiler.cpp
+        src/app/graphics/shader_compiler.hpp
+        src/app/graphics/shader_chain.cpp
+        src/app/graphics/shader_chain.hpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp
         src/app/achievements/gui/AchievementSetItem.cpp
@@ -332,6 +336,9 @@ target_link_libraries(firelight_lib PUBLIC
         Qt6::GuiPrivate
         Qt6::Network
         Qt6::Widgets
+        # Runtime GLSL -> QShader baking for user-supplied video shaders
+        # (QShaderBaker lives in the ShaderTools private module).
+        Qt6::ShaderToolsPrivate
         # ${FFMPEG_LIBRARIES}
         PkgConfig::AVCODEC
         PkgConfig::AVFORMAT
@@ -538,6 +545,7 @@ add_executable(fl_test
         tests/app/settings/emulation_setting_test.cpp
         tests/app/settings/settings_catalog_test.cpp
         tests/app/settings/sqlite_core_option_repository_test.cpp
+        tests/app/graphics/shader_preset_test.cpp
         tests/app/gui/core_options_model_test.cpp
         tests/app/gui/emulation_settings_model_test.cpp
         tests/app/cli/cli_app_test.cpp

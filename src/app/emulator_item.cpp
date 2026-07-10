@@ -591,7 +591,7 @@ void EmulatorItem::startGame() {
     m_renderer = new EmulatorItemRenderer(
         window()->rendererInterface()->graphicsApi(), window(), emuInstance,
         getActivityService(), getAchievementManager(), getGameImageProvider(),
-        getSaveManager(), getMediaService());
+        getSaveManager(), getMediaService(), getShaderLibrary());
 
     m_renderer->onGeometryChanged([this](unsigned int width,
                                          unsigned int height, float aspectRatio,
