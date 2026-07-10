@@ -108,6 +108,13 @@ new game reaches the bedroom (`trainerID != 0`, `map == 0x26`). This closes the
 loop — an LLM proposes the route + oracle targets; the tool does the frame-perfect
 search and verification.
 
+`examples/yellow_early.txt` is a first-pass **authored early-game segment** (intro →
+player's bedroom → navigate to the wall), with `@assert`s on `map`/position that all
+pass. Authoring notes: the intro is an unoptimized A-mash placeholder; the SNES the
+player stands on re-opens its text on any `A`, so **`B` (not `A`) dismisses it**
+before the D-pad will move — the kind of detail iterative `shot`/`watch` authoring
+surfaces. Reaching Pikachu is more of the same overworld navigation.
+
 ### Gen-1 assist (Phase 3)
 
 `yellow_ram.hpp` holds the authoritative Pokémon Yellow RAM/HRAM addresses (from
