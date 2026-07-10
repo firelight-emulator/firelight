@@ -41,6 +41,7 @@
 
 #include "fltm.hpp"
 #include "libretro.h"
+#include "yellow_ram.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -457,8 +458,9 @@ int usage(const char *a0) {
                "  %s ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>\n"
                "  %s read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>\n"
                "  %s sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len=2]\n"
+               "  %s watch   <core> <rom> <movie.fltm> <frame>   (decode Pokemon Yellow state)\n"
                "  %s maps    <core> <rom> _\n",
-               a0, a0, a0, a0, a0, a0, a0, a0, a0);
+               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -698,6 +700,37 @@ int main(int argc, char **argv) {
       }
       std::printf("\n");
     }
+    closeCore();
+    return 0;
+  }
+
+  // ---- watch: decode named Pokemon Yellow state at a frame (yellow_ram.hpp) ----
+  if (cmd == "watch") {
+    const uint32_t frame = std::strtoul(argv[5] ? argv[5] : "0", nullptr, 0);
+    replayTo(corePath, frame, nullptr, every);
+    const auto r8 = [](uint16_t a) { return readGB(a); };
+    const auto r16 = [&](uint16_t a) { // big-endian
+      return (r8(a) << 8) | r8(a + 1);
+    };
+    using namespace yellow;
+    std::printf("frame %u:\n", frame);
+    std::printf("  RNG      Add=%02x Sub=%02x  DSum=%02x  rDIV=%02x frameCtr=%02x\n",
+                r8(hRandomAdd), r8(hRandomSub),
+                (r8(hRandomAdd) + r8(hRandomSub)) & 0xFF, r8(rDIV),
+                r8(hFrameCounter));
+    std::printf("  world    map=0x%02x pos=(%d,%d) dir=0x%02x tileset=0x%02x\n",
+                r8(wCurMap), r8(wXCoord), r8(wYCoord), r8(wPlayerDirection),
+                r8(wCurMapTileset));
+    std::printf("  party    count=%d  lead: HP=%d/%d Lv=%d DVs=%04x\n",
+                r8(wPartyCount), r16(wPartyMon1HP), r16(wPartyMon1MaxHP),
+                r8(wPartyMon1Level), r16(wPartyMon1DVs));
+    std::printf("  battle   you: sp=0x%02x HP=%d/%d Lv=%d | foe: sp=0x%02x "
+                "HP=%d/%d Lv=%d DVs=%04x\n",
+                r8(wBattleMonSpecies), r16(wBattleMonHP), r16(wBattleMonMaxHP),
+                r8(wBattleMonLevel), r8(wEnemyMonSpecies), r16(wEnemyMonHP),
+                r16(wEnemyMonMaxHP), r8(wEnemyMonLevel), r16(wEnemyMonDVs));
+    std::printf("  ids/dmg  trainerID=%04x  crit=%02x damage=%d\n",
+                r16(wPlayerID), r8(wCriticalHitOrOHKO), r16(wDamage));
     closeCore();
     return 0;
   }

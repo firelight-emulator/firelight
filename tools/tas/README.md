@@ -79,7 +79,23 @@ gate 1a). Subcommands:
 - `play    <core> <rom> <movie.fltm>` — deterministic replay + checkpoint report.
 - `verify  <core> <rom> <movie.fltm>` — replay-twice determinism + checkpoint sync.
 - `shot    <core> <rom> <movie.fltm> <frame> <out.ppm>` — dump a frame (binary PPM).
-- `ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>` — hexdump system RAM.
+- `ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>` — hexdump SYSTEM_RAM.
+- `read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>` — read any Game Boy address (WRAM / I-O / **HRAM**) via the core's memory-map descriptors.
+- `sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len]` — **luck manipulation**: savestate at a frame, then for each idle-frame delay 0..N show how the target (e.g. the RNG bytes) shifts — the search picks the delay that hits the wanted value.
+- `watch   <core> <rom> <movie.fltm> <frame>` — decode named Pokémon Yellow state (RNG/DSum, party, battle you/foe, position, trainer ID) — see `yellow_ram.hpp`.
+- `maps    <core> <rom> _` — dump the core's memory-map descriptors.
+
+### Gen-1 assist (Phase 3)
+
+`yellow_ram.hpp` holds the authoritative Pokémon Yellow RAM/HRAM addresses (from
+the `pokeyellow.sym` symfile — Yellow's WRAM is shifted vs Red/Blue). Reads go
+through the core's `RETRO_ENVIRONMENT_SET_MEMORY_MAPS` descriptors (`readGB`),
+which reach WRAM banks, `rDIV`, **and** the HRAM RNG bytes (`0xFFD3/0xFFD4`) that
+are not in `SYSTEM_RAM`. `sweep` demonstrates the manipulation lever (each idle
+delay → a distinct RNG state); a targeted search over `sweep` against a `watch`
+oracle (crit / forced miss / wild-encounter DVs) is the "assist". Verified
+in-game on mGBA: a compiled script reaches the overworld and `watch` reports real
+`map`/position/`trainerID`.
 
 **Input-script format** (one directive per line; `#` = comment):
 
