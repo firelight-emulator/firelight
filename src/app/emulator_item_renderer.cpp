@@ -874,22 +874,32 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     if (m_vulkanRenderer->isFirstFrameReady() &&
         m_vulkanRenderer->sharedTexture() &&
         m_vulkanRenderer->sharedSemValue() > 0) {
-      // Composite the shared image into colorTexture() via a GPU copy.
-      // renderFrame() already CPU-waited on the blit fence, so m_sharedImage
-      // is guaranteed complete â€” no GPU-side semaphore needed here.
+      // The shared image is complete (renderFrame() CPU-waited on the blit
+      // fence). Expose it to QRhi in a sampleable layout.
       m_vulkanRenderer->sharedTexture()->createFrom({
         reinterpret_cast<quint64>(m_vulkanRenderer->qtSharedImage()),
         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
       });
 
-      QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-      batch->copyTexture(colorTexture(), m_vulkanRenderer->sharedTexture());
-      // Read the composited frame back only when something needs it, so an
-      // idle HW core doesn't pay for a per-frame GPU->CPU copy.
-      if (anyFrameConsumerActive())
-        scheduleFrameReadback(batch);
-      cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
-      cb->endPass(batch);
+      if (m_activeShaderPreset.has_value()) {
+        // Same chain as the software path — the shared image is created SAMPLED,
+        // so it can be sampled directly as the chain's source. colorTexture() is
+        // the core's render size here (not display-sized for HW cores yet), so
+        // this runs at native resolution; display-res on Vulkan is a follow-up.
+        applyShaderChain(cb, m_vulkanRenderer->sharedTexture());
+      } else {
+        // Composite the shared image into colorTexture() via a GPU copy.
+        // renderFrame() already CPU-waited on the blit fence, so m_sharedImage
+        // is guaranteed complete — no GPU-side semaphore needed here.
+        QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
+        batch->copyTexture(colorTexture(), m_vulkanRenderer->sharedTexture());
+        // Read the composited frame back only when something needs it, so an
+        // idle HW core doesn't pay for a per-frame GPU->CPU copy.
+        if (anyFrameConsumerActive())
+          scheduleFrameReadback(batch);
+        cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
+        cb->endPass(batch);
+      }
     } else {
       // No real frame yet so clear to opaque black so colorTexture always has valid content
       cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);

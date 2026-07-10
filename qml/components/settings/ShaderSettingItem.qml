@@ -217,6 +217,28 @@ FocusScope {
             }
         }
 
+        // Live preview of the selected shader on a sample frame (updates as the
+        // sliders below move). Hidden for "None".
+        Rectangle {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: 8
+            Layout.preferredWidth: 360
+            Layout.preferredHeight: 270
+            visible: root.selectedId !== ""
+            color: "black"
+            radius: 8
+            border.width: 1
+            border.color: Theme.border
+            clip: true
+
+            ShaderPreviewItem {
+                anchors.fill: parent
+                anchors.margins: 1
+                shaderId: root.selectedId
+                params: JSON.stringify(root.selectedParams)
+            }
+        }
+
         // Parameter sliders for the selected preset.
         ColumnLayout {
             Layout.fillWidth: true

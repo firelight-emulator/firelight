@@ -259,6 +259,8 @@ add_library(firelight_lib
         src/app/graphics/shader_compiler.hpp
         src/app/graphics/shader_chain.cpp
         src/app/graphics/shader_chain.hpp
+        src/app/graphics/shader_preview_item.cpp
+        src/app/graphics/shader_preview_item.hpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp
         src/app/achievements/gui/AchievementSetItem.cpp

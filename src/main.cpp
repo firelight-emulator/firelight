@@ -77,6 +77,7 @@
 #include "app/emulator_item.hpp"
 #include "app/graphics/border_library.hpp"
 #include "app/graphics/shader_library.hpp"
+#include "app/graphics/shader_preview_item.hpp"
 #include "app/input/gui/gamepad_status_item.hpp"
 #include "app/library/gui/entry_list_model.hpp"
 #include "app/library/gui/library_entry_item.hpp"
@@ -545,6 +546,8 @@ int main(int argc, char *argv[]) {
     }
 
     qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
+    qmlRegisterType<firelight::graphics::ShaderPreviewItem>("Firelight", 1, 0,
+                                                            "ShaderPreviewItem");
     qmlRegisterType<firelight::gui::NetplayStreamItem>("Firelight", 1, 0,
                                                        "NetplayStreamItem");
     qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0,
