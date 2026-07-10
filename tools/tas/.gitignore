@@ -2,3 +2,5 @@
 *.exe
 *.o
 *.obj
+# Generated movie artifacts
+*.fltm

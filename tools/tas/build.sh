@@ -14,12 +14,17 @@ if command -v cygpath >/dev/null 2>&1; then
 fi
 export PATH="$CXX_DIR:$PATH"
 
-"$CXX" -std=c++20 -O2 -Wall -Wextra \
-  -I"$REPO/include/libretro" \
-  "$HERE/determinism_test.cpp" \
-  -o "$HERE/determinism_test.exe"
+build() { # <src> <out>
+  "$CXX" -std=c++20 -O2 -Wall -Wextra -I"$REPO/include/libretro" \
+    "$HERE/$1" -o "$HERE/$2"
+  echo "built: $HERE/$2"
+}
 
-echo "built: $HERE/determinism_test.exe"
+build determinism_test.cpp determinism_test.exe
+build tas_movie.cpp tas_movie.exe
+
 echo
-echo "run e.g.:"
-echo "  \"$HERE/determinism_test.exe\" \"$REPO/_cores/windows/gambatte_libretro.dll\" /path/to/pokemon_yellow.gbc 4000 1"
+echo "run e.g. (Game Boy -> use the mGBA core; gate 1a: gambatte savestates unreliable):"
+echo "  \"$HERE/determinism_test.exe\" \"$REPO/_cores/windows/mgba_libretro.dll\" <rom.gbc> 4000 12"
+echo "  \"$HERE/tas_movie.exe\" gen    \"$REPO/_cores/windows/mgba_libretro.dll\" <rom.gbc> out.fltm 4000 1"
+echo "  \"$HERE/tas_movie.exe\" verify \"$REPO/_cores/windows/mgba_libretro.dll\" <rom.gbc> out.fltm"
