@@ -570,8 +570,9 @@ int usage(const char *a0) {
                "  %s sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len=2]\n"
                "  %s watch   <core> <rom> <movie.fltm> <frame>   (decode Pokemon Yellow state)\n"
                "  %s route   <core> <rom> <route.txt> <out.fltm> (execute a route plan)\n"
+               "  %s dump    <core> <rom> <movie.fltm> <outdir> [everyN=2] [from] [to]\n"
                "  %s maps    <core> <rom> _\n",
-               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
+               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -930,6 +931,30 @@ int main(int argc, char **argv) {
     std::printf("  ids/dmg  trainerID=%04x  crit=%02x damage=%d\n",
                 r16(wPlayerID), r8(wCriticalHitOrOHKO), r16(wDamage));
     closeCore();
+    return 0;
+  }
+
+  // ---- dump: render every Nth frame's framebuffer to <outdir>/f_NNNNNN.ppm in
+  // ONE replay pass (for encoding to a GIF/MP4). ----
+  if (cmd == "dump") {
+    const std::string outdir = argv[5] ? argv[5] : ".";
+    const uint32_t everyN = argc > 6 ? std::strtoul(argv[6], nullptr, 0) : 2;
+    const uint32_t from = argc > 7 ? std::strtoul(argv[7], nullptr, 0) : 0;
+    const uint32_t to = argc > 8 ? std::strtoul(argv[8], nullptr, 0) : UINT32_MAX;
+    g_wantFB = true;
+    openCore(corePath);
+    const uint32_t n = static_cast<uint32_t>(m.input.size());
+    uint32_t idx = 0;
+    char path[1024];
+    for (g_frame = 0; g_frame < n; ++g_frame) {
+      g.run();
+      if (g_frame >= from && g_frame <= to && (g_frame % (everyN ? everyN : 1)) == 0) {
+        std::snprintf(path, sizeof path, "%s/f_%06u.ppm", outdir.c_str(), idx++);
+        writePPM(path);
+      }
+    }
+    closeCore();
+    std::printf("dumped %u frames to %s\n", idx, outdir.c_str());
     return 0;
   }
 

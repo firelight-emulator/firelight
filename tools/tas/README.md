@@ -84,6 +84,7 @@ gate 1a). Subcommands:
 - `sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len]` — **luck manipulation**: savestate at a frame, then for each idle-frame delay 0..N show how the target (e.g. the RNG bytes) shifts — the search picks the delay that hits the wanted value.
 - `watch   <core> <rom> <movie.fltm> <frame>` — decode named Pokémon Yellow state (RNG/DSum, party, battle you/foe, position, trainer ID) — see `yellow_ram.hpp`.
 - `route   <core> <rom> <route.txt> <out.fltm>` — execute a route plan → verified movie.
+- `dump    <core> <rom> <movie.fltm> <outdir> [everyN=2] [from] [to]` — render frames → PPMs in one pass (for GIF/MP4).
 - `maps    <core> <rom> _` — dump the core's memory-map descriptors.
 
 ### Route plans (Phase 4 — the LLM-planner interface)
@@ -114,6 +115,21 @@ pass. Authoring notes: the intro is an unoptimized A-mash placeholder; the SNES 
 player stands on re-opens its text on any `A`, so **`B` (not `A`) dismisses it**
 before the D-pad will move — the kind of detail iterative `shot`/`watch` authoring
 surfaces. Reaching Pikachu is more of the same overworld navigation.
+
+### Rendering a movie to GIF/MP4
+
+`dump` renders every Nth frame's framebuffer in a single replay pass; encode with
+ffmpeg:
+
+```sh
+tas_movie dump <mgba> <yellow.gbc> movie.fltm frames/ 2 <from> <to>
+PAL="split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer"
+ffmpeg -framerate 30 -i frames/f_%06d.ppm -vf "scale=320:288:flags=neighbor,$PAL" demo.gif
+# or MP4:
+ffmpeg -framerate 30 -i frames/f_%06d.ppm -vf scale=320:288:flags=neighbor -pix_fmt yuv420p demo.mp4
+```
+
+(Dump every 2nd frame + 30 fps ≈ real-time, since Game Boy runs at ~59.7 fps.)
 
 ### Gen-1 assist (Phase 3)
 
