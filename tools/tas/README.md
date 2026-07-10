@@ -83,7 +83,30 @@ gate 1a). Subcommands:
 - `read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>` — read any Game Boy address (WRAM / I-O / **HRAM**) via the core's memory-map descriptors.
 - `sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len]` — **luck manipulation**: savestate at a frame, then for each idle-frame delay 0..N show how the target (e.g. the RNG bytes) shifts — the search picks the delay that hits the wanted value.
 - `watch   <core> <rom> <movie.fltm> <frame>` — decode named Pokémon Yellow state (RNG/DSum, party, battle you/foe, position, trainer ID) — see `yellow_ram.hpp`.
+- `route   <core> <rom> <route.txt> <out.fltm>` — execute a route plan → verified movie.
 - `maps    <core> <rom> _` — dump the core's memory-map descriptors.
+
+### Route plans (Phase 4 — the LLM-planner interface)
+
+A **route plan** is the machine-readable artifact a planner (an LLM) emits and the
+tool executes. It interleaves input with two kinds of directive:
+
+```
+@name <text>                                       # label a segment
+@assert <gbAddr> <op> <val> [size=N]               # verify RAM state (== != < > <= >=)
+@search <gbAddr> <op> <val> [size=N] [maxdelay=N]  # insert idle frames until it holds
+<frameCount> <buttons>                             # input, as in the script format
+```
+
+`route` runs the plan on a live core: it plays the input, **grinds each `@search`**
+(the RNG luck-manipulation lever — find the smallest idle-frame delay that makes
+the target condition hold, and bake it in), and **checks each `@assert`** (did the
+segment reach the intended game state?). Output is a verification-passing `.fltm`
+plus a per-directive PASS/FAIL report. See `examples/yellow_route.txt`. Verified on
+mGBA + Pokémon Yellow: a plan steers `hRandomAdd` (found delay=8) and confirms a
+new game reaches the bedroom (`trainerID != 0`, `map == 0x26`). This closes the
+loop — an LLM proposes the route + oracle targets; the tool does the frame-perfect
+search and verification.
 
 ### Gen-1 assist (Phase 3)
 

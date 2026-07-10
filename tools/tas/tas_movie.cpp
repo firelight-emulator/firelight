@@ -447,6 +447,116 @@ int readGB(uint32_t addr) {
   return -1;
 }
 
+// Read `size` bytes big-endian at GB address `addr` (via readGB).
+uint32_t readN(uint32_t addr, uint32_t size) {
+  uint32_t v = 0;
+  for (uint32_t i = 0; i < size; ++i) {
+    const int b = readGB(addr + i);
+    v = (v << 8) | (b < 0 ? 0u : static_cast<uint32_t>(b));
+  }
+  return v;
+}
+
+bool compareOp(uint32_t a, const std::string &op, uint32_t b) {
+  if (op == "==") return a == b;
+  if (op == "!=") return a != b;
+  if (op == "<") return a < b;
+  if (op == ">") return a > b;
+  if (op == "<=") return a <= b;
+  if (op == ">=") return a >= b;
+  return false;
+}
+
+// A route = an ordered plan an LLM planner emits: input segments, RAM assertions
+// (verify a segment reached the intended state), and search slots (insert idle
+// frames until a target RAM/RNG condition holds -- luck manipulation). Directives
+// in the route file: '@name <text>', '@assert <addr> <op> <val> [size=N]',
+// '@search <addr> <op> <val> [size=N] [maxdelay=N]'; other lines are input-script
+// lines ('<frameCount> <buttons>').
+struct RouteOp {
+  enum Kind { INPUT, ASSERT, SEARCH, NAME } kind;
+  uint32_t count = 0;
+  uint16_t buttons = 0;
+  uint16_t addr = 0;
+  std::string op;
+  uint32_t val = 0, size = 1, maxDelay = 30;
+  std::string name;
+};
+
+bool parseRoute(const char *path, std::vector<RouteOp> &out, std::string &err) {
+  std::ifstream f(path);
+  if (!f) {
+    err = "cannot open route file";
+    return false;
+  }
+  std::string line;
+  int ln = 0;
+  while (std::getline(f, line)) {
+    ++ln;
+    if (const auto h = line.find('#'); h != std::string::npos)
+      line.erase(h);
+    std::istringstream is(line);
+    std::string tok;
+    if (!(is >> tok))
+      continue;
+    if (tok == "@name") {
+      RouteOp o;
+      o.kind = RouteOp::NAME;
+      std::getline(is, o.name);
+      out.push_back(o);
+    } else if (tok == "@assert" || tok == "@search") {
+      RouteOp o;
+      o.kind = (tok == "@assert") ? RouteOp::ASSERT : RouteOp::SEARCH;
+      std::string a, op, v;
+      if (!(is >> a >> op >> v)) {
+        err = "line " + std::to_string(ln) +
+              ": @assert/@search needs <gbAddr> <op> <value>";
+        return false;
+      }
+      o.addr = static_cast<uint16_t>(std::strtoul(a.c_str(), nullptr, 0));
+      o.op = op;
+      o.val = std::strtoul(v.c_str(), nullptr, 0);
+      std::string kv;
+      while (is >> kv) {
+        const auto eq = kv.find('=');
+        if (eq == std::string::npos)
+          continue;
+        const uint32_t n = std::strtoul(kv.c_str() + eq + 1, nullptr, 0);
+        if (kv.compare(0, eq, "size") == 0)
+          o.size = n;
+        else if (kv.compare(0, eq, "maxdelay") == 0)
+          o.maxDelay = n;
+      }
+      out.push_back(o);
+    } else {
+      RouteOp o;
+      o.kind = RouteOp::INPUT;
+      o.count = std::strtoul(tok.c_str(), nullptr, 0);
+      InputFrame fr;
+      std::string b;
+      while (is >> b) {
+        if (b == "-" || upper(b) == "NONE")
+          continue;
+        std::stringstream bs(b);
+        std::string part;
+        while (std::getline(bs, part, '+')) {
+          if (part.empty())
+            continue;
+          const int bit = buttonBit(part);
+          if (bit < 0) {
+            err = "line " + std::to_string(ln) + ": unknown button '" + part + "'";
+            return false;
+          }
+          fr.set(static_cast<unsigned>(bit), true);
+        }
+      }
+      o.buttons = fr.buttons;
+      out.push_back(o);
+    }
+  }
+  return true;
+}
+
 int usage(const char *a0) {
   std::fprintf(stderr,
                "usage:\n"
@@ -459,8 +569,9 @@ int usage(const char *a0) {
                "  %s read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>\n"
                "  %s sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len=2]\n"
                "  %s watch   <core> <rom> <movie.fltm> <frame>   (decode Pokemon Yellow state)\n"
+               "  %s route   <core> <rom> <route.txt> <out.fltm> (execute a route plan)\n"
                "  %s maps    <core> <rom> _\n",
-               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
+               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -530,6 +641,93 @@ int main(int argc, char **argv) {
                 scriptPath, outPath, m.coreName.c_str(), m.coreVersion.c_str(),
                 m.input.size(), m.checkpoints.size());
     return 0;
+  }
+
+  // ---- route: execute an ordered route plan (input segments + RAM assertions
+  // + idle-frame search slots) into a verified movie. An LLM planner emits the
+  // plan; this grinds the searches and checks the assertions. ----
+  if (cmd == "route") {
+    if (argc < 6)
+      return usage(argv[0]);
+    std::vector<RouteOp> ops;
+    std::string err;
+    if (!parseRoute(argv[4], ops, err)) {
+      std::fprintf(stderr, "FATAL: %s\n", err.c_str());
+      return 2;
+    }
+    Movie m;
+    m.romName = baseName(g_romPath);
+    m.romHash = romHash;
+    m.romSize = static_cast<uint32_t>(rom.size());
+    g_movie = &m;
+    openCore(corePath);
+    static Movie idle;
+    int failures = 0;
+    const auto runLast = [&]() {
+      g_frame = static_cast<uint32_t>(m.input.size()) - 1;
+      g.run();
+    };
+    for (const auto &o : ops) {
+      if (o.kind == RouteOp::NAME) {
+        std::printf("== %s ==\n", o.name.c_str());
+      } else if (o.kind == RouteOp::INPUT) {
+        InputFrame fr;
+        fr.buttons = o.buttons;
+        for (uint32_t i = 0; i < o.count; ++i) {
+          m.input.push_back(fr);
+          runLast();
+        }
+      } else if (o.kind == RouteOp::ASSERT) {
+        const uint32_t v = readN(o.addr, o.size);
+        const bool ok = compareOp(v, o.op, o.val);
+        std::printf("  assert 0x%04x %s 0x%x : %s (got 0x%x) @frame %zu\n", o.addr,
+                    o.op.c_str(), o.val, ok ? "PASS" : "FAIL", v, m.input.size());
+        failures += !ok;
+      } else { // SEARCH
+        const size_t ss = g.serialize_size();
+        std::vector<uint8_t> snap(ss);
+        g.serialize(snap.data(), ss);
+        int found = -1;
+        for (uint32_t d = 0; d <= o.maxDelay; ++d) {
+          g.unserialize(snap.data(), ss);
+          const Movie *saved = g_movie;
+          g_movie = &idle;
+          for (uint32_t k = 0; k < d; ++k) {
+            g_frame = k;
+            g.run();
+          }
+          g_movie = saved;
+          if (compareOp(readN(o.addr, o.size), o.op, o.val)) {
+            found = static_cast<int>(d);
+            break;
+          }
+        }
+        g.unserialize(snap.data(), ss);
+        if (found < 0) {
+          std::printf("  search 0x%04x %s 0x%x : FAIL (no delay in 0..%u)\n",
+                      o.addr, o.op.c_str(), o.val, o.maxDelay);
+          ++failures;
+        } else {
+          InputFrame blank;
+          for (int k = 0; k < found; ++k) {
+            m.input.push_back(blank);
+            runLast();
+          }
+          std::printf("  search 0x%04x %s 0x%x : delay=%d (+%d idle frames) "
+                      "@frame %zu\n",
+                      o.addr, o.op.c_str(), o.val, found, found, m.input.size());
+        }
+      }
+    }
+    closeCore();
+    stampAndCheckpoint(corePath, m, every); // re-stamp + embed checkpoints
+    if (!m.save(argv[5])) {
+      std::fprintf(stderr, "FATAL: cannot write '%s'\n", argv[5]);
+      return 3;
+    }
+    std::printf("\nroute -> %s : %zu frames, %d failure(s)\n", argv[5],
+                m.input.size(), failures);
+    return failures == 0 ? 0 : 4;
   }
 
   // ---- maps: print the core's memory-map descriptors (no movie needed) ----

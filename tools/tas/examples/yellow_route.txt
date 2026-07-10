@@ -1,0 +1,23 @@
+# LLM route plan (prototype) for Pokemon Yellow, executed by `tas_movie route`.
+# A planner (LLM) emits plans like this; the tool grinds the @search slots and
+# checks the @assert oracles, producing a verified .fltm movie.
+#
+# Directives:
+#   @name <text>                                       -- label a segment
+#   @assert <gbAddr> <op> <val> [size=N]               -- verify RAM (op: == != < > <= >=)
+#   @search <gbAddr> <op> <val> [size=N] [maxdelay=N]  -- insert idle frames until it holds
+#   <frameCount> <buttons>                             -- input (- or A B START SELECT UP DOWN LEFT RIGHT)
+
+@name boot to title
+700 -
+2 START
+90 -
+2 START
+120 -
+@assert 0xD358 == 0x0000 size=2          # pre-game: trainer ID still zero (no save started)
+
+@name RNG luck-manipulation demo
+# Steer the Gen-1 RNG byte hRandomAdd (0xFFD3): the search finds the smallest
+# idle-frame delay that lands it below 0x10, then we assert it stuck.
+@search 0xFFD3 < 0x10 maxdelay=200
+@assert 0xFFD3 < 0x10
