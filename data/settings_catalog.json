@@ -52,7 +52,13 @@
       ] },
     { "key": "mouse-controls-lightgun", "label": "Aim light guns with the mouse", "category": "Input",
       "description": "When on, the mouse aims and fires any light-gun or mouse device a game uses, even if a gamepad is selected for that player. Turn off to use only the selected controller.",
-      "type": "boolean", "default": "true" }
+      "type": "boolean", "default": "true" },
+    { "key": "border", "label": "Border", "category": "Video",
+      "description": "A decorative frame or console-style bezel drawn around the game. Drop your own images into the borders folder to add more.",
+      "type": "custom", "widget": "border-picker", "default": "" },
+    { "key": "shader", "label": "Shader / filter", "category": "Video",
+      "description": "A video shader applied to the game image (CRT, scanlines, sharpening, and more). Drop your own GLSL shaders into the shaders folder to add more.",
+      "type": "custom", "widget": "shader-picker", "default": "" }
   ],
 
   "cores": {

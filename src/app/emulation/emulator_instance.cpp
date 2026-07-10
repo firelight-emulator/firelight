@@ -450,6 +450,18 @@ namespace firelight::emulation {
 
   int EmulatorInstance::getIntegerScale() const { return m_integerScale; }
 
+  void EmulatorInstance::setBorder(const std::string &border) {
+    m_border = border;
+  }
+
+  std::string EmulatorInstance::getBorder() const { return m_border; }
+
+  void EmulatorInstance::setShader(const std::string &shader) {
+    m_shader = shader;
+  }
+
+  std::string EmulatorInstance::getShader() const { return m_shader; }
+
   void EmulatorInstance::setSyncMethod(const std::string &syncMethod) {
     m_syncMethod = syncMethod;
   }

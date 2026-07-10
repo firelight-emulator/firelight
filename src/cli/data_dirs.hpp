@@ -14,6 +14,8 @@ namespace firelight::cli {
     QString savesPath;
     QString capturesPath; // gameplay captures: screenshots/ + clips/ subdirs
     QString coreSystemPath; // shared core-system directory (PPSSPP, etc.)
+    QString shadersPath; // user + built-in video shader presets
+    QString bordersPath; // user + built-in borders/bezels
   };
 
   // Resolves the data directories, honoring --config-dir / --portable (and the

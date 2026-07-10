@@ -75,6 +75,8 @@
 
 #include <firelight/activity/sqlite_activity_log.hpp>
 #include "app/emulator_item.hpp"
+#include "app/graphics/border_library.hpp"
+#include "app/graphics/shader_library.hpp"
 #include "app/input/gui/gamepad_status_item.hpp"
 #include "app/library/gui/entry_list_model.hpp"
 #include "app/library/gui/library_entry_item.hpp"
@@ -197,6 +199,8 @@ int main(int argc, char *argv[]) {
     auto romsPath = dataDirs.romsPath;
     auto capturesPath = dataDirs.capturesPath;
     auto coreSystemPath = dataDirs.coreSystemPath;
+    auto shadersPath = dataDirs.shadersPath;
+    auto bordersPath = dataDirs.bordersPath;
 
     // Set path to settings file
     QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope,
@@ -228,6 +232,14 @@ int main(int argc, char *argv[]) {
 
     if (!QFileInfo::exists(capturesPath) && QDir().mkpath(capturesPath)) {
         spdlog::info("[Startup] Captures directory does not exist; creating: {}", capturesPath.toStdString());
+    }
+
+    if (!QFileInfo::exists(shadersPath) && QDir().mkpath(shadersPath)) {
+        spdlog::info("[Startup] Shaders directory does not exist; creating: {}", shadersPath.toStdString());
+    }
+
+    if (!QFileInfo::exists(bordersPath) && QDir().mkpath(bordersPath)) {
+        spdlog::info("[Startup] Borders directory does not exist; creating: {}", bordersPath.toStdString());
     }
 
     // ===== Check for single-instance mode =======================================================
@@ -788,6 +800,17 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("LibraryFolderModel",
                                              &libraryFolderListModel);
     engine.rootContext()->setContextProperty("LibraryScanner", &libScanner2);
+
+    // Borders/bezels and video shaders are discovered from the shipped system
+    // tree (read-only) plus the user's writable folders. Exposed to QML as the
+    // picker models and (for borders) an id->info lookup.
+    const auto systemDir = QCoreApplication::applicationDirPath() + "/system";
+    auto *borderStore = new firelight::graphics::BorderLibrary(
+        systemDir + "/borders", bordersPath, &app);
+    auto *shaderStore = new firelight::graphics::ShaderLibrary(
+        systemDir + "/shaders", shadersPath, &app);
+    engine.rootContext()->setContextProperty("BorderStore", borderStore);
+    engine.rootContext()->setContextProperty("ShaderStore", shaderStore);
 
     auto resizeHandler = new firelight::gui::WindowResizeHandler();
     engine.rootContext()->setContextProperty("window_resize_handler",

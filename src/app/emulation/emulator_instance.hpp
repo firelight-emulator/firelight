@@ -67,6 +67,17 @@ public:
   void setIntegerScale(int integerScale);
   int getIntegerScale() const;
 
+  // Border/bezel drawn around the game (a purely visual concern read by QML).
+  // Value is the border id ("" => none).
+  void setBorder(const std::string &border);
+  std::string getBorder() const;
+
+  // Video shader/filter applied to the game image. The value is either a bare
+  // preset id ("" => none) or a JSON blob {"preset":id,"params":{...}} carrying
+  // the id plus parameter overrides. Consumed by the renderer.
+  void setShader(const std::string &shader);
+  std::string getShader() const;
+
   void setSyncMethod(const std::string &syncMethod);
   std::string getSyncMethod() const;
 
@@ -184,6 +195,8 @@ private:
   bool m_startMuted = false;
   std::string m_pictureMode;
   std::string m_aspectRatioMode;
+  std::string m_border;
+  std::string m_shader;
   int m_integerScale = 0;
   std::string m_syncMethod;
   int m_targetFramerate = 0;

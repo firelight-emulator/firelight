@@ -162,16 +162,37 @@ FocusScope {
         emulator.undoLastLoadSuspendPoint()
     }
 
+    // Current border/bezel, resolved from the "border" setting id. Empty map when
+    // no border is selected. A "frame" is drawn behind the game (the game keeps
+    // its normal picture-mode sizing); a "bezel" is drawn in front with a
+    // transparent screen cutout, and the game is positioned into `screenRect`.
+    property var borderInfo: BorderStore.borderById(EmulationService.border)
+    property bool bezelActive: !!(borderInfo && borderInfo.type === "bezel"
+                                  && borderInfo.imageUrl)
+
     Rectangle {
         id: background
         color: "black"
         anchors.fill: root
     }
 
+    // Decorative frame: a full-window image drawn behind the game.
+    Image {
+        id: frameImage
+        anchors.fill: parent
+        visible: !!(root.borderInfo && root.borderInfo.type === "frame"
+                    && root.borderInfo.imageUrl)
+        source: visible ? root.borderInfo.imageUrl : ""
+        fillMode: Image.PreserveAspectCrop
+        opacity: root.borderInfo && root.borderInfo.opacity !== undefined
+                 ? root.borderInfo.opacity : 1.0
+        smooth: true
+        cache: true
+    }
+
     EmulatorItem {
         id: emulator
         focus: true
-        anchors.centerIn: root
 
         paused: root.paused || root.windowResizing
         muted: root.startMuted || paused || playbackMultiplier !== 1
@@ -226,6 +247,10 @@ FocusScope {
         }
 
         width: {
+            // A bezel dictates the game rectangle (fits the transparent cutout).
+            if (root.bezelActive) {
+                return root.borderInfo.screenWidth * root.width
+            }
             if (EmulationService.pictureMode === "stretch") {
                 return root.width
             } else if (EmulationService.pictureMode === "aspect-ratio-fill") {
@@ -237,6 +262,9 @@ FocusScope {
             return emulator.videoWidth
         }
         height: {
+            if (root.bezelActive) {
+                return root.borderInfo.screenHeight * root.height
+            }
             if (EmulationService.pictureMode === "stretch") {
                 return root.height
             } else if (EmulationService.pictureMode === "aspect-ratio-fill") {
@@ -247,6 +275,12 @@ FocusScope {
 
             return emulator.videoHeight
         }
+        // Position into the bezel cutout, else centered (replaces anchors.centerIn
+        // so bezel placement can override it).
+        x: root.bezelActive ? root.borderInfo.screenX * root.width
+                            : (root.width - width) / 2
+        y: root.bezelActive ? root.borderInfo.screenY * root.height
+                            : (root.height - height) / 2
 
         rewindEnabled: EmulationService.rewindEnabled
 
@@ -271,6 +305,22 @@ FocusScope {
                 speedIndicator.opacity = 1
             }
         }
+    }
+
+    // Bezel overlay: a full-window image with a transparent screen cutout, drawn
+    // in front of the game (which is positioned into the cutout above).
+    Image {
+        id: bezelImage
+        anchors.fill: parent
+        visible: root.bezelActive
+        source: root.bezelActive ? root.borderInfo.imageUrl : ""
+        fillMode: Image.Stretch
+        opacity: root.borderInfo && root.borderInfo.opacity !== undefined
+                 ? root.borderInfo.opacity : 1.0
+        smooth: true
+        cache: true
+        // The cutout is transparent art; the game shows through. Don't eat input.
+        enabled: false
     }
 
     Pane {

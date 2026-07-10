@@ -18,6 +18,8 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
             emit rewindEnabledChanged();
             emit pictureModeChanged();
             emit aspectRatioModeChanged();
+            emit borderChanged();
+            emit shaderChanged();
           });
 
   m_emulationStartedConnection =
@@ -48,6 +50,10 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
                   emit aspectRatioModeChanged();
                 } else if (e.key == "integer-scale") {
                   emit integerScaleChanged();
+                } else if (e.key == "border") {
+                  emit borderChanged();
+                } else if (e.key == "shader") {
+                  emit shaderChanged();
                 }
               });
 
@@ -139,6 +145,22 @@ int QtEmulationServiceProxy::getIntegerScale() const {
   }
 
   return instance->getIntegerScale();
+}
+QString QtEmulationServiceProxy::getBorder() const {
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
+  if (!instance) {
+    return "";
+  }
+
+  return QString::fromStdString(instance->getBorder());
+}
+QString QtEmulationServiceProxy::getShader() const {
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
+  if (!instance) {
+    return "";
+  }
+
+  return QString::fromStdString(instance->getShader());
 }
 
 void QtEmulationServiceProxy::loadEntry(const int entryId) {

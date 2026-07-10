@@ -1,0 +1,7 @@
+{
+  "name": "Dark Bezel",
+  "type": "bezel",
+  "image": "bezel.png",
+  "screenRect": { "x": 0.14, "y": 0.09, "width": 0.72, "height": 0.82 },
+  "opacity": 1.0
+}

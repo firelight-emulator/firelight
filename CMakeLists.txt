@@ -249,6 +249,12 @@ add_library(firelight_lib
         src/app/emulator_item_renderer.cpp
         src/app/emulator_vulkan_renderer.cpp
         src/app/emulator_item.cpp
+        src/app/graphics/border_library.cpp
+        src/app/graphics/border_library.hpp
+        src/app/graphics/shader_preset.cpp
+        src/app/graphics/shader_preset.hpp
+        src/app/graphics/shader_library.cpp
+        src/app/graphics/shader_library.hpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp
         src/app/achievements/gui/AchievementSetItem.cpp
@@ -462,6 +468,15 @@ file(COPY ${CMAKE_SOURCE_DIR}/content.db DESTINATION ${CMAKE_BINARY_DIR}/system)
 # dir on first run. Bundled next to the executable here.
 if (EXISTS ${CMAKE_SOURCE_DIR}/_system/PPSSPP)
     file(COPY ${CMAKE_SOURCE_DIR}/_system/PPSSPP DESTINATION ${CMAKE_BINARY_DIR}/system)
+endif ()
+
+# Built-in video shaders and borders/bezels. Discovered at runtime from
+# <system>/shaders and <system>/borders (alongside the user's own folders).
+if (EXISTS ${CMAKE_SOURCE_DIR}/_system/shaders)
+    file(COPY ${CMAKE_SOURCE_DIR}/_system/shaders DESTINATION ${CMAKE_BINARY_DIR}/system)
+endif ()
+if (EXISTS ${CMAKE_SOURCE_DIR}/_system/borders)
+    file(COPY ${CMAKE_SOURCE_DIR}/_system/borders DESTINATION ${CMAKE_BINARY_DIR}/system)
 endif ()
 
 # Friendly emulation settings + per-core option defaults (loaded at runtime by
@@ -712,6 +727,16 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/_system/PPSSPP)
             ${CMAKE_SOURCE_DIR}/_system/PPSSPP
             DESTINATION ${CMAKE_INSTALL_BINDIR}/system
     )
+endif ()
+
+# Built-in shaders and borders/bezels.
+if (EXISTS ${CMAKE_SOURCE_DIR}/_system/shaders)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/_system/shaders
+            DESTINATION ${CMAKE_INSTALL_BINDIR}/system)
+endif ()
+if (EXISTS ${CMAKE_SOURCE_DIR}/_system/borders)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/_system/borders
+            DESTINATION ${CMAKE_INSTALL_BINDIR}/system)
 endif ()
 
 

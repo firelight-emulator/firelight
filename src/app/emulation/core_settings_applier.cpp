@@ -107,6 +107,10 @@ void CoreSettingsApplier::refresh() {
     m_instance.setMouseControlsPointerDevices(
       value("mouse-controls-lightgun") == "true");
   });
+  apply("border", [&] { m_instance.setBorder(value("border")); });
+  // The shader value carries both the preset id and its parameter overrides as a
+  // small JSON blob (or a bare id); the renderer parses it.
+  apply("shader", [&] { m_instance.setShader(value("shader")); });
 }
 
 } // namespace firelight::emulation

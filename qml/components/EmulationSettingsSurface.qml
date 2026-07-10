@@ -223,6 +223,18 @@ FocusScope {
                 delegate: paletteDelegate
             }
             DelegateChoice {
+                roleValue: "border-picker"
+                delegate: borderPickerDelegate
+            }
+            DelegateChoice {
+                roleValue: "shader-picker"
+                delegate: shaderPickerDelegate
+            }
+            DelegateChoice {
+                roleValue: "hidden"
+                delegate: hiddenDelegate
+            }
+            DelegateChoice {
                 roleValue: "text"
                 delegate: textDelegate
             }
@@ -245,6 +257,63 @@ FocusScope {
             DelegateChoice {
                 delegate: comboBoxDelegate
             }
+        }
+    }
+
+    Component {
+        id: borderPickerDelegate
+        BorderSettingItem {
+            required property var model
+            required property var index
+            width: ListView.view.width
+            visible: model.visible
+            height: visible ? implicitHeight : 0
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+            value: model.value
+            resettable: model.overridden
+
+            onReset: root.model.resetValue(index)
+            onActivated: function (v) {
+                ListView.view.currentIndex = index
+                model.value = v
+            }
+        }
+    }
+
+    Component {
+        id: shaderPickerDelegate
+        ShaderSettingItem {
+            required property var model
+            required property var index
+            width: ListView.view.width
+            visible: model.visible
+            height: visible ? implicitHeight : 0
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+            value: model.value
+            resettable: model.overridden
+
+            onReset: root.model.resetValue(index)
+            onActivated: function (v) {
+                ListView.view.currentIndex = index
+                model.value = v
+            }
+        }
+    }
+
+    // A no-op row for settings that persist but have no visible control (e.g.
+    // the shader parameter blob managed by the shader picker).
+    Component {
+        id: hiddenDelegate
+        Item {
+            required property var model
+            required property var index
+            width: ListView.view.width
+            height: 0
+            visible: false
         }
     }
 

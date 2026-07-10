@@ -29,6 +29,8 @@ class QtEmulationServiceProxy final : public QObject {
   Q_PROPERTY(QString aspectRatioMode READ getAspectRatioMode NOTIFY
                  aspectRatioModeChanged)
   Q_PROPERTY(int integerScale READ getIntegerScale NOTIFY integerScaleChanged)
+  Q_PROPERTY(QString border READ getBorder NOTIFY borderChanged)
+  Q_PROPERTY(QString shader READ getShader NOTIFY shaderChanged)
 
 public:
   explicit QtEmulationServiceProxy(QObject *parent = nullptr);
@@ -46,6 +48,8 @@ public:
   QString getPictureMode() const;
   QString getAspectRatioMode() const;
   int getIntegerScale() const;
+  QString getBorder() const;
+  QString getShader() const;
 
   Q_INVOKABLE void loadEntry(int entryId);
   Q_INVOKABLE void stopEmulation();
@@ -73,6 +77,8 @@ signals:
   void pictureModeChanged();
   void aspectRatioModeChanged();
   void integerScaleChanged();
+  void borderChanged();
+  void shaderChanged();
   void controllerDevicesChanged();
 
 private:
