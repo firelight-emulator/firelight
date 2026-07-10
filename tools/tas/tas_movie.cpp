@@ -102,6 +102,16 @@ bool g_wantFB = false;
 unsigned g_fbW = 0, g_fbH = 0;
 std::vector<uint8_t> g_fbData; // tightly packed g_fbW*g_fbH*g_bpp
 
+// Memory-map descriptors captured from SET_MEMORY_MAPS -- lets us read arbitrary
+// emulated addresses (e.g. HRAM RNG bytes that are NOT in SYSTEM_RAM).
+struct MemDesc {
+  uint64_t flags;
+  uint8_t *ptr;
+  size_t offset, start, select, disconnect, len;
+  std::string space;
+};
+std::vector<MemDesc> g_memmap;
+
 uint64_t fnv1a(const void *p, size_t n, uint64_t h = 1469598103934665603ull) {
   const uint8_t *b = static_cast<const uint8_t *>(p);
   for (size_t i = 0; i < n; ++i) {
@@ -133,6 +143,17 @@ bool env_cb(unsigned cmd, void *data) {
   case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
     *static_cast<const char **>(data) = ".";
     return true;
+  case RETRO_ENVIRONMENT_SET_MEMORY_MAPS: {
+    const auto *mm = static_cast<const retro_memory_map *>(data);
+    g_memmap.clear();
+    for (unsigned i = 0; i < mm->num_descriptors; ++i) {
+      const auto &d = mm->descriptors[i];
+      g_memmap.push_back({d.flags, static_cast<uint8_t *>(d.ptr), d.offset,
+                          d.start, d.select, d.disconnect, d.len,
+                          d.addrspace ? d.addrspace : ""});
+    }
+    return true;
+  }
   default:
     return false;
   }
@@ -396,6 +417,29 @@ uint16_t scriptedButtons(uint32_t frame, uint32_t seed) {
   return static_cast<uint16_t>(x & 0x1FDu);
 }
 
+// Read one byte at emulated GB address `addr` via the memory-map descriptors
+// (WRAM banks, I/O incl. rDIV, HRAM incl. the RNG bytes). -1 if unmapped.
+int readGB(uint32_t addr) {
+  for (const auto &d : g_memmap) {
+    if (!d.ptr)
+      continue;
+    size_t rel;
+    if (d.select == 0) {
+      if (addr < d.start || addr >= d.start + d.len)
+        continue;
+      rel = addr - d.start;
+    } else {
+      if ((addr & d.select) != (d.start & d.select))
+        continue;
+      rel = addr & ~d.select;
+      if (d.len && rel >= d.len)
+        continue;
+    }
+    return d.ptr[d.offset + rel];
+  }
+  return -1;
+}
+
 int usage(const char *a0) {
   std::fprintf(stderr,
                "usage:\n"
@@ -404,8 +448,10 @@ int usage(const char *a0) {
                "  %s play    <core> <rom> <movie.fltm>\n"
                "  %s verify  <core> <rom> <movie.fltm>\n"
                "  %s shot    <core> <rom> <movie.fltm> <frame> <out.ppm>\n"
-               "  %s ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>\n",
-               a0, a0, a0, a0, a0, a0);
+               "  %s ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>\n"
+               "  %s read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>\n"
+               "  %s maps    <core> <rom> _\n",
+               a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -474,6 +520,23 @@ int main(int argc, char **argv) {
     std::printf("compiled %s -> %s\n  core=%s %s  frames=%zu  checkpoints=%zu\n",
                 scriptPath, outPath, m.coreName.c_str(), m.coreVersion.c_str(),
                 m.input.size(), m.checkpoints.size());
+    return 0;
+  }
+
+  // ---- maps: print the core's memory-map descriptors (no movie needed) ----
+  if (cmd == "maps") {
+    static Movie empty;
+    g_movie = &empty;
+    openCore(corePath);
+    const size_t sysRam = g.get_memory_size(RETRO_MEMORY_SYSTEM_RAM);
+    closeCore();
+    std::printf("SYSTEM_RAM size = %zu bytes (0x%zx)\n", sysRam, sysRam);
+    std::printf("memory-map descriptors: %zu\n", g_memmap.size());
+    for (const auto &d : g_memmap)
+      std::printf("  start=0x%05zx len=0x%05zx offset=0x%05zx select=0x%05zx "
+                  "flags=0x%llx space='%s'\n",
+                  d.start, d.len, d.offset, d.select,
+                  static_cast<unsigned long long>(d.flags), d.space.c_str());
     return 0;
   }
 
@@ -563,6 +626,28 @@ int main(int argc, char **argv) {
       if (i % 16 == 0)
         std::printf("\n  %04x:", addr + i);
       std::printf(" %02x", ram[addr + i]);
+    }
+    std::printf("\n");
+    closeCore();
+    return 0;
+  }
+
+  if (cmd == "read") {
+    if (argc < 8)
+      return usage(argv[0]);
+    const uint32_t frame = std::strtoul(argv[5], nullptr, 0);
+    const uint32_t addr = std::strtoul(argv[6], nullptr, 0);
+    const uint32_t len = std::strtoul(argv[7], nullptr, 0);
+    replayTo(corePath, frame, nullptr, every);
+    std::printf("GB memory @0x%04x len %u (frame %u):", addr, len, frame);
+    for (uint32_t i = 0; i < len; ++i) {
+      const int v = readGB(addr + i);
+      if (i % 16 == 0)
+        std::printf("\n  %04x:", addr + i);
+      if (v < 0)
+        std::printf(" --");
+      else
+        std::printf(" %02x", v);
     }
     std::printf("\n");
     closeCore();
