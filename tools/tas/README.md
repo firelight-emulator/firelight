@@ -68,3 +68,31 @@ Compare cores yourself:
 determinism_test.exe _cores/windows/mgba_libretro.dll     <rom.gbc> 8000 16   # PASS
 determinism_test.exe _cores/windows/gambatte_libretro.dll <rom.gbc> 8000 16   # FAIL
 ```
+
+## Movie engine — `tas_movie`
+
+A headless `.fltm` movie engine on a libretro core (use **mGBA** for Game Boy, per
+gate 1a). Subcommands:
+
+- `gen     <core> <rom> <out.fltm> [frames] [seed]` — scripted-input test movie.
+- `compile <core> <rom> <script.txt> <out.fltm>` — author from an input script.
+- `play    <core> <rom> <movie.fltm>` — deterministic replay + checkpoint report.
+- `verify  <core> <rom> <movie.fltm>` — replay-twice determinism + checkpoint sync.
+- `shot    <core> <rom> <movie.fltm> <frame> <out.ppm>` — dump a frame (binary PPM).
+- `ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>` — hexdump system RAM.
+
+**Input-script format** (one directive per line; `#` = comment):
+
+```
+<frameCount> <buttons>   # buttons: - (none) or +-joined A B START SELECT UP DOWN LEFT RIGHT
+60 -                     # wait 60 frames
+2  START                 # tap Start
+16 RIGHT                 # walk right
+2  RIGHT+A               # right + A
+```
+
+`.fltm` = FLTM header (core+ROM identity, rerecord count) + per-frame `InputFrame`
+log (10 bytes, mirroring Firelight's record) + optional frame→framebuffer-hash
+checkpoints (used by `verify`). Verified end-to-end on mGBA + Pokémon Yellow:
+`examples/yellow_boot.txt` compiles, replays deterministically, and `shot` at frame
+935 renders the **Pokémon Yellow title screen** (correct RGB565 colours).

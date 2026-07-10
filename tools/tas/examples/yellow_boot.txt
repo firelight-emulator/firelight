@@ -1,0 +1,15 @@
+# Pokemon Yellow boot -> title screen (mGBA).
+# Compile + screenshot:
+#   tas_movie compile <mgba> <yellow.gbc> examples/yellow_boot.txt boot.fltm
+#   tas_movie shot    <mgba> <yellow.gbc> boot.fltm 935 title.ppm
+#
+# Input-script format: "<frameCount> <buttons>"; buttons = - (none) or
+# +-joined names A B START SELECT UP DOWN LEFT RIGHT. '#' starts a comment.
+
+600 -          # let the Game Freak / intro sequence play
+2 START        # tap Start
+90 -
+2 START        # tap Start again
+120 -
+2 A            # confirm
+120 -          # rests on the title screen (frame ~935)

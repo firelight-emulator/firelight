@@ -1,27 +1,41 @@
 // tools/tas/tas_movie.cpp
 //
-// Headless TAS movie engine (Phase 1) for Firelight, driving a libretro core
-// directly (mGBA for Game Boy -- gate 1a showed stock gambatte v0.5.0 savestates
-// are unreliable; mGBA passes fully). No Qt dependency. Subcommands:
+// Headless TAS movie engine for Firelight, driving a libretro core directly
+// (mGBA for Game Boy -- gate 1a showed stock gambatte v0.5.0 savestates are
+// unreliable; mGBA passes fully). No Qt dependency. Subcommands:
 //
-//   gen    <core> <rom> <out.fltm> [frames=4000] [seed=1]
-//            Generate a scripted-input movie (for exercising the pipeline) and
-//            embed per-checkpoint video-framebuffer hashes.
-//   play   <core> <rom> <movie.fltm>
-//            Replay the movie deterministically; print progress + final hash and
-//            report checkpoint matches if the movie carries them.
-//   verify <core> <rom> <movie.fltm>
-//            Replay twice (determinism) AND check every embedded checkpoint
-//            (sync). Exit 0 iff both pass.
+//   gen     <core> <rom> <out.fltm> [frames=4000] [seed=1]
+//             Scripted-input movie (pipeline exercise) with embedded checkpoints.
+//   compile <core> <rom> <script.txt> <out.fltm>
+//             Author a movie from a human-readable input script (see below),
+//             playing it through to stamp the header + embed checkpoints.
+//   play    <core> <rom> <movie.fltm>
+//             Deterministic replay; report checkpoint matches.
+//   verify  <core> <rom> <movie.fltm>
+//             Replay twice (determinism) AND check checkpoints (sync). Exit 0 iff ok.
+//   shot    <core> <rom> <movie.fltm> <frame> <out.ppm>
+//             Replay to <frame> and write the framebuffer as a binary PPM (P6).
+//   ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>
+//             Replay to <frame> and hexdump <len> bytes of system RAM at <hexAddr>.
 //
-// Determinism is measured on the VIDEO framebuffer (see determinism_test.cpp for
-// why the raw savestate blob is a poor metric). Build via tools/tas/build.sh.
+// Input-script format (one directive per line; '#' starts a comment):
+//   <frameCount> <buttons>
+//   buttons: '-' (none) or '+'-joined names: A B START SELECT UP DOWN LEFT RIGHT
+//   e.g.   60 -          # wait 60 frames
+//          2  START      # press Start for 2 frames
+//          16 RIGHT      # walk right
+//          2  RIGHT+A    # right + A
+//
+// Determinism is measured on the VIDEO framebuffer. Build via tools/tas/build.sh.
 
+#include <algorithm>
+#include <cctype>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -67,6 +81,8 @@ struct Core {
   void (*unload_game)();
   void (*get_system_info)(retro_system_info *);
   void (*get_system_av_info)(retro_system_av_info *);
+  void *(*get_memory_data)(unsigned);
+  size_t (*get_memory_size)(unsigned);
 };
 
 Core g;
@@ -76,6 +92,15 @@ uint64_t g_frameHash = 0;
 const Movie *g_movie = nullptr;
 const std::vector<uint8_t> *g_rom = nullptr;
 const char *g_romPath = nullptr;
+
+// video format (captured from SET_PIXEL_FORMAT; libretro default is 0RGB1555)
+retro_pixel_format g_pixfmt = RETRO_PIXEL_FORMAT_0RGB1555;
+int g_bpp = 2;
+
+// framebuffer capture (only when g_wantFB, for `shot`)
+bool g_wantFB = false;
+unsigned g_fbW = 0, g_fbH = 0;
+std::vector<uint8_t> g_fbData; // tightly packed g_fbW*g_fbH*g_bpp
 
 uint64_t fnv1a(const void *p, size_t n, uint64_t h = 1469598103934665603ull) {
   const uint8_t *b = static_cast<const uint8_t *>(p);
@@ -96,8 +121,11 @@ template <class T> void bind(T &fn, const char *name) {
 
 bool env_cb(unsigned cmd, void *data) {
   switch (cmd) {
-  case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
+  case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
+    g_pixfmt = *static_cast<const retro_pixel_format *>(data);
+    g_bpp = (g_pixfmt == RETRO_PIXEL_FORMAT_XRGB8888) ? 4 : 2;
     return true;
+  }
   case RETRO_ENVIRONMENT_GET_CAN_DUPE:
     *static_cast<bool *>(data) = true;
     return true;
@@ -113,11 +141,19 @@ void video_cb(const void *data, unsigned width, unsigned height, size_t pitch) {
   if (!data)
     return;
   const uint8_t *p = static_cast<const uint8_t *>(data);
-  const size_t rowBytes = static_cast<size_t>(width) * 2; // 16bpp
+  const size_t rowBytes = static_cast<size_t>(width) * g_bpp;
   uint64_t h = 1469598103934665603ull;
   for (unsigned y = 0; y < height; ++y)
     h = fnv1a(p + static_cast<size_t>(y) * pitch, rowBytes, h);
   g_frameHash = h;
+  if (g_wantFB) {
+    g_fbW = width;
+    g_fbH = height;
+    g_fbData.resize(rowBytes * height);
+    for (unsigned y = 0; y < height; ++y)
+      std::memcpy(&g_fbData[static_cast<size_t>(y) * rowBytes],
+                  p + static_cast<size_t>(y) * pitch, rowBytes);
+  }
 }
 void audio_cb(int16_t, int16_t) {}
 size_t audio_batch_cb(const int16_t *, size_t frames) { return frames; }
@@ -146,6 +182,8 @@ void bindAll() {
   bind(g.unload_game, "retro_unload_game");
   bind(g.get_system_info, "retro_get_system_info");
   bind(g.get_system_av_info, "retro_get_system_av_info");
+  bind(g.get_memory_data, "retro_get_memory_data");
+  bind(g.get_memory_size, "retro_get_memory_size");
 }
 
 void openCore(const char *corePath) {
@@ -182,19 +220,20 @@ void closeCore() {
   g_lib = nullptr;
 }
 
-// Replay the current g_movie on a fresh core, sampling the framebuffer hash
-// every `every` frames (and on the last frame). Fills `out`.
-void replay(const char *corePath,
-            std::vector<std::pair<uint32_t, uint64_t>> &out,
-            uint32_t every = 100) {
+// Replay the current g_movie on a fresh core; run to (and including) `toFrame`
+// (or the whole movie if toFrame==UINT32_MAX). Samples checkpoints into `out`
+// every `every` frames when `out` is non-null. Leaves the core CLOSED unless
+// `keepOpen`.
+void replayTo(const char *corePath, uint32_t toFrame,
+              std::vector<std::pair<uint32_t, uint64_t>> *out, uint32_t every) {
   openCore(corePath);
   const uint32_t n = static_cast<uint32_t>(g_movie->input.size());
-  for (g_frame = 0; g_frame < n; ++g_frame) {
+  const uint32_t last = (toFrame == UINT32_MAX) ? n : std::min(toFrame + 1, n);
+  for (g_frame = 0; g_frame < last; ++g_frame) {
     g.run();
-    if ((g_frame % every) == 0 || g_frame == n - 1)
-      out.push_back({g_frame, g_frameHash});
+    if (out && ((g_frame % every) == 0 || g_frame == n - 1))
+      out->push_back({g_frame, g_frameHash});
   }
-  closeCore();
 }
 
 std::vector<uint8_t> readFile(const char *path) {
@@ -210,24 +249,112 @@ std::string baseName(const std::string &p) {
   return s == std::string::npos ? p : p.substr(s + 1);
 }
 
-// Scripted, purely-frame-and-seed-derived input (GB joypad ids only, mask
-// 0x1FD). Matches determinism_test so movies are reproducible.
-uint16_t scriptedButtons(uint32_t frame, uint32_t seed) {
-  uint32_t x = frame * 2654435761u + seed * 40503u + 12345u;
-  x ^= x >> 13;
-  x *= 1274126177u;
-  x ^= x >> 16;
-  return static_cast<uint16_t>(x & 0x1FDu);
+std::string upper(std::string s) {
+  for (char &c : s)
+    c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+  return s;
 }
 
-int usage(const char *argv0) {
-  std::fprintf(stderr,
-               "usage:\n"
-               "  %s gen    <core> <rom> <out.fltm> [frames=4000] [seed=1]\n"
-               "  %s play   <core> <rom> <movie.fltm>\n"
-               "  %s verify <core> <rom> <movie.fltm>\n",
-               argv0, argv0, argv0);
-  return 1;
+// Button name -> RETRO_DEVICE_ID_JOYPAD_*, or -1.
+int buttonBit(const std::string &raw) {
+  const std::string n = upper(raw);
+  if (n == "A") return RETRO_DEVICE_ID_JOYPAD_A;
+  if (n == "B") return RETRO_DEVICE_ID_JOYPAD_B;
+  if (n == "START") return RETRO_DEVICE_ID_JOYPAD_START;
+  if (n == "SELECT") return RETRO_DEVICE_ID_JOYPAD_SELECT;
+  if (n == "UP") return RETRO_DEVICE_ID_JOYPAD_UP;
+  if (n == "DOWN") return RETRO_DEVICE_ID_JOYPAD_DOWN;
+  if (n == "LEFT") return RETRO_DEVICE_ID_JOYPAD_LEFT;
+  if (n == "RIGHT") return RETRO_DEVICE_ID_JOYPAD_RIGHT;
+  return -1;
+}
+
+// Parse an input script into a per-frame input log. Returns false + err on error.
+bool parseScript(const char *path, std::vector<InputFrame> &out,
+                 std::string &err) {
+  std::ifstream f(path);
+  if (!f) {
+    err = "cannot open script";
+    return false;
+  }
+  std::string line;
+  int lineNo = 0;
+  while (std::getline(f, line)) {
+    ++lineNo;
+    if (const auto h = line.find('#'); h != std::string::npos)
+      line.erase(h);
+    std::istringstream is(line);
+    long count;
+    if (!(is >> count)) // blank / comment-only line
+      continue;
+    if (count < 0) {
+      err = "line " + std::to_string(lineNo) + ": negative frame count";
+      return false;
+    }
+    InputFrame fr;
+    std::string tok;
+    while (is >> tok) {
+      if (tok == "-" || upper(tok) == "NONE")
+        continue;
+      std::stringstream ts(tok);
+      std::string part;
+      while (std::getline(ts, part, '+')) {
+        if (part.empty())
+          continue;
+        const int bit = buttonBit(part);
+        if (bit < 0) {
+          err = "line " + std::to_string(lineNo) + ": unknown button '" + part +
+                "'";
+          return false;
+        }
+        fr.set(static_cast<unsigned>(bit), true);
+      }
+    }
+    for (long i = 0; i < count; ++i)
+      out.push_back(fr);
+  }
+  return true;
+}
+
+bool writePPM(const char *path) {
+  if (g_fbData.empty()) {
+    std::fprintf(stderr, "FATAL: no framebuffer captured\n");
+    return false;
+  }
+  std::ofstream o(path, std::ios::binary);
+  if (!o)
+    return false;
+  o << "P6\n" << g_fbW << " " << g_fbH << "\n255\n";
+  const auto pixel = [&](unsigned i, uint8_t &r, uint8_t &gc, uint8_t &b) {
+    if (g_bpp == 4) { // XRGB8888, little-endian bytes B,G,R,X
+      const uint8_t *px = &g_fbData[static_cast<size_t>(i) * 4];
+      b = px[0];
+      gc = px[1];
+      r = px[2];
+    } else {
+      const uint16_t px = g_fbData[static_cast<size_t>(i) * 2] |
+                          (g_fbData[static_cast<size_t>(i) * 2 + 1] << 8);
+      if (g_pixfmt == RETRO_PIXEL_FORMAT_RGB565) {
+        uint8_t r5 = (px >> 11) & 31, g6 = (px >> 5) & 63, b5 = px & 31;
+        r = (r5 << 3) | (r5 >> 2);
+        gc = (g6 << 2) | (g6 >> 4);
+        b = (b5 << 3) | (b5 >> 2);
+      } else { // 0RGB1555
+        uint8_t r5 = (px >> 10) & 31, g5 = (px >> 5) & 31, b5 = px & 31;
+        r = (r5 << 3) | (r5 >> 2);
+        gc = (g5 << 3) | (g5 >> 2);
+        b = (b5 << 3) | (b5 >> 2);
+      }
+    }
+  };
+  for (unsigned i = 0; i < g_fbW * g_fbH; ++i) {
+    uint8_t r, gc, b;
+    pixel(i, r, gc, b);
+    o.put(static_cast<char>(r));
+    o.put(static_cast<char>(gc));
+    o.put(static_cast<char>(b));
+  }
+  return static_cast<bool>(o);
 }
 
 bool cmpCheckpoints(const std::vector<std::pair<uint32_t, uint64_t>> &got,
@@ -243,6 +370,45 @@ bool cmpCheckpoints(const std::vector<std::pair<uint32_t, uint64_t>> &got,
   return true;
 }
 
+// Play `m` through a fresh core, stamping core identity + checkpoints into it.
+void stampAndCheckpoint(const char *corePath, Movie &m, uint32_t every) {
+  g_movie = &m;
+  openCore(corePath);
+  retro_system_info si{};
+  g.get_system_info(&si);
+  m.coreName = si.library_name ? si.library_name : "?";
+  m.coreVersion = si.library_version ? si.library_version : "?";
+  const uint32_t n = static_cast<uint32_t>(m.input.size());
+  m.checkpoints.clear();
+  for (g_frame = 0; g_frame < n; ++g_frame) {
+    g.run();
+    if ((g_frame % every) == 0 || g_frame == n - 1)
+      m.checkpoints.push_back({g_frame, g_frameHash});
+  }
+  closeCore();
+}
+
+uint16_t scriptedButtons(uint32_t frame, uint32_t seed) {
+  uint32_t x = frame * 2654435761u + seed * 40503u + 12345u;
+  x ^= x >> 13;
+  x *= 1274126177u;
+  x ^= x >> 16;
+  return static_cast<uint16_t>(x & 0x1FDu);
+}
+
+int usage(const char *a0) {
+  std::fprintf(stderr,
+               "usage:\n"
+               "  %s gen     <core> <rom> <out.fltm> [frames=4000] [seed=1]\n"
+               "  %s compile <core> <rom> <script.txt> <out.fltm>\n"
+               "  %s play    <core> <rom> <movie.fltm>\n"
+               "  %s verify  <core> <rom> <movie.fltm>\n"
+               "  %s shot    <core> <rom> <movie.fltm> <frame> <out.ppm>\n"
+               "  %s ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>\n",
+               a0, a0, a0, a0, a0, a0);
+  return 1;
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -253,7 +419,6 @@ int main(int argc, char **argv) {
   const std::string cmd = argv[1];
   const char *corePath = argv[2];
   g_romPath = argv[3];
-  const std::string movPath = argv[4];
   const uint32_t every = 100;
 
   const std::vector<uint8_t> rom = readFile(g_romPath);
@@ -264,6 +429,7 @@ int main(int argc, char **argv) {
   g_rom = &rom;
   const uint64_t romHash = fnv1a(rom.data(), rom.size());
 
+  // ---- gen ----
   if (cmd == "gen") {
     const uint32_t frames = argc > 5 ? std::atoi(argv[5]) : 4000;
     const uint32_t seed = argc > 6 ? std::atoi(argv[6]) : 1;
@@ -274,81 +440,133 @@ int main(int argc, char **argv) {
     m.input.resize(frames);
     for (uint32_t i = 0; i < frames; ++i)
       m.input[i].buttons = scriptedButtons(i, seed);
-
-    g_movie = &m;
-    openCore(corePath);
-    retro_system_info si{};
-    g.get_system_info(&si);
-    m.coreName = si.library_name ? si.library_name : "?";
-    m.coreVersion = si.library_version ? si.library_version : "?";
-    for (g_frame = 0; g_frame < frames; ++g_frame) {
-      g.run();
-      if ((g_frame % every) == 0 || g_frame == frames - 1)
-        m.checkpoints.push_back({g_frame, g_frameHash});
-    }
-    closeCore();
-
-    if (!m.save(movPath)) {
-      std::fprintf(stderr, "FATAL: cannot write '%s'\n", movPath.c_str());
+    stampAndCheckpoint(corePath, m, every);
+    if (!m.save(argv[4])) {
+      std::fprintf(stderr, "FATAL: cannot write '%s'\n", argv[4]);
       return 3;
     }
-    std::printf("wrote %s\n  core=%s %s\n  frames=%u  checkpoints=%zu  seed=%u\n",
-                movPath.c_str(), m.coreName.c_str(), m.coreVersion.c_str(),
-                frames, m.checkpoints.size(), seed);
+    std::printf("wrote %s\n  core=%s %s  frames=%u  checkpoints=%zu  seed=%u\n",
+                argv[4], m.coreName.c_str(), m.coreVersion.c_str(), frames,
+                m.checkpoints.size(), seed);
     return 0;
   }
 
+  // ---- compile ----
+  if (cmd == "compile") {
+    if (argc < 6)
+      return usage(argv[0]);
+    const char *scriptPath = argv[4];
+    const char *outPath = argv[5];
+    Movie m;
+    std::string err;
+    if (!parseScript(scriptPath, m.input, err)) {
+      std::fprintf(stderr, "FATAL: %s\n", err.c_str());
+      return 2;
+    }
+    m.romName = baseName(g_romPath);
+    m.romHash = romHash;
+    m.romSize = static_cast<uint32_t>(rom.size());
+    stampAndCheckpoint(corePath, m, every);
+    if (!m.save(outPath)) {
+      std::fprintf(stderr, "FATAL: cannot write '%s'\n", outPath);
+      return 3;
+    }
+    std::printf("compiled %s -> %s\n  core=%s %s  frames=%zu  checkpoints=%zu\n",
+                scriptPath, outPath, m.coreName.c_str(), m.coreVersion.c_str(),
+                m.input.size(), m.checkpoints.size());
+    return 0;
+  }
+
+  // ---- everything else loads a movie ----
   Movie m;
-  if (!m.load(movPath)) {
-    std::fprintf(stderr, "FATAL: cannot load movie '%s'\n", movPath.c_str());
+  if (!m.load(argv[4])) {
+    std::fprintf(stderr, "FATAL: cannot load movie '%s'\n", argv[4]);
     return 2;
   }
   g_movie = &m;
-  std::printf("[movie] %s\n  core=%s %s  frames=%zu  checkpoints=%zu  rom=%s\n",
-              movPath.c_str(), m.coreName.c_str(), m.coreVersion.c_str(),
-              m.input.size(), m.checkpoints.size(), m.romName.c_str());
+  std::printf("[movie] %s  core=%s %s  frames=%zu  checkpoints=%zu  rom=%s\n",
+              argv[4], m.coreName.c_str(), m.coreVersion.c_str(), m.input.size(),
+              m.checkpoints.size(), m.romName.c_str());
   if (m.romHash != romHash)
-    std::printf("  WARNING: ROM hash mismatch -- movie was made for a different "
-                "ROM (0x%016llx vs 0x%016llx)\n",
-                static_cast<unsigned long long>(m.romHash),
-                static_cast<unsigned long long>(romHash));
+    std::printf("  WARNING: ROM hash mismatch (movie made for a different ROM)\n");
 
   if (cmd == "play") {
     std::vector<std::pair<uint32_t, uint64_t>> got;
-    replay(corePath, got);
+    replayTo(corePath, UINT32_MAX, &got, every);
+    closeCore();
     std::printf("replayed %zu frames; final framebuffer hash = 0x%016llx\n",
                 m.input.size(),
                 static_cast<unsigned long long>(got.empty() ? 0
                                                             : got.back().second));
     if (!m.checkpoints.empty()) {
       uint32_t bad = 0;
-      const bool ok = cmpCheckpoints(got, m.checkpoints, bad);
-      if (ok)
-        std::printf("checkpoints: %zu/%zu match\n", m.checkpoints.size(),
-                    m.checkpoints.size());
-      else
-        std::printf("checkpoints: MISMATCH at/near frame %u\n", bad);
+      std::printf(cmpCheckpoints(got, m.checkpoints, bad)
+                      ? "checkpoints: all match\n"
+                      : "checkpoints: MISMATCH near frame %u\n",
+                  bad);
     }
     return 0;
   }
 
   if (cmd == "verify") {
     std::vector<std::pair<uint32_t, uint64_t>> a, b;
-    replay(corePath, a);
-    replay(corePath, b);
+    replayTo(corePath, UINT32_MAX, &a, every);
+    closeCore();
+    replayTo(corePath, UINT32_MAX, &b, every);
+    closeCore();
     const bool det = (a == b);
     uint32_t bad = 0;
     const bool cp =
         m.checkpoints.empty() ? true : cmpCheckpoints(a, m.checkpoints, bad);
     std::printf("\ndeterminism (replay x2) : %s\n", det ? "PASS" : "FAIL");
-    if (m.checkpoints.empty())
-      std::printf("checkpoint match        : (movie has no checkpoints)\n");
-    else
-      std::printf("checkpoint match        : %s%s\n", cp ? "PASS" : "FAIL",
-                  cp ? "" : "");
+    std::printf("checkpoint match        : %s\n",
+                m.checkpoints.empty() ? "(none)" : (cp ? "PASS" : "FAIL"));
     const bool ok = det && cp;
     std::printf("\n%s\n", ok ? "MOVIE VERIFIED" : "MOVIE FAILED VERIFICATION");
     return ok ? 0 : 4;
+  }
+
+  if (cmd == "shot") {
+    if (argc < 7)
+      return usage(argv[0]);
+    const uint32_t frame = std::strtoul(argv[5], nullptr, 0);
+    g_wantFB = true;
+    replayTo(corePath, frame, nullptr, every);
+    closeCore();
+    if (!writePPM(argv[6]))
+      return 3;
+    std::printf("wrote %s  (%ux%u, frame %u, fmt=%s)\n", argv[6], g_fbW, g_fbH,
+                frame,
+                g_bpp == 4 ? "XRGB8888"
+                           : (g_pixfmt == RETRO_PIXEL_FORMAT_RGB565 ? "RGB565"
+                                                                    : "0RGB1555"));
+    return 0;
+  }
+
+  if (cmd == "ram") {
+    if (argc < 8)
+      return usage(argv[0]);
+    const uint32_t frame = std::strtoul(argv[5], nullptr, 0);
+    const uint32_t addr = std::strtoul(argv[6], nullptr, 0);
+    const uint32_t len = std::strtoul(argv[7], nullptr, 0);
+    replayTo(corePath, frame, nullptr, every);
+    const auto *ram = static_cast<const uint8_t *>(
+        g.get_memory_data(RETRO_MEMORY_SYSTEM_RAM));
+    const size_t ramSize = g.get_memory_size(RETRO_MEMORY_SYSTEM_RAM);
+    std::printf("system RAM: %zu bytes; dump @0x%04x len %u (frame %u):\n",
+                ramSize, addr, len, frame);
+    for (uint32_t i = 0; i < len; ++i) {
+      if (addr + i >= ramSize) {
+        std::printf(" <oob>");
+        break;
+      }
+      if (i % 16 == 0)
+        std::printf("\n  %04x:", addr + i);
+      std::printf(" %02x", ram[addr + i]);
+    }
+    std::printf("\n");
+    closeCore();
+    return 0;
   }
 
   return usage(argv[0]);
