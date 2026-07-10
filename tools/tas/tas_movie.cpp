@@ -239,6 +239,12 @@ void openCore(const char *corePath) {
   }
   retro_system_av_info av{};
   g.get_system_av_info(&av);
+  // Savestate-anchored movies: restore the embedded start state right after
+  // load_game, so the input log plays from there instead of from power-on.
+  if (g_movie && g_movie->startMode == 1 && !g_movie->startState.empty()) {
+    if (!g.unserialize(g_movie->startState.data(), g_movie->startState.size()))
+      std::fprintf(stderr, "WARNING: failed to restore start savestate\n");
+  }
 }
 
 void closeCore() {
@@ -561,7 +567,8 @@ int usage(const char *a0) {
   std::fprintf(stderr,
                "usage:\n"
                "  %s gen     <core> <rom> <out.fltm> [frames=4000] [seed=1]\n"
-               "  %s compile <core> <rom> <script.txt> <out.fltm>\n"
+               "  %s compile <core> <rom> <script.txt> <out.fltm> [anchor.fltm]\n"
+               "  %s savestate <core> <rom> <in.fltm> <atFrame> <out.fltm>\n"
                "  %s play    <core> <rom> <movie.fltm>\n"
                "  %s verify  <core> <rom> <movie.fltm>\n"
                "  %s shot    <core> <rom> <movie.fltm> <frame> <out.ppm>\n"
@@ -569,10 +576,10 @@ int usage(const char *a0) {
                "  %s read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>\n"
                "  %s sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len=2]\n"
                "  %s watch   <core> <rom> <movie.fltm> <frame>   (decode Pokemon Yellow state)\n"
-               "  %s route   <core> <rom> <route.txt> <out.fltm> (execute a route plan)\n"
+               "  %s route   <core> <rom> <route.txt> <out.fltm> [anchor.fltm]\n"
                "  %s dump    <core> <rom> <movie.fltm> <outdir> [everyN=2] [from] [to]\n"
                "  %s maps    <core> <rom> _\n",
-               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
+               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -618,6 +625,43 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  // ---- savestate: capture a savestate anchor from <in.fltm> at <atFrame> into a
+  // new <out.fltm> (empty input, startMode=savestate) for anchored authoring. ----
+  if (cmd == "savestate") {
+    if (argc < 7)
+      return usage(argv[0]);
+    Movie in;
+    if (!in.load(argv[4])) {
+      std::fprintf(stderr, "FATAL: cannot load movie '%s'\n", argv[4]);
+      return 2;
+    }
+    const uint32_t atFrame = std::strtoul(argv[5], nullptr, 0);
+    g_movie = &in;
+    replayTo(corePath, atFrame, nullptr, every); // leaves core open at atFrame
+    const size_t ss = g.serialize_size();
+    std::vector<uint8_t> blob(ss);
+    if (!g.serialize(blob.data(), ss)) {
+      std::fprintf(stderr, "FATAL: serialize failed\n");
+      return 3;
+    }
+    closeCore();
+    Movie out;
+    out.coreName = in.coreName;
+    out.coreVersion = in.coreVersion;
+    out.romName = in.romName.empty() ? baseName(g_romPath) : in.romName;
+    out.romHash = romHash;
+    out.romSize = static_cast<uint32_t>(rom.size());
+    out.startMode = 1;
+    out.startState = std::move(blob);
+    if (!out.save(argv[6])) {
+      std::fprintf(stderr, "FATAL: cannot write '%s'\n", argv[6]);
+      return 3;
+    }
+    std::printf("savestate anchor -> %s : from %s @frame %u, %zu-byte state\n",
+                argv[6], argv[4], atFrame, out.startState.size());
+    return 0;
+  }
+
   // ---- compile ----
   if (cmd == "compile") {
     if (argc < 6)
@@ -633,6 +677,15 @@ int main(int argc, char **argv) {
     m.romName = baseName(g_romPath);
     m.romHash = romHash;
     m.romSize = static_cast<uint32_t>(rom.size());
+    if (argc > 6) { // optional savestate anchor to author from
+      Movie base;
+      if (!base.load(argv[6])) {
+        std::fprintf(stderr, "FATAL: cannot load base '%s'\n", argv[6]);
+        return 2;
+      }
+      m.startMode = base.startMode;
+      m.startState = base.startState;
+    }
     stampAndCheckpoint(corePath, m, every);
     if (!m.save(outPath)) {
       std::fprintf(stderr, "FATAL: cannot write '%s'\n", outPath);
@@ -660,6 +713,15 @@ int main(int argc, char **argv) {
     m.romName = baseName(g_romPath);
     m.romHash = romHash;
     m.romSize = static_cast<uint32_t>(rom.size());
+    if (argc > 6) { // optional savestate anchor to author from
+      Movie base;
+      if (!base.load(argv[6])) {
+        std::fprintf(stderr, "FATAL: cannot load base '%s'\n", argv[6]);
+        return 2;
+      }
+      m.startMode = base.startMode;
+      m.startState = base.startState;
+    }
     g_movie = &m;
     openCore(corePath);
     static Movie idle;

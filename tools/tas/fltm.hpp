@@ -34,12 +34,16 @@ struct InputFrame {
 };
 
 struct Movie {
-  static constexpr uint32_t kVersion = 1;
+  static constexpr uint32_t kVersion = 2;
 
   std::string coreName, coreVersion, romName;
   uint64_t romHash = 0; // FNV-1a of ROM bytes (tool-local identity check)
   uint32_t romSize = 0;
   uint32_t rerecordCount = 0;
+  // Start state: 0 = power-on (input plays from boot); 1 = savestate anchor
+  // (restore `startState` right after load_game, then input plays from there).
+  uint8_t startMode = 0;
+  std::vector<uint8_t> startState; // core serialize() blob, iff startMode==1
   std::vector<InputFrame> input;
   std::vector<std::pair<uint32_t, uint64_t>> checkpoints; // frame -> fb hash
 
@@ -108,6 +112,11 @@ inline bool Movie::save(const std::string &path) const {
   detail::put(o, romHash);
   detail::put(o, romSize);
   detail::put(o, rerecordCount);
+  o.push_back(startMode);
+  if (startMode == 1) {
+    detail::put(o, static_cast<uint32_t>(startState.size()));
+    o.insert(o.end(), startState.begin(), startState.end());
+  }
   detail::put(o, static_cast<uint32_t>(input.size()));
   for (const auto &f : input) {
     detail::put(o, f.buttons);
@@ -139,7 +148,7 @@ inline bool Movie::load(const std::string &path) {
   if (r.u8() != 'F' || r.u8() != 'L' || r.u8() != 'T' || r.u8() != 'M')
     return false;
   const uint32_t ver = r.u32();
-  if (ver != kVersion)
+  if (ver < 1 || ver > kVersion)
     return false;
   coreName = r.str();
   coreVersion = r.str();
@@ -147,6 +156,17 @@ inline bool Movie::load(const std::string &path) {
   romHash = r.u64();
   romSize = r.u32();
   rerecordCount = r.u32();
+  startMode = 0;
+  startState.clear();
+  if (ver >= 2) {
+    startMode = r.u8();
+    if (startMode == 1) {
+      const uint32_t ss = r.u32();
+      startState.resize(ss);
+      for (uint32_t i = 0; i < ss && r.ok; ++i)
+        startState[i] = r.u8();
+    }
+  }
   const uint32_t n = r.u32();
   input.clear();
   input.reserve(n);

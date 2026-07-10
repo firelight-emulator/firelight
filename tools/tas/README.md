@@ -75,7 +75,8 @@ A headless `.fltm` movie engine on a libretro core (use **mGBA** for Game Boy, p
 gate 1a). Subcommands:
 
 - `gen     <core> <rom> <out.fltm> [frames] [seed]` — scripted-input test movie.
-- `compile <core> <rom> <script.txt> <out.fltm>` — author from an input script.
+- `compile <core> <rom> <script.txt> <out.fltm> [anchor.fltm]` — author from an input script (optionally from a savestate anchor).
+- `savestate <core> <rom> <in.fltm> <atFrame> <out.fltm>` — capture a savestate anchor for anchored authoring.
 - `play    <core> <rom> <movie.fltm>` — deterministic replay + checkpoint report.
 - `verify  <core> <rom> <movie.fltm>` — replay-twice determinism + checkpoint sync.
 - `shot    <core> <rom> <movie.fltm> <frame> <out.ppm>` — dump a frame (binary PPM).
@@ -83,7 +84,7 @@ gate 1a). Subcommands:
 - `read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>` — read any Game Boy address (WRAM / I-O / **HRAM**) via the core's memory-map descriptors.
 - `sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len]` — **luck manipulation**: savestate at a frame, then for each idle-frame delay 0..N show how the target (e.g. the RNG bytes) shifts — the search picks the delay that hits the wanted value.
 - `watch   <core> <rom> <movie.fltm> <frame>` — decode named Pokémon Yellow state (RNG/DSum, party, battle you/foe, position, trainer ID) — see `yellow_ram.hpp`.
-- `route   <core> <rom> <route.txt> <out.fltm>` — execute a route plan → verified movie.
+- `route   <core> <rom> <route.txt> <out.fltm> [anchor.fltm]` — execute a route plan (optionally from an anchor) → verified movie.
 - `dump    <core> <rom> <movie.fltm> <outdir> [everyN=2] [from] [to]` — render frames → PPMs in one pass (for GIF/MP4).
 - `maps    <core> <rom> _` — dump the core's memory-map descriptors.
 
@@ -115,6 +116,27 @@ pass. Authoring notes: the intro is an unoptimized A-mash placeholder; the SNES 
 player stands on re-opens its text on any `A`, so **`B` (not `A`) dismisses it**
 before the D-pad will move — the kind of detail iterative `shot`/`watch` authoring
 surfaces. Reaching Pikachu is more of the same overworld navigation.
+
+### Savestate-anchored authoring
+
+Replaying a long intro every iteration is slow, so `.fltm` movies can start from a
+**savestate anchor** instead of power-on. Capture a checkpoint once, then author new
+segments *from* it:
+
+```sh
+# capture the bedroom state at frame 4623 of an existing movie
+tas_movie savestate <mgba> <yellow.gbc> early.fltm 4623 anchor.fltm
+
+# author a NEW segment that STARTS from that state (no intro replay)
+tas_movie compile <mgba> <yellow.gbc> segment.txt out.fltm anchor.fltm
+tas_movie route   <mgba> <yellow.gbc> segment.txt out.fltm anchor.fltm
+```
+
+The anchor embeds the core's savestate (mGBA GB ≈ 200 KB) and restores in a *fresh*
+process (verified: identical `map`/position/`trainerID`), so a segment that used to
+need a ~4,600-frame intro replay becomes a ~100-frame movie starting at the
+checkpoint — a **~45× shorter iterate loop**. Anchored movies still `verify`
+deterministically. (`.fltm` is now format v2; v1 movies still load.)
 
 ### Rendering a movie to GIF/MP4
 
