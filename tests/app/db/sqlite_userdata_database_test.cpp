@@ -170,6 +170,133 @@ TEST_F(SqliteUserdataDatabaseTest, UpdateSavefileMetadataWhenNotExist) {
 
   ASSERT_FALSE(db.updateSavefileMetadata(metadata));
 }
+
+namespace {
+ModInstallation makeInstallation(int entryId, const std::string &baseHash,
+                                 const std::string &patchedHash) {
+  ModInstallation installation;
+  installation.entryId = entryId;
+  installation.baseContentHash = baseHash;
+  installation.modId = 42;
+  installation.modSlug = "radical-red";
+  installation.installedPatchId = 7;
+  installation.installedVersion = "1.2.0";
+  installation.saveGeneration = 1;
+  installation.patchedContentHash = patchedHash;
+  installation.patchFilePath = "/patches/radical-red-1.2.0.bps";
+  installation.pinned = false;
+  installation.source = "shop";
+  return installation;
+}
+} // namespace
+
+TEST_F(SqliteUserdataDatabaseTest, ConstructorCreatesModInstallationTable) {
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
+  ASSERT_TRUE(db.tableExists("mod_installation"));
+}
+
+TEST_F(SqliteUserdataDatabaseTest, CreateModInstallationSetsIdAndCreatedAt) {
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
+  auto installation = makeInstallation(10, "basehash", "patchedhash");
+
+  ASSERT_TRUE(db.createModInstallation(installation));
+  ASSERT_NE(installation.id, -1);
+  ASSERT_GT(installation.createdAt, 0u);
+
+  const auto fetched = db.getModInstallation(installation.id);
+  ASSERT_TRUE(fetched.has_value());
+  EXPECT_EQ(fetched->entryId, 10);
+  EXPECT_EQ(fetched->baseContentHash, "basehash");
+  EXPECT_EQ(fetched->modId, 42);
+  EXPECT_EQ(fetched->modSlug, "radical-red");
+  EXPECT_EQ(fetched->installedPatchId, 7);
+  EXPECT_EQ(fetched->installedVersion, "1.2.0");
+  EXPECT_EQ(fetched->saveGeneration, 1);
+  EXPECT_EQ(fetched->patchedContentHash, "patchedhash");
+  EXPECT_EQ(fetched->patchFilePath, "/patches/radical-red-1.2.0.bps");
+  EXPECT_FALSE(fetched->pinned);
+  EXPECT_EQ(fetched->source, "shop");
+}
+
+TEST_F(SqliteUserdataDatabaseTest, GetModInstallationForEntry) {
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
+  auto installation = makeInstallation(11, "basehash", "patchedhash");
+  ASSERT_TRUE(db.createModInstallation(installation));
+
+  const auto forEntry = db.getModInstallationForEntry(11);
+  ASSERT_TRUE(forEntry.has_value());
+  EXPECT_EQ(forEntry->id, installation.id);
+
+  EXPECT_FALSE(db.getModInstallationForEntry(999).has_value());
+}
+
+TEST_F(SqliteUserdataDatabaseTest, GetModInstallationsForBaseContentHash) {
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
+  // Two mods on the same base game, one mod on a different base game.
+  auto a = makeInstallation(1, "smw", "smw-kaizo");
+  auto b = makeInstallation(2, "smw", "smw-star");
+  auto c = makeInstallation(3, "othergame", "other-mod");
+  ASSERT_TRUE(db.createModInstallation(a));
+  ASSERT_TRUE(db.createModInstallation(b));
+  ASSERT_TRUE(db.createModInstallation(c));
+
+  const auto forSmw = db.getModInstallationsForBaseContentHash("smw");
+  ASSERT_EQ(forSmw.size(), 2u);
+
+  EXPECT_EQ(db.getModInstallationsForBaseContentHash("othergame").size(), 1u);
+  EXPECT_TRUE(db.getModInstallationsForBaseContentHash("nope").empty());
+  EXPECT_EQ(db.getAllModInstallations().size(), 3u);
+}
+
+TEST_F(SqliteUserdataDatabaseTest, UpdateModInstallationPersistsMutableFields) {
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
+  auto installation = makeInstallation(12, "basehash", "patched-v1");
+  ASSERT_TRUE(db.createModInstallation(installation));
+
+  // Simulate applying an update: new version, new patched hash, bumped save
+  // generation, retained patch path, and the user pinning + skipping a version.
+  installation.installedVersion = "1.3.0";
+  installation.installedPatchId = 8;
+  installation.saveGeneration = 2;
+  installation.patchedContentHash = "patched-v2";
+  installation.patchFilePath = "/patches/radical-red-1.3.0.bps";
+  installation.pinned = true;
+  installation.ignoreUpdatesUpToVersion = "1.3.0";
+  ASSERT_TRUE(db.updateModInstallation(installation));
+
+  const auto fetched = db.getModInstallation(installation.id);
+  ASSERT_TRUE(fetched.has_value());
+  EXPECT_EQ(fetched->installedVersion, "1.3.0");
+  EXPECT_EQ(fetched->installedPatchId, 8);
+  EXPECT_EQ(fetched->saveGeneration, 2);
+  EXPECT_EQ(fetched->patchedContentHash, "patched-v2");
+  EXPECT_EQ(fetched->patchFilePath, "/patches/radical-red-1.3.0.bps");
+  EXPECT_TRUE(fetched->pinned);
+  EXPECT_EQ(fetched->ignoreUpdatesUpToVersion, "1.3.0");
+  // Immutable identity fields are unchanged.
+  EXPECT_EQ(fetched->entryId, 12);
+  EXPECT_EQ(fetched->baseContentHash, "basehash");
+}
+
+TEST_F(SqliteUserdataDatabaseTest, DeleteModInstallation) {
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
+  auto installation = makeInstallation(13, "basehash", "patchedhash");
+  ASSERT_TRUE(db.createModInstallation(installation));
+
+  ASSERT_TRUE(db.deleteModInstallation(installation.id));
+  EXPECT_FALSE(db.getModInstallation(installation.id).has_value());
+  EXPECT_FALSE(db.deleteModInstallation(installation.id));
+}
+
+TEST_F(SqliteUserdataDatabaseTest, OneModInstallationPerEntry) {
+  SqliteUserdataDatabase db(QString::fromStdString(temp_file_path.string()));
+  auto first = makeInstallation(20, "basehash", "patchedhash");
+  ASSERT_TRUE(db.createModInstallation(first));
+
+  // entry_id is unique: a second installation for the same entry is rejected.
+  auto duplicate = makeInstallation(20, "basehash", "other");
+  ASSERT_FALSE(db.createModInstallation(duplicate));
+}
 //
 // TEST_F(SqliteUserdataDatabaseTest, GetOrCreateSavefileMetadataTest) {
 //   SqliteUserdataDatabase db(temp_file_path.string());

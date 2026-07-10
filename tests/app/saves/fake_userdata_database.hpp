@@ -77,13 +77,79 @@ public:
   }
   void setPlatformSettingValue(int, std::string, std::string) override {}
 
+  bool createModInstallation(db::ModInstallation &installation) override {
+    std::lock_guard lock(m_mutex);
+    installation.id = m_nextModId++;
+    m_modInstallations[installation.id] = installation;
+    return true;
+  }
+
+  bool updateModInstallation(const db::ModInstallation &installation) override {
+    std::lock_guard lock(m_mutex);
+    const auto it = m_modInstallations.find(installation.id);
+    if (it == m_modInstallations.end()) {
+      return false;
+    }
+    it->second = installation;
+    return true;
+  }
+
+  std::optional<db::ModInstallation> getModInstallation(int id) override {
+    std::lock_guard lock(m_mutex);
+    const auto it = m_modInstallations.find(id);
+    if (it == m_modInstallations.end()) {
+      return std::nullopt;
+    }
+    return it->second;
+  }
+
+  std::optional<db::ModInstallation>
+  getModInstallationForEntry(int entryId) override {
+    std::lock_guard lock(m_mutex);
+    for (const auto &[id, installation] : m_modInstallations) {
+      if (installation.entryId == entryId) {
+        return installation;
+      }
+    }
+    return std::nullopt;
+  }
+
+  std::vector<db::ModInstallation>
+  getModInstallationsForBaseContentHash(std::string baseContentHash) override {
+    std::lock_guard lock(m_mutex);
+    std::vector<db::ModInstallation> result;
+    for (const auto &[id, installation] : m_modInstallations) {
+      if (installation.baseContentHash == baseContentHash) {
+        result.push_back(installation);
+      }
+    }
+    return result;
+  }
+
+  std::vector<db::ModInstallation> getAllModInstallations() override {
+    std::lock_guard lock(m_mutex);
+    std::vector<db::ModInstallation> result;
+    result.reserve(m_modInstallations.size());
+    for (const auto &[id, installation] : m_modInstallations) {
+      result.push_back(installation);
+    }
+    return result;
+  }
+
+  bool deleteModInstallation(int id) override {
+    std::lock_guard lock(m_mutex);
+    return m_modInstallations.erase(id) > 0;
+  }
+
   int createCount = 0;
   int updateCount = 0;
 
 private:
   std::mutex m_mutex;
   int m_nextId = 1;
+  int m_nextModId = 1;
   std::map<std::pair<std::string, int>, db::SavefileMetadata> m_savefiles;
+  std::map<int, db::ModInstallation> m_modInstallations;
 };
 
 } // namespace firelight

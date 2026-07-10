@@ -42,6 +42,16 @@ public:
   virtual void deleteSuspendPoint(const std::string &contentHash,
                                   int saveSlotNumber, int index) = 0;
 
+  // Copies SRAM saves — and only SRAM, never suspend points — from one content
+  // hash's save directory to another, per slot, writing a destination slot only
+  // when it has no save yet. Used to carry a mod's progress forward across a
+  // save-compatible version update, where the patched content hash (and thus the
+  // save directory) changes. Suspend points are deliberately not migrated: they
+  // are tied to exact ROM/core state and cannot survive a patch change.
+  // Returns the number of slots copied.
+  virtual int copySavefilesForward(const std::string &fromContentHash,
+                                   const std::string &toContentHash) = 0;
+
   [[nodiscard]] virtual std::string getSaveDirectory() const = 0;
   virtual void setSaveDirectory(const std::string &saveDirectory) = 0;
 };

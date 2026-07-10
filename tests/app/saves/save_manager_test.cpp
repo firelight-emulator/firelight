@@ -93,4 +93,87 @@ TEST_F(SaveManagerTest, SetsLastModifiedTimestamp) {
   EXPECT_GT(md->lastModifiedAt, 0u);
 }
 
+// --- copySavefilesForward (save-compatible mod-update migration) ---
+
+TEST_F(SaveManagerTest, CopyForwardMovesSramToNewHash) {
+  const std::string oldHash = "mod-v1";
+  const std::string newHash = "mod-v2";
+  const auto data = bytesOf("progress");
+  ASSERT_TRUE(m_saveManager->writeSaveData(oldHash, 1, Savefile(data)).get());
+
+  const int copied = m_saveManager->copySavefilesForward(oldHash, newHash);
+  EXPECT_EQ(copied, 1);
+
+  // The new hash now has the same SRAM...
+  const auto readBack = m_saveManager->readSaveData(newHash, 1);
+  ASSERT_TRUE(readBack.has_value());
+  EXPECT_EQ(readBack->getSaveRamData(), data);
+  // ...and it is indexed so it shows without a re-scan.
+  EXPECT_TRUE(m_db.getSavefileMetadata(newHash, 1).has_value());
+  // The original save is left intact under the old hash.
+  const auto original = m_saveManager->readSaveData(oldHash, 1);
+  ASSERT_TRUE(original.has_value());
+  EXPECT_EQ(original->getSaveRamData(), data);
+}
+
+TEST_F(SaveManagerTest, CopyForwardCopiesEveryPopulatedSlot) {
+  const std::string oldHash = "mod-v1";
+  const std::string newHash = "mod-v2";
+  ASSERT_TRUE(
+      m_saveManager->writeSaveData(oldHash, 1, Savefile(bytesOf("a"))).get());
+  ASSERT_TRUE(
+      m_saveManager->writeSaveData(oldHash, 4, Savefile(bytesOf("b"))).get());
+
+  EXPECT_EQ(m_saveManager->copySavefilesForward(oldHash, newHash), 2);
+  EXPECT_TRUE(m_saveManager->readSaveData(newHash, 1).has_value());
+  EXPECT_TRUE(m_saveManager->readSaveData(newHash, 4).has_value());
+  EXPECT_FALSE(m_saveManager->readSaveData(newHash, 2).has_value());
+}
+
+TEST_F(SaveManagerTest, CopyForwardNeverOverwritesExistingDestinationSave) {
+  const std::string oldHash = "mod-v1";
+  const std::string newHash = "mod-v2";
+  ASSERT_TRUE(
+      m_saveManager->writeSaveData(oldHash, 1, Savefile(bytesOf("old"))).get());
+  const auto keep = bytesOf("already-here");
+  ASSERT_TRUE(m_saveManager->writeSaveData(newHash, 1, Savefile(keep)).get());
+
+  // Destination slot already has a save, so nothing is copied over it.
+  EXPECT_EQ(m_saveManager->copySavefilesForward(oldHash, newHash), 0);
+  const auto readBack = m_saveManager->readSaveData(newHash, 1);
+  ASSERT_TRUE(readBack.has_value());
+  EXPECT_EQ(readBack->getSaveRamData(), keep);
+}
+
+TEST_F(SaveManagerTest, CopyForwardDoesNotMigrateSuspendPoints) {
+  const std::string oldHash = "mod-v1";
+  const std::string newHash = "mod-v2";
+  ASSERT_TRUE(
+      m_saveManager->writeSaveData(oldHash, 1, Savefile(bytesOf("x"))).get());
+  SuspendPoint sp;
+  sp.state = {1, 2, 3, 4};
+  sp.saveSlotNumber = 1;
+  m_saveManager->writeSuspendPoint(oldHash, 1, 0, sp);
+  ASSERT_TRUE(m_saveManager->readSuspendPoint(oldHash, 1, 0).has_value());
+
+  m_saveManager->copySavefilesForward(oldHash, newHash);
+
+  // SRAM migrated, but suspend points are deliberately left behind.
+  EXPECT_TRUE(m_saveManager->readSaveData(newHash, 1).has_value());
+  EXPECT_FALSE(m_saveManager->readSuspendPoint(newHash, 1, 0).has_value());
+}
+
+TEST_F(SaveManagerTest, CopyForwardIsNoOpForSameOrEmptyHash) {
+  ASSERT_TRUE(
+      m_saveManager->writeSaveData("mod-v1", 1, Savefile(bytesOf("x"))).get());
+  EXPECT_EQ(m_saveManager->copySavefilesForward("mod-v1", "mod-v1"), 0);
+  EXPECT_EQ(m_saveManager->copySavefilesForward("", "mod-v2"), 0);
+  EXPECT_EQ(m_saveManager->copySavefilesForward("mod-v1", ""), 0);
+}
+
+TEST_F(SaveManagerTest, CopyForwardWithNoSourceSaveCopiesNothing) {
+  EXPECT_EQ(m_saveManager->copySavefilesForward("absent", "mod-v2"), 0);
+  EXPECT_FALSE(m_saveManager->readSaveData("mod-v2", 1).has_value());
+}
+
 } // namespace firelight::saves

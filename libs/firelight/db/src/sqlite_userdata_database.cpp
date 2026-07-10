@@ -2,6 +2,7 @@
 
 #include <QSqlError>
 #include <QSqlQuery>
+#include <chrono>
 #include <spdlog/spdlog.h>
 
 namespace firelight::db {
@@ -79,6 +80,29 @@ namespace firelight::db {
     if (!createPlatformSettings.exec()) {
       spdlog::error("Table creation failed: {}",
                     createPlatformSettings.lastError().text().toStdString());
+    }
+
+    QSqlQuery createModInstallation(m_database);
+    createModInstallation.prepare("CREATE TABLE IF NOT EXISTS mod_installation("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "entry_id INTEGER NOT NULL,"
+      "base_content_hash TEXT NOT NULL,"
+      "mod_id INTEGER NOT NULL DEFAULT -1,"
+      "mod_slug TEXT NOT NULL DEFAULT '',"
+      "installed_patch_id INTEGER NOT NULL DEFAULT -1,"
+      "installed_version TEXT NOT NULL DEFAULT '',"
+      "save_generation INTEGER NOT NULL DEFAULT 0,"
+      "patched_content_hash TEXT NOT NULL,"
+      "patch_file_path TEXT NOT NULL DEFAULT '',"
+      "pinned INTEGER NOT NULL DEFAULT 0,"
+      "ignore_updates_up_to_version TEXT NOT NULL DEFAULT '',"
+      "source TEXT NOT NULL DEFAULT '',"
+      "created_at INTEGER NOT NULL,"
+      "UNIQUE(entry_id));");
+
+    if (!createModInstallation.exec()) {
+      spdlog::error("Table creation failed: {}",
+                    createModInstallation.lastError().text().toStdString());
     }
   }
 
@@ -389,5 +413,208 @@ namespace firelight::db {
       spdlog::warn("Insert into platform_settings failed: {}",
                    query.lastError().text().toStdString());
     }
+  }
+
+  namespace {
+    ModInstallation readModInstallation(const QSqlQuery &query) {
+      ModInstallation installation;
+      installation.id = query.value("id").toInt();
+      installation.entryId = query.value("entry_id").toInt();
+      installation.baseContentHash =
+          query.value("base_content_hash").toString().toStdString();
+      installation.modId = query.value("mod_id").toInt();
+      installation.modSlug = query.value("mod_slug").toString().toStdString();
+      installation.installedPatchId = query.value("installed_patch_id").toInt();
+      installation.installedVersion =
+          query.value("installed_version").toString().toStdString();
+      installation.saveGeneration = query.value("save_generation").toInt();
+      installation.patchedContentHash =
+          query.value("patched_content_hash").toString().toStdString();
+      installation.patchFilePath =
+          query.value("patch_file_path").toString().toStdString();
+      installation.pinned = query.value("pinned").toBool();
+      installation.ignoreUpdatesUpToVersion =
+          query.value("ignore_updates_up_to_version").toString().toStdString();
+      installation.source = query.value("source").toString().toStdString();
+      installation.createdAt = query.value("created_at").toULongLong();
+      return installation;
+    }
+  } // namespace
+
+  bool SqliteUserdataDatabase::createModInstallation(ModInstallation &installation) {
+    if (!m_database.open()) {
+      spdlog::error("Couldn't open database: {}",
+                    m_database.lastError().text().toStdString());
+      return false;
+    }
+
+    if (installation.createdAt == 0) {
+      installation.createdAt = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+          .count();
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(
+      "INSERT INTO mod_installation (entry_id, base_content_hash, mod_id, "
+      "mod_slug, installed_patch_id, installed_version, save_generation, "
+      "patched_content_hash, patch_file_path, pinned, "
+      "ignore_updates_up_to_version, source, created_at) VALUES "
+      "(:entryId, :baseContentHash, :modId, :modSlug, :installedPatchId, "
+      ":installedVersion, :saveGeneration, :patchedContentHash, "
+      ":patchFilePath, :pinned, :ignoreUpdatesUpToVersion, :source, "
+      ":createdAt);");
+    query.bindValue(":entryId", installation.entryId);
+    query.bindValue(":baseContentHash",
+                    QString::fromStdString(installation.baseContentHash));
+    query.bindValue(":modId", installation.modId);
+    query.bindValue(":modSlug", QString::fromStdString(installation.modSlug));
+    query.bindValue(":installedPatchId", installation.installedPatchId);
+    query.bindValue(":installedVersion",
+                    QString::fromStdString(installation.installedVersion));
+    query.bindValue(":saveGeneration", installation.saveGeneration);
+    query.bindValue(":patchedContentHash",
+                    QString::fromStdString(installation.patchedContentHash));
+    query.bindValue(":patchFilePath",
+                    QString::fromStdString(installation.patchFilePath));
+    query.bindValue(":pinned", installation.pinned ? 1 : 0);
+    query.bindValue(":ignoreUpdatesUpToVersion",
+                    QString::fromStdString(installation.ignoreUpdatesUpToVersion));
+    query.bindValue(":source", QString::fromStdString(installation.source));
+    query.bindValue(":createdAt", QVariant::fromValue(installation.createdAt));
+
+    if (!query.exec()) {
+      spdlog::error("Create mod installation failed: {}",
+                    query.lastError().text().toStdString());
+      query.finish();
+      return false;
+    }
+
+    installation.id = query.lastInsertId().toInt();
+    query.finish();
+    return true;
+  }
+
+  bool SqliteUserdataDatabase::updateModInstallation(
+    const ModInstallation &installation) {
+    QSqlQuery query(m_database);
+    query.prepare(
+      "UPDATE mod_installation SET installed_patch_id = :installedPatchId, "
+      "installed_version = :installedVersion, save_generation = :saveGeneration, "
+      "patched_content_hash = :patchedContentHash, "
+      "patch_file_path = :patchFilePath, pinned = :pinned, "
+      "ignore_updates_up_to_version = :ignoreUpdatesUpToVersion WHERE id = :id;");
+    query.bindValue(":installedPatchId", installation.installedPatchId);
+    query.bindValue(":installedVersion",
+                    QString::fromStdString(installation.installedVersion));
+    query.bindValue(":saveGeneration", installation.saveGeneration);
+    query.bindValue(":patchedContentHash",
+                    QString::fromStdString(installation.patchedContentHash));
+    query.bindValue(":patchFilePath",
+                    QString::fromStdString(installation.patchFilePath));
+    query.bindValue(":pinned", installation.pinned ? 1 : 0);
+    query.bindValue(":ignoreUpdatesUpToVersion",
+                    QString::fromStdString(installation.ignoreUpdatesUpToVersion));
+    query.bindValue(":id", installation.id);
+
+    if (!query.exec()) {
+      spdlog::error("Update mod installation failed: {}",
+                    query.lastError().text().toStdString());
+      return false;
+    }
+
+    return query.numRowsAffected() >= 1;
+  }
+
+  std::optional<ModInstallation>
+  SqliteUserdataDatabase::getModInstallation(const int id) {
+    QSqlQuery query(m_database);
+    query.prepare("SELECT * FROM mod_installation WHERE id = :id LIMIT 1;");
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+      spdlog::error("Failed to get mod installation: {}",
+                    query.lastError().text().toStdString());
+      return std::nullopt;
+    }
+
+    if (!query.next()) {
+      return std::nullopt;
+    }
+
+    return readModInstallation(query);
+  }
+
+  std::optional<ModInstallation>
+  SqliteUserdataDatabase::getModInstallationForEntry(const int entryId) {
+    QSqlQuery query(m_database);
+    query.prepare(
+      "SELECT * FROM mod_installation WHERE entry_id = :entryId LIMIT 1;");
+    query.bindValue(":entryId", entryId);
+
+    if (!query.exec()) {
+      spdlog::error("Failed to get mod installation for entry: {}",
+                    query.lastError().text().toStdString());
+      return std::nullopt;
+    }
+
+    if (!query.next()) {
+      return std::nullopt;
+    }
+
+    return readModInstallation(query);
+  }
+
+  std::vector<ModInstallation>
+  SqliteUserdataDatabase::getModInstallationsForBaseContentHash(
+    const std::string baseContentHash) {
+    QSqlQuery query(m_database);
+    query.prepare("SELECT * FROM mod_installation WHERE base_content_hash = "
+      ":baseContentHash ORDER BY created_at ASC;");
+    query.bindValue(":baseContentHash",
+                    QString::fromStdString(baseContentHash));
+
+    if (!query.exec()) {
+      spdlog::warn("Could not retrieve mod installations: {}",
+                   query.lastError().text().toStdString());
+      return {};
+    }
+
+    std::vector<ModInstallation> installations;
+    while (query.next()) {
+      installations.emplace_back(readModInstallation(query));
+    }
+    return installations;
+  }
+
+  std::vector<ModInstallation> SqliteUserdataDatabase::getAllModInstallations() {
+    QSqlQuery query(m_database);
+    query.prepare("SELECT * FROM mod_installation ORDER BY created_at ASC;");
+
+    if (!query.exec()) {
+      spdlog::warn("Could not retrieve mod installations: {}",
+                   query.lastError().text().toStdString());
+      return {};
+    }
+
+    std::vector<ModInstallation> installations;
+    while (query.next()) {
+      installations.emplace_back(readModInstallation(query));
+    }
+    return installations;
+  }
+
+  bool SqliteUserdataDatabase::deleteModInstallation(const int id) {
+    QSqlQuery query(m_database);
+    query.prepare("DELETE FROM mod_installation WHERE id = :id;");
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+      spdlog::error("Delete mod installation failed: {}",
+                    query.lastError().text().toStdString());
+      return false;
+    }
+
+    return query.numRowsAffected() >= 1;
   }
 } // namespace firelight::db

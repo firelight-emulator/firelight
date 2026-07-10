@@ -41,6 +41,22 @@ namespace firelight::db {
 
     void setPlatformSettingValue(int platformId, std::string key, std::string value) override;
 
+    bool createModInstallation(ModInstallation &installation) override;
+
+    bool updateModInstallation(const ModInstallation &installation) override;
+
+    std::optional<ModInstallation> getModInstallation(int id) override;
+
+    std::optional<ModInstallation>
+    getModInstallationForEntry(int entryId) override;
+
+    std::vector<ModInstallation>
+    getModInstallationsForBaseContentHash(std::string baseContentHash) override;
+
+    std::vector<ModInstallation> getAllModInstallations() override;
+
+    bool deleteModInstallation(int id) override;
+
   private:
     QString m_database_path;
     QSqlDatabase m_database;

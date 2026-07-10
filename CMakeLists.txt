@@ -506,6 +506,7 @@ add_executable(fl_test
         tests/app/saves/save_manager_test.cpp
         tests/app/library/archive_reader_test.cpp
         tests/app/library/content_identifier_test.cpp
+        tests/app/library/content_hasher_test.cpp
         tests/app/library/content_extensions_test.cpp
         tests/app/library/content_loader_test.cpp
         tests/app/library/entry_list_model_test.cpp

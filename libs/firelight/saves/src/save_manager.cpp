@@ -214,6 +214,91 @@ void SaveManager::deleteSuspendPoint(const std::string &contentHash,
       SuspendPointDeletedEvent{contentHash, saveSlotNumber, index});
 }
 
+int SaveManager::copySavefilesForward(const std::string &fromContentHash,
+                                      const std::string &toContentHash) {
+  if (fromContentHash == toContentHash || fromContentHash.empty() ||
+      toContentHash.empty()) {
+    return 0;
+  }
+
+  const auto fromHashQ = QString::fromStdString(fromContentHash);
+  const auto toHashQ = QString::fromStdString(toContentHash);
+
+  int copied = 0;
+  // Mirror getSaveFileInfoList's 8-slot layout: slot1..slot8.
+  for (auto i = 0; i < 8; ++i) {
+    const auto slotNumber = i + 1;
+    const auto slot = "/slot" + QString::number(slotNumber);
+
+    const auto sourceFile = std::filesystem::path(
+        (m_saveDirectory + "/" + fromHashQ + slot + "/savefile.srm")
+            .toStdString());
+    if (!std::filesystem::exists(sourceFile)) {
+      continue;
+    }
+
+    const auto destDirQ = m_saveDirectory + "/" + toHashQ + slot;
+    const auto destFile =
+        std::filesystem::path((destDirQ + "/savefile.srm").toStdString());
+    // Never overwrite an existing save at the destination.
+    if (std::filesystem::exists(destFile)) {
+      continue;
+    }
+
+    if (!QDir(m_saveDirectory + "/" + toHashQ)
+             .mkpath("slot" + QString::number(slotNumber))) {
+      spdlog::error("Failed to create save directory for {} slot {}",
+                    toContentHash, slotNumber);
+      continue;
+    }
+
+    // Copy through a temp file + rename so an interrupted copy cannot leave a
+    // partial save at the destination.
+    const auto tempFile =
+        std::filesystem::path((destDirQ + "/savefile.srm.tmp").toStdString());
+    std::error_code ec;
+    std::filesystem::copy_file(
+        sourceFile, tempFile,
+        std::filesystem::copy_options::overwrite_existing, ec);
+    if (ec) {
+      spdlog::error("Failed to copy savefile forward for {} slot {}: {}",
+                    toContentHash, slotNumber, ec.message());
+      std::filesystem::remove(tempFile, ec);
+      continue;
+    }
+    std::filesystem::rename(tempFile, destFile, ec);
+    if (ec) {
+      spdlog::error("Failed to finalize copied savefile for {} slot {}: {}",
+                    toContentHash, slotNumber, ec.message());
+      std::filesystem::remove(tempFile, ec);
+      continue;
+    }
+
+    // Index the copied save so it is visible without a re-scan.
+    if (!m_userdataDatabase.getSavefileMetadata(toContentHash, slotNumber)
+             .has_value()) {
+      QFile copiedFile(QString::fromStdString(destFile.string()));
+      std::string md5;
+      if (copiedFile.open(QIODeviceBase::ReadOnly)) {
+        md5 = QCryptographicHash::hash(copiedFile.readAll(),
+                                       QCryptographicHash::Md5)
+                  .toHex()
+                  .toStdString();
+      }
+      db::SavefileMetadata metadata;
+      metadata.contentId = toContentHash;
+      metadata.slotNumber = slotNumber;
+      metadata.savefileMd5 = md5;
+      metadata.lastModifiedAt = QDateTime::currentSecsSinceEpoch();
+      m_userdataDatabase.createSavefileMetadata(metadata);
+    }
+
+    ++copied;
+  }
+
+  return copied;
+}
+
 std::string SaveManager::getSaveDirectory() const {
   return m_saveDirectory.toStdString();
 }
