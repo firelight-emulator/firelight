@@ -398,6 +398,32 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   // touches GPU state. Cheap when the setting hasn't changed.
   resolveActiveShader();
 
+  // Size the color buffer for software cores: display-sized (fixed size 0 =
+  // track the item's pixel size) while a shader is active so the chain renders
+  // at output resolution, else the core's native size. HW (Vulkan) cores keep
+  // the size the vulkan block manages below. setFixed* is safe here (synchronize
+  // runs with the GUI thread blocked).
+  if (!m_usingHardwareRenderer && m_coreBaseWidth > 0 && m_coreBaseHeight > 0) {
+    // While paused the shader doesn't run and displayPauseImage() uploads a
+    // native-sized frame, so only display-size when actively shading.
+    if (m_activeShaderPreset.has_value() && !m_paused) {
+      if (emulatorItem->fixedColorBufferWidth() != 0 ||
+          emulatorItem->fixedColorBufferHeight() != 0) {
+        emulatorItem->setFixedColorBufferWidth(0);
+        emulatorItem->setFixedColorBufferHeight(0);
+      }
+    } else {
+      if (emulatorItem->fixedColorBufferWidth() !=
+              static_cast<int>(m_coreBaseWidth) ||
+          emulatorItem->fixedColorBufferHeight() !=
+              static_cast<int>(m_coreBaseHeight)) {
+        emulatorItem->setFixedColorBufferWidth(static_cast<int>(m_coreBaseWidth));
+        emulatorItem->setFixedColorBufferHeight(
+            static_cast<int>(m_coreBaseHeight));
+      }
+    }
+  }
+
   // Apply video-callback render dimensions to colorTexture.
   // synchronize() runs with the main thread blocked, so setFixed* is safe here.
   if (m_vulkanRenderer) {
@@ -671,24 +697,33 @@ bool EmulatorItemRenderer::resolveActiveShader() {
 // the game never disappears because of a bad shader.
 void EmulatorItemRenderer::applyShaderChain(QRhiCommandBuffer *cb,
                                             QRhiTexture *source) {
-  const QSize sz = colorTexture()->pixelSize();
+  // Source is native (the raw core frame); output is colorTexture(), which is
+  // display-sized while shading — so the chain does the native->display upscale
+  // and output-resolution shaders see the true OutputSize.
+  const QSize sourceSize = source->pixelSize();
+  const QSize outputSize = colorTexture()->pixelSize();
   QString err;
   const bool ok =
       m_activeShaderPreset &&
       m_shaderChain.ensureBuilt(rhi(), renderTarget()->renderPassDescriptor(),
-                                *m_activeShaderPreset, m_shaderParams, source, sz,
-                                sz, &err);
+                                *m_activeShaderPreset, m_shaderParams, source,
+                                sourceSize, outputSize, &err);
   if (ok) {
     m_shaderChain.setParams(m_shaderParams);
     m_shaderChain.render(cb, renderTarget(), m_shaderFrameCount++);
   } else {
     if (!err.isEmpty()) {
-      spdlog::warn("Shader chain unavailable; showing unshaded frame: {}",
+      spdlog::warn("Shader chain unavailable; disabling shader for this game: {}",
                    err.toStdString());
     }
-    QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-    batch->copyTexture(colorTexture(), source);
-    cb->resourceUpdate(batch);
+    // The chain couldn't build (e.g. no runtime shader baker). We can't blit a
+    // native source into the display-sized colorTexture() (size mismatch), so
+    // clear to black for this one frame and drop back to the unshaded path —
+    // synchronize() will restore native sizing next frame. Reset so we don't
+    // retry a known-bad shader every frame.
+    cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
+    cb->endPass();
+    m_activeShaderPreset.reset();
   }
 
   // Refresh the CPU capture image from the now-final colorTexture().
@@ -774,18 +809,33 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     bool shade = m_activeShaderPreset.has_value();
     QRhiTexture *frameTarget = colorTexture();
     if (shade) {
-      const QSize sz = colorTexture()->pixelSize();
-      if (!m_shaderSourceTexture || m_shaderSourceTexture->pixelSize() != sz) {
-        m_shaderSourceTexture.reset(rhi()->newTexture(
-            QRhiTexture::RGBA8, sz, 1, QRhiTexture::UsedAsTransferSource));
-        if (!m_shaderSourceTexture->create()) {
-          m_shaderSourceTexture.reset();
-        }
+      // The source texture holds the raw core frame at NATIVE resolution; the
+      // chain upscales it to colorTexture(), which is display-sized while a
+      // shader is active (see synchronize()). This is what lets output-resolution
+      // shaders (sharp-bilinear, CRT masks) work.
+      QSize nativeSz(static_cast<int>(m_coreBaseWidth),
+                     static_cast<int>(m_coreBaseHeight));
+      // receive() rotates the frame by m_screenRotation before upload, so 90/270
+      // rotations transpose the uploaded dimensions — match them.
+      if (m_screenRotation % 2 != 0) {
+        nativeSz.transpose();
       }
-      if (m_shaderSourceTexture) {
-        frameTarget = m_shaderSourceTexture.get();
+      if (nativeSz.isEmpty()) {
+        shade = false; // no geometry yet — fall back to the direct path
       } else {
-        shade = false; // allocation failed — fall back to the direct path
+        if (!m_shaderSourceTexture ||
+            m_shaderSourceTexture->pixelSize() != nativeSz) {
+          m_shaderSourceTexture.reset(rhi()->newTexture(
+              QRhiTexture::RGBA8, nativeSz, 1, QRhiTexture::UsedAsTransferSource));
+          if (!m_shaderSourceTexture->create()) {
+            m_shaderSourceTexture.reset();
+          }
+        }
+        if (m_shaderSourceTexture) {
+          frameTarget = m_shaderSourceTexture.get();
+        } else {
+          shade = false; // allocation failed — fall back to the direct path
+        }
       }
     }
 

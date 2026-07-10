@@ -131,6 +131,13 @@ public:
 
   void submitCommand(EmulatorCommand command);
 
+  // Whether a video shader is currently active (software cores only). Read on the
+  // render thread by EmulatorItem::updateGeometry so it doesn't force the color
+  // buffer back to native size while the shader wants it display-sized.
+  [[nodiscard]] bool isShaderActive() const {
+    return m_activeShaderPreset.has_value();
+  }
+
 protected:
   ~EmulatorItemRenderer() override;
 

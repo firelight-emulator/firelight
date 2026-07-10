@@ -643,8 +643,12 @@ void EmulatorItem::updateGeometry(unsigned int width, unsigned int height,
       "width: {}, height: {}, aspectRatio: {}, calculatedAspectRatio: {}",
       m_coreBaseWidth, m_coreBaseHeight, m_coreAspectRatio,
       m_calculatedAspectRatio);
-  setFixedColorBufferWidth(m_coreBaseWidth);
-  setFixedColorBufferHeight(m_coreBaseHeight);
+  // While a shader is active the renderer keeps the color buffer at the item's
+  // display size (so shaders run at output resolution); don't fight that here.
+  if (!m_renderer || !m_renderer->isShaderActive()) {
+    setFixedColorBufferWidth(m_coreBaseWidth);
+    setFixedColorBufferHeight(m_coreBaseHeight);
+  }
   emit videoWidthChanged();
   emit videoHeightChanged();
   emit videoAspectRatioChanged();
