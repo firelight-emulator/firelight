@@ -1,6 +1,7 @@
 #include "qt_emulation_service_proxy.hpp"
 
 #include "emulation/emulation_service.hpp"
+#include "emulator_item_renderer.hpp"
 
 #include <qtconcurrentrun.h>
 #include <spdlog/spdlog.h>
@@ -170,6 +171,13 @@ void QtEmulationServiceProxy::loadEntry(const int entryId) {
   QThreadPool::globalInstance()->start(
       [this, entryId] { m_emulationService->loadEntry(entryId); });
 }
+QString QtEmulationServiceProxy::captureCurrentFrame() const {
+  if (!m_emulationService->isGameRunning()) {
+    return {};
+  }
+  return EmulatorItemRenderer::captureCurrentFramePreviewUrl();
+}
+
 void QtEmulationServiceProxy::stopEmulation() {
   m_emulationService->stopEmulation();
 }

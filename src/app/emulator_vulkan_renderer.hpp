@@ -31,8 +31,12 @@ public:
 
   // Runs the emulator frame(s), blits core → shared image.
   // targetSize must be colorTexture()->pixelSize() so the shared image matches.
+  // When `nativeShared` is true the shared image is instead sized to the core's
+  // render dimensions (native), leaving the display upscale to the shader chain
+  // — used when a video shader is active so it samples an un-upscaled source.
   void renderFrame(firelight::emulation::EmulatorInstance *emulator,
-                   float playbackMultiplier, QSize targetSize, QRhi *rhi);
+                   float playbackMultiplier, QSize targetSize, QRhi *rhi,
+                   bool nativeShared = false);
 
   // Called from receive() when data == RETRO_HW_FRAME_BUFFER_VALID.
   void setRenderDimensions(uint32_t w, uint32_t h);

@@ -138,6 +138,14 @@ public:
     return m_activeShaderPreset.has_value();
   }
 
+  // Publishes a snapshot of the current frame to the GameImageProvider and
+  // returns its "image://gameimages/..." URL (empty if no frame yet). Call on
+  // the GUI thread — used by the shader preview to show the live frame.
+  QString publishCurrentFramePreviewUrl();
+  // Convenience for GUI code (e.g. EmulationService): the current renderer's
+  // frame URL, or empty when no game is running.
+  static QString captureCurrentFramePreviewUrl();
+
 protected:
   ~EmulatorItemRenderer() override;
 
@@ -204,6 +212,9 @@ private:
 
   QImage m_overlayImage;
   QImage m_currentImage;
+  // Guards m_currentImage between the render-thread readback and a GUI-thread
+  // preview snapshot.
+  std::mutex m_currentImageMutex;
 
   SuspendPoint m_beforeLastLoadSuspendPoint;
   QList<QString> m_rewindImageUrls{};

@@ -32,7 +32,7 @@ void EmulatorVulkanRenderer::setRenderDimensions(uint32_t w, uint32_t h) {
 
 void EmulatorVulkanRenderer::renderFrame(
   firelight::emulation::EmulatorInstance *emulator, float playbackMultiplier,
-  QSize targetSize, QRhi *rhi) {
+  QSize targetSize, QRhi *rhi, bool nativeShared) {
   m_coreSignalSem = VK_NULL_HANDLE;
   m_vkFrameReady = false;
 
@@ -55,7 +55,13 @@ void EmulatorVulkanRenderer::renderFrame(
     return;
   }
 
-  if (!ensureSharedImage(targetSize, rhi)) {
+  // With a shader active, keep the shared image at the core's render resolution
+  // so the chain (not this blit) does the upscale to the display size.
+  const QSize sharedSize =
+      nativeShared ? QSize(static_cast<int>(m_vkRenderWidth),
+                           static_cast<int>(m_vkRenderHeight))
+                   : targetSize;
+  if (!ensureSharedImage(sharedSize, rhi)) {
     spdlog::debug("renderFrame: ensureSharedImage() failed");
     return;
   }

@@ -88,6 +88,22 @@ void CaptureListModel::refresh() {
   emit countChanged();
 }
 
+QString CaptureListModel::newestScreenshotUrl() const {
+  const media::GameCapture *newest = nullptr;
+  for (const auto &c : m_items) {
+    if (c.type != media::CaptureType::Screenshot) {
+      continue;
+    }
+    if (!newest || c.timestamp > newest->timestamp) {
+      newest = &c;
+    }
+  }
+  if (!newest) {
+    return {};
+  }
+  return QUrl::fromLocalFile(QString::fromStdString(newest->filePath)).toString();
+}
+
 void CaptureListModel::toggleFavorite(int captureId) {
   for (int i = 0; i < m_items.size(); ++i) {
     if (m_items[i].id == captureId) {

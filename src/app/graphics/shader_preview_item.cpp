@@ -2,10 +2,13 @@
 
 #include "shader_library.hpp"
 
+#include "../gui/game_image_provider.hpp"
+
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLinearGradient>
 #include <QPainter>
+#include <QUrl>
 #include <memory>
 
 namespace firelight::graphics {
@@ -71,13 +74,24 @@ protected:
       m_preset.reset();
       m_params.clear();
     }
+    // Source frame: the item's resolved image (current game frame / screenshot),
+    // or the generated sample when it has none.
+    QImage src = preview->sourceImage();
+    if (src.isNull()) {
+      src = buildSampleImage();
+    }
+    m_pendingSource = src.convertToFormat(QImage::Format_RGBA8888);
+    m_sourceDirty = true;
   }
 
   void render(QRhiCommandBuffer *cb) override {
-    // Upload the sample frame once.
-    if (!m_sampleTex) {
-      const QImage sample = buildSampleImage();
-      m_sampleSize = sample.size();
+    // (Re)upload the source frame when it changed.
+    if (m_sourceDirty || !m_sampleTex) {
+      QImage src = m_pendingSource;
+      if (src.isNull()) {
+        src = buildSampleImage().convertToFormat(QImage::Format_RGBA8888);
+      }
+      m_sampleSize = src.size();
       m_sampleTex.reset(
           rhi()->newTexture(QRhiTexture::RGBA8, m_sampleSize, 1,
                             QRhiTexture::UsedAsTransferSource));
@@ -85,9 +99,10 @@ protected:
         m_sampleTex.reset();
       } else {
         QRhiResourceUpdateBatch *b = rhi()->nextResourceUpdateBatch();
-        b->uploadTexture(m_sampleTex.get(), sample);
+        b->uploadTexture(m_sampleTex.get(), src);
         cb->resourceUpdate(b);
       }
+      m_sourceDirty = false;
     }
 
     const QSize outputSize = colorTexture()->pixelSize();
@@ -114,6 +129,8 @@ private:
   QSize m_sampleSize;
   std::optional<ShaderPreset> m_preset;
   QVector<float> m_params;
+  QImage m_pendingSource;
+  bool m_sourceDirty = true;
   quint64 m_revision = 0;
   quint64 m_frame = 0;
 };
@@ -138,6 +155,42 @@ void ShaderPreviewItem::setParams(const QString &params) {
   m_params = params;
   emit paramsChanged();
   resolve();
+}
+
+void ShaderPreviewItem::setSourceImageUrl(const QString &url) {
+  if (m_sourceImageUrl == url) {
+    return;
+  }
+  m_sourceImageUrl = url;
+  emit sourceImageUrlChanged();
+  loadSource();
+}
+
+void ShaderPreviewItem::loadSource() {
+  m_sourceImage = QImage();
+  const QString url = m_sourceImageUrl;
+  if (!url.isEmpty()) {
+    if (url.startsWith("image://")) {
+      // image://<provider>/<id> — we only use the "gameimages" provider.
+      const QString id = url.section('/', 3);
+      if (auto *provider = getGameImageProvider(); provider && !id.isEmpty()) {
+        QSize sz;
+        const QImage img = provider->requestImage(id, &sz, QSize());
+        if (!img.isNull()) {
+          m_sourceImage = img;
+        }
+      }
+    } else {
+      const QString path =
+          url.startsWith("file:") ? QUrl(url).toLocalFile() : url;
+      const QImage img(path);
+      if (!img.isNull()) {
+        m_sourceImage = img;
+      }
+    }
+  }
+  ++m_revision;
+  update();
 }
 
 void ShaderPreviewItem::resolve() {

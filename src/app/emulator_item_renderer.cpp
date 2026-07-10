@@ -53,6 +53,10 @@ EmulatorItemRenderer::EmulatorItemRenderer(
 EmulatorItemRenderer::~EmulatorItemRenderer() {
   m_quitting = true;
 
+  // Stop captureCurrentFramePreviewUrl() from dereferencing this once it's gone.
+  if (globalRenderer == this)
+    globalRenderer = nullptr;
+
   if (m_clipRecorder)
     m_clipRecorder->stop();
 
@@ -243,9 +247,15 @@ void EmulatorItemRenderer::scheduleFrameReadback(QRhiResourceUpdateBatch *batch)
       // OpenGL's default framebuffer is bottom-up.
       if (m_graphicsApi == QSGRendererInterface::OpenGL)
         frame.flip(Qt::Vertical);
-      m_currentImage = frame;
-      feedClipRecorder(m_currentImage);
-      feedNetplayStream(m_currentImage);
+      {
+        // Guards against the GUI thread reading it for a shader-preview snapshot
+        // (publishCurrentFramePreviewUrl). Other writers run in GUI-blocked
+        // synchronize(), so they can't race that reader.
+        std::lock_guard<std::mutex> lock(m_currentImageMutex);
+        m_currentImage = frame;
+      }
+      feedClipRecorder(frame);
+      feedNetplayStream(frame);
     }
     delete rbResult;
   };
@@ -427,16 +437,27 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   // Apply video-callback render dimensions to colorTexture.
   // synchronize() runs with the main thread blocked, so setFixed* is safe here.
   if (m_vulkanRenderer) {
-    const uint32_t pendingW = m_vulkanRenderer->pendingWidth();
-    const uint32_t pendingH = m_vulkanRenderer->pendingHeight();
-    if (pendingW >= 2 && pendingH >= 2 &&
-        (static_cast<int>(pendingW) != emulatorItem->fixedColorBufferWidth() ||
-         static_cast<int>(pendingH) != emulatorItem->fixedColorBufferHeight())) {
-      spdlog::info("synchronize: resizing colorBuffer {}x{} -> {}x{}",
-                   emulatorItem->fixedColorBufferWidth(), emulatorItem->fixedColorBufferHeight(),
-                   pendingW, pendingH);
-      emulatorItem->setFixedColorBufferWidth(pendingW);
-      emulatorItem->setFixedColorBufferHeight(pendingH);
+    if (m_activeShaderPreset.has_value() && !m_paused) {
+      // Display-size the color buffer so the chain upscales the (native) shared
+      // image to the output resolution — same gate as the software path.
+      if (emulatorItem->fixedColorBufferWidth() != 0 ||
+          emulatorItem->fixedColorBufferHeight() != 0) {
+        emulatorItem->setFixedColorBufferWidth(0);
+        emulatorItem->setFixedColorBufferHeight(0);
+      }
+    } else {
+      const uint32_t pendingW = m_vulkanRenderer->pendingWidth();
+      const uint32_t pendingH = m_vulkanRenderer->pendingHeight();
+      if (pendingW >= 2 && pendingH >= 2 &&
+          (static_cast<int>(pendingW) != emulatorItem->fixedColorBufferWidth() ||
+           static_cast<int>(pendingH) !=
+               emulatorItem->fixedColorBufferHeight())) {
+        spdlog::info("synchronize: resizing colorBuffer {}x{} -> {}x{}",
+                     emulatorItem->fixedColorBufferWidth(),
+                     emulatorItem->fixedColorBufferHeight(), pendingW, pendingH);
+        emulatorItem->setFixedColorBufferWidth(pendingW);
+        emulatorItem->setFixedColorBufferHeight(pendingH);
+      }
     }
   }
 
@@ -868,8 +889,11 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
       applyShaderChain(cb, m_shaderSourceTexture.get());
     }
   } else if (m_vulkanRenderer) {
+    // With a shader active, colorTexture() is display-sized (see synchronize);
+    // keep the shared image native so the chain upscales native→display.
     m_vulkanRenderer->renderFrame(m_emulatorInstance, m_playbackMultiplier,
-                                  colorTexture()->pixelSize(), rhi());
+                                  colorTexture()->pixelSize(), rhi(),
+                                  m_activeShaderPreset.has_value());
 
     if (m_vulkanRenderer->isFirstFrameReady() &&
         m_vulkanRenderer->sharedTexture() &&
@@ -942,6 +966,23 @@ void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
   if (!m_emulatorInstance || m_quitting)
     return;
   m_commandQueue.enqueue(command);
+}
+
+QString EmulatorItemRenderer::publishCurrentFramePreviewUrl() {
+  QImage copy;
+  {
+    std::lock_guard<std::mutex> lock(m_currentImageMutex);
+    copy = m_currentImage;
+  }
+  if (copy.isNull() || !m_gameImageProvider) {
+    return {};
+  }
+  return m_gameImageProvider->setImage(copy);
+}
+
+QString EmulatorItemRenderer::captureCurrentFramePreviewUrl() {
+  return globalRenderer ? globalRenderer->publishCurrentFramePreviewUrl()
+                        : QString();
 }
 
 // (Vulkan implementation lives in EmulatorVulkanRenderer.)

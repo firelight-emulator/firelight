@@ -55,6 +55,11 @@ public:
   Q_INVOKABLE void stopEmulation();
   Q_INVOKABLE void resetGame();
 
+  // Snapshots the running game's current frame into the GameImageProvider and
+  // returns its "image://gameimages/..." URL (empty when no game is running or
+  // no frame is available). Used to seed the shader preview with the live frame.
+  Q_INVOKABLE QString captureCurrentFrame() const;
+
   // --- per-game controller device selection (Mouse / Light Gun / Gamepad) ---
   // Number of controller ports the running game's core exposes.
   Q_INVOKABLE int controllerPortCount() const;

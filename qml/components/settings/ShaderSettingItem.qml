@@ -20,6 +20,27 @@ FocusScope {
 
     implicitHeight: col.implicitHeight
 
+    // Source frame for the live preview: the running game's current frame, else
+    // the newest screenshot, else "" (the preview item falls back to a generated
+    // sample). Fetched once when the panel appears.
+    property string previewSource: ""
+    function refreshPreviewSource() {
+        if (EmulationService.isGameRunning) {
+            const url = EmulationService.captureCurrentFrame()
+            if (url) {
+                previewSource = url
+                return
+            }
+        }
+        if (typeof CaptureModel !== "undefined" && CaptureModel) {
+            CaptureModel.refresh()
+            previewSource = CaptureModel.newestScreenshotUrl()
+            return
+        }
+        previewSource = ""
+    }
+    Component.onCompleted: refreshPreviewSource()
+
     // --- value (de)serialization -------------------------------------------------
     function parsed() {
         if (!root.value) {
@@ -236,6 +257,7 @@ FocusScope {
                 anchors.margins: 1
                 shaderId: root.selectedId
                 params: JSON.stringify(root.selectedParams)
+                sourceImageUrl: root.previewSource
             }
         }
 

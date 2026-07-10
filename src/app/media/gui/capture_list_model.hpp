@@ -45,6 +45,9 @@ public:
 
   // Reloads from the repository (e.g. when the gallery opens).
   Q_INVOKABLE void refresh();
+  // The newest screenshot's file:// URL (empty if there are none). Used to seed
+  // the shader preview when no game is running.
+  [[nodiscard]] Q_INVOKABLE QString newestScreenshotUrl() const;
   Q_INVOKABLE void toggleFavorite(int captureId);
   // Removes the capture from the index and deletes its file(s).
   Q_INVOKABLE void removeCapture(int captureId);
