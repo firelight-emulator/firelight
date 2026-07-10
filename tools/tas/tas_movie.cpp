@@ -83,6 +83,9 @@ struct Core {
   void (*get_system_av_info)(retro_system_av_info *);
   void *(*get_memory_data)(unsigned);
   size_t (*get_memory_size)(unsigned);
+  size_t (*serialize_size)();
+  bool (*serialize)(void *, size_t);
+  bool (*unserialize)(const void *, size_t);
 };
 
 Core g;
@@ -205,6 +208,9 @@ void bindAll() {
   bind(g.get_system_av_info, "retro_get_system_av_info");
   bind(g.get_memory_data, "retro_get_memory_data");
   bind(g.get_memory_size, "retro_get_memory_size");
+  bind(g.serialize_size, "retro_serialize_size");
+  bind(g.serialize, "retro_serialize");
+  bind(g.unserialize, "retro_unserialize");
 }
 
 void openCore(const char *corePath) {
@@ -450,8 +456,9 @@ int usage(const char *a0) {
                "  %s shot    <core> <rom> <movie.fltm> <frame> <out.ppm>\n"
                "  %s ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>\n"
                "  %s read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>\n"
+               "  %s sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len=2]\n"
                "  %s maps    <core> <rom> _\n",
-               a0, a0, a0, a0, a0, a0, a0, a0);
+               a0, a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -650,6 +657,47 @@ int main(int argc, char **argv) {
         std::printf(" %02x", v);
     }
     std::printf("\n");
+    closeCore();
+    return 0;
+  }
+
+  // ---- sweep: the luck-manipulation lever. Savestate at <atFrame>, then for
+  // each idle-frame delay 0..maxDelay, restore and insert that many blank frames
+  // and read <gbAddr>. Shows how a target (e.g. the RNG bytes) shifts with timing
+  // -- the search would pick the delay that yields the wanted value. ----
+  if (cmd == "sweep") {
+    if (argc < 8)
+      return usage(argv[0]);
+    const uint32_t atFrame = std::strtoul(argv[5], nullptr, 0);
+    const uint32_t maxDelay = std::strtoul(argv[6], nullptr, 0);
+    const uint32_t addr = std::strtoul(argv[7], nullptr, 0);
+    const uint32_t len = argc > 8 ? std::strtoul(argv[8], nullptr, 0) : 2;
+    replayTo(corePath, atFrame, nullptr, every);
+    const size_t ss = g.serialize_size();
+    std::vector<uint8_t> snap(ss);
+    g.serialize(snap.data(), ss);
+    static Movie idle; // no input during the inserted idle frames
+    std::printf("sweep at frame %u; addr 0x%04x; idle-frame delay 0..%u:\n",
+                atFrame, addr, maxDelay);
+    for (uint32_t delay = 0; delay <= maxDelay; ++delay) {
+      g.unserialize(snap.data(), ss);
+      const Movie *saved = g_movie;
+      g_movie = &idle;
+      for (uint32_t k = 0; k < delay; ++k) {
+        g_frame = k;
+        g.run();
+      }
+      g_movie = saved;
+      std::printf("  delay=%3u:", delay);
+      for (uint32_t i = 0; i < len; ++i) {
+        const int v = readGB(addr + i);
+        if (v < 0)
+          std::printf(" --");
+        else
+          std::printf(" %02x", v);
+      }
+      std::printf("\n");
+    }
     closeCore();
     return 0;
   }
