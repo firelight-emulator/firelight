@@ -115,7 +115,19 @@ player's bedroom → navigate to the wall), with `@assert`s on `map`/position th
 pass. Authoring notes: the intro is an unoptimized A-mash placeholder; the SNES the
 player stands on re-opens its text on any `A`, so **`B` (not `A`) dismisses it**
 before the D-pad will move — the kind of detail iterative `shot`/`watch` authoring
-surfaces. Reaching Pikachu is more of the same overworld navigation.
+surfaces.
+
+`examples/yellow_get_pikachu_full.txt` (+ the documented `yellow_get_pikachu.txt`) is a
+**complete, verified** movie that receives the starter **PIKACHU** (Level 5), compiled
+from the north-Pallet Oak-trigger anchor `yellow_get_pikachu.fltm` /
+`yellow_pallet_anchor.fltm` (`verify` PASSes: deterministic + checkpoint-synced; end
+state `wPartyCount=1`, `wPartySpecies=0x54`). `yellow_get_pikachu.mp4` shows the gift
+sequence. **Key finding:** the Oak's-Lab gift is *not* an auto-advancing cutscene —
+after Oak's speech control returns and you must **walk to the Poké Ball** (DOWN 1,
+RIGHT 2 from `(5,3)` → `(7,4)`, face up, `A`); the rival snatches a ball and Oak then
+hands you Pikachu. Mashing `A` loops forever (re-examining the ball). Cutscenes must be
+authored with continuous `compile`, **not** the `step` frame-stepper (whose
+per-command savestate restore fragments scripted walks and glitches free-roam movement).
 
 ### Savestate-anchored authoring
 

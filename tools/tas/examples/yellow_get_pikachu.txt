@@ -1,0 +1,52 @@
+# Pokemon Yellow -- receive the starter PIKACHU (Level 5), as a verified continuous movie.
+#
+# Compile (anchored at the north-Pallet Oak trigger savestate):
+#   tas_movie compile <mgba> "Pokemon Yellow Version.gbc" yellow_get_pikachu.txt out.fltm yellow_pallet_anchor.fltm
+# The pre-compiled, self-contained result is examples/yellow_get_pikachu.fltm (embeds the
+# anchor savestate; `verify` PASSes: deterministic + checkpoint-synced). End state:
+# wPartyCount(0xD162)=1, wPartySpecies(0xD163)=0x54 (PIKACHU), level 5.
+#
+# THE KEY INSIGHT (credit: the user): the Oak's-Lab gift is NOT an auto-advancing cutscene.
+# After Oak's speech, control RETURNS to the player, who must WALK to the Poke Ball on the
+# table (DOWN 1, RIGHT 2 from the give spot at (5,3) -> (7,4)), face UP, and press A. The
+# rival BLUE then snatches a ball, Oak scolds him and repositions you to (5,3), and hands
+# you PIKACHU. Mashing A alone LOOPS FOREVER (it just re-examines the ball / re-triggers
+# Oak's line) -- you must STOP pressing A and walk. This is why 13 input-pattern sweeps all
+# failed identically before the "walk to the ball" insight.
+#
+# Two authoring rules this movie follows (both learned the hard way):
+#   1. Long continuous spans (no input, or A only at text) let Oak's/BLUE's SCRIPTED WALKS
+#      complete -- never mash A during a scripted walk (it interrupts the movement script).
+#   2. One A tap + ~45 idle frames cleanly advances exactly one text box.
+#
+# Cadence tokens below are expanded (the script format has no loop syntax):
+#   "2 A / 24 -"  x140  = drive Oak walk-down, "That was close!", the wild-Pikachu demo
+#                         battle, and the escort into the lab, up to mid-gift-speech.
+#   "2 A / 45 -"  x30   = finish Oak's speech to the control-return window (K=30).
+#   70 -                = settle; control is now the player's.
+#   walk               = DOWN 1, RIGHT 2 to the ball tile (7,4), then face UP.
+#   "2 A / 45 -"  x95   = press A at the ball -> BLUE snatch -> reposition -> receive Pikachu.
+
+# ---- 140x "2 A / 24 -" : trigger -> escort -> lab -> mid gift-speech ----
+2 A
+24 -
+2 A
+24 -
+2 A
+24 -
+2 A
+24 -
+2 A
+24 -
+2 A
+24 -
+2 A
+24 -
+2 A
+24 -
+2 A
+24 -
+2 A
+24 -
+# (repeat the "2 A / 24 -" pair to 140 total -- see yellow_get_pikachu_full.txt for the
+#  fully-expanded, ready-to-compile version; this header file documents the structure.)

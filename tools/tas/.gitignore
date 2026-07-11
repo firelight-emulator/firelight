@@ -4,3 +4,7 @@
 *.obj
 # Generated movie artifacts
 *.fltm
+# ...but keep the checked-in Pikachu example: the Pallet anchor savestate is required
+# input to recompile the script, and the result movie is the verified deliverable.
+!examples/yellow_pallet_anchor.fltm
+!examples/yellow_get_pikachu.fltm
