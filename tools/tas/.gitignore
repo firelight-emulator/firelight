@@ -8,3 +8,4 @@
 # input to recompile the script, and the result movie is the verified deliverable.
 !examples/yellow_pallet_anchor.fltm
 !examples/yellow_get_pikachu.fltm
+!examples/yellow_get_pikachu_from_boot.fltm

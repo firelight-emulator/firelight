@@ -86,6 +86,7 @@ gate 1a). Subcommands:
 - `watch   <core> <rom> <movie.fltm> <frame>` — decode named Pokémon Yellow state (RNG/DSum, party, battle you/foe, position, trainer ID) — see `yellow_ram.hpp`.
 - `route   <core> <rom> <route.txt> <out.fltm> [anchor.fltm]` — execute a route plan (optionally from an anchor) → verified movie.
 - `dump    <core> <rom> <movie.fltm> <outdir> [everyN=2] [from] [to]` — render frames → PPMs in one pass (for GIF/MP4).
+- `flatten <core> <rom> <out.fltm> <in.fltm>[:maxframes] ...` — concatenate the input logs of several movies into ONE **power-on** movie (embedded anchors ignored; each input optionally truncated to `maxframes`). Collapses a savestate-anchored chain (intro → nav → gift) into a self-contained from-boot run.
 - `maps    <core> <rom> _` — dump the core's memory-map descriptors.
 
 ### Route plans (Phase 4 — the LLM-planner interface)
@@ -128,6 +129,19 @@ RIGHT 2 from `(5,3)` → `(7,4)`, face up, `A`); the rival snatches a ball and O
 hands you Pikachu. Mashing `A` loops forever (re-examining the ball). Cutscenes must be
 authored with continuous `compile`, **not** the `step` frame-stepper (whose
 per-command savestate restore fragments scripted walks and glitches free-roam movement).
+
+`examples/yellow_get_pikachu_from_boot.fltm` is the same result as a **complete, self-contained
+power-on movie** (16,349 frames: boot → name entry → bedroom → Pallet → Oak trigger → escort →
+gift → Pikachu; `verify` PASSes). It was assembled by flattening the savestate-anchored chain:
+
+```sh
+tas_movie flatten <mgba> <yellow> yellow_get_pikachu_from_boot.fltm \
+  clean_intro.fltm full.fltm:1500 yellow_get_pikachu.fltm
+```
+
+i.e. the whole intro movie, then the first 1500 frames of the bedroom→Pallet navigation (up to
+where the Pallet anchor was captured), then the gift movie — concatenated and re-verified from
+power-on. This is the pattern for turning anchored authoring segments into a submittable run.
 
 ### Savestate-anchored authoring
 

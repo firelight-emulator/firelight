@@ -605,8 +605,9 @@ int usage(const char *a0) {
                "  %s route   <core> <rom> <route.txt> <out.fltm> [anchor.fltm]\n"
                "  %s dump    <core> <rom> <movie.fltm> <outdir> [everyN=2] [from] [to]\n"
                "  %s step    <core> <rom> <dir> <reset|do|peek|undo|save> [args]\n"
+               "  %s flatten <core> <rom> <out.fltm> <in.fltm>[:maxframes] ...  (concat inputs -> power-on movie)\n"
                "  %s maps    <core> <rom> _\n",
-               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
+               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -721,6 +722,53 @@ int main(int argc, char **argv) {
     std::printf("compiled %s -> %s\n  core=%s %s  frames=%zu  checkpoints=%zu\n",
                 scriptPath, outPath, m.coreName.c_str(), m.coreVersion.c_str(),
                 m.input.size(), m.checkpoints.size());
+    return 0;
+  }
+
+  // ---- flatten: concatenate the input logs of several movies into ONE power-on
+  // movie (startMode=0). Each arg is <movie.fltm>[:maxframes]; embedded anchors are
+  // ignored -- only the per-frame input is taken (optionally truncated to maxframes).
+  // Collapses a savestate-anchored chain (intro -> nav -> gift) into a from-boot run.
+  if (cmd == "flatten") {
+    if (argc < 5)
+      return usage(argv[0]);
+    const char *outPath = argv[4];
+    Movie out;
+    out.romName = baseName(g_romPath);
+    out.romHash = romHash;
+    out.romSize = static_cast<uint32_t>(rom.size());
+    out.startMode = 0; // power-on
+    for (int i = 5; i < argc; ++i) {
+      std::string spec = argv[i];
+      std::string path = spec;
+      uint32_t maxf = 0xFFFFFFFFu;
+      const size_t colon = spec.rfind(':');
+      if (colon != std::string::npos && colon > 1) { // skip Windows drive-letter ':'
+        const std::string tail = spec.substr(colon + 1);
+        if (!tail.empty() &&
+            tail.find_first_not_of("0123456789") == std::string::npos) {
+          maxf = static_cast<uint32_t>(std::strtoul(tail.c_str(), nullptr, 10));
+          path = spec.substr(0, colon);
+        }
+      }
+      Movie in;
+      if (!in.load(path.c_str())) {
+        std::fprintf(stderr, "FATAL: cannot load '%s'\n", path.c_str());
+        return 2;
+      }
+      const uint32_t sz = static_cast<uint32_t>(in.input.size());
+      const uint32_t n = maxf < sz ? maxf : sz;
+      out.input.insert(out.input.end(), in.input.begin(),
+                       in.input.begin() + n);
+      std::fprintf(stderr, "  + %s : %u/%u frames\n", path.c_str(), n, sz);
+    }
+    stampAndCheckpoint(corePath, out, every);
+    if (!out.save(outPath)) {
+      std::fprintf(stderr, "FATAL: cannot write '%s'\n", outPath);
+      return 3;
+    }
+    std::printf("flattened -> %s  (power-on)  frames=%zu  checkpoints=%zu\n",
+                outPath, out.input.size(), out.checkpoints.size());
     return 0;
   }
 
