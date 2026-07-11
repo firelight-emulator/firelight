@@ -237,6 +237,29 @@ void openCore(const char *corePath) {
     std::fprintf(stderr, "FATAL: load_game failed\n");
     std::exit(3);
   }
+  // Optional battery-save (SRAM) injection: if TAS_SRAM points to a .sav file,
+  // copy it into the core's SAVE_RAM buffer right after load_game so the game
+  // boots to "CONTINUE" and resumes the saved state (used to seed a run from a
+  // constructed save, e.g. a pre-Elite-Four team at the Indigo Plateau).
+  if (const char *sramPath = std::getenv("TAS_SRAM")) {
+    std::ifstream sf(sramPath, std::ios::binary);
+    if (!sf) {
+      std::fprintf(stderr, "WARNING: TAS_SRAM set but cannot open '%s'\n", sramPath);
+    } else {
+      std::vector<uint8_t> sav((std::istreambuf_iterator<char>(sf)),
+                               std::istreambuf_iterator<char>());
+      void *dst = g.get_memory_data(RETRO_MEMORY_SAVE_RAM);
+      const size_t cap = g.get_memory_size(RETRO_MEMORY_SAVE_RAM);
+      if (!dst || cap == 0) {
+        std::fprintf(stderr, "WARNING: core exposes no SAVE_RAM (size=%zu)\n", cap);
+      } else {
+        const size_t n = sav.size() < cap ? sav.size() : cap;
+        std::memcpy(dst, sav.data(), n);
+        std::fprintf(stderr, "[sram] loaded %zu/%zu bytes from %s\n", n, cap,
+                     sramPath);
+      }
+    }
+  }
   retro_system_av_info av{};
   g.get_system_av_info(&av);
   // Savestate-anchored movies: restore the embedded start state right after
@@ -479,6 +502,30 @@ int readGB(uint32_t addr) {
   return -1;
 }
 
+// Write one byte at emulated GB address `addr` via the memory-map descriptors
+// (mirrors readGB). Returns true if the address was mapped and written.
+bool writeGB(uint32_t addr, uint8_t val) {
+  for (const auto &d : g_memmap) {
+    if (!d.ptr)
+      continue;
+    size_t rel;
+    if (d.select == 0) {
+      if (addr < d.start || addr >= d.start + d.len)
+        continue;
+      rel = addr - d.start;
+    } else {
+      if ((addr & d.select) != (d.start & d.select))
+        continue;
+      rel = addr & ~d.select;
+      if (d.len && rel >= d.len)
+        continue;
+    }
+    d.ptr[d.offset + rel] = val;
+    return true;
+  }
+  return false;
+}
+
 // Read `size` bytes big-endian at GB address `addr` (via readGB).
 uint32_t readN(uint32_t addr, uint32_t size) {
   uint32_t v = 0;
@@ -606,8 +653,11 @@ int usage(const char *a0) {
                "  %s dump    <core> <rom> <movie.fltm> <outdir> [everyN=2] [from] [to]\n"
                "  %s step    <core> <rom> <dir> <reset|do|peek|undo|save> [args]\n"
                "  %s flatten <core> <rom> <out.fltm> <in.fltm>[:maxframes] ...  (concat inputs -> power-on movie)\n"
-               "  %s maps    <core> <rom> _\n",
-               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
+               "  %s poke    <core> <rom> <base.fltm> <atFrame> <out.fltm> <pokefile>  (write RAM -> savestate anchor)\n"
+               "  %s savesram <core> <rom> <movie.fltm> <atFrame> <out.sav>  (dump SAVE_RAM to a .sav)\n"
+               "  %s maps    <core> <rom> _\n"
+               "  (env TAS_SRAM=<file.sav> injects a battery save into SAVE_RAM after load_game)\n",
+               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -687,6 +737,119 @@ int main(int argc, char **argv) {
     }
     std::printf("savestate anchor -> %s : from %s @frame %u, %zu-byte state\n",
                 argv[6], argv[4], atFrame, out.startState.size());
+    return 0;
+  }
+
+  // ---- poke: replay a movie to a frame, apply raw RAM writes, then savestate the
+  // result as an anchor. Poke file lines: "<gbAddr> <hexbyte> [hexbyte ...]" (or
+  // "<gbAddr>: ..."), '#'=comment; addr parsed base-0 (use 0x..), bytes base-16.
+  // Writes go through the memory-map descriptors (writeGB) into WRAM/HRAM. Used to
+  // seed an arbitrary RAM setup (party / items / badges / flags) and capture it. ----
+  if (cmd == "poke") {
+    if (argc < 8)
+      return usage(argv[0]);
+    Movie in;
+    if (!in.load(argv[4])) {
+      std::fprintf(stderr, "FATAL: cannot load movie '%s'\n", argv[4]);
+      return 2;
+    }
+    const uint32_t atFrame = std::strtoul(argv[5], nullptr, 0);
+    const char *outPath = argv[6];
+    std::ifstream pf(argv[7]);
+    if (!pf) {
+      std::fprintf(stderr, "FATAL: cannot open poke file '%s'\n", argv[7]);
+      return 2;
+    }
+    struct Poke {
+      uint32_t addr;
+      std::vector<uint8_t> bytes;
+    };
+    std::vector<Poke> pokes;
+    std::string line;
+    while (std::getline(pf, line)) {
+      const auto h = line.find('#');
+      if (h != std::string::npos)
+        line.erase(h);
+      for (auto &c : line)
+        if (c == ':' || c == ',')
+          c = ' ';
+      std::istringstream is(line);
+      std::string tok;
+      if (!(is >> tok))
+        continue;
+      Poke p;
+      p.addr = std::strtoul(tok.c_str(), nullptr, 0);
+      while (is >> tok)
+        p.bytes.push_back(
+            static_cast<uint8_t>(std::strtoul(tok.c_str(), nullptr, 16)));
+      if (!p.bytes.empty())
+        pokes.push_back(std::move(p));
+    }
+    g_movie = &in;
+    replayTo(corePath, atFrame, nullptr, every); // leaves core open at atFrame
+    size_t ok = 0, bad = 0;
+    for (const auto &p : pokes)
+      for (size_t i = 0; i < p.bytes.size(); ++i)
+        (writeGB(p.addr + static_cast<uint32_t>(i), p.bytes[i]) ? ok : bad)++;
+    const size_t ssz = g.serialize_size();
+    std::vector<uint8_t> blob(ssz);
+    if (!g.serialize(blob.data(), ssz)) {
+      std::fprintf(stderr, "FATAL: serialize failed\n");
+      return 3;
+    }
+    closeCore();
+    Movie out;
+    out.coreName = in.coreName;
+    out.coreVersion = in.coreVersion;
+    out.romName = in.romName.empty() ? baseName(g_romPath) : in.romName;
+    out.romHash = romHash;
+    out.romSize = static_cast<uint32_t>(rom.size());
+    out.startMode = 1;
+    out.startState = std::move(blob);
+    if (!out.save(outPath)) {
+      std::fprintf(stderr, "FATAL: cannot write '%s'\n", outPath);
+      return 3;
+    }
+    std::printf("poke anchor -> %s : %zu bytes written (%zu unmapped), "
+                "from %s @frame %u\n",
+                outPath, ok, bad, argv[4], atFrame);
+    return 0;
+  }
+
+  // ---- savesram: replay a movie to a frame and dump the core's SAVE_RAM (battery
+  // save) to a .sav file. Run the movie through an in-game SAVE first so the buffer
+  // holds a valid, fully-consistent save that can be patched and re-injected. ----
+  if (cmd == "savesram") {
+    if (argc < 7)
+      return usage(argv[0]);
+    Movie in;
+    if (!in.load(argv[4])) {
+      std::fprintf(stderr, "FATAL: cannot load movie '%s'\n", argv[4]);
+      return 2;
+    }
+    const uint32_t atFrame = std::strtoul(argv[5], nullptr, 0);
+    const char *outPath = argv[6];
+    g_movie = &in;
+    replayTo(corePath, atFrame, nullptr, every); // leaves core open at atFrame
+    const void *src = g.get_memory_data(RETRO_MEMORY_SAVE_RAM);
+    const size_t n = g.get_memory_size(RETRO_MEMORY_SAVE_RAM);
+    if (!src || n == 0) {
+      std::fprintf(stderr, "FATAL: core exposes no SAVE_RAM (size=%zu)\n", n);
+      closeCore();
+      return 3;
+    }
+    std::vector<uint8_t> sav(n);
+    std::memcpy(sav.data(), src, n);
+    closeCore();
+    std::ofstream f(outPath, std::ios::binary);
+    if (!f) {
+      std::fprintf(stderr, "FATAL: cannot write '%s'\n", outPath);
+      return 3;
+    }
+    f.write(reinterpret_cast<const char *>(sav.data()),
+            static_cast<std::streamsize>(sav.size()));
+    std::printf("saved SRAM -> %s (%zu bytes) from %s @frame %u\n", outPath, n,
+                argv[4], atFrame);
     return 0;
   }
 
