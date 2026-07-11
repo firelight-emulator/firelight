@@ -27,6 +27,8 @@ namespace firelight::graphics {
 //       vec4 Frame;        // x = frame count, y = internal (V-flip)
 //       vec4 Param[8];     // Param[i].x = declared parameter i
 //   };
+//   layout(binding=2) uniform sampler2D Feedback;  // previous frame's final
+//       // output — only meaningful when the preset sets "feedback": true.
 class ShaderChain {
 public:
   ShaderChain();
@@ -48,9 +50,11 @@ public:
 
   // Runs every pass: source -> intermediate(s) -> `finalRt`. Must be called
   // outside an active render pass (it opens its own passes). `frameCount` feeds
-  // the Frame uniform.
+  // the Frame uniform. `finalTex` is the texture backing `finalRt` (the caller's
+  // colorTexture); for feedback presets it is copied into the history texture at
+  // the end of the frame.
   void render(QRhiCommandBuffer *cb, QRhiRenderTarget *finalRt,
-              quint64 frameCount);
+              QRhiTexture *finalTex, quint64 frameCount);
 
   // Updates just the tunable parameter values (no rebuild).
   void setParams(const QVector<float> &params) { m_params = params; }
@@ -85,6 +89,12 @@ private:
   QRhiRenderPassDescriptor *m_finalRpd = nullptr;
   QShader m_vertexShader;
   std::vector<Pass> m_passes;
+
+  // Feedback (previous-frame) support, allocated only for feedback presets.
+  bool m_feedback = false;
+  bool m_historyInitialized = false;
+  std::unique_ptr<QRhiTexture> m_historyTex;
+  std::unique_ptr<QRhiSampler> m_feedbackSampler;
 
   bool rebuild(QString *error);
   void drawPass(QRhiCommandBuffer *cb, const Pass &pass, QRhiRenderTarget *rt,

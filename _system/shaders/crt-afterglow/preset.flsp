@@ -1,0 +1,11 @@
+{
+  "name": "CRT Afterglow",
+  "feedback": true,
+  "parameters": [
+    { "key": "persistence", "label": "Phosphor persistence", "min": 0.0, "max": 0.95, "step": 0.05, "default": 0.55 },
+    { "key": "scanline", "label": "Scanline depth", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.3 }
+  ],
+  "passes": [
+    { "fragment": "shader.frag", "scale": 1.0, "filter": "linear", "wrap": "clamp" }
+  ]
+}

@@ -39,7 +39,8 @@ FocusScope {
             anchors.margins: 8
             spacing: 6
 
-            // "None" shows an empty placeholder rather than an image.
+            // Image-less tiles: "None" shows an empty placeholder; other rendered
+            // borders (e.g. "ambient") get a colourful hint instead.
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -48,8 +49,23 @@ FocusScope {
                 color: "transparent"
                 border.width: 1
                 border.color: Theme.border
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 1
+                    radius: 3
+                    visible: tile.tileName !== qsTr("None")
+                    opacity: 0.6
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0.0; color: "#3a5fa0" }
+                        GradientStop { position: 0.5; color: "#9a3f7f" }
+                        GradientStop { position: 1.0; color: "#3fa060" }
+                    }
+                }
                 Text {
                     anchors.centerIn: parent
+                    visible: tile.tileName === qsTr("None")
                     text: qsTr("Off")
                     color: Theme.textMuted
                     font.pixelSize: 14

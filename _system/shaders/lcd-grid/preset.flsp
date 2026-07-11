@@ -1,0 +1,9 @@
+{
+  "name": "LCD Grid",
+  "parameters": [
+    { "key": "strength", "label": "Grid strength", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.35 }
+  ],
+  "passes": [
+    { "fragment": "shader.frag", "scale": 1.0, "filter": "nearest", "wrap": "clamp" }
+  ]
+}

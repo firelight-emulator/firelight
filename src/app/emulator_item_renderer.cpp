@@ -731,7 +731,8 @@ void EmulatorItemRenderer::applyShaderChain(QRhiCommandBuffer *cb,
                                 sourceSize, outputSize, &err);
   if (ok) {
     m_shaderChain.setParams(m_shaderParams);
-    m_shaderChain.render(cb, renderTarget(), m_shaderFrameCount++);
+    m_shaderChain.render(cb, renderTarget(), colorTexture(),
+                         m_shaderFrameCount++);
   } else {
     if (!err.isEmpty()) {
       spdlog::warn("Shader chain unavailable; disabling shader for this game: {}",

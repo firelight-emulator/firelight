@@ -114,7 +114,7 @@ protected:
                                   m_sampleSize, outputSize, &err);
     if (ok) {
       m_shaderChain.setParams(m_params);
-      m_shaderChain.render(cb, renderTarget(), m_frame++);
+      m_shaderChain.render(cb, renderTarget(), colorTexture(), m_frame++);
     } else {
       // No (usable) shader — the picker hides the preview in this case, so just
       // clear to a neutral colour.

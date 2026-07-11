@@ -4,6 +4,8 @@
 
 #include <QColor>
 #include <QFile>
+#include <QImage>
+#include <QVarLengthArray>
 #include <cstring>
 #include <spdlog/spdlog.h>
 
@@ -60,6 +62,10 @@ ShaderChain::~ShaderChain() { releaseResources(); }
 
 void ShaderChain::releaseResources() {
   m_passes.clear();
+  m_historyTex.reset();
+  m_feedbackSampler.reset();
+  m_feedback = false;
+  m_historyInitialized = false;
   m_valid = false;
   m_presetId.clear();
 }
@@ -105,6 +111,27 @@ bool ShaderChain::rebuild(QString *error) {
     return false;
   }
   m_vertexShader = *vs;
+
+  // Feedback (previous frame) resources, shared across passes.
+  m_feedback = m_preset.feedback;
+  if (m_feedback) {
+    m_historyTex.reset(m_rhi->newTexture(QRhiTexture::RGBA8, m_outputSize, 1));
+    if (!m_historyTex->create()) {
+      if (error) {
+        *error = QStringLiteral("failed to create feedback history texture");
+      }
+      return false;
+    }
+    m_feedbackSampler.reset(m_rhi->newSampler(
+        QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+        QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge));
+    if (!m_feedbackSampler->create()) {
+      if (error) {
+        *error = QStringLiteral("failed to create feedback sampler");
+      }
+      return false;
+    }
+  }
 
   const int passCount = m_preset.passes.size();
   for (int i = 0; i < passCount; ++i) {
@@ -188,16 +215,21 @@ bool ShaderChain::rebuild(QString *error) {
     // lifetime of this build, so wire the bindings once here — no per-frame srb
     // churn, and the layout matches the pipeline exactly.
     pass.srb.reset(m_rhi->newShaderResourceBindings());
-    pass.srb->setBindings({
-        QRhiShaderResourceBinding::uniformBuffer(
-            0,
-            QRhiShaderResourceBinding::VertexStage |
-                QRhiShaderResourceBinding::FragmentStage,
-            pass.ubuf.get()),
-        QRhiShaderResourceBinding::sampledTexture(
-            1, QRhiShaderResourceBinding::FragmentStage, pass.inputTex,
-            pass.sampler.get()),
-    });
+    QVarLengthArray<QRhiShaderResourceBinding, 3> bindings;
+    bindings.append(QRhiShaderResourceBinding::uniformBuffer(
+        0,
+        QRhiShaderResourceBinding::VertexStage |
+            QRhiShaderResourceBinding::FragmentStage,
+        pass.ubuf.get()));
+    bindings.append(QRhiShaderResourceBinding::sampledTexture(
+        1, QRhiShaderResourceBinding::FragmentStage, pass.inputTex,
+        pass.sampler.get()));
+    if (m_feedback) {
+      bindings.append(QRhiShaderResourceBinding::sampledTexture(
+          2, QRhiShaderResourceBinding::FragmentStage, m_historyTex.get(),
+          m_feedbackSampler.get()));
+    }
+    pass.srb->setBindings(bindings.cbegin(), bindings.cend());
     if (!pass.srb->create()) {
       if (error) {
         *error = QStringLiteral("failed to create shader resource bindings");
@@ -260,9 +292,20 @@ void ShaderChain::drawPass(QRhiCommandBuffer *cb, const Pass &pass,
 }
 
 void ShaderChain::render(QRhiCommandBuffer *cb, QRhiRenderTarget *finalRt,
-                         quint64 frameCount) {
+                         QRhiTexture *finalTex, quint64 frameCount) {
   if (!m_valid || m_passes.empty() || !finalRt) {
     return;
+  }
+
+  // Clear the history to black before its first use so afterglow shaders don't
+  // sample (and then perpetuate) uninitialized garbage.
+  if (m_feedback && m_historyTex && !m_historyInitialized) {
+    QRhiResourceUpdateBatch *batch = m_rhi->nextResourceUpdateBatch();
+    QImage black(m_outputSize, QImage::Format_RGBA8888);
+    black.fill(Qt::black);
+    batch->uploadTexture(m_historyTex.get(), black);
+    cb->resourceUpdate(batch);
+    m_historyInitialized = true;
   }
 
   for (size_t i = 0; i < m_passes.size(); ++i) {
@@ -271,6 +314,13 @@ void ShaderChain::render(QRhiCommandBuffer *cb, QRhiRenderTarget *finalRt,
     QRhiRenderTarget *rt = isLast ? finalRt : pass.outRt.get();
     const QSize outSize = isLast ? m_outputSize : pass.outSize;
     drawPass(cb, pass, rt, pass.inputSize, outSize, frameCount);
+  }
+
+  // Save this frame's final output for the next frame's Feedback sampler.
+  if (m_feedback && m_historyTex && finalTex) {
+    QRhiResourceUpdateBatch *batch = m_rhi->nextResourceUpdateBatch();
+    batch->copyTexture(m_historyTex.get(), finalTex);
+    cb->resourceUpdate(batch);
   }
 }
 

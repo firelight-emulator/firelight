@@ -176,6 +176,33 @@ FocusScope {
         anchors.fill: root
     }
 
+    // Ambient backdrop (border type "ambient"): a blurred, enlarged copy of the
+    // gameplay filling the window around the game, Ambilight-style. Reuses the
+    // MultiEffect blur pattern; the EmulatorItem is a layer, so it can be a
+    // MultiEffect source while also being drawn normally on top.
+    Item {
+        id: ambient
+        anchors.fill: parent
+        visible: !!(root.borderInfo && root.borderInfo.type === "ambient")
+
+        MultiEffect {
+            anchors.fill: parent
+            visible: ambient.visible && emulator.width > 0
+            source: emulator
+            blurEnabled: true
+            blur: 1.0
+            blurMax: 64
+            saturation: 0.25
+            brightness: -0.12
+        }
+        // Dim overlay so the game stays the focal point.
+        Rectangle {
+            anchors.fill: parent
+            color: "black"
+            opacity: 0.35
+        }
+    }
+
     // Decorative frame: a full-window image drawn behind the game.
     Image {
         id: frameImage

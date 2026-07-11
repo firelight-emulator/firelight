@@ -44,6 +44,7 @@ std::optional<ShaderPreset> parse(const QString &json, const QString &baseDir,
   preset.id = id;
   preset.path = path;
   preset.name = obj.value("name").toString(id);
+  preset.feedback = obj.value("feedback").toBool(false);
 
   if (!obj.contains("passes") || !obj.value("passes").isArray()) {
     return setError(QStringLiteral("preset has no 'passes' array"));

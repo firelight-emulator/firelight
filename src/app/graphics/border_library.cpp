@@ -169,7 +169,10 @@ void BorderLibrary::scanDirectory(const QString &dir, const bool builtIn,
       }
     }
 
-    if (info.imagePath.isEmpty() || !QFileInfo::exists(info.imagePath)) {
+    // "ambient" is a rendered effect (a blurred, scaled copy of the game), so it
+    // legitimately has no image; every other type needs one.
+    if (info.type != "ambient" &&
+        (info.imagePath.isEmpty() || !QFileInfo::exists(info.imagePath))) {
       spdlog::warn("Border '{}' has no usable image; skipping",
                    info.id.toStdString());
       continue;

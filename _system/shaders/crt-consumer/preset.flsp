@@ -1,0 +1,12 @@
+{
+  "name": "CRT Consumer",
+  "parameters": [
+    { "key": "scanline", "label": "Scanline depth", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.35 },
+    { "key": "mask", "label": "Aperture mask", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.3 },
+    { "key": "curvature", "label": "Curvature", "min": 0.0, "max": 0.3, "step": 0.01, "default": 0.06 },
+    { "key": "brightboost", "label": "Brightness boost", "min": 1.0, "max": 2.0, "step": 0.05, "default": 1.25 }
+  ],
+  "passes": [
+    { "fragment": "shader.frag", "scale": 1.0, "filter": "linear", "wrap": "clamp" }
+  ]
+}

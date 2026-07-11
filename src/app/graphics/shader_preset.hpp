@@ -35,6 +35,10 @@ struct ShaderPreset {
   QString name;    // display name
   QString path;    // absolute path to the .flsp file (or folder)
   bool builtIn = false;
+  // When true the chain keeps the previous frame's final output and binds it as
+  // an extra sampler (binding 2, "Feedback"), enabling afterglow / persistence /
+  // NTSC-style effects.
+  bool feedback = false;
   QVector<ShaderPass> passes;
   QVector<ShaderParameter> parameters;
 };
