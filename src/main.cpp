@@ -27,7 +27,7 @@
 #include "app/audio/SfxPlayer.hpp"
 #include "app/audio/audio_manager.hpp"
 #include "app/audio/qt_microphone.hpp"
-#include <firelight/db/sqlite_userdata_database.hpp>
+#include <firelight/saves/sqlite_save_database.hpp>
 #include "app/input/gui/analog_settings_model.hpp"
 #include "app/input/gui/binding_list_model.hpp"
 #include "app/input/gui/controller_list_model.hpp"
@@ -268,13 +268,19 @@ int main(int argc, char *argv[]) {
     firelight::activity::SqliteActivityLog activityLog(activityDbPath);
     firelight::ServiceAccessor::setActivityService(&activityLog);
 
-    // TODO: Not sure we really need this.
     const auto userdataDbPath = defaultAppDataPathString + "/userdata.db";
-    firelight::db::SqliteUserdataDatabase userdata_database(userdataDbPath);
+    firelight::saves::SqliteSaveDatabase saveDatabase(
+        userdataDbPath.toStdString());
 
-    // Save data service
-    firelight::saves::SaveManager saveManager(savesPath.toStdString(),
-                                              userdata_database);
+    // Save data service. The persisted save-directory override lives in the app
+    // layer now (the Qt-free SaveManager no longer owns QSettings); resolve it
+    // here and pass the result in. QtSaveManagerProxy writes it back on change.
+    QSettings savesSettings;
+    const auto resolvedSaveDir =
+        savesSettings.value("Saves/SaveDirectory", savesPath)
+            .toString()
+            .toStdString();
+    firelight::saves::SaveManager saveManager(resolvedSaveDir, saveDatabase);
     firelight::ServiceAccessor::setSaveManager(&saveManager);
 
     // Achievement service

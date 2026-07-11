@@ -3,7 +3,7 @@
 #include <QApplication>
 #include <QTest>
 #include <QtQuickTest>
-#include <firelight/db/sqlite_userdata_database.hpp>
+#include <firelight/saves/sqlite_save_database.hpp>
 #include <gtest/gtest.h>
 #include <service_accessor.hpp>
 #include <firelight/saves/save_manager_impl.hpp>
@@ -14,7 +14,7 @@
 int main(int argc, char **argv) {
   QApplication app(argc, argv);
 
-  firelight::db::SqliteUserdataDatabase userdata(":memory:");
+  firelight::saves::SqliteSaveDatabase userdata(":memory:");
   firelight::ServiceAccessor::setSaveManager(new firelight::saves::SaveManager(
       std::filesystem::temp_directory_path().string(), userdata));
 

@@ -1,36 +1,44 @@
-#include "fake_userdata_database.hpp"
+#include "fake_save_database.hpp"
 
 #include <firelight/saves/save_manager_impl.hpp>
 
 #include <gtest/gtest.h>
 
-#include <QFileInfo>
-#include <QTemporaryDir>
-
+#include <atomic>
+#include <chrono>
+#include <filesystem>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace firelight::saves {
+namespace fs = std::filesystem;
 
 namespace {
-std::vector<char> bytesOf(const std::string &s) {
-  return {s.begin(), s.end()};
-}
+std::atomic_int g_counter{0};
+
+std::vector<char> bytesOf(const std::string &s) { return {s.begin(), s.end()}; }
 } // namespace
 
 class SaveManagerTest : public testing::Test {
 protected:
-  QTemporaryDir m_tempDir;
-  FakeUserdataDatabase m_db;
+  fs::path m_tempDir;
+  FakeSaveDatabase m_db;
   std::unique_ptr<SaveManager> m_saveManager;
   const std::string m_hash = "abc123hash";
 
   void SetUp() override {
-    ASSERT_TRUE(m_tempDir.isValid());
-    m_saveManager =
-        std::make_unique<SaveManager>(m_tempDir.path().toStdString(), m_db);
-    // Force the temp dir regardless of any persisted QSettings value.
-    m_saveManager->setSaveDirectory(m_tempDir.path().toStdString());
+    const auto unique =
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
+        "_" + std::to_string(g_counter++);
+    m_tempDir = fs::temp_directory_path() / ("fl_saves_test_" + unique);
+    fs::create_directories(m_tempDir);
+    m_saveManager = std::make_unique<SaveManager>(m_tempDir.string(), m_db);
+  }
+
+  void TearDown() override {
+    std::error_code ec;
+    fs::remove_all(m_tempDir, ec);
   }
 };
 
@@ -54,10 +62,8 @@ TEST_F(SaveManagerTest, WriteThenReadRoundTrips) {
 TEST_F(SaveManagerTest, WriteCreatesFileAtSlotPath) {
   ASSERT_TRUE(
       m_saveManager->writeSaveData(m_hash, 3, Savefile(bytesOf("x"))).get());
-  const QString expected = m_tempDir.path() + "/" +
-                           QString::fromStdString(m_hash) +
-                           "/slot3/savefile.srm";
-  EXPECT_TRUE(QFileInfo::exists(expected));
+  const auto expected = m_tempDir / m_hash / "slot3" / "savefile.srm";
+  EXPECT_TRUE(fs::exists(expected));
 }
 
 TEST_F(SaveManagerTest, FirstWriteCreatesMetadataSecondUpdates) {
@@ -90,7 +96,7 @@ TEST_F(SaveManagerTest, SetsLastModifiedTimestamp) {
       m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("data"))).get());
   const auto md = m_db.getSavefileMetadata(m_hash, 1);
   ASSERT_TRUE(md.has_value());
-  EXPECT_GT(md->lastModifiedAt, 0u);
+  EXPECT_GT(md->lastModifiedAt, 0);
 }
 
 } // namespace firelight::saves

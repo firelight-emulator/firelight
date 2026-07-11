@@ -26,6 +26,8 @@ namespace firelight {
       return "./system/_cores/windows/";
 #elif defined(__linux__)
       return "./system/_cores/linux/";
+#elif defined(__APPLE__)
+      return "./system/_cores/macosx/";
 #else
       return "";
 #endif

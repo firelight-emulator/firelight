@@ -121,7 +121,6 @@ add_subdirectory(libs/firelight/audio)
 add_subdirectory(libs/firelight/media)
 add_subdirectory(libs/firelight/metadata)
 add_subdirectory(libs/firelight/netplay)
-add_subdirectory(libs/firelight/db)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -302,7 +301,7 @@ add_library(firelight_lib
 target_compile_definitions(firelight_lib PUBLIC FL_VERSION="${FL_VER_FULL}")
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app ${CMAKE_SOURCE_DIR}/src)
-target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CLI11 ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src/rcheevos ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src ${CMAKE_SOURCE_DIR}/libs/firelight/input/src ${CMAKE_SOURCE_DIR}/libs/firelight/db/src ${CMAKE_SOURCE_DIR}/libs/firelight/library/src)
+target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CLI11 ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src/rcheevos ${CMAKE_SOURCE_DIR}/libs/firelight/achievements/src ${CMAKE_SOURCE_DIR}/libs/firelight/input/src ${CMAKE_SOURCE_DIR}/libs/firelight/saves/src ${CMAKE_SOURCE_DIR}/libs/firelight/library/src)
 target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS} ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/lib/debug)
 
 if (WIN32)
@@ -347,7 +346,6 @@ target_link_libraries(firelight_lib PUBLIC
         firelight_audio
         firelight_media
         firelight_metadata
-        firelight_db
         firelight_library
         firelight_saves
         firelight_discord
@@ -406,7 +404,7 @@ qt6_add_qml_module(firelight
 )
 
 #target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
-target_include_directories(firelight PRIVATE libs/firelight/achievements/src libs/firelight/activity/src libs/firelight/settings/src libs/firelight/mods/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/discord/src)
+target_include_directories(firelight PRIVATE libs/firelight/achievements/src libs/firelight/activity/src libs/firelight/settings/src libs/firelight/mods/src libs/firelight/input/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/discord/src)
 #target_link_libraries(firelight PRIVATE firelight_lib)
 target_link_libraries(firelight PUBLIC
         discord
@@ -502,8 +500,6 @@ add_executable(fl_test
         tests/app/patching/ups_patch_test.cpp
         tests/app/patching/bps_patch_test.cpp
         tests/app/patching/util_test.cpp
-        tests/app/db/sqlite_userdata_database_test.cpp
-        tests/app/saves/save_manager_test.cpp
         tests/app/library/archive_reader_test.cpp
         tests/app/library/content_identifier_test.cpp
         tests/app/library/content_extensions_test.cpp
@@ -515,7 +511,6 @@ add_executable(fl_test
         tests/app/gui/filesystem_utils_test.cpp
         tests/app/library/entry_resolver_test.cpp
         tests/app/library/smart_folder_test.cpp
-        tests/app/db/daos/savefile_metadata_test.cpp
         tests/app/db/daos/play_session_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
         tests/app/settings/sqlite_settings_repository_test.cpp
@@ -593,7 +588,7 @@ add_test(NAME QMLTests COMMAND fl_qml_test)
 
 add_dependencies(fl_test copy_resources)
 
-target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include src libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/activity/src libs/firelight/activity/include)
+target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include src libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/saves/tests libs/firelight/activity/src libs/firelight/activity/include)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
 

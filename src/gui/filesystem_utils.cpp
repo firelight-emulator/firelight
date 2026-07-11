@@ -9,7 +9,9 @@ namespace firelight::gui {
 
 QString FilesystemUtils::getFileURI() {
   // See https://en.wikipedia.org/wiki/File_URI_scheme for a vague explanation
-#ifdef __linux__
+#ifdef __APPLE__
+  return "file://";
+#elif __linux__
   return "file://";
 #elif _WIN32
   return "file:///";
@@ -34,6 +36,9 @@ QString FilesystemUtils::readTextFile(const QString &url) {
 }
 
 bool FilesystemUtils::isFile(const QString &path) {
+  if (path.isEmpty()) {
+    return false;
+  }
   auto fileURI = getFileURI();
   return path.startsWith(fileURI);
 }

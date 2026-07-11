@@ -1,20 +1,19 @@
 #pragma once
 
 #include <firelight/saves/isave_manager.hpp>
-#include <firelight/userdata_database.hpp>
+#include <firelight/saves/save_database.hpp>
 
-#include <QSettings>
-#include <memory>
+#include <string>
 
 namespace firelight::saves {
 // Sqlite/filesystem-backed implementation of the ISaveManager domain contract.
 // Announces suspend-point changes through the EventDispatcher (see
-// save_events.hpp) rather than Qt signals, so it is a plain class, not a
-// QObject. Its QSettings/QString/QDir internals are Qt value/utility types.
+// save_events.hpp) rather than Qt signals, so it is a plain, Qt-free class. The
+// save directory is held in memory; persistence of that setting is the app
+// layer's job (QtSaveManagerProxy), which passes the resolved directory in.
 class SaveManager final : public ISaveManager {
 public:
-  SaveManager(const std::string &defaultSaveDir,
-              db::IUserdataDatabase &userdataDatabase);
+  SaveManager(const std::string &saveDir, ISaveDatabase &saveDatabase);
   ~SaveManager() override;
 
   [[nodiscard]] std::vector<SavefileInfo>
@@ -42,18 +41,17 @@ public:
   void setSaveDirectory(const std::string &saveDirectory) override;
 
 private:
-  void writeSuspendPointToDisk(const QString &contentHash, int index,
+  void writeSuspendPointToDisk(const std::string &contentHash, int index,
                                const SuspendPoint &suspendPoint);
 
   [[nodiscard]] std::optional<SuspendPoint>
-  readSuspendPointFromDisk(const QString &contentHash, int saveSlotNumber,
+  readSuspendPointFromDisk(const std::string &contentHash, int saveSlotNumber,
                            int index) const;
 
-  void deleteSuspendPointFromDisk(const QString &contentHash, int saveSlotNumber,
-                                  int index);
+  void deleteSuspendPointFromDisk(const std::string &contentHash,
+                                  int saveSlotNumber, int index);
 
-  QSettings m_settings;
-  db::IUserdataDatabase &m_userdataDatabase;
-  QString m_saveDirectory;
+  ISaveDatabase &m_saveDatabase;
+  std::string m_saveDirectory;
 };
 } // namespace firelight::saves

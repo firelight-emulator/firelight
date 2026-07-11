@@ -3,61 +3,116 @@
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/saves/save_events.hpp>
 
+#include "firelight/saves/detail/md5.hpp"
+
+#include <spdlog/spdlog.h>
+
+#include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <future>
-#include <qcryptographichash.h>
-#include <qdir.h>
-#include <qdatetime.h>
-#include <qfile.h>
-#include <qfileinfo.h>
-#include <qsavefile.h>
-#include <spdlog/spdlog.h>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 namespace firelight::saves {
-SaveManager::SaveManager(const std::string &defaultSaveDir,
-                         db::IUserdataDatabase &userdataDatabase)
-    : m_userdataDatabase(userdataDatabase) {
-  m_settings.beginGroup("Saves");
-  m_saveDirectory =
-      m_settings
-          .value("SaveDirectory", QString::fromStdString(defaultSaveDir))
-          .toString();
+namespace {
+int64_t nowMs() {
+  using namespace std::chrono;
+  return duration_cast<milliseconds>(system_clock::now().time_since_epoch())
+      .count();
 }
 
-SaveManager::~SaveManager() {
-  m_settings.setValue("SaveDirectory", m_saveDirectory);
+// Last-modified time of a file as int64 milliseconds since the Unix epoch.
+// Portable conversion from filesystem clock to system clock (C++20 clock_cast
+// support is uneven across the toolchains we build on).
+int64_t fileMtimeMs(const fs::path &p) {
+  std::error_code ec;
+  const auto ftime = fs::last_write_time(p, ec);
+  if (ec)
+    return 0;
+  using namespace std::chrono;
+  const auto sctp = time_point_cast<system_clock::duration>(
+      ftime - fs::file_time_type::clock::now() + system_clock::now());
+  return duration_cast<milliseconds>(sctp.time_since_epoch()).count();
 }
+
+// Atomically replace `path` with `data` via a temp file + rename, so a failed
+// or partial write can never corrupt a prior good file. Returns false on error.
+bool writeAtomic(const fs::path &path, const void *data, size_t size) {
+  const fs::path tmp = path.string() + ".tmp";
+  {
+    std::ofstream out(tmp, std::ios::binary);
+    out.write(static_cast<const char *>(data), static_cast<std::streamsize>(size));
+    out.close();
+    if (out.fail()) {
+      std::error_code ec;
+      fs::remove(tmp, ec);
+      return false;
+    }
+  }
+  std::error_code ec;
+  fs::rename(tmp, path, ec);
+  if (ec) {
+    std::error_code rmEc;
+    fs::remove(tmp, rmEc);
+    return false;
+  }
+  return true;
+}
+
+// Convert a possibly-file:// URL into a filesystem path. Strips the scheme but,
+// unlike the old code, does NOT strip the leading '/' of a POSIX absolute path
+// (that turned /Users/x into Users/x). Only a Windows drive path (/C:/...) has
+// its leading slash removed.
+std::string stripFileUrl(std::string s) {
+  constexpr std::string_view kScheme = "file://";
+  if (s.rfind(kScheme, 0) == 0)
+    s.erase(0, kScheme.size());
+  if (s.size() >= 3 && s[0] == '/' &&
+      ((s[1] >= 'A' && s[1] <= 'Z') || (s[1] >= 'a' && s[1] <= 'z')) &&
+      s[2] == ':')
+    s.erase(0, 1);
+  return s;
+}
+
+std::string slotDir(const std::string &root, const std::string &contentHash,
+                    int slot) {
+  return root + "/" + contentHash + "/slot" + std::to_string(slot);
+}
+
+std::string suspendDir(const std::string &root, const std::string &contentHash,
+                       int saveSlot, unsigned int slotNumber) {
+  return root + "/" + contentHash + "/slot" + std::to_string(saveSlot) +
+         "/suspendpoints/slot" + std::to_string(slotNumber);
+}
+} // namespace
+
+SaveManager::SaveManager(const std::string &saveDir, ISaveDatabase &saveDatabase)
+    : m_saveDatabase(saveDatabase), m_saveDirectory(saveDir) {}
+
+SaveManager::~SaveManager() = default;
 
 std::vector<SavefileInfo>
 SaveManager::getSaveFileInfoList(const std::string &contentHash) const {
   std::vector<SavefileInfo> result;
-  const auto contentHashQ = QString::fromStdString(contentHash);
 
   for (auto i = 0; i < 8; ++i) {
-    auto dir =
-        m_saveDirectory + "/" + contentHashQ + "/slot" + QString::number(i + 1);
-    if (!QDir(dir).exists()) {
+    const fs::path saveFile =
+        fs::path(slotDir(m_saveDirectory, contentHash, i + 1)) / "savefile.srm";
+
+    if (std::error_code ec; !fs::exists(saveFile, ec)) {
       result.emplace_back(SavefileInfo{.hasData = false, .slotNumber = i + 1});
       continue;
     }
-
-    const auto saveFile =
-        std::filesystem::path((dir + "/savefile.srm").toStdString());
-
-    if (!exists(saveFile)) {
-      result.emplace_back(SavefileInfo{.hasData = false, .slotNumber = i + 1});
-      continue;
-    }
-
-    QFileInfo fileInfo(QString::fromStdString(saveFile.string()));
 
     SavefileInfo info;
     info.hasData = true;
     info.contentHash = contentHash;
     info.filePath = saveFile.string();
     info.slotNumber = i + 1;
-    info.lastModifiedEpochSeconds = fileInfo.lastModified().toSecsSinceEpoch();
+    info.lastModifiedEpochSeconds = fileMtimeMs(saveFile) / 1000;
 
     result.emplace_back(info);
   }
@@ -70,12 +125,11 @@ std::future<bool> SaveManager::writeSaveData(const std::string &contentHash,
                                              const Savefile &saveData) {
   return std::async(std::launch::async, [this, contentHash, saveSlotNumber,
                                          saveData] {
-    const auto contentHashQ = QString::fromStdString(contentHash);
     auto exists = false;
-    db::SavefileMetadata metadata;
+    SavefileMetadata metadata;
 
     auto metadataOpt =
-        m_userdataDatabase.getSavefileMetadata(contentHash, saveSlotNumber);
+        m_saveDatabase.getSavefileMetadata(contentHash, saveSlotNumber);
 
     if (metadataOpt.has_value()) {
       metadata = metadataOpt.value();
@@ -87,9 +141,7 @@ std::future<bool> SaveManager::writeSaveData(const std::string &contentHash,
 
     const auto bytes = saveData.getSaveRamData();
 
-    auto savefileMd5 = QCryptographicHash::hash(bytes, QCryptographicHash::Md5)
-                           .toHex()
-                           .toStdString();
+    const auto savefileMd5 = detail::Md5::hash(bytes.data(), bytes.size());
 
     if (metadata.savefileMd5 == savefileMd5) {
       return true;
@@ -99,51 +151,27 @@ std::future<bool> SaveManager::writeSaveData(const std::string &contentHash,
                  saveSlotNumber);
     metadata.savefileMd5 = savefileMd5;
 
-    auto dir = m_saveDirectory + "/" + contentHashQ + "/slot" +
-               QString::number(saveSlotNumber);
-    if (!QDir(m_saveDirectory + "/" + contentHashQ)
-             .mkpath("slot" + QString::number(saveSlotNumber))) {
-      spdlog::error("Failed to create save directory for {} slot {}",
-                    contentHash, saveSlotNumber);
+    const auto dir = slotDir(m_saveDirectory, contentHash, saveSlotNumber);
+    std::error_code mkEc;
+    fs::create_directories(dir, mkEc);
+    if (mkEc) {
+      spdlog::error("Failed to create save directory for {} slot {}: {}",
+                    contentHash, saveSlotNumber, mkEc.message());
       return false;
     }
 
-    const auto tempSaveFile =
-        std::filesystem::path((dir + "/savefile.srm.tmp").toStdString());
-    const auto saveFile =
-        std::filesystem::path((dir + "/savefile.srm").toStdString());
-
-    // Write to a temp file first and verify the write fully succeeded before
-    // replacing the existing save, so a failed/partial write cannot corrupt a
-    // known-good save.
-    {
-      std::ofstream saveFileStream(tempSaveFile, std::ios::binary);
-      saveFileStream.write(bytes.data(), bytes.size());
-      saveFileStream.close();
-      if (saveFileStream.fail()) {
-        spdlog::error("Failed to write savefile for {} slot {}", contentHash,
-                      saveSlotNumber);
-        std::error_code ec;
-        std::filesystem::remove(tempSaveFile, ec);
-        return false;
-      }
-    }
-
-    std::error_code renameEc;
-    std::filesystem::rename(tempSaveFile, saveFile, renameEc);
-    if (renameEc) {
-      spdlog::error("Failed to replace savefile for {} slot {}: {}", contentHash,
-                    saveSlotNumber, renameEc.message());
-      std::error_code removeEc;
-      std::filesystem::remove(tempSaveFile, removeEc);
+    const fs::path saveFile = fs::path(dir) / "savefile.srm";
+    if (!writeAtomic(saveFile, bytes.data(), bytes.size())) {
+      spdlog::error("Failed to write savefile for {} slot {}", contentHash,
+                    saveSlotNumber);
       return false;
     }
 
-    metadata.lastModifiedAt = QDateTime::currentSecsSinceEpoch();
+    metadata.lastModifiedAt = nowMs();
 
     const bool metadataOk =
-        exists ? m_userdataDatabase.updateSavefileMetadata(metadata)
-               : m_userdataDatabase.createSavefileMetadata(metadata);
+        exists ? m_saveDatabase.updateSavefileMetadata(metadata)
+               : m_saveDatabase.createSavefileMetadata(metadata);
     if (!metadataOk) {
       // The save data is safely on disk; only the metadata index failed.
       spdlog::warn(
@@ -157,43 +185,30 @@ std::future<bool> SaveManager::writeSaveData(const std::string &contentHash,
 
 std::optional<Savefile> SaveManager::readSaveData(const std::string &contentHash,
                                                   int saveSlotNumber) const {
-  auto dir = m_saveDirectory + "/" + QString::fromStdString(contentHash) +
-             "/slot" + QString::number(saveSlotNumber);
-  if (!QDir(dir).exists()) {
-    return {};
-  }
+  const fs::path saveFile =
+      fs::path(slotDir(m_saveDirectory, contentHash, saveSlotNumber)) /
+      "savefile.srm";
 
-  const auto saveFile =
-      std::filesystem::path((dir + "/savefile.srm").toStdString());
+  if (std::error_code ec; !fs::exists(saveFile, ec)) {
+    return std::nullopt;
+  }
 
   spdlog::info("[SaveDataService] Reading from save file: {}",
                saveFile.string());
 
-  if (!exists(saveFile)) {
-    return std::nullopt;
-  }
-
   std::ifstream saveFileStream(saveFile, std::ios::binary);
-
-  auto size = file_size(saveFile);
-
+  const auto size = fs::file_size(saveFile);
   std::vector<char> data(size);
-
-  saveFileStream.read(data.data(), size);
+  saveFileStream.read(data.data(), static_cast<std::streamsize>(size));
   saveFileStream.close();
 
-  auto fileContents = std::vector(data.data(), data.data() + size);
-
-  Savefile saveData(fileContents);
-
-  return {saveData};
+  return Savefile(data);
 }
 
 void SaveManager::writeSuspendPoint(const std::string &contentHash,
                                     int saveSlotNumber, int index,
                                     const SuspendPoint &suspendPoint) {
-  writeSuspendPointToDisk(QString::fromStdString(contentHash), index,
-                          suspendPoint);
+  writeSuspendPointToDisk(contentHash, index, suspendPoint);
   EventDispatcher::instance().publish(
       SuspendPointUpdatedEvent{contentHash, saveSlotNumber, index});
 }
@@ -201,168 +216,135 @@ void SaveManager::writeSuspendPoint(const std::string &contentHash,
 std::optional<SuspendPoint>
 SaveManager::readSuspendPoint(const std::string &contentHash, int saveSlotNumber,
                               int index) {
-  return readSuspendPointFromDisk(QString::fromStdString(contentHash),
-                                  saveSlotNumber, index);
+  return readSuspendPointFromDisk(contentHash, saveSlotNumber, index);
 }
 
 void SaveManager::deleteSuspendPoint(const std::string &contentHash,
                                      const int saveSlotNumber,
                                      const int index) {
-  deleteSuspendPointFromDisk(QString::fromStdString(contentHash), saveSlotNumber,
-                             index);
+  deleteSuspendPointFromDisk(contentHash, saveSlotNumber, index);
   EventDispatcher::instance().publish(
       SuspendPointDeletedEvent{contentHash, saveSlotNumber, index});
 }
 
-std::string SaveManager::getSaveDirectory() const {
-  return m_saveDirectory.toStdString();
-}
+std::string SaveManager::getSaveDirectory() const { return m_saveDirectory; }
 
 void SaveManager::setSaveDirectory(const std::string &saveDirectory) {
-  const auto raw = QString::fromStdString(saveDirectory);
-  auto temp = raw;
-
-  if (temp.startsWith("file://")) {
-    temp = temp.remove(0, 7);
-  }
-  if (temp.startsWith("/")) {
-    temp = temp.remove(0, 1);
-  }
-
-  if (raw == m_saveDirectory) {
+  const auto stripped = stripFileUrl(saveDirectory);
+  if (stripped == m_saveDirectory) {
     return;
   }
-
-  m_saveDirectory = temp;
-  m_settings.setValue("SaveDirectory", m_saveDirectory);
+  m_saveDirectory = stripped;
 }
 
-void SaveManager::writeSuspendPointToDisk(const QString &contentHash,
+void SaveManager::writeSuspendPointToDisk(const std::string &contentHash,
                                           int index,
                                           const SuspendPoint &suspendPoint) {
-  unsigned int slotNumber = index + 1;
+  const unsigned int slotNumber = index + 1;
   if (suspendPoint.locked) {
     spdlog::warn("Trying to write locked suspend point for entry with content "
                  "hash {} and index {}",
-                 contentHash.toStdString(), index);
+                 contentHash, index);
     return;
   }
 
-  auto dir = QString("%1/%2/slot%3/suspendpoints/slot%4")
-                 .arg(m_saveDirectory, contentHash)
-                 .arg(suspendPoint.saveSlotNumber)
-                 .arg(slotNumber);
-
-  if (!QDir(dir).exists() && !QDir().mkpath(dir)) {
+  const auto dir = suspendDir(m_saveDirectory, contentHash,
+                              suspendPoint.saveSlotNumber, slotNumber);
+  std::error_code mkEc;
+  fs::create_directories(dir, mkEc);
+  if (mkEc) {
     return;
   }
 
-  QSaveFile saveFile(dir + "/suspendpoint.state");
-  saveFile.open(QIODeviceBase::WriteOnly);
-
-  saveFile.write(QByteArray::fromRawData(
-      reinterpret_cast<const char *>(suspendPoint.state.data()),
-      suspendPoint.state.size()));
-  if (!saveFile.commit()) {
+  if (!writeAtomic(fs::path(dir) / "suspendpoint.state",
+                   suspendPoint.state.data(), suspendPoint.state.size())) {
     spdlog::error("Could not write suspend point to disk");
     return;
   }
 
   if (!suspendPoint.image.isNull()) {
-    QSaveFile imageFile(dir + "/screenshot.png");
-    imageFile.open(QIODeviceBase::WriteOnly);
-    imageFile.write(
-        reinterpret_cast<const char *>(suspendPoint.image.pngData.data()),
-        static_cast<qint64>(suspendPoint.image.pngData.size()));
-    if (!imageFile.commit()) {
+    if (!writeAtomic(fs::path(dir) / "screenshot.png",
+                     suspendPoint.image.pngData.data(),
+                     suspendPoint.image.pngData.size())) {
       spdlog::warn("Could not save suspend point image");
     }
   }
 
   if (!suspendPoint.retroachievementsState.empty()) {
-    QSaveFile rcheevosFile(dir + "/rcheevos.state");
-    rcheevosFile.open(QIODeviceBase::WriteOnly);
-    rcheevosFile.write(
-        QByteArray::fromRawData(reinterpret_cast<const char *>(
-                                    suspendPoint.retroachievementsState.data()),
-                                suspendPoint.retroachievementsState.size()));
-
-    if (!rcheevosFile.commit()) {
+    if (!writeAtomic(fs::path(dir) / "rcheevos.state",
+                     suspendPoint.retroachievementsState.data(),
+                     suspendPoint.retroachievementsState.size())) {
       spdlog::error("Could not write rcheevos state to disk");
       return;
     }
   }
 
-  auto metadata = m_userdataDatabase.getSuspendPointMetadata(
-      contentHash.toStdString(), suspendPoint.saveSlotNumber, slotNumber);
+  auto metadata = m_saveDatabase.getSuspendPointMetadata(
+      contentHash, suspendPoint.saveSlotNumber, slotNumber);
   if (metadata.has_value()) {
-    metadata->lastModifiedAt = QDateTime::currentMSecsSinceEpoch();
+    metadata->lastModifiedAt = nowMs();
     metadata->locked = suspendPoint.locked;
-    m_userdataDatabase.updateSuspendPointMetadata(*metadata);
+    m_saveDatabase.updateSuspendPointMetadata(*metadata);
   } else {
-    auto ms = QDateTime::currentMSecsSinceEpoch();
-    db::SuspendPointMetadata newMetadata{
-        .contentId = contentHash.toStdString(),
+    const auto ms = nowMs();
+    SuspendPointMetadata newMetadata{
+        .contentId = contentHash,
         .saveSlotNumber = suspendPoint.saveSlotNumber,
         .slotNumber = slotNumber,
-        .lastModifiedAt = static_cast<uint64_t>(ms),
-        .createdAt = static_cast<uint64_t>(ms),
+        .lastModifiedAt = ms,
+        .createdAt = ms,
         .locked = suspendPoint.locked};
 
-    m_userdataDatabase.createSuspendPointMetadata(newMetadata);
+    m_saveDatabase.createSuspendPointMetadata(newMetadata);
   }
 }
 
 std::optional<SuspendPoint>
-SaveManager::readSuspendPointFromDisk(const QString &contentHash,
+SaveManager::readSuspendPointFromDisk(const std::string &contentHash,
                                       int saveSlotNumber, int index) const {
-  auto slotNumber = index + 1;
+  const unsigned int slotNumber = index + 1;
+  const auto dir =
+      suspendDir(m_saveDirectory, contentHash, saveSlotNumber, slotNumber);
 
-  auto dir = QString("%1/%2/slot%3/suspendpoints/slot%4")
-                 .arg(m_saveDirectory, contentHash)
-                 .arg(saveSlotNumber)
-                 .arg(slotNumber);
-
-  if (!QDir(dir).exists() && !QDir().mkpath(dir)) {
-    return {};
-  }
-
-  long long created = 0;
-
-  QFile stateFile(dir + "/suspendpoint.state");
-  if (!stateFile.open(QIODeviceBase::ReadOnly)) {
+  const fs::path stateFile = fs::path(dir) / "suspendpoint.state";
+  if (std::error_code ec; !fs::exists(stateFile, ec)) {
     return std::nullopt;
   }
 
-  created =
-      stateFile.fileTime(QFileDevice::FileModificationTime).toMSecsSinceEpoch();
+  const int64_t created = fileMtimeMs(stateFile);
 
-  std::vector<uint8_t> data(stateFile.size());
-  stateFile.read(reinterpret_cast<char *>(data.data()), stateFile.size());
-  stateFile.close();
+  std::vector<uint8_t> data;
+  {
+    std::ifstream in(stateFile, std::ios::binary);
+    const auto size = fs::file_size(stateFile);
+    data.resize(size);
+    in.read(reinterpret_cast<char *>(data.data()),
+            static_cast<std::streamsize>(size));
+  }
 
   firelight::Image image;
-  if (QFile imageFile(dir + "/screenshot.png"); imageFile.exists()) {
-    if (imageFile.open(QIODeviceBase::ReadOnly)) {
-      const auto bytes = imageFile.readAll();
-      image.pngData.assign(bytes.begin(), bytes.end());
-    }
+  if (const fs::path imagePath = fs::path(dir) / "screenshot.png";
+      fs::exists(imagePath)) {
+    std::ifstream in(imagePath, std::ios::binary);
+    const auto size = fs::file_size(imagePath);
+    image.pngData.resize(size);
+    in.read(reinterpret_cast<char *>(image.pngData.data()),
+            static_cast<std::streamsize>(size));
   }
 
   std::vector<uint8_t> rcheevosData;
-  if (auto rcheevosFile = dir + "/rcheevos.state";
-      QFile(rcheevosFile).exists()) {
-    QFile file(rcheevosFile);
-    file.open(QIODeviceBase::ReadOnly);
-    auto bytes = file.readAll();
-    rcheevosData = std::vector<uint8_t>(bytes.begin(), bytes.end());
-    file.close();
+  if (const fs::path rcheevosPath = fs::path(dir) / "rcheevos.state";
+      fs::exists(rcheevosPath)) {
+    std::ifstream in(rcheevosPath, std::ios::binary);
+    const auto size = fs::file_size(rcheevosPath);
+    rcheevosData.resize(size);
+    in.read(reinterpret_cast<char *>(rcheevosData.data()),
+            static_cast<std::streamsize>(size));
   }
 
   bool locked = false;
-
-  auto metadata = m_userdataDatabase.getSuspendPointMetadata(
-      contentHash.toStdString(), saveSlotNumber, slotNumber);
+  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash,
+                                                         saveSlotNumber, slotNumber);
   if (metadata.has_value()) {
     locked = metadata->locked;
   }
@@ -376,40 +358,27 @@ SaveManager::readSuspendPointFromDisk(const QString &contentHash,
   };
 }
 
-void SaveManager::deleteSuspendPointFromDisk(const QString &contentHash,
+void SaveManager::deleteSuspendPointFromDisk(const std::string &contentHash,
                                              int saveSlotNumber, int index) {
-  auto slotNumber = index + 1;
+  const unsigned int slotNumber = index + 1;
+  const auto dir =
+      suspendDir(m_saveDirectory, contentHash, saveSlotNumber, slotNumber);
 
-  auto dir = QString("%1/%2/slot%3/suspendpoints/slot%4")
-                 .arg(m_saveDirectory, contentHash)
-                 .arg(saveSlotNumber)
-                 .arg(slotNumber);
-
-  if (!QDir(dir).exists()) {
+  if (std::error_code ec; !fs::exists(dir, ec)) {
     return;
   }
 
-  auto metadata = m_userdataDatabase.getSuspendPointMetadata(
-      contentHash.toStdString(), saveSlotNumber, slotNumber);
+  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash,
+                                                         saveSlotNumber, slotNumber);
   if (metadata.has_value()) {
-    m_userdataDatabase.deleteSuspendPointMetadata(metadata->id);
+    m_saveDatabase.deleteSuspendPointMetadata(metadata->id);
   }
 
   spdlog::debug("Deleting suspend point from disk");
 
-  QFile stateFile(dir + "/suspendpoint.state");
-  if (stateFile.exists()) {
-    stateFile.remove();
-  }
-
-  QFile imageFile(dir + "/screenshot.png");
-  if (imageFile.exists()) {
-    imageFile.remove();
-  }
-
-  QFile rcheevosFile(dir + "/rcheevos.state");
-  if (rcheevosFile.exists()) {
-    rcheevosFile.remove();
-  }
+  std::error_code ec;
+  fs::remove(fs::path(dir) / "suspendpoint.state", ec);
+  fs::remove(fs::path(dir) / "screenshot.png", ec);
+  fs::remove(fs::path(dir) / "rcheevos.state", ec);
 }
 } // namespace firelight::saves

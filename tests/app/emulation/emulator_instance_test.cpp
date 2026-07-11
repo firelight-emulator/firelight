@@ -5,7 +5,6 @@
 
 #include "fake_core.hpp"
 
-#include <firelight/db/sqlite_userdata_database.hpp>
 #include <emulation/emulation_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>

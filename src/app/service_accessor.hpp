@@ -35,10 +35,6 @@ namespace firelight {
     class ISaveManager;
   }
 
-  namespace db {
-    class IUserdataDatabase;
-  }
-
   namespace mods {
     class IModRepository;
   }

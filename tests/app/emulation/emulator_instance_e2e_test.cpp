@@ -1,4 +1,4 @@
-#include "../saves/fake_userdata_database.hpp"
+#include "fake_save_database.hpp"
 #include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include "fake_core.hpp"
 
@@ -33,7 +33,7 @@ protected:
   std::unique_ptr<settings::SettingsService> m_settingsService;
   std::unique_ptr<settings::SqliteCoreOptionRepository> m_coreOptionRepo;
   std::unique_ptr<cheats::SqliteCheatRepository> m_cheatRepo;
-  std::unique_ptr<FakeUserdataDatabase> m_userdataDb;
+  std::unique_ptr<saves::FakeSaveDatabase> m_userdataDb;
   std::unique_ptr<saves::SaveManager> m_saveManager;
   std::unique_ptr<EmulationService> m_emulationService;
   QTemporaryDir m_saveDir;
@@ -54,7 +54,7 @@ protected:
         *new settings::SqliteSettingsRepository(":memory:"));
     settings::SettingsService::setInstance(m_settingsService.get());
 
-    m_userdataDb = std::make_unique<FakeUserdataDatabase>();
+    m_userdataDb = std::make_unique<saves::FakeSaveDatabase>();
     m_saveManager =
         std::make_unique<saves::SaveManager>(m_saveDir.path().toStdString(),
                                              *m_userdataDb);
