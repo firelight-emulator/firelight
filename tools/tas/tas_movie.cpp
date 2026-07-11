@@ -278,6 +278,15 @@ std::vector<uint8_t> readFile(const char *path) {
                               std::istreambuf_iterator<char>());
 }
 
+bool writeFileBytes(const std::string &path, const std::vector<uint8_t> &d) {
+  std::ofstream f(path, std::ios::binary);
+  if (!f)
+    return false;
+  f.write(reinterpret_cast<const char *>(d.data()),
+          static_cast<std::streamsize>(d.size()));
+  return static_cast<bool>(f);
+}
+
 std::string baseName(const std::string &p) {
   const auto s = p.find_last_of("/\\");
   return s == std::string::npos ? p : p.substr(s + 1);
@@ -301,6 +310,23 @@ int buttonBit(const std::string &raw) {
   if (n == "LEFT") return RETRO_DEVICE_ID_JOYPAD_LEFT;
   if (n == "RIGHT") return RETRO_DEVICE_ID_JOYPAD_RIGHT;
   return -1;
+}
+
+// Parse a button spec like "A", "-", "A+B", "UP+A" into a joypad bitmask.
+uint16_t parseButtons(const std::string &spec) {
+  if (spec.empty() || spec == "-" || upper(spec) == "NONE")
+    return 0;
+  InputFrame fr;
+  std::stringstream ss(spec);
+  std::string part;
+  while (std::getline(ss, part, '+')) {
+    if (part.empty())
+      continue;
+    const int b = buttonBit(part);
+    if (b >= 0)
+      fr.set(static_cast<unsigned>(b), true);
+  }
+  return fr.buttons;
 }
 
 // Parse an input script into a per-frame input log. Returns false + err on error.
@@ -578,8 +604,9 @@ int usage(const char *a0) {
                "  %s watch   <core> <rom> <movie.fltm> <frame>   (decode Pokemon Yellow state)\n"
                "  %s route   <core> <rom> <route.txt> <out.fltm> [anchor.fltm]\n"
                "  %s dump    <core> <rom> <movie.fltm> <outdir> [everyN=2] [from] [to]\n"
+               "  %s step    <core> <rom> <dir> <reset|do|peek|undo|save> [args]\n"
                "  %s maps    <core> <rom> _\n",
-               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
+               a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0, a0);
   return 1;
 }
 
@@ -810,18 +837,20 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  // ---- everything else loads a movie ----
+  // ---- commands past here consume a movie from argv[4]; 'step' does not ----
   Movie m;
-  if (!m.load(argv[4])) {
-    std::fprintf(stderr, "FATAL: cannot load movie '%s'\n", argv[4]);
-    return 2;
+  if (cmd != "step") {
+    if (!m.load(argv[4])) {
+      std::fprintf(stderr, "FATAL: cannot load movie '%s'\n", argv[4]);
+      return 2;
+    }
+    g_movie = &m;
+    std::printf("[movie] %s  core=%s %s  frames=%zu  checkpoints=%zu  rom=%s\n",
+                argv[4], m.coreName.c_str(), m.coreVersion.c_str(),
+                m.input.size(), m.checkpoints.size(), m.romName.c_str());
+    if (m.romHash != romHash)
+      std::printf("  WARNING: ROM hash mismatch (movie made for a different ROM)\n");
   }
-  g_movie = &m;
-  std::printf("[movie] %s  core=%s %s  frames=%zu  checkpoints=%zu  rom=%s\n",
-              argv[4], m.coreName.c_str(), m.coreVersion.c_str(), m.input.size(),
-              m.checkpoints.size(), m.romName.c_str());
-  if (m.romHash != romHash)
-    std::printf("  WARNING: ROM hash mismatch (movie made for a different ROM)\n");
 
   if (cmd == "play") {
     std::vector<std::pair<uint32_t, uint64_t>> got;
@@ -1018,6 +1047,167 @@ int main(int argc, char **argv) {
     closeCore();
     std::printf("dumped %u frames to %s\n", idx, outdir.c_str());
     return 0;
+  }
+
+  // ---- step: a stateful, interactive frame-stepper for precise authoring.
+  //   step <core> <rom> <dir> reset <base.fltm>          start a session at base's END state
+  //   step <core> <rom> <dir> do   <buttons> [count=1]   advance + commit; report + write last.ppm
+  //   step <core> <rom> <dir> peek <buttons> [count=1]   advance WITHOUT committing (try an input)
+  //   step <core> <rom> <dir> undo                       revert the last committed step (1 level)
+  //   step <core> <rom> <dir> save <out.fltm>            write the session movie (anchored at reset)
+  // Session state lives in <dir>: reset.bin, cur.bin, prev.bin, log.txt, frame.txt, last.ppm
+  if (cmd == "step") {
+    if (argc < 6)
+      return usage(argv[0]);
+    const std::string dir = argv[4], sub = argv[5];
+    const std::string curP = dir + "/cur.bin", prevP = dir + "/prev.bin",
+                      resetP = dir + "/reset.bin", logP = dir + "/log.txt",
+                      frameP = dir + "/frame.txt", shotP = dir + "/last.ppm";
+    const auto readCtr = [&]() {
+      std::ifstream f(frameP);
+      uint32_t v = 0;
+      if (f)
+        f >> v;
+      return v;
+    };
+    const auto writeCtr = [&](uint32_t v) {
+      std::ofstream f(frameP);
+      f << v;
+    };
+    const auto report = [&](const char *tag) {
+      using namespace yellow;
+      const auto r8 = [](uint16_t a) { return readGB(a); };
+      const auto r16 = [&](uint16_t a) { return (r8(a) << 8) | r8(a + 1); };
+      std::printf("%s frame=%u map=0x%02x pos=(%d,%d) dir=0x%02x | party=%d "
+                  "lead=%d/%d | RNG=%02x,%02x DSum=%02x\n",
+                  tag, readCtr(), r8(wCurMap), r8(wXCoord), r8(wYCoord),
+                  r8(wPlayerDirection), r8(wPartyCount), r16(wPartyMon1HP),
+                  r16(wPartyMon1MaxHP), r8(hRandomAdd), r8(hRandomSub),
+                  (r8(hRandomAdd) + r8(hRandomSub)) & 0xFF);
+    };
+
+    if (sub == "reset") {
+      if (argc < 7)
+        return usage(argv[0]);
+      Movie base;
+      if (!base.load(argv[6])) {
+        std::fprintf(stderr, "FATAL: cannot load base '%s'\n", argv[6]);
+        return 2;
+      }
+      g_movie = &base;
+      g_wantFB = true;
+      openCore(corePath);
+      const uint32_t n = static_cast<uint32_t>(base.input.size());
+      for (g_frame = 0; g_frame < n; ++g_frame)
+        g.run();
+      const size_t ss = g.serialize_size();
+      std::vector<uint8_t> blob(ss);
+      g.serialize(blob.data(), ss);
+      writeFileBytes(resetP, blob);
+      writeFileBytes(curP, blob);
+      writeFileBytes(prevP, blob);
+      { std::ofstream f(logP); }
+      writeCtr(n);
+      report("[reset]");
+      if (n > 0)
+        writePPM(shotP.c_str()); // no frame rendered when resetting a pure anchor
+      closeCore();
+      std::printf("session in %s (%zu-byte anchor)\n",
+                  dir.c_str(), blob.size());
+      return 0;
+    }
+
+    if (sub == "do" || sub == "peek") {
+      if (argc < 7)
+        return usage(argv[0]);
+      const uint16_t btn = parseButtons(argv[6]);
+      const uint32_t count = argc > 7 ? std::strtoul(argv[7], nullptr, 0) : 1;
+      const std::vector<uint8_t> curState = readFile(curP.c_str());
+      if (curState.empty()) {
+        std::fprintf(stderr, "FATAL: no session -- run 'reset' first\n");
+        return 2;
+      }
+      Movie tmp;
+      tmp.startMode = 1;
+      tmp.startState = curState;
+      InputFrame fr;
+      fr.buttons = btn;
+      tmp.input.assign(count ? count : 1, fr);
+      g_movie = &tmp;
+      g_wantFB = true;
+      openCore(corePath);
+      for (g_frame = 0; g_frame < tmp.input.size(); ++g_frame)
+        g.run();
+      if (sub == "do") {
+        const size_t ss = g.serialize_size();
+        std::vector<uint8_t> nb(ss);
+        g.serialize(nb.data(), ss);
+        writeFileBytes(prevP, curState);
+        writeFileBytes(curP, nb);
+        std::ofstream lf(logP, std::ios::app);
+        lf << count << " " << argv[6] << "\n";
+        writeCtr(readCtr() + count);
+      }
+      report(sub == "do" ? "[do]  " : "[peek]");
+      writePPM(shotP.c_str());
+      closeCore();
+      return 0;
+    }
+
+    if (sub == "undo") {
+      const std::vector<uint8_t> prevState = readFile(prevP.c_str());
+      if (prevState.empty()) {
+        std::fprintf(stderr, "nothing to undo\n");
+        return 2;
+      }
+      writeFileBytes(curP, prevState);
+      std::ifstream lf(logP);
+      std::vector<std::string> lines;
+      std::string ln;
+      while (std::getline(lf, ln))
+        lines.push_back(ln);
+      lf.close();
+      uint32_t popped = 0;
+      if (!lines.empty()) {
+        std::istringstream is(lines.back());
+        is >> popped;
+        lines.pop_back();
+      }
+      std::ofstream of(logP, std::ios::trunc);
+      for (const auto &l : lines)
+        of << l << "\n";
+      const uint32_t f = readCtr();
+      writeCtr(f > popped ? f - popped : 0);
+      std::printf("undid last step (-%u frames; single-level undo)\n", popped);
+      return 0;
+    }
+
+    if (sub == "save") {
+      if (argc < 7)
+        return usage(argv[0]);
+      Movie m;
+      m.startMode = 1;
+      m.startState = readFile(resetP.c_str());
+      m.romName = baseName(g_romPath);
+      m.romHash = romHash;
+      m.romSize = static_cast<uint32_t>(rom.size());
+      std::string err;
+      if (!parseScript(logP.c_str(), m.input, err)) {
+        std::fprintf(stderr, "FATAL: %s\n", err.c_str());
+        return 2;
+      }
+      stampAndCheckpoint(corePath, m, every);
+      if (!m.save(argv[6])) {
+        std::fprintf(stderr, "FATAL: cannot write '%s'\n", argv[6]);
+        return 3;
+      }
+      std::printf("saved session movie -> %s (%zu frames from anchor)\n", argv[6],
+                  m.input.size());
+      return 0;
+    }
+
+    std::fprintf(stderr, "unknown step subcommand '%s'\n", sub.c_str());
+    return usage(argv[0]);
   }
 
   return usage(argv[0]);
