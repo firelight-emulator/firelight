@@ -29,19 +29,47 @@ target_include_directories(tas_movie PRIVATE
 add_executable(tas_determinism_test determinism_test.cpp)
 target_include_directories(tas_determinism_test PRIVATE ${FL_REPO_ROOT}/include/libretro)
 
+# The core is loaded at runtime (dlopen/LoadLibrary); link libdl where needed.
+if(NOT WIN32)
+  target_link_libraries(tas_movie PRIVATE ${CMAKE_DL_LIBS})
+  target_link_libraries(tas_determinism_test PRIVATE ${CMAKE_DL_LIBS})
+endif()
+
 if(NOT MSVC)
   target_compile_options(tas_movie PRIVATE -Wall -Wextra)
   target_compile_options(tas_determinism_test PRIVATE -Wall -Wextra)
 endif()
 
-# Determinism merge gate. Registered under the project's existing `ctest` step
-# (the CI workflows already run `ctest --output-on-failure`), so no workflow edit
-# is needed to activate it once FL_BUILD_TAS=ON. Skips when the core/ROM/movie
-# env vars are absent (CI runners have no ROM) — see tests/run_verify.cmake.
+# Determinism merge gate. Runs the reference movie through `tas_movie verify`
+# (double-replay framebuffer-hash self-check -- portable across core builds and
+# platforms). Registered as a CTest, so it runs under the CI workflows' existing
+# `ctest --output-on-failure` step the moment FL_BUILD_TAS=ON. Defaults to the
+# committed mGBA core (per platform) + the self-authored test ROM + reference
+# movie in tests/, so it needs no external assets; override any input with the
+# FL_TAS_TEST_CORE / FL_TAS_TEST_ROM / FL_TAS_TEST_MOVIE env vars. The runner
+# skips (does not fail) if any input is missing.
+if(WIN32)
+  set(_fl_tas_core "${FL_REPO_ROOT}/_cores/windows/mgba_libretro.dll")
+else()
+  set(_fl_tas_core "${FL_REPO_ROOT}/_cores/linux/mgba_libretro.so")
+endif()
+set(FL_TAS_TEST_CORE "$ENV{FL_TAS_TEST_CORE}")
+set(FL_TAS_TEST_ROM "$ENV{FL_TAS_TEST_ROM}")
+set(FL_TAS_TEST_MOVIE "$ENV{FL_TAS_TEST_MOVIE}")
+if(NOT FL_TAS_TEST_CORE)
+  set(FL_TAS_TEST_CORE "${_fl_tas_core}")
+endif()
+if(NOT FL_TAS_TEST_ROM)
+  set(FL_TAS_TEST_ROM "${CMAKE_CURRENT_SOURCE_DIR}/tests/testrom.gb")
+endif()
+if(NOT FL_TAS_TEST_MOVIE)
+  set(FL_TAS_TEST_MOVIE "${CMAKE_CURRENT_SOURCE_DIR}/tests/reference.fltm")
+endif()
+
 enable_testing()
 add_test(NAME tas_verify COMMAND ${CMAKE_COMMAND}
   -DTAS_MOVIE_EXE=$<TARGET_FILE:tas_movie>
-  -DTAS_CORE=$ENV{FL_TAS_TEST_CORE}
-  -DTAS_ROM=$ENV{FL_TAS_TEST_ROM}
-  -DTAS_MOVIE=$ENV{FL_TAS_TEST_MOVIE}
+  -DTAS_CORE=${FL_TAS_TEST_CORE}
+  -DTAS_ROM=${FL_TAS_TEST_ROM}
+  -DTAS_MOVIE=${FL_TAS_TEST_MOVIE}
   -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_verify.cmake)

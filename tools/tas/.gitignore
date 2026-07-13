@@ -9,3 +9,5 @@
 !examples/yellow_pallet_anchor.fltm
 !examples/yellow_get_pikachu.fltm
 !examples/yellow_get_pikachu_from_boot.fltm
+# ...and the CI determinism-gate reference movie (checkpoint-free; over tests/testrom.gb).
+!tests/reference.fltm
