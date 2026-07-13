@@ -110,6 +110,7 @@ add_subdirectory(libs/firelight/audio)
 add_subdirectory(libs/firelight/media)
 add_subdirectory(libs/firelight/metadata)
 add_subdirectory(libs/firelight/db)
+add_subdirectory(libs/firelight/tas)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -583,6 +584,7 @@ add_dependencies(check
         firelight_audio_test
         firelight_media_test
         firelight_metadata_test
+        firelight_tas_test
 )
 #ctest_coverage_collect_gcov()
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
