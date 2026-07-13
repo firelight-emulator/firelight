@@ -347,7 +347,7 @@ uint16_t parseButtons(const std::string &spec) {
       continue;
     const int b = buttonBit(part);
     if (b >= 0)
-      fr.set(static_cast<unsigned>(b), true);
+      fr.setButton(static_cast<unsigned>(b), true);
   }
   return fr.buttons;
 }
@@ -390,7 +390,7 @@ bool parseScript(const char *path, std::vector<InputFrame> &out,
                 "'";
           return false;
         }
-        fr.set(static_cast<unsigned>(bit), true);
+        fr.setButton(static_cast<unsigned>(bit), true);
       }
     }
     for (long i = 0; i < count; ++i)
@@ -626,7 +626,7 @@ bool parseRoute(const char *path, std::vector<RouteOp> &out, std::string &err) {
             err = "line " + std::to_string(ln) + ": unknown button '" + part + "'";
             return false;
           }
-          fr.set(static_cast<unsigned>(bit), true);
+          fr.setButton(static_cast<unsigned>(bit), true);
         }
       }
       o.buttons = fr.buttons;

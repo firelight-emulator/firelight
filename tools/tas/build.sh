@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Build the standalone libretro determinism tester (gate 1a) with MSYS2 mingw64 g++.
-# No Qt/Firelight deps -- just the libretro.h header and the C++ stdlib.
+# No Qt deps -- the libretro.h header, the C++ stdlib, and the header-only canonical
+# input type (firelight::input::InputFrame + its IRetroPad interface, both Qt-free).
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
@@ -15,7 +16,13 @@ fi
 export PATH="$CXX_DIR:$PATH"
 
 build() { # <src> <out>
-  "$CXX" -std=c++20 -O2 -Wall -Wextra -I"$REPO/include/libretro" \
+  # Include roots (all header-only, no Qt): libretro.h; the repo include/ tree
+  # (firelight/libretro/retropad.hpp, which #includes "libretro/libretro.h"); and
+  # the canonical input header tree (firelight/input/input_frame.hpp).
+  "$CXX" -std=c++20 -O2 -Wall -Wextra \
+    -I"$REPO/include/libretro" \
+    -I"$REPO/include" \
+    -I"$REPO/libs/firelight/input/include" \
     "$HERE/$1" -o "$HERE/$2"
   echo "built: $HERE/$2"
 }

@@ -5,51 +5,28 @@
 //   + optional verification checkpoints (frame -> video-framebuffer hash).
 // Little-endian binary. Header-only.
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iterator>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include <firelight/input/input_frame.hpp>
+
 namespace tas {
 
-// One frame of input. Mirrors Firelight's InputFrame: a 16-bit button bitmask
-// over RETRO_DEVICE_ID_JOYPAD_* ids (0..15) plus four int16 analog axes (unused
-// on Game Boy, kept for forward-compatibility / other platforms).
-struct InputFrame {
-  uint16_t buttons = 0;
-  int16_t lx = 0, ly = 0, rx = 0, ry = 0;
-
-  [[nodiscard]] bool button(unsigned id) const {
-    return id < 16 && ((buttons >> id) & 1u) != 0;
-  }
-  void set(unsigned id, bool on) {
-    if (id >= 16)
-      return;
-    const uint16_t bit = static_cast<uint16_t>(1u << id);
-    buttons = on ? static_cast<uint16_t>(buttons | bit)
-                 : static_cast<uint16_t>(buttons & ~bit);
-  }
-};
-
-// This layout is a byte-for-byte mirror of firelight::input::InputFrame
-// (libs/firelight/input/include/firelight/input/input_frame.hpp): `buttons` @0,
-// then leftStick X/Y and rightStick X/Y, each little-endian int16 -- a fixed
-// 10-byte record (its SERIALIZED_SIZE). The two MUST stay in lock-step so a
-// movie authored in-app round-trips through this CLI. The CMake-integrated build
-// (roadmap Phase 1) links firelight_input and replaces this mirror with the
-// canonical type directly; until then, these checks guard against silent drift.
-static_assert(std::is_trivially_copyable_v<InputFrame>);
-static_assert(offsetof(InputFrame, buttons) == 0);
-static_assert(offsetof(InputFrame, lx) == 2);
-static_assert(offsetof(InputFrame, ly) == 4);
-static_assert(offsetof(InputFrame, rx) == 6);
-static_assert(offsetof(InputFrame, ry) == 8);
-static_assert(sizeof(InputFrame) == 10,
-              "InputFrame must match the canonical 10-byte wire record");
+// One frame of input. Phase 1 (roadmap "de-fork") retires the former byte-identical
+// mirror for the canonical app type: firelight::input::InputFrame
+// (libs/firelight/input/include/firelight/input/input_frame.hpp) — `buttons` (a
+// 16-bit RETRO_DEVICE_ID_JOYPAD_* bitmask) plus four int16 analog axes, with the
+// authoritative 10-byte little-endian wire encoding provided by its serialize() /
+// deserialize(). Reusing that type (and its encoding, below) makes the layout a
+// single source of truth, so a movie authored in-app and one written by this CLI
+// are the same bytes by construction rather than by a hand-maintained assert.
+using InputFrame = firelight::input::InputFrame;
 
 struct Movie {
   static constexpr uint32_t kVersion = 2;
@@ -137,11 +114,10 @@ inline bool Movie::save(const std::string &path) const {
   }
   detail::put(o, static_cast<uint32_t>(input.size()));
   for (const auto &f : input) {
-    detail::put(o, f.buttons);
-    detail::put(o, static_cast<uint16_t>(f.lx));
-    detail::put(o, static_cast<uint16_t>(f.ly));
-    detail::put(o, static_cast<uint16_t>(f.rx));
-    detail::put(o, static_cast<uint16_t>(f.ry));
+    // Canonical 10-byte LE record (buttons, then L/R stick X/Y) — identical bytes
+    // to the previous hand-rolled encoding, now sourced from the shared type.
+    const auto bytes = f.serialize();
+    o.insert(o.end(), bytes.begin(), bytes.end());
   }
   detail::put(o, static_cast<uint32_t>(checkpoints.size()));
   for (const auto &c : checkpoints) {
@@ -189,13 +165,10 @@ inline bool Movie::load(const std::string &path) {
   input.clear();
   input.reserve(n);
   for (uint32_t i = 0; i < n && r.ok; ++i) {
-    InputFrame fr;
-    fr.buttons = r.u16();
-    fr.lx = static_cast<int16_t>(r.u16());
-    fr.ly = static_cast<int16_t>(r.u16());
-    fr.rx = static_cast<int16_t>(r.u16());
-    fr.ry = static_cast<int16_t>(r.u16());
-    input.push_back(fr);
+    std::array<uint8_t, InputFrame::SERIALIZED_SIZE> raw{};
+    for (auto &b : raw)
+      b = r.u8();
+    input.push_back(InputFrame::deserialize(raw));
   }
   const uint32_t cc = r.u32();
   checkpoints.clear();
