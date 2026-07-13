@@ -5,10 +5,12 @@
 //   + optional verification checkpoints (frame -> video-framebuffer hash).
 // Little-endian binary. Header-only.
 
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -32,6 +34,22 @@ struct InputFrame {
                  : static_cast<uint16_t>(buttons & ~bit);
   }
 };
+
+// This layout is a byte-for-byte mirror of firelight::input::InputFrame
+// (libs/firelight/input/include/firelight/input/input_frame.hpp): `buttons` @0,
+// then leftStick X/Y and rightStick X/Y, each little-endian int16 -- a fixed
+// 10-byte record (its SERIALIZED_SIZE). The two MUST stay in lock-step so a
+// movie authored in-app round-trips through this CLI. The CMake-integrated build
+// (roadmap Phase 1) links firelight_input and replaces this mirror with the
+// canonical type directly; until then, these checks guard against silent drift.
+static_assert(std::is_trivially_copyable_v<InputFrame>);
+static_assert(offsetof(InputFrame, buttons) == 0);
+static_assert(offsetof(InputFrame, lx) == 2);
+static_assert(offsetof(InputFrame, ly) == 4);
+static_assert(offsetof(InputFrame, rx) == 6);
+static_assert(offsetof(InputFrame, ry) == 8);
+static_assert(sizeof(InputFrame) == 10,
+              "InputFrame must match the canonical 10-byte wire record");
 
 struct Movie {
   static constexpr uint32_t kVersion = 2;

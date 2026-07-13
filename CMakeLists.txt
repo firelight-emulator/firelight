@@ -121,6 +121,14 @@ add_subdirectory(libs/firelight/discord)
 add_subdirectory(libs/discord)
 add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
+# TAS harness tooling (roadmap Phase 0). Off by default so the normal app build is
+# untouched; enable with -DFL_BUILD_TAS=ON to build tools/tas and register its
+# determinism gate under the existing `ctest` step. See tools/tas/CMakeLists.txt.
+option(FL_BUILD_TAS "Build the TAS harness tools (tools/tas)" OFF)
+if(FL_BUILD_TAS)
+    add_subdirectory(tools/tas)
+endif()
+
 file(GLOB QML_FILES
         qml/*.qml
         qml/components/achievements/*.qml

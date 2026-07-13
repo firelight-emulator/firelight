@@ -645,7 +645,7 @@ int usage(const char *a0) {
                "  %s play    <core> <rom> <movie.fltm>\n"
                "  %s verify  <core> <rom> <movie.fltm>\n"
                "  %s shot    <core> <rom> <movie.fltm> <frame> <out.ppm>\n"
-               "  %s ram     <core> <rom> <movie.fltm> <frame> <hexAddr> <len>\n"
+               "  %s ram     (deprecated alias of 'read'; emulated GB addresses)\n"
                "  %s read    <core> <rom> <movie.fltm> <frame> <gbAddr> <len>\n"
                "  %s sweep   <core> <rom> <movie.fltm> <atFrame> <maxDelay> <gbAddr> [len=2]\n"
                "  %s watch   <core> <rom> <movie.fltm> <frame>   (decode Pokemon Yellow state)\n"
@@ -779,9 +779,22 @@ int main(int argc, char **argv) {
         continue;
       Poke p;
       p.addr = std::strtoul(tok.c_str(), nullptr, 0);
-      while (is >> tok)
-        p.bytes.push_back(
-            static_cast<uint8_t>(std::strtoul(tok.c_str(), nullptr, 16)));
+      // Each token is a hex value that may span MULTIPLE bytes, most-significant
+      // first: "5E" -> {0x5E}, "0300" / "0x0300" -> {0x03,0x00}. (Previously a
+      // multi-digit token was parsed then truncated to a single byte, so a
+      // 2-byte value like a big-endian stat had to be split across lines.)
+      while (is >> tok) {
+        std::string h = tok;
+        if (h.size() >= 2 && h[0] == '0' && (h[1] == 'x' || h[1] == 'X'))
+          h.erase(0, 2);
+        if (h.empty())
+          continue;
+        if (h.size() % 2 != 0)
+          h.insert(h.begin(), '0'); // pad odd nibble count to whole bytes
+        for (size_t i = 0; i < h.size(); i += 2)
+          p.bytes.push_back(static_cast<uint8_t>(
+              std::strtoul(h.substr(i, 2).c_str(), nullptr, 16)));
+      }
       if (!p.bytes.empty())
         pokes.push_back(std::move(p));
     }
@@ -1116,35 +1129,19 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  if (cmd == "ram") {
+  // ---- read: dump `len` bytes at emulated GB address `addr` at `frame`, via the
+  // memory-map descriptors. 'ram' is a deprecated alias kept for old scripts: it
+  // used to index the raw SYSTEM_RAM buffer -- a second, confusing address space.
+  // There is now ONE address model: emulated GB addresses everywhere
+  // (read / poke / sweep / watch). ----
+  if (cmd == "read" || cmd == "ram") {
     if (argc < 8)
       return usage(argv[0]);
-    const uint32_t frame = std::strtoul(argv[5], nullptr, 0);
-    const uint32_t addr = std::strtoul(argv[6], nullptr, 0);
-    const uint32_t len = std::strtoul(argv[7], nullptr, 0);
-    replayTo(corePath, frame, nullptr, every);
-    const auto *ram = static_cast<const uint8_t *>(
-        g.get_memory_data(RETRO_MEMORY_SYSTEM_RAM));
-    const size_t ramSize = g.get_memory_size(RETRO_MEMORY_SYSTEM_RAM);
-    std::printf("system RAM: %zu bytes; dump @0x%04x len %u (frame %u):\n",
-                ramSize, addr, len, frame);
-    for (uint32_t i = 0; i < len; ++i) {
-      if (addr + i >= ramSize) {
-        std::printf(" <oob>");
-        break;
-      }
-      if (i % 16 == 0)
-        std::printf("\n  %04x:", addr + i);
-      std::printf(" %02x", ram[addr + i]);
-    }
-    std::printf("\n");
-    closeCore();
-    return 0;
-  }
-
-  if (cmd == "read") {
-    if (argc < 8)
-      return usage(argv[0]);
+    if (cmd == "ram")
+      std::fprintf(
+          stderr,
+          "note: 'ram' is deprecated; it now reads emulated GB addresses like "
+          "'read' (was: raw SYSTEM_RAM buffer index). Update scripts to 'read'.\n");
     const uint32_t frame = std::strtoul(argv[5], nullptr, 0);
     const uint32_t addr = std::strtoul(argv[6], nullptr, 0);
     const uint32_t len = std::strtoul(argv[7], nullptr, 0);
