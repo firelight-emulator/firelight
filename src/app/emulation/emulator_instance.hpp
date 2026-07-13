@@ -42,6 +42,20 @@ public:
   void reset();
   std::future<bool> save();
 
+  // --- TAS harness support (roadmap Phase 1) ---
+  // TAS mode makes runFrame() a pure emulation step for bit-exact replay: it
+  // suppresses the periodic autosave, whose trigger is wall-clock time and whose
+  // work is disk IO — both unrelated to emulation and a source of nondeterminism.
+  // The TAS session sets this before it drives frames through a movie provider.
+  void setTasMode(bool enabled) { m_tasMode = enabled; }
+  [[nodiscard]] bool isTasMode() const { return m_tasMode; }
+  // Autosave cadence in wall-clock seconds (default 10). Exposed so the cadence is
+  // tunable and the TAS determinism guard above is directly testable.
+  void setAutosaveIntervalSeconds(int seconds) { m_saveIntervalSeconds = seconds; }
+  [[nodiscard]] int getAutosaveIntervalSeconds() const {
+    return m_saveIntervalSeconds;
+  }
+
   void setMuted(bool muted);
   bool isMuted() const;
 
@@ -165,6 +179,8 @@ private:
   std::vector<SuspendPoint> m_rewindSuspendPoints;
   std::chrono::time_point<std::chrono::steady_clock> m_lastSaveTime;
   int m_saveIntervalSeconds = 10;
+  // When true, runFrame() skips the wall-clock autosave (see setTasMode).
+  bool m_tasMode = false;
 
   std::string m_contentPath;
   std::string m_contentHash;

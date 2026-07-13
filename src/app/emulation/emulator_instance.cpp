@@ -355,7 +355,10 @@ namespace firelight::emulation {
     //              (now - std::chrono::seconds(m_saveIntervalSeconds))
     //                  .time_since_epoch()
     //                  .count());
-    if (now - std::chrono::seconds(m_saveIntervalSeconds) > m_lastSaveTime) {
+    // In TAS mode the periodic autosave is suppressed so runFrame() is a pure
+    // emulation step (no wall-clock-triggered disk IO to perturb a replay).
+    if (!m_tasMode &&
+        now - std::chrono::seconds(m_saveIntervalSeconds) > m_lastSaveTime) {
       m_lastSaveTime = now;
       save();
     }

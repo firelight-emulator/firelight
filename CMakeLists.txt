@@ -516,6 +516,8 @@ add_executable(fl_test
         tests/app/emulation/core_configuration_test.cpp
         tests/app/emulation/core_registry_test.cpp
         tests/app/libretro/core_input_router_test.cpp
+        tests/app/tas/tas_input_playback_test.cpp
+        tests/app/tas/tas_emulator_instance_test.cpp
         tests/app/achievements/sqlite_achievement_repository_test.cpp
         tests/app/achievements/achievement_service_test.cpp
         tests/app/activity/sqlite_activity_log_test.cpp
@@ -563,7 +565,7 @@ add_test(NAME QMLTests COMMAND fl_qml_test)
 
 add_dependencies(fl_test copy_resources)
 
-target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include src libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/activity/src libs/firelight/activity/include)
+target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include src libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/db/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/activity/src libs/firelight/activity/include libs/firelight/tas/include)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(fl_test)
 
