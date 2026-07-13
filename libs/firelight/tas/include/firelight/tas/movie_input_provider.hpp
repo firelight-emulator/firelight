@@ -57,6 +57,18 @@ public:
   // Advance one frame; the session calls this exactly once per emulated frame.
   void advance() { seekTo(m_cursor + 1); }
 
+  // Replace a single frame's input without disturbing the cursor (an author edit).
+  // Refreshes the live pad if the edited frame is the one currently presented.
+  void setFrameAt(std::size_t index, const input::InputFrame &f) {
+    if (index >= m_frames.size()) {
+      return;
+    }
+    m_frames[index] = f;
+    if (index == m_cursor) {
+      m_pad->setFrame(f);
+    }
+  }
+
   // Which controller port this movie drives (default 0).
   void setPort(int port) { m_port = port; }
   [[nodiscard]] int port() const { return m_port; }

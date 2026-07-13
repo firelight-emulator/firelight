@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_library(firelight_tas STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/greenzone_store.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/tas_session.cpp
 )
 target_include_directories(firelight_tas
         PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
@@ -29,6 +30,7 @@ add_executable(firelight_tas_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/scripted_retropad_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/movie_input_provider_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/greenzone_store_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/tas_session_test.cpp
 )
 target_link_libraries(firelight_tas_test
         PRIVATE firelight_tas
