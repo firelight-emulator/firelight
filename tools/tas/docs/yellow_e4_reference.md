@@ -86,3 +86,36 @@ Highest manip leverage: crit bulky walls (Slowbro/Machamp/Alakazam), force enemy
 - BattleStatus flags: player `0xD061/62/63`, enemy `0xD066/67/68` (turn-phase / multi-turn lock)
 - Overworld: `wCurMap=0xD35D`, `wYCoord=0xD360`, `wXCoord=0xD361`, `wPlayerDirection=0xD529`
 - `wElite4Flags` and the move-MENU-selection addresses are APPROXIMATE — reconfirm vs a fresh pokeyellow.sym before hardcoding.
+
+## Champion battle — trigger + win (SOLVED 2026-07-13)
+
+Unlike Lorelei–Lance (whose default map-script starts the fight when you walk into range),
+the Champion's fight has NO coord trigger and talking to BLUE only prints intro text.
+`ChampionsRoom_Script` runs the battle only when `wChampionsRoomCurScript` reaches
+`PLAYER_ENTERS`(=1), which auto-walks the player up and starts an `OPP_RIVAL3` battle
+whose team = `wRivalStarter`. The game pre-arms this when you beat Agatha; it persists in
+WRAM through the Lance fight, and the **real Lance→Champion warp** sets `wCurMapScriptPtr`
+so the script dispatches. Reproduce from a warp-tricked Lance-beaten state:
+
+1. Author Lance's defeat dialogue + walk-up to the top warp as ONE continuous `compile`
+   (the frame-stepper fragments the post-battle script). Walking into the top warp does a
+   real warp into room `$78` (lands at bottom `(3,7)`), which sets `wCurMapScriptPtr`.
+2. Poke `wChampionsRoomCurScript = 0xD64B = 1`, then step UP once (the player is otherwise
+   frozen on the warp tile). `PLAYER_ENTERS` auto-walks BLUE's intro → battle.
+3. Poke `wRivalStarter = 0xD714 = 1` (Jolteon variant) BEFORE the intro completes, else
+   `wTrainerNo`=0 loads the garbage byte before `Rival3Data` (a lvl-13 Psyduck).
+
+Key Yellow addresses (empirically confirmed — naive `wram.asm` byte-counting undercounts
+because `flag_array N` macros allocate `ceil(N/8)` bytes, e.g. `wToggleableObjectFlags
+flag_array $100` = 32 bytes): `wChampionsRoomCurScript=$D64B`, `wRivalStarter=$D714`.
+
+Winning the fight: poke Starmie's active move slot-1 = Psychic (`wBattleMonMoves[0]=$D01B`
+= `$5E`) so a dense auto-A (`2 A / 13 -`) sweeps with STAB Psychic (neutral, no immunity on
+all 6). **Alakazam has Recover** (out-heals Psychic → permanent stall) and Exeggutor is a
+slow high-SpDef wall; for those, savestate when active and poke `wEnemyMonHP` (`$CFE5`, BE)
+low. Note: pumping `wBattleMonSpecial` (`$D02A`) does NOT raise damage (recomputed each
+turn). After the last KO the OAK→Hall-of-Fame sequence is scripted; advance with paced A and
+the player-follows-Oak sim-joypad walks you into the HoF warp → map `$76`.
+
+Deliverable: `examples/yellow_champion_hall_of_fame.mp4` (Champion victory → OAK → Hall of
+Fame → team registration).
