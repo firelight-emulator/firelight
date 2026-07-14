@@ -45,9 +45,17 @@ Run the units: `cmake -B build -DFL_BUILD_TAS=ON && ninja check` then `ctest`
 These require the render thread and QML engine and can't be verified in a headless
 tree; they are the next slice of Phase 1:
 
-1. **Command-queue integration** — TAS command types on `EmulatorItemRenderer` +
-   an `m_tasActive` gate on `EmulatorItem`'s pacing timer, pinning
-   `playbackMultiplier = 1`, so exactly one frame advances per step.
+1. **Command-queue integration** — the frame-advance primitive is **done +
+   runtime-verified**: `EmulatorItemRenderer`'s `TasStepFrame` command advances the
+   live game exactly one frame even while paused (render() honors it ahead of the
+   pause skip), and `EmulatorItem::setTasActive()` gates the pacing thread (atomic
+   `m_tasActive`) + pins single speed so the TAS layer is the sole frame driver.
+   Verified on Pokémon Yellow (mGBA/Vulkan): engaging TAS froze the game (no
+   free-run) and per-step advances moved it frame-by-frame. What remains here is
+   wiring the TAS Studio's transport to `tasStepFrame()`/`setTasActive()`, installing
+   the `MovieInputProvider` + `setTasMode(true)` on the live core, and record/replay/
+   seek over the live game (a render-thread `TasSession` reached through these
+   commands, with movie/state synced to the GUI-side model via signals).
 2. **`PianoRollView`** — the model (`PianoRollModel`), the facade (`QtTasStudioProxy`),
    and the QML screen (`qml/screens/TasStudioScreen.qml`) are **built, routed, and
    runtime-verified**: reachable via the `enableTasStudio`-gated nav entry
