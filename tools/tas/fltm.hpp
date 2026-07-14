@@ -29,12 +29,18 @@ namespace tas {
 using InputFrame = firelight::input::InputFrame;
 
 struct Movie {
-  static constexpr uint32_t kVersion = 2;
+  // v3 (roadmap Phase 1 "sync manifest"): adds coreDllHash so playback can gate on
+  // the exact core build. Loading is backward-compatible (v1/v2 have no hash).
+  static constexpr uint32_t kVersion = 3;
 
   std::string coreName, coreVersion, romName;
   uint64_t romHash = 0; // FNV-1a of ROM bytes (tool-local identity check)
   uint32_t romSize = 0;
   uint32_t rerecordCount = 0;
+  // FNV-1a-64 (hex) of the core .dll/.so bytes this movie was authored against, or
+  // empty for pre-v3 movies. mGBA 0.11-dev is a moving target whose savestate format
+  // shifts between builds; a hash mismatch means a replay can silently desync.
+  std::string coreDllHash;
   // Start state: 0 = power-on (input plays from boot); 1 = savestate anchor
   // (restore `startState` right after load_game, then input plays from there).
   uint8_t startMode = 0;
@@ -107,6 +113,7 @@ inline bool Movie::save(const std::string &path) const {
   detail::put(o, romHash);
   detail::put(o, romSize);
   detail::put(o, rerecordCount);
+  detail::puts(o, coreDllHash); // v3
   o.push_back(startMode);
   if (startMode == 1) {
     detail::put(o, static_cast<uint32_t>(startState.size()));
@@ -150,6 +157,9 @@ inline bool Movie::load(const std::string &path) {
   romHash = r.u64();
   romSize = r.u32();
   rerecordCount = r.u32();
+  coreDllHash.clear();
+  if (ver >= 3)
+    coreDllHash = r.str();
   startMode = 0;
   startState.clear();
   if (ver >= 2) {
@@ -178,6 +188,30 @@ inline bool Movie::load(const std::string &path) {
     checkpoints.emplace_back(fr, h);
   }
   return r.ok;
+}
+
+// FNV-1a-64 of a file's bytes, as a lowercase 16-char hex string; "" if unreadable.
+// The sync-manifest core fingerprint (see Movie::coreDllHash): cheap, dependency-
+// free, and collision-negligible for drift detection (not a security hash).
+inline std::string hashCoreFile(const std::string &path) {
+  std::ifstream f(path, std::ios::binary);
+  if (!f)
+    return {};
+  uint64_t h = 1469598103934665603ull; // FNV offset basis
+  char buf[65536];
+  while (f) {
+    f.read(buf, sizeof(buf));
+    const std::streamsize got = f.gcount();
+    for (std::streamsize i = 0; i < got; ++i) {
+      h ^= static_cast<uint8_t>(buf[i]);
+      h *= 1099511628211ull; // FNV prime
+    }
+  }
+  static const char *hex = "0123456789abcdef";
+  std::string out(16, '0');
+  for (int i = 0; i < 16; ++i)
+    out[15 - static_cast<std::size_t>(i)] = hex[(h >> (4 * i)) & 0xF];
+  return out;
 }
 
 } // namespace tas

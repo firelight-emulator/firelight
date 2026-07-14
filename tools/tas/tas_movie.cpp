@@ -461,6 +461,8 @@ void stampAndCheckpoint(const char *corePath, Movie &m, uint32_t every) {
   g.get_system_info(&si);
   m.coreName = si.library_name ? si.library_name : "?";
   m.coreVersion = si.library_version ? si.library_version : "?";
+  // Sync-manifest v3: fingerprint the exact core build this movie is authored on.
+  m.coreDllHash = tas::hashCoreFile(corePath);
   const uint32_t n = static_cast<uint32_t>(m.input.size());
   m.checkpoints.clear();
   for (g_frame = 0; g_frame < n; ++g_frame) {
@@ -1074,6 +1076,15 @@ int main(int argc, char **argv) {
                 m.input.size(), m.checkpoints.size(), m.romName.c_str());
     if (m.romHash != romHash)
       std::printf("  WARNING: ROM hash mismatch (movie made for a different ROM)\n");
+    // Sync-manifest v3: warn on any core-build drift. Pre-v3 movies (empty hash)
+    // and the offline/no-core commands are unaffected.
+    if (!m.coreDllHash.empty()) {
+      const std::string liveHash = tas::hashCoreFile(corePath);
+      if (liveHash != m.coreDllHash)
+        std::printf("  WARNING: core hash mismatch (movie=%s, core=%s) -- savestates "
+                    "and replay may desync\n",
+                    m.coreDllHash.c_str(), liveHash.c_str());
+    }
   }
 
   if (cmd == "play") {
@@ -1095,6 +1106,12 @@ int main(int argc, char **argv) {
   }
 
   if (cmd == "verify") {
+    // Sync-manifest v3 hard gate: verify is the determinism gate, so a core-build
+    // mismatch fails it (bypass with TAS_IGNORE_CORE_HASH). Pre-v3 movies (empty
+    // hash) are unaffected, so the portable checkpoint-free gate keeps passing.
+    bool coreMatch = true;
+    if (!m.coreDllHash.empty() && !std::getenv("TAS_IGNORE_CORE_HASH"))
+      coreMatch = (tas::hashCoreFile(corePath) == m.coreDllHash);
     std::vector<std::pair<uint32_t, uint64_t>> a, b;
     replayTo(corePath, UINT32_MAX, &a, every);
     closeCore();
@@ -1107,7 +1124,9 @@ int main(int argc, char **argv) {
     std::printf("\ndeterminism (replay x2) : %s\n", det ? "PASS" : "FAIL");
     std::printf("checkpoint match        : %s\n",
                 m.checkpoints.empty() ? "(none)" : (cp ? "PASS" : "FAIL"));
-    const bool ok = det && cp;
+    std::printf("core hash match         : %s\n",
+                m.coreDllHash.empty() ? "(none)" : (coreMatch ? "PASS" : "FAIL"));
+    const bool ok = det && cp && coreMatch;
     std::printf("\n%s\n", ok ? "MOVIE VERIFIED" : "MOVIE FAILED VERIFICATION");
     return ok ? 0 : 4;
   }
