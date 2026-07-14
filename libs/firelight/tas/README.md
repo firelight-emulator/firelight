@@ -23,6 +23,10 @@ Plus, outside this lib:
   step (suppresses the wall-clock autosave); `setAutosaveIntervalSeconds()` tunes it.
 - **`tests/app/tas`**: `MovieInputProvider` proven against the real `CoreInputRouter`,
   and TAS-mode proven against a real `EmulatorInstance` (via `fl_test`).
+- **`tools/tas/tas_app_equiv`**: the app-vs-CLI framebuffer **equivalence gate**
+  (critical path #2) — replays a movie through the real app `libretro::Core` and
+  asserts each frame's hash matches the CLI oracle's checkpoints. Its own executable
+  (linking `firelight_emulation_lib`) run as a `ctest` under `FL_BUILD_TAS`.
 
 Run the units: `cmake -B build -DFL_BUILD_TAS=ON && ninja check` then `ctest`
 (`firelight_tas_test` = 25 cases; the `tas_*` cases live in `fl_test`).
@@ -51,18 +55,14 @@ MSYS2 mingw64 **g++** (both standalone and via the configured Ninja tree, run th
 here) — all code is standard C++20, so risk is low; the first `tas-testing` CI run is
 the confirmation.
 
-The **app-vs-CLI framebuffer/RAM equivalence** gate (replaying a real mGBA core
-through the app's `libretro::Core` and hashing frames against the CLI oracle's stored
-checkpoints) is **not** done, but was investigated: a real mGBA core **does load
-headlessly** in the app `Core` wrapper (constructor + `init()` reach "Libretro core
-loaded"), so a hashing `IVideoDataReceiver` (mGBA is `RETRO_HW_CONTEXT_NONE`) is the
-right shape and the leak-to-avoid-teardown-exit trick works. The blocker: a *minimal*
-in-process harness (stub config provider + hashing video receiver, **no audio
-receiver**) **segfaults during init/loadGame** — the app `Core` expects more of the
-context `EmulationService` normally wires (audio receiver / DRC, HW-render
-negotiation). So the gate needs either that full context assembled headlessly (a
-stub audio output + pointer provider) or an out-of-process replay harness that
-tolerates the real-core exit. This is the next hard item on the critical path.
-A stronger fixture also wants a **PPU-rendering** test ROM — `tests/testrom.gb` never
-drives the LCD, so its framebuffer is constant (equivalence over it checks
-format/pitch/dimension parity but not changing content).
+The **app-vs-CLI framebuffer equivalence** gate (critical path #2) is **done**
+(`tools/tas/tas_app_equiv`): the real mGBA core loads headlessly in the app `Core`
+(a hashing `IVideoDataReceiver` suffices — mGBA is `RETRO_HW_CONTEXT_NONE`; the Core
+is leaked to avoid the real-DLL teardown-exit; the earlier segfault was a null
+`audioReceiver`, since `loadGame` calls `audioReceiver->initialize()` — fixed with a
+`NullAudioOutput` stub). It PASSES on Windows/g++ and catches a corrupted checkpoint.
+Two follow-ups remain: (1) `tests/testrom.gb` renders a **constant** framebuffer, so
+the gate checks format/pitch/dimension/hash parity but not changing content — a
+PPU-rendering test ROM would strengthen it; (2) the fixture is Windows-CLI-authored,
+so the ctest runs on Windows only (the exe still builds on Linux) — a Linux-authored
+fixture would extend the run to the Linux runner.
