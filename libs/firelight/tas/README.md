@@ -32,6 +32,10 @@ Plus, outside this lib:
   isCurrent / isKeyframe roles) with `toggleButton()` and range `paintButton()`, every
   edit routed through `TasSession::editFrame`. The substance of the piano-roll,
   unit-tested headlessly (`QApplication`, like the other `gui/models` tests).
+- **`src/gui/qt_tas_studio_proxy`** (`QtTasStudioProxy`): the QML-facing facade —
+  owns the session + model and exposes transport / editing / playhead state to QML
+  (`qmlRegisterType` as `TasStudioController`). Its C++ logic is unit-tested (6 cases);
+  `loadDemo()` gives the UI content without a running game.
 
 Run the units: `cmake -B build -DFL_BUILD_TAS=ON && ninja check` then `ctest`
 (`firelight_tas_test` = 25 cases; the `tas_*` cases live in `fl_test`).
@@ -44,10 +48,14 @@ tree; they are the next slice of Phase 1:
 1. **Command-queue integration** — TAS command types on `EmulatorItemRenderer` +
    an `m_tasActive` gate on `EmulatorItem`'s pacing timer, pinning
    `playbackMultiplier = 1`, so exactly one frame advances per step.
-2. **`PianoRollView`** — the model (`PianoRollModel`) is **done + tested**; what
-   remains is the QML `TableView` presentation over it and a `QtTasStudioProxy` that
-   owns the session, exposes the model + play/step/seek to QML, and (in-app) submits
-   frame-advance through the render-thread command queue. QML-runtime-bound.
+2. **`PianoRollView`** — the model (`PianoRollModel`), the facade (`QtTasStudioProxy`),
+   and the QML screen (`qml/screens/TasStudioScreen.qml`, behind the
+   `enableTasStudio` flag) are **scaffolded**: the C++ is unit-tested and the QML is
+   qmllint-clean + registration-compiled. What remains is QML-runtime-bound —
+   verifying actual rendering/interaction in the GUI build, routing the screen into
+   app navigation, and (critically) making the proxy drive the LIVE game's
+   `EmulatorInstance::runFrame` through the render-thread command queue instead of the
+   `loadDemo()` stand-in.
 3. **Docked live video + held-buttons overlay** — a `SplitView` restructure of
    `NewEmulatorPage.qml` behind an `enableTasStudio` feature flag (OFF by default).
 
