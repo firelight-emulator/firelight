@@ -341,6 +341,12 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         m_shouldRunFrame = true;
         break;
 
+      case TasStepFrame:
+        // Advance exactly one frame, even while paused (render() honors this).
+        m_shouldRunFrame = true;
+        m_tasStepPending = true;
+        break;
+
       case WriteRewindPoint: {
         if (m_paused)
           break;
@@ -563,8 +569,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
-  // If we're paused, display the pause image and skip running a frame
-  if (m_paused) {
+  // If we're paused, display the pause image and skip running a frame — unless a
+  // TAS single-step was requested, which advances exactly one frame while paused.
+  if (m_paused && !m_tasStepPending) {
     displayPauseImage(cb);
     return;
   }
@@ -574,12 +581,15 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
-  if (m_currentWaitFrames > 0) {
+  // A TAS step ignores the frame-skip/wait pacing (it is exactly one frame).
+  if (m_currentWaitFrames > 0 && !m_tasStepPending) {
     m_currentWaitFrames--;
     return;
   }
   m_currentWaitFrames = m_waitFrames;
   m_shouldRunFrame = false;
+  const bool tasStep = m_tasStepPending;
+  m_tasStepPending = false;
 
   // ------------------------------------------------------------
   // If we made it here, we're going to run at least one frame
@@ -592,7 +602,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
                   QRhiCommandBuffer::ExternalContent);
     m_currentUpdateBatch = batch;
     cb->beginExternal();
-    if (m_playbackMultiplier > 1) {
+    if (m_playbackMultiplier > 1 && !tasStep) {
       for (int i = 0; i < static_cast<int>(m_playbackMultiplier); i++)
         m_emulatorInstance->runFrame();
     } else {
@@ -615,7 +625,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = nullptr;
     cb->endPass(batch);
   } else if (m_vulkanRenderer) {
-    m_vulkanRenderer->renderFrame(m_emulatorInstance, m_playbackMultiplier,
+    m_vulkanRenderer->renderFrame(m_emulatorInstance,
+                                  tasStep ? 1.0f : m_playbackMultiplier,
                                   colorTexture()->pixelSize(), rhi());
 
     if (m_vulkanRenderer->isFirstFrameReady() &&

@@ -78,6 +78,10 @@ public:
   // frame-pacing thread.
   std::atomic<bool> m_paused = false;
 
+  // TAS mode gate. Written on the GUI thread (setTasActive), read on the
+  // frame-pacing thread — when true the pacer submits no RunFrame commands.
+  std::atomic<bool> m_tasActive = false;
+
   uint m_coreBaseWidth = 0;
   uint m_coreBaseHeight = 0;
   uint m_coreMaxWidth = 0;
@@ -116,6 +120,15 @@ public:
   Q_INVOKABLE void createRewindPoints();
 
   Q_INVOKABLE void loadRewindPoint(int index);
+
+  // --- TAS harness support (roadmap Phase 1) ---
+  // Advance the emulator exactly one frame via the render-thread command queue,
+  // even while paused — the primitive the TAS Studio's frame-step drives.
+  Q_INVOKABLE void tasStepFrame();
+  // When active, the frame-pacing thread stops submitting free-running RunFrame
+  // commands, so the TAS layer is the sole driver of frame advance. Also pauses.
+  Q_INVOKABLE void setTasActive(bool active);
+  [[nodiscard]] bool tasActive() const { return m_tasActive.load(); }
 
   [[nodiscard]] float playbackMultiplier() const {
     return m_playbackMultiplier;

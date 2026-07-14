@@ -107,7 +107,10 @@ public:
     SetPlaybackMultiplier,
     CaptureScreenshot,
     CaptureVideoClip,
-    RunFrame
+    RunFrame,
+    // TAS: advance exactly one frame even while paused (the render-thread
+    // primitive the TAS Studio's frame-step drives). See render()/synchronize().
+    TasStepFrame
   };
 
   struct EmulatorCommand {
@@ -166,6 +169,9 @@ private:
 
   bool m_quitting = false;
   bool m_shouldRunFrame = true;
+  // TAS single-step: when set, render() runs exactly one frame even though the
+  // item is paused, then clears the flag (back to the held pause image).
+  bool m_tasStepPending = false;
 
   QThread m_emulatorThread;
   QChronoTimer m_emulatorTimer{};

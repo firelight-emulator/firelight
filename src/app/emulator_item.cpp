@@ -86,6 +86,11 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   m_emulationTimer.setTimerType(Qt::PreciseTimer);
 
   connect(&m_emulationTimer, &QChronoTimer::timeout, [this] {
+    // TAS mode: the TAS layer drives frame advance explicitly (tasStepFrame), so
+    // the pacer must not submit any free-running frames.
+    if (m_tasActive.load()) {
+      return;
+    }
     // Audio-driven pacing: submit a frame whenever the audio buffer has room to
     // accept another, instead of spinning to a wall-clock target. The audio
     // device's consumption rate becomes the master clock.
@@ -559,6 +564,25 @@ void EmulatorItem::mouseReleaseEvent(QMouseEvent *event) {
   feedPointer(event->position());
   getInputService()->updateMouseButtons(m_mousePressed, m_mouseRightPressed,
                                         m_mouseMiddlePressed);
+}
+
+void EmulatorItem::tasStepFrame() {
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::TasStepFrame});
+    // Wake the render loop so synchronize() drains the command promptly (the
+    // pacer is idle while paused / under TAS control).
+    QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+  }
+}
+
+void EmulatorItem::setTasActive(const bool active) {
+  m_tasActive = active;
+  // Under TAS control the game must not free-run and must advance one frame at a
+  // time at single speed; releasing control resumes normal playback.
+  if (active) {
+    setPlaybackMultiplier(1);
+  }
+  setPaused(active);
 }
 
 void EmulatorItem::startGame() {
