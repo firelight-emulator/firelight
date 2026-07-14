@@ -211,6 +211,8 @@ add_library(firelight_lib
         src/gui/models/core_options_model.hpp
         src/gui/models/emulation_settings_model.cpp
         src/gui/models/emulation_settings_model.hpp
+        src/gui/models/piano_roll_model.cpp
+        src/gui/models/piano_roll_model.hpp
         src/gui/qt_audio_settings_proxy.cpp
         src/gui/qt_audio_settings_proxy.hpp
         src/gui/qt_core_registry_proxy.cpp
@@ -320,6 +322,7 @@ target_link_libraries(firelight_lib PUBLIC
         spdlog::spdlog
         cpr::cpr
         firelight_emulation_lib
+        firelight_tas
         firelight_achievements
         firelight_activity
         firelight_settings
@@ -519,6 +522,7 @@ add_executable(fl_test
         tests/app/tas/tas_input_playback_test.cpp
         tests/app/tas/tas_emulator_instance_test.cpp
         tests/app/tas/tas_session_emulator_test.cpp
+        tests/app/tas/piano_roll_model_test.cpp
         tests/app/achievements/sqlite_achievement_repository_test.cpp
         tests/app/achievements/achievement_service_test.cpp
         tests/app/activity/sqlite_activity_log_test.cpp
