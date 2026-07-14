@@ -49,13 +49,15 @@ tree; they are the next slice of Phase 1:
    an `m_tasActive` gate on `EmulatorItem`'s pacing timer, pinning
    `playbackMultiplier = 1`, so exactly one frame advances per step.
 2. **`PianoRollView`** — the model (`PianoRollModel`), the facade (`QtTasStudioProxy`),
-   and the QML screen (`qml/screens/TasStudioScreen.qml`, behind the
-   `enableTasStudio` flag) are **scaffolded**: the C++ is unit-tested and the QML is
-   qmllint-clean + registration-compiled. What remains is QML-runtime-bound —
-   verifying actual rendering/interaction in the GUI build, routing the screen into
-   app navigation, and (critically) making the proxy drive the LIVE game's
-   `EmulatorInstance::runFrame` through the render-thread command queue instead of the
-   `loadDemo()` stand-in.
+   and the QML screen (`qml/screens/TasStudioScreen.qml`) are **built, routed, and
+   runtime-verified**: reachable via the `enableTasStudio`-gated nav entry
+   (`Main3.qml` `/tas-studio` route), and confirmed in the running Qt/Vulkan app to
+   render the piano-roll (playhead, greenzone-keyframe marker, per-button cells over
+   the `loadDemo()` movie) and respond to controls live (Step-Forward advances the
+   playhead + frame counter through the proxy → session → model → view). The one piece
+   still remaining is **making the proxy drive the LIVE game's
+   `EmulatorInstance::runFrame` through the render-thread command queue** instead of
+   the `loadDemo()` stand-in (item 1 below is its prerequisite).
 3. **Docked live video + held-buttons overlay** — a `SplitView` restructure of
    `NewEmulatorPage.qml` behind an `enableTasStudio` feature flag (OFF by default).
 
