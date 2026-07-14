@@ -114,7 +114,7 @@ Popup {
             Text {
                 Layout.fillWidth: true
                 text: root.description
-                font.pointSize: 10
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.family: Constants.regularFontFamily
                 wrapMode: Text.WordWrap
                 elide: Text.ElideRight
@@ -136,7 +136,7 @@ Popup {
                         id: first
                         text: root.current
                         font.family: Constants.regularFontFamily
-                        font.pointSize: 16
+                        font.pixelSize: AppStyle.fontSizeLarge
                         font.weight: Font.DemiBold
                         color: "white"
                         verticalAlignment: Text.AlignBottom
@@ -175,7 +175,7 @@ Popup {
                         text: " /"
                         height: first.height
                         font.family: Constants.regularFontFamily
-                        font.pointSize: 15
+                        font.pixelSize: AppStyle.fontSizeLarge
                         color: "#aaaaaa"
                         verticalAlignment: Text.AlignBottom
                     }
@@ -184,7 +184,7 @@ Popup {
                         text: root.desired
                         height: first.height
                         font.family: Constants.regularFontFamily
-                        font.pointSize: 12
+                        font.pixelSize: AppStyle.fontSizeMedium
                         color: "#aaaaaa"
                         verticalAlignment: Text.AlignBottom
                     }

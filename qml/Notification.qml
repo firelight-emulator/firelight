@@ -42,7 +42,7 @@ Rectangle {
             // anchors.leftMargin: 10
 
             text: "P1 controller connected"
-            font.pointSize: 13
+            font.pixelSize: AppStyle.fontSizeMedium
             color: "white"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -64,7 +64,7 @@ Rectangle {
             // anchors.leftMargin: 10
 
             text: "ain't that neat"
-            font.pointSize: 8
+            font.pixelSize: AppStyle.fontSizeSmall
             color: "white"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

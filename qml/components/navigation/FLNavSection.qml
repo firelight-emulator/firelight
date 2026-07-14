@@ -15,7 +15,7 @@ FocusScope {
     Text {
         id: titleText
         text: root.title
-        font.pixelSize: 15
+        font.pixelSize: AppStyle.fontSizeMedium
         // leftPadding: 12
         font.weight: Font.Bold
         font.family: Constants.regularFontFamily

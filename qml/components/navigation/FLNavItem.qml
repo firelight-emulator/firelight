@@ -42,7 +42,7 @@ Button {
             id: labelText
             opacity: parent.width > 140 ? 1 : 0
             text: root.label
-            font.pixelSize: 17
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             font.family: Constants.regularFontFamily
             color: root.checked ? "#FFFFFF" : "#a8a8a8"

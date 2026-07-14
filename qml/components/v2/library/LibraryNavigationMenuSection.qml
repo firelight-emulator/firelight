@@ -72,7 +72,7 @@ FocusScope {
                     color: Theme.textPrimary
                     opacity: 0.8
                     font.family: Constants.regularFontFamily
-                    font.pointSize: 11
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.weight: Font.DemiBold
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter

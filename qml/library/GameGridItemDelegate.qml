@@ -141,7 +141,7 @@ FocusScope {
             }
             Text {
                 text: myDelegate.model.displayName
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Bold
                 // font.family: Constants.regularFontFamily
                 color: "white"
@@ -153,7 +153,7 @@ FocusScope {
 
             Text {
                 text: myDelegate.model.platformId
-                font.pointSize: 10
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.Medium
                 // font.family: Constants.regularFontFamily
                 color: "#C2BBBB"

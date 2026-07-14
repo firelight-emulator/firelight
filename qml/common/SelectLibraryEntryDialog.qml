@@ -26,7 +26,7 @@ Dialog {
         font.family: Constants.regularFontFamily
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pointSize: 11
+        font.pixelSize: AppStyle.fontSizeMedium
         leftPadding: 10
         rightPadding: 10
         topPadding: 8
@@ -61,7 +61,7 @@ Dialog {
                 font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
             }
 
             onClicked: function () {
@@ -86,7 +86,7 @@ Dialog {
                 font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
             }
 
             onClicked: function () {

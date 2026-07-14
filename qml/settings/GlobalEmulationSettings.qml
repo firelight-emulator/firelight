@@ -16,7 +16,7 @@ FocusScope {
         Text {
             Layout.fillWidth: true
             text: qsTr("Emulation")
-            font.pixelSize: 26
+            font.pixelSize: AppStyle.fontSizeLarge
             font.family: Constants.regularFontFamily
             font.weight: Font.Bold
             color: Theme.textPrimary
@@ -25,7 +25,7 @@ FocusScope {
         Text {
             Layout.fillWidth: true
             text: qsTr("Global defaults for all games. Consoles and individual games can override these.")
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.Normal
             wrapMode: Text.WordWrap

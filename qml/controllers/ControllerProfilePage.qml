@@ -191,7 +191,7 @@ Pane {
                 header: Text {
                     text: "Shortcuts"
                     color: Theme.textPrimary
-                    font.pixelSize: 20
+                    font.pixelSize: AppStyle.fontSizeLarge
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                     verticalAlignment: Text.AlignVCenter
@@ -272,7 +272,7 @@ Pane {
                           Layout.fillHeight: true
                           text: model.name
                           color: Theme.textPrimary
-                          font.pixelSize: 15
+                          font.pixelSize: AppStyle.fontSizeMedium
                           font.family: Constants.regularFontFamily
                           font.weight: Font.DemiBold
                           verticalAlignment: Text.AlignVCenter
@@ -282,7 +282,7 @@ Pane {
                           Layout.fillWidth: true
                           Layout.alignment: Qt.AlignLeft
                           Layout.fillHeight: true
-                          font.pixelSize: 15
+                          font.pixelSize: AppStyle.fontSizeMedium
                           color: model.hasBinding ? "white" : ColorPalette.neutral400
                           text: model.bindingsLabel
                           font.family: Constants.regularFontFamily

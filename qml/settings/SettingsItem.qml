@@ -17,7 +17,7 @@ Rectangle {
             Text {
                 text: control.label
                 color: Theme.textPrimary
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
@@ -26,7 +26,7 @@ Rectangle {
                 Layout.fillHeight: true
                 visible: control.description !== ""
                 text: control.description
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 wrapMode: Text.WordWrap

@@ -13,12 +13,9 @@ Button {
         radius: height / 2
     }
 
-    contentItem: Text {
-        font.family: Constants.symbolFontFamily
-        text: "\ue5d4"
+    contentItem: Icon {
+        name: "more_vert"
         color: Theme.textPrimary
-        font.pointSize: 16
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        size: 21
     }
 }

@@ -23,10 +23,16 @@ SplitView {
 
     handle: Item {
         SplitView.fillHeight: true
-        implicitWidth: 8
+        implicitWidth: 0
 
-        HoverHandler {
-            id: handleHoverHandler
+        containmentMask: Item {
+            height: splitView.height
+            width: 8
+            x: -4
+
+            HoverHandler {
+                id: handleHoverHandler
+            }
         }
 
         Rectangle {
@@ -53,7 +59,7 @@ SplitView {
         SplitView.preferredWidth: 280
 
         background: Rectangle {
-            color: Theme.glassElevated
+            color: Theme.glass
             topLeftRadius: 8
             bottomLeftRadius: 8
         }
@@ -73,6 +79,7 @@ SplitView {
         }
 
         contentItem: ColumnLayout {
+            spacing: 0
             FocusScope {
                 id: folderListContainer
                 Layout.fillWidth: true
@@ -89,18 +96,16 @@ SplitView {
 
                     RowLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 32
+                        Layout.preferredHeight: 48
                         Layout.rightMargin: 12
                         spacing: 12
 
                         Text {
                             Layout.fillHeight: true
-                            Layout.topMargin: 10
-                            Layout.leftMargin: 16
-                            text: "Your stuff"
+                            text: "Library"
                             color: "#ffffff"
                             font.family: Constants.regularFontFamily
-                            font.pointSize: 12
+                            font.pixelSize: AppStyle.fontSizeMedium
                             font.weight: Font.DemiBold
                             horizontalAlignment: Text.AlignLeft
                             verticalAlignment: Text.AlignVCenter
@@ -114,7 +119,6 @@ SplitView {
                         FLIcon {
                             id: addFolderIcon
                             Layout.fillHeight: true
-                            Layout.topMargin: 13
                             icon: "add"
                             size: 26
                             color: "#ffffff"
@@ -147,102 +151,44 @@ SplitView {
                         }
                     }
 
-                    LibraryNavigationMenuSection {
-                        id: libraryMenuSection
-                        Layout.fillWidth: true
-                        Layout.topMargin: 8
-
-                        title: ""
-                        model: [
-                            { displayName: "All games", iconName: "browse" },
-                            { displayName: "Favorites", iconName: "favorite" }
-                        ]
-                        focus: true
-
-                        onActiveFocusChanged: {
-                            if (activeFocus) {
-                                platformMenuSection.currentIndex = 0
-                                folderMenuSection.currentIndex = 0
-                            }
-                        }
-
-                        collapsible: false
-
-                        KeyNavigation.down: platformMenuSection.collapsed ? folderMenuSection.collapsed ? null : folderMenuSection : platformMenuSection
-
-                        delegate: LibraryNavigationMenuItem {
-                            id: menuItem
-                            required property var model
-
-                            iconSource: "qrc:/icons/" + model.iconName
-                            displayText: model.displayName
-                            numberOfItems: {
-                                if (model.displayName === "All games") {
-                                    return LibraryEntryModel.rowCount()
-                                } else if (model.displayName === "Favorites") {
-                                    return LibraryEntryModel.numFavorites
-                                } else {
-                                    return 0
-                                }
-                            }
-
-                            width: ListView.view.width
-                            ButtonGroup.group: libraryButtonGroup
-
-                            onCheckedChanged: {
-                                if (menuItem.checked) {
-                                    if (model.displayName === "All games") {
-                                        gameView.clearFilters();
-                                    } else if (model.displayName === "Favorites") {
-                                        gameView.filterByFavorites();
-                                    }
-                                }
-                            }
-                        }
-                    }
-
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.leftMargin: 8
-                        Layout.rightMargin: 8
-                        implicitHeight: 36
-                        radius: 4
-                        color: Qt.rgba(1, 1, 1, 0.04)
+                        implicitHeight: 1
+                        color: "#123123"
                     }
                 }
-                Rectangle {
-                    anchors.left: folderList.left
-                    anchors.top: folderList.top
-                    anchors.right: folderList.right
-                    height: 40
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop {
-                            position: 0.0; color: Theme.surface
-                        }
-                        GradientStop {
-                            position: 1.0; color: "transparent"
-                        }
-                    }
-                    z: 5
-                    opacity: folderList.contentY > 16 ? 1 : 0
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 160
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
-                    // contentItem: Rectangle {
-                    //     color: "#ffffff"
-                    //     radius: 4
-                    //     opacity: 0.12
-                    // }
-                }
+                // Rectangle {
+                //     anchors.left: folderList.left
+                //     anchors.top: folderList.top
+                //     anchors.right: folderList.right
+                //     height: 40
+                //     gradient: Gradient {
+                //         orientation: Gradient.Vertical
+                //         GradientStop {
+                //             position: 0.0; color: Theme.surface
+                //         }
+                //         GradientStop {
+                //             position: 1.0; color: "transparent"
+                //         }
+                //     }
+                //     z: 5
+                //     opacity: folderList.contentY > 16 ? 1 : 0
+                //     Behavior on opacity {
+                //         NumberAnimation {
+                //             duration: 160
+                //             easing.type: Easing.InOutQuad
+                //         }
+                //     }
+                //     // contentItem: Rectangle {
+                //     //     color: "#ffffff"
+                //     //     radius: 4
+                //     //     opacity: 0.12
+                //     // }
+                // }
 
                 Flickable {
                     id: folderList
                     anchors.top: staticMenuColumn.bottom
-                    anchors.topMargin: 16
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
@@ -261,6 +207,59 @@ SplitView {
                         spacing: 0
 
                         anchors.fill: parent
+
+                        LibraryNavigationMenuSection {
+                            id: libraryMenuSection
+                            Layout.fillWidth: true
+
+                            title: ""
+                            model: [
+                                { displayName: "All games", iconName: "browse" },
+                                { displayName: "Favorites", iconName: "favorite" }
+                            ]
+                            focus: true
+
+                            onActiveFocusChanged: {
+                                if (activeFocus) {
+                                    platformMenuSection.currentIndex = 0
+                                    folderMenuSection.currentIndex = 0
+                                }
+                            }
+
+                            collapsible: false
+
+                            KeyNavigation.down: platformMenuSection.collapsed ? folderMenuSection.collapsed ? null : folderMenuSection : platformMenuSection
+
+                            delegate: LibraryNavigationMenuItem {
+                                id: menuItem
+                                required property var model
+
+                                iconSource: "qrc:/icons/" + model.iconName
+                                displayText: model.displayName
+                                numberOfItems: {
+                                    if (model.displayName === "All games") {
+                                        return LibraryEntryModel.rowCount()
+                                    } else if (model.displayName === "Favorites") {
+                                        return LibraryEntryModel.numFavorites
+                                    } else {
+                                        return 0
+                                    }
+                                }
+
+                                width: ListView.view.width
+                                ButtonGroup.group: libraryButtonGroup
+
+                                onCheckedChanged: {
+                                    if (menuItem.checked) {
+                                        if (model.displayName === "All games") {
+                                            gameView.clearFilters();
+                                        } else if (model.displayName === "Favorites") {
+                                            gameView.filterByFavorites();
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
                         LibraryNavigationMenuSection {
                             id: platformMenuSection
@@ -378,7 +377,7 @@ SplitView {
         // clip: true
 
         background: Rectangle {
-            color: Theme.glass
+            color: Theme.glassElevated
             topRightRadius: detailsPanel.width > 0 ? 0 : 8
             bottomRightRadius: detailsPanel.width > 0 ? 0 : 8
         }

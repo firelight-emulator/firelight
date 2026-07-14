@@ -1,15 +1,16 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
+import QtQuick.VectorImage
 
 RoundButton {
     id: control
-    height: 50
-    width: 50
-
-    icon.width: 32
-    icon.height: 32
-    icon.color: "white"
+    // height: 50
+    // width: 50
+    //
+    // icon.width: 32
+    // icon.height: 32
+    // icon.color: "white"
 
     property string tooltipText: ""
 
@@ -22,13 +23,12 @@ RoundButton {
 
     flat: true
 
-    contentItem: Image {
+    contentItem: VectorImage {
         id: iconImage
         anchors.centerIn: parent
         source: control.icon.source
-        sourceSize.width: control.icon.width
-        sourceSize.height: control.icon.height
         fillMode: Image.PreserveAspectFit
+        preferredRendererType: VectorImage.CurveRenderer
         opacity: control.enabled ? 1 : 0.5
 
         layer.enabled: true

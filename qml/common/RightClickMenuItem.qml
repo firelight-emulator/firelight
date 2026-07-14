@@ -16,18 +16,15 @@ MenuItem {
     padding: 4
     horizontalPadding: 8
 
-    Text {
+    Icon {
         id: externalIndicator
         visible: control.externalLink
         x: control.width - width
         y: control.height / 2 - height / 2
         width: parent.height - parent.padding * 2
         height: parent.height - parent.padding * 2
-        font.family: Constants.symbolFontFamily
-        font.pointSize: 12
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-        text: "\ue89e"
+        size: 16
+        name: "open_in_new"
         color: Theme.textPrimary
     }
 
@@ -96,7 +93,7 @@ MenuItem {
             hovered: renameHover.hovered
             text: control.text
             color: enabled ? renameHover.hovered ? (control.dangerous ? ColorPalette.red700 : "white") : (control.dangerous ? ColorPalette.red500 : "#dfdfdf") : "grey"
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             font.family: Constants.regularFontFamily
             // font.weight: Font.DemiBold

@@ -15,20 +15,15 @@ Button {
     contentItem: RowLayout {
         spacing: 8
 
-        Text {
+        Icon {
             id: buttonIcon
-            text: control.labelIcon
+            glyph: control.labelIcon
             visible: labelIcon !== ""
-            // width: 24
             Layout.fillHeight: true
 
-            font.family: Constants.symbolFontFamily
-            font.pixelSize: 24
-            font.weight: Font.ExtraLight
-            // font.variableAxes: { "FILL": 1 }
+            size: 24
+            weight: Font.ExtraLight
             color: control.enabled ? "white" : "#aaaaaa"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
         }
         Text {
             id: buttonText
@@ -36,7 +31,7 @@ Button {
             text: control.labelText
             Layout.fillHeight: true
             Layout.fillWidth: true
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
             font.family: Constants.regularFontFamily
             color: control.enabled ? "white" : "#aaaaaa"
             horizontalAlignment: Text.AlignLeft

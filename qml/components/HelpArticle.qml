@@ -31,7 +31,7 @@ Flickable {
         wrapMode: Text.WordWrap
         color: "white"
         font.family: Constants.regularFontFamily
-        font.pixelSize: 15
+        font.pixelSize: AppStyle.fontSizeMedium
         lineHeight: 1.3
         linkColor: ColorPalette.hyperlinkColor
 

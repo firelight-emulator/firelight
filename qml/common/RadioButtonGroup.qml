@@ -22,7 +22,7 @@ FocusScope {
             Layout.fillWidth: true
             text: root.label
             color: Theme.textPrimary
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             Layout.alignment: Qt.AlignLeft
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
@@ -85,7 +85,7 @@ FocusScope {
                         leftPadding: control.indicator.width + control.spacing
                         text: model.label
                         color: Theme.textPrimary
-                        font.pixelSize: 15
+                        font.pixelSize: AppStyle.fontSizeMedium
                         Layout.alignment: Qt.AlignLeft
                         font.family: Constants.regularFontFamily
                         font.weight: Font.DemiBold
@@ -97,7 +97,7 @@ FocusScope {
                         // visible: root.description !== ""
                         text: model.description
                         leftPadding: control.indicator.width + control.spacing
-                        font.pixelSize: 13
+                        font.pixelSize: AppStyle.fontSizeSmall
                         Layout.alignment: Qt.AlignLeft
                         font.family: Constants.regularFontFamily
                         // font.weight: Font.

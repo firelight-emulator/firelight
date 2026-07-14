@@ -47,10 +47,10 @@ FocusScope {
 
             IconButton {
                 id: menuButton
-                icon.width: 24
-                icon.height: 24
                 icon.source: "qrc:/icons/menu"
                 Layout.alignment: Qt.AlignVCenter
+                Layout.preferredHeight: 36
+                Layout.preferredWidth: 36
                 Layout.topMargin: 2
                 Layout.leftMargin: 6
                 // tooltipText: "Open menu"

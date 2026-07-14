@@ -20,7 +20,7 @@ BaseSettingItem {
         placeholderText: root.placeholder
         color: Theme.textPrimary
         font.family: Constants.regularFontFamily
-        font.pixelSize: 15
+        font.pixelSize: AppStyle.fontSizeMedium
         focusPolicy: Qt.ClickFocus
 
         background: Rectangle {

@@ -77,7 +77,7 @@ Popup {
 
             Text {
                 text: root.title
-                font.pointSize: 16
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 color: "white"
@@ -85,7 +85,7 @@ Popup {
 
             Text {
                 text: root.numEarnedAchievements + " of " + root.totalAchievements + " achievements earned"
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 // font.weight: Font.Light
                 color: "#bbbbbb"

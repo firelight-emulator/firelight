@@ -194,7 +194,7 @@ ListView {
                              gamesPanel.achievementColumnWidth = width
                          }
                          text: "Achievements"
-                         font.pointSize: 11
+                         font.pixelSize: AppStyle.fontSizeMedium
                          font.weight: Font.DemiBold
                          font.family: Constants.regularFontFamily
                          color: "#919191"
@@ -301,7 +301,7 @@ ListView {
                      Layout.fillHeight: true
                      Layout.verticalStretchFactor: 1
                      text: model.displayName
-                     font.pointSize: 12
+                     font.pixelSize: AppStyle.fontSizeMedium
                      font.weight: Font.DemiBold
                      font.family: Constants.regularFontFamily
                      color: "#FFFFFF"
@@ -312,7 +312,7 @@ ListView {
                      Layout.fillHeight: true
                      Layout.verticalStretchFactor: 1
                      text: model.platformId
-                     font.pointSize: 11
+                     font.pixelSize: AppStyle.fontSizeMedium
                      font.weight: Font.DemiBold
                      font.family: Constants.regularFontFamily
                      color: "#919191"
@@ -347,7 +347,7 @@ ListView {
                  Layout.minimumWidth: root.timePlayedColumnWidth
                  Layout.maximumWidth: root.timePlayedColumnWidth
                  text: "1000 hours"
-                 font.pointSize: 12
+                 font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily
                  color: "#919191"
@@ -359,7 +359,7 @@ ListView {
                  Layout.minimumWidth: root.lastPlayedColumnWidth
                  Layout.maximumWidth: root.lastPlayedColumnWidth
                  text: model.lastPlayedAt
-                 font.pointSize: 12
+                 font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily
                  color: "#919191"
@@ -372,7 +372,7 @@ ListView {
                  Layout.minimumWidth: root.achievementColumnWidth
                  Layout.maximumWidth: root.achievementColumnWidth
                  text: "19/55 achievements"
-                 font.pointSize: 12
+                 font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily
                  color: "#919191"

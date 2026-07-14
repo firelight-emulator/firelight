@@ -24,7 +24,7 @@ Pane {
         }
         Text {
             Layout.preferredHeight: 23
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
             color: Theme.textPrimary

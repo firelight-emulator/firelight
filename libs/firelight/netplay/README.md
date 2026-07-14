@@ -130,7 +130,7 @@ NetplaySession *-- SessionEvents : owns
 NetplaySession o-- SessionDescriptor : selected game
 NetplaySession o-- StreamConfig : announced
 NetplaySession ..> ControlMessage : encode/decode
-RtcTransport ..> IPeerLink : creates (Impl::Link)
+RtcTransport ..> IPeerLink : creates (Impl.Link)
 SlotTable *-- SlotAssignment : P1..P8
 IPeerLink --> ChannelKind : lanes
 NetplaySession --> GamePhase : tracks

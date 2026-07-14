@@ -55,7 +55,7 @@ BaseSettingItem {
             placeholderText: "#rrggbb"
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
             inputMask: "\\#HHHHHH"
 
             background: Rectangle {

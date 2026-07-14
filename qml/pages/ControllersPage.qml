@@ -167,7 +167,7 @@ FocusScope {
             Text {
                 text: "No controller connected"
                 color: ColorPalette.neutral500
-                font.pixelSize: 14
+                font.pixelSize: AppStyle.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 font.family: Constants.regularFontFamily
@@ -196,7 +196,7 @@ FocusScope {
                 id: playerNum
                 text: (content.index + 1)
                 color: "white"
-                font.pixelSize: 14
+                font.pixelSize: AppStyle.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 anchors.top: parent.top

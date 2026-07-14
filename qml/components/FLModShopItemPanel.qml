@@ -20,7 +20,7 @@ ColumnLayout {
         Layout.fillWidth: true
         color: Theme.textPrimary
         font.family: Constants.regularFontFamily
-        font.pixelSize: 36
+        font.pixelSize: AppStyle.fontSizeXLarge
         font.weight: Font.Black
         horizontalAlignment: Text.AlignLeft
         text: modInfo.modName
@@ -33,7 +33,7 @@ ColumnLayout {
         Layout.bottomMargin: 12
         color: Theme.textMuted
         font.family: Constants.regularFontFamily
-        font.pixelSize: 15
+        font.pixelSize: AppStyle.fontSizeMedium
         font.weight: Font.Normal
         text: modInfo.platformName
         wrapMode: Text.WordWrap
@@ -54,7 +54,7 @@ ColumnLayout {
             Layout.topMargin: 16
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             leftPadding: 12
             text: "Author"
@@ -70,7 +70,7 @@ ColumnLayout {
             contentItem: Text {
                 color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 16
+                font.pixelSize: AppStyle.fontSizeMedium
                 text: modInfo.authorName
                 // font.weight: Font.DemiBold
                 wrapMode: Text.WordWrap
@@ -90,7 +90,7 @@ ColumnLayout {
             bottomPadding: 24
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
-            font.pixelSize: 20
+            font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.DemiBold
             lineHeight: 1.2
             text: modInfo.tagline
@@ -101,7 +101,7 @@ ColumnLayout {
             Layout.fillWidth: true
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignLeft
             lineHeight: 1.2
@@ -133,7 +133,7 @@ ColumnLayout {
                 bottomPadding: 24
                 color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 20
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.weight: Font.DemiBold
                 lineHeight: 1.2
                 text: modInfo.tagline
@@ -144,7 +144,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 color: Theme.textMuted
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 16
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignLeft
                 lineHeight: 1.2
@@ -181,7 +181,7 @@ ColumnLayout {
                 Layout.topMargin: 16
                 color: Theme.textMuted
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.DemiBold
                 leftPadding: 12
                 text: "Author"
@@ -197,7 +197,7 @@ ColumnLayout {
                 contentItem: Text {
                     color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
-                    font.pixelSize: 16
+                    font.pixelSize: AppStyle.fontSizeMedium
                     text: modInfo.authorName
                     // font.weight: Font.DemiBold
                     wrapMode: Text.WordWrap
@@ -220,7 +220,7 @@ ColumnLayout {
         contentItem: Text {
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignHCenter
             text: "Trademarks, tradenames, and copyrights are property of their respective owners."

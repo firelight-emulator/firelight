@@ -3,6 +3,13 @@ import QtQuick
 pragma Singleton
 
 Item {
+    // Font size scale — device-independent px. Use these for text; never font.pointSize
+    // (pointSize renders ~25% smaller on macOS than Windows due to a 72-vs-96 logical-DPI baseline).
+    readonly property int fontSizeSmall: 13   // captions, muted/secondary labels
+    readonly property int fontSizeMedium: 16  // body / default
+    readonly property int fontSizeLarge: 22   // subtitles, section headers
+    readonly property int fontSizeXLarge: 32  // page / hero titles
+
     readonly property var windowPadding: 18
     readonly property var mainHeaderHeight: 42 + mainHeaderPadding * 2
     readonly property var mainHeaderPadding: 18
@@ -21,7 +28,7 @@ Item {
 
     readonly property var buttonStandardWidth: 200
     readonly property var buttonStandardHeight: 42
-    readonly property var buttonTextFontSize: 16
+    readonly property int buttonTextFontSize: fontSizeMedium
     readonly property var buttonTextFontWeight: Font.DemiBold
     readonly property var buttonIconSize: 24
     readonly property var buttonIconWeight: Font.Normal

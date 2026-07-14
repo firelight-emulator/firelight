@@ -72,7 +72,7 @@ BaseSettingItem {
             color: Theme.textPrimary
             elide: Text.ElideRight
             font.family: Constants.regularFontFamily
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
             verticalAlignment: Text.AlignVCenter
         }
 
@@ -106,7 +106,7 @@ BaseSettingItem {
                             text: modelData.label
                             color: Theme.textPrimary
                             font.family: Constants.regularFontFamily
-                            font.pixelSize: 14
+                            font.pixelSize: AppStyle.fontSizeSmall
                             verticalAlignment: Text.AlignVCenter
                         }
                     }

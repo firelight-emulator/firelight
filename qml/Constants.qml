@@ -18,7 +18,6 @@ Item {
     readonly property color rightClickMenuItem_HoverColor: "#3a3a3a"
     readonly property int rightClickMenuItem_BackgroundRadius: 4
     readonly property color rightClickMenuItem_TextColor: "#f1f1f1"
-    readonly property int rightClickMenuItem_textPointSize: 12
 
     readonly property color surface_color: "#121212"
 
@@ -57,7 +56,7 @@ Item {
     }
 
     readonly property string symbolFontFamily: symbols.name
-    readonly property string regularFontFamily: "Segoe UI"
+    readonly property string regularFontFamily: localFont.name
     readonly property string mainFontFamily: localFont.name
     readonly property string lightFontFamily: localFont.name
     readonly property string strongFontFamily: lexendBlack.name

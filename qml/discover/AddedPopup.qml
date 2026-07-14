@@ -32,7 +32,7 @@ Pane {
     Text {
         anchors.centerIn: parent
         text: "Added " + modName + " to library"
-        font.pointSize: 11
+        font.pixelSize: AppStyle.fontSizeMedium
         font.family: Constants.regularFontFamily
         color: "#212020"
     }

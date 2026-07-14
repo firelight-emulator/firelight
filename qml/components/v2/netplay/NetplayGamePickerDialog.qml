@@ -36,7 +36,7 @@ Dialog {
                 Text {
                     text: model.displayName
                     color: Theme.textPrimary
-                    font.pixelSize: 14
+                    font.pixelSize: AppStyle.fontSizeSmall
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }

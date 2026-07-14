@@ -56,19 +56,14 @@ Button {
     }
 
     contentItem: RowLayout {
-        Text {
+        Icon {
             visible: control.iconCode !== ""
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            text: control.iconCode
-            font.family: Constants.symbolFontFamily
-
-            font.pixelSize: AppStyle.buttonIconSize
-            font.weight: AppStyle.buttonIconWeight
+            glyph: control.iconCode
+            size: AppStyle.buttonIconSize
+            weight: AppStyle.buttonIconWeight
             color: !enabled ? AppStyle.buttonTextColorDisabled : control.activeFocus && !InputMethodManager.usingMouse ? AppStyle.buttonTextColorFocused : AppStyle.buttonTextColorInactive
-
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
         }
         Text {
             text: control.label
@@ -88,7 +83,7 @@ Button {
     Text {
         text: control.text
         visible: control.enabled && ((hover.hovered && InputMethodManager.usingMouse) || (control.activeFocus && !InputMethodManager.usingMouse)) && control.text
-        font.pixelSize: 15
+        font.pixelSize: AppStyle.fontSizeMedium
         font.family: Constants.regularFontFamily
         font.weight: Font.Normal
         color: Theme.textPrimary

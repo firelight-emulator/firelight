@@ -81,7 +81,7 @@ Pane {
                 id: titleText
                 Layout.fillWidth: true
                 text: row.model.name
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
@@ -94,7 +94,7 @@ Pane {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 text: row.model.description
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 wrapMode: Text.WordWrap
                 elide: Text.ElideRight
@@ -117,7 +117,7 @@ Pane {
 
             Text {
                 text: "Not earned"
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 visible: !row.model.earned
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Normal
@@ -127,7 +127,7 @@ Pane {
             Text {
                 text: "Earned on"
                 visible: row.model.earned
-                font.pointSize: 10
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Normal
                 color: "white"
@@ -136,7 +136,7 @@ Pane {
             Text {
                 text: row.model.earned_date_hardcore
                 visible: row.model.earned
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 color: "white"

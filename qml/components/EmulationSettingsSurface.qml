@@ -82,7 +82,7 @@ FocusScope {
                 color: Theme.textPrimary
                 leftPadding: 8
                 topPadding: 8
-                font.pixelSize: 16
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
             }
@@ -94,7 +94,7 @@ FocusScope {
                 text: qsTr("These are the core's raw options. They appear after a game on this console has run at least once.")
                 color: Theme.textMuted
                 wrapMode: Text.WordWrap
-                font.pixelSize: 14
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Medium
             }
@@ -116,7 +116,7 @@ FocusScope {
                     leftPadding: 8
                     color: Theme.textPrimary
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 15
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                 }
@@ -145,7 +145,7 @@ FocusScope {
                             text: modelData.label
                             color: Theme.textPrimary
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 16
+                            font.pixelSize: AppStyle.fontSizeMedium
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
                         }
@@ -153,7 +153,7 @@ FocusScope {
                             rightPadding: 8
                             text: "›"
                             color: Theme.textMuted
-                            font.pixelSize: 20
+                            font.pixelSize: AppStyle.fontSizeLarge
                         }
                     }
                     onClicked: coreOptionsModel.categoryFilter = modelData.key

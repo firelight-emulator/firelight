@@ -48,7 +48,7 @@ Pane {
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                 text: "Activity"
                                 color: Theme.textPrimary
-                                font.pointSize: 13
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 font.weight: Font.DemiBold
                                 verticalAlignment: Text.AlignVCenter
                                 horizontalAlignment: Text.AlignLeft
@@ -113,7 +113,7 @@ Pane {
                                 width: 180
                                 text: ActivityBucketsModel.get(root.currentIndex).label ?? ""
                                 color: Theme.textPrimary
-                                font.pointSize: 13
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 font.weight: Font.Medium
                                 verticalAlignment: Text.AlignVCenter
                                 horizontalAlignment: Text.AlignHCenter
@@ -195,7 +195,7 @@ Pane {
                                             opacity: 0.5
                                             font.family: Constants.regularFontFamily
                                             font.weight: Font.Normal
-                                            font.pointSize: 12
+                                            font.pixelSize: AppStyle.fontSizeMedium
                                             text: modelData
                                         }
 
@@ -278,7 +278,7 @@ Pane {
 
                                                 Text {
                                                     text: "Games played during this hour:"
-                                                    font.pointSize: 12
+                                                    font.pixelSize: AppStyle.fontSizeMedium
                                                     font.family: Constants.regularFontFamily
                                                     font.weight: Font.DemiBold
                                                     verticalAlignment: Text.AlignVCenter
@@ -296,7 +296,7 @@ Pane {
                                                         spacing: 12
                                                         Text {
                                                             text: "#" + (index + 1)
-                                                            font.pointSize: 11
+                                                            font.pixelSize: AppStyle.fontSizeMedium
                                                             font.family: Constants.regularFontFamily
                                                             font.weight: Font.DemiBold
                                                             verticalAlignment: Text.AlignVCenter
@@ -327,7 +327,7 @@ Pane {
 
                                                             Text {
                                                                 text: modelData.displayName
-                                                                font.pointSize: 11
+                                                                font.pixelSize: AppStyle.fontSizeMedium
                                                                 font.family: Constants.regularFontFamily
                                                                 font.weight: Font.DemiBold
                                                                 verticalAlignment: Text.AlignVCenter
@@ -339,7 +339,7 @@ Pane {
 
                                                             Text {
                                                                 text: modelData.platformName
-                                                                font.pointSize: 11
+                                                                font.pixelSize: AppStyle.fontSizeMedium
                                                                 font.family: Constants.regularFontFamily
                                                                 font.weight: Font.Medium
                                                                 verticalAlignment: Text.AlignVCenter
@@ -368,7 +368,7 @@ Pane {
                                                                 }
                                                                 return result
                                                             }
-                                                            font.pointSize: 11
+                                                            font.pixelSize: AppStyle.fontSizeMedium
                                                             font.family: Constants.regularFontFamily
                                                             font.weight: Font.DemiBold
                                                             verticalAlignment: Text.AlignVCenter
@@ -488,7 +488,7 @@ Pane {
                                     Layout.fillHeight: true
                                     text: modelData.displayName + " (" + modelData.platformName + ")"
                                     color: Theme.textPrimary
-                                    font.pointSize: 12
+                                    font.pixelSize: AppStyle.fontSizeMedium
                                     font.family: Constants.regularFontFamily
                                     font.weight: Font.Medium
                                 }
@@ -514,7 +514,7 @@ Pane {
                                         return result;
                                     }
                                     color: Theme.textPrimary
-                                    font.pointSize: 12
+                                    font.pixelSize: AppStyle.fontSizeMedium
                                     font.family: Constants.regularFontFamily
                                     font.weight: Font.Medium
                                 }

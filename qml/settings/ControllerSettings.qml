@@ -64,7 +64,7 @@ FocusScope {
             }
 
             Text {
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Medium
                 Layout.fillWidth: true
@@ -117,7 +117,7 @@ FocusScope {
             }
 
             Text {
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Medium
                 Layout.fillWidth: true
@@ -142,7 +142,7 @@ FocusScope {
 
             Text {
                 text: "Preferred controller per platform"
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 color: Theme.textPrimary
@@ -150,7 +150,7 @@ FocusScope {
             }
             Text {
                 text: "When a controller of the chosen type is connected, it becomes player one whenever a game for that platform launches."
-                font.pixelSize: 13
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.family: Constants.regularFontFamily
                 color: Theme.textMuted
                 wrapMode: Text.WordWrap
@@ -169,7 +169,7 @@ FocusScope {
                     Text {
                         text: displayName
                         color: Theme.textPrimary
-                        font.pixelSize: 14
+                        font.pixelSize: AppStyle.fontSizeSmall
                         font.family: Constants.regularFontFamily
                         Layout.fillWidth: true
                         verticalAlignment: Text.AlignVCenter

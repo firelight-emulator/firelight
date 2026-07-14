@@ -51,7 +51,7 @@ ApplicationWindow {
             Text {
                 text: gamepad.name !== "" ? gamepad.name : "No Gamepad Connected"
                 color: "white"
-                font.pixelSize: 18
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
             }
             // Item {

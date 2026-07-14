@@ -84,7 +84,7 @@ Button {
                     text: control.name
                     color: "white"
                     font.family: Constants.mainFontFamily
-                    font.pixelSize: 16
+                    font.pixelSize: AppStyle.fontSizeMedium
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
                     lineHeight: 1.2
@@ -108,7 +108,7 @@ Button {
                         text: control.type
                         color: "#c3c3c3"
                         font.family: Constants.mainFontFamily
-                        font.pixelSize: 14
+                        font.pixelSize: AppStyle.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -123,7 +123,7 @@ Button {
                 color: "#c3c3c3"
                 font.family: Constants.mainFontFamily
                 font.weight: Font.Normal
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 lineHeight: 1.2
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignLeft
@@ -147,7 +147,7 @@ Button {
                 text: control.points + " pt" + (control.points !== 1 ? "s" : "")
                 color: "white"
                 font.family: Constants.mainFontFamily
-                font.pixelSize: 16
+                font.pixelSize: AppStyle.fontSizeMedium
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignBottom
                 Layout.fillHeight: true
@@ -158,7 +158,7 @@ Button {
                 text: control.earned ? control.earnedDate : "Not earned"
                 color: "#c3c3c3"
                 font.family: Constants.mainFontFamily
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 lineHeight: 1.2
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter

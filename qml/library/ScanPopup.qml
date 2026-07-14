@@ -18,7 +18,7 @@ Pane {
     Text {
         anchors.centerIn: parent
         text: library_manager.scanning ? "Scanning..." : "Library scan complete"
-        font.pointSize: 11
+        font.pixelSize: AppStyle.fontSizeMedium
         font.family: Constants.regularFontFamily
         color: "#212020"
     }

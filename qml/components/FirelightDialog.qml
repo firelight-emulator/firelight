@@ -47,7 +47,7 @@ Dialog {
         visible: control.headerText !== ""
 
         font.family: Constants.regularFontFamily
-        font.pixelSize: 18
+        font.pixelSize: AppStyle.fontSizeMedium
         leftPadding: 24
         topPadding: 16
         rightPadding: 24
@@ -84,7 +84,7 @@ Dialog {
         wrapMode: Text.WordWrap
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 18
+        font.pixelSize: AppStyle.fontSizeMedium
     }
 
     footer: FocusScope {

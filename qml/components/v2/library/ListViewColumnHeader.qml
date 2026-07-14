@@ -24,7 +24,7 @@ Item {
         id: headerText
         height: parent.height
         text: root.text
-        font.pointSize: 11
+        font.pixelSize: AppStyle.fontSizeMedium
         font.weight: root.selected ? Font.Bold : Font.DemiBold
         font.family: Constants.regularFontFamily
         color: root.selected ? Theme.textPrimary : Theme.textMuted

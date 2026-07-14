@@ -71,7 +71,7 @@ ListView {
                     id: titleText
                     Layout.fillWidth: true
                     text: icon.title
-                    font.pointSize: 11
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
@@ -84,7 +84,7 @@ ListView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: icon.description
-                    font.pointSize: 10
+                    font.pixelSize: AppStyle.fontSizeSmall
                     font.family: Constants.regularFontFamily
                     wrapMode: Text.WordWrap
                     verticalAlignment: Text.AlignVCenter

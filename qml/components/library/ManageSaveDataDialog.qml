@@ -101,14 +101,14 @@ FirelightDialog {
                     Layout.alignment: Qt.AlignVCenter
                     Text {
                         text: "Slot " + model.slotNumber
-                        font.pixelSize: 16
+                        font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textPrimary
                         Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
                     }
 
                     Text {
                         text: model.lastModified
-                        font.pixelSize: 16
+                        font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textMuted
                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                         visible: model.hasData
@@ -116,7 +116,7 @@ FirelightDialog {
 
                     Text {
                         text: "No data"
-                        font.pixelSize: 16
+                        font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textMuted
                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                         visible: !model.hasData
@@ -138,7 +138,7 @@ FirelightDialog {
                     }
                     contentItem: Text {
                         text: "Active"
-                        font.pixelSize: 14
+                        font.pixelSize: AppStyle.fontSizeSmall
                         font.family: Constants.regularFontFamily
                         font.weight: Font.DemiBold
                         color: "white"

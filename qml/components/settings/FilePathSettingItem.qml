@@ -44,7 +44,7 @@ BaseSettingItem {
             color: root.value === "" ? ColorPalette.neutral400 : "white"
             elide: Text.ElideMiddle
             font.family: Constants.regularFontFamily
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
             verticalAlignment: Text.AlignVCenter
         }
 

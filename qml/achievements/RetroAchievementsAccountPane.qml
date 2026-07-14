@@ -57,7 +57,7 @@ FocusScope {
                         Text {
                             text: achievement_manager.displayName
                             color: Theme.textPrimary
-                            font.pixelSize: 22
+                            font.pixelSize: AppStyle.fontSizeLarge
                             font.weight: Font.DemiBold
 
                             font.family: Constants.regularFontFamily
@@ -67,7 +67,7 @@ FocusScope {
                         Text {
                             text: achievement_manager.points
                             color: Theme.textMuted
-                            font.pixelSize: 16
+                            font.pixelSize: AppStyle.fontSizeMedium
                             font.weight: Font.Normal
 
                             font.family: Constants.regularFontFamily
@@ -141,7 +141,7 @@ FocusScope {
                         Layout.topMargin: 24
                         Layout.alignment: Qt.AlignHCenter
                         color: Theme.textPrimary
-                        font.pixelSize: 18
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.weight: Font.Normal
                         font.family: Constants.regularFontFamily
                         horizontalAlignment: Text.AlignHCenter
@@ -169,7 +169,7 @@ FocusScope {
                         contentItem: Item {
                             Text {
                                 anchors.fill: parent
-                                font.pointSize: 12
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 font.family: Constants.regularFontFamily
                                 color: Theme.textMuted
                                 text: "Username"
@@ -185,7 +185,7 @@ FocusScope {
                                 property var globalCursorProxy: thePane
                                 font.family: Constants.regularFontFamily
                                 focus: true
-                                font.pointSize: 12
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 color: Theme.textPrimary
                                 verticalAlignment: Text.AlignVCenter
 
@@ -216,7 +216,7 @@ FocusScope {
                         contentItem: FocusScope {
                             Text {
                                 anchors.fill: parent
-                                font.pointSize: 12
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 font.family: Constants.regularFontFamily
                                 color: Theme.textMuted
                                 text: "Password"
@@ -232,7 +232,7 @@ FocusScope {
                                 property bool showGlobalCursor: true
                                 property var globalCursorProxy: theOtherPane
                                 font.family: Constants.regularFontFamily
-                                font.pointSize: 12
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 color: Theme.textPrimary
                                 verticalAlignment: Text.AlignVCenter
 
@@ -290,7 +290,7 @@ FocusScope {
                         Layout.topMargin: 48
                         Layout.alignment: Qt.AlignHCenter
                         color: Theme.textPrimary
-                        font.pixelSize: 18
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.weight: Font.Normal
                         font.family: Constants.regularFontFamily
                         horizontalAlignment: Text.AlignHCenter
@@ -301,7 +301,7 @@ FocusScope {
                         text: "This button will take you to the RetroAchievements website to create one"
                         Layout.alignment: Qt.AlignHCenter
                         color: Theme.textMuted
-                        font.pixelSize: 16
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.weight: Font.Normal
                         font.family: Constants.regularFontFamily
                         horizontalAlignment: Text.AlignHCenter

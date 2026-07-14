@@ -38,7 +38,7 @@ FocusScope {
         Text {
             Layout.alignment: Qt.AlignCenter
             Layout.preferredWidth: parent.width * 0.75
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.Medium
             color: Theme.textPrimary

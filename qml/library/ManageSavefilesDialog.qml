@@ -27,7 +27,7 @@ Dialog {
         text: qsTr("Manage Save Files")
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pointSize: 16
+        font.pixelSize: AppStyle.fontSizeLarge
     }
 
     contentItem: ListView {
@@ -81,7 +81,7 @@ Dialog {
                     font.family: Constants.regularFontFamily
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pointSize: 11
+                    font.pixelSize: AppStyle.fontSizeMedium
                 }
 
                 Button {
@@ -107,7 +107,7 @@ Dialog {
                         font.family: Constants.regularFontFamily
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 11
+                        font.pixelSize: AppStyle.fontSizeMedium
                     }
 
                     RowLayout {
@@ -136,7 +136,7 @@ Dialog {
                                 font.family: Constants.regularFontFamily
                                 horizontalAlignment: Text.AlignLeft
                                 verticalAlignment: Text.AlignBottom
-                                font.pointSize: 11
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                             }
@@ -147,7 +147,7 @@ Dialog {
                                 font.family: Constants.regularFontFamily
                                 horizontalAlignment: Text.AlignLeft
                                 verticalAlignment: Text.AlignTop
-                                font.pointSize: 11
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                             }
@@ -196,7 +196,7 @@ Dialog {
                 font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
             }
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
 

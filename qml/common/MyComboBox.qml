@@ -6,16 +6,13 @@ ComboBox {
     id: control
     implicitContentWidthPolicy: ComboBox.WidestText
 
-    indicator: Text {
+    indicator: Icon {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
-        text: "\ue5c5"
-        font.family: Constants.symbolFontFamily
-        font.pixelSize: 32
+        name: "arrow_drop_down"
+        size: 32
         padding: 4
         color: "#ececec"
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
     }
 
     contentItem: TextInput {
@@ -27,7 +24,7 @@ ComboBox {
         color: "#ececec"
         font.family: Constants.regularFontFamily
         verticalAlignment: Text.AlignVCenter
-        font.pointSize: 11
+        font.pixelSize: AppStyle.fontSizeMedium
         font.weight: Font.DemiBold
 
         readOnly: true
@@ -71,16 +68,15 @@ ComboBox {
                 Layout.fillHeight: true
                 text: delegate.model[control.textRole]
                 font.family: Constants.regularFontFamily
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 color: control.currentIndex === index ? ColorPalette.neutral100 : ColorPalette.neutral300
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
             }
 
-            Text {
-                text: "\ue86c"
-                font.family: Constants.symbolFontFamily
-                font.pixelSize: 18
+            Icon {
+                name: "check_circle"
+                size: 18
                 color: "#17b317"
                 visible: control.currentIndex === index
                 Layout.alignment: Qt.AlignCenter

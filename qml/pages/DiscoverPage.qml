@@ -44,7 +44,7 @@ Flickable {
                     anchors.fill: parent
                     text: "Discover"
                     color: "white"
-                    font.pointSize: 26
+                    font.pixelSize: AppStyle.fontSizeXLarge
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                     horizontalAlignment: Text.AlignLeft
@@ -155,7 +155,7 @@ Flickable {
 
                                         Text {
                                             text: model.name
-                                            font.pointSize: 11
+                                            font.pixelSize: AppStyle.fontSizeMedium
                                             font.weight: Font.Bold
                                             font.family: Constants.regularFontFamily
                                             color: "white"
@@ -166,7 +166,7 @@ Flickable {
                                         }
                                         Text {
                                             text: model.platform_name
-                                            font.pointSize: 10
+                                            font.pixelSize: AppStyle.fontSizeSmall
                                             font.weight: Font.Medium
                                             font.family: Constants.regularFontFamily
                                             color: "#C2BBBB"

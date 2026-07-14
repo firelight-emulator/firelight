@@ -11,7 +11,7 @@ Pane {
         id: label
         color: Theme.textPrimary
         font.family: Constants.regularFontFamily
-        font.pointSize: 12
+        font.pixelSize: AppStyle.fontSizeMedium
         font.weight: Font.DemiBold
     }
 }

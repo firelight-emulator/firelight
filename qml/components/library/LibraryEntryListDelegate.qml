@@ -100,7 +100,7 @@ Button {
         }
         Text {
             text: root.model.displayName
-            font.pixelSize: 17
+            font.pixelSize: AppStyle.fontSizeMedium
             // font.weight: Font.DemiBold
             font.family: Constants.mainFontFamily
             color: (root.activeFocus && root.ListView.isCurrentItem) ? "black" : "white"
@@ -113,7 +113,7 @@ Button {
         }
         Text {
             text: PlatformModel.getPlatformDisplayName(root.model.platformId)
-            font.pixelSize: 17
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.Medium
             font.family: Constants.mainFontFamily
             color: (root.activeFocus && root.ListView.isCurrentItem) ? "#2A2A2A" : "#d3d3d3"

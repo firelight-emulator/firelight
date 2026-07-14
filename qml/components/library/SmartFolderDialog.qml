@@ -172,7 +172,7 @@ FirelightDialog {
             Text {
                 anchors.fill: parent
                 anchors.leftMargin: 10
-                font.pixelSize: 14
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.family: Constants.regularFontFamily
                 color: Theme.textMuted
                 text: fieldPane.placeholder
@@ -187,7 +187,7 @@ FirelightDialog {
                 clip: true
                 inputMethodHints: fieldPane.inputHints
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 14
+                font.pixelSize: AppStyle.fontSizeSmall
                 color: Theme.textPrimary
                 verticalAlignment: Text.AlignVCenter
             }
@@ -199,14 +199,14 @@ FirelightDialog {
         Layout.topMargin: 8
         color: Theme.textPrimary
         font.family: Constants.regularFontFamily
-        font.pixelSize: 13
+        font.pixelSize: AppStyle.fontSizeSmall
         font.weight: Font.DemiBold
     }
 
     component FieldLabel: Text {
         color: Theme.textMuted
         font.family: Constants.regularFontFamily
-        font.pixelSize: 12
+        font.pixelSize: AppStyle.fontSizeSmall
     }
 
     contentItem: ScrollView {
@@ -260,7 +260,7 @@ FirelightDialog {
                             color: Theme.textPrimary
                             elide: Text.ElideMiddle
                             font.family: Constants.regularFontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: AppStyle.fontSizeSmall
                             verticalAlignment: Text.AlignVCenter
                         }
                         onToggled: control.selectedDirIds = control.toggleId(control.selectedDirIds, model.directory_id)
@@ -280,7 +280,7 @@ FirelightDialog {
                     text: "Only favorites"
                     color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
-                    font.pixelSize: 13
+                    font.pixelSize: AppStyle.fontSizeSmall
                     verticalAlignment: Text.AlignVCenter
                 }
             }
@@ -305,7 +305,7 @@ FirelightDialog {
                             text: model.displayName
                             color: Theme.textPrimary
                             font.family: Constants.regularFontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: AppStyle.fontSizeSmall
                             verticalAlignment: Text.AlignVCenter
                         }
                         onToggled: control.selectedPlatformIds = control.toggleId(control.selectedPlatformIds, model.platformId)

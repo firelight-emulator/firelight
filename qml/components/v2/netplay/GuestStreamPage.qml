@@ -35,7 +35,7 @@ Rectangle {
         anchors.centerIn: parent
         text: "Waiting for the host's stream..."
         color: Theme.textMuted
-        font.pixelSize: 16
+        font.pixelSize: AppStyle.fontSizeMedium
     }
 
     RowLayout {
@@ -47,7 +47,7 @@ Rectangle {
         Text {
             text: NetworkService.gameName
             color: Theme.textMuted
-            font.pixelSize: 13
+            font.pixelSize: AppStyle.fontSizeSmall
             Layout.alignment: Qt.AlignVCenter
         }
         Button {

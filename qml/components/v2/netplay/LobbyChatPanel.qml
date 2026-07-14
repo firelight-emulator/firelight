@@ -16,7 +16,7 @@ Rectangle {
         Text {
             text: "Chat"
             color: Theme.textMuted
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
         }
 
         ListView {
@@ -34,13 +34,13 @@ Rectangle {
                 Text {
                     text: model.senderName
                     color: model.isSelf ? "#5588dd" : "#cc8855"
-                    font.pixelSize: 11
+                    font.pixelSize: AppStyle.fontSizeSmall
                     font.weight: Font.DemiBold
                 }
                 Text {
                     text: model.text
                     color: Theme.textPrimary
-                    font.pixelSize: 13
+                    font.pixelSize: AppStyle.fontSizeSmall
                     wrapMode: Text.Wrap
                     Layout.fillWidth: true
                 }

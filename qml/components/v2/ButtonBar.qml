@@ -42,7 +42,7 @@ Pane {
                 color: "white"
                 opacity: dayButton.checked ? 1.0 : 0.8
                 font.family: Constants.regularFontFamily
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Medium
 
                 verticalAlignment: Qt.AlignVCenter
@@ -70,7 +70,7 @@ Pane {
                 color: "white"
                 opacity: weekButton.checked ? 1.0 : 0.8
                 font.family: Constants.regularFontFamily
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Medium
 
                 verticalAlignment: Qt.AlignVCenter
@@ -98,7 +98,7 @@ Pane {
                 color: "white"
                 opacity: monthButton.checked ? 1.0 : 0.8
                 font.family: Constants.regularFontFamily
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Medium
 
                 verticalAlignment: Qt.AlignVCenter
@@ -126,7 +126,7 @@ Pane {
                 color: "white"
                 opacity: yearButton.checked ? 1.0 : 0.8
                 font.family: Constants.regularFontFamily
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Medium
 
                 verticalAlignment: Qt.AlignVCenter

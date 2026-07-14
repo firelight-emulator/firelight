@@ -60,7 +60,7 @@ Button {
             Layout.leftMargin: 8
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
-            font.pointSize: 11
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             text: control.displayText
             visible: control.width > 64

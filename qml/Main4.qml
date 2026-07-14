@@ -221,12 +221,10 @@ MainWindow {
 
                     checkable: false
                     checked: Router.isActive(model.route)
-                    icon.width: 24
-                    icon.height: 24
+                    Layout.maximumWidth: 36
+                    Layout.maximumHeight: 36
 
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-
-                    anchors.horizontalCenter: parent.horizontalCenter
 
                     icon.source: "qrc:/icons/" + model.iconName
 

@@ -29,13 +29,10 @@ FocusScope {
 
                     hoverEnabled: true
 
-                    contentItem: Text {
-                        text: "\ue5e0"
-                        font.family: Constants.symbolFontFamily
+                    contentItem: Icon {
+                        name: "arrow_back_ios"
                         leftPadding: 8
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 24
+                        size: 24
                         color: Theme.textMuted
                     }
 
@@ -50,7 +47,7 @@ FocusScope {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: qsTr("Default Game Boy settings")
-                    font.pixelSize: 26
+                    font.pixelSize: AppStyle.fontSizeLarge
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Bold
                     horizontalAlignment: Text.AlignLeft
@@ -299,7 +296,7 @@ FocusScope {
                         text: "Example"
                         color: ColorPalette.neutral300
                         horizontalAlignment: Text.AlignHCenter
-                        font.pixelSize: 15
+                        font.pixelSize: AppStyle.fontSizeMedium
                         Layout.alignment: Qt.AlignLeft
                         font.family: Constants.regularFontFamily
                         font.weight: Font.DemiBold

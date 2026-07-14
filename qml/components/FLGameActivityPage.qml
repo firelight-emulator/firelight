@@ -50,7 +50,7 @@ Pane {
 
             Text {
                 text: "Activity summary"
-                font.pixelSize: 18
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 color: "white"
                 font.weight: Font.DemiBold
@@ -83,7 +83,7 @@ Pane {
                              anchors.top: parent.top
                              anchors.bottom: timePlayedValue.top
                              anchors.bottomMargin: 8
-                             font.pixelSize: 16
+                             font.pixelSize: AppStyle.fontSizeMedium
                              font.family: Constants.regularFontFamily
                              font.weight: Font.Medium
                              color: "white"
@@ -113,7 +113,7 @@ Pane {
                                 // model.numUnpausedSeconds
                             }
                              anchors.bottom: parent.bottom
-                             font.pixelSize: 30
+                             font.pixelSize: AppStyle.fontSizeXLarge
                              font.family: Constants.regularFontFamily
                              elide: Text.ElideRight
                              width: parent.width
@@ -133,7 +133,7 @@ Pane {
                               anchors.top: parent.top
                               anchors.bottom: timesPlayedValue.top
                               anchors.bottomMargin: 8
-                              font.pixelSize: 16
+                              font.pixelSize: AppStyle.fontSizeMedium
                               font.family: Constants.regularFontFamily
                               font.weight: Font.Medium
                               color: "white"
@@ -146,7 +146,7 @@ Pane {
                               anchors.bottom: parent.bottom
                              elide: Text.ElideRight
                              width: parent.width
-                              font.pixelSize: 30
+                              font.pixelSize: AppStyle.fontSizeXLarge
                               font.family: Constants.regularFontFamily
                               font.weight: Font.Bold
                               color: "white"
@@ -166,7 +166,7 @@ Pane {
                              anchors.top: parent.top
                              anchors.bottom: playTimeValue.top
                              anchors.bottomMargin: 8
-                             font.pixelSize: 16
+                             font.pixelSize: AppStyle.fontSizeMedium
                              font.family: Constants.regularFontFamily
                              font.weight: Font.Medium
                              color: "white"
@@ -200,7 +200,7 @@ Pane {
                                 // model.numUnpausedSeconds
                             }
                              anchors.bottom: parent.bottom
-                             font.pixelSize: 30
+                             font.pixelSize: AppStyle.fontSizeXLarge
                              elide: Text.ElideRight
                              width: parent.width
                              font.family: Constants.regularFontFamily
@@ -247,7 +247,7 @@ Pane {
             Text {
                 id: title
                 text: "Recent activity"
-                font.pixelSize: 18
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 color: "white"
                 font.weight: Font.DemiBold
@@ -294,7 +294,7 @@ Pane {
                                  // model.numUnpausedSeconds
                              }
                             padding: 0
-                            font.pixelSize: 20
+                            font.pixelSize: AppStyle.fontSizeLarge
                             font.weight: Font.Medium
                             font.family: Constants.regularFontFamily
                             verticalAlignment: Text.AlignVCenter

@@ -19,7 +19,7 @@ Flickable {
             Layout.topMargin: 30
             Layout.fillWidth: true
             text: qsTr("Achievements")
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
             Layout.bottomMargin: 8
@@ -37,7 +37,7 @@ Flickable {
             Layout.topMargin: 30
             Layout.fillWidth: true
             text: qsTr("Controllers")
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
             Layout.bottomMargin: 8

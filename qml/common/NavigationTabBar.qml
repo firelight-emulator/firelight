@@ -50,7 +50,7 @@ TabBar {
                 text: modelData
                 color: parent.enabled ? parent.checked ? "#ffffff" : "#f0f0f0" : "#666666"
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

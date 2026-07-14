@@ -65,7 +65,7 @@ Button {
             Layout.preferredHeight: 44
             text: root.label
             color: Theme.textPrimary
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             verticalAlignment: Text.AlignVCenter
             font.family: Constants.regularFontFamily
@@ -79,7 +79,7 @@ Button {
 
         Text {
             text: FilesystemUtils.isFile(root.value) ? FilesystemUtils.removeFileURI(root.value) : root.value
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             Layout.alignment: Qt.AlignRight
             font.family: Constants.regularFontFamily
             // font.weight: Font.DemiBold

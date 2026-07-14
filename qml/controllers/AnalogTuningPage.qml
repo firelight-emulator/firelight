@@ -36,14 +36,14 @@ FocusScope {
                 text: ts.label
                 color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 Layout.fillWidth: true
             }
             Text {
                 text: ts.percent ? Math.round(ts.value * 100) + "%" : ts.value.toFixed(2)
                 color: Theme.textMuted
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
             }
         }
 
@@ -141,7 +141,7 @@ FocusScope {
                 color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
-                font.pixelSize: 17
+                font.pixelSize: AppStyle.fontSizeMedium
                 Layout.bottomMargin: 4
             }
             TuningSlider {
@@ -174,7 +174,7 @@ FocusScope {
                     text: "Response curve"
                     color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
-                    font.pixelSize: 15
+                    font.pixelSize: AppStyle.fontSizeMedium
                     Layout.fillWidth: true
                 }
                 ComboBox {
@@ -216,7 +216,7 @@ FocusScope {
                 color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
-                font.pixelSize: 22
+                font.pixelSize: AppStyle.fontSizeLarge
                 Layout.topMargin: 8
             }
 
@@ -257,7 +257,7 @@ FocusScope {
                 color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
-                font.pixelSize: 17
+                font.pixelSize: AppStyle.fontSizeMedium
             }
             TuningSlider {
                 label: "Left trigger press threshold"

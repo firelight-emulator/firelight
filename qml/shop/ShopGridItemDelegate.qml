@@ -58,7 +58,7 @@ FocusScope {
             }
             Text {
                 text: myDelegate.model.title
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Bold
                 font.family: Constants.regularFontFamily
                 color: "white"
@@ -72,7 +72,7 @@ FocusScope {
             Text {
                 // text: myDelegate.model.platform_name
                 text: myDelegate.model.target_game_name + " (" + myDelegate.model.platform_name + ")"
-                font.pointSize: 10
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.Medium
                 font.family: Constants.regularFontFamily
                 leftPadding: 4
@@ -84,7 +84,7 @@ FocusScope {
             Text {
                 // text: myDelegate.model.platform_name
                 text: "by " + myDelegate.model.creator_name
-                font.pointSize: 10
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.Medium
                 font.family: Constants.regularFontFamily
                 leftPadding: 4

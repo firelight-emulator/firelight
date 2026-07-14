@@ -21,7 +21,7 @@ Item {
             Text {
                 text: "Lobby"
                 color: Theme.textPrimary
-                font.pixelSize: 24
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.weight: Font.DemiBold
             }
             Rectangle {
@@ -38,7 +38,7 @@ Item {
                         text: NetworkService.joinCode
                         color: Theme.textPrimary
                         font.family: "Consolas"
-                        font.pixelSize: 14
+                        font.pixelSize: AppStyle.fontSizeSmall
                     }
                     ToolButton {
                         text: "Copy"
@@ -103,7 +103,7 @@ Item {
                                       ? NetworkService.gameName
                                       : "No game selected"
                                 color: Theme.textPrimary
-                                font.pixelSize: 17
+                                font.pixelSize: AppStyle.fontSizeMedium
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
@@ -111,7 +111,7 @@ Item {
                                 visible: !NetworkService.isHost && !NetworkService.hasGame
                                 text: "Waiting for the host to pick a game"
                                 color: Theme.textMuted
-                                font.pixelSize: 13
+                                font.pixelSize: AppStyle.fontSizeSmall
                             }
                         }
                         Button {
@@ -125,7 +125,7 @@ Item {
                 Text {
                     text: "Players"
                     color: Theme.textMuted
-                    font.pixelSize: 14
+                    font.pixelSize: AppStyle.fontSizeSmall
                 }
 
                 GridLayout {
@@ -198,7 +198,7 @@ Item {
             Text {
                 text: "Player " + (root.pickingSlot + 1)
                 color: Theme.textPrimary
-                font.pixelSize: 16
+                font.pixelSize: AppStyle.fontSizeMedium
             }
 
             Repeater {

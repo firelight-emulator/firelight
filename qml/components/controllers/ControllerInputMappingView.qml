@@ -165,7 +165,7 @@ FocusScope {
                             anchors.centerIn: parent
                             text: classTab.modelData
                             color: classTab.current ? "black" : "white"
-                            font.pixelSize: 14
+                            font.pixelSize: AppStyle.fontSizeSmall
                             font.family: Constants.regularFontFamily
                             font.weight: Font.Medium
                         }
@@ -380,7 +380,7 @@ FocusScope {
                     Layout.fillHeight: true
                     text: model.originalInputName
                     color: Theme.textPrimary
-                    font.pixelSize: 15
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                     verticalAlignment: Text.AlignVCenter
@@ -396,7 +396,7 @@ FocusScope {
                         height: parent.height
                         // text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (gamepadStatus.inputLabels[modelData.retropad_button] + " (default)") : gamepadStatus.inputLabels[inputMapping.inputMappings[modelData.retropad_button]]
                         // color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-                        font.pixelSize: 15
+                        font.pixelSize: AppStyle.fontSizeMedium
                         color: model.hasConflict ? Theme.warning : (!model.hasMapping ? Theme.textMuted : Theme.textPrimary)
                         text: model.hasMapping ? model.mappedInputName : "(Not mapped)"
 
@@ -408,7 +408,7 @@ FocusScope {
                     Text {
                         height: parent.height
                         visible: model.isDefault
-                        font.pixelSize: 15
+                        font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textMuted
                         text: " (Default)"
                         font.family: Constants.regularFontFamily

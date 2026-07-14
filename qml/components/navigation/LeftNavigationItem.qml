@@ -60,7 +60,7 @@ Button {
 
             elide: Text.ElideRight
             text: root.label
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             font.family: Constants.regularFontFamily
             color: root.checked ? "#FFFFFF" : "#c3c3c3"

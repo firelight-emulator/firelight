@@ -16,7 +16,7 @@ ToolTip {
 
     contentItem: Text {
         text: root.text
-        font.pixelSize: 16
+        font.pixelSize: AppStyle.fontSizeMedium
         font.family: Constants.mainFontFamily
         color: Theme.textPrimary
     }

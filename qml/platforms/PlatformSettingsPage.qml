@@ -25,7 +25,7 @@ FocusScope {
             Text {
                 Layout.fillWidth: true
                 text: qsTr("Platform settings")
-                font.pixelSize: 26
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Bold
                 Layout.bottomMargin: 8
@@ -36,7 +36,7 @@ FocusScope {
                 Layout.fillWidth: true
                 // text: qsTr("Here's where you can change settings for each platform. You can change settings on a per-game basis by selecting the game in your library and going to 'Settings'.")
                 text: qsTr("Here's where you can change the default settings for each platform. Later you'll be able to change them on a per-game basis.")
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Normal
                 wrapMode: Text.WordWrap
@@ -75,7 +75,7 @@ FocusScope {
                     }
                     Text {
                         text: qsTr("Game Boy")
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         height: parent.height
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
@@ -110,7 +110,7 @@ FocusScope {
                     }
                     Text {
                         text: qsTr("Game Boy Color")
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         height: parent.height
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
@@ -145,7 +145,7 @@ FocusScope {
                     }
                     Text {
                         text: qsTr("Game Boy Advance")
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         height: parent.height
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
@@ -180,7 +180,7 @@ FocusScope {
                     }
                     Text {
                         text: qsTr("NES")
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         height: parent.height
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
@@ -218,7 +218,7 @@ FocusScope {
                     Text {
                         text: qsTr("SNES")
                         height: parent.height
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
@@ -254,7 +254,7 @@ FocusScope {
                     Text {
                         text: qsTr("Nintendo 64")
                         height: parent.height
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
@@ -290,7 +290,7 @@ FocusScope {
                     Text {
                         text: qsTr("Nintendo DS")
                         height: parent.height
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
@@ -326,7 +326,7 @@ FocusScope {
                     Text {
                         text: qsTr("Master System")
                         height: parent.height
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
@@ -362,7 +362,7 @@ FocusScope {
                     Text {
                         text: qsTr("Genesis/Mega Drive")
                         height: parent.height
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter
@@ -398,7 +398,7 @@ FocusScope {
                     Text {
                         text: qsTr("Game Gear")
                         height: parent.height
-                        font.pointSize: 14
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         font.weight: Font.Normal
                         verticalAlignment: Text.AlignVCenter

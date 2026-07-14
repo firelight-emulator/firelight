@@ -23,14 +23,14 @@ RowLayout {
         Text {
             text: "Core"
             color: Theme.textPrimary
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
         }
         Text {
             text: "The emulator core used to run this platform. Changing it can affect save states and achievements."
             color: Theme.textMuted
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
             font.family: Constants.regularFontFamily
             font.weight: Font.Medium
             wrapMode: Text.WordWrap

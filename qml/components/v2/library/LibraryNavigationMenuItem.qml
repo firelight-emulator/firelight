@@ -6,6 +6,7 @@ import QtQml.Models
 import QtQuick.Layouts 1.0
 import QtNetwork
 import QtMultimedia
+import QtQuick.VectorImage
 import QtQuick.Effects
 import Firelight 1.0
 
@@ -70,17 +71,35 @@ Button {
         }
     }
     contentItem: RowLayout {
-        Image {
-            sourceSize.width: 20
-            sourceSize.height: 20
+        // iconSource may be a Material icon (qrc:/icons/<name>), a console logo, or folder
+        // art. Render known Material names as crisp font glyphs; everything else as a crisp
+        // (GPU curve-rendered) vector image.
+        readonly property string resolvedIconName: control.iconSource.indexOf("qrc:/icons/") === 0
+            ? control.iconSource.substring(11) : ""
+        readonly property bool iconIsGlyph: resolvedIconName !== "" && MaterialSymbols.glyph(resolvedIconName) !== ""
+
+        Icon {
+            Layout.preferredWidth: height
+            Layout.fillHeight: true
+            visible: parent.iconIsGlyph
+            name: parent.resolvedIconName
+            size: 20
+            color: Theme.textPrimary
+        }
+        VectorImage {
+            Layout.preferredWidth: height
+            Layout.fillHeight: true
+            visible: !parent.iconIsGlyph
             source: control.iconSource
             fillMode: Image.PreserveAspectFit
+            smooth: true
+            preferredRendererType: VectorImage.CurveRenderer
         }
         Text {
             Layout.leftMargin: 8
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
-            font.pointSize: 11
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             text: control.displayText
             visible: control.width > 64
@@ -92,7 +111,7 @@ Button {
         Text {
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
-            font.pointSize: 10
+            font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold
             text: control.numberOfItems
             Layout.fillHeight: true

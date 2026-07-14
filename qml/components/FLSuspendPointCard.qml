@@ -40,7 +40,7 @@ Button {
             leftPadding: 4
             rightPadding: 4
             text: "Slot " + (root.index + 1)
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
             color: "white"
@@ -51,7 +51,7 @@ Button {
             leftPadding: 4
             rightPadding: 4
             text: root.dateTimeString
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.Normal
             color: "#d1d1d1"
@@ -112,7 +112,7 @@ Button {
             contentItem: Text {
                 color: parent.enabled ? "white" : "#727272"
                 text: "Load Suspend Point"
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignHCenter
@@ -139,7 +139,7 @@ Button {
                 contentItem: Text {
                     color: "white"
                     text: "Overwrite"
-                    font.pixelSize: 15
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Normal
                     horizontalAlignment: Text.AlignHCenter

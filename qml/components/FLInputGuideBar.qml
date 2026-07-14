@@ -138,7 +138,7 @@ Pane {
                         verticalAlignment: Text.AlignVCenter
                         color: "white"
                         // font.weight: Font.DemiBold
-                        font.pixelSize: 16
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                     }
                 }

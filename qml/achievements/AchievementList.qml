@@ -44,7 +44,7 @@ FocusScope {
                     text: "Sort by:"
                     color: "white"
                     font.family: Constants.regularFontFamily
-                    font.pointSize: 10
+                    font.pixelSize: AppStyle.fontSizeSmall
                 }
 
                 MyComboBox {
@@ -96,7 +96,7 @@ FocusScope {
             text: "Log in blah blah"
             color: "white"
             font.family: Constants.regularFontFamily
-            font.pointSize: 10
+            font.pixelSize: AppStyle.fontSizeSmall
             Layout.alignment: Qt.AlignCenter
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -117,7 +117,7 @@ FocusScope {
                 font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
             }
             onClicked: {
                 Router.navigate("/settings/achievements")

@@ -21,7 +21,7 @@ Rectangle {
             Text {
                 text: "P" + model.slotNumber
                 color: Theme.textMuted
-                font.pixelSize: 12
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.DemiBold
             }
             Item {
@@ -39,7 +39,7 @@ Rectangle {
         Text {
             text: model.occupied ? model.displayName : "Empty"
             color: model.occupied ? Theme.textPrimary : "#666666"
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
             elide: Text.ElideRight
             Layout.fillWidth: true
         }
@@ -48,7 +48,7 @@ Rectangle {
             visible: model.occupied && model.isHostMember
             text: "Host"
             color: Theme.textMuted
-            font.pixelSize: 11
+            font.pixelSize: AppStyle.fontSizeSmall
         }
     }
 

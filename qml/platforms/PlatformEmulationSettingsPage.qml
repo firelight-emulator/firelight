@@ -31,13 +31,10 @@ FocusScope {
                     color: backButton.hovered ? "#404143" : "transparent"
                     radius: height / 2
                 }
-                contentItem: Text {
-                    text: ""
-                    font.family: Constants.symbolFontFamily
+                contentItem: Icon {
+                    name: "arrow_back_ios"
                     leftPadding: 8
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 24
+                    size: 24
                     color: Theme.textMuted
                 }
 
@@ -48,7 +45,7 @@ FocusScope {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 text: qsTr("Default %1 settings").arg(root.platformName)
-                font.pixelSize: 26
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.family: Constants.regularFontFamily
                 font.weight: Font.Bold
                 horizontalAlignment: Text.AlignLeft

@@ -145,7 +145,7 @@ FirelightDialog {
             font.family: Constants.regularFontFamily
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 18
+            font.pixelSize: AppStyle.fontSizeMedium
         }
 
         Text {
@@ -153,7 +153,7 @@ FirelightDialog {
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             color: Theme.textPrimary
-            font.pixelSize: 20
+            font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.Bold
             font.family: Constants.regularFontFamily
             horizontalAlignment: Text.AlignHCenter

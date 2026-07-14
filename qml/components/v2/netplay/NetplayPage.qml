@@ -27,7 +27,7 @@ Item {
                 Text {
                     text: "Play online"
                     color: Theme.textPrimary
-                    font.pixelSize: 28
+                    font.pixelSize: AppStyle.fontSizeXLarge
                     font.weight: Font.DemiBold
                     Layout.alignment: Qt.AlignHCenter
                 }
@@ -37,7 +37,7 @@ Item {
                           "host's IP to join them. Friends can join and leave " +
                           "any time."
                     color: Theme.textMuted
-                    font.pixelSize: 14
+                    font.pixelSize: AppStyle.fontSizeSmall
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter
                     Layout.fillWidth: true
@@ -61,7 +61,7 @@ Item {
                         visible: NetworkService.signInState === "failed"
                         text: "Sign-in didn't go through. Give it another try."
                         color: Theme.danger
-                        font.pixelSize: 13
+                        font.pixelSize: AppStyle.fontSizeSmall
                         Layout.alignment: Qt.AlignHCenter
                     }
                 }
@@ -75,7 +75,7 @@ Item {
                         visible: NetworkService.providerName.length > 0
                         text: "Signed in as " + NetworkService.playerName
                         color: Theme.textMuted
-                        font.pixelSize: 13
+                        font.pixelSize: AppStyle.fontSizeSmall
                         Layout.alignment: Qt.AlignHCenter
                     }
 
@@ -87,7 +87,7 @@ Item {
                         Text {
                             text: "Your name"
                             color: Theme.textMuted
-                            font.pixelSize: 13
+                            font.pixelSize: AppStyle.fontSizeSmall
                         }
                         TextField {
                             id: playerNameField
@@ -134,7 +134,7 @@ Item {
                     text: ""
                     visible: text.length > 0
                     color: Theme.danger
-                    font.pixelSize: 13
+                    font.pixelSize: AppStyle.fontSizeSmall
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter
                     Layout.fillWidth: true

@@ -163,7 +163,7 @@ FocusScope {
                     Layout.fillHeight: true
                     text: platformList.currentItem.model.display_name + " controls"
                     color: Theme.textPrimary
-                    font.pixelSize: 16
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                     verticalAlignment: Text.AlignVCenter
@@ -177,7 +177,7 @@ FocusScope {
                     Layout.leftMargin: 12
                     text: "Key"
                     color: Theme.textPrimary
-                    font.pixelSize: 16
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                     verticalAlignment: Text.AlignVCenter
@@ -242,7 +242,7 @@ FocusScope {
                             Layout.fillHeight: true
                             text: modelData.display_name
                             color: Theme.textPrimary
-                            font.pixelSize: 16
+                            font.pixelSize: AppStyle.fontSizeMedium
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
                             verticalAlignment: Text.AlignVCenter
@@ -257,7 +257,7 @@ FocusScope {
                             color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
                             // text: "heya"
                             // color: "white"
-                            font.pixelSize: 16
+                            font.pixelSize: AppStyle.fontSizeMedium
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
                             verticalAlignment: Text.AlignVCenter
@@ -464,7 +464,7 @@ FocusScope {
                 font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 18
+                font.pixelSize: AppStyle.fontSizeMedium
             }
 
             Text {
@@ -472,7 +472,7 @@ FocusScope {
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 color: Theme.textPrimary
-                font.pixelSize: 20
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.weight: Font.Bold
                 font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter

@@ -127,7 +127,7 @@ Dialog {
             text: "Change artwork"
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
-            font.pixelSize: 19
+            font.pixelSize: AppStyle.fontSizeLarge
             elide: Text.ElideRight
         }
         Text {
@@ -138,7 +138,7 @@ Dialog {
             text: control.gameName
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
             elide: Text.ElideRight
         }
     }
@@ -212,7 +212,7 @@ Dialog {
                         text: parent.text
                         color: parent.checked ? "white" : ColorPalette.neutral400
                         font.family: Constants.regularFontFamily
-                        font.pixelSize: 14
+                        font.pixelSize: AppStyle.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -248,14 +248,14 @@ Dialog {
                     text: "Your artwork"
                     color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
-                    font.pixelSize: 14
+                    font.pixelSize: AppStyle.fontSizeSmall
                 }
                 Text {
                     visible: control.storedList.length === 0
                     text: "No artwork yet for this game."
                     color: Theme.textMuted
                     font.family: Constants.regularFontFamily
-                    font.pixelSize: 13
+                    font.pixelSize: AppStyle.fontSizeSmall
                 }
                 Flow {
                     Layout.fillWidth: true
@@ -287,7 +287,7 @@ Dialog {
                         text: "SteamGridDB"
                         color: Theme.textPrimary
                         font.family: Constants.regularFontFamily
-                        font.pixelSize: 14
+                        font.pixelSize: AppStyle.fontSizeSmall
                     }
                     BusyIndicator {
                         running: GameArtService.searching
@@ -342,7 +342,7 @@ Dialog {
                         text: "Add your SteamGridDB API key to search for artwork."
                         color: Theme.textMuted
                         font.family: Constants.regularFontFamily
-                        font.pixelSize: 13
+                        font.pixelSize: AppStyle.fontSizeSmall
                         wrapMode: Text.WordWrap
                     }
                     RowLayout {
@@ -378,7 +378,7 @@ Dialog {
                         text: "Get a key at steamgriddb.com/profile/preferences/api"
                         color: ColorPalette.hyperlinkColor
                         font.family: Constants.regularFontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: AppStyle.fontSizeSmall
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
@@ -392,7 +392,7 @@ Dialog {
                     text: "No SteamGridDB results for this game and type."
                     color: ColorPalette.neutral500
                     font.family: Constants.regularFontFamily
-                    font.pixelSize: 13
+                    font.pixelSize: AppStyle.fontSizeSmall
                 }
 
                 // Results grouped by matched game, each under its own header.
@@ -411,7 +411,7 @@ Dialog {
                                 text: groupDelegate.modelData.gameName
                                 color: ColorPalette.neutral400
                                 font.family: Constants.regularFontFamily
-                                font.pixelSize: 13
+                                font.pixelSize: AppStyle.fontSizeSmall
                                 font.weight: Font.DemiBold
                                 elide: Text.ElideRight
                             }

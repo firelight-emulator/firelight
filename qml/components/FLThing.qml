@@ -385,7 +385,7 @@ FocusScope {
                         anchors.bottom: platformText.top
                         anchors.bottomMargin: 4
                         color: "white"
-                        font.pixelSize: 32
+                        font.pixelSize: AppStyle.fontSizeXLarge
                         font.weight: Font.Bold
                         text: model.name
                         visible: gameDele.ListView.isCurrentItem
@@ -396,7 +396,7 @@ FocusScope {
                         anchors.leftMargin: 16
                         anchors.bottom: gameDele.bottom
                         color: "white"
-                        font.pixelSize: 20
+                        font.pixelSize: AppStyle.fontSizeLarge
                         // font.weight: Font.Bold
                         text: model.platform
                         visible: gameDele.ListView.isCurrentItem
@@ -469,7 +469,7 @@ FocusScope {
                         anchors.leftMargin: 16
                         anchors.top: allDele.top
                         color: "white"
-                        font.pixelSize: 32
+                        font.pixelSize: AppStyle.fontSizeXLarge
                         font.weight: Font.Bold
                         text: "All games"
                         visible: allDele.ListView.isCurrentItem

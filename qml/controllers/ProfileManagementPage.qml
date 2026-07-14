@@ -37,7 +37,7 @@ FocusScope {
                 color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
-                font.pixelSize: 22
+                font.pixelSize: AppStyle.fontSizeLarge
                 Layout.fillWidth: true
             }
             Button {
@@ -78,7 +78,7 @@ FocusScope {
                         text: name
                         color: Theme.textPrimary
                         font.family: Constants.regularFontFamily
-                        font.pixelSize: 16
+                        font.pixelSize: AppStyle.fontSizeMedium
                         Layout.fillWidth: true
                     }
 
@@ -87,7 +87,7 @@ FocusScope {
                         text: "Built-in"
                         color: Theme.textMuted
                         font.family: Constants.regularFontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: AppStyle.fontSizeSmall
                     }
 
                     Button {

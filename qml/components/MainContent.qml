@@ -54,7 +54,7 @@ FocusScope {
             initialItem: Text {
                 text: "Loading..."
                 anchors.fill: parent
-                font.pixelSize: 22
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.family: Constants.regularFontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

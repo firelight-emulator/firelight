@@ -54,7 +54,7 @@ FocusScope {
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
-            font.pixelSize: 20
+            font.pixelSize: AppStyle.fontSizeLarge
         }
 
         Text {
@@ -62,7 +62,7 @@ FocusScope {
             text: "No custom bindings — the default mapping is used."
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
-            font.pixelSize: 14
+            font.pixelSize: AppStyle.fontSizeSmall
         }
 
         ListView {
@@ -98,7 +98,7 @@ FocusScope {
                             text: sourceLabel
                             color: Theme.textPrimary
                             font.family: Constants.regularFontFamily
-                            font.pixelSize: 16
+                            font.pixelSize: AppStyle.fontSizeMedium
                             Layout.fillWidth: true
                         }
 
@@ -106,7 +106,7 @@ FocusScope {
                             text: "Toggle"
                             color: Theme.textMuted
                             font.family: Constants.regularFontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: AppStyle.fontSizeSmall
                         }
                         Switch {
                             checked: toggle
@@ -117,7 +117,7 @@ FocusScope {
                             text: "Turbo"
                             color: Theme.textMuted
                             font.family: Constants.regularFontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: AppStyle.fontSizeSmall
                         }
                         Switch {
                             checked: turboEnabled
@@ -139,7 +139,7 @@ FocusScope {
                             text: "Rate"
                             color: Theme.textMuted
                             font.family: Constants.regularFontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: AppStyle.fontSizeSmall
                         }
                         Slider {
                             id: rateSlider
@@ -154,7 +154,7 @@ FocusScope {
                             text: Math.round(turboRate) + " Hz"
                             color: Theme.textMuted
                             font.family: Constants.regularFontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: AppStyle.fontSizeSmall
                         }
                     }
                 }
@@ -168,7 +168,7 @@ FocusScope {
                 text: "Press a button on player " + root.capturePlayerNumber + "…"
                 color: Theme.accent
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 Layout.fillWidth: true
             }
             Item {

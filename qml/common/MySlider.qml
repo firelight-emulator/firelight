@@ -103,7 +103,7 @@ Slider {
                     required property var index
                     property int val: control.from + (index * control.stepSize)
                     text: (val) + "%"
-                    font.pointSize: 10
+                    font.pixelSize: AppStyle.fontSizeSmall
                     font.weight: Font.Medium
                     color: ColorPalette.neutral400
 

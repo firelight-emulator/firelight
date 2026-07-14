@@ -57,7 +57,7 @@ Item {
             Text {
                 text: "Media"
                 color: Theme.textPrimary
-                font.pointSize: 18
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.weight: Font.Bold
                 font.family: Constants.regularFontFamily
             }
@@ -108,7 +108,7 @@ Item {
         text: root.gameContentHash !== "" ? "No media for this game yet."
                                           : "No screenshots or clips yet."
         color: Theme.textMuted
-        font.pointSize: 13
+        font.pixelSize: AppStyle.fontSizeMedium
         font.family: Constants.regularFontFamily
     }
 }

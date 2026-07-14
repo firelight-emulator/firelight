@@ -48,7 +48,7 @@ FocusScope {
             text: sliderRoot.labelText
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.Medium
             verticalAlignment: Text.AlignVCenter
         }
@@ -96,7 +96,7 @@ FocusScope {
                         text: modeButton.text
                         color: modeButton.checked ? "#ffffff" : ColorPalette.neutral100
                         font.family: Constants.regularFontFamily
-                        font.pixelSize: 14
+                        font.pixelSize: AppStyle.fontSizeSmall
                         font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -163,7 +163,7 @@ FocusScope {
         }
 
         Text {
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             visible: AppearanceSettings.backgroundMode === "image"
             font.family: Constants.regularFontFamily
             font.weight: Font.Medium

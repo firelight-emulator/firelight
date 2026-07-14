@@ -35,7 +35,7 @@ Rectangle {
                        + (NetworkService.memberCount === 1 ? "" : "s")
             }
             color: Theme.textPrimary
-            font.pixelSize: 13
+            font.pixelSize: AppStyle.fontSizeSmall
         }
     }
 

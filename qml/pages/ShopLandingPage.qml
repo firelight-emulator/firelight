@@ -32,7 +32,7 @@ FocusScope {
             id: introText
             text: "The Mod Shop is where you'll be able to easily find and download mods for your games.\n\nIt's not ready yet, but here are some of the awesome mods you can look forward to!"
             color: Theme.textPrimary
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.Normal
             width: gridView.width
             font.family: Constants.regularFontFamily

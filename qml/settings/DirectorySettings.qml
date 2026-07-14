@@ -81,7 +81,7 @@ FocusScope {
                     }
                     Text {
                         text: model.path
-                        font.pixelSize: 17
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         font.weight: Font.DemiBold
                         color: Theme.textPrimary
@@ -175,7 +175,7 @@ FocusScope {
         }
 
         Text {
-            font.pixelSize: 15
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.Medium
             color: Theme.textPrimary

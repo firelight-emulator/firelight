@@ -79,7 +79,7 @@ Item {
                             anchors.centerIn: parent
                             text: "▶"
                             color: "white"
-                            font.pixelSize: 16
+                            font.pixelSize: AppStyle.fontSizeMedium
                         }
                     }
 
@@ -91,7 +91,7 @@ Item {
                         visible: cell.model.favorite
                         text: "★"
                         color: "gold"
-                        font.pixelSize: 18
+                        font.pixelSize: AppStyle.fontSizeMedium
                     }
                 }
             }

@@ -39,7 +39,7 @@ BaseSettingItem {
             color: Theme.textPrimary
             horizontalAlignment: Text.AlignRight
             verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
         }

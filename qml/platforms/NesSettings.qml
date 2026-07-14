@@ -29,13 +29,10 @@ FocusScope {
 
                     hoverEnabled: true
 
-                    contentItem: Text {
-                        text: "\ue5e0"
-                        font.family: Constants.symbolFontFamily
+                    contentItem: Icon {
+                        name: "arrow_back_ios"
                         leftPadding: 8
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 24
+                        size: 24
                         color: Theme.textMuted
                     }
 
@@ -50,7 +47,7 @@ FocusScope {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: qsTr("Default NES settings")
-                    font.pixelSize: 26
+                    font.pixelSize: AppStyle.fontSizeLarge
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Bold
                     horizontalAlignment: Text.AlignLeft
@@ -72,7 +69,7 @@ FocusScope {
                 Layout.fillWidth: true
                 text: "There's nothing here yet."
                 color: Theme.textPrimary
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignHCenter

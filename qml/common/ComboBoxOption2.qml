@@ -35,7 +35,7 @@ Button {
                 Layout.fillWidth: true
                 text: root.label
                 color: Theme.textPrimary
-                font.pixelSize: 16
+                font.pixelSize: AppStyle.fontSizeMedium
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
@@ -46,7 +46,7 @@ Button {
                 Layout.fillWidth: true
                 visible: root.description !== ""
                 text: root.description
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 lineHeight: 1.2
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily

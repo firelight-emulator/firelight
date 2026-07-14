@@ -55,7 +55,7 @@ Pane {
               }
               Text {
                   text: model.displayName
-                  font.pixelSize: 17
+                  font.pixelSize: AppStyle.fontSizeMedium
                   font.weight: Font.DemiBold
                   font.family: Constants.regularFontFamily
                   color: "white"
@@ -85,7 +85,7 @@ Pane {
 
                   text: (hours > 0 ? hours + " hours, " : "") + (minutes > 0 ? minutes + " minutes, " : "") + (seconds > 0 ? seconds + ( seconds > 1 ? " seconds" : " second") : "")
                   color: ColorPalette.neutral300
-                  font.pixelSize: 17
+                  font.pixelSize: AppStyle.fontSizeMedium
                   font.weight: Font.Medium
                   font.family: Constants.regularFontFamily
               }

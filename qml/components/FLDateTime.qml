@@ -20,7 +20,7 @@ Item {
               let date = new Date(epochSeconds)
               return date.toLocaleTimeString()
           }
-          font.pixelSize: 16
+          font.pixelSize: AppStyle.fontSizeMedium
           font.weight: Font.DemiBold
           font.family: Constants.regularFontFamily
           color: "white"
@@ -39,7 +39,7 @@ Item {
               let date = new Date(epochSeconds)
               return date.toLocaleDateString()
           }
-          font.pixelSize: 16
+          font.pixelSize: AppStyle.fontSizeMedium
           font.weight: Font.DemiBold
           font.family: Constants.regularFontFamily
           color: "#7e7e7e"

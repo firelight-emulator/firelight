@@ -28,7 +28,6 @@ Button {
             width: parent.height - 8
             height: parent.height - 8
             size: parent.height - 8
-            fillMode: Image.PreserveAspectFit
             color: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? "black" : "white") : "white" : "#aaaaaa"
         }
 
@@ -43,7 +42,7 @@ Button {
 
             text: control.labelText
 
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
             color: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? "black" : "white") : "white" : "#aaaaaa"

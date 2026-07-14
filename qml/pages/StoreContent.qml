@@ -83,7 +83,7 @@ Flickable {
                         text: root.name
                         color: "white"
                         Layout.fillWidth: true
-                        font.pointSize: 26
+                        font.pixelSize: AppStyle.fontSizeXLarge
                         font.family: Constants.regularFontFamily
                         font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignLeft
@@ -95,7 +95,7 @@ Flickable {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                         width: parent.width
-                        font.pointSize: 11
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         color: "white"
                         Layout.fillWidth: true
@@ -122,7 +122,7 @@ Flickable {
                         Layout.alignment: Qt.AlignRight | Qt.AlignBottom
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
-                        font.pointSize: 10
+                        font.pixelSize: AppStyle.fontSizeSmall
                         font.family: Constants.regularFontFamily
                         color: "#d5d5d5"
                     }
@@ -143,7 +143,7 @@ Flickable {
                             font.family: Constants.regularFontFamily
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pointSize: 11
+                            font.pixelSize: AppStyle.fontSizeMedium
                         }
 
                         HoverHandler {
@@ -242,7 +242,7 @@ Flickable {
 
                 Text {
                     text: "Click and drag to see all screenshots"
-                    font.pointSize: 10
+                    font.pixelSize: AppStyle.fontSizeSmall
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Medium
                     color: "white"
@@ -268,7 +268,7 @@ Flickable {
                 Layout.topMargin: 12
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 color: "#d5d5d5"
             }
@@ -301,7 +301,7 @@ Flickable {
             id: words
             anchors.centerIn: parent
             text: ""
-            font.pointSize: 11
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             color: "#212020"
         }

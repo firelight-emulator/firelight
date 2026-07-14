@@ -21,16 +21,13 @@ Pane {
     RowLayout {
         anchors.fill: parent
 
-        Text {
+        Icon {
             Layout.fillHeight: true
             visible: root.isSubItem
             leftPadding: 8
             rightPadding: 8
-            text: "\ue5da"
-            font.family: Constants.symbolFontFamily
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 24
+            name: "subdirectory_arrow_right"
+            size: 24
             color: Theme.textMuted
         }
 
@@ -43,7 +40,7 @@ Pane {
                 Layout.fillWidth: true
                 text: root.label
                 color: Theme.textPrimary
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
@@ -53,7 +50,7 @@ Pane {
                 Layout.fillWidth: true
                 visible: root.description !== ""
                 text: root.description
-                font.pixelSize: 13
+                font.pixelSize: AppStyle.fontSizeSmall
                 Layout.alignment: Qt.AlignLeft
                 font.family: Constants.regularFontFamily
                 // font.weight: Font.

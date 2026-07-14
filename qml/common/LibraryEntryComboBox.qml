@@ -44,7 +44,7 @@ ComboBox {
         contentItem: ColumnLayout {
             Text {
                 text: model.display_name
-                font.pointSize: 10
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.Bold
                 font.family: Constants.regularFontFamily
                 color: "white"
@@ -55,7 +55,7 @@ ComboBox {
             }
             Text {
                 text: model.platform_name
-                font.pointSize: 9
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.Medium
                 font.family: Constants.regularFontFamily
                 color: "#C2BBBB"

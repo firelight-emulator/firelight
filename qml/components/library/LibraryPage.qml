@@ -81,7 +81,7 @@ Pane {
                     Layout.fillWidth: true
                     Text {
                         text: "Folders"
-                        font.pixelSize: 18
+                        font.pixelSize: AppStyle.fontSizeMedium
                         font.family: Constants.regularFontFamily
                         // font.weight: Font.DemiBold
                         color: Theme.textPrimary
@@ -107,7 +107,7 @@ Pane {
                     Layout.topMargin: 8
                     text: "No folders"
                     visible: folderList.count === 0
-                    font.pixelSize: 15
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.weight: Font.DemiBold
                     font.family: Constants.regularFontFamily
                     color: ColorPalette.neutral400
@@ -187,7 +187,7 @@ Pane {
                 Layout.fillWidth: true
                 Text {
                     text: libraryButtonGroup.checkedButton.sectionTitle
-                    font.pixelSize: 24
+                    font.pixelSize: AppStyle.fontSizeLarge
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                     color: "white"
@@ -202,7 +202,7 @@ Pane {
 
                 Text {
                     text: "Sort by:"
-                    font.pixelSize: 16
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                     color: "white"

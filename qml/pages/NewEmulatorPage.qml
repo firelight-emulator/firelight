@@ -308,7 +308,7 @@ FocusScope {
         contentItem: Text {
             text: emulator.playbackMultiplier + "x"
             color: "white"
-            font.pixelSize: 20
+            font.pixelSize: AppStyle.fontSizeLarge
             font.family: Constants.regularFontFamily
             anchors.centerIn: parent
             verticalAlignment: Text.AlignVCenter

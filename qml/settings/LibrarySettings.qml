@@ -18,7 +18,7 @@ Item {
             Layout.fillWidth: true
             text: qsTr("Game directory")
             color: Theme.textPrimary
-            font.pointSize: 12
+            font.pixelSize: AppStyle.fontSizeMedium
             // font.pointSize: 11
             font.family: Constants.regularFontFamily
             font.weight: Font.DemiBold
@@ -30,7 +30,7 @@ Item {
             text: qsTr("Firelight will automatically watch this directory for game files and update your library accordingly. Later you'll be able to add more!")
             color: Theme.textMuted
             wrapMode: Text.WordWrap
-            font.pointSize: 11
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             Layout.bottomMargin: 8
         }
@@ -61,7 +61,7 @@ Item {
                         padding: 4
                         text: model.path
                         font.family: Constants.regularFontFamily
-                        font.pointSize: 12
+                        font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
                         readOnly: true
@@ -101,7 +101,7 @@ Item {
                         contentItem: Text {
                             text: "Change folder"
                             font.family: Constants.regularFontFamily
-                            font.pointSize: 10
+                            font.pixelSize: AppStyle.fontSizeSmall
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                             color: "#020202"

@@ -82,6 +82,14 @@ C++ services are not exposed to QML directly. Instead:
 
 `Constants.qml`, `ColorPalette.qml`, `AppStyle.qml`, `GeneralSettings.qml`, and `AppearanceSettings.qml` are declared as QML singleton types in `CMakeLists.txt`.
 
+### Font sizing
+
+Use the `AppStyle.fontSize{Small,Medium,Large,XLarge}` tokens (13/16/22/32, device-independent px) for all text `font.pixelSize`. **Never use `font.pointSize`** — it renders ~25% smaller on macOS than on Windows because the logical-DPI baseline differs (72 vs 96), whereas `pixelSize` is consistent across platforms and still scales on HiDPI displays.
+
+### Icons
+
+Render icons with the `Icon` component (`qml/components/Icon.qml`): `Icon { name: "settings"; size: 22; color: Theme.textPrimary }`. It draws a Material Symbols Rounded glyph via `Text.CurveRendering` (crisp and resolution-independent at any DPR, unlike distance-field or raster SVGs) and colors via `color`. Icon names map to codepoints in the `MaterialSymbols` singleton (`qml/MaterialSymbols.qml`, generated from the font's cmap); the same names as the `qrc:/icons/*` aliases. `FLIcon` is a thin backwards-compatible wrapper over `Icon` (its `icon:` = `Icon.name`). For non-Material artwork (console logos, folder art) use `VectorImage { preferredRendererType: VectorImage.CurveRenderer }`, not a raster `Image`.
+
 ### Achievements Subsystem
 
 The `firelight_achievements` library (`libs/firelight/achievements/`) is a self-contained static library:

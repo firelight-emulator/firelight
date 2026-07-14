@@ -332,7 +332,7 @@ ApplicationWindow {
                 text: "RetroAchievements login failed"
                 color: "white"
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 20
+                font.pixelSize: AppStyle.fontSizeLarge
             }
 
             Text {
@@ -340,7 +340,7 @@ ApplicationWindow {
                 text: raLoginDialog.message
                 color: "white"
                 font.family: Constants.regularFontFamily
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 wrapMode: Text.WordWrap
             }
 
@@ -486,7 +486,7 @@ ApplicationWindow {
             id: messageText
             anchors.centerIn: parent
             color: "#dddddd"
-            font.pixelSize: 13
+            font.pixelSize: AppStyle.fontSizeSmall
         }
 
         Timer {

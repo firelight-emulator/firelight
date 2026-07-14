@@ -43,7 +43,7 @@ FirelightDialog {
                  contentItem: Item {
                      Text {
                          anchors.fill: parent
-                          font.pixelSize: 16
+                          font.pixelSize: AppStyle.fontSizeMedium
                          font.family: Constants.regularFontFamily
                          color: ColorPalette.neutral500
                          text: "Display name"
@@ -59,7 +59,7 @@ FirelightDialog {
                          property var globalCursorProxy: thePane
                          font.family: Constants.regularFontFamily
                          focus: true
-                          font.pixelSize: 16
+                          font.pixelSize: AppStyle.fontSizeMedium
                          color: "white"
                          verticalAlignment: Text.AlignVCenter
 

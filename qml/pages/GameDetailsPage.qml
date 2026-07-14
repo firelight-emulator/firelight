@@ -37,7 +37,7 @@ FocusScope {
                 padding: 10
                 text: root.entryData.display_name
                 color: "white"
-                font.pointSize: 22
+                font.pixelSize: AppStyle.fontSizeXLarge
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignLeft
@@ -65,7 +65,7 @@ FocusScope {
                     font.family: Constants.regularFontFamily
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pointSize: 12
+                    font.pixelSize: AppStyle.fontSizeMedium
                 }
                 onClicked: {
                     root.playPressed()
@@ -136,7 +136,7 @@ FocusScope {
                         text: "activity stuff"
                         color: "white"
                         font.family: Constants.regularFontFamily
-                        font.pointSize: 10
+                        font.pixelSize: AppStyle.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -145,7 +145,7 @@ FocusScope {
                         text: "settings stuff"
                         color: "white"
                         font.family: Constants.regularFontFamily
-                        font.pointSize: 10
+                        font.pixelSize: AppStyle.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

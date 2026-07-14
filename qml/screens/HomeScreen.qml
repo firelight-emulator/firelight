@@ -30,7 +30,7 @@ FocusScope {
         contentItem: Text {
             text: "Updating library..."
             color: Theme.textPrimary
-            font.pixelSize: 16
+            font.pixelSize: AppStyle.fontSizeMedium
             font.family: Constants.regularFontFamily
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -94,7 +94,7 @@ FocusScope {
                     text: "Library"
                     color: Theme.textPrimary
                     opacity: libraryButton.checked ? 1 : 0.5
-                    font.pixelSize: 24
+                    font.pixelSize: AppStyle.fontSizeLarge
                     font.weight: Font.Normal
                     font.family: Constants.regularFontFamily
                     horizontalAlignment: Text.AlignHCenter
@@ -123,7 +123,7 @@ FocusScope {
                     text: "Mod Shop"
                     color: Theme.textPrimary
                     opacity: modShopButton.checked ? 1 : 0.5
-                    font.pixelSize: 24
+                    font.pixelSize: AppStyle.fontSizeLarge
                     font.weight: Font.Normal
                     font.family: Constants.regularFontFamily
                     horizontalAlignment: Text.AlignHCenter
@@ -167,34 +167,24 @@ FocusScope {
             //     iconCode: "\ue7f4"
             // }
 
-            Text {
-                text: "\ue63e"
+            Icon {
+                name: "wifi"
                 visible: NetworkInformation.reachability === NetworkInformation.Reachability.Online
                 Layout.fillHeight: true
                 topPadding: 1
-                font.pixelSize: AppStyle.buttonTextFontSize + 6
+                size: AppStyle.fontSizeLarge
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                font.family: Constants.regularFontFamily
-                font.weight: AppStyle.buttonTextFontWeight
                 color: AppStyle.buttonTextColorInactive
-
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
             }
 
-            Text {
-                text: "\ue648"
+            Icon {
+                name: "wifi_off"
                 visible: NetworkInformation.reachability === NetworkInformation.Reachability.Disconnected || NetworkInformation.reachability === NetworkInformation.Reachability.Unknown
                 Layout.fillHeight: true
                 topPadding: 1
-                font.pixelSize: AppStyle.buttonTextFontSize + 6
+                size: AppStyle.fontSizeLarge
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                font.family: Constants.regularFontFamily
-                font.weight: AppStyle.buttonTextFontWeight
                 color: AppStyle.buttonTextColorInactive
-
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
@@ -217,7 +207,7 @@ FocusScope {
                 }
                 text: ""
                 color: Theme.textPrimary
-                font.pixelSize: 18
+                font.pixelSize: AppStyle.fontSizeMedium
                 horizontalAlignment: Text.AlignRight
                 verticalAlignment: Text.AlignVCenter
                 Layout.rightMargin: 12

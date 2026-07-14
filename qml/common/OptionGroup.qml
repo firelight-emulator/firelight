@@ -19,7 +19,7 @@ FocusScope {
         text: root.label
         leftPadding: 12
 
-        font.pixelSize: 15
+        font.pixelSize: AppStyle.fontSizeMedium
         font.family: Constants.regularFontFamily
         font.weight: Font.Normal
         Layout.fillWidth: true

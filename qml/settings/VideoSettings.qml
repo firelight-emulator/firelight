@@ -36,14 +36,14 @@ FocusScope {
                 Text {
                     text: "Audio output device"
                     color: Theme.textPrimary
-                    font.pixelSize: 16
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.family: Constants.regularFontFamily
                     font.weight: Font.DemiBold
                 }
                 Text {
                     text: "Applies the next time a game starts."
                     color: Theme.textMuted
-                    font.pixelSize: 14
+                    font.pixelSize: AppStyle.fontSizeSmall
                     font.family: Constants.regularFontFamily
                     font.weight: Font.Medium
                 }

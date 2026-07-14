@@ -48,12 +48,12 @@ Rectangle {
                 Text {
                     text: NetworkService.isHost ? "Ready check" : "The host wants to play"
                     color: Theme.textMuted
-                    font.pixelSize: 12
+                    font.pixelSize: AppStyle.fontSizeSmall
                 }
                 Text {
                     text: NetworkService.gameName
                     color: Theme.textPrimary
-                    font.pixelSize: 16
+                    font.pixelSize: AppStyle.fontSizeMedium
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -63,7 +63,7 @@ Rectangle {
                 text: NetworkService.readySlotCount + "/" + NetworkService.occupiedSlotCount + " ready"
                 color: NetworkService.readySlotCount === NetworkService.occupiedSlotCount
                        ? "#66cc66" : "#aaaaaa"
-                font.pixelSize: 13
+                font.pixelSize: AppStyle.fontSizeSmall
             }
         }
 
