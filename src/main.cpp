@@ -102,6 +102,7 @@
 #include "gui/qt_achievement_service_proxy.hpp"
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
+#include "gui/qt_tas_studio_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include <firelight/input/sdl_input_service.hpp>
 #include <firelight/settings/settings_catalog.hpp>
@@ -556,6 +557,10 @@ int main(int argc, char *argv[]) {
         "Firelight", 1, 0, "CoreOptionsModel");
     qmlRegisterType<firelight::activity::GameActivityListModel>(
         "Firelight", 1, 0, "GameActivityModel");
+    // TAS Studio (Phase 1). Creatable per-screen from TasStudioScreen.qml; drives a
+    // TasSession + PianoRollModel. Gated in QML behind GeneralSettings.enableTasStudio.
+    qmlRegisterType<firelight::gui::QtTasStudioProxy>("Firelight", 1, 0,
+                                                      "TasStudioController");
 
     QNetworkInformation::loadDefaultBackend();
     if (QNetworkInformation::instance()->reachability() ==

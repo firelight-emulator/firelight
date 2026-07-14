@@ -1,0 +1,86 @@
+#pragma once
+
+#include "gui/models/piano_roll_model.hpp"
+
+#include <firelight/input/input_frame.hpp>
+#include <firelight/tas/tas_emulator.hpp>
+#include <firelight/tas/tas_session.hpp>
+
+#include <QObject>
+
+#include <memory>
+#include <vector>
+
+namespace firelight::gui {
+
+// The QML-facing facade for the TAS Studio. Owns a TasSession and its PianoRollModel
+// and exposes transport (play / pause / step / seek), input editing, and playhead /
+// movie state to QML. The QML TableView binds to `model`; the control bar calls the
+// invokables here.
+//
+// SCAFFOLD SCOPE: so the studio is unit-testable and previewable without a running
+// game, this drives a TasSession over an injected ITasEmulator — `attach()` for tests,
+// or a self-contained counter emulator via `loadDemo()` for a UI preview. Driving the
+// LIVE game means running EmulatorInstance::runFrame through the render-thread
+// EmulatorCommand queue; that wiring is deferred (see libs/firelight/tas/README.md).
+// Not `final`: qmlRegisterType<> subclasses the registered type internally.
+class QtTasStudioProxy : public QObject {
+  Q_OBJECT
+  Q_PROPERTY(firelight::gui::PianoRollModel *model READ model CONSTANT)
+  Q_PROPERTY(int currentFrame READ currentFrame NOTIFY playheadChanged)
+  Q_PROPERTY(int frameCount READ frameCount NOTIFY movieChanged)
+  Q_PROPERTY(int rerecordCount READ rerecordCount NOTIFY movieChanged)
+  Q_PROPERTY(bool playing READ isPlaying NOTIFY playingChanged)
+  Q_PROPERTY(bool hasMovie READ hasMovie NOTIFY movieChanged)
+
+public:
+  explicit QtTasStudioProxy(QObject *parent = nullptr);
+  ~QtTasStudioProxy() override;
+
+  [[nodiscard]] PianoRollModel *model() const { return m_model; }
+  [[nodiscard]] int currentFrame() const;
+  [[nodiscard]] int frameCount() const;
+  [[nodiscard]] int rerecordCount() const;
+  [[nodiscard]] bool isPlaying() const { return m_playing; }
+  [[nodiscard]] bool hasMovie() const { return m_session != nullptr; }
+
+  // C++ wiring: drive a session over `emu` (borrowed — the caller keeps it alive)
+  // replaying `movie`. Used by tests and, later, the live-game integration.
+  void attach(tas::ITasEmulator *emu, std::vector<input::InputFrame> movie);
+
+  // --- transport ---
+  Q_INVOKABLE void play();
+  Q_INVOKABLE void pause();
+  Q_INVOKABLE void togglePlay();
+  Q_INVOKABLE void stepForward();
+  Q_INVOKABLE void stepBackward();
+  Q_INVOKABLE void seekTo(int frame);
+  // Called once per emulated frame by the driver: advances while playing, auto-pausing
+  // at the movie's end.
+  Q_INVOKABLE void tick();
+
+  // --- editing (delegates to the model, which routes through the session) ---
+  Q_INVOKABLE void toggleInput(int frame, int buttonId);
+  Q_INVOKABLE void paintInput(int firstFrame, int lastFrame, int buttonId,
+                              bool pressed);
+
+  // A self-contained demo movie so the UI has content without a running game.
+  Q_INVOKABLE void loadDemo(int frames = 240);
+
+signals:
+  void playheadChanged();
+  void movieChanged();
+  void playingChanged();
+
+private:
+  void setPlaying(bool playing);
+  void afterEmulatorMove(); // refresh model + notify playhead after a step/seek
+
+  PianoRollModel *m_model; // child QObject
+  std::unique_ptr<tas::TasSession> m_session;
+  tas::ITasEmulator *m_emu = nullptr;            // borrowed (attach)
+  std::unique_ptr<tas::ITasEmulator> m_demoEmu;  // owned (loadDemo)
+  bool m_playing = false;
+};
+
+} // namespace firelight::gui

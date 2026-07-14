@@ -255,6 +255,8 @@ add_library(firelight_lib
         src/gui/qt_input_service_proxy.hpp
         src/gui/qt_emulation_service_proxy.cpp
         src/gui/qt_emulation_service_proxy.hpp
+        src/gui/qt_tas_studio_proxy.cpp
+        src/gui/qt_tas_studio_proxy.hpp
         src/image_cache.cpp
         src/gui/models/game_activity_list_model.cpp
         src/gui/models/game_activity_list_model.hpp
@@ -523,6 +525,7 @@ add_executable(fl_test
         tests/app/tas/tas_emulator_instance_test.cpp
         tests/app/tas/tas_session_emulator_test.cpp
         tests/app/tas/piano_roll_model_test.cpp
+        tests/app/tas/tas_studio_proxy_test.cpp
         tests/app/achievements/sqlite_achievement_repository_test.cpp
         tests/app/achievements/achievement_service_test.cpp
         tests/app/activity/sqlite_activity_log_test.cpp
