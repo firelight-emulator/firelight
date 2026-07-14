@@ -55,6 +55,11 @@ public:
   [[nodiscard]] int getAutosaveIntervalSeconds() const {
     return m_saveIntervalSeconds;
   }
+  // Install the authoritative per-frame input source on the loaded core — the TAS
+  // movie provider. Forwards to ICore::setRetropadProvider, replacing the live
+  // input service for the duration of playback/record. Pass the live input service
+  // (or nullptr) to restore normal control.
+  void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
 
   void setMuted(bool muted);
   bool isMuted() const;

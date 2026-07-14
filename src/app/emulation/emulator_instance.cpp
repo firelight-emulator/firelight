@@ -371,6 +371,13 @@ namespace firelight::emulation {
     }
   }
 
+  void EmulatorInstance::setRetropadProvider(
+      firelight::libretro::IRetropadProvider *provider) {
+    if (m_core) {
+      m_core->setRetropadProvider(provider);
+    }
+  }
+
   void EmulatorInstance::reset() {
     m_core->reset();
     if (const auto achievements = m_context.achievementManager) {
