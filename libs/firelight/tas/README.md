@@ -49,8 +49,20 @@ Everything above under "built + verified" compiles and passes tests locally with
 MSYS2 mingw64 **g++** (both standalone and via the configured Ninja tree, run through
 `ctest`). Not exercised locally: the CI **clang** build and the Linux path (no runner
 here) — all code is standard C++20, so risk is low; the first `tas-testing` CI run is
-the confirmation. The **app-vs-CLI framebuffer/RAM equivalence** gate (replaying a
-real mGBA core in-process and hashing frames against the CLI oracle) is **not** done:
-the app's `Core` teardown of a real DLL exits the process (why the app tests use
-`FakeCore`), so that gate needs an out-of-process harness — tracked as the next hard
-item on the critical path.
+the confirmation.
+
+The **app-vs-CLI framebuffer/RAM equivalence** gate (replaying a real mGBA core
+through the app's `libretro::Core` and hashing frames against the CLI oracle's stored
+checkpoints) is **not** done, but was investigated: a real mGBA core **does load
+headlessly** in the app `Core` wrapper (constructor + `init()` reach "Libretro core
+loaded"), so a hashing `IVideoDataReceiver` (mGBA is `RETRO_HW_CONTEXT_NONE`) is the
+right shape and the leak-to-avoid-teardown-exit trick works. The blocker: a *minimal*
+in-process harness (stub config provider + hashing video receiver, **no audio
+receiver**) **segfaults during init/loadGame** — the app `Core` expects more of the
+context `EmulationService` normally wires (audio receiver / DRC, HW-render
+negotiation). So the gate needs either that full context assembled headlessly (a
+stub audio output + pointer provider) or an out-of-process replay harness that
+tolerates the real-core exit. This is the next hard item on the critical path.
+A stronger fixture also wants a **PPU-rendering** test ROM — `tests/testrom.gb` never
+drives the LCD, so its framebuffer is constant (equivalence over it checks
+format/pitch/dimension parity but not changing content).
