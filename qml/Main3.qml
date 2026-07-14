@@ -463,6 +463,12 @@ ApplicationWindow {
     }
 
     Component {
+        id: tasStudioScreen
+
+        TasStudioScreen {}
+    }
+
+    Component {
         id: galleryPage
 
         GalleryPage {}
@@ -543,6 +549,8 @@ ApplicationWindow {
                     content.goToContent("Settings", settingsScreen, {}, StackView.ReplaceTransition)
                 } else if (route === "/help") {
                     content.goToContent("Help", helpScreen, {}, StackView.ReplaceTransition)
+                } else if (route === "/tas-studio") {
+                    content.goToContent("TAS Studio", tasStudioScreen, {}, StackView.ReplaceTransition)
                 } else if (route === "/gallery") {
                     content.goToContent("Media", galleryPage, {}, StackView.ReplaceTransition)
                 } else if (route.startsWith("/gallery/games/")) {

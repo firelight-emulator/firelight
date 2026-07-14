@@ -176,6 +176,23 @@ Pane {
             }
         }
 
+        // Experimental TAS Studio (Phase 1), gated behind the GeneralSettings flag.
+        LeftNavigationItem {
+            id: tasStudioButton
+            label: "TAS Studio"
+            iconName: "play-circle"
+            visible: GeneralSettings.enableTasStudio
+
+            Layout.fillWidth: true
+
+            checked: Router.currentRoute.startsWith("/tas-studio")
+            onToggled: {
+                if (toggled) {
+                    Router.navigateTo("/tas-studio")
+                }
+            }
+        }
+
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
