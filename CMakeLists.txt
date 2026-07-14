@@ -589,6 +589,33 @@ add_dependencies(check
         firelight_metadata_test
         firelight_tas_test
 )
+
+# TAS app-vs-CLI framebuffer equivalence gate (roadmap Phase 1, critical path #2).
+# Its own executable (not part of fl_test) linking the Qt-Quick-free
+# firelight_emulation_lib, so a real-core crash can't take down the unit-test suite.
+# Gated with FL_BUILD_TAS; the ctest skips when the committed core/ROM/fixture are
+# absent. Replays a movie through the real app libretro::Core and checks each frame's
+# framebuffer hash against the CLI oracle's stored checkpoints.
+if(FL_BUILD_TAS)
+    # Built on every platform (proves it compiles + links against the emulation lib).
+    add_executable(tas_app_equiv tools/tas/tas_app_equiv.cpp)
+    target_include_directories(tas_app_equiv PRIVATE
+            ${CMAKE_SOURCE_DIR}/tools/tas
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/src/app
+            ${CMAKE_SOURCE_DIR}/libs/firelight/tas/include
+            ${CMAKE_SOURCE_DIR}/libs/firelight/input/include)
+    target_link_libraries(tas_app_equiv PRIVATE firelight_emulation_lib firelight_tas)
+    # The committed equiv.fltm checkpoints were authored by the Windows CLI, so run
+    # the gate on Windows where the fixture's platform matches. (A Linux-authored
+    # fixture would let it run on the Linux runner too; the exe still builds there.)
+    if(WIN32)
+        add_test(NAME tas_app_equiv COMMAND tas_app_equiv
+                "${CMAKE_SOURCE_DIR}/_cores/windows/mgba_libretro.dll"
+                "${CMAKE_SOURCE_DIR}/tools/tas/tests/testrom.gb"
+                "${CMAKE_SOURCE_DIR}/tools/tas/tests/equiv.fltm")
+    endif()
+endif()
 #ctest_coverage_collect_gcov()
 #target_compile_options(firelight PRIVATE -Werror -ggdb3 -O0)
 #

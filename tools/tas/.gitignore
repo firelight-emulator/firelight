@@ -11,3 +11,4 @@
 !examples/yellow_get_pikachu_from_boot.fltm
 # ...and the CI determinism-gate reference movie (checkpoint-free; over tests/testrom.gb).
 !tests/reference.fltm
+!tests/equiv.fltm
