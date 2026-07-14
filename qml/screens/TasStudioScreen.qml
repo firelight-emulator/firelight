@@ -13,6 +13,10 @@ Rectangle {
     id: root
     color: ColorPalette.neutral1000
 
+    // When set (by Main3 while a game is running), the studio drives that live game
+    // instead of the self-contained demo movie.
+    property var liveEmulator: null
+
     // The Game Boy button columns shown in the grid (id = RETRO_DEVICE_ID_JOYPAD_*).
     readonly property var buttonCols: [
         { id: 8, label: "A" },
@@ -30,7 +34,18 @@ Rectangle {
 
     TasStudioController {
         id: tas
-        Component.onCompleted: tas.loadDemo(240)
+        Component.onCompleted: {
+            if (root.liveEmulator) {
+                tas.bindLiveEmulator(root.liveEmulator) // drive the running game
+            } else {
+                tas.loadDemo(240) // self-contained preview
+            }
+        }
+        Component.onDestruction: {
+            if (root.liveEmulator) {
+                tas.bindLiveEmulator(null) // release TAS control, resume play
+            }
+        }
     }
 
     // Keep the playhead in view as playback/seek moves it.
@@ -58,6 +73,15 @@ Rectangle {
                 font.bold: true
             }
 
+            Text {
+                visible: tas.liveMode
+                text: "● LIVE"
+                color: ColorPalette.red500
+                font.pixelSize: 13
+                font.bold: true
+                Layout.leftMargin: 4
+            }
+
             Item { Layout.fillWidth: true }
 
             Button { text: "◀◀"; onClicked: tas.seekTo(0) }
@@ -67,7 +91,11 @@ Rectangle {
                 onClicked: tas.togglePlay()
             }
             Button { text: "▶"; onClicked: tas.stepForward() }
-            Button { text: "Reload demo"; onClicked: tas.loadDemo(240) }
+            Button {
+                text: "Reload demo"
+                visible: !tas.liveMode
+                onClicked: tas.loadDemo(240)
+            }
 
             Text {
                 text: "frame " + tas.currentFrame + " / " + tas.frameCount
@@ -87,7 +115,8 @@ Rectangle {
             radius: 4
             Text {
                 anchors.centerIn: parent
-                text: "Live video docks here in-app"
+                text: tas.liveMode ? "Driving the live game — video docks here next"
+                                   : "Live video docks here in-app"
                 color: ColorPalette.neutral500
                 font.pixelSize: 14
             }

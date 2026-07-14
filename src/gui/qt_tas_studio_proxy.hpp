@@ -11,6 +11,8 @@
 #include <memory>
 #include <vector>
 
+class EmulatorItem;
+
 namespace firelight::gui {
 
 // The QML-facing facade for the TAS Studio. Owns a TasSession and its PianoRollModel
@@ -32,6 +34,8 @@ class QtTasStudioProxy : public QObject {
   Q_PROPERTY(int rerecordCount READ rerecordCount NOTIFY movieChanged)
   Q_PROPERTY(bool playing READ isPlaying NOTIFY playingChanged)
   Q_PROPERTY(bool hasMovie READ hasMovie NOTIFY movieChanged)
+  // True when driving a live game (bindLiveEmulator) rather than the demo session.
+  Q_PROPERTY(bool liveMode READ isLiveMode NOTIFY liveModeChanged)
 
 public:
   explicit QtTasStudioProxy(QObject *parent = nullptr);
@@ -43,6 +47,12 @@ public:
   [[nodiscard]] int rerecordCount() const;
   [[nodiscard]] bool isPlaying() const { return m_playing; }
   [[nodiscard]] bool hasMovie() const { return m_session != nullptr; }
+  [[nodiscard]] bool isLiveMode() const { return m_liveEmulator != nullptr; }
+
+  // Bind the running game's EmulatorItem so the transport drives it (frame-step via
+  // the render-thread command queue) instead of the demo session; binding engages
+  // TAS control (pause + pacer gate). Pass null to release control and resume play.
+  Q_INVOKABLE void bindLiveEmulator(QObject *emulatorItem);
 
   // C++ wiring: drive a session over `emu` (borrowed — the caller keeps it alive)
   // replaying `movie`. Used by tests and, later, the live-game integration.
@@ -71,6 +81,7 @@ signals:
   void playheadChanged();
   void movieChanged();
   void playingChanged();
+  void liveModeChanged();
 
 private:
   void setPlaying(bool playing);
@@ -81,6 +92,12 @@ private:
   tas::ITasEmulator *m_emu = nullptr;            // borrowed (attach)
   std::unique_ptr<tas::ITasEmulator> m_demoEmu;  // owned (loadDemo)
   bool m_playing = false;
+
+  // Live-game driving (bindLiveEmulator). When set, the transport drives this real
+  // game via EmulatorItem::tasStepFrame()/setTasActive() and m_liveFrame counts the
+  // frames stepped since binding (there is no authored movie in this mode yet).
+  EmulatorItem *m_liveEmulator = nullptr;
+  int m_liveFrame = 0;
 };
 
 } // namespace firelight::gui

@@ -1,5 +1,7 @@
 #include "qt_tas_studio_proxy.hpp"
 
+#include "emulator_item.hpp"
+
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -38,11 +40,42 @@ QtTasStudioProxy::QtTasStudioProxy(QObject *parent)
 QtTasStudioProxy::~QtTasStudioProxy() = default;
 
 int QtTasStudioProxy::currentFrame() const {
+  if (m_liveEmulator) {
+    return m_liveFrame;
+  }
   return m_session ? static_cast<int>(m_session->currentFrame()) : 0;
 }
 
 int QtTasStudioProxy::frameCount() const {
+  if (m_liveEmulator) {
+    return m_liveFrame; // no authored movie in live mode yet
+  }
   return m_session ? static_cast<int>(m_session->movieLength()) : 0;
+}
+
+void QtTasStudioProxy::bindLiveEmulator(QObject *emulatorItem) {
+  auto *item = qobject_cast<EmulatorItem *>(emulatorItem);
+  if (item == m_liveEmulator) {
+    return;
+  }
+  // Release the previous live game (resume normal play).
+  if (m_liveEmulator) {
+    m_liveEmulator->setTasActive(false);
+  }
+  m_liveEmulator = item;
+  m_liveFrame = 0;
+  setPlaying(false);
+  if (m_liveEmulator) {
+    // Engage TAS control (pause + gate the pacer) and clear the demo grid — live
+    // mode drives the real game; an authored movie over it is a later increment.
+    m_liveEmulator->setTasActive(true);
+    m_session.reset();
+    m_demoEmu.reset();
+    m_model->setSession(nullptr);
+  }
+  emit liveModeChanged();
+  emit playheadChanged();
+  emit movieChanged();
 }
 
 int QtTasStudioProxy::rerecordCount() const {
@@ -72,7 +105,7 @@ void QtTasStudioProxy::setPlaying(bool playing) {
 }
 
 void QtTasStudioProxy::play() {
-  if (m_session) {
+  if (m_session || m_liveEmulator) {
     setPlaying(true);
   }
 }
@@ -93,6 +126,14 @@ void QtTasStudioProxy::afterEmulatorMove() {
 }
 
 void QtTasStudioProxy::stepForward() {
+  if (m_liveEmulator) {
+    // Drive the real game one frame via the render-thread command queue.
+    m_liveEmulator->tasStepFrame();
+    ++m_liveFrame;
+    emit playheadChanged();
+    emit movieChanged();
+    return;
+  }
   if (!m_session || currentFrame() >= frameCount()) {
     return; // don't run past the movie's authored input
   }
@@ -101,6 +142,9 @@ void QtTasStudioProxy::stepForward() {
 }
 
 void QtTasStudioProxy::stepBackward() {
+  if (m_liveEmulator) {
+    return; // no rewind over a live game yet (needs a render-thread greenzone)
+  }
   if (!m_session || currentFrame() <= 0) {
     return;
   }
@@ -117,7 +161,14 @@ void QtTasStudioProxy::seekTo(int frame) {
 }
 
 void QtTasStudioProxy::tick() {
-  if (!m_playing || !m_session) {
+  if (!m_playing) {
+    return;
+  }
+  if (m_liveEmulator) {
+    stepForward(); // continuous live advance while playing
+    return;
+  }
+  if (!m_session) {
     return;
   }
   if (currentFrame() < frameCount()) {

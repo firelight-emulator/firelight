@@ -120,6 +120,9 @@ FocusScope {
         }
     }
 
+    // The running EmulatorItem, so the TAS Studio can drive it (tasStepFrame etc.).
+    property alias liveEmulator: emulator
+
     property alias videoAspectRatio: emulator.videoAspectRatio
     property alias contentHash: emulator.contentHash
     property alias gameName: emulator.gameName

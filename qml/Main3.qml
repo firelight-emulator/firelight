@@ -550,7 +550,10 @@ ApplicationWindow {
                 } else if (route === "/help") {
                     content.goToContent("Help", helpScreen, {}, StackView.ReplaceTransition)
                 } else if (route === "/tas-studio") {
-                    content.goToContent("TAS Studio", tasStudioScreen, {}, StackView.ReplaceTransition)
+                    content.goToContent("TAS Studio", tasStudioScreen,
+                        {liveEmulator: (EmulationService.isGameRunning && emulatorLoader.item)
+                                        ? emulatorLoader.item.liveEmulator : null},
+                        StackView.ReplaceTransition)
                 } else if (route === "/gallery") {
                     content.goToContent("Media", galleryPage, {}, StackView.ReplaceTransition)
                 } else if (route.startsWith("/gallery/games/")) {
