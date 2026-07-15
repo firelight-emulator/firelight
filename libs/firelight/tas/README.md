@@ -59,16 +59,26 @@ built Qt/Vulkan app on Pokémon Yellow (mGBA):
   the bound `EmulatorItem` (no reparenting; the game keeps rendering on its own page),
   fit to the game's aspect ratio. *Verified:* the live game shows in the studio and
   updates as you step.
+- **Record → replay → seek over the live game.** Record captures each live frame's
+  input into a movie (`EmulatorItemRenderer` record hook → `tasFrameRecorded`, shown in
+  the piano-roll). Replay reinstalls a `MovieInputProvider` on the live core, restores
+  the record anchor, and plays the movie back hands-off. Seek/rewind uses a render-side
+  `GreenzoneStore` (keyframe every 30 frames): a row click or step-back restores the
+  nearest keyframe in `synchronize()` and fast-forwards through the proven step path to
+  the target. *Verified:* record/replay reproduce the run; row-click and rewind land
+  frame-exact and stable. Two hard constraints, learned the hard way: on the Vulkan/HW
+  path only `renderFrame()` refreshes `colorTexture()` (a restored state can't be shown
+  without running a frame), and the core must never be advanced by a bare `runFrame()`
+  outside `renderFrame()` nor restored while a QRhi command buffer is live — both
+  corrupt the HW path. Backward seeks therefore show a brief scrub (proven path only).
 
 ## Remaining Phase 1 increment
 
-**Record / replay / seek over the live game.** The headless pieces exist
-(`MovieInputProvider`, `RecordingInputProvider`, `GreenzoneStore`, `TasSession`); what
-remains is running a `TasSession` on the render thread over the live `EmulatorInstance`
-(reached through new TAS commands), capturing real input into a movie, keyframing the
-live core for instant seek, and syncing the movie + playhead back to the GUI-side
-`PianoRollModel` via signals. Prereq: a small `setRetropadProvider` passthrough on
-`EmulatorInstance` so the movie/record providers can be installed on the live core.
+Record / replay / seek over the live game is **done** (above). What's left toward a
+full studio: **input editing over the live movie** (toggling a cell rewrites the movie,
+invalidates the greenzone tail, and bumps the rerecord count — the `TasSession` edit
+path exists headlessly but isn't yet wired to the live core), and movie **save/load**
+(`.fltm`) from the studio.
 
 ## Nice-to-haves
 
