@@ -625,6 +625,18 @@ void EmulatorItem::tasStopReplay() {
   }
 }
 
+void EmulatorItem::tasSeekTo(const int targetFrame) {
+  if (!m_renderer) {
+    return;
+  }
+  m_renderer->submitCommand(
+      {.type = EmulatorItemRenderer::TasSeekTo,
+       .tasSeekTargetFrame = static_cast<uint64_t>(std::max(0, targetFrame))});
+  // Wake the render loop so synchronize() drains the command promptly (the game is
+  // paused under TAS control while seeking).
+  QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+}
+
 void EmulatorItem::startGame() {
   QThreadPool::globalInstance()->start([this] {
     const auto emuInstance =

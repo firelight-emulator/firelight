@@ -47,6 +47,10 @@ public:
   void setLiveMovie(const std::vector<input::InputFrame> *movie);
   void syncLiveMovie();
   void resetLiveMovie();
+  // The highlighted row in live mode after a seek: `framesEmulated` means the state
+  // that consumed input[framesEmulated-1], so row (framesEmulated-1) is current. -1
+  // (the default / recording) falls back to highlighting the latest recorded row.
+  void setLiveCurrentFrame(int framesEmulated);
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   QVariant data(const QModelIndex &index, int role) const override;
@@ -85,6 +89,8 @@ private:
   // Rows the model has committed from m_liveMovie (lags its size; advanced in
   // batches by syncLiveMovie so the view isn't updated every emulated frame).
   int m_liveMovieRows = 0;
+  // Live playhead as frames-emulated; -1 = follow the latest recorded row.
+  int m_liveCurrentFrame = -1;
 };
 
 } // namespace firelight::gui

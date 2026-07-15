@@ -138,6 +138,10 @@ public:
   // emitting tasReplayAdvanced() per frame and tasReplayFinished() at the end.
   Q_INVOKABLE void tasStartReplay();
   Q_INVOKABLE void tasStopReplay();
+  // Jump the live game to frame `targetFrame` of the recorded movie via the
+  // greenzone (restore nearest keyframe, fast-forward, present). Rewind and
+  // movie-relative stepping route through this. Emits tasSeekFinished when done.
+  Q_INVOKABLE void tasSeekTo(int targetFrame);
 
   [[nodiscard]] float playbackMultiplier() const {
     return m_playbackMultiplier;
@@ -188,6 +192,10 @@ signals:
   // replayed frame, and a one-shot when the movie is exhausted.
   void tasReplayAdvanced(int frameIndex);
   void tasReplayFinished();
+
+  // TAS seek landed (queued from the render thread): the frames-emulated cursor the
+  // game is now displaying.
+  void tasSeekFinished(int framesEmulated);
 
   void startedChanged();
 

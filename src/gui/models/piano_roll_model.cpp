@@ -45,9 +45,22 @@ void PianoRollModel::syncLiveMovie() {
 void PianoRollModel::resetLiveMovie() {
   beginResetModel();
   m_liveMovieRows = m_liveMovie ? static_cast<int>(m_liveMovie->size()) : 0;
+  m_liveCurrentFrame = -1; // recording: follow the latest row until the first seek
   endResetModel();
   emit playheadChanged();
   emit movieChanged();
+}
+
+void PianoRollModel::setLiveCurrentFrame(int framesEmulated) {
+  if (m_liveCurrentFrame == framesEmulated) {
+    return;
+  }
+  m_liveCurrentFrame = framesEmulated;
+  // The highlight moved; re-evaluate IsCurrentRole across the committed rows.
+  if (m_liveMovieRows > 0) {
+    emit dataChanged(index(0), index(m_liveMovieRows - 1), {IsCurrentRole});
+  }
+  emit playheadChanged();
 }
 
 int PianoRollModel::rowCount(const QModelIndex &parent) const {
@@ -76,7 +89,11 @@ QVariant PianoRollModel::data(const QModelIndex &index, int role) const {
     case ButtonsRole:
       return static_cast<unsigned>((*m_liveMovie)[static_cast<size_t>(row)].buttons);
     case IsCurrentRole:
-      return row == static_cast<int>(m_liveMovie->size()) - 1; // latest recorded
+      // After a seek, framesEmulated F highlights the row whose input produced the
+      // shown frame (F-1); while recording (-1), follow the latest committed row.
+      return m_liveCurrentFrame >= 0
+                 ? (row == m_liveCurrentFrame - 1)
+                 : (row == m_liveMovieRows - 1);
     case IsKeyframeRole:
       return false;
     default:

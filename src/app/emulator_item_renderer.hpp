@@ -13,6 +13,7 @@
 #include <QVideoFrameInput>
 #include <firelight/libretro/video_data_receiver.hpp>
 #include <firelight/tas/movie_input_provider.hpp> // TAS replay: input_frame + provider
+#include <firelight/tas/greenzone_store.hpp>       // TAS seek: keyframe ladder
 #include <mutex>
 #include <qsgrendererinterface.h>
 #include <rhi/qrhi.h>
@@ -120,7 +121,11 @@ public:
     // through the core (a movie provider drives input; the live controller is
     // suppressed). TasStopReplay ends it early and restores live control.
     TasStartReplay,
-    TasStopReplay
+    TasStopReplay,
+    // TAS: jump the live game to a given frame of the recorded movie using the
+    // greenzone (restore nearest keyframe, fast-forward, present). Rewind and
+    // movie-relative stepping route through this.
+    TasSeekTo
   };
 
   struct EmulatorCommand {
@@ -128,6 +133,7 @@ public:
     int suspendPointIndex;
     int rewindPointIndex;
     float playbackMultiplier;
+    uint64_t tasSeekTargetFrame = 0; // TasSeekTo target (frames-emulated)
   };
 
   void submitCommand(EmulatorCommand command);
@@ -196,6 +202,26 @@ private:
   // advances one frame per emulated frame until the movie is exhausted.
   bool m_tasReplaying = false;
   std::unique_ptr<firelight::tas::MovieInputProvider> m_tasMovieProvider;
+  // Whether m_tasMovieProvider is currently installed as the core's retropad
+  // provider (matching m_tasRecordedMovie). False during recording (the live input
+  // service is installed) and before the first seek/replay after a record.
+  bool m_tasMovieProviderInstalled = false;
+  // The greenzone keyframe ladder over the live run. Seeded with keyframe[0] = the
+  // record anchor; keyframes captured every stride frames as the cursor advances. The
+  // stride bounds a backward seek's fast-forward (each FF frame costs a render cycle),
+  // so keep it small for snappy rewind; maxKeyframes caps RAM (~200 KB per state).
+  firelight::tas::GreenzoneStore m_tasGreenzone{
+      firelight::tas::GreenzoneStore::Config{.stride = 30, .maxKeyframes = 1024}};
+  // The unified live TAS cursor: frames emulated since the anchor == provider cursor
+  // (when installed) == the state-after-N-frames the core currently holds.
+  uint64_t m_tasLiveFrame = 0;
+  // TAS seek: prepareTasSeek() (in synchronize) restores the nearest keyframe, then
+  // the render loop fast-forwards ONE frame per render() call through the normal,
+  // proven step path (never a bare runFrame) until m_tasLiveFrame reaches the target.
+  // Intermediate frames are run but not composited, so the seek still looks instant.
+  bool m_tasSeeking = false;
+  uint64_t m_tasSeekTarget = 0;
+  bool m_tasSeekWasMuted = false;
 
   QThread m_emulatorThread;
   QChronoTimer m_emulatorTimer{};
@@ -245,6 +271,16 @@ private:
   void initializeEmulatorInstance(QRhiCommandBuffer *cb);
 
   void displayPauseImage(QRhiCommandBuffer *cb);
+
+  // --- TAS seek helpers (render thread) ---
+  // Install m_tasMovieProvider as the core's input source for the recorded movie,
+  // if not already installed. Idempotent.
+  void ensureTasMovieProviderInstalled();
+  // Restore the greenzone + headless fast-forward toward `target` (no RHI, no display)
+  // and arm the final displayed transition to run through the normal render step. Runs
+  // in synchronize() — the same GUI-blocked, no-active-command-buffer context in which
+  // the app's rewind/suspend restores run safely.
+  void prepareTasSeek(uint64_t target);
 
   // Pushes the latest software frame into the instant-replay recorder.
   void feedClipRecorder(const QImage &frame);

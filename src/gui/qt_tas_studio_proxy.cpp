@@ -66,6 +66,8 @@ void QtTasStudioProxy::bindLiveEmulator(QObject *emulatorItem) {
                &QtTasStudioProxy::onReplayAdvanced);
     disconnect(m_liveEmulator, &EmulatorItem::tasReplayFinished, this,
                &QtTasStudioProxy::onReplayFinished);
+    disconnect(m_liveEmulator, &EmulatorItem::tasSeekFinished, this,
+               &QtTasStudioProxy::onSeekFinished);
     m_liveEmulator->tasStopReplay();
     m_liveEmulator->tasStopRecording();
     m_liveEmulator->setTasActive(false);
@@ -96,6 +98,8 @@ void QtTasStudioProxy::bindLiveEmulator(QObject *emulatorItem) {
             &QtTasStudioProxy::onReplayAdvanced, Qt::QueuedConnection);
     connect(m_liveEmulator, &EmulatorItem::tasReplayFinished, this,
             &QtTasStudioProxy::onReplayFinished, Qt::QueuedConnection);
+    connect(m_liveEmulator, &EmulatorItem::tasSeekFinished, this,
+            &QtTasStudioProxy::onSeekFinished, Qt::QueuedConnection);
     m_model->setLiveMovie(&m_liveMovie);
   } else {
     m_model->setLiveMovie(nullptr);
@@ -184,8 +188,9 @@ void QtTasStudioProxy::stopReplay() {
 
 void QtTasStudioProxy::onReplayAdvanced(int frameIndex) {
   m_liveFrame = frameIndex;
-  // Throttle the playhead/scroll to ~10 Hz (same reasoning as onFrameRecorded).
+  // Throttle the playhead/scroll + row highlight to ~10 Hz (as onFrameRecorded).
   if ((frameIndex % 6) == 0) {
+    m_model->setLiveCurrentFrame(frameIndex); // highlight follows the replay position
     emit playheadChanged();
   }
 }
@@ -196,9 +201,17 @@ void QtTasStudioProxy::onReplayFinished() {
     m_replaying = false;
     emit replayingChanged();
   }
+  m_model->setLiveCurrentFrame(m_liveFrame); // highlight the final frame's row
   if (m_liveEmulator) {
     m_liveEmulator->setTasActive(true); // pause on the movie's final frame
   }
+  emit playheadChanged();
+  emit movieChanged();
+}
+
+void QtTasStudioProxy::onSeekFinished(int framesEmulated) {
+  m_liveFrame = framesEmulated;
+  m_model->setLiveCurrentFrame(framesEmulated); // highlight row framesEmulated-1
   emit playheadChanged();
   emit movieChanged();
 }
@@ -252,7 +265,17 @@ void QtTasStudioProxy::afterEmulatorMove() {
 
 void QtTasStudioProxy::stepForward() {
   if (m_liveEmulator) {
-    // Drive the real game one frame via the render-thread command queue.
+    if (!m_liveMovie.empty() && !m_recording && !m_replaying) {
+      // Navigate the recorded movie forward via the greenzone (forward-continue in
+      // the renderer makes a single step cost one frame). Stop at the movie's end.
+      const int target = m_liveFrame + 1;
+      if (target <= static_cast<int>(m_liveMovie.size())) {
+        m_liveEmulator->tasSeekTo(target);
+      }
+      return;
+    }
+    // No recorded movie yet: nudge the live game forward one frame, reading the
+    // controller, via the render-thread command queue.
     m_liveEmulator->tasStepFrame();
     ++m_liveFrame;
     emit playheadChanged();
@@ -268,7 +291,17 @@ void QtTasStudioProxy::stepForward() {
 
 void QtTasStudioProxy::stepBackward() {
   if (m_liveEmulator) {
-    return; // no rewind over a live game yet (needs a render-thread greenzone)
+    // Rewind one frame over the live game via the greenzone. Floor at frame 1 (the
+    // first displayable frame; frame 0 is the pre-input anchor).
+    if (m_recording || m_replaying) {
+      return;
+    }
+    const int target = m_liveFrame - 1;
+    if (target < 1) {
+      return;
+    }
+    m_liveEmulator->tasSeekTo(target);
+    return;
   }
   if (!m_session || currentFrame() <= 0) {
     return;
@@ -277,6 +310,19 @@ void QtTasStudioProxy::stepBackward() {
 }
 
 void QtTasStudioProxy::seekTo(int frame) {
+  if (m_liveEmulator) {
+    if (m_recording || m_replaying || m_liveMovie.empty()) {
+      return; // can't seek mid-capture / mid-replay or with nothing recorded
+    }
+    // Row `frame` -> framesEmulated `frame + 1` (the state that row's input
+    // produces). This +1 row->framesEmulated mapping lives ONLY here; the render /
+    // greenzone layer works purely in frames-emulated. Floor at 1 (frame 0 is the
+    // pre-input anchor, which has no displayable frame on the HW path).
+    const int target =
+        std::clamp(frame + 1, 1, static_cast<int>(m_liveMovie.size()));
+    m_liveEmulator->tasSeekTo(target);
+    return;
+  }
   if (!m_session) {
     return;
   }

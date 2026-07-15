@@ -20,6 +20,8 @@
 #endif
 #include <spdlog/spdlog.h>
 
+#include <algorithm> // std::min for TAS seek clamping
+
 #include "emulator_item.hpp"
 
 static EmulatorItemRenderer *globalRenderer = nullptr;
@@ -351,10 +353,20 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         m_tasRecording = true;
         m_tasRecordFrame = 0;
         m_tasRecordedMovie.clear();
+        // Recording reads the live controller, so make sure the live input service —
+        // not a leftover movie provider from a prior replay/seek — is installed.
+        m_emulatorInstance->restoreLiveRetropadProvider();
+        m_tasMovieProviderInstalled = false;
+        m_tasReplaying = false;
         // Anchor the movie to the state at record-start (safe here: synchronize()
         // runs with the GUI thread blocked, before render() runs frame 0). Replay
-        // restores this so the recorded inputs reproduce the same run.
+        // and seek restore this so the recorded inputs reproduce the same run.
         m_tasAnchorState = m_emulatorInstance->serializeState();
+        // Re-seed the greenzone: keyframe[0] is the anchor; the ladder is rebuilt as
+        // the cursor advances. A fresh record must not reuse a stale ladder.
+        m_tasGreenzone.clear();
+        m_tasGreenzone.put(0, m_tasAnchorState);
+        m_tasLiveFrame = 0;
         break;
 
       case TasStopRecording:
@@ -363,13 +375,10 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
       case TasStartReplay:
         if (!m_tasRecordedMovie.empty() && !m_tasAnchorState.empty()) {
-          if (!m_tasMovieProvider) {
-            m_tasMovieProvider =
-                std::make_unique<firelight::tas::MovieInputProvider>();
-          }
-          m_tasMovieProvider->setMovie(m_tasRecordedMovie); // cursor -> 0
+          ensureTasMovieProviderInstalled();
           m_emulatorInstance->deserializeState(m_tasAnchorState);
-          m_emulatorInstance->setRetropadProvider(m_tasMovieProvider.get());
+          m_tasMovieProvider->seekTo(0); // cursor -> 0, aligned with the anchor
+          m_tasLiveFrame = 0;
           m_tasReplaying = true;
         }
         break;
@@ -378,7 +387,15 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         if (m_tasReplaying) {
           m_tasReplaying = false;
           m_emulatorInstance->restoreLiveRetropadProvider();
+          m_tasMovieProviderInstalled = false;
         }
+        break;
+
+      case TasSeekTo:
+        // Do the restore + headless fast-forward HERE (synchronize is GUI-blocked with
+        // no active RHI command buffer — the safe context the app's rewind/suspend
+        // restores use). The final displayed frame is armed to run in render().
+        prepareTasSeek(command.tasSeekTargetFrame);
         break;
 
       case WriteRewindPoint: {
@@ -603,8 +620,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
-  // If we're paused, display the pause image and skip running a frame — unless a
-  // TAS single-step was requested, which advances exactly one frame while paused.
+  // If we're paused, display the pause image and skip running a frame — unless a TAS
+  // single-step (or a seek's armed landing frame, which sets m_tasStepPending) was
+  // requested, which advances exactly one frame while paused.
   if (m_paused && !m_tasStepPending) {
     displayPauseImage(cb);
     return;
@@ -696,21 +714,117 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     }
   }
 
-  // TAS replay: the frame just consumed the movie provider's current input; step the
-  // cursor to the next frame and, when the movie is exhausted, hand control back to
-  // the live controller and notify the GUI.
-  if (m_tasReplaying && m_tasMovieProvider) {
+  // TAS cursor bookkeeping after a normally-run frame. Keep m_tasLiveFrame == frames
+  // emulated (== movie provider cursor during replay/seek), and capture greenzone
+  // keyframes on the stride cadence so seek/rewind can jump back cheaply.
+  if (m_tasSeeking && m_tasMovieProvider) {
+    // Fast-forwarding toward the seek target: advance one frame; when the cursor
+    // reaches the target the game is now displaying it (this was the shown frame).
     m_tasMovieProvider->advance();
-    emit m_emulatorItem->tasReplayAdvanced(
-        static_cast<int>(m_tasMovieProvider->cursor()));
+    ++m_tasLiveFrame;
+    if (m_tasGreenzone.shouldCapture(m_tasLiveFrame)) {
+      m_tasGreenzone.put(m_tasLiveFrame, m_emulatorInstance->serializeState());
+    }
+    if (m_tasLiveFrame >= m_tasSeekTarget) {
+      m_tasSeeking = false;
+      m_emulatorInstance->setMuted(m_tasSeekWasMuted);
+      emit m_emulatorItem->tasSeekFinished(static_cast<int>(m_tasLiveFrame));
+    } else {
+      m_tasStepPending = true; // run the next fast-forward frame
+      m_shouldRunFrame = true;
+    }
+  } else if (m_tasRecording) {
+    ++m_tasLiveFrame;
+    if (m_tasGreenzone.shouldCapture(m_tasLiveFrame)) {
+      m_tasGreenzone.put(m_tasLiveFrame, m_emulatorInstance->serializeState());
+    }
+  } else if (m_tasReplaying && m_tasMovieProvider) {
+    // The frame just consumed the movie provider's current input; step the cursor.
+    m_tasMovieProvider->advance();
+    ++m_tasLiveFrame;
+    if (m_tasGreenzone.shouldCapture(m_tasLiveFrame)) {
+      m_tasGreenzone.put(m_tasLiveFrame, m_emulatorInstance->serializeState());
+    }
+    emit m_emulatorItem->tasReplayAdvanced(static_cast<int>(m_tasLiveFrame));
     if (m_tasMovieProvider->atEnd()) {
       m_tasReplaying = false;
       m_emulatorInstance->restoreLiveRetropadProvider();
+      m_tasMovieProviderInstalled = false;
       emit m_emulatorItem->tasReplayFinished();
     }
   }
 
   update();
+}
+
+void EmulatorItemRenderer::ensureTasMovieProviderInstalled() {
+  if (m_tasMovieProviderInstalled) {
+    return;
+  }
+  if (!m_tasMovieProvider) {
+    m_tasMovieProvider = std::make_unique<firelight::tas::MovieInputProvider>();
+  }
+  // setMovie resets the cursor to 0; every seek/replay re-seeks it right after, so
+  // that's harmless. This makes the core read recorded input, not the live pad.
+  m_tasMovieProvider->setMovie(m_tasRecordedMovie);
+  m_emulatorInstance->setRetropadProvider(m_tasMovieProvider.get());
+  m_tasMovieProviderInstalled = true;
+}
+
+void EmulatorItemRenderer::prepareTasSeek(uint64_t target) {
+  const uint64_t movieLen = m_tasRecordedMovie.size();
+  if (movieLen == 0 || m_tasAnchorState.empty() || m_tasReplaying || m_tasSeeking) {
+    return; // nothing to seek over, or a replay/seek is already driving the core
+  }
+  ensureTasMovieProviderInstalled();
+
+  const uint64_t F = std::min(target, movieLen); // clamp to [0, movieLen]
+
+  // Idempotent: already at F. Running a frame would advance to F+1.
+  if (F == m_tasLiveFrame) {
+    emit m_emulatorItem->tasSeekFinished(static_cast<int>(m_tasLiveFrame));
+    return;
+  }
+
+  // Anchor boundary: "0 frames" has no displayable image, so restore RAM to the
+  // start and leave colorTexture() showing the last frame (cosmetic only).
+  if (F == 0) {
+    if (const auto *s0 = m_tasGreenzone.state(0)) {
+      m_emulatorInstance->deserializeState(*s0);
+    }
+    m_tasMovieProvider->seekTo(0);
+    m_tasLiveFrame = 0;
+    emit m_emulatorItem->tasSeekFinished(0);
+    return;
+  }
+
+  // Pick the start point: seeking forward continues from the current state (no
+  // restore); otherwise restore the nearest keyframe at or before F-1 (anchor@0
+  // guarantees a hit). The restore is safe here — synchronize() is the same
+  // GUI-blocked, no-active-command-buffer context the app's rewind/suspend use.
+  uint64_t start;
+  if (F > m_tasLiveFrame) {
+    start = m_tasLiveFrame; // core already holds state `start`
+  } else {
+    const auto kf = m_tasGreenzone.nearestAtOrBefore(F - 1);
+    start = kf.value_or(0);
+    if (const auto *s = m_tasGreenzone.state(start)) {
+      m_emulatorInstance->deserializeState(*s);
+    }
+  }
+  m_tasMovieProvider->seekTo(start); // pad now presents movie[start]
+  m_tasLiveFrame = start;
+  m_overlayImage = QImage(); // don't let a stale pause overlay clobber the seek frame
+
+  // Mute across the fast-forward; the render loop advances one frame per call through
+  // the normal step path (proven) until it reaches F, suppressing intermediate frames'
+  // display so the seek looks instant.
+  m_tasSeekWasMuted = m_emulatorInstance->isMuted();
+  m_emulatorInstance->setMuted(true);
+  m_tasSeeking = true;
+  m_tasSeekTarget = F;
+  m_tasStepPending = true; // run the first fast-forward frame (honored while paused)
+  m_shouldRunFrame = true;
 }
 
 void EmulatorItemRenderer::initializeEmulatorInstance(QRhiCommandBuffer *cb) {

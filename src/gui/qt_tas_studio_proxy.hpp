@@ -107,6 +107,8 @@ private:
   // Slots for EmulatorItem replay signals — move the playhead / end replay.
   void onReplayAdvanced(int frameIndex);
   void onReplayFinished();
+  // Slot for EmulatorItem::tasSeekFinished — land the live playhead after a seek.
+  void onSeekFinished(int framesEmulated);
 
   PianoRollModel *m_model; // child QObject
   std::unique_ptr<tas::TasSession> m_session;
