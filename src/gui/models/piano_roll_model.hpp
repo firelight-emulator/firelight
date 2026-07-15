@@ -2,6 +2,10 @@
 
 #include <QAbstractListModel>
 
+#include <firelight/input/input_frame.hpp>
+
+#include <vector>
+
 namespace firelight::tas {
 class TasSession;
 }
@@ -35,6 +39,15 @@ public:
   // Bind (or rebind) the session whose movie this grid edits; nullptr => empty grid.
   void setSession(tas::TasSession *session);
 
+  // Live-recording display mode: show a read-only movie the caller owns and grows
+  // (a live-game recording). Takes precedence over the session while set; pass
+  // nullptr to leave it. syncLiveMovie() commits any newly-appended frames as rows
+  // in one batch (call it throttled, not per-frame); resetLiveMovie() clears the
+  // committed rows.
+  void setLiveMovie(const std::vector<input::InputFrame> *movie);
+  void syncLiveMovie();
+  void resetLiveMovie();
+
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   QVariant data(const QModelIndex &index, int role) const override;
   QHash<int, QByteArray> roleNames() const override;
@@ -67,6 +80,11 @@ private:
   void emitEdited(int fromFrame);
 
   tas::TasSession *m_session = nullptr;
+  // Non-null in live-recording mode (read-only, owned by the proxy).
+  const std::vector<input::InputFrame> *m_liveMovie = nullptr;
+  // Rows the model has committed from m_liveMovie (lags its size; advanced in
+  // batches by syncLiveMovie so the view isn't updated every emulated frame).
+  int m_liveMovieRows = 0;
 };
 
 } // namespace firelight::gui

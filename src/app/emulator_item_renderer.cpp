@@ -347,6 +347,15 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         m_tasStepPending = true;
         break;
 
+      case TasStartRecording:
+        m_tasRecording = true;
+        m_tasRecordFrame = 0;
+        break;
+
+      case TasStopRecording:
+        m_tasRecording = false;
+        break;
+
       case WriteRewindPoint: {
         if (m_paused)
           break;
@@ -595,6 +604,14 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   // If we made it here, we're going to run at least one frame
   // ------------------------------------------------------------
   emit m_emulatorItem->aboutToRunFrame();
+
+  // TAS record: capture the input this frame is about to consume (the same sample
+  // the core's input router takes), and hand it to the GUI to append to the movie.
+  if (m_tasRecording) {
+    const uint16_t buttons = m_emulatorInstance->captureCurrentInputButtons(0);
+    emit m_emulatorItem->tasFrameRecorded(static_cast<int>(m_tasRecordFrame++),
+                                          static_cast<int>(buttons));
+  }
 
   if (!m_usingHardwareRenderer) {
     QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();

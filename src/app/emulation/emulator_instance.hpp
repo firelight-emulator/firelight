@@ -121,6 +121,10 @@ public:
   std::vector<uint8_t> serializeState();
   bool deserializeState(const std::vector<uint8_t> &state);
 
+  // Snapshots the live controller's button mask for `port` this frame — the
+  // per-frame input a TAS recording captures. 0 if there is no input service.
+  [[nodiscard]] uint16_t captureCurrentInputButtons(int port) const;
+
   // Multi-disc control. getDiscCount() is 0 for single-disc/cartridge content.
   // swapDisc publishes a DiscChangedEvent on success.
   [[nodiscard]] unsigned getDiscCount() const;

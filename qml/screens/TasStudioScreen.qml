@@ -17,6 +17,15 @@ Rectangle {
     // instead of the self-contained demo movie.
     property var liveEmulator: null
 
+    // Swallow keyboard input so it drives ONLY the game (which reads keys via the
+    // app's global window-level handler and records them), not the studio's own
+    // controls. The transport/grid are operated with the mouse. Grabbing focus here
+    // keeps key events from reaching the studio's focusable children.
+    focus: true
+    Component.onCompleted: root.forceActiveFocus()
+    Keys.onPressed: function (event) { event.accepted = true }
+    Keys.onReleased: function (event) { event.accepted = true }
+
     // The Game Boy button columns shown in the grid (id = RETRO_DEVICE_ID_JOYPAD_*).
     readonly property var buttonCols: [
         { id: 8, label: "A" },
@@ -52,7 +61,11 @@ Rectangle {
     Connections {
         target: tas
         function onPlayheadChanged() {
-            grid.positionViewAtIndex(tas.currentFrame, ListView.Contain);
+            // Follow the playhead / latest recorded frame; clamp to the committed
+            // row count (during recording currentFrame runs ahead of it).
+            var idx = Math.min(tas.currentFrame, grid.count - 1);
+            if (idx >= 0)
+                grid.positionViewAtIndex(idx, ListView.Contain);
         }
     }
 
@@ -84,14 +97,24 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
-            Button { text: "◀◀"; onClicked: tas.seekTo(0) }
-            Button { text: "◀"; onClicked: tas.stepBackward() }
+            // focusPolicy NoFocus: mouse-operated only, so clicking never steals
+            // keyboard focus from the root (which swallows game keys).
+            Button { focusPolicy: Qt.NoFocus; text: "◀◀"; onClicked: tas.seekTo(0) }
+            Button { focusPolicy: Qt.NoFocus; text: "◀"; onClicked: tas.stepBackward() }
             Button {
+                focusPolicy: Qt.NoFocus
                 text: tas.playing ? "‖" : "▶"
                 onClicked: tas.togglePlay()
             }
-            Button { text: "▶"; onClicked: tas.stepForward() }
+            Button { focusPolicy: Qt.NoFocus; text: "▶"; onClicked: tas.stepForward() }
             Button {
+                focusPolicy: Qt.NoFocus
+                visible: tas.liveMode
+                text: tas.recording ? "■ Stop" : "● Record"
+                onClicked: tas.recording ? tas.stopRecording() : tas.startRecording()
+            }
+            Button {
+                focusPolicy: Qt.NoFocus
                 text: "Reload demo"
                 visible: !tas.liveMode
                 onClicked: tas.loadDemo(240)
@@ -176,6 +199,8 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            focus: false                 // don't grab keyboard from the root
+            keyNavigationEnabled: false   // arrow keys drive the game, not the list
             model: tas.model
             boundsBehavior: Flickable.StopAtBounds
             cacheBuffer: root.rowHeight * 24

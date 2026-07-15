@@ -17,19 +17,75 @@ void PianoRollModel::setSession(tas::TasSession *session) {
   emit movieChanged();
 }
 
+void PianoRollModel::setLiveMovie(const std::vector<input::InputFrame> *movie) {
+  beginResetModel();
+  m_liveMovie = movie;
+  m_liveMovieRows = movie ? static_cast<int>(movie->size()) : 0;
+  endResetModel();
+  emit playheadChanged();
+  emit movieChanged();
+}
+
+void PianoRollModel::syncLiveMovie() {
+  if (m_liveMovie == nullptr) {
+    return;
+  }
+  const int newSize = static_cast<int>(m_liveMovie->size());
+  if (newSize > m_liveMovieRows) {
+    beginInsertRows(QModelIndex(), m_liveMovieRows, newSize - 1);
+    m_liveMovieRows = newSize;
+    endInsertRows();
+  } else if (newSize < m_liveMovieRows) {
+    beginResetModel();
+    m_liveMovieRows = newSize;
+    endResetModel();
+  }
+}
+
+void PianoRollModel::resetLiveMovie() {
+  beginResetModel();
+  m_liveMovieRows = m_liveMovie ? static_cast<int>(m_liveMovie->size()) : 0;
+  endResetModel();
+  emit playheadChanged();
+  emit movieChanged();
+}
+
 int PianoRollModel::rowCount(const QModelIndex &parent) const {
-  if (parent.isValid() || m_session == nullptr) {
+  if (parent.isValid()) {
     return 0;
   }
-  return static_cast<int>(m_session->movieLength());
+  if (m_liveMovie != nullptr) {
+    return m_liveMovieRows;
+  }
+  return m_session ? static_cast<int>(m_session->movieLength()) : 0;
 }
 
 QVariant PianoRollModel::data(const QModelIndex &index, int role) const {
-  if (m_session == nullptr || !index.isValid()) {
+  if (!index.isValid()) {
     return {};
   }
   const int row = index.row();
-  if (row < 0 || row >= static_cast<int>(m_session->movieLength())) {
+
+  if (m_liveMovie != nullptr) {
+    if (row < 0 || row >= m_liveMovieRows) {
+      return {};
+    }
+    switch (role) {
+    case FrameIndexRole:
+      return row;
+    case ButtonsRole:
+      return static_cast<unsigned>((*m_liveMovie)[static_cast<size_t>(row)].buttons);
+    case IsCurrentRole:
+      return row == static_cast<int>(m_liveMovie->size()) - 1; // latest recorded
+    case IsKeyframeRole:
+      return false;
+    default:
+      return {};
+    }
+  }
+
+  if (m_session == nullptr ||
+      row < 0 || row >= static_cast<int>(m_session->movieLength())) {
     return {};
   }
   switch (role) {

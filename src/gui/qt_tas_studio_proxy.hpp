@@ -36,6 +36,8 @@ class QtTasStudioProxy : public QObject {
   Q_PROPERTY(bool hasMovie READ hasMovie NOTIFY movieChanged)
   // True when driving a live game (bindLiveEmulator) rather than the demo session.
   Q_PROPERTY(bool liveMode READ isLiveMode NOTIFY liveModeChanged)
+  // True while recording the live game's input into the piano-roll.
+  Q_PROPERTY(bool recording READ isRecording NOTIFY recordingChanged)
 
 public:
   explicit QtTasStudioProxy(QObject *parent = nullptr);
@@ -48,6 +50,11 @@ public:
   [[nodiscard]] bool isPlaying() const { return m_playing; }
   [[nodiscard]] bool hasMovie() const { return m_session != nullptr; }
   [[nodiscard]] bool isLiveMode() const { return m_liveEmulator != nullptr; }
+  [[nodiscard]] bool isRecording() const { return m_recording; }
+
+  // --- live-game recording (captures real input into the piano-roll) ---
+  Q_INVOKABLE void startRecording();
+  Q_INVOKABLE void stopRecording();
 
   // Bind the running game's EmulatorItem so the transport drives it (frame-step via
   // the render-thread command queue) instead of the demo session; binding engages
@@ -82,10 +89,13 @@ signals:
   void movieChanged();
   void playingChanged();
   void liveModeChanged();
+  void recordingChanged();
 
 private:
   void setPlaying(bool playing);
   void afterEmulatorMove(); // refresh model + notify playhead after a step/seek
+  // Slot for EmulatorItem::tasFrameRecorded — appends one recorded frame.
+  void onFrameRecorded(int frame, int buttons);
 
   PianoRollModel *m_model; // child QObject
   std::unique_ptr<tas::TasSession> m_session;
@@ -98,6 +108,10 @@ private:
   // frames stepped since binding (there is no authored movie in this mode yet).
   EmulatorItem *m_liveEmulator = nullptr;
   int m_liveFrame = 0;
+  bool m_recording = false;
+  // The live-game recording shown in the piano-roll (GUI-side mirror; the render
+  // thread emits each frame via tasFrameRecorded).
+  std::vector<input::InputFrame> m_liveMovie;
 };
 
 } // namespace firelight::gui

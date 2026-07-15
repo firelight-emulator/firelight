@@ -48,7 +48,7 @@ int QtTasStudioProxy::currentFrame() const {
 
 int QtTasStudioProxy::frameCount() const {
   if (m_liveEmulator) {
-    return m_liveFrame; // no authored movie in live mode yet
+    return static_cast<int>(m_liveMovie.size()); // recorded frames
   }
   return m_session ? static_cast<int>(m_session->movieLength()) : 0;
 }
@@ -58,22 +58,86 @@ void QtTasStudioProxy::bindLiveEmulator(QObject *emulatorItem) {
   if (item == m_liveEmulator) {
     return;
   }
-  // Release the previous live game (resume normal play).
+  // Release the previous live game (stop recording, resume normal play).
   if (m_liveEmulator) {
+    disconnect(m_liveEmulator, &EmulatorItem::tasFrameRecorded, this,
+               &QtTasStudioProxy::onFrameRecorded);
+    m_liveEmulator->tasStopRecording();
     m_liveEmulator->setTasActive(false);
   }
   m_liveEmulator = item;
   m_liveFrame = 0;
+  m_liveMovie.clear();
+  if (m_recording) {
+    m_recording = false;
+    emit recordingChanged();
+  }
   setPlaying(false);
   if (m_liveEmulator) {
-    // Engage TAS control (pause + gate the pacer) and clear the demo grid — live
-    // mode drives the real game; an authored movie over it is a later increment.
+    // Engage TAS control (pause + gate the pacer), drop the demo session, and show
+    // this game's recording (empty until you Record) in the piano-roll.
     m_liveEmulator->setTasActive(true);
     m_session.reset();
     m_demoEmu.reset();
+    // tasFrameRecorded is emitted from the RENDER thread; force a queued connection
+    // so onFrameRecorded (which mutates the GUI-thread model) runs on the GUI thread.
+    connect(m_liveEmulator, &EmulatorItem::tasFrameRecorded, this,
+            &QtTasStudioProxy::onFrameRecorded, Qt::QueuedConnection);
+    m_model->setLiveMovie(&m_liveMovie);
+  } else {
+    m_model->setLiveMovie(nullptr);
     m_model->setSession(nullptr);
   }
   emit liveModeChanged();
+  emit playheadChanged();
+  emit movieChanged();
+}
+
+void QtTasStudioProxy::onFrameRecorded(int /*frame*/, int buttons) {
+  input::InputFrame f;
+  f.buttons = static_cast<uint16_t>(buttons);
+  m_liveMovie.push_back(f); // queued in order from the render thread
+  m_liveFrame = static_cast<int>(m_liveMovie.size());
+  // Throttle the view/model to ~10 Hz: committing a row (and re-evaluating the
+  // QML bindings) on every one of 60 emulated frames/sec floods the GUI thread.
+  if ((m_liveMovie.size() % 6) == 0) {
+    m_model->syncLiveMovie();
+    emit playheadChanged();
+    emit movieChanged();
+  }
+}
+
+void QtTasStudioProxy::startRecording() {
+  if (!m_liveEmulator) {
+    return;
+  }
+  m_liveMovie.clear();
+  m_liveFrame = 0;
+  m_model->resetLiveMovie();
+  m_liveEmulator->tasStartRecording(); // unpauses + runs at 1x, capturing frames
+  // NOTE: keyboard input follows QML focus, so while the studio is on top a keyboard
+  // can't play into the recording (a gamepad works — SDL reads it globally). Giving
+  // the game keyboard focus pulls the view back to gameplay, so proper keyboard
+  // record needs a split layout (game playable beside the piano-roll) — a follow-up.
+  if (!m_recording) {
+    m_recording = true;
+    emit recordingChanged();
+  }
+  setPlaying(false);
+  emit playheadChanged();
+  emit movieChanged();
+}
+
+void QtTasStudioProxy::stopRecording() {
+  if (m_liveEmulator) {
+    m_liveEmulator->tasStopRecording();
+    m_liveEmulator->setTasActive(true); // pause so the recording can be reviewed
+  }
+  if (m_recording) {
+    m_recording = false;
+    emit recordingChanged();
+  }
+  m_model->syncLiveMovie(); // commit any frames since the last throttled update
   emit playheadChanged();
   emit movieChanged();
 }

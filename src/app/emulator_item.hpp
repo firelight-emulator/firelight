@@ -129,6 +129,10 @@ public:
   // commands, so the TAS layer is the sole driver of frame advance. Also pauses.
   Q_INVOKABLE void setTasActive(bool active);
   [[nodiscard]] bool tasActive() const { return m_tasActive.load(); }
+  // Start/stop recording each emulated frame's input into a movie; the renderer
+  // emits tasFrameRecorded(frameIndex, buttons) per frame while recording.
+  Q_INVOKABLE void tasStartRecording();
+  Q_INVOKABLE void tasStopRecording();
 
   [[nodiscard]] float playbackMultiplier() const {
     return m_playbackMultiplier;
@@ -170,6 +174,10 @@ public slots:
 
 signals:
   void aboutToRunFrame();
+
+  // Emitted once per emulated frame while TAS recording is active (queued from the
+  // render thread): the frame index and its captured button mask.
+  void tasFrameRecorded(int frame, int buttons);
 
   void startedChanged();
 

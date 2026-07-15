@@ -585,6 +585,26 @@ void EmulatorItem::setTasActive(const bool active) {
   setPaused(active);
 }
 
+void EmulatorItem::tasStartRecording() {
+  if (!m_renderer) {
+    return;
+  }
+  // Record real-time play at single speed: hand control back to the pacer (not TAS
+  // step control), unpause, and pin 1x so every frame is captured exactly once.
+  setPlaybackMultiplier(1);
+  m_tasActive = false;
+  setPaused(false);
+  m_renderer->submitCommand({.type = EmulatorItemRenderer::TasStartRecording});
+  QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+}
+
+void EmulatorItem::tasStopRecording() {
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::TasStopRecording});
+    QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+  }
+}
+
 void EmulatorItem::startGame() {
   QThreadPool::globalInstance()->start([this] {
     const auto emuInstance =

@@ -6,6 +6,7 @@
 #include <firelight/cheats/cheat_repository.hpp>
 #include "emulation_service.hpp"
 #include "firelight/event_dispatcher.hpp"
+#include <firelight/input/input_frame.hpp>
 #include <firelight/input/input_service.hpp>
 #include <libretro/game.hpp>
 
@@ -376,6 +377,20 @@ namespace firelight::emulation {
     if (m_core) {
       m_core->setRetropadProvider(provider);
     }
+  }
+
+  uint16_t EmulatorInstance::captureCurrentInputButtons(const int port) const {
+    if (!m_context.inputService) {
+      return 0;
+    }
+    const auto pad = m_context.inputService->getRetropadForPlayerIndex(port);
+    if (!pad) {
+      return 0;
+    }
+    // Same sampling the CoreInputRouter does each frame, so the recorded input
+    // matches what the core reads.
+    return input::captureJoypadFrame(*pad, m_platformId, /*controllerTypeId=*/1)
+        .buttons;
   }
 
   void EmulatorInstance::reset() {
