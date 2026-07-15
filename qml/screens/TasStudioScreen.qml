@@ -106,17 +106,34 @@ Rectangle {
             }
         }
 
-        // --- live-video placeholder (docked in-app; deferred here) ---
+        // --- live video: a mirror of the running EmulatorItem's texture (no
+        //     reparenting — the game keeps rendering on its own page; we display a
+        //     live copy here), fit to the game's aspect ratio. ---
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 180
+            Layout.preferredHeight: tas.liveMode ? 340 : 180
             color: ColorPalette.neutral900
             border.color: ColorPalette.neutral700
             radius: 4
+            clip: true
+
+            ShaderEffectSource {
+                id: videoMirror
+                visible: tas.liveMode && root.liveEmulator !== null
+                sourceItem: tas.liveMode ? root.liveEmulator : null
+                live: true          // keep re-rendering even while the source is occluded
+                hideSource: false   // leave the game visible on its own page
+                anchors.centerIn: parent
+                property real ar: (root.liveEmulator && root.liveEmulator.trueAspectRatio > 0)
+                                  ? root.liveEmulator.trueAspectRatio : (160.0 / 144.0)
+                width: Math.min(parent.width - 8, (parent.height - 8) * ar)
+                height: width / ar
+            }
+
             Text {
                 anchors.centerIn: parent
-                text: tas.liveMode ? "Driving the live game — video docks here next"
-                                   : "Live video docks here in-app"
+                visible: !videoMirror.visible
+                text: "Live video docks here in-app"
                 color: ColorPalette.neutral500
                 font.pixelSize: 14
             }
