@@ -72,13 +72,26 @@ built Qt/Vulkan app on Pokémon Yellow (mGBA):
   outside `renderFrame()` nor restored while a QRhi command buffer is live — both
   corrupt the HW path. Backward seeks therefore show a brief scrub (proven path only).
 
+- **Live input editing.** Clicking a piano-roll cell rewrites that frame's input in the
+  live movie + greenzone (invalidating the stale keyframe tail), bumps the rerecord
+  count, and re-simulates from the nearest valid keyframe to show the effect. An edit
+  during an in-flight seek is deferred and re-simulated on seek completion. *Verified:*
+  edit → replay/seek reflect the edits, stable across repeated edits. Fixing this
+  surfaced two crashes worth noting for future work here: (a) `serializeState()`/
+  `deserializeState()` must never run in `render()` (RHI command buffer in flight →
+  Qt6Gui fault) — only in `synchronize()`, as the base app does; the greenzone capture
+  defers its serialize to the next `synchronize()`. (b) the `EmulatorCommand` queue was
+  unsynchronized (a latent base-app race): once a TAS keyframe serialize slows the
+  render thread, the pacing thread's submissions back the queue up, the `QList`
+  reallocates mid-drain, and the concurrent enqueue/dequeue corrupts the heap — now
+  guarded by `m_commandQueueMutex`.
+
 ## Remaining Phase 1 increment
 
-Record / replay / seek over the live game is **done** (above). What's left toward a
-full studio: **input editing over the live movie** (toggling a cell rewrites the movie,
-invalidates the greenzone tail, and bumps the rerecord count — the `TasSession` edit
-path exists headlessly but isn't yet wired to the live core), and movie **save/load**
-(`.fltm`) from the studio.
+Record / replay / seek / **edit** over the live game are all done (above). What's left
+toward a full studio: movie **save/load** (`.fltm`) from the studio (the format + the
+headless `tas_movie` reader/writer exist; the in-app UI to persist and reopen a live
+movie isn't wired yet), and a held-buttons HUD overlay on the docked video.
 
 ## Nice-to-haves
 
