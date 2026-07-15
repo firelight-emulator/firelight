@@ -40,37 +40,42 @@ Plus, outside this lib:
 Run the units: `cmake -B build -DFL_BUILD_TAS=ON && ninja check` then `ctest`
 (`firelight_tas_test` = 25 cases; the `tas_*` cases live in `fl_test`).
 
-## Deferred (needs the full Qt/Vulkan GUI build — scaffolding only)
+## Live-game path — done + runtime-verified
 
-These require the render thread and QML engine and can't be verified in a headless
-tree; they are the next slice of Phase 1:
+The TAS Studio now drives a real running game and shows it. All confirmed in the
+built Qt/Vulkan app on Pokémon Yellow (mGBA):
 
-1. **Command-queue integration** — the frame-advance primitive is **done +
-   runtime-verified**: `EmulatorItemRenderer`'s `TasStepFrame` command advances the
-   live game exactly one frame even while paused (render() honors it ahead of the
-   pause skip), and `EmulatorItem::setTasActive()` gates the pacing thread (atomic
-   `m_tasActive`) + pins single speed so the TAS layer is the sole frame driver.
-   Verified on Pokémon Yellow (mGBA/Vulkan): engaging TAS froze the game (no
-   free-run) and per-step advances moved it frame-by-frame. What remains here is
-   wiring the TAS Studio's transport to `tasStepFrame()`/`setTasActive()`, installing
-   the `MovieInputProvider` + `setTasMode(true)` on the live core, and record/replay/
-   seek over the live game (a render-thread `TasSession` reached through these
-   commands, with movie/state synced to the GUI-side model via signals).
-2. **`PianoRollView`** — the model (`PianoRollModel`), the facade (`QtTasStudioProxy`),
-   and the QML screen (`qml/screens/TasStudioScreen.qml`) are **built, routed, and
-   runtime-verified**: reachable via the `enableTasStudio`-gated nav entry
-   (`Main3.qml` `/tas-studio` route), and confirmed in the running Qt/Vulkan app to
-   render the piano-roll (playhead, greenzone-keyframe marker, per-button cells over
-   the `loadDemo()` movie) and respond to controls live (Step-Forward advances the
-   playhead + frame counter through the proxy → session → model → view). The one piece
-   still remaining is **making the proxy drive the LIVE game's
-   `EmulatorInstance::runFrame` through the render-thread command queue** instead of
-   the `loadDemo()` stand-in (item 1 below is its prerequisite).
-3. **Docked live video + held-buttons overlay** — a `SplitView` restructure of
-   `NewEmulatorPage.qml` behind an `enableTasStudio` feature flag (OFF by default).
+- **Frame-advance primitive** — `EmulatorItemRenderer::TasStepFrame` advances the
+  live game exactly one frame even while paused (render() honors it ahead of the
+  pause skip; pinned to a single frame). `EmulatorItem::setTasActive()` gates the
+  pacing thread (atomic `m_tasActive`) + pins single speed, so the TAS layer is the
+  sole frame driver. *Verified:* engaging TAS froze the game (no free-run); stepping
+  advanced it frame-by-frame.
+- **Studio transport → live game** — `QtTasStudioProxy::bindLiveEmulator()` binds the
+  running `EmulatorItem` (exposed as `NewEmulatorPage.liveEmulator`, passed by the
+  `Main3.qml` `/tas-studio` route); in live mode the transport calls
+  `tasStepFrame()`/`setTasActive()`. *Verified:* Step advances the real game.
+- **Docked live video** — the studio's video pane is a `ShaderEffectSource` mirror of
+  the bound `EmulatorItem` (no reparenting; the game keeps rendering on its own page),
+  fit to the game's aspect ratio. *Verified:* the live game shows in the studio and
+  updates as you step.
 
-To wire `TasSession` to the real pipeline, `EmulatorInstance` needs a small
-`setRetropadProvider` passthrough to the core; that lands with (1).
+## Remaining Phase 1 increment
+
+**Record / replay / seek over the live game.** The headless pieces exist
+(`MovieInputProvider`, `RecordingInputProvider`, `GreenzoneStore`, `TasSession`); what
+remains is running a `TasSession` on the render thread over the live `EmulatorInstance`
+(reached through new TAS commands), capturing real input into a movie, keyframing the
+live core for instant seek, and syncing the movie + playhead back to the GUI-side
+`PianoRollModel` via signals. Prereq: a small `setRetropadProvider` passthrough on
+`EmulatorInstance` so the movie/record providers can be installed on the live core.
+
+## Nice-to-haves
+
+- A Settings-UI toggle for `enableTasStudio` (currently a source default; the
+  QML `Settings` value gets reset at startup, so enabling it means flipping the
+  default + rebuilding).
+- A held-buttons HUD overlay on the docked video.
 
 ## Verification boundary
 
