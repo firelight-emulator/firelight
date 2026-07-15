@@ -350,10 +350,35 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       case TasStartRecording:
         m_tasRecording = true;
         m_tasRecordFrame = 0;
+        m_tasRecordedMovie.clear();
+        // Anchor the movie to the state at record-start (safe here: synchronize()
+        // runs with the GUI thread blocked, before render() runs frame 0). Replay
+        // restores this so the recorded inputs reproduce the same run.
+        m_tasAnchorState = m_emulatorInstance->serializeState();
         break;
 
       case TasStopRecording:
         m_tasRecording = false;
+        break;
+
+      case TasStartReplay:
+        if (!m_tasRecordedMovie.empty() && !m_tasAnchorState.empty()) {
+          if (!m_tasMovieProvider) {
+            m_tasMovieProvider =
+                std::make_unique<firelight::tas::MovieInputProvider>();
+          }
+          m_tasMovieProvider->setMovie(m_tasRecordedMovie); // cursor -> 0
+          m_emulatorInstance->deserializeState(m_tasAnchorState);
+          m_emulatorInstance->setRetropadProvider(m_tasMovieProvider.get());
+          m_tasReplaying = true;
+        }
+        break;
+
+      case TasStopReplay:
+        if (m_tasReplaying) {
+          m_tasReplaying = false;
+          m_emulatorInstance->restoreLiveRetropadProvider();
+        }
         break;
 
       case WriteRewindPoint: {
@@ -609,6 +634,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   // the core's input router takes), and hand it to the GUI to append to the movie.
   if (m_tasRecording) {
     const uint16_t buttons = m_emulatorInstance->captureCurrentInputButtons(0);
+    firelight::input::InputFrame rf;
+    rf.buttons = buttons;
+    m_tasRecordedMovie.push_back(rf); // render-side copy for replay
     emit m_emulatorItem->tasFrameRecorded(static_cast<int>(m_tasRecordFrame++),
                                           static_cast<int>(buttons));
   }
@@ -665,6 +693,20 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
       // No real frame yet so clear to opaque black so colorTexture always has valid content
       cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
       cb->endPass();
+    }
+  }
+
+  // TAS replay: the frame just consumed the movie provider's current input; step the
+  // cursor to the next frame and, when the movie is exhausted, hand control back to
+  // the live controller and notify the GUI.
+  if (m_tasReplaying && m_tasMovieProvider) {
+    m_tasMovieProvider->advance();
+    emit m_emulatorItem->tasReplayAdvanced(
+        static_cast<int>(m_tasMovieProvider->cursor()));
+    if (m_tasMovieProvider->atEnd()) {
+      m_tasReplaying = false;
+      m_emulatorInstance->restoreLiveRetropadProvider();
+      emit m_emulatorItem->tasReplayFinished();
     }
   }
 

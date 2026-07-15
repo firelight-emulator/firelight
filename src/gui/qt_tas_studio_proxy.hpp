@@ -38,6 +38,8 @@ class QtTasStudioProxy : public QObject {
   Q_PROPERTY(bool liveMode READ isLiveMode NOTIFY liveModeChanged)
   // True while recording the live game's input into the piano-roll.
   Q_PROPERTY(bool recording READ isRecording NOTIFY recordingChanged)
+  // True while replaying the recorded movie back through the live game.
+  Q_PROPERTY(bool replaying READ isReplaying NOTIFY replayingChanged)
 
 public:
   explicit QtTasStudioProxy(QObject *parent = nullptr);
@@ -51,10 +53,15 @@ public:
   [[nodiscard]] bool hasMovie() const { return m_session != nullptr; }
   [[nodiscard]] bool isLiveMode() const { return m_liveEmulator != nullptr; }
   [[nodiscard]] bool isRecording() const { return m_recording; }
+  [[nodiscard]] bool isReplaying() const { return m_replaying; }
 
   // --- live-game recording (captures real input into the piano-roll) ---
   Q_INVOKABLE void startRecording();
   Q_INVOKABLE void stopRecording();
+
+  // --- live-game replay (plays the recorded movie back through the core) ---
+  Q_INVOKABLE void startReplay();
+  Q_INVOKABLE void stopReplay();
 
   // Bind the running game's EmulatorItem so the transport drives it (frame-step via
   // the render-thread command queue) instead of the demo session; binding engages
@@ -90,12 +97,16 @@ signals:
   void playingChanged();
   void liveModeChanged();
   void recordingChanged();
+  void replayingChanged();
 
 private:
   void setPlaying(bool playing);
   void afterEmulatorMove(); // refresh model + notify playhead after a step/seek
   // Slot for EmulatorItem::tasFrameRecorded — appends one recorded frame.
   void onFrameRecorded(int frame, int buttons);
+  // Slots for EmulatorItem replay signals — move the playhead / end replay.
+  void onReplayAdvanced(int frameIndex);
+  void onReplayFinished();
 
   PianoRollModel *m_model; // child QObject
   std::unique_ptr<tas::TasSession> m_session;
@@ -109,6 +120,7 @@ private:
   EmulatorItem *m_liveEmulator = nullptr;
   int m_liveFrame = 0;
   bool m_recording = false;
+  bool m_replaying = false;
   // The live-game recording shown in the piano-roll (GUI-side mirror; the render
   // thread emits each frame via tasFrameRecorded).
   std::vector<input::InputFrame> m_liveMovie;

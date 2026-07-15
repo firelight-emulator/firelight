@@ -605,6 +605,26 @@ void EmulatorItem::tasStopRecording() {
   }
 }
 
+void EmulatorItem::tasStartReplay() {
+  if (!m_renderer) {
+    return;
+  }
+  // Play the movie back at single speed under pacer drive (like recording, but the
+  // renderer feeds recorded input instead of the live controller).
+  setPlaybackMultiplier(1);
+  m_tasActive = false;
+  setPaused(false);
+  m_renderer->submitCommand({.type = EmulatorItemRenderer::TasStartReplay});
+  QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+}
+
+void EmulatorItem::tasStopReplay() {
+  if (m_renderer) {
+    m_renderer->submitCommand({.type = EmulatorItemRenderer::TasStopReplay});
+    QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+  }
+}
+
 void EmulatorItem::startGame() {
   QThreadPool::globalInstance()->start([this] {
     const auto emuInstance =

@@ -61,6 +61,11 @@ public:
   // (or nullptr) to restore normal control.
   void setRetropadProvider(firelight::libretro::IRetropadProvider *provider);
 
+  // Restore the live input service as the core's retropad provider — the inverse of
+  // installing a TAS movie provider. Used when TAS replay ends to hand the physical
+  // controller back to the game.
+  void restoreLiveRetropadProvider();
+
   void setMuted(bool muted);
   bool isMuted() const;
 

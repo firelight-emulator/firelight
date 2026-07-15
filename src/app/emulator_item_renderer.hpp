@@ -12,6 +12,7 @@
 #include <QSGRenderNode>
 #include <QVideoFrameInput>
 #include <firelight/libretro/video_data_receiver.hpp>
+#include <firelight/tas/movie_input_provider.hpp> // TAS replay: input_frame + provider
 #include <mutex>
 #include <qsgrendererinterface.h>
 #include <rhi/qrhi.h>
@@ -114,7 +115,12 @@ public:
     // TAS: start/stop capturing each emulated frame's input into a movie (emitted
     // to the GUI via EmulatorItem::tasFrameRecorded).
     TasStartRecording,
-    TasStopRecording
+    TasStopRecording,
+    // TAS: restore the recording's anchor state and play the recorded movie back
+    // through the core (a movie provider drives input; the live controller is
+    // suppressed). TasStopReplay ends it early and restores live control.
+    TasStartReplay,
+    TasStopReplay
   };
 
   struct EmulatorCommand {
@@ -180,6 +186,16 @@ private:
   // to the GUI as tasFrameRecorded(frameIndex, buttons).
   bool m_tasRecording = false;
   uint64_t m_tasRecordFrame = 0;
+  // The recorded movie kept render-side (a copy of what was emitted to the GUI) so
+  // replay can drive it without shipping the log back across the thread boundary.
+  std::vector<firelight::input::InputFrame> m_tasRecordedMovie;
+  // The core state at the instant recording started; replay restores it first so the
+  // recorded inputs reproduce the same run.
+  std::vector<uint8_t> m_tasAnchorState;
+  // TAS replay: while set, m_tasMovieProvider drives the core's input and its cursor
+  // advances one frame per emulated frame until the movie is exhausted.
+  bool m_tasReplaying = false;
+  std::unique_ptr<firelight::tas::MovieInputProvider> m_tasMovieProvider;
 
   QThread m_emulatorThread;
   QChronoTimer m_emulatorTimer{};

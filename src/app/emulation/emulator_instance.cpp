@@ -379,6 +379,12 @@ namespace firelight::emulation {
     }
   }
 
+  void EmulatorInstance::restoreLiveRetropadProvider() {
+    if (m_core) {
+      m_core->setRetropadProvider(m_context.inputService);
+    }
+  }
+
   uint16_t EmulatorInstance::captureCurrentInputButtons(const int port) const {
     if (!m_context.inputService) {
       return 0;

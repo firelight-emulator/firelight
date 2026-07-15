@@ -58,10 +58,15 @@ void QtTasStudioProxy::bindLiveEmulator(QObject *emulatorItem) {
   if (item == m_liveEmulator) {
     return;
   }
-  // Release the previous live game (stop recording, resume normal play).
+  // Release the previous live game (stop recording/replay, resume normal play).
   if (m_liveEmulator) {
     disconnect(m_liveEmulator, &EmulatorItem::tasFrameRecorded, this,
                &QtTasStudioProxy::onFrameRecorded);
+    disconnect(m_liveEmulator, &EmulatorItem::tasReplayAdvanced, this,
+               &QtTasStudioProxy::onReplayAdvanced);
+    disconnect(m_liveEmulator, &EmulatorItem::tasReplayFinished, this,
+               &QtTasStudioProxy::onReplayFinished);
+    m_liveEmulator->tasStopReplay();
     m_liveEmulator->tasStopRecording();
     m_liveEmulator->setTasActive(false);
   }
@@ -71,6 +76,10 @@ void QtTasStudioProxy::bindLiveEmulator(QObject *emulatorItem) {
   if (m_recording) {
     m_recording = false;
     emit recordingChanged();
+  }
+  if (m_replaying) {
+    m_replaying = false;
+    emit replayingChanged();
   }
   setPlaying(false);
   if (m_liveEmulator) {
@@ -83,6 +92,10 @@ void QtTasStudioProxy::bindLiveEmulator(QObject *emulatorItem) {
     // so onFrameRecorded (which mutates the GUI-thread model) runs on the GUI thread.
     connect(m_liveEmulator, &EmulatorItem::tasFrameRecorded, this,
             &QtTasStudioProxy::onFrameRecorded, Qt::QueuedConnection);
+    connect(m_liveEmulator, &EmulatorItem::tasReplayAdvanced, this,
+            &QtTasStudioProxy::onReplayAdvanced, Qt::QueuedConnection);
+    connect(m_liveEmulator, &EmulatorItem::tasReplayFinished, this,
+            &QtTasStudioProxy::onReplayFinished, Qt::QueuedConnection);
     m_model->setLiveMovie(&m_liveMovie);
   } else {
     m_model->setLiveMovie(nullptr);
@@ -138,6 +151,54 @@ void QtTasStudioProxy::stopRecording() {
     emit recordingChanged();
   }
   m_model->syncLiveMovie(); // commit any frames since the last throttled update
+  emit playheadChanged();
+  emit movieChanged();
+}
+
+void QtTasStudioProxy::startReplay() {
+  if (!m_liveEmulator || m_liveMovie.empty() || m_recording) {
+    return; // nothing recorded to play back (or still recording)
+  }
+  m_model->syncLiveMovie(); // make sure every recorded row is committed first
+  m_liveFrame = 0;
+  m_liveEmulator->tasStartReplay(); // restores anchor + drives recorded input
+  if (!m_replaying) {
+    m_replaying = true;
+    emit replayingChanged();
+  }
+  setPlaying(false);
+  emit playheadChanged();
+}
+
+void QtTasStudioProxy::stopReplay() {
+  if (m_liveEmulator) {
+    m_liveEmulator->tasStopReplay();
+    m_liveEmulator->setTasActive(true); // pause where replay left off
+  }
+  if (m_replaying) {
+    m_replaying = false;
+    emit replayingChanged();
+  }
+  emit playheadChanged();
+}
+
+void QtTasStudioProxy::onReplayAdvanced(int frameIndex) {
+  m_liveFrame = frameIndex;
+  // Throttle the playhead/scroll to ~10 Hz (same reasoning as onFrameRecorded).
+  if ((frameIndex % 6) == 0) {
+    emit playheadChanged();
+  }
+}
+
+void QtTasStudioProxy::onReplayFinished() {
+  m_liveFrame = static_cast<int>(m_liveMovie.size());
+  if (m_replaying) {
+    m_replaying = false;
+    emit replayingChanged();
+  }
+  if (m_liveEmulator) {
+    m_liveEmulator->setTasActive(true); // pause on the movie's final frame
+  }
   emit playheadChanged();
   emit movieChanged();
 }

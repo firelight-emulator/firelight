@@ -133,6 +133,11 @@ public:
   // emits tasFrameRecorded(frameIndex, buttons) per frame while recording.
   Q_INVOKABLE void tasStartRecording();
   Q_INVOKABLE void tasStopRecording();
+  // Replay the just-recorded movie: the renderer restores the recording's anchor
+  // state and drives the core from the recorded input (live controller suppressed),
+  // emitting tasReplayAdvanced() per frame and tasReplayFinished() at the end.
+  Q_INVOKABLE void tasStartReplay();
+  Q_INVOKABLE void tasStopReplay();
 
   [[nodiscard]] float playbackMultiplier() const {
     return m_playbackMultiplier;
@@ -178,6 +183,11 @@ signals:
   // Emitted once per emulated frame while TAS recording is active (queued from the
   // render thread): the frame index and its captured button mask.
   void tasFrameRecorded(int frame, int buttons);
+
+  // TAS replay progress (queued from the render thread): the movie cursor after each
+  // replayed frame, and a one-shot when the movie is exhausted.
+  void tasReplayAdvanced(int frameIndex);
+  void tasReplayFinished();
 
   void startedChanged();
 

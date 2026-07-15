@@ -109,9 +109,17 @@ Rectangle {
             Button { focusPolicy: Qt.NoFocus; text: "▶"; onClicked: tas.stepForward() }
             Button {
                 focusPolicy: Qt.NoFocus
-                visible: tas.liveMode
+                visible: tas.liveMode && !tas.replaying
                 text: tas.recording ? "■ Stop" : "● Record"
                 onClicked: tas.recording ? tas.stopRecording() : tas.startRecording()
+            }
+            Button {
+                focusPolicy: Qt.NoFocus
+                // Play the recorded movie back; hidden while recording or before
+                // anything is recorded.
+                visible: tas.liveMode && !tas.recording && tas.frameCount > 0
+                text: tas.replaying ? "■ Stop" : "▶ Replay"
+                onClicked: tas.replaying ? tas.stopReplay() : tas.startReplay()
             }
             Button {
                 focusPolicy: Qt.NoFocus
