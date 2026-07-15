@@ -75,6 +75,7 @@ void QtTasStudioProxy::bindLiveEmulator(QObject *emulatorItem) {
   m_liveEmulator = item;
   m_liveFrame = 0;
   m_liveMovie.clear();
+  m_liveRerecords = 0;
   if (m_recording) {
     m_recording = false;
     emit recordingChanged();
@@ -130,6 +131,7 @@ void QtTasStudioProxy::startRecording() {
   }
   m_liveMovie.clear();
   m_liveFrame = 0;
+  m_liveRerecords = 0;
   m_model->resetLiveMovie();
   m_liveEmulator->tasStartRecording(); // unpauses + runs at 1x, capturing frames
   // NOTE: keyboard input follows QML focus, so while the studio is on top a keyboard
@@ -217,6 +219,9 @@ void QtTasStudioProxy::onSeekFinished(int framesEmulated) {
 }
 
 int QtTasStudioProxy::rerecordCount() const {
+  if (m_liveEmulator) {
+    return m_liveRerecords;
+  }
   return m_session ? static_cast<int>(m_session->rerecordCount()) : 0;
 }
 
@@ -350,6 +355,25 @@ void QtTasStudioProxy::tick() {
 }
 
 void QtTasStudioProxy::toggleInput(int frame, int buttonId) {
+  if (m_liveEmulator) {
+    // Edit the recorded live movie in place. Disallowed mid-capture/replay (the movie
+    // is being written / played); a seek in flight is fine — the render side applies
+    // the edit immediately and defers the re-simulation to the seek's completion.
+    if (m_recording || m_replaying || frame < 0 ||
+        frame >= static_cast<int>(m_liveMovie.size()) || buttonId < 0 ||
+        buttonId >= 16) {
+      return;
+    }
+    input::InputFrame &f = m_liveMovie[static_cast<size_t>(frame)];
+    f.setButton(static_cast<unsigned>(buttonId), !f.button(static_cast<unsigned>(buttonId)));
+    ++m_liveRerecords;
+    m_model->liveRowChanged(frame); // refresh the toggled cell
+    // Propagate to the render-side authoritative movie + greenzone + re-sim; the
+    // landed frame comes back via onSeekFinished (updates the playhead/highlight).
+    m_liveEmulator->tasEditFrame(frame, static_cast<int>(f.buttons));
+    emit movieChanged(); // rerecord count changed
+    return;
+  }
   if (!m_session) {
     return;
   }

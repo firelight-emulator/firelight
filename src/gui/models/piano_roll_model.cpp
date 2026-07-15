@@ -51,6 +51,13 @@ void PianoRollModel::resetLiveMovie() {
   emit movieChanged();
 }
 
+void PianoRollModel::liveRowChanged(int row) {
+  if (m_liveMovie == nullptr || row < 0 || row >= m_liveMovieRows) {
+    return;
+  }
+  emit dataChanged(index(row), index(row), {ButtonsRole});
+}
+
 void PianoRollModel::setLiveCurrentFrame(int framesEmulated) {
   if (m_liveCurrentFrame == framesEmulated) {
     return;

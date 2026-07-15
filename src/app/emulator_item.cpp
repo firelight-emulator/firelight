@@ -637,6 +637,16 @@ void EmulatorItem::tasSeekTo(const int targetFrame) {
   QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
 }
 
+void EmulatorItem::tasEditFrame(const int frame, const int buttons) {
+  if (!m_renderer || frame < 0) {
+    return;
+  }
+  m_renderer->submitCommand({.type = EmulatorItemRenderer::TasEditFrame,
+                             .tasSeekTargetFrame = static_cast<uint64_t>(frame),
+                             .tasEditButtons = buttons});
+  QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+}
+
 void EmulatorItem::startGame() {
   QThreadPool::globalInstance()->start([this] {
     const auto emuInstance =

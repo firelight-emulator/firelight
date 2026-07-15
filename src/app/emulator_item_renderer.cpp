@@ -336,8 +336,41 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     }
   }
 
-  while (!m_commandQueue.isEmpty()) {
-    const auto command = m_commandQueue.dequeue();
+  // Deferred greenzone capture: a frame in the previous render() landed on the stride
+  // cadence. serializeState() is unsafe in render() (RHI command buffer in flight —
+  // faults Qt6Gui), but safe here in synchronize() with the GUI blocked, as the app's
+  // rewind/suspend do. No frame has run since, so the core still holds that state.
+  // Capture before draining commands, since an edit/seek command may then restore or
+  // invalidate it.
+  if (m_tasPendingKeyframe && m_emulatorInstance) {
+    m_tasGreenzone.put(*m_tasPendingKeyframe, m_emulatorInstance->serializeState());
+    m_tasPendingKeyframe.reset();
+  }
+
+  // A deferred edit's re-simulation, once the seek that deferred it has finished. This
+  // is a state restore (prepareTasSeek), so it runs here, not in render(). Drop any
+  // keyframes the finished seek captured past the edit, then re-seek to rebuild them
+  // from the edited input. (Runs before the command loop so a queued seek can't first
+  // restore a now-stale keyframe.)
+  if (!m_tasSeeking && m_tasPendingEditFrame && m_emulatorInstance) {
+    const uint64_t p = *m_tasPendingEditFrame;
+    m_tasPendingEditFrame.reset();
+    m_tasGreenzone.invalidateFrom(p);
+    prepareTasSeek(p + 1, /*forceRestore=*/true);
+  }
+
+  // Move the queued commands out under the lock, then process them without holding it
+  // (some commands do heavy work). New submissions land in m_commandQueue and are
+  // handled next synchronize(). Locking only the swap keeps the enqueue/drain from
+  // racing on the QList's storage (a heap corruptor — see the class comment).
+  QQueue<EmulatorCommand> pendingCommands;
+  {
+    std::lock_guard<std::mutex> lock(m_commandQueueMutex);
+    pendingCommands.swap(m_commandQueue);
+  }
+
+  while (!pendingCommands.isEmpty()) {
+    const auto command = pendingCommands.dequeue();
     switch (command.type) {
       case RunFrame:
         m_shouldRunFrame = true;
@@ -367,6 +400,8 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         m_tasGreenzone.clear();
         m_tasGreenzone.put(0, m_tasAnchorState);
         m_tasLiveFrame = 0;
+        m_tasPendingEditFrame.reset();
+        m_tasPendingKeyframe.reset();
         break;
 
       case TasStopRecording:
@@ -396,6 +431,11 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         // no active RHI command buffer — the safe context the app's rewind/suspend
         // restores use). The final displayed frame is armed to run in render().
         prepareTasSeek(command.tasSeekTargetFrame);
+        break;
+
+      case TasEditFrame:
+        editTasFrame(command.tasSeekTargetFrame,
+                     static_cast<uint16_t>(command.tasEditButtons));
         break;
 
       case WriteRewindPoint: {
@@ -723,12 +763,19 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_tasMovieProvider->advance();
     ++m_tasLiveFrame;
     if (m_tasGreenzone.shouldCapture(m_tasLiveFrame)) {
-      m_tasGreenzone.put(m_tasLiveFrame, m_emulatorInstance->serializeState());
+      m_tasPendingKeyframe = m_tasLiveFrame; // serialize in the next synchronize()
     }
     if (m_tasLiveFrame >= m_tasSeekTarget) {
       m_tasSeeking = false;
       m_emulatorInstance->setMuted(m_tasSeekWasMuted);
-      emit m_emulatorItem->tasSeekFinished(static_cast<int>(m_tasLiveFrame));
+      if (m_tasPendingEditFrame) {
+        // An edit landed during this seek. Its re-simulation is a state RESTORE, which
+        // must not run here in render() (RHI in flight) — leave m_tasPendingEditFrame
+        // set and let the next synchronize() pick it up. Don't emit tasSeekFinished; the
+        // deferred re-sim will when it lands.
+      } else {
+        emit m_emulatorItem->tasSeekFinished(static_cast<int>(m_tasLiveFrame));
+      }
     } else {
       m_tasStepPending = true; // run the next fast-forward frame
       m_shouldRunFrame = true;
@@ -736,14 +783,14 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   } else if (m_tasRecording) {
     ++m_tasLiveFrame;
     if (m_tasGreenzone.shouldCapture(m_tasLiveFrame)) {
-      m_tasGreenzone.put(m_tasLiveFrame, m_emulatorInstance->serializeState());
+      m_tasPendingKeyframe = m_tasLiveFrame; // serialize in the next synchronize()
     }
   } else if (m_tasReplaying && m_tasMovieProvider) {
     // The frame just consumed the movie provider's current input; step the cursor.
     m_tasMovieProvider->advance();
     ++m_tasLiveFrame;
     if (m_tasGreenzone.shouldCapture(m_tasLiveFrame)) {
-      m_tasGreenzone.put(m_tasLiveFrame, m_emulatorInstance->serializeState());
+      m_tasPendingKeyframe = m_tasLiveFrame; // serialize in the next synchronize()
     }
     emit m_emulatorItem->tasReplayAdvanced(static_cast<int>(m_tasLiveFrame));
     if (m_tasMovieProvider->atEnd()) {
@@ -771,7 +818,7 @@ void EmulatorItemRenderer::ensureTasMovieProviderInstalled() {
   m_tasMovieProviderInstalled = true;
 }
 
-void EmulatorItemRenderer::prepareTasSeek(uint64_t target) {
+void EmulatorItemRenderer::prepareTasSeek(uint64_t target, bool forceRestore) {
   const uint64_t movieLen = m_tasRecordedMovie.size();
   if (movieLen == 0 || m_tasAnchorState.empty() || m_tasReplaying || m_tasSeeking) {
     return; // nothing to seek over, or a replay/seek is already driving the core
@@ -780,8 +827,9 @@ void EmulatorItemRenderer::prepareTasSeek(uint64_t target) {
 
   const uint64_t F = std::min(target, movieLen); // clamp to [0, movieLen]
 
-  // Idempotent: already at F. Running a frame would advance to F+1.
-  if (F == m_tasLiveFrame) {
+  // Idempotent: already at F. Running a frame would advance to F+1. (After an edit,
+  // forceRestore re-simulates F even though we're "already there" — its state changed.)
+  if (!forceRestore && F == m_tasLiveFrame) {
     emit m_emulatorItem->tasSeekFinished(static_cast<int>(m_tasLiveFrame));
     return;
   }
@@ -803,7 +851,7 @@ void EmulatorItemRenderer::prepareTasSeek(uint64_t target) {
   // guarantees a hit). The restore is safe here — synchronize() is the same
   // GUI-blocked, no-active-command-buffer context the app's rewind/suspend use.
   uint64_t start;
-  if (F > m_tasLiveFrame) {
+  if (!forceRestore && F > m_tasLiveFrame) {
     start = m_tasLiveFrame; // core already holds state `start`
   } else {
     const auto kf = m_tasGreenzone.nearestAtOrBefore(F - 1);
@@ -817,14 +865,42 @@ void EmulatorItemRenderer::prepareTasSeek(uint64_t target) {
   m_overlayImage = QImage(); // don't let a stale pause overlay clobber the seek frame
 
   // Mute across the fast-forward; the render loop advances one frame per call through
-  // the normal step path (proven) until it reaches F, suppressing intermediate frames'
-  // display so the seek looks instant.
+  // the normal step path (proven) until it reaches F, then pauses. Backward seeks show
+  // a brief scrub (every frame is composited — using only the proven playback path).
   m_tasSeekWasMuted = m_emulatorInstance->isMuted();
   m_emulatorInstance->setMuted(true);
   m_tasSeeking = true;
   m_tasSeekTarget = F;
   m_tasStepPending = true; // run the first fast-forward frame (honored while paused)
   m_shouldRunFrame = true;
+}
+
+void EmulatorItemRenderer::editTasFrame(uint64_t frame, uint16_t buttons) {
+  if (frame >= m_tasRecordedMovie.size() || m_tasRecording || m_tasReplaying) {
+    return; // out of range, or the movie is being written / played right now
+  }
+  // Apply the edit to the authoritative movie and (cursor-preserving) the installed
+  // provider. `buttons` is the GUI's already-computed new mask, so the render-side and
+  // GUI-side movies stay identical even if a seek is in flight. Editing input[frame]
+  // changes the transition out of keyframe[frame], so every keyframe strictly after
+  // `frame` is now stale — drop them (they lazily rebuild as the cursor advances).
+  m_tasRecordedMovie[frame].buttons = buttons;
+  if (m_tasMovieProvider) {
+    m_tasMovieProvider->setFrameAt(frame, m_tasRecordedMovie[frame]);
+  }
+  m_tasGreenzone.invalidateFrom(frame);
+
+  if (m_tasSeeking) {
+    // A seek is fast-forwarding right now; it must not keep capturing keyframes from
+    // pre-edit state. We can't restart it here (prepareTasSeek no-ops mid-seek), so
+    // defer: remember the earliest edited frame and re-simulate when the seek lands.
+    m_tasPendingEditFrame =
+        std::min(m_tasPendingEditFrame.value_or(frame), frame);
+    return;
+  }
+  // Re-simulate to show the edit's result: seek to frame+1 (the first state that
+  // consumes the new input), forcing a restore so it recomputes even if we're there.
+  prepareTasSeek(frame + 1, /*forceRestore=*/true);
 }
 
 void EmulatorItemRenderer::initializeEmulatorInstance(QRhiCommandBuffer *cb) {
@@ -858,6 +934,7 @@ void EmulatorItemRenderer::displayPauseImage(QRhiCommandBuffer *cb) {
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
   if (!m_emulatorInstance || m_quitting)
     return;
+  std::lock_guard<std::mutex> lock(m_commandQueueMutex);
   m_commandQueue.enqueue(command);
 }
 

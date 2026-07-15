@@ -25,6 +25,7 @@
 
 #include <libretro/libretro_vulkan.h>
 #include <memory>
+#include <optional>
 #include <qchronotimer.h>
 
 #include "emulator_vulkan_renderer.hpp"
@@ -53,8 +54,11 @@ namespace firelight {
 // Threading: created, used, and destroyed on the QML render thread — Qt drives
 // initialize()/synchronize()/render() there, which is also where the
 // EmulatorCommand queue (incl. RunFrame -> EmulatorInstance) is drained.
-// submitCommand() enqueues from the GUI and pacing threads (the QQueue itself is
-// not synchronized).
+// submitCommand() enqueues from the GUI and pacing threads; the queue is guarded by
+// m_commandQueueMutex (enqueue and the drain's swap-out both lock it). Without the
+// lock, a concurrent enqueue that reallocates the QList while synchronize() drains it
+// corrupts the heap — rare when the queue stays tiny, but reachable once the render
+// thread is briefly slow (e.g. a TAS keyframe serialize) and submissions back up.
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver {
@@ -125,7 +129,10 @@ public:
     // TAS: jump the live game to a given frame of the recorded movie using the
     // greenzone (restore nearest keyframe, fast-forward, present). Rewind and
     // movie-relative stepping route through this.
-    TasSeekTo
+    TasSeekTo,
+    // TAS: rewrite one frame's input in the recorded movie, invalidate the greenzone
+    // tail it produced, and re-simulate so the edit's effect is shown.
+    TasEditFrame
   };
 
   struct EmulatorCommand {
@@ -133,7 +140,8 @@ public:
     int suspendPointIndex;
     int rewindPointIndex;
     float playbackMultiplier;
-    uint64_t tasSeekTargetFrame = 0; // TasSeekTo target (frames-emulated)
+    uint64_t tasSeekTargetFrame = 0; // TasSeekTo target / TasEditFrame frame index
+    int tasEditButtons = 0;          // TasEditFrame new button mask
   };
 
   void submitCommand(EmulatorCommand command);
@@ -173,6 +181,7 @@ private:
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;
+  std::mutex m_commandQueueMutex; // guards m_commandQueue (enqueue vs drain swap-out)
 
   QImage m_overlayImage;
   QImage m_currentImage;
@@ -215,6 +224,11 @@ private:
   // The unified live TAS cursor: frames emulated since the anchor == provider cursor
   // (when installed) == the state-after-N-frames the core currently holds.
   uint64_t m_tasLiveFrame = 0;
+  // A greenzone keyframe to capture: set in render() when a frame lands on the stride
+  // cadence, serialized in the NEXT synchronize(). serializeState() must not run in
+  // render() (with the RHI command buffer in flight it faults Qt6Gui); the core state
+  // is unchanged between the two, so the deferred capture is still state-after-frame.
+  std::optional<uint64_t> m_tasPendingKeyframe;
   // TAS seek: prepareTasSeek() (in synchronize) restores the nearest keyframe, then
   // the render loop fast-forwards ONE frame per render() call through the normal,
   // proven step path (never a bare runFrame) until m_tasLiveFrame reaches the target.
@@ -222,6 +236,11 @@ private:
   bool m_tasSeeking = false;
   uint64_t m_tasSeekTarget = 0;
   bool m_tasSeekWasMuted = false;
+  // An edit that arrived while a seek was in flight: its re-simulation is deferred to
+  // the seek's completion (the value is the earliest edited frame, coalescing multiple
+  // edits). The in-flight seek may have captured stale keyframes past the edit, so on
+  // completion we re-invalidate from here and re-seek to rebuild them correctly.
+  std::optional<uint64_t> m_tasPendingEditFrame;
 
   QThread m_emulatorThread;
   QChronoTimer m_emulatorTimer{};
@@ -279,8 +298,13 @@ private:
   // Restore the greenzone + headless fast-forward toward `target` (no RHI, no display)
   // and arm the final displayed transition to run through the normal render step. Runs
   // in synchronize() — the same GUI-blocked, no-active-command-buffer context in which
-  // the app's rewind/suspend restores run safely.
-  void prepareTasSeek(uint64_t target);
+  // the app's rewind/suspend restores run safely. forceRestore re-simulates even when
+  // target == the current frame (used after an edit), always restoring rather than
+  // continuing forward from the current state.
+  void prepareTasSeek(uint64_t target, bool forceRestore = false);
+  // Rewrite one frame's input in the recorded movie, invalidate the greenzone tail it
+  // produced, refresh the movie provider, and re-simulate so the edit is shown.
+  void editTasFrame(uint64_t frame, uint16_t buttons);
 
   // Pushes the latest software frame into the instant-replay recorder.
   void feedClipRecorder(const QImage &frame);

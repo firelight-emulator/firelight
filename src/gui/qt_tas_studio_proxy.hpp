@@ -123,6 +123,7 @@ private:
   int m_liveFrame = 0;
   bool m_recording = false;
   bool m_replaying = false;
+  int m_liveRerecords = 0; // live-mode edit count (rerecordCount in live mode)
   // The live-game recording shown in the piano-roll (GUI-side mirror; the render
   // thread emits each frame via tasFrameRecorded).
   std::vector<input::InputFrame> m_liveMovie;

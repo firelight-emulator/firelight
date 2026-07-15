@@ -51,6 +51,8 @@ public:
   // that consumed input[framesEmulated-1], so row (framesEmulated-1) is current. -1
   // (the default / recording) falls back to highlighting the latest recorded row.
   void setLiveCurrentFrame(int framesEmulated);
+  // Refresh one live-movie row's buttons cell after an in-place edit of m_liveMovie.
+  void liveRowChanged(int row);
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   QVariant data(const QModelIndex &index, int role) const override;

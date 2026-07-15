@@ -142,6 +142,9 @@ public:
   // greenzone (restore nearest keyframe, fast-forward, present). Rewind and
   // movie-relative stepping route through this. Emits tasSeekFinished when done.
   Q_INVOKABLE void tasSeekTo(int targetFrame);
+  // Rewrite frame `frame`'s input in the recorded movie to `buttons`, invalidate the
+  // greenzone tail, and re-simulate (emits tasSeekFinished when the re-sim lands).
+  Q_INVOKABLE void tasEditFrame(int frame, int buttons);
 
   [[nodiscard]] float playbackMultiplier() const {
     return m_playbackMultiplier;
