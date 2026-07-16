@@ -5,8 +5,8 @@ pragma Singleton
 Item {
     // Font size scale — device-independent px. Use these for text; never font.pointSize
     // (pointSize renders ~25% smaller on macOS than Windows due to a 72-vs-96 logical-DPI baseline).
-    readonly property int fontSizeSmall: 13   // captions, muted/secondary labels
-    readonly property int fontSizeMedium: 16  // body / default
+    readonly property int fontSizeSmall: 14  // captions, muted/secondary labels
+    readonly property int fontSizeMedium: 15  // body / default
     readonly property int fontSizeLarge: 22   // subtitles, section headers
     readonly property int fontSizeXLarge: 32  // page / hero titles
 

@@ -12,7 +12,10 @@ RoundButton {
     // icon.height: 32
     // icon.color: "white"
 
+    required property string iconName
     property string tooltipText: ""
+
+    property real size: 24
 
     property real xOffset: 0
 
@@ -23,21 +26,11 @@ RoundButton {
 
     flat: true
 
-    contentItem: VectorImage {
-        id: iconImage
+    contentItem: Icon {
         anchors.centerIn: parent
-        source: control.icon.source
-        fillMode: Image.PreserveAspectFit
-        preferredRendererType: VectorImage.CurveRenderer
+        name: control.iconName
+        size: control.size
         opacity: control.enabled ? 1 : 0.5
-
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            source: iconImage
-            colorization: 1
-            colorizationColor: "white"
-        }
-        // transform: Translate { x: control.xOffset }
     }
 
     background: Rectangle {

@@ -16,7 +16,8 @@ Button {
 
     objectName: "LibraryNavigationMenuItem|" + displayText
 
-    required property string iconSource
+    property string iconSource: ""
+    property string iconName: ""
     required property string displayText
     property var numberOfItems
 
@@ -81,20 +82,21 @@ Button {
         Icon {
             Layout.preferredWidth: height
             Layout.fillHeight: true
-            visible: parent.iconIsGlyph
-            name: parent.resolvedIconName
+            // visible: parent.iconIsGlyph
+            name: control.iconName
+            filled: false
             size: 20
             color: Theme.textPrimary
         }
-        VectorImage {
-            Layout.preferredWidth: height
-            Layout.fillHeight: true
-            visible: !parent.iconIsGlyph
-            source: control.iconSource
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-            preferredRendererType: VectorImage.CurveRenderer
-        }
+        // VectorImage {
+        //     Layout.preferredWidth: height
+        //     Layout.fillHeight: true
+        //     visible: !parent.iconIsGlyph
+        //     source: control.iconSource
+        //     fillMode: Image.PreserveAspectFit
+        //     smooth: true
+        //     preferredRendererType: VectorImage.CurveRenderer
+        // }
         Text {
             Layout.leftMargin: 8
             color: Theme.textPrimary

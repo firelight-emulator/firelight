@@ -361,7 +361,9 @@ namespace firelight::emulation {
     //                  .count());
     if (now - std::chrono::seconds(m_saveIntervalSeconds) > m_lastSaveTime) {
       m_lastSaveTime = now;
-      save();
+      // Keep the future so its destructor doesn't block this (render) thread
+      // until the write completes. The write runs on its own copy of the data.
+      m_pendingSave = save();
     }
 
     m_core->run(0);

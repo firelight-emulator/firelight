@@ -9,6 +9,8 @@ import Firelight 1.0
 BaseSettingItem {
     id: root
 
+    controlBelow: true
+
     property string value: ""
     property string placeholder: ""
     signal edited(string newValue)

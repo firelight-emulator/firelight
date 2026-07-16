@@ -96,16 +96,15 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
       if (m_paused) {
         return;
       }
-      const auto emulator =
-          firelight::emulation::EmulationService::getInstance()
-              ->getCurrentEmulatorInstance();
-      if (emulator && m_renderer) {
-        const float level = emulator->getAudioBufferLevel();
-        // Keep the buffer around half full; below that, room for another frame.
-        if (level >= 0.0f && level < 0.5f) {
-          m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
-          QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
-        }
+      // Read the level through the service, which guards the instance's lifetime.
+      // Dereferencing a raw instance pointer here races loadEntry/stopEmulation
+      // freeing it on the GUI thread (a use-after-free on game load/unload).
+      const float level = firelight::emulation::EmulationService::getInstance()
+                              ->currentAudioBufferLevel();
+      // Keep the buffer around half full; below that, room for another frame.
+      if (m_renderer && level >= 0.0f && level < 0.5f) {
+        m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
+        QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
       }
       return;
     }

@@ -234,22 +234,54 @@ Item {
     //     }
     // }
 
-    Loader {
-        id: viewLoader
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 0
 
-        // anchors.topMargin: 48
-        // anchors.fill: parent
+        Pane {
+            id: headerThing
 
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+            background: Item {}
+            Layout.preferredHeight: 48
+            Layout.fillWidth: true
 
-        sourceComponent: root.viewMode === "grid" ? gridView : listView
-        onLoaded: {
-            item.currentIndex = Qt.binding(() => root.currentIndex);
+            Text {
+                height: parent.height
+                text: "Category One > Category Two > Category Three"
+                color: "#ffffff"
+                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.weight: Font.DemiBold
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 1
+            color: "#ffffff"
+            opacity: 0.2
+        }
+
+        Loader {
+            id: viewLoader
+
+            clip: true
+
+            // anchors.topMargin: 48
+            // anchors.fill: parent
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+
+            sourceComponent: root.viewMode === "grid" ? gridView : listView
+            onLoaded: {
+                item.currentIndex = Qt.binding(() => root.currentIndex);
+            }
         }
     }
+
+
 
     Component {
         id: listView

@@ -164,7 +164,7 @@ Item {
             anchors.rightMargin: 12
             width: 40
             height: 40
-            icon.source: "qrc:/icons/cancel"
+            iconName: "cancel"
             onClicked: EmulationService.stopEmulation()
         }
     }

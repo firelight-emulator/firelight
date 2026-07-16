@@ -47,7 +47,7 @@ FocusScope {
 
             IconButton {
                 id: menuButton
-                icon.source: "qrc:/icons/menu"
+                iconName: "menu"
                 Layout.alignment: Qt.AlignVCenter
                 Layout.preferredHeight: 36
                 Layout.preferredWidth: 36
@@ -137,9 +137,9 @@ FocusScope {
 
             IconButton {
                 xOffset: 1
-                icon.width: 22
-                icon.height: 22
-                icon.source: "qrc:/icons/chevron-back"
+                Layout.preferredHeight: 36
+                Layout.preferredWidth: 36
+                iconName: "chevron-back"
                 Layout.alignment: Qt.AlignVCenter
                 Layout.topMargin: 2
                 onClicked: Router.back()
@@ -148,9 +148,9 @@ FocusScope {
 
             IconButton {
                 xOffset: -1
-                icon.width: 22
-                icon.height: 22
-                icon.source: "qrc:/icons/chevron-forward"
+                Layout.preferredHeight: 36
+                Layout.preferredWidth: 36
+                iconName: "chevron-forward"
                 Layout.alignment: Qt.AlignVCenter
                 Layout.topMargin: 2
                 enabled: Router.canGoForward
@@ -183,13 +183,12 @@ FocusScope {
             spacing: 24
 
             IconButton {
-                icon.width: 24
-                icon.height: 24
-                icon.source: "qrc:/icons/settings"
+                Layout.preferredHeight: 36
+                Layout.preferredWidth: 36
+                iconName: "settings"
                 Layout.alignment: Qt.AlignVCenter
                 Layout.topMargin: 2
                 // tooltipText: "Open menu"
-                opacity: 0.7
                 onClicked: Router.navigate("/settings")
             }
 

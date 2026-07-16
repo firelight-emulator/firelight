@@ -5,6 +5,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 
 #include <firelight/audio/audio_rate_controller.hpp>
 #include <firelight/audio/audio_resampler.hpp>
@@ -65,6 +66,12 @@ private:
 
   std::unique_ptr<QAudioSink> m_audioSink;
   QIODevice *m_audioDevice = nullptr;
+
+  // QAudioSink/QIODevice aren't thread-safe. receive() (render thread) and
+  // getBufferLevel() (the "audio" sync method's pacing thread) both touch the
+  // sink, so all access is serialized on this. Held only for the brief sink
+  // calls — never across a core frame.
+  mutable std::mutex m_sinkMutex;
 
   bool m_isMuted = false;
   int m_sampleRate = 0;       // the core's audio rate

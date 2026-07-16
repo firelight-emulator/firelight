@@ -98,6 +98,7 @@ SplitView {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
                         Layout.rightMargin: 12
+                        Layout.leftMargin: 12
                         spacing: 12
 
                         Text {
@@ -116,31 +117,22 @@ SplitView {
                             implicitHeight: 1
                         }
 
-                        FLIcon {
-                            id: addFolderIcon
-                            Layout.fillHeight: true
-                            icon: "add"
-                            size: 26
-                            color: "#ffffff"
-                            opacity: newFolderHover.hovered ? 1.0 : 0.8
+                        IconButton {
+                            Layout.preferredWidth: 32
+                            Layout.preferredHeight: 32
+                            iconName: "add"
+                            Layout.topMargin: 2
                             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                            onClicked: newFolderMenu.open()
 
-                            HoverHandler {
-                                id: newFolderHover
-                            }
-
-                            TapHandler {
-                                onTapped: newFolderMenu.popup()
-                            }
-
-                            Menu {
+                            RightClickMenu {
                                 id: newFolderMenu
 
-                                MenuItem {
+                                RightClickMenuItem {
                                     text: "New folder"
                                     onTriggered: createFolderDialog.open()
                                 }
-                                MenuItem {
+                                RightClickMenuItem {
                                     text: "New smart folder"
                                     onTriggered: {
                                         smartFolderDialog.editFolderId = -1;
@@ -154,7 +146,8 @@ SplitView {
                     Rectangle {
                         Layout.fillWidth: true
                         implicitHeight: 1
-                        color: "#123123"
+                        color: "#ffffff"
+                        opacity: 0.2
                     }
                 }
                 // Rectangle {
@@ -371,15 +364,17 @@ SplitView {
         SplitView.fillHeight: true
         SplitView.fillWidth: true
         bottomPadding: 0
-        horizontalPadding: 24
+        horizontalPadding: 0 // 24
         topPadding: 0
         verticalPadding: 0
         // clip: true
 
         background: Rectangle {
             color: Theme.glassElevated
-            topRightRadius: detailsPanel.width > 0 ? 0 : 8
-            bottomRightRadius: detailsPanel.width > 0 ? 0 : 8
+            topRightRadius: 8
+            bottomRightRadius: 8
+            // topRightRadius: detailsPanel.width > 0 ? 0 : 8
+            // bottomRightRadius: detailsPanel.width > 0 ? 0 : 8
         }
 
         contentItem: GameView {
@@ -387,23 +382,23 @@ SplitView {
         }
     }
 
-    Pane {
-        id: detailsPanel
-
-        SplitView.fillHeight: true
-        SplitView.fillWidth: true
-
-        onWidthChanged: {
-            console.log("Details panel width: " + width)
-        }
-
-        padding: 8
-        clip: true
-
-        background: Rectangle {
-            color: Theme.glassElevated
-            topRightRadius: 8
-            bottomRightRadius: 8
-        }
-    }
+    // Pane {
+    //     id: detailsPanel
+    //
+    //     SplitView.fillHeight: true
+    //     SplitView.fillWidth: true
+    //
+    //     onWidthChanged: {
+    //         console.log("Details panel width: " + width)
+    //     }
+    //
+    //     padding: 8
+    //     clip: true
+    //
+    //     background: Rectangle {
+    //         color: Theme.glassElevated
+    //         topRightRadius: 8
+    //         bottomRightRadius: 8
+    //     }
+    // }
 }

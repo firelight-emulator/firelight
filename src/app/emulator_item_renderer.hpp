@@ -8,6 +8,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QQueue>
+#include <mutex>
 #include <QQuickRhiItemRenderer>
 #include <QSGRenderNode>
 #include <QVideoFrameInput>
@@ -51,8 +52,10 @@ namespace firelight {
 // Threading: created, used, and destroyed on the QML render thread — Qt drives
 // initialize()/synchronize()/render() there, which is also where the
 // EmulatorCommand queue (incl. RunFrame -> EmulatorInstance) is drained.
-// submitCommand() enqueues from the GUI and pacing threads (the QQueue itself is
-// not synchronized).
+// submitCommand() enqueues from the GUI and pacing threads while the render
+// thread drains it in synchronize(), so all access goes through
+// m_commandQueueMutex (QQueue isn't thread-safe — a concurrent enqueue realloc
+// racing a dequeue corrupts the heap).
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver {
@@ -158,7 +161,11 @@ private:
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;
-  // Capture commands deferred one frame to wait for a fresh readback.
+  // Guards m_commandQueue against concurrent enqueue (GUI/pacing threads) and
+  // drain (render thread).
+  std::mutex m_commandQueueMutex;
+  // Capture commands deferred one frame to wait for a fresh readback. Only ever
+  // touched on the render thread (in synchronize), so it needs no lock.
   QQueue<EmulatorCommand> m_deferredCommands;
   // Forces a single framebuffer readback next frame (idle HW cores).
   bool m_captureNextFrame = false;

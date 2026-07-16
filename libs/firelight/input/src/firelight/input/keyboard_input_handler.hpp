@@ -5,6 +5,8 @@
 #include <QPointF>
 #include <QTimer>
 
+#include <mutex>
+
 #include <firelight/input/igamepad.hpp>
 #include <firelight/libretro/retropad.hpp>
 
@@ -62,6 +64,10 @@ private:
 
   QMap<Input, bool> m_buttonStates;
   QMap<Qt::Key, bool> m_keyStates;
+  // m_keyStates is written on the GUI thread (eventFilter) and read on the render
+  // thread (input poll during core->run). QMap isn't thread-safe and operator[]
+  // mutates the tree, so every access is serialized here.
+  std::mutex m_keyStatesMutex;
 
   std::shared_ptr<GamepadProfile> m_profile;
 

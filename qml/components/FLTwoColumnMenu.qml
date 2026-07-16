@@ -47,15 +47,13 @@ FocusScope {
             keyNavigationEnabled: true
             model: root.menuItems
 
-            delegate: FirelightMenuItem {
+            delegate: MainNavigationMenuItem {
                 required property var index
                 required property var modelData
-                property bool showGlobalCursor: true
 
                 checked: ListView.isCurrentItem
                 focus: ListView.isCurrentItem
-                height: 50
-                labelText: modelData
+                displayText: modelData
                 width: ListView.view.width
 
                 onClicked: function () {
@@ -124,21 +122,20 @@ FocusScope {
             anchors.left: parent.left
             anchors.top: parent.top
             currentIndex: root.currentIndex
+            anchors.margins: 8
             focus: true
             interactive: false
             keyNavigationEnabled: true
             model: root.menuItems
-            width: 300
+            width: 240
 
-            delegate: FirelightMenuItem {
+            delegate: MainNavigationMenuItem {
                 required property var index
                 required property var modelData
-                property bool showGlobalCursor: true
 
                 checked: ListView.isCurrentItem
                 focus: ListView.isCurrentItem
-                height: 50
-                labelText: modelData
+                displayText: modelData
                 width: ListView.view.width
 
                 onClicked: function () {

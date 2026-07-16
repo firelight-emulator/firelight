@@ -3,11 +3,13 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// Multi-select setting: a checklist over `options` ({label, value}). `value` is
-// a JSON array of the selected option values; emits `changed` with the new JSON
-// array string when the selection changes.
+// Multi-select setting: a full-width wrap of toggleable chips over `options`
+// ({label, value}). `value` is a JSON array of the selected option values;
+// emits `changed` with the new JSON array string when the selection changes.
 BaseSettingItem {
     id: root
+
+    controlBelow: true
 
     property string value: "[]"
     property var options: []
@@ -40,76 +42,51 @@ BaseSettingItem {
         root.changed(JSON.stringify(copy));
     }
 
-    function summary() {
-        if (selected.length === 0) {
-            return qsTr("None");
-        }
-        var labels = [];
-        for (var i = 0; i < options.length; i++) {
-            if (isSelected(options[i].value)) {
-                labels.push(options[i].label);
-            }
-        }
-        return labels.join(", ");
-    }
+    control: Flow {
+        spacing: 6
 
-    control: Button {
-        id: btn
-        implicitWidth: 260
-        enabled: root.enabled
-        focusPolicy: Qt.NoFocus
-        onClicked: popup.open()
+        Repeater {
+            model: root.options
+            delegate: Button {
+                id: chip
+                required property var modelData
+                readonly property bool on: root.isSelected(modelData.value)
 
-        background: Rectangle {
-            radius: 4
-            color: Theme.surface
-        }
+                enabled: root.enabled
+                focusPolicy: Qt.NoFocus
+                hoverEnabled: true
+                padding: 0
+                onClicked: root.toggle(modelData.value)
 
-        contentItem: Text {
-            text: root.summary()
-            leftPadding: 8
-            rightPadding: 8
-            color: Theme.textPrimary
-            elide: Text.ElideRight
-            font.family: Constants.regularFontFamily
-            font.pixelSize: AppStyle.fontSizeSmall
-            verticalAlignment: Text.AlignVCenter
-        }
+                HoverHandler { cursorShape: Qt.PointingHandCursor }
 
-        Popup {
-            id: popup
-            y: btn.height + 4
-            width: Math.max(btn.width, 220)
-            padding: 4
-            modal: true
-            dim: false
-
-            background: Rectangle {
-                radius: 6
-                color: Theme.surfaceElevated
-                border.color: Theme.border
-                border.width: 1
-            }
-
-            contentItem: ColumnLayout {
-                spacing: 0
-                Repeater {
-                    model: root.options
-                    delegate: CheckDelegate {
-                        required property var modelData
-                        Layout.fillWidth: true
-                        padding: 6
-                        checked: root.isSelected(modelData.value)
-                        onToggled: root.toggle(modelData.value)
-                        contentItem: Text {
-                            leftPadding: 28
-                            text: modelData.label
-                            color: Theme.textPrimary
-                            font.family: Constants.regularFontFamily
-                            font.pixelSize: AppStyle.fontSizeSmall
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                contentItem: RowLayout {
+                    spacing: 4
+                    Icon {
+                        Layout.leftMargin: 10
+                        visible: chip.on
+                        name: "check"
+                        size: 14
+                        color: Theme.accent
                     }
+                    Text {
+                        Layout.leftMargin: chip.on ? 0 : 12
+                        Layout.rightMargin: 12
+                        text: chip.modelData.label
+                        color: chip.on ? Theme.accent : Theme.textMuted
+                        font.family: Constants.regularFontFamily
+                        font.pixelSize: AppStyle.fontSizeSmall
+                        font.weight: Font.DemiBold
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+
+                background: Rectangle {
+                    implicitHeight: 30
+                    radius: 15
+                    color: chip.on ? Theme.blend(Theme.surface, Theme.accent, 0.18) : "transparent"
+                    border.width: 1
+                    border.color: chip.on ? Theme.accent : Theme.border
                 }
             }
         }

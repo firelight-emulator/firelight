@@ -582,7 +582,7 @@ Pane {
                          Layout.preferredHeight: 42
                          Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
                          focus: true
-                          icon.source: "qrc:/icons/sort"
+                         iconName: "sort"
                           // icon.height: 42
                           // icon.width: 42
                           // KeyNavigation.right: mainArea

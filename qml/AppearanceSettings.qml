@@ -11,6 +11,12 @@ Settings {
     property bool usingCustomBackground: false
     property string backgroundFile: ""
 
+    property string accentColor: "#a55300"
+
+    Behavior on accentColor {
+        ColorAnimation { duration: 64 }
+    }
+
     // --- Theme ---
     // "solid" | "gradient" | "image"
     property string backgroundMode: "solid"

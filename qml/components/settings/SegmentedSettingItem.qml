@@ -1,0 +1,68 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import Firelight 1.0
+
+// Pick one of a few options, all visible at once. `options` is [{label, value}];
+// `currentValue` is the selected value; emits `changed` on selection. Sits to
+// the side for 2 options, full-width below for 3+.
+BaseSettingItem {
+    id: root
+
+    property var options: []
+    property string currentValue: ""
+    signal changed(string value)
+
+    controlBelow: (options ? options.length : 0) >= 3
+
+    control: Rectangle {
+        id: segBox
+        implicitHeight: 34
+        implicitWidth: segRow.implicitWidth + 4
+        radius: 6
+        color: Theme.surface
+        border.width: 1
+        border.color: Theme.border
+
+        RowLayout {
+            id: segRow
+            anchors.fill: parent
+            anchors.margins: 2
+            spacing: 2
+
+            Repeater {
+                model: root.options
+                delegate: Button {
+                    id: seg
+                    required property var modelData
+                    readonly property bool on: root.currentValue === modelData.value
+
+                    Layout.fillWidth: root.controlBelow
+                    Layout.preferredHeight: 30
+                    implicitWidth: segLabel.implicitWidth + 24
+                    focusPolicy: Qt.NoFocus
+                    hoverEnabled: true
+                    onClicked: root.changed(modelData.value)
+
+                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+
+                    contentItem: Text {
+                        id: segLabel
+                        text: seg.modelData.label
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: seg.on ? "#40200a" : Theme.textMuted
+                        font.family: Constants.regularFontFamily
+                        font.pixelSize: AppStyle.fontSizeSmall
+                        font.weight: Font.DemiBold
+                    }
+
+                    background: Rectangle {
+                        radius: 4
+                        color: seg.on ? Theme.accent : (seg.hovered ? Theme.surfaceHover : "transparent")
+                    }
+                }
+            }
+        }
+    }
+}

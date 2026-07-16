@@ -33,6 +33,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   // Note: we run this path even when muted (writing silence below) so the audio
   // buffer keeps draining at the device rate — the "audio" sync method paces the
   // emulation off this buffer's occupancy and must not stall when muted.
+  std::lock_guard lock(m_sinkMutex);
   if (m_audioDevice && m_audioSink) {
     // Added m_audioSink check
     const auto bufferTotalCapacity = m_audioSink->bufferSize();
@@ -80,6 +81,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   return numFrames;
 }
 
+// Callers (initialize / reinitializeAudioDevice) hold m_sinkMutex.
 void AudioManager::openAudioSink() {
   const QAudioDevice dev = selectedOutputDevice();
 
@@ -119,6 +121,7 @@ void AudioManager::openAudioSink() {
 }
 
 void AudioManager::initialize(const double new_freq) {
+  std::lock_guard lock(m_sinkMutex);
   m_sampleRate = static_cast<int>(new_freq);
   openAudioSink();
 }
@@ -127,6 +130,7 @@ void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
 bool AudioManager::isMuted() const { return m_isMuted; }
 
 void AudioManager::setPaused(const bool paused) {
+  std::lock_guard lock(m_sinkMutex);
   if (!m_audioSink) {
     return;
   }
@@ -143,7 +147,9 @@ float AudioManager::getBufferLevel() const {
   // Live read of the sink's occupancy. The "audio" sync method paces frames off
   // this value from another thread; a cached value only refreshed while we're
   // feeding the sink would freeze once the buffer fills and we stop feeding it,
-  // stalling emulation. bytesFree()/bufferSize() are cheap reads.
+  // stalling emulation. bytesFree()/bufferSize() are cheap reads, but the sink
+  // isn't thread-safe, so serialize against receive()/reinit on other threads.
+  std::lock_guard lock(m_sinkMutex);
   if (m_audioSink) {
     const auto capacity = m_audioSink->bufferSize();
     if (capacity > 0) {
@@ -163,6 +169,7 @@ void AudioManager::setDynamicRateControlEnabled(const bool enabled) {
 }
 
 void AudioManager::reinitializeAudioDevice() {
+  std::lock_guard lock(m_sinkMutex);
   if (!m_audioSink) {
     return; // Not initialized yet
   }
@@ -183,6 +190,7 @@ void AudioManager::reinitializeAudioDevice() {
 void AudioManager::onAudioDevicesChanged() { reinitializeAudioDevice(); }
 
 AudioManager::~AudioManager() {
+  std::lock_guard lock(m_sinkMutex);
   if (m_audioDevice) {
     m_audioDevice->close();
   }

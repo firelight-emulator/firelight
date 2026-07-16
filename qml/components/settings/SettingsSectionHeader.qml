@@ -20,7 +20,8 @@ Pane {
         Rectangle {
             width: 4
             implicitHeight: 24
-            color: Theme.textMuted
+            radius: 2
+            color: Theme.accent
         }
         Text {
             Layout.preferredHeight: 23

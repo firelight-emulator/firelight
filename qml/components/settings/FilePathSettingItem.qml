@@ -10,6 +10,8 @@ import Firelight 1.0
 BaseSettingItem {
     id: root
 
+    controlBelow: true
+
     property string value: ""
     property bool directoryMode: false
     property var extensions: []
@@ -39,7 +41,7 @@ BaseSettingItem {
         spacing: 8
 
         Text {
-            Layout.maximumWidth: 260
+            Layout.fillWidth: true
             text: root.value === "" ? qsTr("Not set") : root.value
             color: root.value === "" ? ColorPalette.neutral400 : "white"
             elide: Text.ElideMiddle

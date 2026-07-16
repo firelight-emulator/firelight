@@ -66,17 +66,18 @@ QtObject {
 
     // --- solid tokens (functional, Radix Slate tinted toward the theme color) ---
     readonly property color background: blend(_slate1, themeColor, intensity * 0.5)
+    readonly property color backgroundSubtle: blend(_slate2, themeColor, intensity)
     readonly property color surface: blend(_slate3, themeColor, intensity)
     readonly property color surfaceElevated: blend(_slate4, themeColor, intensity)
     readonly property color surfaceHover: blend(_slate5, themeColor, intensity)
-    readonly property color border: blend(_slate6, themeColor, intensity * 0.6)
+    readonly property color border: blend(_slate6, themeColor, intensity)
     readonly property color borderStrong: blend(_slate8, themeColor, intensity * 0.5)
 
     readonly property color textPrimary: _slate12
     readonly property color textMuted: _slate11
 
     // Radix accent + status (dark, step 9).
-    readonly property color accent: "#f76b15"
+    readonly property color accent: AppearanceSettings.accentColor
     readonly property color onAccent: onColor(accent)
 
     readonly property color success: "#30a46c"

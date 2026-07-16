@@ -11,7 +11,7 @@ MenuItem {
     property real minWidth: 0
     property real maxWidth: -1
 
-    implicitHeight: 42
+    implicitHeight: 36
     implicitWidth: contentItem.width
     padding: 4
     horizontalPadding: 8

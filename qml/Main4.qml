@@ -195,14 +195,15 @@ MainWindow {
         id: navRail
         anchors.top: titleBar.bottom
         anchors.left: parent.left
+        anchors.leftMargin: 2
         anchors.bottom: parent.bottom
         width: 58
 
         background: Item {}
 
         ColumnLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 6
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
             spacing: 16
 
             Repeater {
@@ -226,7 +227,7 @@ MainWindow {
 
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
-                    icon.source: "qrc:/icons/" + model.iconName
+                    iconName: model.iconName
 
                     onClicked: {
                         Router.navigate(model.route)
@@ -249,7 +250,7 @@ MainWindow {
         anchors.left: navRail.right
         anchors.right: parent.right
         anchors.top: titleBar.bottom
-        anchors.leftMargin: 8
+        anchors.leftMargin: 2
         anchors.rightMargin: 8
         anchors.bottomMargin: 8
 

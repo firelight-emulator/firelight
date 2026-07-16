@@ -120,7 +120,10 @@ namespace firelight::emulation {
       m_currentPlatform = *result.platform;
     }
     m_currentCoreConfig = result.coreConfig;
-    m_emulatorInstance = std::move(result.instance);
+    {
+      std::lock_guard lock(m_instanceMutex);
+      m_emulatorInstance = std::move(result.instance);
+    }
 
     EventDispatcher::instance().publish(GameLoadedEvent{});
 
@@ -130,8 +133,16 @@ namespace firelight::emulation {
   }
 
   void EmulationService::stopEmulation() {
-    m_emulatorInstance.reset();
+    {
+      std::lock_guard lock(m_instanceMutex);
+      m_emulatorInstance.reset();
+    }
     EventDispatcher::instance().publish(EmulationStoppedEvent{});
+  }
+
+  float EmulationService::currentAudioBufferLevel() {
+    std::lock_guard lock(m_instanceMutex);
+    return m_emulatorInstance ? m_emulatorInstance->getAudioBufferLevel() : -1.0f;
   }
 
   void EmulationService::setPendingLaunchOverrides(LaunchOverrides overrides) {

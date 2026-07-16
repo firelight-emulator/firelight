@@ -37,24 +37,39 @@ FocusScope {
         Pane {
             Layout.fillWidth: true
             Layout.preferredHeight: 32
-            background: Rectangle {
-                color: Theme.surfaceHover
-            }
+            horizontalPadding: 0
+            // background: Rectangle {
+            //     color: Theme.surfaceHover
+            // }
+            background: Item {}
             visible: root.title !== ""
 
             RowLayout {
                 anchors.fill: parent
-                spacing: 8
+                spacing: 2
+
+                Text {
+                    Layout.fillHeight: true
+                    text: root.title
+                    color: Theme.textPrimary
+                    opacity: 0.7
+                    font.family: Constants.regularFontFamily
+                    font.pixelSize: AppStyle.fontSizeSmall
+                    font.weight: Font.Medium
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    visible: root.title !== ""
+                }
 
                 FLIcon {
-                    icon: "arrow"
+                    icon: "chevron-back"
                     Layout.topMargin: -3
                     Layout.bottomMargin: -4
                     Layout.fillHeight: true
                     size: 15
-                    visible: root.title !== ""
+                    visible: root.title !== "" && root.collapsible
                     color: Theme.textPrimary
-                    opacity: 0.8
+                    opacity: 0.7
                     rotation: contentContainer.collapsed ? 180 : 270
                     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
@@ -64,19 +79,6 @@ FocusScope {
                             easing.type: Easing.InOutQuad
                         }
                     }
-                }
-
-                Text {
-                    Layout.fillHeight: true
-                    text: root.title
-                    color: Theme.textPrimary
-                    opacity: 0.8
-                    font.family: Constants.regularFontFamily
-                    font.pixelSize: AppStyle.fontSizeMedium
-                    font.weight: Font.DemiBold
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                    visible: root.title !== ""
                 }
 
                 Item {
@@ -119,9 +121,9 @@ FocusScope {
             property bool collapsed: false
 
             Layout.fillWidth: true
-            Layout.topMargin: collapsed ? 0 : 8
-            Layout.leftMargin: 8
-            Layout.rightMargin: 8
+            Layout.topMargin: 0
+            // Layout.leftMargin: 8
+            // Layout.rightMargin: 8
             Layout.bottomMargin: collapsed ? 0 : 8
             Layout.preferredHeight: collapsed ? 0 : list.implicitHeight
             // clip: true

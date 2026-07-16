@@ -6,6 +6,8 @@ import Firelight 1.0
 BaseSettingItem {
     id: root
 
+    controlBelow: true
+
     property real from: 0
     property real to: 10
     property real stepSize: 1
@@ -18,13 +20,16 @@ BaseSettingItem {
 
         Slider {
             id: theControl
-            Layout.preferredWidth: 220
+            Layout.fillWidth: true
             enabled: root.enabled
             focusPolicy: Qt.NoFocus
             from: root.from
             to: root.to
             stepSize: root.stepSize
             snapMode: Slider.SnapAlways
+
+            palette.midlight: Theme.textPrimary
+            palette.dark: Theme.accent
 
             onMoved: root.moved(value)
 
@@ -35,7 +40,7 @@ BaseSettingItem {
 
         Text {
             Layout.preferredWidth: 40
-            text: theControl.value
+            text: theControl.value.toFixed(2)
             color: Theme.textPrimary
             horizontalAlignment: Text.AlignRight
             verticalAlignment: Text.AlignVCenter

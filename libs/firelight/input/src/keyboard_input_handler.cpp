@@ -45,6 +45,7 @@ QString KeyboardInputHandler::getKeyLabel(const Qt::Key key) {
 
 bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
                                            Input t_button) {
+  std::lock_guard lock(m_keyStatesMutex);
   const auto input = static_cast<GamepadInput>(t_button);
   if (m_profile) {
     auto mapping = m_profile->getMappingForPlatformAndController(
@@ -80,6 +81,7 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
 
 int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
                                                     int controllerTypeId) {
+  std::lock_guard lock(m_keyStatesMutex);
   if (!m_profile) {
     if (m_keyStates[Qt::Key_Left]) {
       return -32767;
@@ -146,6 +148,7 @@ int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
 
 int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId,
                                                     int controllerTypeId) {
+  std::lock_guard lock(m_keyStatesMutex);
   if (!m_profile) {
     if (m_keyStates[Qt::Key_Left]) {
       return -32767;
@@ -262,9 +265,16 @@ bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
       return false;
     }
     const auto key = static_cast<Qt::Key>(keyEvent->key());
-    // Ignore auto-repeat: only report the rising edge to the shortcut engine.
-    if (!m_keyStates.value(key, false)) {
-      m_keyStates[key] = true;
+    bool rising = false;
+    {
+      std::lock_guard lock(m_keyStatesMutex);
+      // Ignore auto-repeat: only report the rising edge to the shortcut engine.
+      if (!m_keyStates.value(key, false)) {
+        m_keyStates[key] = true;
+        rising = true;
+      }
+    }
+    if (rising) {
       EventDispatcher::instance().publish(KeyboardKeyEvent{
           .playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = true});
     }
@@ -274,7 +284,10 @@ bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
       return false;
     }
     const auto key = static_cast<Qt::Key>(keyEvent->key());
-    m_keyStates[key] = false;
+    {
+      std::lock_guard lock(m_keyStatesMutex);
+      m_keyStates[key] = false;
+    }
     EventDispatcher::instance().publish(KeyboardKeyEvent{
         .playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = false});
   }

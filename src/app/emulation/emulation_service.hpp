@@ -8,6 +8,7 @@
 #include <firelight/libretro/core_run_config.hpp>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 
 namespace firelight::library {
@@ -89,6 +90,12 @@ public:
   void stopEmulation();
   EmulatorInstance *getCurrentEmulatorInstance();
 
+  // Audio-buffer level of the running instance, or -1 if none. Safe to call from
+  // the frame-pacing thread: the instance can be destroyed on the GUI thread by
+  // loadEntry/stopEmulation, so this reads it under m_instanceMutex rather than
+  // handing out a raw pointer the caller might dereference after a reset().
+  float currentAudioBufferLevel();
+
   // Sets the one-shot launch knobs applied to (and consumed by) the next
   // loadEntry. See LaunchOverrides. Not persisted.
   void setPendingLaunchOverrides(LaunchOverrides overrides);
@@ -109,6 +116,9 @@ private:
   std::unique_ptr<GameLoader> m_loader;
 
   std::unique_ptr<EmulatorInstance> m_emulatorInstance;
+  // Guards m_emulatorInstance's lifetime against the frame-pacing thread, which
+  // reads it (currentAudioBufferLevel) while loadEntry/stopEmulation may reset it.
+  std::mutex m_instanceMutex;
 
   // One-shot per-launch knobs (save slot, muted, ...), applied and cleared in
   // loadEntry. Distinct from m_context's stable service dependencies.

@@ -171,6 +171,10 @@ private:
   std::vector<SuspendPoint> m_rewindSuspendPoints;
   std::chrono::time_point<std::chrono::steady_clock> m_lastSaveTime;
   int m_saveIntervalSeconds = 10;
+  // Holds the in-flight autosave. Discarding the future std::async returns would
+  // block the render thread in its destructor until the write finished (a hitch
+  // every save interval); keeping it here lets the write run in the background.
+  std::future<bool> m_pendingSave;
 
   std::string m_contentPath;
   std::string m_contentHash;

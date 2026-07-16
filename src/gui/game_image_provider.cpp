@@ -6,47 +6,49 @@ GameImageProvider::GameImageProvider() : QQuickImageProvider(Image) {}
 
 QImage GameImageProvider::requestImage(const QString &id, QSize *size,
                                        const QSize &requestedSize) {
-  if (!m_images.contains(id)) {
-    return {};
+  // Copy the stored image out under the lock, then scale outside it: QImage is
+  // copy-on-write, so the copy is cheap and stays valid even if another thread
+  // replaces the map entry while we scale.
+  QImage image;
+  {
+    std::lock_guard lock(m_mutex);
+    const auto it = m_images.constFind(id);
+    if (it == m_images.constEnd()) {
+      return {};
+    }
+    image = it.value();
   }
 
-  if (m_images[id].height() != 0 && m_images[id].width() != 0) {
+  if (image.height() != 0 && image.width() != 0) {
     if (size != nullptr) {
-      size->setHeight(m_images[id].height());
-      size->setWidth(m_images[id].width());
+      size->setHeight(image.height());
+      size->setWidth(image.width());
     }
   }
 
-  // if ((requestedSize.height() <= 0 && requestedSize.width() <= 0)) {
-  //     return {};
-  // }
-
   if (requestedSize.height() > 0) {
-    return m_images[id].scaledToHeight(requestedSize.height(),
-                                       Qt::SmoothTransformation);
+    return image.scaledToHeight(requestedSize.height(),
+                                Qt::SmoothTransformation);
   }
 
   if (requestedSize.width() > 0) {
-    return m_images[id].scaledToWidth(requestedSize.width(),
-                                      Qt::SmoothTransformation);
+    return image.scaledToWidth(requestedSize.width(),
+                               Qt::SmoothTransformation);
   }
 
-  return m_images[id];
+  return image;
 }
 
 void GameImageProvider::setImage(const QString &id, const QImage &image) {
+  std::lock_guard lock(m_mutex);
   m_images[id] = image;
 }
 
 QString GameImageProvider::setImage(const QImage &image) {
-  // if (m_cacheIdsToProviderIds.contains(image.cacheKey())) {
-  //     return "image://gameimages/" +
-  //     m_cacheIdsToProviderIds[image.cacheKey()];
-  // }
-
   const auto id = QUuid::createUuid().toString(QUuid::WithoutBraces);
   const auto url = "image://gameimages/" + id;
 
+  std::lock_guard lock(m_mutex);
   m_images[id] = image;
   return url;
 }
@@ -54,11 +56,11 @@ QString GameImageProvider::setImage(const QImage &image) {
 void GameImageProvider::removeImageWithUrl(const QString &url) {
   const auto id = url.split("/").last();
 
-  m_images.erase(m_images.find(id));
-  // if (m_images.isDetached())
-  //   if (!m_images.isEmpty() && m_images.contains(id)) {
-  //     // m_cacheIdsToProviderIds.remove(m_images[id].cacheKey());
-  //     m_images.remove(id);
-  //   }
+  std::lock_guard lock(m_mutex);
+  // erase(find(...)) is undefined behavior when the id isn't present, so only
+  // erase a real hit.
+  if (const auto it = m_images.find(id); it != m_images.end()) {
+    m_images.erase(it);
+  }
 }
 } // namespace firelight::gui

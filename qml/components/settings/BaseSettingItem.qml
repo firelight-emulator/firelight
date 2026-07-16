@@ -3,12 +3,36 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// One settings row inside a section card: the label with its description beneath
+// it, the control to the right (or full-width below when `controlBelow`), and a
+// full-bleed hairline between rows. A subtle highlight appears on hover or
+// gamepad/keyboard focus. Default children land in an indented slot for nested
+// sub-settings.
 FocusScope {
     id: root
 
     required property string label
     required property Item control
     property string description: ""
+
+    // Place the control full-width below the label instead of to its right.
+    property bool controlBelow: false
+
+    // Bind to whatever a dependent setting hangs off of.
+    property bool shown: true
+
+    // The between-rows divider. SettingsSection turns it off for a group's last
+    // row so the card doesn't end with a line.
+    property bool showDivider: true
+
+    // Marks this row as a dependent sub-setting of the one above it: indented
+    // with a quieter label, so two cues carry the relationship rather than one.
+    // SettingSubGroup sets this on its children.
+    property bool subItem: false
+    readonly property int contentIndent: subItem ? 40 : 16
+
+    // Sub-settings rendered indented below the row.
+    default property alias nestedContent: nestedColumn.data
 
     // Shown when this setting has an override at the current tier; emits reset()
     // so the caller can clear it (falling back to the inherited value).
@@ -17,137 +41,167 @@ FocusScope {
 
     property var onClicked: null
 
-    implicitHeight: button.implicitHeight
-    implicitWidth: button.implicitWidth
+    // Rows always span their column; a row with no width renders nothing, and
+    // callers shouldn't have to remember this at every use site.
+    Layout.fillWidth: true
 
-    Button {
-        id: button
-        anchors.fill: parent
+    // Dependent rows swap in instantly. Animating the height cascades into the
+    // card and everything below it, which reads worse than a clean swap.
+    visible: shown
+    implicitHeight: content.implicitHeight
 
-        background: Item {}
+    // The single `control` lives either in the side slot or the below slot.
+    Binding {
+        target: root.control
+        property: "parent"
+        value: root.controlBelow ? belowSlot : sideSlot
+        when: root.control !== null
+    }
+    Binding {
+        target: root.control
+        property: "width"
+        value: root.controlBelow ? belowSlot.width : sideSlot.width
+        when: root.control !== null
+    }
 
-        contentItem: ColumnLayout {
-            spacing: 0
-            // Rectangle {
-            //     Layout.fillWidth: true
-            //     Layout.maximumHeight: 1
-            //     Layout.preferredHeight: 1
-            //     color: ColorPalette.neutral300
-            //     opacity: 0.25
-            // }
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 60
-                padding: 8
+    HoverHandler {
+        id: hover
+        cursorShape: root.onClicked ? Qt.PointingHandCursor : Qt.ArrowCursor
+    }
+    TapHandler {
+        enabled: root.onClicked !== null
+        onTapped: if (root.onClicked) root.onClicked()
+    }
 
-                focus: true
+    // Full-bleed hover / focus highlight behind the row.
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: content.top
+        anchors.bottom: content.bottom
+        color: ColorPalette.neutral300
+        opacity: hover.hovered || (!InputMethodManager.usingMouse && root.activeFocus) ? 0.08 : 0
 
-                property bool showGlobalCursor: true
-                property var globalCursorSpacing: 1
+        Behavior on opacity {
+            NumberAnimation { duration: 100; easing.type: Easing.InOutQuad }
+        }
+    }
 
-                 HoverHandler {
-                     cursorShape: Qt.PointingHandCursor
-                 }
+    ColumnLayout {
+        id: content
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        spacing: 0
 
-
-                onClicked: {
-                    if (root.onClicked) {
-                        root.onClicked()
-                    }
-                }
-
-                background: Rectangle {
-                    color: ColorPalette.neutral300
-                    opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.08
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 100
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
-                    radius: 8
-                }
-
-                contentItem: RowLayout {
-                    height: 48
-                    Text {
-                        id: labelText
-                        Layout.fillWidth: true
-                        text: root.label
-                        color: Theme.textPrimary
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.DemiBold
-                    }
-                    Button {
-                        id: resetButton
-                        visible: root.resettable
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        Layout.rightMargin: 8
-                        padding: 6
-                        hoverEnabled: true
-                        focusPolicy: Qt.NoFocus
-
-                        onClicked: root.reset()
-
-                        HoverHandler {
-                            cursorShape: Qt.PointingHandCursor
-                        }
-
-                        background: Rectangle {
-                            radius: 6
-                            color: resetButton.hovered ? ColorPalette.neutral300 : "transparent"
-                            opacity: resetButton.hovered ? 0.2 : 0
-                        }
-
-                        contentItem: Text {
-                            text: qsTr("Reset")
-                            color: Theme.textMuted
-                            font.pixelSize: AppStyle.fontSizeSmall
-                            font.family: Constants.regularFontFamily
-                            font.weight: Font.Medium
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                    Pane {
-                        id: controlItem
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenters
-                        background: Item{}
-                        padding: 0
-                        contentItem: root.control
-                    }
-                }
-            }
-
-            // Rectangle {
-            //     Layout.fillWidth: true
-            //     Layout.maximumHeight: 1
-            //     Layout.preferredHeight: 1
-            //     color: ColorPalette.neutral300
-            //     opacity: 0.25
-            // }
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: root.contentIndent
+            Layout.rightMargin: 16
+            Layout.topMargin: 13
+            spacing: 12
 
             Text {
-                id: descriptionText
+                id: labelText
                 Layout.fillWidth: true
-                Layout.topMargin: 4
-                leftPadding: 8
-                rightPadding: 8
-                visible: root.description !== ""
-
+                Layout.alignment: Qt.AlignVCenter
+                text: root.label
+                color: root.subItem ? Theme.textMuted : Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
-                font.weight: Font.Medium
-                lineHeight: 1.2
-                color: Theme.textMuted
-                text: root.description
+                font.weight: Font.DemiBold
                 wrapMode: Text.WordWrap
             }
 
+            Button {
+                id: resetButton
+                visible: root.resettable
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                padding: 6
+                focusPolicy: Qt.NoFocus
+                hoverEnabled: true
+                onClicked: root.reset()
 
+                HoverHandler { cursorShape: Qt.PointingHandCursor }
+
+                background: Rectangle {
+                    radius: 6
+                    color: ColorPalette.neutral300
+                    opacity: resetButton.hovered ? 0.2 : 0
+                }
+                contentItem: Text {
+                    text: qsTr("Reset")
+                    color: Theme.textMuted
+                    font.pixelSize: AppStyle.fontSizeSmall
+                    font.family: Constants.regularFontFamily
+                    font.weight: Font.Medium
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            Item {
+                id: sideSlot
+                visible: !root.controlBelow
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                // A control that asks for more than it can have — a long file
+                // path, say — would otherwise squeeze the label to nothing and
+                // draw straight over it. Cap it and let the control shrink.
+                Layout.maximumWidth: Math.round(root.width * 0.6)
+                implicitWidth: (!root.controlBelow && root.control) ? root.control.implicitWidth : 0
+                implicitHeight: (!root.controlBelow && root.control) ? root.control.implicitHeight : 0
+            }
+        }
+
+        Item {
+            id: belowSlot
+            visible: root.controlBelow
+            Layout.fillWidth: true
+            Layout.leftMargin: root.contentIndent
+            Layout.rightMargin: 16
+            Layout.topMargin: root.controlBelow ? 10 : 0
+            implicitHeight: (root.controlBelow && root.control) ? root.control.implicitHeight : 0
+        }
+
+        // Full width, below the label AND the control — a wide control must never
+        // squeeze the description into a narrow column.
+        Text {
+            id: descText
+            Layout.fillWidth: true
+            Layout.leftMargin: root.contentIndent
+            Layout.rightMargin: 16
+            Layout.topMargin: root.description !== "" ? 6 : 0
+            visible: root.description !== ""
+            text: root.description
+            color: Theme.textMuted
+            font.pixelSize: AppStyle.fontSizeSmall
+            font.family: Constants.regularFontFamily
+            font.weight: Font.Medium
+            lineHeight: 1.3
+            wrapMode: Text.WordWrap
+        }
+
+        ColumnLayout {
+            id: nestedColumn
+            Layout.fillWidth: true
+            Layout.leftMargin: root.contentIndent + 8
+            Layout.rightMargin: 16
+            Layout.topMargin: children.length > 0 ? 10 : 0
+            spacing: 6
+            visible: children.length > 0
+        }
+
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 13
+        }
+
+        Rectangle {
+            id: divider
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            visible: root.showDivider
+            color: Theme.border
+            opacity: 0.7
         }
     }
 }

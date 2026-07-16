@@ -403,13 +403,22 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     }
   }
 
-  // Capture commands held back a frame (waiting for a fresh HW readback) run now
-  // that m_currentImage has been refreshed.
-  while (!m_deferredCommands.isEmpty())
-    m_commandQueue.enqueue(m_deferredCommands.dequeue());
+  // Take the cross-thread queue into a local under the lock, then process it
+  // without holding the lock: command handling is heavy (state serialize, GPU
+  // work) and must not block the GUI/pacing threads enqueueing, and some
+  // handlers re-enqueue onto m_deferredCommands mid-loop.
+  QQueue<EmulatorCommand> pending;
+  {
+    std::lock_guard lock(m_commandQueueMutex);
+    // Capture commands held back a frame (waiting for a fresh HW readback) run
+    // now that m_currentImage has been refreshed.
+    while (!m_deferredCommands.isEmpty())
+      m_commandQueue.enqueue(m_deferredCommands.dequeue());
+    pending.swap(m_commandQueue);
+  }
 
-  while (!m_commandQueue.isEmpty()) {
-    const auto command = m_commandQueue.dequeue();
+  while (!pending.isEmpty()) {
+    const auto command = pending.dequeue();
     switch (command.type) {
       case RunFrame:
         m_shouldRunFrame = true;
@@ -418,11 +427,16 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       case WriteRewindPoint: {
         if (m_paused)
           break;
-        if (deferCaptureUntilFrameReady(command))
-          break;
+        // Rolling snapshots take whatever frame is already on hand rather than
+        // forcing a per-interval GPU readback, which stalled HW-rendered cores
+        // every few seconds. The serialized state — the part rewind needs — is
+        // always current; on a HW core the thumbnail may be stale or blank.
         SuspendPoint sp;
         sp.state = m_emulatorInstance->serializeState();
-        sp.image = firelight::gui::toImage(m_currentImage);
+        QImage thumb = m_currentImage;
+        if (thumb.width() > 640)
+          thumb = thumb.scaledToWidth(640, Qt::FastTransformation);
+        sp.image = firelight::gui::toImage(thumb);
         sp.timestamp = QDateTime::currentMSecsSinceEpoch();
         sp.retroachievementsState = m_achievementManager->serializeState();
         m_rewindPoints.push_front(sp);
@@ -750,6 +764,7 @@ void EmulatorItemRenderer::displayPauseImage(QRhiCommandBuffer *cb) {
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
   if (!m_emulatorInstance || m_quitting)
     return;
+  std::lock_guard lock(m_commandQueueMutex);
   m_commandQueue.enqueue(command);
 }
 
