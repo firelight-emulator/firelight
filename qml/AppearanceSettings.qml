@@ -23,6 +23,9 @@ QtObject {
     property SettingBinding dimBinding: SettingBinding { key: "background-dim" }
     property SettingBinding tintBinding: SettingBinding { key: "theme-intensity" }
     property SettingBinding glassBinding: SettingBinding { key: "glass-opacity" }
+    property SettingBinding tileSizeBinding: SettingBinding { key: "library-tile-size" }
+    property SettingBinding scaleBinding: SettingBinding { key: "interface-scale" }
+    property SettingBinding densityBinding: SettingBinding { key: "interface-density" }
 
     // Colors are "#rrggbb" strings, not `color`: that's what consumers were
     // built against, they coerce to `color` where used, and they round-trip the
@@ -54,6 +57,16 @@ QtObject {
     readonly property real themeIntensity: parseFloat(tintBinding.value)
     // Opacity of translucent "glass" surfaces over the background.
     readonly property real glassOpacity: parseFloat(glassBinding.value)
+    // Library grid cover-art edge, in px. The grid binds cellWidth/cellHeight
+    // to this and GameTile decodes to match.
+    readonly property int libraryTileSize: parseInt(tileSizeBinding.value)
+
+    // Accessibility scaling. AppStyle multiplies its metric tokens by these:
+    // uiScale enlarges everything (fonts + dimensions), uiDensity only affects
+    // spacing/heights. The `|| ` guards a not-yet-loaded binding from poisoning
+    // every token with NaN.
+    readonly property real uiScale: parseFloat(scaleBinding.value) || 1.0
+    readonly property real uiDensity: parseFloat(densityBinding.value) || 1.0
 
     // In image mode the theme tints itself from the image rather than from
     // backgroundColor. Derived, not stored: it's a function of the chosen file,

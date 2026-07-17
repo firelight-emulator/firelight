@@ -145,7 +145,7 @@ FocusScope {
                             Layout.fillWidth: true
                             verticalAlignment: Text.AlignVCenter
                         }
-                        ComboBox {
+                        FLComboBox {
                             Layout.preferredWidth: 220
                             textRole: "label"
                             valueRole: "value"
@@ -181,7 +181,7 @@ FocusScope {
                 font.weight: Font.DemiBold
             }
 
-            ComboBox {
+            FLComboBox {
                 id: profilePicker
                 Layout.fillWidth: true
                 model: profiles
@@ -202,7 +202,7 @@ FocusScope {
                 font.weight: Font.DemiBold
             }
 
-            ComboBox {
+            FLComboBox {
                 id: presetPicker
                 Layout.preferredWidth: 200
                 textRole: "label"

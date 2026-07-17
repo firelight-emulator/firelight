@@ -306,22 +306,13 @@ Dialog {
                     Layout.fillWidth: true
                     visible: GameArtService.providerConfigured
                     spacing: 8
-                    TextField {
+                    FLTextField {
                         id: searchField
                         Layout.fillWidth: true
                         text: control.searchTerm
                         placeholderText: "Search term"
-                        color: Theme.textPrimary
-                        font.family: Constants.regularFontFamily
-                        selectByMouse: true
                         onTextEdited: control.searchTerm = text
                         onAccepted: control.doSearch()
-                        background: Rectangle {
-                            color: ColorPalette.textFieldColor
-                            radius: 6
-                            border.color: ColorPalette.neutral700
-                            border.width: 1
-                        }
                     }
                     FirelightButton {
                         rounded: false
@@ -348,19 +339,11 @@ Dialog {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 8
-                        TextField {
+                        FLTextField {
                             id: keyField
                             Layout.fillWidth: true
                             placeholderText: "SteamGridDB API key"
                             echoMode: TextInput.Password
-                            color: Theme.textPrimary
-                            font.family: Constants.regularFontFamily
-                            background: Rectangle {
-                                color: ColorPalette.textFieldColor
-                                radius: 6
-                                border.color: ColorPalette.neutral700
-                                border.width: 1
-                            }
                         }
                         FirelightButton {
                             rounded: false

@@ -54,9 +54,9 @@ SplitView {
     Pane {
         id: libraryNavigationPane
         SplitView.fillHeight: true
-        SplitView.maximumWidth: 280
-        SplitView.minimumWidth: 60
-        SplitView.preferredWidth: 280
+        SplitView.maximumWidth: Math.round(280 * AppStyle.scale)
+        SplitView.minimumWidth: Math.round(60 * AppStyle.scale)
+        SplitView.preferredWidth: Math.round(280 * AppStyle.scale)
 
         background: Rectangle {
             color: Theme.glass
@@ -117,9 +117,7 @@ SplitView {
                             implicitHeight: 1
                         }
 
-                        IconButton {
-                            Layout.preferredWidth: 32
-                            Layout.preferredHeight: 32
+                        FLIconButton {
                             iconName: "add"
                             Layout.topMargin: 2
                             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter

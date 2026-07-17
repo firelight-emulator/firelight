@@ -43,21 +43,24 @@ BaseSettingItem {
         Text {
             Layout.fillWidth: true
             text: root.value === "" ? qsTr("Not set") : root.value
-            color: root.value === "" ? ColorPalette.neutral400 : "white"
+            color: root.value === "" ? Theme.textMuted : Theme.textPrimary
             elide: Text.ElideMiddle
             font.family: Constants.regularFontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             verticalAlignment: Text.AlignVCenter
         }
 
-        Button {
+        FLButton {
+            size: "sm"
             text: qsTr("Browse…")
             enabled: root.enabled
             focusPolicy: Qt.NoFocus
             onClicked: root.directoryMode ? folderDialog.open() : fileDialog.open()
         }
 
-        Button {
+        FLButton {
+            size: "sm"
+            variant: "ghost"
             text: qsTr("Clear")
             visible: root.value !== ""
             enabled: root.enabled

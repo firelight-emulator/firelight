@@ -67,29 +67,22 @@ Item {
             }
 
             // Capture-type filter.
-            Repeater {
-                model: [
-                    {label: "All", value: "all"},
-                    {label: "Screenshots", value: "screenshot"},
-                    {label: "Clips", value: "clip"}
-                ]
-                delegate: Button {
-                    required property var modelData
-                    text: modelData.label
-                    checkable: true
-                    checked: root.typeFilter === modelData.value
-                    onClicked: root.typeFilter = modelData.value
-                }
+            FLSegmentedControl {
+                readonly property var typeValues: ["all", "screenshot", "clip"]
+                segments: ["All", "Screenshots", "Clips"]
+                currentIndex: Math.max(0, typeValues.indexOf(root.typeFilter))
+                onActivated: function (index) { root.typeFilter = typeValues[index] }
             }
 
-            Button {
+            FLButton {
                 text: "Favorites"
                 checkable: true
+                variant: checked ? "primary" : "secondary"
                 checked: root.showOnlyFavorites
                 onClicked: root.showOnlyFavorites = !root.showOnlyFavorites
             }
 
-            Button {
+            FLButton {
                 text: root.sortAscending ? "Oldest first" : "Newest first"
                 onClicked: root.sortAscending = !root.sortAscending
             }

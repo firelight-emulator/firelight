@@ -174,7 +174,7 @@ FocusScope {
                 topPadding: 1
                 size: AppStyle.fontSizeLarge
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                color: AppStyle.buttonTextColorInactive
+                color: Theme.buttonTextInactive
             }
 
             Icon {
@@ -184,7 +184,7 @@ FocusScope {
                 topPadding: 1
                 size: AppStyle.fontSizeLarge
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                color: AppStyle.buttonTextColorInactive
+                color: Theme.buttonTextInactive
             }
 
             Text {

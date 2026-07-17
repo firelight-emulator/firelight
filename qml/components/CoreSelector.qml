@@ -38,7 +38,7 @@ RowLayout {
         }
     }
 
-    ComboBox {
+    FLComboBox {
         id: combo
         Layout.preferredWidth: 280
         textRole: "name"

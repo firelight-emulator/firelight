@@ -111,70 +111,6 @@ MainWindow {
     //     }
     // }
 
-    Popup {
-        id: navigationPane
-        height: window.height
-        width: 300
-        parent: Overlay.overlay
-
-        background: Rectangle {
-            color: Theme.surfaceElevated
-            radius: 8
-        }
-
-        modal: true
-        Overlay.modal: Rectangle {
-            color: "black"
-            opacity: visible ? 0.7 : 0
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 160
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-
-
-
-        enter: Transition {
-            NumberAnimation {
-                duration: 160
-                easing.type: Easing.InOutBounce
-                from: -300
-                property: "x"
-                to: 0
-            }
-        }
-
-        exit: Transition {
-            NumberAnimation {
-                duration: 160
-                easing.type: Easing.InOutBounce
-                from: 0
-                property: "x"
-                to: -300
-            }
-        }
-    }
-
-    Component {
-        id: libraryPage
-        LibraryPageV2 {}
-    }
-
-    Component {
-        id: activityPage
-
-        ActivityPageV2 {}
-    }
-
-    Component {
-        id: galleryPage
-
-        GalleryPage {}
-    }
-
     Pane {
         id: titleBar
         anchors.top: parent.top
@@ -211,14 +147,16 @@ MainWindow {
         anchors.left: parent.left
         anchors.leftMargin: 2
         anchors.bottom: parent.bottom
-        width: 58
+        // Scales with the UI so the icon buttons (which grow with scale) always
+        // fit instead of overflowing a fixed rail.
+        width: Math.round(58 * AppStyle.scale)
 
         background: Item {}
 
         ColumnLayout {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
-            spacing: 16
+            spacing: AppStyle.spacingLg
 
             Repeater {
                 model: [
@@ -230,22 +168,21 @@ MainWindow {
                     { displayName: "Online Lobby", iconName: "online", route: "/netplay" }
                 ]
 
-                delegate: IconButton {
+                delegate: FLIconButton {
                     id: menuItem
                     required property var model
 
                     checkable: false
                     checked: Router.isActive(model.route)
-                    Layout.maximumWidth: 36
-                    Layout.maximumHeight: 36
-
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-
+                    checkedColor: Theme.textPrimary
+                    size: "md"
                     iconName: model.iconName
+                    tooltipText: model.displayName
+
+                    Layout.alignment: Qt.AlignVCenter
 
                     onClicked: {
                         Router.navigate(model.route)
-                        navigationPane.close()
                     }
                 }
             }
@@ -253,6 +190,23 @@ MainWindow {
             Item {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
+            }
+
+            FLIconButton {
+                readonly property string route: "/settings"
+
+                checkable: false
+                checked: Router.isActive(route)
+                checkedColor: Theme.textPrimary
+                size: "md"
+                iconName: "settings"
+                tooltipText: "Settings"
+
+                Layout.alignment: Qt.AlignVCenter
+
+                onClicked: {
+                    Router.navigate(route)
+                }
             }
         }
     }

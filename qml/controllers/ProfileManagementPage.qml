@@ -40,11 +40,12 @@ FocusScope {
                 font.pixelSize: AppStyle.fontSizeLarge
                 Layout.fillWidth: true
             }
-            Button {
+            FLButton {
                 text: "Import…"
                 onClicked: importDialog.open()
             }
-            Button {
+            FLButton {
+                variant: "primary"
                 text: "New Profile"
                 onClicked: root.openNameDialog("create", -1, "New Profile")
             }
@@ -64,8 +65,8 @@ FocusScope {
                 required property bool builtin
 
                 width: ListView.view.width
-                height: 56
-                radius: 4
+                height: AppStyle.rowHeight + AppStyle.spacingMd
+                radius: AppStyle.radiusSm
                 color: Theme.surface
 
                 RowLayout {
@@ -90,16 +91,19 @@ FocusScope {
                         font.pixelSize: AppStyle.fontSizeSmall
                     }
 
-                    Button {
+                    FLButton {
+                        size: "sm"
                         text: "Clone"
                         onClicked: root.openNameDialog("clone", profileId, name + " copy")
                     }
-                    Button {
+                    FLButton {
+                        size: "sm"
                         text: "Rename"
                         enabled: !builtin
                         onClicked: root.openNameDialog("rename", profileId, name)
                     }
-                    Button {
+                    FLButton {
+                        size: "sm"
                         text: "Export"
                         onClicked: {
                             root.pendingId = profileId;
@@ -107,7 +111,9 @@ FocusScope {
                             exportDialog.open();
                         }
                     }
-                    Button {
+                    FLButton {
+                        size: "sm"
+                        variant: "danger"
                         text: "Delete"
                         enabled: !builtin
                         onClicked: {
@@ -128,7 +134,7 @@ FocusScope {
              : root.nameMode === "clone" ? "Clone Profile" : "New Profile"
         standardButtons: Dialog.Ok | Dialog.Cancel
 
-        TextField {
+        FLTextField {
             id: nameField
             width: 320
             placeholderText: "Profile name"

@@ -82,9 +82,24 @@ C++ services are not exposed to QML directly. Instead:
 
 `Constants.qml`, `ColorPalette.qml`, `AppStyle.qml`, `GeneralSettings.qml`, and `AppearanceSettings.qml` are declared as QML singleton types in `CMakeLists.txt`.
 
-### Font sizing
+### Design system: color ← Theme, size ← AppStyle, components ← FL*
 
-Use the `AppStyle.fontSize{Small,Medium,Large,XLarge}` tokens (13/16/22/32, device-independent px) for all text `font.pixelSize`. **Never use `font.pointSize`** — it renders ~25% smaller on macOS than on Windows because the logical-DPI baseline differs (72 vs 96), whereas `pixelSize` is consistent across platforms and still scales on HiDPI displays.
+Two token singletons, one rule: **color comes from `Theme`, size/metrics from `AppStyle`, never a
+literal at a call site.** `Theme` (`qml/Theme.qml`) owns semantic colors and reacts to the user's
+appearance settings; `AppStyle` (`qml/AppStyle.qml`) owns metrics (font sizes, `spacing*`,
+`controlHeight`/`rowHeight`, `iconSize*`, `radius*`) and reacts to `scale`/`density`. Every metric token
+is `Math.round(base * scale …)`, and interactive heights are floored at `AppStyle.minTarget` (24px, WCAG
+2.5.8). A raw `width: 200` / `spacing: 8` / `font.pixelSize: 14` bypasses the whole thing and won't scale
+— use a token.
+
+Prefer the reusable **`FL*` components in `qml/components/v2/`** (`FLButton`, `FLIconButton`,
+`FLSearchField`, `FLPanel`, `FLScrollView`, `FLListRow`, `GameTile`, …) over hand-rolling a
+`Button`/`TextField`/`Pane`/`ListView`. They already read the tokens, so they scale and re-theme for
+free. Add a new one rather than making a one-off.
+
+Use the `AppStyle.fontSize{Small,Medium,Large,XLarge}` tokens for all text `font.pixelSize`. **Never use
+`font.pointSize`** — it renders ~25% smaller on macOS than on Windows because the logical-DPI baseline
+differs (72 vs 96), whereas `pixelSize` is consistent across platforms and still scales on HiDPI displays.
 
 ### Icons
 

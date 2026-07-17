@@ -18,7 +18,7 @@ Slider {
     implicitHeight: 60
 
     handle: Rectangle {
-        color: ColorPalette.neutral100
+        color: Theme.textPrimary
         width: 10
         height: 24
         radius: 2
@@ -39,7 +39,7 @@ Slider {
                 width: control.availableWidth
                 x: control.widthDiff / 2
                 y: parent.height / 2 - (height / 2)
-                color: ColorPalette.neutral500
+                color: Theme.border
 
                 // Rectangle {
                 //     height: 24
@@ -56,7 +56,7 @@ Slider {
                         // required property var model
 
                         height: control.intervalMarkerHeight
-                        color: ColorPalette.neutral500
+                        color: Theme.border
                         width: control.intervalMarkerWidth
                         x: (index) * (control.availableWidth / control.numIntervals) - (width / 2)
                         y: -height / 2 + (parent.height / 2)
@@ -73,7 +73,7 @@ Slider {
                 // }
 
                 Rectangle {
-                    color: "#d14c20"
+                    color: Theme.accent
                     height: parent.height
                     width: control.availableWidth * control.visualPosition
                 }

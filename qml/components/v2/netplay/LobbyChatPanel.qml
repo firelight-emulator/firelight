@@ -53,7 +53,7 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 6
 
-            TextField {
+            FLTextField {
                 id: chatField
                 placeholderText: "Say something..."
                 Layout.fillWidth: true
@@ -62,7 +62,8 @@ Rectangle {
                     text = ""
                 }
             }
-            Button {
+            FLButton {
+                variant: "primary"
                 text: "Send"
                 enabled: chatField.text.trim().length > 0
                 onClicked: chatField.accepted()

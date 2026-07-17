@@ -28,7 +28,8 @@ Button {
     property bool showGlobalCursor: true
     property real globalCursorSpacing: 2
 
-    implicitHeight: 36
+    // Scales with the UI (36 at 100%) so the label isn't cramped when enlarged.
+    implicitHeight: AppStyle.controlHeight
     width: ListView.view.width
 
     // onClicked: {
@@ -37,7 +38,7 @@ Button {
 
     hoverEnabled: true
     checkable: true
-    padding: 8
+    padding: AppStyle.spacingSm
 
     background: Item {
         property alias radius: backgroundRect.radius
@@ -46,7 +47,7 @@ Button {
 
             color: control.hovered || control.checked || control.down ? "#FFFFFF" : "transparent"
             opacity: control.down ? 0.05 : control.hovered ? 0.08 : control.checked ? 0.12 : 0
-            radius: 4
+            radius: AppStyle.radiusSm
         }
 
         Rectangle {
@@ -56,7 +57,7 @@ Button {
             border.color: control.containsDrag ? "#c36d00" : "transparent"
             border.width: 2
             opacity: 1
-            radius: 4
+            radius: AppStyle.radiusSm
         }
 
         Rectangle {
@@ -85,7 +86,7 @@ Button {
             // visible: parent.iconIsGlyph
             name: control.iconName
             filled: false
-            size: 20
+            size: Math.round(20 * AppStyle.scale)
             color: Theme.textPrimary
         }
         // VectorImage {
@@ -97,20 +98,21 @@ Button {
         //     smooth: true
         //     preferredRendererType: VectorImage.CurveRenderer
         // }
+        // Fills the row and elides: a long platform name ("Genesis/Mega Drive")
+        // shrinks with "…" instead of shoving the count off the clipped edge.
         Text {
-            Layout.leftMargin: 8
+            Layout.leftMargin: AppStyle.spacingSm
+            Layout.fillWidth: true
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             text: control.displayText
+            elide: Text.ElideRight
             visible: control.width > 64
         }
-        Item {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-        }
         Text {
+            Layout.leftMargin: AppStyle.spacingSm
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: AppStyle.fontSizeSmall

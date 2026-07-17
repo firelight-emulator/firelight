@@ -49,7 +49,7 @@ Item {
             Item {
                 Layout.fillWidth: true
             }
-            TextField {
+            FLTextField {
                 id: lobbyNameField
                 text: NetworkService.playerName
                 maximumLength: 24
@@ -60,7 +60,7 @@ Item {
                     }
                 }
             }
-            Button {
+            FLButton {
                 text: NetworkService.isHost ? "Close lobby" : "Leave lobby"
                 onClicked: NetworkService.leaveLobby()
             }
@@ -114,7 +114,7 @@ Item {
                                 font.pixelSize: AppStyle.fontSizeSmall
                             }
                         }
-                        Button {
+                        FLButton {
                             visible: NetworkService.isHost
                             text: NetworkService.hasGame ? "Change game" : "Choose game"
                             onClicked: gamePicker.open()
@@ -158,16 +158,18 @@ Item {
                     Layout.fillWidth: true
                     spacing: 12
 
-                    Button {
+                    FLButton {
                         id: readyButton
                         checkable: true
+                        variant: checked ? "primary" : "secondary"
                         text: checked ? "Ready!" : "Ready up"
                         onToggled: NetworkService.setReady(checked)
                     }
                     Item {
                         Layout.fillWidth: true
                     }
-                    Button {
+                    FLButton {
+                        variant: "primary"
                         visible: NetworkService.isHost
                         enabled: NetworkService.hasGame
                         text: "Start game"
@@ -204,7 +206,7 @@ Item {
             Repeater {
                 model: memberPicker.visible ? NetworkService.lobbyMembers() : []
 
-                delegate: Button {
+                delegate: FLButton {
                     required property var modelData
                     text: modelData.displayName
                     Layout.fillWidth: true
@@ -216,7 +218,7 @@ Item {
                 }
             }
 
-            Button {
+            FLButton {
                 text: "Clear slot"
                 Layout.fillWidth: true
                 onClicked: {

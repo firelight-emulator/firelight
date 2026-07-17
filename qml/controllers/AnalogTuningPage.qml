@@ -177,7 +177,7 @@ FocusScope {
                     font.pixelSize: AppStyle.fontSizeMedium
                     Layout.fillWidth: true
                 }
-                ComboBox {
+                FLComboBox {
                     model: ["Linear", "Exponential"]
                     currentIndex: panel.curve
                     onActivated: panel.curveSelected(currentIndex)

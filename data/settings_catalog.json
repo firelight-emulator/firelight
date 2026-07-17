@@ -403,6 +403,103 @@
       "default": "false"
     },
     {
+      "key": "library-tile-size",
+      "label": "Library tile size",
+      "group": "system-display",
+      "order": 20,
+      "description": "How large game cover art appears in the library grid.",
+      "keywords": [
+        "grid",
+        "cover",
+        "art",
+        "thumbnail",
+        "zoom",
+        "size",
+        "big",
+        "small"
+      ],
+      "type": "slider",
+      "default": "140",
+      "min": 100,
+      "max": 240,
+      "step": 20
+    },
+    {
+      "key": "interface-scale",
+      "label": "Interface scale",
+      "group": "system-display",
+      "order": 30,
+      "description": "Enlarges menus and text for readability. Some screens may not fit larger sizes perfectly yet.",
+      "keywords": [
+        "scale",
+        "zoom",
+        "size",
+        "text",
+        "font",
+        "bigger",
+        "larger",
+        "accessibility",
+        "readability"
+      ],
+      "type": "segmented",
+      "default": "1.0",
+      "options": [
+        {
+          "label": "100%",
+          "value": "1.0"
+        },
+        {
+          "label": "125%",
+          "value": "1.25"
+        },
+        {
+          "label": "150%",
+          "value": "1.5"
+        },
+        {
+          "label": "175%",
+          "value": "1.75"
+        },
+        {
+          "label": "200%",
+          "value": "2.0"
+        }
+      ]
+    },
+    {
+      "key": "interface-density",
+      "label": "Density",
+      "group": "system-display",
+      "order": 40,
+      "description": "How much breathing room to leave around controls and lists.",
+      "keywords": [
+        "density",
+        "compact",
+        "comfortable",
+        "spacious",
+        "spacing",
+        "padding",
+        "tight",
+        "roomy"
+      ],
+      "type": "segmented",
+      "default": "1.0",
+      "options": [
+        {
+          "label": "Compact",
+          "value": "0.9"
+        },
+        {
+          "label": "Comfortable",
+          "value": "1.0"
+        },
+        {
+          "label": "Spacious",
+          "value": "1.15"
+        }
+      ]
+    },
+    {
       "key": "audio-output-device",
       "label": "Audio output device",
       "group": "system-audio",
@@ -531,6 +628,36 @@
       "label": "Achievement earned",
       "group": "notifications-achievements",
       "order": 10,
+      "keywords": [
+        "retroachievements",
+        "popup",
+        "toast",
+        "unlock"
+      ],
+      "_note": "INERT: persisted and searchable, but nothing reads it yet.",
+      "type": "boolean",
+      "default": "true"
+    },
+    {
+      "key": "notify-all-achievements-earned",
+      "label": "All achievements earned",
+      "group": "notifications-achievements",
+      "order": 20,
+      "keywords": [
+        "retroachievements",
+        "popup",
+        "toast",
+        "unlock"
+      ],
+      "_note": "INERT: persisted and searchable, but nothing reads it yet.",
+      "type": "boolean",
+      "default": "true"
+    },
+    {
+      "key": "notify-TODO",
+      "label": "All achievements earned",
+      "group": "notifications-achievements",
+      "order": 30,
       "keywords": [
         "retroachievements",
         "popup",

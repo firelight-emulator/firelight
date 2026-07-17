@@ -33,8 +33,9 @@ Item {
         height: parent.height
         x: Math.round((parent.width - width) / 2)
 
-        cellWidth: 140
-        cellHeight: 140
+        // User-controlled tile size (Settings → System → Display).
+        cellWidth: AppearanceSettings.libraryTileSize
+        cellHeight: AppearanceSettings.libraryTileSize
 
         Component.onCompleted: {
             initialContentY = contentY
@@ -103,24 +104,9 @@ Item {
                     opacity: control.down ? 0.05 : 0
                     radius: 4
                 }
-                contentItem: Item {
-                    Image {
-                        anchors.fill: parent
-                        sourceSize.width: 256
-                        sourceSize.height: 256
-                        source: gridRoot.iconSource(model.icon1x1SourceUrl)
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        mipmap: true
-                        visible: model.icon1x1SourceUrl !== undefined && model.icon1x1SourceUrl !== ""
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "grey"
-                        visible: model.icon1x1SourceUrl === "" || model.icon1x1SourceUrl === undefined
-                    }
-
+                contentItem: GameTile {
+                    source: gridRoot.iconSource(gameDelegate.model.icon1x1SourceUrl)
+                    size: root.cellWidth
                 }
             }
         }

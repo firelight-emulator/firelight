@@ -637,7 +637,8 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   const std::vector<std::string> facadeKeys = {
       "accent-color",   "background-mode", "background-color",
       "background-color-2", "background-file", "background-blur",
-      "background-dim", "theme-intensity",  "glass-opacity"};
+      "background-dim", "theme-intensity",  "glass-opacity",
+      "library-tile-size", "interface-scale", "interface-density"};
 
   for (const auto &key : facadeKeys) {
     const auto *setting = c.findByKey(key);

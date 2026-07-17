@@ -49,7 +49,8 @@ Item {
                     spacing: 8
                     Layout.fillWidth: true
 
-                    Button {
+                    FLButton {
+                        variant: "primary"
                         text: NetworkService.signInState === "signing-in"
                               ? "Signing in..."
                               : "Sign in with " + NetworkService.providerName
@@ -89,7 +90,7 @@ Item {
                             color: Theme.textMuted
                             font.pixelSize: AppStyle.fontSizeSmall
                         }
-                        TextField {
+                        FLTextField {
                             id: playerNameField
                             text: NetworkService.playerName
                             maximumLength: 24
@@ -102,7 +103,8 @@ Item {
                         }
                     }
 
-                    Button {
+                    FLButton {
+                        variant: "primary"
                         text: "Host a lobby"
                         enabled: !NetworkService.busy
                         Layout.alignment: Qt.AlignHCenter
@@ -113,14 +115,15 @@ Item {
                         spacing: 8
                         Layout.fillWidth: true
 
-                        TextField {
+                        FLTextField {
                             id: joinCodeField
                             placeholderText: "Host IP (e.g. 192.168.1.50)"
                             Layout.fillWidth: true
                             onAccepted: joinButton.clicked()
                         }
-                        Button {
+                        FLButton {
                             id: joinButton
+                            variant: "primary"
                             text: "Join"
                             enabled: joinCodeField.text.trim().length > 0
                                      && !NetworkService.busy

@@ -158,12 +158,10 @@ Item {
         z: 50
         onClicked: gameplay.foreground()
 
-        IconButton {
+        FLIconButton {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.rightMargin: 12
-            width: 40
-            height: 40
             iconName: "cancel"
             onClicked: EmulationService.stopEmulation()
         }

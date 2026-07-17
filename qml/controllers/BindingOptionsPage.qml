@@ -124,7 +124,9 @@ FocusScope {
                             onToggled: bindings.setTurboEnabled(index, checked)
                         }
 
-                        Button {
+                        FLButton {
+                            size: "sm"
+                            variant: "ghost"
                             text: "Remove"
                             onClicked: bindings.removeBinding(index)
                         }
@@ -175,7 +177,7 @@ FocusScope {
                 visible: !root.capturing
                 Layout.fillWidth: true
             }
-            Button {
+            FLButton {
                 text: root.capturing ? "Cancel" : "Add alternate binding"
                 onClicked: root.capturing = !root.capturing
             }

@@ -422,7 +422,7 @@ FirelightDialog {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
-                ComboBox {
+                FLComboBox {
                     id: sortCombo
                     Layout.fillWidth: true
                     model: control.sortOptions

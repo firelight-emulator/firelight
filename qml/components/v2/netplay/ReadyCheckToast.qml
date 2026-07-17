@@ -17,8 +17,8 @@ Rectangle {
     }
 
     width: Math.min(420, parent.width - 32)
-    height: content.implicitHeight + 24
-    radius: 10
+    height: content.implicitHeight + AppStyle.spacingLg
+    radius: AppStyle.radiusMd
     color: Theme.surfaceElevated
     border.color: Theme.border
     border.width: 1
@@ -62,7 +62,7 @@ Rectangle {
             Text {
                 text: NetworkService.readySlotCount + "/" + NetworkService.occupiedSlotCount + " ready"
                 color: NetworkService.readySlotCount === NetworkService.occupiedSlotCount
-                       ? "#66cc66" : "#aaaaaa"
+                       ? Theme.success : Theme.textMuted
                 font.pixelSize: AppStyle.fontSizeSmall
             }
         }
@@ -71,7 +71,8 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 8
 
-            Button {
+            FLButton {
+                variant: "primary"
                 visible: !NetworkService.isHost
                 text: root.selfReady ? "Ready!" : "I'm ready"
                 enabled: !root.selfReady
@@ -82,13 +83,15 @@ Rectangle {
                 }
             }
 
-            Button {
+            FLButton {
+                variant: "primary"
                 visible: NetworkService.isHost
                 text: "Launch"
                 Layout.fillWidth: true
                 onClicked: root.hostLaunchRequested()
             }
-            Button {
+            FLButton {
+                variant: "ghost"
                 visible: NetworkService.isHost
                 text: "Cancel"
                 onClicked: NetworkService.endSession()

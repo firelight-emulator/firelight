@@ -43,15 +43,14 @@ FocusScope {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
-            spacing: 16
+            spacing: AppStyle.spacingLg
 
-            IconButton {
+            FLIconButton {
                 id: menuButton
                 iconName: "menu"
                 Layout.alignment: Qt.AlignVCenter
-                Layout.preferredHeight: 36
-                Layout.preferredWidth: 36
-                Layout.topMargin: 2
+
+                // Layout.topMargin: 2
                 Layout.leftMargin: 6
                 // tooltipText: "Open menu"
 
@@ -135,24 +134,16 @@ FocusScope {
                 }
             }
 
-            IconButton {
-                xOffset: 1
-                Layout.preferredHeight: 36
-                Layout.preferredWidth: 36
+            FLIconButton {
                 iconName: "chevron-back"
                 Layout.alignment: Qt.AlignVCenter
-                Layout.topMargin: 2
-                onClicked: Router.back()
                 enabled: Router.canGoBack
+                onClicked: Router.back()
             }
 
-            IconButton {
-                xOffset: -1
-                Layout.preferredHeight: 36
-                Layout.preferredWidth: 36
+            FLIconButton {
                 iconName: "chevron-forward"
                 Layout.alignment: Qt.AlignVCenter
-                Layout.topMargin: 2
                 enabled: Router.canGoForward
                 onClicked: Router.forward()
             }
@@ -180,17 +171,17 @@ FocusScope {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
-            spacing: 24
+            spacing: AppStyle.spacingXl
 
-            IconButton {
-                Layout.preferredHeight: 36
-                Layout.preferredWidth: 36
-                iconName: "settings"
-                Layout.alignment: Qt.AlignVCenter
-                Layout.topMargin: 2
-                // tooltipText: "Open menu"
-                onClicked: Router.navigate("/settings")
-            }
+            // IconButton {
+            //     Layout.preferredHeight: 36
+            //     Layout.preferredWidth: 36
+            //     iconName: "settings"
+            //     Layout.alignment: Qt.AlignVCenter
+            //     Layout.topMargin: 2
+            //     // tooltipText: "Open menu"
+            //     onClicked: Router.navigate("/settings")
+            // }
 
             TitleBarProfileButton {
                 Layout.fillHeight: true

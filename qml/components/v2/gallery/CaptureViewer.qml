@@ -60,19 +60,21 @@ Popup {
             onSourceChanged: if (source !== "") play()
         }
 
-        Button {
+        FLIconButton {
             anchors.top: parent.top
             anchors.right: parent.right
-            anchors.margins: 8
-            text: "✕"
+            anchors.margins: AppStyle.spacingSm
+            iconName: "close"
+            tooltipText: "Close"
             onClicked: viewer.close()
         }
 
-        Button {
+        FLButton {
             visible: viewer.mediaKind === "clip"
+            variant: "primary"
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.margins: 12
+            anchors.margins: AppStyle.spacingMd
             text: player.playbackState === MediaPlayer.PlayingState ? "Pause"
                                                                     : "Play"
             onClicked: player.playbackState === MediaPlayer.PlayingState

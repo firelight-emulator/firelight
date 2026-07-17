@@ -16,7 +16,7 @@ BaseSettingItem {
     signal moved(real value)
 
     control: RowLayout {
-        spacing: 12
+        spacing: AppStyle.spacingMd
 
         Slider {
             id: theControl
@@ -39,8 +39,10 @@ BaseSettingItem {
         }
 
         Text {
-            Layout.preferredWidth: 40
-            text: theControl.value.toFixed(2)
+            // Fractional sliders (e.g. tint at step 0.01) need decimals; integer
+            // sliders (volume, tile size) shouldn't read "100.00".
+            Layout.preferredWidth: Math.round(52 * AppStyle.scale)
+            text: theControl.value.toFixed(root.stepSize < 1 ? 2 : 0)
             color: Theme.textPrimary
             horizontalAlignment: Text.AlignRight
             verticalAlignment: Text.AlignVCenter

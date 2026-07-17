@@ -34,9 +34,9 @@ BaseSettingItem {
             model: root.swatches
             delegate: Rectangle {
                 required property string modelData
-                width: 24
-                height: 24
-                radius: 12
+                width: AppStyle.iconSizeMd
+                height: AppStyle.iconSizeMd
+                radius: width / 2
                 color: modelData
                 border.width: root.value.toLowerCase() === modelData.toLowerCase() ? 3 : 1
                 border.color: root.value.toLowerCase() === modelData.toLowerCase()
@@ -49,23 +49,14 @@ BaseSettingItem {
             }
         }
 
-        TextField {
+        FLTextField {
             id: hexField
-            Layout.leftMargin: 4
-            implicitWidth: 90
+            size: "sm"
+            Layout.leftMargin: AppStyle.spacingXs
+            implicitWidth: Math.round(90 * AppStyle.scale)
             enabled: root.enabled
             placeholderText: "#rrggbb"
-            color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
-            font.pixelSize: AppStyle.fontSizeSmall
             inputMask: "\\#HHHHHH"
-
-            background: Rectangle {
-                radius: 4
-                color: Theme.surface
-                border.width: hexField.activeFocus ? 2 : 0
-                border.color: Theme.border
-            }
 
             Component.onCompleted: text = root.value
             onEditingFinished: if (text.length === 7) root.picked(text)

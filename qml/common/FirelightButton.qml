@@ -30,7 +30,7 @@ Button {
 
     background: Rectangle {
         color: "white"
-        opacity: !enabled ? 0 : parent.activeFocus && !InputMethodManager.usingMouse ? AppStyle.buttonBackgroundOpacityFocused : parent.pressed ? AppStyle.buttonBackgroundOpacityPressed : hover.hovered ? AppStyle.buttonBackgroundOpacityHovered : (!control.flat ? AppStyle.buttonBackgroundOpacityInactive : 0)
+        opacity: !enabled ? 0 : parent.activeFocus && !InputMethodManager.usingMouse ? Theme.buttonBgOpacityFocused : parent.pressed ? Theme.buttonBgOpacityPressed : hover.hovered ? Theme.buttonBgOpacityHovered : (!control.flat ? Theme.buttonBgOpacityInactive : 0)
         Behavior on opacity {
             NumberAnimation {
                 duration: 32
@@ -63,7 +63,7 @@ Button {
             glyph: control.iconCode
             size: AppStyle.buttonIconSize
             weight: AppStyle.buttonIconWeight
-            color: !enabled ? AppStyle.buttonTextColorDisabled : control.activeFocus && !InputMethodManager.usingMouse ? AppStyle.buttonTextColorFocused : AppStyle.buttonTextColorInactive
+            color: !enabled ? Theme.buttonTextDisabled : control.activeFocus && !InputMethodManager.usingMouse ? Theme.buttonTextFocused : Theme.buttonTextInactive
         }
         Text {
             text: control.label
@@ -73,7 +73,7 @@ Button {
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             font.family: Constants.regularFontFamily
             font.weight: AppStyle.buttonTextFontWeight
-            color: !enabled ? AppStyle.buttonTextColorDisabled : control.activeFocus && !InputMethodManager.usingMouse ? AppStyle.buttonTextColorFocused : AppStyle.buttonTextColorInactive
+            color: !enabled ? Theme.buttonTextDisabled : control.activeFocus && !InputMethodManager.usingMouse ? Theme.buttonTextFocused : Theme.buttonTextInactive
 
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

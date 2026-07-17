@@ -17,9 +17,9 @@ BaseSettingItem {
 
     control: Rectangle {
         id: segBox
-        implicitHeight: 34
+        implicitHeight: AppStyle.controlHeight
         implicitWidth: segRow.implicitWidth + 4
-        radius: 6
+        radius: AppStyle.radiusMd
         color: Theme.surface
         border.width: 1
         border.color: Theme.border
@@ -38,8 +38,9 @@ BaseSettingItem {
                     readonly property bool on: root.currentValue === modelData.value
 
                     Layout.fillWidth: root.controlBelow
-                    Layout.preferredHeight: 30
-                    implicitWidth: segLabel.implicitWidth + 24
+                    // Fills the box so segment height tracks the scaled box.
+                    Layout.fillHeight: true
+                    implicitWidth: segLabel.implicitWidth + AppStyle.spacingMd * 2
                     focusPolicy: Qt.NoFocus
                     hoverEnabled: true
                     onClicked: root.changed(modelData.value)
@@ -51,14 +52,14 @@ BaseSettingItem {
                         text: seg.modelData.label
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: seg.on ? "#40200a" : Theme.textMuted
+                        color: seg.on ? Theme.onAccent : Theme.textMuted
                         font.family: Constants.regularFontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         font.weight: Font.DemiBold
                     }
 
                     background: Rectangle {
-                        radius: 4
+                        radius: AppStyle.radiusSm
                         color: seg.on ? Theme.accent : (seg.hovered ? Theme.surfaceHover : "transparent")
                     }
                 }

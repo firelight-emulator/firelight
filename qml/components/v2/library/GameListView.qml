@@ -107,7 +107,7 @@ ListView {
                              anchors.centerIn: parent
                              width: 1
                              height: parent.height - 8
-                             color: "#FFFFFF"
+                             color: Theme.textPrimary
                              opacity: headerHoverHandler.hovered ? 0.12 : 0
                          }
                      }
@@ -197,7 +197,7 @@ ListView {
                          font.pixelSize: AppStyle.fontSizeMedium
                          font.weight: Font.DemiBold
                          font.family: Constants.regularFontFamily
-                         color: "#919191"
+                         color: Theme.textMuted
                          horizontalAlignment: Text.AlignLeft
                          verticalAlignment: Text.AlignVCenter
                      }
@@ -212,7 +212,7 @@ ListView {
              Rectangle {
                  Layout.fillWidth: true
                  implicitHeight: 1
-                 color: "#FFFFFF"
+                 color: Theme.textPrimary
                  opacity: 0.12
              }
              Item {
@@ -224,9 +224,10 @@ ListView {
      delegate: Button {
         id: delegateButton
         required property var model
-         height: 64
+         readonly property int _art: Math.round(48 * AppStyle.scale)
+         height: Math.max(AppStyle.rowHeight, _art + AppStyle.spacingSm * 2)
          width: ListView.view.width
-         padding: 8
+         padding: AppStyle.spacingSm
          hoverEnabled: true
 
          TapHandler {
@@ -269,27 +270,16 @@ ListView {
          }
 
          background: Rectangle {
-             color: "white"
+             color: Theme.textPrimary
              opacity: hovered ? 0.08 : 0
-             radius: 4
+             radius: AppStyle.radiusSm
          }
          contentItem: RowLayout {
-             spacing: 16
+             spacing: AppStyle.spacingLg
 
-
-            Image {
-                sourceSize.width: 48
-                sourceSize.height: 48
-                source: model.icon1x1SourceUrl
-                fillMode: Image.PreserveAspectFit
-                visible: model.icon1x1SourceUrl !== undefined && model.icon1x1SourceUrl !== ""
-            }
-
-            Rectangle {
-                width: 48
-                height: 48
-                color: "grey"
-                visible: model.icon1x1SourceUrl === "" || model.icon1x1SourceUrl === undefined
+            GameTile {
+                source: delegateButton.model.icon1x1SourceUrl
+                size: delegateButton._art
             }
 
              ColumnLayout {
@@ -304,7 +294,7 @@ ListView {
                      font.pixelSize: AppStyle.fontSizeMedium
                      font.weight: Font.DemiBold
                      font.family: Constants.regularFontFamily
-                     color: "#FFFFFF"
+                     color: Theme.textPrimary
                      elide: Text.ElideRight
                  }
                  Text {
@@ -315,7 +305,7 @@ ListView {
                      font.pixelSize: AppStyle.fontSizeMedium
                      font.weight: Font.DemiBold
                      font.family: Constants.regularFontFamily
-                     color: "#919191"
+                     color: Theme.textMuted
                      elide: Text.ElideRight
                      }
              }
@@ -350,7 +340,7 @@ ListView {
                  font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily
-                 color: "#919191"
+                 color: Theme.textMuted
                  elide: Text.ElideRight
                  verticalAlignment: Text.AlignVCenter
              }
@@ -362,7 +352,7 @@ ListView {
                  font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily
-                 color: "#919191"
+                 color: Theme.textMuted
                  elide: Text.ElideRight
                  verticalAlignment: Text.AlignVCenter
              }
@@ -375,7 +365,7 @@ ListView {
                  font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily
-                 color: "#919191"
+                 color: Theme.textMuted
                  elide: Text.ElideRight
                  verticalAlignment: Text.AlignVCenter
              }
@@ -386,7 +376,7 @@ ListView {
                  icon.source: "qrc:/icons/more-vertical"
                 icon.width: 32
                 icon.height: 32
-                icon.color: "#919191"
+                icon.color: Theme.textMuted
                 background: Item {}
                 visible: delegateButton.hovered
 

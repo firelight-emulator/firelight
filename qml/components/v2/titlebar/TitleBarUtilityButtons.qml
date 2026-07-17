@@ -51,8 +51,8 @@ FocusScope {
             }
 
             background: Rectangle {
-                color: minButton.down ? AppStyle.titleBarMinimizeButtonColorPressed : minButton.hovered ? AppStyle.titleBarMinimizeButtonColorHovered : "transparent"
-                opacity: minButton.down ? AppStyle.titleBarMinimizeButtonOpacityPressed : minButton.hovered ? AppStyle.titleBarMinimizeButtonOpacityHovered : 0
+                color: minButton.down ? Theme.titleBarBtnPressed : minButton.hovered ? Theme.titleBarBtnHovered : "transparent"
+                opacity: minButton.down ? Theme.titleBarBtnPressedOpacity : minButton.hovered ? Theme.titleBarBtnHoveredOpacity : 0
             }
         }
 
@@ -71,8 +71,8 @@ FocusScope {
             onClicked: root.maximizeClicked()
 
             background: Rectangle {
-                color: maxButton.down ? AppStyle.titleBarMaximizeButtonColorPressed : maxButton.hovered ? AppStyle.titleBarMaximizeButtonColorHovered : "transparent"
-                opacity: maxButton.down ? AppStyle.titleBarMaximizeButtonOpacityPressed : maxButton.hovered ? AppStyle.titleBarMaximizeButtonOpacityHovered : 0
+                color: maxButton.down ? Theme.titleBarBtnPressed : maxButton.hovered ? Theme.titleBarBtnHovered : "transparent"
+                opacity: maxButton.down ? Theme.titleBarBtnPressedOpacity : maxButton.hovered ? Theme.titleBarBtnHoveredOpacity : 0
             }
 
             Rectangle {
@@ -100,8 +100,8 @@ FocusScope {
             }
 
             background: Rectangle {
-                color: closeButton.down ? AppStyle.titleBarCloseButtonColorPressed : closeButton.hovered ? AppStyle.titleBarCloseButtonColorHovered : "transparent"
-                opacity: closeButton.down ? AppStyle.titleBarCloseButtonOpacityPressed : closeButton.hovered ? AppStyle.titleBarCloseButtonOpacityHovered : 0
+                color: closeButton.down ? Theme.titleBarClosePressed : closeButton.hovered ? Theme.titleBarCloseHovered : "transparent"
+                opacity: closeButton.down ? Theme.titleBarClosePressedOpacity : closeButton.hovered ? Theme.titleBarCloseHoveredOpacity : 0
             }
 
             Canvas {
@@ -111,6 +111,10 @@ FocusScope {
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
+                    // Without beginPath the path accumulates across repaints
+                    // (e.g. the first paint at 0-size before the size binding
+                    // resolves), leaving stray segments in the X.
+                    ctx.beginPath();
                     ctx.lineWidth = 1;
                     ctx.strokeStyle = "white";
                     ctx.moveTo(0, 0);

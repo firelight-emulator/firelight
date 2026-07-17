@@ -15,22 +15,12 @@ BaseSettingItem {
     property string placeholder: ""
     signal edited(string newValue)
 
-    control: TextField {
+    control: FLTextField {
         id: field
-        implicitWidth: 260
+        implicitWidth: Math.round(260 * AppStyle.scale)
         enabled: root.enabled
         placeholderText: root.placeholder
-        color: Theme.textPrimary
-        font.family: Constants.regularFontFamily
-        font.pixelSize: AppStyle.fontSizeMedium
         focusPolicy: Qt.ClickFocus
-
-        background: Rectangle {
-            radius: 4
-            color: Theme.surface
-            border.width: field.activeFocus ? 2 : 0
-            border.color: Theme.border
-        }
 
         Component.onCompleted: text = root.value
         onEditingFinished: root.edited(text)

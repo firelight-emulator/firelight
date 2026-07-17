@@ -3,62 +3,68 @@ import QtQuick
 pragma Singleton
 
 Item {
+    // The metrics half of the design system: sizes only (fonts, spacing,
+    // dimensions). Color lives in Theme — read color from Theme, size from here,
+    // and never a literal at a call site.
+    //
+    // Two user-facing multipliers feed every token, from the Interface scale /
+    // Density settings. `scale` zooms everything (text and metrics); `density`
+    // tightens/loosens spacing and row heights without touching font size.
+    // Tokens round to whole px so text stays crisp. This depends on
+    // AppearanceSettings, which depends only on SettingBinding — no cycle.
+    readonly property real scale: AppearanceSettings.uiScale
+    readonly property real density: AppearanceSettings.uiDensity
+
+    // Interactive controls must never resolve below 24px (WCAG 2.5.8), whatever
+    // scale/density do.
+    readonly property int minTarget: 24
+
     // Font size scale — device-independent px. Use these for text; never font.pointSize
     // (pointSize renders ~25% smaller on macOS than Windows due to a 72-vs-96 logical-DPI baseline).
-    readonly property int fontSizeSmall: 14  // captions, muted/secondary labels
-    readonly property int fontSizeMedium: 15  // body / default
-    readonly property int fontSizeLarge: 22   // subtitles, section headers
-    readonly property int fontSizeXLarge: 32  // page / hero titles
+    readonly property int fontSizeSmall: Math.round(14 * scale)  // captions, muted/secondary labels
+    readonly property int fontSizeMedium: Math.round(15 * scale)  // body / default
+    readonly property int fontSizeLarge: Math.round(22 * scale)   // subtitles, section headers
+    readonly property int fontSizeXLarge: Math.round(32 * scale)  // page / hero titles
 
-    readonly property var windowPadding: 18
-    readonly property var mainHeaderHeight: 42 + mainHeaderPadding * 2
-    readonly property var mainHeaderPadding: 18
+    // Spacing / gaps / padding — scale AND density (density is about how tightly
+    // content packs).
+    readonly property int spacingXs: Math.round(4 * scale * density)
+    readonly property int spacingSm: Math.round(8 * scale * density)
+    readonly property int spacingMd: Math.round(12 * scale * density)
+    readonly property int spacingLg: Math.round(16 * scale * density)
+    readonly property int spacingXl: Math.round(24 * scale * density)
 
-    readonly property color buttonBackgroundColorDisabled: ColorPalette.neutral700
-    readonly property color buttonBackgroundColorInactive: ColorPalette.neutral800
-    readonly property color buttonBackgroundColorHovered: ColorPalette.neutral700
-    readonly property color buttonBackgroundColorPressed: ColorPalette.neutral900
-    readonly property color buttonBackgroundColorFocused: ColorPalette.neutral100
+    // Interactive heights — floored at minTarget.
+    readonly property int controlHeight: Math.max(minTarget, Math.round(36 * scale * density))
+    readonly property int rowHeight: Math.max(minTarget, Math.round(44 * scale * density))
 
-    readonly property var buttonBackgroundOpacityDisabled: 0
-    readonly property var buttonBackgroundOpacityInactive: 0.15
-    readonly property var buttonBackgroundOpacityHovered: 0.3
-    readonly property var buttonBackgroundOpacityPressed: 0.2
-    readonly property var buttonBackgroundOpacityFocused: 1
+    // Icon glyph sizes — scale only (an icon isn't a density concern).
+    readonly property int iconSizeSm: Math.round(16 * scale)
+    readonly property int iconSizeMd: Math.round(24 * scale)
+    readonly property int iconSizeLg: Math.round(32 * scale)
 
-    readonly property var buttonStandardWidth: 200
-    readonly property var buttonStandardHeight: 42
+    // Corner radii — scale only.
+    readonly property int radiusSm: Math.round(4 * scale)
+    readonly property int radiusMd: Math.round(8 * scale)
+    readonly property int radiusLg: Math.round(12 * scale)
+
+    readonly property int windowPadding: Math.round(18 * scale)
+
+    // Button metrics (color/opacity moved to Theme).
+    readonly property int buttonStandardWidth: Math.round(200 * scale)
+    readonly property int buttonStandardHeight: Math.max(minTarget, Math.round(42 * scale * density))
     readonly property int buttonTextFontSize: fontSizeMedium
     readonly property var buttonTextFontWeight: Font.DemiBold
-    readonly property var buttonIconSize: 24
+    readonly property int buttonIconSize: iconSizeMd
     readonly property var buttonIconWeight: Font.Normal
 
-    readonly property color buttonTextColorDisabled: ColorPalette.neutral500
-    readonly property color buttonTextColorInactive: "white"
-    readonly property color buttonTextColorFocused: "black"
-
     //*************************************************************
-    // Top Bar
+    // Top Bar (metrics only; color/opacity moved to Theme)
     //*************************************************************
-    readonly property real titleBarHeight: 58
-    readonly property real titleBarPadding: 8
-    readonly property real titleBarUtilityButtonWidth: 48
-    readonly property real titleBarUtilityButtonIconSize: 10
-
-    readonly property color titleBarMinimizeButtonColorHovered: "white"
-    readonly property real titleBarMinimizeButtonOpacityHovered: 0.08
-    readonly property color titleBarMinimizeButtonColorPressed: "white"
-    readonly property real titleBarMinimizeButtonOpacityPressed: 0.05
-
-    readonly property color titleBarMaximizeButtonColorHovered: "white"
-    readonly property real titleBarMaximizeButtonOpacityHovered: 0.08
-    readonly property color titleBarMaximizeButtonColorPressed: "white"
-    readonly property real titleBarMaximizeButtonOpacityPressed: 0.05
-
-    readonly property color titleBarCloseButtonColorHovered: "#c42b1c"
-    readonly property real titleBarCloseButtonOpacityHovered: 1
-    readonly property color titleBarCloseButtonColorPressed: "#941320"
-    readonly property real titleBarCloseButtonOpacityPressed: 1
+    readonly property int titleBarHeight: Math.round(40 * scale)
+    readonly property int titleBarPadding: Math.round(4 * scale)
+    readonly property int titleBarUtilityButtonWidth: Math.round(48 * scale)
+    readonly property int titleBarUtilityButtonIconSize: Math.round(10 * scale)
 
     //*************************************************************
     // Something Else

@@ -118,7 +118,7 @@ FocusScope {
 
                 placeholderText: qsTr("Search (Ctrl + F)")
                 font.pixelSize: AppStyle.fontSizeMedium
-                color: "white"
+                color: Theme.textPrimary
                 font.family: Constants.regularFontFamily
                 background: Rectangle {
                     color: "transparent"
@@ -223,7 +223,7 @@ FocusScope {
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.family: Constants.regularFontFamily
                 font.weight: Font.DemiBold
-                color: "#9e9e9e"
+                color: Theme.textMuted
                 anchors.centerIn: parent
                 visible: searchField.text === ""
             }
@@ -258,7 +258,7 @@ FocusScope {
                             font.pixelSize: AppStyle.fontSizeMedium
                             font.family: Constants.regularFontFamily
                             font.weight: Font.Medium
-                            color: "#9e9e9e"
+                            color: Theme.textMuted
                             Layout.fillHeight: true
 
                             Connections {
@@ -295,7 +295,7 @@ FocusScope {
                                 font.pixelSize: AppStyle.fontSizeMedium
                                 font.family: Constants.regularFontFamily
                                 font.weight: Font.Medium
-                                color: "#bdbdbd"
+                                color: Theme.textMuted
                             }
                         }
 
@@ -326,7 +326,7 @@ FocusScope {
                             font.pixelSize: AppStyle.fontSizeMedium
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
-                            color: "#bdbdbd"
+                            color: Theme.textMuted
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
                             anchors.leftMargin: 12
@@ -418,7 +418,7 @@ FocusScope {
                                 font.family: Constants.regularFontFamily
                                 font.weight: Font.DemiBold
                                 verticalAlignment: Text.AlignVCenter
-                                color: "white"
+                                color: Theme.textPrimary
                                 Layout.fillHeight: true
                                 Layout.fillWidth: true
                                 Layout.verticalStretchFactor: 1
@@ -430,7 +430,7 @@ FocusScope {
                                 font.family: Constants.regularFontFamily
                                 font.weight: Font.Medium
                                 verticalAlignment: Text.AlignVCenter
-                                color: "#9e9e9e"
+                                color: Theme.textMuted
                                 Layout.fillHeight: true
                                 Layout.fillWidth: true
                                 Layout.verticalStretchFactor: 1

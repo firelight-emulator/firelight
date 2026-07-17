@@ -84,6 +84,34 @@ QtObject {
     readonly property color warning: "#ffc53d"
     readonly property color danger: "#e5484d"
 
+    // --- chrome: button / title-bar state colors ---
+    // Relocated from AppStyle (which is now metrics-only). Values unchanged;
+    // still on the legacy ColorPalette scale rather than the semantic tokens
+    // above — reconcile when the buttons are migrated to FLButton.
+    readonly property color buttonBgDisabled: ColorPalette.neutral700
+    readonly property color buttonBgInactive: ColorPalette.neutral800
+    readonly property color buttonBgHovered: ColorPalette.neutral700
+    readonly property color buttonBgPressed: ColorPalette.neutral900
+    readonly property color buttonBgFocused: ColorPalette.neutral100
+    readonly property real buttonBgOpacityDisabled: 0
+    readonly property real buttonBgOpacityInactive: 0.15
+    readonly property real buttonBgOpacityHovered: 0.3
+    readonly property real buttonBgOpacityPressed: 0.2
+    readonly property real buttonBgOpacityFocused: 1
+    readonly property color buttonTextDisabled: ColorPalette.neutral500
+    readonly property color buttonTextInactive: "white"
+    readonly property color buttonTextFocused: "black"
+
+    // Title-bar min/max share one state look; close is red.
+    readonly property color titleBarBtnHovered: "white"
+    readonly property real titleBarBtnHoveredOpacity: 0.08
+    readonly property color titleBarBtnPressed: "white"
+    readonly property real titleBarBtnPressedOpacity: 0.05
+    readonly property color titleBarCloseHovered: "#c42b1c"
+    readonly property real titleBarCloseHoveredOpacity: 1
+    readonly property color titleBarClosePressed: "#941320"
+    readonly property real titleBarClosePressedOpacity: 1
+
     // --- glass tokens (translucent over the blurred background) ---
     // Kept a clean dark neutral (Discord-style): the color comes from the
     // background bleeding through the translucency, NOT from tinting the panel,

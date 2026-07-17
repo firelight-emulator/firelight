@@ -11,10 +11,18 @@ MenuItem {
     property real minWidth: 0
     property real maxWidth: -1
 
-    implicitHeight: 36
-    implicitWidth: contentItem.width
-    padding: 4
-    horizontalPadding: 8
+    implicitHeight: AppStyle.controlHeight
+    // Derive from the content's *implicit* width (intrinsic), not contentItem.width
+    // — the Menu drives item width from its own implicitWidth, so reading the
+    // laid-out width here closes a binding loop that a scale change re-triggers.
+    implicitWidth: {
+        var cw = contentItem.implicitWidth
+        if (control.maxWidth > 0 && cw > control.maxWidth) cw = control.maxWidth
+        if (cw < control.minWidth) cw = control.minWidth
+        return cw + leftPadding + rightPadding
+    }
+    padding: AppStyle.spacingXs
+    horizontalPadding: AppStyle.spacingSm
 
     Icon {
         id: externalIndicator
@@ -23,22 +31,26 @@ MenuItem {
         y: control.height / 2 - height / 2
         width: parent.height - parent.padding * 2
         height: parent.height - parent.padding * 2
-        size: 16
+        size: AppStyle.iconSizeSm
         name: "open_in_new"
         color: Theme.textPrimary
     }
 
     arrow: Canvas {
         x: parent.width - width
-        implicitWidth: 40
-        implicitHeight: 40
+        implicitWidth: Math.round(40 * AppStyle.scale)
+        implicitHeight: Math.round(40 * AppStyle.scale)
         visible: control.subMenu
+        // Coords are fractions of the (scaled) canvas so the triangle grows with
+        // the UI; beginPath keeps repaints from accumulating stale segments.
         onPaint: {
             var ctx = getContext("2d")
+            ctx.clearRect(0, 0, width, height)
+            ctx.beginPath()
             ctx.fillStyle = enabled ? Constants.rightClickMenuItem_TextColor : "grey"
-            ctx.moveTo(14, 14)
-            ctx.lineTo(width - 15, height / 2)
-            ctx.lineTo(14, height - 14)
+            ctx.moveTo(width * 0.35, height * 0.35)
+            ctx.lineTo(width * 0.63, height / 2)
+            ctx.lineTo(width * 0.35, height * 0.65)
             ctx.closePath()
             ctx.fill()
         }
@@ -67,16 +79,7 @@ MenuItem {
     }
 
     contentItem: RowLayout {
-        width: {
-            if (control.maxWidth > 0 && implicitWidth > control.maxWidth) {
-                return control.maxWidth
-            } else if (implicitWidth < control.minWidth) {
-                return control.minWidth
-            } else {
-                return implicitWidth
-            }
-        }
-        spacing: 12
+        spacing: AppStyle.spacingMd
         Image {
             Layout.preferredHeight: parent.height * 0.84
             Layout.preferredWidth: height * 0.84

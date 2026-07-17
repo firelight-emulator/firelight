@@ -25,9 +25,9 @@ BaseSettingItem {
     }
 
     control: Rectangle {
-        implicitHeight: 34
-        implicitWidth: 128
-        radius: 6
+        implicitHeight: AppStyle.controlHeight
+        implicitWidth: Math.round(128 * AppStyle.scale)
+        radius: AppStyle.radiusMd
         color: Theme.surface
         border.width: 1
         border.color: Theme.border
@@ -37,7 +37,7 @@ BaseSettingItem {
             spacing: 0
 
             Button {
-                Layout.preferredWidth: 34
+                Layout.preferredWidth: AppStyle.controlHeight
                 Layout.fillHeight: true
                 enabled: root.enabled && root.value > root.from
                 focusPolicy: Qt.NoFocus
@@ -46,7 +46,7 @@ BaseSettingItem {
                 background: Item {}
                 contentItem: Icon {
                     name: "remove"
-                    size: 16
+                    size: AppStyle.iconSizeSm
                     color: enabled ? Theme.textPrimary : Theme.textMuted
                 }
             }
@@ -63,7 +63,7 @@ BaseSettingItem {
             }
 
             Button {
-                Layout.preferredWidth: 34
+                Layout.preferredWidth: AppStyle.controlHeight
                 Layout.fillHeight: true
                 enabled: root.enabled && root.value < root.to
                 focusPolicy: Qt.NoFocus
@@ -72,7 +72,7 @@ BaseSettingItem {
                 background: Item {}
                 contentItem: Icon {
                     name: "add"
-                    size: 16
+                    size: AppStyle.iconSizeSm
                     color: enabled ? Theme.textPrimary : Theme.textMuted
                 }
             }

@@ -6,7 +6,7 @@ Menu {
     id: control
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-    padding: 6
+    padding: Math.round(6 * AppStyle.scale)
     // horizontalPadding: 8
 
     overlap: 4

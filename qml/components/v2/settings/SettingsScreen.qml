@@ -172,7 +172,7 @@ FocusScope {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        width: 200
+        width: Math.round(250 * AppStyle.scale)
         padding: 16
         clip: true
 
@@ -186,28 +186,12 @@ FocusScope {
             anchors.fill: parent
             spacing: 10
 
-            TextField {
+            FLSearchField {
                 id: searchField
                 Layout.fillWidth: true
-                implicitHeight: 32
-                placeholderText: qsTr("Search settings")
-                color: Theme.textPrimary
-                placeholderTextColor: Theme.textMuted
-                font.family: Constants.regularFontFamily
-                font.pixelSize: AppStyle.fontSizeSmall
-                leftPadding: 12
-                rightPadding: 12
-
+                placeholder: qsTr("Search settings")
                 onTextChanged: searchModel.query = text
                 onAccepted: root.openTopResult()
-                Keys.onEscapePressed: searchField.text = ""
-
-                background: Rectangle {
-                    radius: height / 2
-                    color: searchField.activeFocus ? Theme.surfaceHover : Theme.surfaceElevated
-                    border.width: 1
-                    border.color: searchField.activeFocus ? Theme.accent : Theme.border
-                }
             }
 
             // Results take over the column while a query is live; the nav comes
@@ -233,7 +217,11 @@ FocusScope {
                     required property var model
 
                     width: ListView.view.width
-                    height: 44
+                    padding: AppStyle.spacingSm
+                    leftPadding: AppStyle.spacingMd
+                    rightPadding: AppStyle.spacingMd
+                    // Content-driven so a scaled two-line result doesn't clip.
+                    height: Math.max(AppStyle.rowHeight, resultContent.implicitHeight + topPadding + bottomPadding)
                     hoverEnabled: true
 
                     HoverHandler { cursorShape: Qt.PointingHandCursor }
@@ -241,12 +229,13 @@ FocusScope {
                     onClicked: root.openResult(model.route, model.key)
 
                     background: Rectangle {
-                        radius: 6
-                        color: ColorPalette.neutral300
-                        opacity: resultDelegate.hovered ? 0.12 : 0
+                        radius: AppStyle.radiusMd
+                        color: Theme.textPrimary
+                        opacity: resultDelegate.hovered ? 0.10 : 0
                     }
 
                     contentItem: ColumnLayout {
+                        id: resultContent
                         spacing: 0
 
                         Text {
@@ -366,15 +355,14 @@ FocusScope {
         anchors.bottom: parent.bottom
 
         // Pinned to the pane, not the content column, so it stays in the corner.
-        IconButton {
+        FLIconButton {
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.topMargin: 12
             anchors.rightMargin: 16
-            height: 32
-            width: 32
             z: 1
             iconName: "close"
+            tooltipText: "Close"
             onClicked: {
                 Router.back()
             }
@@ -382,13 +370,14 @@ FocusScope {
 
         // Settings read as a single column, capped and centred. Letting them span
         // the whole pane flings each label and its control to opposite edges with
-        // dead space between.
+        // dead space between. The cap scales with the UI so enlarged controls get
+        // proportional room, but never exceeds the pane (reflow-safe).
         ColumnLayout {
             id: contentColumn
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(720, parent.width - 64)
+            width: Math.min(Math.round(720 * AppStyle.scale), parent.width - 64)
             spacing: 0
 
             StackView {
