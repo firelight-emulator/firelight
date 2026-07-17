@@ -1,45 +1,65 @@
-import QtCore
-import QtQuick
-
 pragma Singleton
 
-// Persisted appearance/theme settings (QtCore Settings -> app QSettings INI,
-// [Appearance] group). Every property here survives across launches for free.
-Settings {
-    category: "Appearance"
+import QtQuick
+import Firelight 1.0
 
-    property bool usingCustomBackground: false
-    property string backgroundFile: ""
+// Typed read path for the appearance settings declared in the settings catalog.
+// The settings page writes them through SettingsModel; Theme and everything else
+// bind to the named properties here. Both go to the same store, so there's one
+// source of truth and one place each key's name is spelled.
+//
+// Read-only by design: assigning to one of these would break its binding and
+// silently stop tracking the stored value. Anything that needs to write a
+// setting outside the settings page should use its own SettingBinding.
+QtObject {
+    id: root
 
-    property string accentColor: "#a55300"
+    property SettingBinding accentBinding: SettingBinding { key: "accent-color" }
+    property SettingBinding modeBinding: SettingBinding { key: "background-mode" }
+    property SettingBinding colorBinding: SettingBinding { key: "background-color" }
+    property SettingBinding color2Binding: SettingBinding { key: "background-color-2" }
+    property SettingBinding fileBinding: SettingBinding { key: "background-file" }
+    property SettingBinding blurBinding: SettingBinding { key: "background-blur" }
+    property SettingBinding dimBinding: SettingBinding { key: "background-dim" }
+    property SettingBinding tintBinding: SettingBinding { key: "theme-intensity" }
+    property SettingBinding glassBinding: SettingBinding { key: "glass-opacity" }
+
+    // Colors are "#rrggbb" strings, not `color`: that's what consumers were
+    // built against, they coerce to `color` where used, and they round-trip the
+    // picker unchanged.
+    property string accentColor: accentBinding.value
 
     Behavior on accentColor {
         ColorAnimation { duration: 64 }
     }
 
-    // --- Theme ---
     // "solid" | "gradient" | "image"
-    property string backgroundMode: "solid"
-    // Solid color, and gradient stop 1 / theme tint source. Stored as a "#rrggbb"
-    // hex string (coerces to `color` where used, and round-trips the picker).
-    property string backgroundColor: "#12131A"
+    readonly property string backgroundMode: modeBinding.value
+    // Solid color, and gradient stop 1 / theme tint source.
+    readonly property string backgroundColor: colorBinding.value
     // Gradient stop 2 (only used in "gradient" mode).
-    property string backgroundColor2: "#1b2333"
+    readonly property string backgroundColor2: color2Binding.value
 
-    // In "image" mode the theme tints itself from the image instead of the
-    // colors above: these are sampled from the chosen image (top band / bottom
-    // band) so surfaces adopt its palette. Empty until an image is sampled.
-    property string imageColorTop: ""
-    property string imageColorBottom: ""
+    // The setting stores a plain path — that's what the file picker deals in —
+    // but Image.source and samplePalette both need a URL. Convert once, here,
+    // rather than at every use site.
+    readonly property string backgroundFile: fileBinding.value === ""
+                                             ? "" : FilesystemUtils.prependFileURI(fileBinding.value)
 
-    // Background blur amount (0..1).
-    property real backgroundBlur: 0
-    // Darkens an image background behind the frosted surfaces (0..1). Defaults
-    // to a gentle dim so panels read dark and readable, Discord-style, instead
-    // of a bright image bleeding straight through the glass.
-    property real backgroundDim: 0.4
-    // How strongly solid surfaces are tinted toward backgroundColor (0..1).
-    property real themeIntensity: 0.12
-    // Opacity of translucent "glass" surfaces over the background (0..1).
-    property real glassOpacity: 0.55
+    readonly property real backgroundBlur: parseFloat(blurBinding.value)
+    // Darkens an image background behind the frosted surfaces, so panels read
+    // dark and readable instead of a bright image bleeding through the glass.
+    readonly property real backgroundDim: parseFloat(dimBinding.value)
+    // How strongly solid surfaces are tinted toward backgroundColor.
+    readonly property real themeIntensity: parseFloat(tintBinding.value)
+    // Opacity of translucent "glass" surfaces over the background.
+    readonly property real glassOpacity: parseFloat(glassBinding.value)
+
+    // In image mode the theme tints itself from the image rather than from
+    // backgroundColor. Derived, not stored: it's a function of the chosen file,
+    // so sampling it on demand can't fall out of sync the way a saved copy did.
+    readonly property var imagePalette: (backgroundMode === "image" && backgroundFile !== "")
+                                        ? ImageUtils.samplePalette(backgroundFile) : null
+    readonly property string imageColorTop: (imagePalette && imagePalette.ok) ? imagePalette.top : ""
+    readonly property string imageColorBottom: (imagePalette && imagePalette.ok) ? imagePalette.bottom : ""
 }

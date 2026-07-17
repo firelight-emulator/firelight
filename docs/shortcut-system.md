@@ -43,7 +43,7 @@ flowchart LR
 ```cpp
 using ShortcutId = std::string;               // "fast_forward", "save_state" — stable, JSON-friendly
 
-enum class ActivationType { Press, Hold, Toggle };
+enum class ActivationType { Press, Hold };
 enum ShortcutScope { InGame = 1, InMenu = 2, Always = InGame | InMenu };
 
 // GLOBAL, app-defined — catalog entry (metadata + behavior contract)
@@ -52,15 +52,14 @@ struct ShortcutAction {
   std::string   displayName, category;
   ActivationType activation;
   int           scope;                        // ShortcutScope flags
-  std::vector<InputSource> defaults;          // shipped default triggers
-};
+};                                            // no defaults: presets ship those
 
 // PER-PROFILE user config — lives on GamepadProfile, next to button bindings
 //   ShortcutMapping wraps: std::map<ShortcutId, std::vector<InputSource>>
 
 // Emitted by the engine, consumed by dispatch
 enum class ShortcutPhase { Started, Ended };
-struct ShortcutEvent { int playerIndex; ShortcutId id; ShortcutPhase phase; bool toggledState; };
+struct ShortcutEvent { int playerIndex; ShortcutId id; ShortcutPhase phase; };
 ```
 
 `InputSource` (`input_source.hpp`) is reused as the trigger — it already holds a
@@ -84,10 +83,17 @@ Activation lives on the **action**, so the engine knows how to interpret an edge
 |---|---|---|
 | `Press` | fires once on the rising edge | `Started` |
 | `Hold` | active while the combo is held | `Started` on press, `Ended` on release |
-| `Toggle` | press flips a latch | `Started` with the new `toggledState` |
 
 `Hold` emitting a matching `Ended` is what makes "hold to fast-forward, release
 to resume" work — the old system only fired on button-down.
+
+**There is deliberately no `Toggle`.** An action like `pause` or `toggle_mute`
+flips state that is **global to the emulator**, but the engine only ever sees
+one device at a time, so a latch here is necessarily per-device — and two
+devices immediately drift apart (P1 pauses; P2's latch flips `false→true` and
+re-asserts a value that is already true, so P2's press does nothing). The engine
+reports the edge; whoever owns the state flips it. Those actions are declared
+`Press`.
 
 ## Scope — gameplay vs. menus
 
@@ -106,8 +112,9 @@ profile, so menu-scope shortcuts still work per device.
 
 ## The detection engine
 
-One `ShortcutEngine` (`libs/firelight/input/`) replaces both the old
-`SdlController::getToggledShortcuts` path and the keyboard `eventFilter` path:
+One `ShortcutEngine` (`libs/firelight/input/`) handles every device — pads are
+fed from the SDL loop (buttons *and* axes, so a trigger can fire a shortcut) and
+the keyboard from its event filter:
 
 ```cpp
 class ShortcutEngine {
@@ -125,43 +132,70 @@ Detection reads the triggering device's own profile (`device->getProfile()
 
 ## Dispatch + catalog
 
-The app owns the global catalog (populated into `ShortcutRegistry` at startup)
-and the `ShortcutId → handler` routing. `QtInputServiceProxy` re-emits
-`ShortcutEvent` to QML as `shortcutTriggered(id, phase)` for menu/UI actions;
-C++ services handle gameplay ones.
+The catalog is declared in `data/shortcuts.json` and loaded into
+`ShortcutRegistry` at startup. `ShortcutDispatcher` (`src/app/emulation/`) is the
+only subscriber: it hops to the GUI thread and calls `ShortcutActions`, which is
+where every action actually lives. Only three reach QML, as signals — the quick
+menu, the rewind menu, and fullscreen. The quick menu calls back in through
+`ShortcutDispatcher::trigger(id)` rather than repeating any of it.
 
 Starter catalog (ids · activation · scope):
 
 | id | activation | scope |
 |---|---|---|
 | `fast_forward` | Hold | InGame |
-| `toggle_fast_forward` | Toggle | InGame |
-| `rewind` | Hold | InGame |
+| `toggle_fast_forward` | Press | InGame |
 | `slow_motion` | Hold | InGame |
 | `speed_up` / `slow_down` | Press | InGame |
 | `save_state` / `load_state` | Press | InGame |
 | `state_slot_next` / `state_slot_prev` | Press | InGame |
 | `open_rewind_menu` / `open_quick_menu` | Press | InGame |
 | `frame_advance` / `reset` / `pause` | Press | InGame |
-| `screenshot` / `toggle_mute` / `toggle_fullscreen` | Press/Toggle | Always |
+| `screenshot` / `toggle_mute` / `toggle_fullscreen` | Press | Always |
 | `exit_game` | Press | InGame |
 
-## Defaults & the built-in-profiles pairing
+## Defaults: presets seed a profile once
 
-Because triggers are per-profile, the tedium of "rebind on every profile" is
-removed by shipping shortcut defaults with each **built-in profile** (per
-`GamepadType`) — the N64 built-in uses N64-available buttons, the Xbox one uses
-`L3+R3`, etc. Most users never rebind. This is the main reason the built-in
-profile seeding is worth doing alongside this.
+Triggers are per-profile, so something has to fill a new profile in or it ships
+unbound — which is exactly what used to happen. `data/shortcuts.json` declares
+**presets** (`firelight`, `retroarch-keyboard`, `handheld`, `none`), and
+`createProfile` copies one in at creation. A preset is a starting point, not a
+tier: the engine never resolves through it, so an unbound action just means off,
+and "reset this row" is a write rather than an erase.
+
+Presets are keyed on `DeviceType` (Gamepad/Keyboard) only — a keyboard binding
+stores a `Qt::Key` and a pad one a `GamepadInput`, which is the one difference
+that forces a split. There is deliberately no per-`GamepadType` table:
+`GamepadInput` already normalizes across pads, and a preset lists **alternates**
+per action, so a pad without R3 simply never satisfies that source and falls
+through to the next.
 
 ## Conflict with game input
 
-A gameplay shortcut bound to a bare button also reaches the running core. Two
-mitigations, applied together:
+**The rule: when a shortcut fires, the input that triggered it is withheld from
+the game until it is physically released. Nothing else.** One rule, always on,
+no per-action flag.
 
-- **Combo defaults** — gameplay shortcuts default to modifier + input.
-- **Optional `suppressInGame`** on a binding — when the shortcut fires, swallow
-  the input so the core doesn't also see it.
+It works because a **combo disambiguates at the trigger's rising edge**, so the
+decision is conditional with no lookahead. Bind `Select+X`: press X alone and
+nothing is satisfied, so the game gets X; hold Select and press X, and the
+shortcut fires and X is swallowed.
+
+- **Modifiers leak, deliberately.** The modifier was already down when the combo
+  completed, so masking it would hand the core a release it never got, and
+  unmasking would hand it a second press. The trigger has no such problem — its
+  rising edge *is* the shortcut's, so the core never saw it down. This is why
+  the modifier belongs on a button the game rarely reads (Select/Back).
+- **A modifier-less binding is the one lossy case**, and honestly so: bind
+  `pause` to bare Start and Start stops reaching the game while in-game, because
+  there is genuinely no way to tell the two intents apart. That is a reason for
+  the editor to warn, and for every shipped pad preset to use combos — not for a
+  config flag.
+
+`InputSuppressor` (on `IGamepad`) holds the masked codes; the engine writes them
+inside `onInput`, under its lock and *before* publishing, since a subscriber runs
+a queued hop later — by which time the core would have sampled the button.
+Masks clear on physical release, on `forgetDevice`, and on `setContext`.
 
 ## What changes vs. today
 
@@ -170,7 +204,7 @@ mitigations, applied together:
 | Catalog | 5-value `Shortcut` enum in the input lib | global `ShortcutRegistry`, string ids, extensible |
 | Triggers | per-profile `ShortcutMapping` (`InputSequence`) | per-profile (kept) — `map<id, vector<InputSource>>` |
 | Multi-binding | one sequence per shortcut | vector per profile + across device profiles |
-| Activation | press-only (hold broken) | Press / Hold / Toggle |
+| Activation | press-only (hold broken) | Press / Hold |
 | Scope | none | InGame / InMenu / Always |
 | pad vs keyboard | two detection paths | one `ShortcutEngine` |
 | dispatch | QML switch on enum int | `ShortcutId → handler` registry |

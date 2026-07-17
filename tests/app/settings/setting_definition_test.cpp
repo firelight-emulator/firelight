@@ -1,17 +1,17 @@
-#include <firelight/settings/emulation_setting.hpp>
+#include <firelight/settings/setting_definition.hpp>
 
 #include <gtest/gtest.h>
 
 namespace firelight::settings {
 
 TEST(EmulationSettingMappingTest, NoMappingReturnsEmpty) {
-  EmulationSetting s;
+  SettingDefinition s;
   s.key = "rewind-enabled"; // frontend-only setting
   EXPECT_TRUE(resolveCoreOptionValues(s, "true").empty());
 }
 
 TEST(EmulationSettingMappingTest, IdentityMappingPassesValueThrough) {
-  EmulationSetting s;
+  SettingDefinition s;
   s.key = "friendly-x";
   s.mapping = {{.coreKey = "core_x"}}; // empty valueMap => identity
   const auto r = resolveCoreOptionValues(s, "somevalue");
@@ -21,7 +21,7 @@ TEST(EmulationSettingMappingTest, IdentityMappingPassesValueThrough) {
 }
 
 TEST(EmulationSettingMappingTest, ValueTranslation) {
-  EmulationSetting s;
+  SettingDefinition s;
   s.key = "color-correction";
   s.mapping = {{.coreKey = "gambatte_gbc_color_correction_mode",
                 .valueMap = {{"Accurate", "accurate"}, {"Fast", "fast"}}}};
@@ -38,7 +38,7 @@ TEST(EmulationSettingMappingTest, ValueTranslation) {
 }
 
 TEST(EmulationSettingMappingTest, CompositeDrivesMultipleCoreOptions) {
-  EmulationSetting s;
+  SettingDefinition s;
   s.key = "enhanced-color";
   s.mapping = {{.coreKey = "core_correction", .valueMap = {{"on", "enabled"}}},
                {.coreKey = "core_palette", .valueMap = {{"on", "rich"}}}};

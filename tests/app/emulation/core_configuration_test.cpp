@@ -1,6 +1,6 @@
 #include <libretro/core_configuration.hpp>
 
-#include <firelight/settings/emulation_setting.hpp>
+#include <firelight/settings/setting_definition.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
@@ -9,7 +9,7 @@
 namespace {
 
 using firelight::settings::CoreOptionMapping;
-using firelight::settings::EmulationSetting;
+using firelight::settings::SettingDefinition;
 
 class CoreConfigurationTest : public testing::Test {
 protected:
@@ -51,7 +51,7 @@ TEST_F(CoreConfigurationTest, CatalogCoreDefaultBeatsCoreDeclaredDefault) {
 }
 
 TEST_F(CoreConfigurationTest, FriendlyMappingDrivesCoreValue) {
-  EmulationSetting s;
+  SettingDefinition s;
   s.key = "friendly-color";
   s.defaultValue = "Accurate";
   s.mapping = {{.coreKey = "core_color",
@@ -69,7 +69,7 @@ TEST_F(CoreConfigurationTest, FriendlyMappingDrivesCoreValue) {
 }
 
 TEST_F(CoreConfigurationTest, AdvancedRawOverrideBeatsFriendlyMapping) {
-  EmulationSetting s;
+  SettingDefinition s;
   s.key = "friendly-color";
   s.defaultValue = "Accurate";
   s.mapping = {{.coreKey = "core_color", .valueMap = {{"Accurate", "accurate"}}}};

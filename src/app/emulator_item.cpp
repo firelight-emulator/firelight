@@ -7,6 +7,7 @@
 #include <spdlog/spdlog.h>
 
 #include "emulation/emulation_service.hpp"
+#include "emulation/shortcut_actions.hpp"
 #include "emulator_item_renderer.hpp"
 #include <firelight/input/input_service.hpp>
 
@@ -48,6 +49,12 @@ void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
 }
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
+  // The emulator a hotkey acts on. Registered from here rather than when the
+  // game starts, because the ScopeAlways actions can fire before then.
+  if (const auto actions = getShortcutActions()) {
+    actions->setController(this);
+  }
+
   setFlag(ItemHasContents);
   setAcceptHoverEvents(true);
   setAcceptTouchEvents(true);
@@ -249,6 +256,9 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
 EmulatorItem::~EmulatorItem() {
   m_stopping = true;
+  if (const auto actions = getShortcutActions()) {
+    actions->setController(nullptr);
+  }
   getDiscordManager()->clearActivity();
 
   // m_emulationTimer was moved to m_emulationThread (see the constructor). Stop
@@ -276,6 +286,17 @@ void EmulatorItem::setPaused(const bool paused) {
     update();
   }
 }
+
+void EmulatorItem::advanceOneFrame() {
+  if (!m_renderer) {
+    return;
+  }
+  // Pause first so the pacing thread stops queueing frames of its own, then
+  // hand the renderer exactly one — the same command the pacer would have sent.
+  setPaused(true);
+  m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
+  update();
+}
 bool EmulatorItem::isRewindEnabled() const { return m_rewindEnabled; }
 void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
   if (m_rewindEnabled == rewindEnabled) {
@@ -292,27 +313,17 @@ void EmulatorItem::setRewindEnabled(const bool rewindEnabled) {
   }
 }
 bool EmulatorItem::isMuted() const {
-  const auto emulator = firelight::emulation::EmulationService::getInstance()
-                            ->getCurrentEmulatorInstance();
-  if (!emulator) {
-    return false;
-  }
-
-  return emulator->isMuted();
+  return firelight::emulation::EmulationService::getInstance()
+      ->currentAudioMuted();
 }
 
 void EmulatorItem::setMuted(const bool muted) {
-  const auto emulator = firelight::emulation::EmulationService::getInstance()
-                            ->getCurrentEmulatorInstance();
-  if (!emulator) {
+  auto *service = firelight::emulation::EmulationService::getInstance();
+  if (service->currentAudioMuted() == muted) {
     return;
   }
 
-  if (emulator->isMuted() == muted) {
-    return;
-  }
-
-  emulator->setMuted(muted);
+  service->setCurrentAudioMuted(muted);
   emit mutedChanged();
 }
 float EmulatorItem::audioBufferLevel() const {

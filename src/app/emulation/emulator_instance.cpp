@@ -7,6 +7,7 @@
 #include "emulation_service.hpp"
 #include "firelight/event_dispatcher.hpp"
 #include <firelight/input/input_service.hpp>
+#include <firelight/input/keyboard_keycodes.hpp>
 #include <libretro/game.hpp>
 
 #include <spdlog/spdlog.h>
@@ -33,6 +34,69 @@ namespace firelight::emulation {
     // settings now (all members it touches are initialized above).
     m_settingsApplier = std::make_unique<CoreSettingsApplier>(
       *this, m_context, m_contentHash, m_platformId);
+
+    // Keys for a core that reads the keyboard. Queued rather than delivered
+    // here: this fires on the GUI thread, and the core is the render thread's.
+    m_keyboardKeyConnection =
+        EventDispatcher::instance().subscribe<input::KeyboardKeyEvent>(
+            [this](const input::KeyboardKeyEvent &event) {
+              const auto key = input::retroKeyFor(event.key);
+              if (key == input::RETROK_UNKNOWN) {
+                return;
+              }
+              std::lock_guard lock(m_pendingKeysMutex);
+              m_pendingKeys.push_back({event.pressed, key, 0});
+            });
+  }
+
+  void EmulatorInstance::setHotkeysDisabled(const bool disabled) {
+    m_hotkeysDisabled = disabled;
+    applyHotkeyState();
+  }
+
+  void EmulatorInstance::applyHotkeyState() {
+    const auto inputService = m_context.inputService;
+    if (!inputService) {
+      return;
+    }
+
+    if (m_hotkeysDisabled) {
+      inputService->setHotkeysEnabled(false);
+      return;
+    }
+
+    inputService->setHotkeysEnabled(true);
+
+    // Nothing turned them off by hand, so honour the core: one that asked for
+    // the keyboard gets it, and only the keyboard — a controller keeps its
+    // hotkeys. This is what makes it unnecessary to know in advance which
+    // systems need the keys.
+    const auto autoDisable =
+        m_context.settingsService &&
+        m_context.settingsService->getGlobalValue("auto-disable-keyboard-hotkeys")
+                .value_or("true") == "true";
+    if (autoDisable && m_core && m_core->wantsKeyboard()) {
+      inputService->setHotkeysEnabled(false, DeviceType::Keyboard);
+    }
+  }
+
+  void EmulatorInstance::drainKeyboardEvents() {
+    // Most cores never ask for the keyboard, so this costs one atomic read a
+    // frame for them.
+    if (!m_core->wantsKeyboard()) {
+      std::lock_guard lock(m_pendingKeysMutex);
+      m_pendingKeys.clear();
+      return;
+    }
+
+    std::vector<PendingKey> keys;
+    {
+      std::lock_guard lock(m_pendingKeysMutex);
+      keys.swap(m_pendingKeys);
+    }
+    for (const auto &[down, key, modifiers] : keys) {
+      m_core->sendKeyboardEvent(down, key, 0, modifiers);
+    }
   }
 
   EmulatorInstance::~EmulatorInstance() {
@@ -42,9 +106,11 @@ namespace firelight::emulation {
     // touch members, so a late event mustn't fire into a half-torn-down instance.
     m_settingsApplier.reset();
 
-    // Restore device-default controller profiles when the game unloads.
+    // Restore device-default controller profiles when the game unloads, and
+    // hand back any hotkeys this game turned off — the menu needs them.
     if (const auto inputService = m_context.inputService) {
       inputService->clearGameContext();
+      inputService->setHotkeysEnabled(true);
     }
     save().wait();
   }
@@ -82,6 +148,10 @@ namespace firelight::emulation {
 
     ::libretro::Game game(m_contentPath, m_gameData);
     m_core->loadGame(&game);
+
+    // The core registers its keyboard callback while loading, so only now can
+    // the auto-disable see whether this one wants the keys.
+    applyHotkeyState();
 
     if (m_saveData.size() > 0) {
       m_core->writeMemoryData(
@@ -353,6 +423,8 @@ namespace firelight::emulation {
   }
 
   void EmulatorInstance::runFrame() {
+    drainKeyboardEvents();
+
     const auto now = std::chrono::steady_clock::now();
     // spdlog::info("Comparing {} and {}: {}", now.time_since_epoch().count(),
     //              m_lastSaveTime.time_since_epoch().count(),
@@ -382,7 +454,7 @@ namespace firelight::emulation {
   }
 
   std::future<bool> EmulatorInstance::save() {
-    if (!m_initialized) {
+    if (!m_initialized || !m_context.saveManager) {
       return std::async(std::launch::deferred, [] { return false; });
     }
     saves::Savefile saveData(m_core->getMemoryData(::libretro::SAVE_RAM));

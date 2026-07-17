@@ -3,6 +3,7 @@
 #include "audio/audio_manager.hpp"
 #include <rcheevos/ra_client.hpp>
 #include <QThreadPool>
+#include "emulation/emulator_controller.hpp"
 #include "emulator_item_renderer.hpp"
 #include "libretro/core_configuration.hpp"
 #include "service_accessor.hpp"
@@ -18,7 +19,8 @@
 // there and enqueues RunFrame onto the renderer (drained on the render thread).
 // m_paused is atomic because the pacing thread reads it each tick.
 class EmulatorItem : public QQuickRhiItem,
-                     public firelight::ServiceAccessor {
+                     public firelight::ServiceAccessor,
+                     public firelight::emulation::IEmulatorController {
 protected:
   void mouseMoveEvent(QMouseEvent *event) override;
 
@@ -88,9 +90,12 @@ public:
   // std::shared_ptr<libretro::Core> m_core = nullptr;
   std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
 
-  [[nodiscard]] bool paused() const;
+  [[nodiscard]] bool paused() const override;
 
-  void setPaused(bool paused);
+  void setPaused(bool paused) override;
+
+  // Runs a single frame and pauses again, so a paused game can be stepped.
+  Q_INVOKABLE void advanceOneFrame() override;
 
   bool isRewindEnabled() const;
 
@@ -102,14 +107,14 @@ public:
 
   [[nodiscard]] float audioBufferLevel() const;
 
-  Q_INVOKABLE void writeSuspendPoint(int index);
+  Q_INVOKABLE void writeSuspendPoint(int index) override;
 
   // Captures the current frame to disk (bound to the "screenshot" shortcut).
-  Q_INVOKABLE void captureScreenshot();
+  Q_INVOKABLE void captureScreenshot() override;
 
-  Q_INVOKABLE void captureVideoClip();
+  Q_INVOKABLE void captureVideoClip() override;
 
-  Q_INVOKABLE void loadSuspendPoint(int index);
+  Q_INVOKABLE void loadSuspendPoint(int index) override;
 
   Q_INVOKABLE void undoLastLoadSuspendPoint();
 
@@ -117,10 +122,10 @@ public:
 
   Q_INVOKABLE void loadRewindPoint(int index);
 
-  [[nodiscard]] float playbackMultiplier() const {
+  [[nodiscard]] float playbackMultiplier() const override {
     return m_playbackMultiplier;
   }
-  void setPlaybackMultiplier(float playbackMultiplier);
+  void setPlaybackMultiplier(float playbackMultiplier) override;
 
   Q_INVOKABLE void incrementPlaybackMultiplier() {
     if (m_playbackMultiplier >= 1) {

@@ -23,7 +23,11 @@ public:
   // --- Profiles ---
   virtual std::shared_ptr<GamepadProfile> getProfile(int id) = 0;
 
-  virtual std::shared_ptr<GamepadProfile> createProfile(std::string name) = 0;
+  // `device` decides which shipped preset seeds the new profile's shortcuts,
+  // and is persisted so the keyboard's profile is still a keyboard profile
+  // next launch.
+  virtual std::shared_ptr<GamepadProfile>
+  createProfile(std::string name, DeviceType device = DeviceType::Gamepad) = 0;
 
   // Returns every stored profile (built-in and user).
   virtual std::vector<std::shared_ptr<GamepadProfile>> listProfiles() = 0;
@@ -41,6 +45,10 @@ public:
   // Persists a profile's default analog tuning.
   virtual void setProfileAnalogSettings(int profileId,
                                         const AnalogSettings &settings) = 0;
+
+  // Persists which preset a profile's shortcuts are measured against, after the
+  // editor applies a different one. Doesn't touch the bindings.
+  virtual void setProfilePresetId(int profileId, const std::string &presetId) = 0;
 
   // Serializes a complete profile (analog + per-platform bindings + shortcuts)
   // to a portable JSON document, and recreates one from such a document.

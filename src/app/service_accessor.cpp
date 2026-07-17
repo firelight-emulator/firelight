@@ -10,6 +10,7 @@ namespace firelight {
   activity::IActivityLog *ServiceAccessor::s_activityService;
   saves::ISaveManager *ServiceAccessor::s_saveManager;
   achievements::RAClient *ServiceAccessor::s_achievementManager;
+  emulation::ShortcutActions *ServiceAccessor::s_shortcutActions;
   gui::GameImageProvider *ServiceAccessor::s_gameImageProvider;
   mods::IModRepository *ServiceAccessor::s_modRepository;
   discord::IDiscordManager *ServiceAccessor::s_discordManager;
@@ -48,6 +49,14 @@ namespace firelight {
 
   void ServiceAccessor::setSaveManager(saves::ISaveManager *manager) {
     s_saveManager = manager;
+  }
+
+  void ServiceAccessor::setShortcutActions(emulation::ShortcutActions *actions) {
+    s_shortcutActions = actions;
+  }
+
+  emulation::ShortcutActions *ServiceAccessor::getShortcutActions() {
+    return s_shortcutActions;
   }
 
   void ServiceAccessor::setAchievementManager(achievements::RAClient *manager) {

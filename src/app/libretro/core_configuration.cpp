@@ -8,7 +8,7 @@
 
 CoreConfiguration::CoreConfiguration(
     std::string contentHash, const int platformId,
-    std::vector<firelight::settings::EmulationSetting> friendlySettings,
+    std::vector<firelight::settings::SettingDefinition> friendlySettings,
     std::map<std::string, std::string> coreDefaults,
     firelight::settings::SettingsService &settingsService)
     : m_contentHash(std::move(contentHash)), m_platformId(platformId),

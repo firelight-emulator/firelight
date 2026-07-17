@@ -1,4 +1,4 @@
-#include "emulation_settings_model.hpp"
+#include "settings_model.hpp"
 
 #include "libretro/core_registry.hpp"
 
@@ -12,27 +12,27 @@ namespace firelight::settings {
 namespace {
 // Maps a catalog setting's declared control to a QML delegate id. `widget` is
 // authoritative when set; otherwise it is derived from the value type.
-QString widgetFor(const EmulationSetting &setting) {
+QString widgetFor(const SettingDefinition &setting) {
   if (!setting.widget.empty()) {
     return QString::fromStdString(setting.widget);
   }
   switch (setting.type) {
-  case BOOLEAN:
+  case SettingType::BOOLEAN:
     return "toggle";
-  case INTEGER:
+  case SettingType::INTEGER:
     return "slider";
-  case STRING:
+  case SettingType::STRING:
     return "text";
-  case CUSTOM:
+  case SettingType::CUSTOM:
     return "custom";
-  case OPTIONS:
-  default:
+  case SettingType::OPTIONS:
     return "dropdown";
   }
+  return "dropdown";
 }
 } // namespace
 
-EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
+SettingsModel::SettingsModel(QObject *parent)
     : QAbstractListModel(parent) {
   // A "core" change re-resolves which core (and thus which settings) apply, so
   // the item set must be rebuilt; any other key just refreshes values.
@@ -63,28 +63,35 @@ EmulationSettingsModel::EmulationSettingsModel(QObject *parent)
             onMatch(e.contentHash == m_contentHash.toStdString(), e.key);
           });
 
+  // An audio-device row's options are the machine's outputs, so plugging in
+  // headphones has to rebuild them.
+  m_mediaDevices = new QMediaDevices(this);
+  connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this,
+          [this] { rebuildItems(); });
+
   rebuildItems();
 }
 
-void EmulationSettingsModel::rebuildItems() {
+void SettingsModel::rebuildItems() {
   beginResetModel();
   m_items.clear();
 
   const auto &catalog = SettingsCatalog::instance();
-  std::vector<EmulationSetting> settings = catalog.commonSettings();
-  if (m_platformId != -1) {
-    const auto coreName = CoreRegistry::instance().resolveCoreName(
-        m_platformId, m_contentHash.toStdString(), m_settingsService);
-    for (const auto &s : catalog.coreSpecificSettings(coreName)) {
-      settings.push_back(s);
-    }
-  }
+  // No platform in scope means no core in scope: the global tier shows the
+  // frontend settings only, never some arbitrary core's.
+  const auto coreName =
+      m_platformId == -1
+          ? std::string{}
+          : CoreRegistry::instance().resolveCoreName(
+                m_platformId, m_contentHash.toStdString(), m_settingsService);
+
+  const auto settings =
+      catalog.settingsForGroup(m_group.toStdString(), coreName);
 
   for (const auto &setting : settings) {
     Item item;
     item.label = QString::fromStdString(setting.label);
     item.key = QString::fromStdString(setting.key);
-    item.section = QString::fromStdString(setting.category);
     item.description = QString::fromStdString(setting.description);
     item.widget = widgetFor(setting);
     item.defaultValue = QString::fromStdString(setting.defaultValue);
@@ -95,6 +102,7 @@ void EmulationSettingsModel::rebuildItems() {
     item.stepValue = setting.stepValue;
     item.requiresRestart = setting.requiresRestart;
     item.advanced = setting.advanced;
+    item.appScope = catalog.isAppSetting(setting.key);
     item.visibleWhen = setting.visibleWhen;
     item.enabledWhen = setting.enabledWhen;
     item.placeholder = QString::fromStdString(setting.placeholder);
@@ -104,6 +112,8 @@ void EmulationSettingsModel::rebuildItems() {
     }
     if (setting.libraryGameSource) {
       item.options = buildGameOptions(setting);
+    } else if (setting.audioDeviceSource) {
+      item.options = buildAudioDeviceOptions();
     } else {
       for (const auto &option : setting.options) {
         item.options.emplace_back(
@@ -114,12 +124,38 @@ void EmulationSettingsModel::rebuildItems() {
     m_items.emplace_back(std::move(item));
   }
 
+  markSubItems();
+
   endResetModel();
   refreshValues();
 }
 
+void SettingsModel::markSubItems() {
+  // A row that depends on another row shown right here is a sub-setting of it,
+  // and renders indented and welded beneath it. Derived from the dependency the
+  // catalog already declares rather than a second thing to author — and scoped
+  // to what's on screen, since depending on a setting from another page says
+  // nothing about how this one should look.
+  const auto shownHere = [this](const std::string &key) {
+    return std::any_of(m_items.begin(), m_items.end(), [&](const Item &other) {
+      return other.key.toStdString() == key;
+    });
+  };
+  const auto dependsOnAShownRow =
+      [&](const std::vector<SettingCondition> &conditions) {
+        return std::any_of(
+            conditions.begin(), conditions.end(),
+            [&](const SettingCondition &c) { return shownHere(c.key); });
+      };
+
+  for (auto &item : m_items) {
+    item.subItem = dependsOnAShownRow(item.visibleWhen) ||
+                   dependsOnAShownRow(item.enabledWhen);
+  }
+}
+
 QVector<QVariantHash>
-EmulationSettingsModel::buildGameOptions(const EmulationSetting &setting) const {
+SettingsModel::buildGameOptions(const SettingDefinition &setting) const {
   QVector<QVariantHash> options;
   // A leading "None" (empty value) lets the user clear the choice.
   options.append(
@@ -155,18 +191,89 @@ EmulationSettingsModel::buildGameOptions(const EmulationSetting &setting) const 
   return options;
 }
 
+bool SettingsModel::overridesInheritedValue(const Item &item) const {
+  // Reset means "clear this tier's override and go back to what I inherit", so
+  // it only means something at a tier with one beneath it. The global tier and
+  // app settings are the base: there's nothing below to fall back to, so no
+  // Reset — changing the value is simply the value.
+  if (item.appScope || (m_level != Game && m_level != Platform)) {
+    return false;
+  }
+  if (!m_settingsService) {
+    return false;
+  }
+  const auto hash = m_contentHash.toStdString();
+  const auto key = item.key.toStdString();
+  const auto stored =
+      m_settingsService->getValueAtLevel(m_level, hash, m_platformId, key);
+  if (!stored) {
+    return false;
+  }
+  // An override that matches what it would inherit anyway isn't overriding
+  // anything the user can see, so offering to clear it is just noise.
+  const auto inherited =
+      m_level == Game
+          ? resolveValueFrom(key, Platform)
+          : resolveValueFrom(key, Global);
+  return stored != inherited.value_or(item.defaultValue.toStdString());
+}
+
 std::optional<std::string>
-EmulationSettingsModel::resolveValue(const std::string &key) {
+SettingsModel::resolveValueFrom(const std::string &key,
+                                const SettingsLevel level) const {
+  const auto hash = m_contentHash.toStdString();
+  if (level <= Platform) {
+    if (auto v =
+            m_settingsService->getValueAtLevel(Platform, hash, m_platformId, key)) {
+      return v;
+    }
+  }
+  return m_settingsService->getValueAtLevel(Global, hash, m_platformId, key);
+}
+
+SettingsLevel SettingsModel::levelFor(const Item &item) const {
+  // An app setting is an emulation setting pinned to the global tier: it has no
+  // core mapping and nothing overrides it per-platform or per-game.
+  return item.appScope ? Global : m_level;
+}
+
+bool SettingsModel::canResolve(const Item &item) const {
+  if (item.appScope) {
+    return m_settingsService != nullptr;
+  }
+  if (!m_settingsService || m_level == Unknown) {
+    return false;
+  }
+  if (m_level == Game && m_contentHash.isEmpty()) {
+    return false;
+  }
+  return !(m_level == Platform && m_platformId == -1);
+}
+
+QVector<QVariantHash> SettingsModel::buildAudioDeviceOptions() const {
+  QVector<QVariantHash> options;
+  // "" means "whatever the OS default is", which follows the OS if it changes.
+  options.append(QVariantHash{{"label", QStringLiteral("System default")},
+                              {"value", QString()}});
+  for (const auto &device : QMediaDevices::audioOutputs()) {
+    options.append(QVariantHash{{"label", device.description()},
+                                {"value", device.description()}});
+  }
+  return options;
+}
+
+std::optional<std::string>
+SettingsModel::resolveValue(const std::string &key, const SettingsLevel level) {
   if (!m_settingsService) {
     return std::nullopt;
   }
   const auto hash = m_contentHash.toStdString();
-  if (m_level <= Game) {
+  if (level <= Game) {
     if (auto v = m_settingsService->getValueAtLevel(Game, hash, m_platformId, key)) {
       return v;
     }
   }
-  if (m_level <= Platform) {
+  if (level <= Platform) {
     if (auto v =
             m_settingsService->getValueAtLevel(Platform, hash, m_platformId, key)) {
       return v;
@@ -178,7 +285,7 @@ EmulationSettingsModel::resolveValue(const std::string &key) {
   return std::nullopt;
 }
 
-std::string EmulationSettingsModel::currentValueOf(const std::string &key) const {
+std::string SettingsModel::currentValueOf(const std::string &key) const {
   for (const auto &item : m_items) {
     if (item.key.toStdString() == key) {
       if (item.widget == "toggle") {
@@ -190,7 +297,7 @@ std::string EmulationSettingsModel::currentValueOf(const std::string &key) const
   return {};
 }
 
-void EmulationSettingsModel::recomputeConditions() {
+void SettingsModel::recomputeConditions() {
   const SettingValueResolver resolver = [this](const std::string &key) {
     return currentValueOf(key);
   };
@@ -205,9 +312,26 @@ void EmulationSettingsModel::recomputeConditions() {
   }
 }
 
-bool EmulationSettingsModel::getShowAdvanced() const { return m_showAdvanced; }
+QString SettingsModel::getGroup() const { return m_group; }
 
-void EmulationSettingsModel::setShowAdvanced(const bool showAdvanced) {
+QString SettingsModel::getGroupLabel() const {
+  const auto *group =
+      SettingsCatalog::instance().findGroup(m_group.toStdString());
+  return group ? QString::fromStdString(group->label) : QString();
+}
+
+void SettingsModel::setGroup(const QString &group) {
+  if (m_group == group) {
+    return;
+  }
+  m_group = group;
+  emit groupChanged();
+  rebuildItems();
+}
+
+bool SettingsModel::getShowAdvanced() const { return m_showAdvanced; }
+
+void SettingsModel::setShowAdvanced(const bool showAdvanced) {
   if (m_showAdvanced == showAdvanced) {
     return;
   }
@@ -216,9 +340,9 @@ void EmulationSettingsModel::setShowAdvanced(const bool showAdvanced) {
   recomputeConditions();
 }
 
-int EmulationSettingsModel::getPlatformId() const { return m_platformId; }
+int SettingsModel::getPlatformId() const { return m_platformId; }
 
-void EmulationSettingsModel::setPlatformId(const int platformId) {
+void SettingsModel::setPlatformId(const int platformId) {
   if (platformId == m_platformId) {
     return;
   }
@@ -227,9 +351,9 @@ void EmulationSettingsModel::setPlatformId(const int platformId) {
   rebuildItems();
 }
 
-int EmulationSettingsModel::getLevel() const { return m_level; }
+int SettingsModel::getLevel() const { return m_level; }
 
-void EmulationSettingsModel::setLevel(int level) {
+void SettingsModel::setLevel(int level) {
   if (level == static_cast<int>(m_level)) {
     return;
   }
@@ -241,9 +365,9 @@ void EmulationSettingsModel::setLevel(int level) {
   refreshValues();
 }
 
-QString EmulationSettingsModel::getContentHash() const { return m_contentHash; }
+QString SettingsModel::getContentHash() const { return m_contentHash; }
 
-void EmulationSettingsModel::setContentHash(const QString &contentHash) {
+void SettingsModel::setContentHash(const QString &contentHash) {
   if (contentHash == m_contentHash) {
     return;
   }
@@ -252,11 +376,11 @@ void EmulationSettingsModel::setContentHash(const QString &contentHash) {
   refreshValues();
 }
 
-int EmulationSettingsModel::rowCount(const QModelIndex &parent) const {
+int SettingsModel::rowCount(const QModelIndex &parent) const {
   return parent.isValid() ? 0 : m_items.size();
 }
 
-QVariant EmulationSettingsModel::data(const QModelIndex &index,
+QVariant SettingsModel::data(const QModelIndex &index,
                                       int role) const {
   if (!index.isValid() || index.row() >= m_items.size()) {
     return {};
@@ -270,8 +394,6 @@ QVariant EmulationSettingsModel::data(const QModelIndex &index,
     return item.key;
   case DescriptionRole:
     return item.description;
-  case SectionRole:
-    return item.section;
   case WidgetRole:
     return item.widget;
   case ValueRole:
@@ -289,8 +411,10 @@ QVariant EmulationSettingsModel::data(const QModelIndex &index,
     return item.maximumValue;
   case StepRole:
     return item.stepValue;
-  case OverriddenRole:
-    return item.overridden;
+  case ResettableRole:
+    return item.resettable;
+  case SubItemRole:
+    return item.subItem;
   case VisibleRole:
     return item.visible;
   case EnabledRole:
@@ -308,11 +432,10 @@ QVariant EmulationSettingsModel::data(const QModelIndex &index,
   }
 }
 
-QHash<int, QByteArray> EmulationSettingsModel::roleNames() const {
+QHash<int, QByteArray> SettingsModel::roleNames() const {
   return {{LabelRole, "label"},
           {KeyRole, "key"},
           {DescriptionRole, "description"},
-          {SectionRole, "section"},
           {WidgetRole, "widget"},
           {ValueRole, "value"},
           {DefaultValueRole, "defaultValue"},
@@ -320,7 +443,8 @@ QHash<int, QByteArray> EmulationSettingsModel::roleNames() const {
           {MinimumRole, "minimumValue"},
           {MaximumRole, "maximumValue"},
           {StepRole, "stepValue"},
-          {OverriddenRole, "overridden"},
+          {ResettableRole, "resettable"},
+          {SubItemRole, "subItem"},
           {VisibleRole, "visible"},
           {EnabledRole, "enabled"},
           {RequiresRestartRole, "requiresRestart"},
@@ -329,18 +453,21 @@ QHash<int, QByteArray> EmulationSettingsModel::roleNames() const {
           {DirectoryModeRole, "directoryMode"}};
 }
 
-Qt::ItemFlags EmulationSettingsModel::flags(const QModelIndex &index) const {
+Qt::ItemFlags SettingsModel::flags(const QModelIndex &index) const {
   return QAbstractListModel::flags(index) | Qt::ItemIsEditable;
 }
 
-bool EmulationSettingsModel::setData(const QModelIndex &index,
+bool SettingsModel::setData(const QModelIndex &index,
                                      const QVariant &value, const int role) {
-  if (!index.isValid() || index.row() >= m_items.size() || role != ValueRole ||
-      m_level == Unknown || !m_settingsService) {
+  if (!index.isValid() || index.row() >= m_items.size() || role != ValueRole) {
     return false;
   }
 
   auto &item = m_items[index.row()];
+  if (!canResolve(item)) {
+    return false;
+  }
+
   QString stringValue;
   if (item.widget == "toggle") {
     item.boolValue = value.toBool();
@@ -350,59 +477,55 @@ bool EmulationSettingsModel::setData(const QModelIndex &index,
     item.stringValue = stringValue;
   }
 
-  m_settingsService->setValueAtLevel(m_level, m_contentHash.toStdString(),
+  m_settingsService->setValueAtLevel(levelFor(item), m_contentHash.toStdString(),
                                      m_platformId, item.key.toStdString(),
                                      stringValue.toStdString());
-  item.overridden = true;
-  emit dataChanged(index, index, {ValueRole, OverriddenRole});
+  item.resettable = overridesInheritedValue(item);
+  emit dataChanged(index, index, {ValueRole, ResettableRole});
   // A change here can flip the visibility/enablement of dependent settings.
   recomputeConditions();
   return true;
 }
 
-void EmulationSettingsModel::resetValue(int row) {
-  if (row < 0 || row >= m_items.size() || m_level == Unknown ||
-      !m_settingsService) {
+void SettingsModel::resetValue(int row) {
+  if (row < 0 || row >= m_items.size()) {
     return;
   }
 
   auto &item = m_items[row];
-  m_settingsService->resetValueAtLevel(m_level, m_contentHash.toStdString(),
+  if (!canResolve(item)) {
+    return;
+  }
+
+  const auto level = levelFor(item);
+  m_settingsService->resetValueAtLevel(level, m_contentHash.toStdString(),
                                        m_platformId, item.key.toStdString());
-  const auto resolved = resolveValue(item.key.toStdString());
+  const auto resolved = resolveValue(item.key.toStdString(), level);
   setItemValue(row, item, resolved.value_or(item.defaultValue.toStdString()));
-  item.overridden = false;
-  emit dataChanged(index(row), index(row), {ValueRole, OverriddenRole});
+  item.resettable = false;
+  emit dataChanged(index(row), index(row), {ValueRole, ResettableRole});
   recomputeConditions();
 }
 
-void EmulationSettingsModel::refreshValues() {
-  if (m_level == Unknown) {
-    return;
-  }
-  if ((m_level == Game && m_contentHash.isEmpty()) ||
-      (m_level == Platform && m_platformId == -1)) {
-    return;
-  }
-
+void SettingsModel::refreshValues() {
   for (int i = 0; i < m_items.size(); ++i) {
     auto &item = m_items[i];
-    const auto resolved = resolveValue(item.key.toStdString());
+    if (!canResolve(item)) {
+      continue;
+    }
+    const auto level = levelFor(item);
+    const auto resolved = resolveValue(item.key.toStdString(), level);
     setItemValue(i, item, resolved.value_or(item.defaultValue.toStdString()));
-    item.overridden =
-        m_settingsService && m_settingsService
-                                 ->getValueAtLevel(m_level, m_contentHash.toStdString(),
-                                                   m_platformId, item.key.toStdString())
-                                 .has_value();
+    item.resettable = overridesInheritedValue(item);
   }
   if (!m_items.isEmpty()) {
     emit dataChanged(index(0), index(m_items.size() - 1),
-                     {ValueRole, OverriddenRole});
+                     {ValueRole, ResettableRole});
   }
   recomputeConditions();
 }
 
-void EmulationSettingsModel::setItemValue(int itemIndex, Item &item,
+void SettingsModel::setItemValue(int itemIndex, Item &item,
                                           const std::string &value) {
   if (item.widget == "toggle") {
     item.boolValue = value == item.trueValue.toStdString();

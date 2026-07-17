@@ -7,33 +7,33 @@
 
 #include <QCoreApplication>
 
-#include <firelight/settings/emulation_setting.hpp>
+#include <firelight/settings/setting_definition.hpp>
 #include <firelight/settings/settings_catalog.hpp>
 
 namespace firelight::cli {
 
 namespace {
 
-const char *typeName(firelight::settings::EmulationSettingType type) {
+const char *typeName(firelight::settings::SettingType type) {
   switch (type) {
-  case firelight::settings::BOOLEAN:
+  case firelight::settings::SettingType::BOOLEAN:
     return "boolean";
-  case firelight::settings::OPTIONS:
+  case firelight::settings::SettingType::OPTIONS:
     return "options";
-  case firelight::settings::INTEGER:
+  case firelight::settings::SettingType::INTEGER:
     return "integer";
-  case firelight::settings::STRING:
+  case firelight::settings::SettingType::STRING:
     return "string";
-  case firelight::settings::CUSTOM:
+  case firelight::settings::SettingType::CUSTOM:
     return "custom";
   }
   return "unknown";
 }
 
-void printSetting(const firelight::settings::EmulationSetting &s) {
+void printSetting(const firelight::settings::SettingDefinition &s) {
   std::printf("  %-28s %-8s default=%s", s.key.c_str(), typeName(s.type),
               s.defaultValue.empty() ? "\"\"" : s.defaultValue.c_str());
-  if (s.type == firelight::settings::OPTIONS && !s.options.empty()) {
+  if (s.type == firelight::settings::SettingType::OPTIONS && !s.options.empty()) {
     std::string values;
     for (const auto &opt : s.options) {
       if (!values.empty()) {
@@ -42,7 +42,7 @@ void printSetting(const firelight::settings::EmulationSetting &s) {
       values += opt.value;
     }
     std::printf("  values=%s", values.c_str());
-  } else if (s.type == firelight::settings::INTEGER) {
+  } else if (s.type == firelight::settings::SettingType::INTEGER) {
     std::printf("  range=%g..%g", s.minValue, s.maxValue);
   }
   std::printf("\n");
@@ -65,6 +65,14 @@ int runListSettings(int argc, char **argv) {
   }
 
   const auto &catalog = firelight::settings::SettingsCatalog::instance();
+
+  if (!catalog.appSettings().empty()) {
+    std::printf("App settings (single-valued; --set does not apply to these):\n");
+    for (const auto &s : catalog.appSettings()) {
+      printSetting(s);
+    }
+    std::printf("\n");
+  }
 
   std::printf("Common settings (apply to every core):\n");
   for (const auto &s : catalog.commonSettings()) {

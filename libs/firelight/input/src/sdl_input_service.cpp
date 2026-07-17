@@ -41,6 +41,25 @@ SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
           });
 }
 
+void SDLInputService::setHotkeysEnabled(const bool enabled,
+                                        const std::optional<DeviceType> only) {
+  // Snapshot under the lock, then talk to the engine without it: the engine
+  // takes its own, and the device collections are read by other threads.
+  std::vector<std::shared_ptr<IGamepad>> devices;
+  {
+    std::shared_lock lock(m_devicesMutex);
+    devices.assign(m_gamepads.begin(), m_gamepads.end());
+    if (m_keyboard) {
+      devices.push_back(m_keyboard);
+    }
+  }
+  for (const auto &device : devices) {
+    if (!only || device->getDeviceType() == *only) {
+      m_shortcutEngine.setHotkeysEnabled(device.get(), enabled);
+    }
+  }
+}
+
 void SDLInputService::setShortcutContext(const int scope) {
   m_shortcutEngine.setContext(scope);
 }
@@ -67,7 +86,7 @@ std::shared_ptr<GamepadProfile> SDLInputService::resolveProfileForGamepad(
       profile = m_gamepadRepository.getProfile(info->profileId);
     } else {
       const auto name = "Default " + gamepad->getName() + " Profile";
-      profile = m_gamepadRepository.createProfile(name);
+      profile = m_gamepadRepository.createProfile(name, gamepad->getDeviceType());
       m_gamepadRepository.updateDeviceInfo(
           gamepad->getDeviceIdentifier(),
           DeviceInfo{gamepad->getName(), profile->getId()});
@@ -263,6 +282,9 @@ bool SDLInputService::removeGamepadByInstanceId(int instanceId) {
     spdlog::info("Removing gamepad: {}", instanceId);
     // Both take their own locks; do them outside m_devicesMutex.
     m_shortcutEngine.forgetDevice(removed.get());
+    // Held inputs are keyed by slot, so leaving them behind would make the next
+    // device in this slot look like it was already holding them.
+    m_gamepadLastStates.erase(removedSlot);
     publishDisconnected(removedSlot);
   }
   return true;
@@ -380,6 +402,64 @@ void SDLInputService::updateMouseOffscreen(const bool offscreen) {
   m_mouseOffscreen.store(offscreen);
 }
 
+std::vector<std::pair<GamepadInput, bool>>
+SDLInputService::decodeAxisMotion(const int sdlAxis, const int value) {
+  switch (sdlAxis) {
+  case SDL_CONTROLLER_AXIS_LEFTX:
+    return {{LeftStickLeft, value < -NAV_STICK_THRESHOLD},
+            {LeftStickRight, value > NAV_STICK_THRESHOLD}};
+  case SDL_CONTROLLER_AXIS_LEFTY:
+    return {{LeftStickUp, value < -NAV_STICK_THRESHOLD},
+            {LeftStickDown, value > NAV_STICK_THRESHOLD}};
+  case SDL_CONTROLLER_AXIS_RIGHTX:
+    return {{RightStickLeft, value < -NAV_STICK_THRESHOLD},
+            {RightStickRight, value > NAV_STICK_THRESHOLD}};
+  case SDL_CONTROLLER_AXIS_RIGHTY:
+    return {{RightStickUp, value < -NAV_STICK_THRESHOLD},
+            {RightStickDown, value > NAV_STICK_THRESHOLD}};
+  // Triggers rest at zero and only travel positive, so there is no opposite
+  // direction to clear.
+  case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
+    return {{LeftTrigger, value >= NAV_STICK_THRESHOLD}};
+  case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+    return {{RightTrigger, value >= NAV_STICK_THRESHOLD}};
+  default:
+    return {};
+  }
+}
+
+void SDLInputService::handleAxisMotion(const int instanceId, const int sdlAxis,
+                                       const int value) {
+  const auto gamepad = findGamepadByInstanceId(instanceId);
+  if (!gamepad) {
+    return;
+  }
+
+  const auto index = gamepad->getPlayerIndex();
+  for (const auto &[input, pressed] : decodeAxisMotion(sdlAxis, value)) {
+    setGamepadInputState(index, gamepad.get(), input, pressed);
+  }
+}
+
+void SDLInputService::setGamepadInputState(const int playerIndex,
+                                           IGamepad *gamepad,
+                                           const GamepadInput input,
+                                           const bool pressed) {
+  if (m_gamepadLastStates[playerIndex][input] == pressed) {
+    return;
+  }
+  m_gamepadLastStates[playerIndex][input] = pressed;
+
+  m_shortcutEngine.onInput(playerIndex, gamepad, static_cast<int>(input),
+                           pressed);
+
+  EventDispatcher::instance().publish(GamepadInputEvent{
+      .playerIndex = playerIndex,
+      .input = input,
+      .pressed = pressed,
+  });
+}
+
 void SDLInputService::run() {
   spdlog::info("Starting SDL Input Service...");
   while (m_running) {
@@ -392,252 +472,9 @@ void SDLInputService::run() {
       case SDL_CONTROLLERDEVICEREMOVED:
         removeGamepadByInstanceId(ev.cdevice.which);
         break;
-      case SDL_CONTROLLERAXISMOTION: {
-        const auto joystickInstanceId = ev.cbutton.which;
-        const auto gamepad = findGamepadByInstanceId(joystickInstanceId);
-
-        if (!gamepad) {
-          break;
-        }
-
-        auto index = gamepad->getPlayerIndex();
-
-        switch (ev.caxis.axis) {
-        case SDL_CONTROLLER_AXIS_LEFTX: {
-          if (ev.caxis.value < NAV_STICK_THRESHOLD && ev.caxis.value > -NAV_STICK_THRESHOLD) {
-            if (m_gamepadLastStates[index][LeftStickLeft]) {
-              m_gamepadLastStates[index][LeftStickLeft] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickLeft,
-                  .pressed = false,
-              });
-            }
-
-            if (m_gamepadLastStates[index][LeftStickRight]) {
-              m_gamepadLastStates[index][LeftStickRight] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickRight,
-                  .pressed = false,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value > NAV_STICK_THRESHOLD) {
-            if (!m_gamepadLastStates[index][LeftStickRight]) {
-              m_gamepadLastStates[index][LeftStickRight] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickRight,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value < -NAV_STICK_THRESHOLD) {
-            if (!m_gamepadLastStates[index][LeftStickLeft]) {
-              m_gamepadLastStates[index][LeftStickLeft] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickLeft,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          break;
-        }
-        case SDL_CONTROLLER_AXIS_LEFTY: {
-          if (ev.caxis.value < NAV_STICK_THRESHOLD && ev.caxis.value > -NAV_STICK_THRESHOLD) {
-            if (m_gamepadLastStates[index][LeftStickUp]) {
-              m_gamepadLastStates[index][LeftStickUp] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickUp,
-                  .pressed = false,
-              });
-            }
-
-            if (m_gamepadLastStates[index][LeftStickDown]) {
-              m_gamepadLastStates[index][LeftStickDown] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickDown,
-                  .pressed = false,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value > NAV_STICK_THRESHOLD) {
-            if (!m_gamepadLastStates[index][LeftStickDown]) {
-              m_gamepadLastStates[index][LeftStickDown] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickDown,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value < -NAV_STICK_THRESHOLD) {
-            if (!m_gamepadLastStates[index][LeftStickUp]) {
-              m_gamepadLastStates[index][LeftStickUp] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftStickUp,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          break;
-        }
-        case SDL_CONTROLLER_AXIS_RIGHTX: {
-          if (ev.caxis.value < NAV_STICK_THRESHOLD && ev.caxis.value > -NAV_STICK_THRESHOLD) {
-            if (m_gamepadLastStates[index][RightStickLeft]) {
-              m_gamepadLastStates[index][RightStickLeft] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickLeft,
-                  .pressed = false,
-              });
-            }
-
-            if (m_gamepadLastStates[index][RightStickRight]) {
-              m_gamepadLastStates[index][RightStickRight] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickRight,
-                  .pressed = false,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value > NAV_STICK_THRESHOLD) {
-            if (!m_gamepadLastStates[index][RightStickRight]) {
-              m_gamepadLastStates[index][RightStickRight] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickRight,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value < -NAV_STICK_THRESHOLD) {
-            if (!m_gamepadLastStates[index][RightStickLeft]) {
-              m_gamepadLastStates[index][RightStickLeft] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickLeft,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          break;
-        }
-        case SDL_CONTROLLER_AXIS_RIGHTY: {
-          if (ev.caxis.value < NAV_STICK_THRESHOLD && ev.caxis.value > -NAV_STICK_THRESHOLD) {
-            if (m_gamepadLastStates[index][RightStickUp]) {
-              m_gamepadLastStates[index][RightStickUp] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickUp,
-                  .pressed = false,
-              });
-            }
-
-            if (m_gamepadLastStates[index][RightStickDown]) {
-              m_gamepadLastStates[index][RightStickDown] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickDown,
-                  .pressed = false,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value > NAV_STICK_THRESHOLD) {
-            if (!m_gamepadLastStates[index][RightStickDown]) {
-              m_gamepadLastStates[index][RightStickDown] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickDown,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          if (ev.caxis.value < -NAV_STICK_THRESHOLD) {
-            if (!m_gamepadLastStates[index][RightStickUp]) {
-              m_gamepadLastStates[index][RightStickUp] = true;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightStickUp,
-                  .pressed = true,
-              });
-            }
-            break;
-          }
-          break;
-        }
-        case SDL_CONTROLLER_AXIS_TRIGGERLEFT: {
-          if (ev.caxis.value < NAV_STICK_THRESHOLD) {
-            if (m_gamepadLastStates[index][LeftTrigger]) {
-              m_gamepadLastStates[index][LeftTrigger] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = LeftTrigger,
-                  .pressed = false,
-              });
-              break;
-            }
-
-            break;
-          }
-
-          if (!m_gamepadLastStates[index][LeftTrigger]) {
-            m_gamepadLastStates[index][LeftTrigger] = true;
-            EventDispatcher::instance().publish(GamepadInputEvent{
-                .playerIndex = index,
-                .input = LeftTrigger,
-                .pressed = true,
-            });
-          }
-
-          break;
-        }
-        case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: {
-          if (ev.caxis.value < NAV_STICK_THRESHOLD) {
-            if (m_gamepadLastStates[index][RightTrigger]) {
-              m_gamepadLastStates[index][RightTrigger] = false;
-              EventDispatcher::instance().publish(GamepadInputEvent{
-                  .playerIndex = index,
-                  .input = RightTrigger,
-                  .pressed = false,
-              });
-              break;
-            }
-
-            break;
-          }
-
-          if (!m_gamepadLastStates[index][RightTrigger]) {
-            m_gamepadLastStates[index][RightTrigger] = true;
-            EventDispatcher::instance().publish(GamepadInputEvent{
-                .playerIndex = index,
-                .input = RightTrigger,
-                .pressed = true,
-            });
-          }
-
-          break;
-        }
-        }
+      case SDL_CONTROLLERAXISMOTION:
+        handleAxisMotion(ev.caxis.which, ev.caxis.axis, ev.caxis.value);
         break;
-      }
       case SDL_CONTROLLERBUTTONUP: {
         const auto joystickInstanceId = ev.cbutton.which;
         const auto gamepad = findGamepadByInstanceId(joystickInstanceId);

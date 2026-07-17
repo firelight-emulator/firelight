@@ -7,37 +7,40 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::input {
-QMap<GamepadInput, Qt::Key> KeyboardInputHandler::defaultKeys;
+KeyboardInputHandler::KeyboardInputHandler() = default;
 
-KeyboardInputHandler::KeyboardInputHandler() {
-  defaultKeys[GamepadInput::DpadUp] = Qt::Key_Up;
-  defaultKeys[GamepadInput::DpadDown] = Qt::Key_Down;
-  defaultKeys[GamepadInput::DpadLeft] = Qt::Key_Left;
-  defaultKeys[GamepadInput::DpadRight] = Qt::Key_Right;
-  defaultKeys[GamepadInput::LeftStickUp] = Qt::Key_I;
-  defaultKeys[GamepadInput::LeftStickDown] = Qt::Key_K;
-  defaultKeys[GamepadInput::LeftStickLeft] = Qt::Key_J;
-  defaultKeys[GamepadInput::LeftStickRight] = Qt::Key_L;
-  defaultKeys[GamepadInput::RightStickUp] = Qt::Key_T;
-  defaultKeys[GamepadInput::RightStickDown] = Qt::Key_G;
-  defaultKeys[GamepadInput::RightStickLeft] = Qt::Key_F;
-  defaultKeys[GamepadInput::RightStickRight] = Qt::Key_H;
-  defaultKeys[GamepadInput::L3] = Qt::Key_M;
-  defaultKeys[GamepadInput::R3] = Qt::Key_B;
-  defaultKeys[GamepadInput::WestFace] = Qt::Key_A;
-  defaultKeys[GamepadInput::SouthFace] = Qt::Key_Z;
-  defaultKeys[GamepadInput::EastFace] = Qt::Key_X;
-  defaultKeys[GamepadInput::NorthFace] = Qt::Key_S;
-  defaultKeys[GamepadInput::LeftBumper] = Qt::Key_Q;
-  defaultKeys[GamepadInput::RightBumper] = Qt::Key_W;
-  defaultKeys[GamepadInput::LeftTrigger] = Qt::Key_E;
-  defaultKeys[GamepadInput::RightTrigger] = Qt::Key_R;
-  defaultKeys[GamepadInput::Start] = Qt::Key_Return;
-  defaultKeys[GamepadInput::Select] = Qt::Key_Shift;
+const QMap<GamepadInput, Qt::Key> &KeyboardInputHandler::defaultKeyMap() {
+  static const QMap<GamepadInput, Qt::Key> keys = {
+      {GamepadInput::DpadUp, Qt::Key_Up},
+      {GamepadInput::DpadDown, Qt::Key_Down},
+      {GamepadInput::DpadLeft, Qt::Key_Left},
+      {GamepadInput::DpadRight, Qt::Key_Right},
+      {GamepadInput::LeftStickUp, Qt::Key_I},
+      {GamepadInput::LeftStickDown, Qt::Key_K},
+      {GamepadInput::LeftStickLeft, Qt::Key_J},
+      {GamepadInput::LeftStickRight, Qt::Key_L},
+      {GamepadInput::RightStickUp, Qt::Key_T},
+      {GamepadInput::RightStickDown, Qt::Key_G},
+      {GamepadInput::RightStickLeft, Qt::Key_F},
+      {GamepadInput::RightStickRight, Qt::Key_H},
+      {GamepadInput::L3, Qt::Key_M},
+      {GamepadInput::R3, Qt::Key_B},
+      {GamepadInput::WestFace, Qt::Key_A},
+      {GamepadInput::SouthFace, Qt::Key_Z},
+      {GamepadInput::EastFace, Qt::Key_X},
+      {GamepadInput::NorthFace, Qt::Key_S},
+      {GamepadInput::LeftBumper, Qt::Key_Q},
+      {GamepadInput::RightBumper, Qt::Key_W},
+      {GamepadInput::LeftTrigger, Qt::Key_E},
+      {GamepadInput::RightTrigger, Qt::Key_R},
+      {GamepadInput::Start, Qt::Key_Return},
+      {GamepadInput::Select, Qt::Key_Shift},
+  };
+  return keys;
 }
 
 Qt::Key KeyboardInputHandler::getDefaultKey(const GamepadInput input) {
-  return defaultKeys.contains(input) ? defaultKeys[input] : Qt::Key_unknown;
+  return defaultKeyMap().value(input, Qt::Key_unknown);
 }
 QString KeyboardInputHandler::getKeyLabel(const Qt::Key key) {
   return QKeySequence(key).toString(QKeySequence::NativeText);
@@ -72,11 +75,16 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
     }
   }
 
-  if (!defaultKeys.contains(static_cast<GamepadInput>(t_button))) {
+  const auto defaultKey = getDefaultKey(static_cast<GamepadInput>(t_button));
+  if (defaultKey == Qt::Key_unknown) {
     return false;
   }
 
-  return m_keyStates[defaultKeys[static_cast<GamepadInput>(t_button)]];
+  // A shortcut is using this key, so the game doesn't see it.
+  if (suppressor().isSuppressed(defaultKey)) {
+    return false;
+  }
+  return m_keyStates[defaultKey];
 }
 
 int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,

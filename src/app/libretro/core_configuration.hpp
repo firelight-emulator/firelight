@@ -1,7 +1,7 @@
 #pragma once
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/libretro/configuration_provider.hpp>
-#include <firelight/settings/emulation_setting.hpp>
+#include <firelight/settings/setting_definition.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <map>
 #include <string>
@@ -15,7 +15,7 @@ public:
   // decoupled from Platform / the catalog itself.
   CoreConfiguration(
       std::string contentHash, int platformId,
-      std::vector<firelight::settings::EmulationSetting> friendlySettings,
+      std::vector<firelight::settings::SettingDefinition> friendlySettings,
       std::map<std::string, std::string> coreDefaults,
       firelight::settings::SettingsService &settingsService);
 
@@ -41,7 +41,7 @@ public:
 private:
   std::string m_contentHash;
   int m_platformId;
-  std::vector<firelight::settings::EmulationSetting> m_friendlySettings;
+  std::vector<firelight::settings::SettingDefinition> m_friendlySettings;
   std::map<std::string, std::string> m_coreDefaults;
   firelight::settings::SettingsService &m_settingsService;
 

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <array>
+#include <optional>
+#include <string_view>
+
 namespace firelight::input {
   // Namespacing masks for non-JOYPAD device inputs. The low byte of a masked
   // value is the raw RETRO_DEVICE_ID_* for that device, so the runtime can
@@ -115,6 +119,27 @@ namespace firelight::input {
         return input; // identity (joypad inputs are already physical buttons)
     }
   }
+
+  // The inputs a shortcut editor offers as a combo modifier — every digital
+  // joypad button. A binding's modifiers can be any input, so this is only what
+  // the UI watches for being held; it is not a restriction the engine enforces.
+  // Sticks are out (a modifier has to be comfortably holdable), as are the
+  // mouse/light-gun namespaces (not a physical pad).
+  inline const std::array<GamepadInput, 16> &modifierCandidates() {
+    static constexpr std::array<GamepadInput, 16> CANDIDATES = {
+        SouthFace,   EastFace,    WestFace,     NorthFace,
+        LeftBumper,  RightBumper, LeftTrigger,  RightTrigger,
+        L3,          R3,          Select,       Start,
+        DpadUp,      DpadDown,    DpadLeft,     DpadRight};
+    return CANDIDATES;
+  }
+
+  // Resolves the name a shipped data file uses for an input (data/shortcuts.json
+  // writes "R3", not 15). Deliberately separate from displayName(): that is prose
+  // for the UI and free to be reworded, whereas these are identifiers that would
+  // break the file if they changed. Returns nullopt for an unknown name so the
+  // catalog can report it rather than silently resolving to some other button.
+  std::optional<GamepadInput> gamepadInputFromName(std::string_view name);
 
   // Device-neutral display name for an input (e.g. "South Face", "D-Pad Up").
   // Platforms provide their own per-button labels ("A", "B", …) in their

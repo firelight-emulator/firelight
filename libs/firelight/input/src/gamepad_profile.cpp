@@ -19,6 +19,11 @@ void GamepadProfile::setBuiltin(const bool builtin) { m_builtin = builtin; }
 int GamepadProfile::getBasedOnType() const { return m_basedOnType; }
 void GamepadProfile::setBasedOnType(const int type) { m_basedOnType = type; }
 
+std::string GamepadProfile::getPresetId() const { return m_presetId; }
+void GamepadProfile::setPresetId(std::string presetId) {
+  m_presetId = std::move(presetId);
+}
+
 std::string GamepadProfile::getIcon() const { return m_icon; }
 void GamepadProfile::setIcon(const std::string &icon) { m_icon = icon; }
 

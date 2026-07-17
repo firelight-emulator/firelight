@@ -3,68 +3,50 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// Bespoke delegate for the Game Boy palette (widget "gbc-palette"): a dropdown
-// plus a live preview image of the selected palette.
-FocusScope {
+// Bespoke delegate for the Game Boy palette (widget "gbc-palette"): the usual
+// dropdown row plus a live preview of the selected palette underneath. The
+// reference for what `type: "custom"` looks like — extend a row component and
+// add to it, rather than rebuilding the row.
+ComboBoxSettingItem {
     id: root
 
-    property string label: ""
-    property string description: ""
     property var options: []
     property string value: ""
-    property bool resettable: false
-
-    signal reset()
     signal activated(string value)
 
-    implicitHeight: col.implicitHeight
+    textRole: "label"
+    valueRole: "value"
+    comboBoxModel: root.options
 
-    ColumnLayout {
-        id: col
-        width: parent.width
-        spacing: 4
-
-        ComboBoxSettingItem {
-            id: combo
-            Layout.fillWidth: true
-            label: root.label
-            description: root.description
-            resettable: root.resettable
-
-            textRole: "label"
-            valueRole: "value"
-            comboBoxModel: root.options
-
-            currentIndex: {
-                for (let i = 0; i < root.options.length; i++) {
-                    if (root.options[i].value === root.value) {
-                        return i
-                    }
-                }
-                return -1
-            }
-
-            onReset: root.reset()
-            onClicked: function () {
-                combo.popup.open()
-                combo.popup.forceActiveFocus()
-            }
-            onCurrentValueChanged: {
-                if (root.value !== currentValue && currentValue) {
-                    root.activated(currentValue)
-                }
+    currentIndex: {
+        for (let i = 0; i < root.options.length; i++) {
+            if (root.options[i].value === root.value) {
+                return i;
             }
         }
+        return -1;
+    }
 
-        Image {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: 12
-            Layout.preferredWidth: 240
-            Layout.preferredHeight: 240
-            fillMode: Image.PreserveAspectFit
-            // Preview assets are named like "gb-dmg" for value "GB - DMG".
-            source: root.value !== "" ? "qrc:images/gbc-previews/" + root.value.toLowerCase().replace(/ /g, "") : ""
-            visible: source.toString() !== ""
+    onClicked: function () {
+        root.popup.open();
+        root.popup.forceActiveFocus();
+    }
+    onCurrentValueChanged: {
+        if (root.value !== currentValue && currentValue) {
+            root.activated(currentValue);
         }
+    }
+
+    // Lands in BaseSettingItem's nested slot, indented under the row.
+    Image {
+        Layout.alignment: Qt.AlignHCenter
+        Layout.preferredWidth: 240
+        Layout.preferredHeight: 240
+        fillMode: Image.PreserveAspectFit
+        // Preview assets are named like "gb-dmg" for value "GB - DMG".
+        source: root.value !== ""
+                ? "qrc:images/gbc-previews/" + root.value.toLowerCase().replace(/ /g, "")
+                : ""
+        visible: source.toString() !== ""
     }
 }

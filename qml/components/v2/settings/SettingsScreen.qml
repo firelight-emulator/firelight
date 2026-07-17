@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Firelight 1.0
 
 FocusScope {
     id: root
@@ -12,27 +13,24 @@ FocusScope {
     // Single source of truth for the nav taxonomy. Each item's `page` references
     // a Component id defined at the bottom of this file. Grouped equivalent of
     // FLTwoColumnMenu's parallel menuItems/routeNames/pages.
+    //
+    // Search terms are NOT here: they're declared per page in the settings
+    // catalog, alongside the settings themselves, so one index covers both.
     property var sections: [
         {
             "title": "",
             "items": [
-                { "displayName": "Appearance", "iconName": "palette", "route": "appearance", "page": appearanceSettings,
-                  "keywords": ["theme", "color", "colour", "accent", "background", "wallpaper", "blur", "tint", "glass"] },
-                { "displayName": "Display", "iconName": "display", "route": "display", "page": videoSettings,
-                  "keywords": ["video", "resolution", "fullscreen", "aspect ratio", "vsync", "sync", "scaling", "frame rate"] },
-                { "displayName": "Sound", "iconName": "speaker", "route": "sound", "page": soundSettings,
-                  "keywords": ["audio", "volume", "output", "device", "mute", "latency"] },
-                { "displayName": "Notifications", "iconName": "bell", "route": "notifications", "page": notificationSettings,
-                  "keywords": ["alerts", "toasts", "popups"] },
+                { "displayName": "Appearance", "iconName": "palette", "route": "appearance", "page": appearanceSettings },
+                { "displayName": "System", "iconName": "display", "route": "system", "page": systemSettings },
+                { "displayName": "Emulation", "iconName": "controller", "route": "emulation", "page": emulationSettings },
+                { "displayName": "Controllers", "iconName": "controller", "route": "controllers", "page": controllerSettings },
+                { "displayName": "Notifications", "iconName": "bell", "route": "notifications", "page": notificationSettings },
                 // { "displayName": "Game Folders", "iconName": "add", "route": "game-folders", "page": directorySettings },
                 // { "displayName": "Scanning", "iconName": "add", "route": "scanning", "page": librarySettings },
                 // { "displayName": "Metadata Scraping", "iconName": "add", "route": "metadata", "page": placeholderSettings },
-                { "displayName": "Captures", "iconName": "photo-library", "route": "captures", "page": placeholderSettings,
-                  "keywords": ["screenshot", "clip", "recording", "instant replay", "gallery", "video"] },
-                { "displayName": "Achievements", "iconName": "trophy", "route": "retroachievements", "page": retroAchievementSettings,
-                  "keywords": ["retroachievements", "hardcore", "account", "login", "trophies"] },
-                { "displayName": "About", "iconName": "info", "route": "about", "page": about,
-                  "keywords": ["version", "license", "credits", "update"] }
+                { "displayName": "Captures", "iconName": "photo-library", "route": "captures", "page": placeholderSettings },
+                { "displayName": "Achievements", "iconName": "trophy", "route": "retroachievements", "page": retroAchievementSettings },
+                { "displayName": "About", "iconName": "info", "route": "about", "page": about }
             ]
         }
         // {
@@ -62,51 +60,31 @@ FocusScope {
     property string currentTitle: ""
     property int currentFlatIndex: -1
 
-    // Nav search. Matches a page's name or its keywords, so "vsync" finds
-    // Display even though no nav item says that word.
-    property string filterText: ""
+    // The setting a search result asked us to reveal, handed to the page it
+    // lives on. Only auto-rendered pages can act on it.
+    property string highlightKey: ""
 
-    function matchesFilter(item) {
-        const query = filterText.trim().toLowerCase();
-        if (query === "") {
-            return true;
-        }
-        if (item.displayName.toLowerCase().indexOf(query) !== -1) {
-            return true;
-        }
-        const words = item.keywords;
-        for (let i = 0; words && i < words.length; i++) {
-            if (words[i].toLowerCase().indexOf(query) !== -1) {
-                return true;
-            }
-        }
-        return false;
+    // Searches every declared page AND setting, so "vsync" finds the Sync
+    // method row itself, not just the page it happens to sit on.
+    SettingsSearchModel {
+        id: searchModel
     }
 
-    // `sections` filtered down to matches; sections with nothing left drop out.
-    readonly property var visibleSections: {
-        if (filterText.trim() === "") {
-            return sections;
+    readonly property bool searching: searchModel.query.trim() !== ""
+
+    // A hit's route is a full path ("/settings/emulation"); letting the Router
+    // own the change keeps one path in and out of this screen.
+    function openResult(route, key) {
+        root.highlightKey = key;
+        searchField.text = "";
+        if (Router.isActive("/settings") && route !== "") {
+            Router.replace(route);
         }
-        const out = [];
-        for (let s = 0; s < sections.length; s++) {
-            const kept = [];
-            for (let i = 0; i < sections[s].items.length; i++) {
-                if (matchesFilter(sections[s].items[i])) {
-                    kept.push(sections[s].items[i]);
-                }
-            }
-            if (kept.length > 0) {
-                out.push({ "title": sections[s].title, "items": kept });
-            }
-        }
-        return out;
     }
 
-    function selectFirstMatch() {
-        const found = visibleSections;
-        if (found.length > 0 && found[0].items.length > 0) {
-            navigateTo(found[0].items[0].route);
+    function openTopResult() {
+        if (searchModel.count > 0) {
+            openResult(searchModel.topRoute(), searchModel.topKey());
         }
     }
 
@@ -220,8 +198,8 @@ FocusScope {
                 leftPadding: 12
                 rightPadding: 12
 
-                onTextChanged: root.filterText = text
-                onAccepted: root.selectFirstMatch()
+                onTextChanged: searchModel.query = text
+                onAccepted: root.openTopResult()
                 Keys.onEscapePressed: searchField.text = ""
 
                 background: Rectangle {
@@ -232,8 +210,86 @@ FocusScope {
                 }
             }
 
+            // Results take over the column while a query is live; the nav comes
+            // back the moment it's cleared.
+            ListView {
+                id: resultList
+                visible: root.searching
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                model: searchModel
+                spacing: 2
+                boundsBehavior: Flickable.StopAtBounds
+
+                ScrollBar.vertical: FLScrollBar {
+                    anchors.right: parent.right
+                    anchors.rightMargin: -4
+                    width: 0
+                }
+
+                delegate: ItemDelegate {
+                    id: resultDelegate
+                    required property var model
+
+                    width: ListView.view.width
+                    height: 44
+                    hoverEnabled: true
+
+                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+
+                    onClicked: root.openResult(model.route, model.key)
+
+                    background: Rectangle {
+                        radius: 6
+                        color: ColorPalette.neutral300
+                        opacity: resultDelegate.hovered ? 0.12 : 0
+                    }
+
+                    contentItem: ColumnLayout {
+                        spacing: 0
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: resultDelegate.model.label
+                            color: Theme.textPrimary
+                            font.family: Constants.regularFontFamily
+                            font.pixelSize: AppStyle.fontSizeSmall
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                        }
+
+                        // Where the hit lives. A page hit is its own answer, so
+                        // it needs no breadcrumb.
+                        Text {
+                            Layout.fillWidth: true
+                            visible: !resultDelegate.model.isPage
+                            text: resultDelegate.model.groupLabel === ""
+                                  ? resultDelegate.model.pageLabel
+                                  : resultDelegate.model.pageLabel + " › " + resultDelegate.model.groupLabel
+                            color: Theme.textMuted
+                            font.family: Constants.regularFontFamily
+                            font.pixelSize: AppStyle.fontSizeSmall - 2
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+            }
+
+            Text {
+                visible: root.searching && searchModel.count === 0
+                Layout.fillWidth: true
+                Layout.topMargin: 8
+                text: qsTr("No settings found")
+                color: Theme.textMuted
+                horizontalAlignment: Text.AlignHCenter
+                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeSmall
+            }
+
             Flickable {
                 id: folderList
+                visible: !root.searching
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 contentHeight: libraryNavColumn.implicitHeight
@@ -251,7 +307,7 @@ FocusScope {
                     anchors.fill: parent
 
                     Repeater {
-                        model: root.visibleSections
+                        model: root.sections
 
                         delegate: ColumnLayout {
                             required property var modelData
@@ -409,9 +465,9 @@ FocusScope {
         }
     }
     Component {
-        id: soundSettings
+        id: systemSettings
 
-        SoundSettings {
+        SystemSettingsPage {
         }
     }
     Component {
@@ -430,12 +486,6 @@ FocusScope {
         id: notificationSettings
 
         NotificationSettings {
-        }
-    }
-    Component {
-        id: videoSettings
-
-        VideoSettings {
         }
     }
     Component {

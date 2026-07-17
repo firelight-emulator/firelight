@@ -144,6 +144,12 @@ namespace libretro {
 
         void clearCheats() override;
 
+        void sendKeyboardEvent(bool down, unsigned key, uint32_t character,
+                               uint16_t modifiers) override;
+        [[nodiscard]] bool wantsKeyboard() const override {
+          return keyboardCallback != nullptr;
+        }
+
         std::function<void()> destroyContextFunction = nullptr;
 
         retro_system_av_info *retroSystemAVInfo;
@@ -244,7 +250,10 @@ namespace libretro {
         // Per-port device options the core advertised via SET_CONTROLLER_INFO.
         std::vector<std::vector<ControllerDeviceOption> > m_controllerDevices;
         uint64_t inputDeviceCapabilitiesBitmask;
-        retro_keyboard_callback *keyboardCallback;
+        // What the core wants called on every key, or null if it doesn't read
+        // the keyboard. Stored from SET_KEYBOARD_CALLBACK; the cores that need
+        // it are the computer ones (DOS, Amiga, MSX, ScummVM).
+        retro_keyboard_event_t keyboardCallback = nullptr;
 
         void recordPotentialAPIViolation(const string &msg);
 

@@ -58,6 +58,10 @@ public:
   void setRewindEnabled(bool enabled);
   bool isRewindEnabled() const;
 
+  // Hands every input straight to the game, for a system that wants the whole
+  // keyboard. The per-device toggle_hotkeys shortcut sits on top of this.
+  void setHotkeysDisabled(bool disabled);
+
   void setPictureMode(const std::string &pictureMode);
   std::string getPictureMode() const;
 
@@ -163,6 +167,24 @@ private:
 
   EmulationContext m_context;
   std::unique_ptr<::libretro::ICore> m_core;
+
+  // Keys on their way to a core that asked for the keyboard. They arrive on the
+  // GUI thread and the core only runs on the render thread, so they queue here
+  // and are handed over at the top of a frame rather than mid-run.
+  struct PendingKey {
+    bool down;
+    unsigned key;
+    uint16_t modifiers;
+  };
+  std::vector<PendingKey> m_pendingKeys;
+  std::mutex m_pendingKeysMutex;
+  ScopedConnection m_keyboardKeyConnection;
+  void drainKeyboardEvents();
+
+  // Pushes the resolved hotkey state to the input service. Re-run once the core
+  // is loaded, since only then is wantsKeyboard() meaningful.
+  void applyHotkeyState();
+  bool m_hotkeysDisabled = false;
   std::shared_ptr<IAudioOutput> m_audioOutput;
   std::unique_ptr<libretro::IAudioInputProvider> m_audioInput;
   std::vector<uint8_t> m_gameData;

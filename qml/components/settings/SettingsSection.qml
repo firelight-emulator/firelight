@@ -19,21 +19,40 @@ FocusScope {
 
     function updateRows() {
         const kids = rows.children;
-        // No line after the card's last row.
+
+        // The visible rows that can carry a divider, in order. Hidden rows are
+        // skipped: a line either side of nothing is still a line.
+        const visible = [];
         for (let i = 0; i < kids.length; i++) {
-            if (kids[i].showDivider !== undefined) {
-                kids[i].showDivider = (i !== kids.length - 1);
+            if (kids[i].showDivider !== undefined && kids[i].visible) {
+                visible.push(kids[i]);
+            } else if (kids[i].showDivider !== undefined) {
+                kids[i].showDivider = false;
             }
         }
-        // A sub-group welds to the setting it depends on: drop the line between
-        // that row and the group beneath it.
-        for (let j = 1; j < kids.length; j++) {
-            if (kids[j].isSettingSubGroup === true
-                    && kids[j - 1].showDivider !== undefined) {
-                kids[j - 1].showDivider = false;
-            }
+
+        for (let i = 0; i < visible.length; i++) {
+            const next = (i + 1 < visible.length) ? visible[i + 1] : null;
+            // No line after the card's last row, and none between a row and
+            // whatever depends on it: a sub-setting welds to the setting above
+            // it, so they read as one block.
+            const weldsToNext = next !== null && next.subItem === true;
+            visible[i].showDivider = (next !== null) && !weldsToNext;
         }
     }
+
+    // Reading every row's `visible` makes this re-evaluate whenever rows are
+    // added, removed, shown or hidden — which is the trigger for updateRows().
+    // Rows arrive from a Repeater long after Component.onCompleted, and
+    // dependent rows come and go, so the layout can't be decided just once.
+    readonly property var rowVisibility: {
+        const out = [];
+        for (let i = 0; i < rows.children.length; i++) {
+            out.push(rows.children[i].visible === true);
+        }
+        return out;
+    }
+    onRowVisibilityChanged: updateRows()
 
     Component.onCompleted: updateRows()
 

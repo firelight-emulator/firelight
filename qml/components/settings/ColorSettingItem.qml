@@ -9,7 +9,7 @@ import Firelight 1.0
 BaseSettingItem {
     id: root
 
-    controlBelow: true
+    controlBelow: false
 
     property string value: ""
     property var presets: []

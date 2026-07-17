@@ -232,7 +232,7 @@ Pane {
                    onCurrentIndexChanged: {
                         let val = comboBox.valueAt(currentIndex)
                         FilteredLibraryEntryModel.sortMethod = val
-                        GeneralSettings.librarySortMethod = val
+                        GeneralSettings.setLibrarySortMethod(val)
                    }
 
                     // Component.onCompleted: {

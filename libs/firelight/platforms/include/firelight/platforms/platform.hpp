@@ -1,6 +1,5 @@
 #pragma once
 #include <firelight/platforms/controller_type.hpp>
-#include <firelight/settings/emulation_setting.hpp>
 
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
@@ -20,7 +19,6 @@ struct Platform {
   // Discord rich-presence large-image key; empty means fall back to `slug`.
   std::string discordImage;
   std::vector<ControllerType> controllerTypes;
-  std::vector<settings::EmulationSetting> emulationSettings;
 
   // The Discord large-image key, defaulting to the slug when unset.
   [[nodiscard]] std::string discordImageOrSlug() const {

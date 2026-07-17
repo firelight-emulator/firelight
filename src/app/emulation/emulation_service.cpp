@@ -145,6 +145,25 @@ namespace firelight::emulation {
     return m_emulatorInstance ? m_emulatorInstance->getAudioBufferLevel() : -1.0f;
   }
 
+  void EmulationService::resetGame() {
+    std::lock_guard lock(m_instanceMutex);
+    if (m_emulatorInstance) {
+      m_emulatorInstance->reset();
+    }
+  }
+
+  void EmulationService::setCurrentAudioMuted(const bool muted) {
+    std::lock_guard lock(m_instanceMutex);
+    if (m_emulatorInstance) {
+      m_emulatorInstance->setMuted(muted);
+    }
+  }
+
+  bool EmulationService::currentAudioMuted() {
+    std::lock_guard lock(m_instanceMutex);
+    return m_emulatorInstance && m_emulatorInstance->isMuted();
+  }
+
   void EmulationService::setPendingLaunchOverrides(LaunchOverrides overrides) {
     m_pendingLaunch = overrides;
   }

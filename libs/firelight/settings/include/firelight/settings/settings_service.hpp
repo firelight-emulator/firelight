@@ -7,6 +7,14 @@
 
 namespace firelight::settings {
 
+// A setting override tier. Values resolve Game -> Platform -> Global -> default;
+// there is no stored "current level" per game — inheritance is the fallback
+// chain. `Unknown` is a sentinel for "not a real tier".
+//
+// Kept in step with SettingsLevelShim (src/gui) so QML can name these; the
+// numbers are load-bearing on both sides.
+enum SettingsLevel { Game, Platform, Global, Unknown };
+
 struct GameSettingChangedEvent {
   std::string contentHash;
   std::string key;

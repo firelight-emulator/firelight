@@ -28,6 +28,12 @@ public:
   [[nodiscard]] int getBasedOnType() const;
   void setBasedOnType(int type);
 
+  // The preset this profile's shortcuts were seeded from. Kept so the editor can
+  // show which rows differ from it and reset them back — the bindings themselves
+  // are the profile's own from the moment it's created, not resolved through it.
+  [[nodiscard]] std::string getPresetId() const;
+  void setPresetId(std::string presetId);
+
   [[nodiscard]] std::string getIcon() const;
   void setIcon(const std::string &icon);
 
@@ -64,6 +70,7 @@ private:
   bool m_builtin = false;
   int m_basedOnType = -1;
   std::string m_icon;
+  std::string m_presetId;
 };
 
 } // namespace firelight::input

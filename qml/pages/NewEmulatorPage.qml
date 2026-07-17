@@ -13,29 +13,13 @@ FocusScope {
 
     objectName: "emulatorPage"
 
+    // Only the shortcuts that need the UI arrive here; ShortcutActions does the
+    // rest in C++, including deciding what's allowed in hardcore mode.
     Connections {
-        target: InputService
+        target: ShortcutDispatcher
 
-        function onShortcutTriggered(player, id, phase) {
-            if (!root.shortcutsInGame) {
-                return
-            }
-            // 0 = Started (see input::ShortcutPhase); act on the press only.
-            if (phase !== 0) {
-                return
-            }
-
-            if (id === "open_rewind_menu" && !achievement_manager.inHardcoreMode) {
-                root.createRewindPoints()
-            } else if (id === "speed_up") {
-                emulator.incrementPlaybackMultiplier()
-            } else if (id === "slow_down") {
-                emulator.decrementPlaybackMultiplier()
-            } else if (id === "screenshot") {
-                emulator.captureScreenshot()
-            } else if (id === "capture_clip") {
-                emulator.captureVideoClip()
-            }
+        function onOpenRewindMenuRequested() {
+            root.createRewindPoints()
         }
     }
 
@@ -134,10 +118,6 @@ FocusScope {
     signal rewindPointsReady(var points)
 
     signal gameReady()
-
-    function resetGame() {
-        emulator.resetGame()
-    }
 
     function createRewindPoints() {
         if (!EmulationService.rewindEnabled) {

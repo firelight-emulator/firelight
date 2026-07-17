@@ -17,6 +17,12 @@ class KeyboardInputHandler final : public QObject, public IGamepad {
 public:
   KeyboardInputHandler();
 
+  // The keys a console input falls back to when the profile has no binding.
+  // Built on first use rather than in the constructor, so callers that only want
+  // to know the defaults (the shortcut catalog, validating that a shipped
+  // keyboard shortcut doesn't sit on a gameplay key) don't need a handler to
+  // exist first.
+  static const QMap<GamepadInput, Qt::Key> &defaultKeyMap();
   static Qt::Key getDefaultKey(GamepadInput input);
   static QString getKeyLabel(Qt::Key key);
 
@@ -60,7 +66,6 @@ protected:
   bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
-  static QMap<GamepadInput, Qt::Key> defaultKeys;
 
   QMap<Input, bool> m_buttonStates;
   QMap<Qt::Key, bool> m_keyStates;

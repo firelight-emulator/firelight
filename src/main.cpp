@@ -33,7 +33,8 @@
 #include "app/input/gui/controller_list_model.hpp"
 #include "app/input/gui/platform_input_preferences.hpp"
 #include "app/input/gui/profile_list_model.hpp"
-#include <firelight/input/shortcut_catalog.hpp>
+#include <firelight/input/shortcut_registry.hpp>
+#include "app/emulation/shortcut_dispatcher.hpp"
 #include <firelight/input/sqlite_controller_repository.hpp>
 #include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include "app/emulation/emulation_context.hpp"
@@ -99,8 +100,11 @@
 #include "gui/image_utils.hpp"
 #include "gui/gamepad_profile_item.hpp"
 #include "gui/models/core_options_model.hpp"
-#include "gui/models/emulation_settings_model.hpp"
-#include "gui/qt_audio_settings_proxy.hpp"
+#include "gui/models/settings_model.hpp"
+#include "gui/models/setting_binding.hpp"
+#include "gui/models/settings_search_model.hpp"
+#include "gui/qt_settings_catalog_proxy.hpp"
+#include "gui/settings_level_shim.hpp"
 #include "gui/qt_core_registry_proxy.hpp"
 #include "gui/models/game_activity_list_model.hpp"
 #include "gui/qt_achievement_service_proxy.hpp"
@@ -337,12 +341,35 @@ int main(int argc, char *argv[]) {
     firelight::input::SqliteControllerRepository controllerRepository(
         controllerRepositoryDbPath, platformService);
 
-    firelight::input::registerDefaultShortcuts();
+    // Resolved relative to the executable, not the working directory — same as
+    // the settings catalog below, and for the same reason.
+    const auto shortcutsPath =
+            (QCoreApplication::applicationDirPath() + "/system/shortcuts.json")
+            .toStdString();
+    auto &shortcutRegistry = firelight::input::ShortcutRegistry::instance();
+    if (!shortcutRegistry.loadFromFile(shortcutsPath)) {
+        spdlog::error("Could not load the shortcut catalog from {}; no hotkeys "
+                      "will work",
+                      shortcutsPath);
+    }
+    for (const auto &problem: shortcutRegistry.validate()) {
+        spdlog::warn("Shortcut catalog: {}", problem);
+    }
 
     firelight::input::SDLInputService inputService(controllerRepository);
     firelight::ServiceAccessor::setInputService(&inputService);
     firelight::ServiceAccessor::setControllerProfileRepository(
         &controllerRepository);
+
+    // Settings service. Constructed before anything that reads a setting —
+    // AudioManager takes it by reference, and the netplay factory below builds
+    // one on demand.
+    firelight::settings::SqliteSettingsRepository settingsRepository(
+        (defaultAppDataPathString + "/settings.db").toStdString());
+
+    firelight::settings::SettingsService settingsService(
+        settingsRepository);
+    firelight::settings::SettingsService::setInstance(&settingsService);
 
     // Online play: direct-connection lobby (host shares their IP) + WebRTC
     // data plane + session. DiscordLobbyBackend can swap back in here once the
@@ -352,15 +379,9 @@ int main(int argc, char *argv[]) {
     firelight::netplay::NetplayService netplayService(
         netplayLobbyBackend, netplayTransport, userLibraryService, FL_VERSION,
         &raClient, &inputService,
-        [] { return std::make_shared<AudioManager>(); });
-
-    // Settings service
-    firelight::settings::SqliteSettingsRepository settingsRepository(
-        (defaultAppDataPathString + "/settings.db").toStdString());
-
-    firelight::settings::SettingsService settingsService(
-        settingsRepository);
-    firelight::settings::SettingsService::setInstance(&settingsService);
+        [&settingsService] {
+            return std::make_shared<AudioManager>(settingsService);
+        });
 
     // Caches each core's declared options (populated after a core loads) so the
     // advanced options editor can list them without the core running.
@@ -572,10 +593,18 @@ int main(int argc, char *argv[]) {
         "Firelight", 1, 0, "PlatformInputPreferences");
     qmlRegisterType<firelight::gui::ControllerListModel>("Firelight", 1, 0,
                                                          "GamepadListModel");
-    qmlRegisterType<firelight::settings::EmulationSettingsModel>(
-        "Firelight", 1, 0, "EmulationSettingsModel");
+    qmlRegisterType<firelight::settings::SettingsModel>(
+        "Firelight", 1, 0, "SettingsModel");
     qmlRegisterType<firelight::settings::CoreOptionsModel>(
         "Firelight", 1, 0, "CoreOptionsModel");
+    qmlRegisterType<firelight::settings::SettingsSearchModel>(
+        "Firelight", 1, 0, "SettingsSearchModel");
+    qmlRegisterType<firelight::settings::SettingBinding>("Firelight", 1, 0,
+                                                         "SettingBinding");
+    // Lets QML say `level: SettingsLevel.Global` instead of `level: 2`.
+    qmlRegisterUncreatableMetaObject(
+        firelight::gui::SettingsLevelShim::staticMetaObject, "Firelight", 1, 0,
+        "SettingsLevel", "SettingsLevel is an enum, not a type");
     qmlRegisterType<firelight::activity::GameActivityListModel>(
         "Firelight", 1, 0, "GameActivityModel");
 
@@ -612,9 +641,9 @@ int main(int argc, char *argv[]) {
         // The tee mirrors PCM into the netplay stream (a no-op unless a host
         // stream is armed) on its way to the real output.
         .audioOutputFactory =
-        [&netplayService] {
+        [&netplayService, &settingsService] {
             return std::make_shared<firelight::netplay::TeeAudioOutput>(
-                std::make_shared<AudioManager>(),
+                std::make_shared<AudioManager>(settingsService),
                 &netplayService.streamSender());
         },
         .audioInputFactory =
@@ -625,6 +654,37 @@ int main(int argc, char *argv[]) {
                                                       settingsService,
                                                       emulationContext);
     firelight::emulation::EmulationService::setInstance(&emuService);
+
+    // What the emulator hotkeys do, and the dispatcher that feeds them. Both
+    // live as long as the app, so a shortcut arriving from the SDL thread can
+    // never reach a half-destroyed subscriber. The three UI-bound actions come
+    // back out as signals for QML.
+    firelight::emulation::ShortcutActions shortcutActions(
+        settingsService, [&raClient] { return raClient.hardcoreModeActive(); },
+        firelight::emulation::ShortcutActions::Intents{});
+    firelight::ServiceAccessor::setShortcutActions(&shortcutActions);
+    // Co-op: without this, any pad can exit the game or save over your slot.
+    // Off by default — a single-player setup is one player, and silently
+    // ignoring a hotkey is worse than the thing it prevents.
+    firelight::emulation::ShortcutDispatcher shortcutDispatcher(
+        shortcutActions, [&settingsService](const int playerIndex) {
+            if (settingsService.getGlobalValue("only-player-one-hotkeys")
+                        .value_or("false") != "true") {
+                return true;
+            }
+            // -1 is "no device behind it" (a menu or a test), which is us.
+            return playerIndex <= 0;
+        });
+    shortcutActions.setIntents({
+        .openQuickMenu = [&] { emit shortcutDispatcher.openQuickMenuRequested(); },
+        .openRewindMenu = [&] { emit shortcutDispatcher.openRewindMenuRequested(); },
+        .toggleFullscreen = [&] { emit shortcutDispatcher.toggleFullscreenRequested(); },
+        .resetGame = [&] { emuService.resetGame(); },
+        .exitGame = [&] { emuService.stopEmulation(); },
+        .notify = [&](const std::string &message) {
+            emit shortcutDispatcher.notified(QString::fromStdString(message));
+        },
+    });
 
     // --- Apply per-launch CLI configuration as session overrides ------------
     // These affect only this run and are never written to the settings DB.
@@ -740,9 +800,9 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("EventEmitter",
                                              new firelight::gui::EventEmitter());
     engine.rootContext()->setContextProperty(
-        "AudioSettings", new firelight::gui::QtAudioSettingsProxy());
-    engine.rootContext()->setContextProperty(
         "CoreRegistry", new firelight::gui::QtCoreRegistryProxy());
+    engine.rootContext()->setContextProperty(
+        "SettingsCatalog", new firelight::gui::QtSettingsCatalogProxy());
     engine.rootContext()->setContextProperty("achievement_manager", &raClient);
     // engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
     engine.rootContext()->setContextProperty("SaveManager", &saveManagerProxy);
@@ -788,6 +848,10 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("InputService", &inputServiceProxy);
     engine.rootContext()->setContextProperty(
         "EmulationService", new firelight::gui::QtEmulationServiceProxy());
+    // Only the shortcuts that genuinely need the UI reach QML; the rest are
+    // handled in ShortcutActions.
+    engine.rootContext()->setContextProperty("ShortcutDispatcher",
+                                             &shortcutDispatcher);
     engine.rootContext()->setContextProperty("AchievementService", &achievementServiceProxy);
     engine.rootContext()->setContextProperty("GameArtService", &gameArtProxy);
 

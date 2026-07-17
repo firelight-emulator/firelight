@@ -60,6 +60,10 @@ public:
   }
   bool loadGame(::libretro::Game *) override {
     m_gameLoaded = true;
+    // A real core registers its keyboard callback while loading, never before.
+    if (m_registersKeyboardOnLoad) {
+      m_wantsKeyboard = true;
+    }
     if (m_sram.empty()) {
       m_sram.assign(SRAM_SIZE, 0); // simulate a game with battery-backed SRAM
     }
@@ -163,6 +167,16 @@ public:
     m_cheatCalls.push_back({index, enabled, code});
   }
   void clearCheats() override { ++m_cheatsCleared; }
+
+  void sendKeyboardEvent(const bool down, const unsigned key, uint32_t,
+                         uint16_t) override {
+    m_keyEvents.push_back({down, key});
+  }
+  [[nodiscard]] bool wantsKeyboard() const override { return m_wantsKeyboard; }
+
+  bool m_wantsKeyboard = false;
+  bool m_registersKeyboardOnLoad = false;
+  std::vector<std::pair<bool, unsigned>> m_keyEvents;
   [[nodiscard]] const std::vector<CheatCall> &cheatCalls() const {
     return m_cheatCalls;
   }

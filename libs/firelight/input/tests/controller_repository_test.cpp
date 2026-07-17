@@ -1,12 +1,33 @@
+#include <firelight/input/shortcut_mapping.hpp>
+#include <firelight/input/shortcut_registry.hpp>
 #include <firelight/input/sqlite_controller_repository.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
+#include <QtCore/qnamespace.h>
 #include <gtest/gtest.h>
 
 namespace firelight::input {
 
 class ControllerRepositoryTest : public testing::Test {
 protected:
+  void TearDown() override { ShortcutRegistry::instance().clear(); }
+
+  // A stand-in for the shipped catalog, so these tests pin the seeding rule
+  // rather than whatever data/shortcuts.json happens to say today.
+  static void loadPresets() {
+    ShortcutRegistry::instance().loadFromString(R"({
+      "defaultPreset": "firelight",
+      "actions": [{"id": "fast_forward"}, {"id": "save_state"},
+                  {"id": "open_quick_menu"}],
+      "presets": [
+        {"id": "firelight",
+         "gamepad": {"fast_forward": ["Select+RightTrigger"],
+                     "open_quick_menu": ["Select+R3", "Select+Start"]},
+         "keyboard": {"save_state": ["Key_F1"]}}
+      ]
+    })");
+  }
+
   platforms::PlatformService m_platformService;
   SqliteControllerRepository m_repo{":memory:", m_platformService};
 };
@@ -25,6 +46,83 @@ TEST_F(ControllerRepositoryTest, CreateAndListProfiles) {
     }
   }
   EXPECT_EQ(found, 2);
+}
+
+// The whole point of shipping presets: a brand-new profile has working hotkeys
+// with no user action. Before seeding existed, every profile started blank.
+TEST_F(ControllerRepositoryTest, NewProfileIsSeededFromTheDefaultPreset) {
+  loadPresets();
+
+  const auto pad = m_repo.createProfile("SeededPad", DeviceType::Gamepad);
+  ASSERT_TRUE(pad);
+  EXPECT_EQ(pad->getPresetId(), "firelight");
+  EXPECT_FALSE(pad->isKeyboardProfile());
+
+  const auto &sources =
+      pad->getShortcutMapping()->getBindings("fast_forward");
+  ASSERT_EQ(sources.size(), 1u);
+  EXPECT_EQ(sources[0].code, GamepadInput::RightTrigger);
+  ASSERT_EQ(sources[0].modifiers.size(), 1u);
+  EXPECT_EQ(sources[0].modifiers[0], GamepadInput::Select);
+
+  // Every alternate is seeded, including ones a given pad can't produce: they
+  // simply never match, and the next one takes over.
+  EXPECT_EQ(pad->getShortcutMapping()->getBindings("open_quick_menu").size(), 2u);
+
+  // A gamepad profile gets the gamepad table only.
+  EXPECT_TRUE(pad->getShortcutMapping()->getBindings("save_state").empty());
+}
+
+TEST_F(ControllerRepositoryTest, KeyboardProfileIsSeededFromTheKeyboardTable) {
+  loadPresets();
+
+  const auto keyboard = m_repo.createProfile("SeededKeys", DeviceType::Keyboard);
+  ASSERT_TRUE(keyboard);
+  EXPECT_TRUE(keyboard->isKeyboardProfile());
+
+  const auto &sources = keyboard->getShortcutMapping()->getBindings("save_state");
+  ASSERT_EQ(sources.size(), 1u);
+  EXPECT_EQ(sources[0].code, Qt::Key_F1);
+  EXPECT_EQ(sources[0].type, SourceType::Key);
+
+  // Gamepad bindings would be meaningless codes on a keyboard.
+  EXPECT_TRUE(keyboard->getShortcutMapping()->getBindings("fast_forward").empty());
+}
+
+// Reads a profile back with none of the in-memory state that created it.
+// Connections are keyed per thread, so a second repository here shares the same
+// live database while keeping its own empty profile cache — which is exactly the
+// "what does the next launch see" question these tests are asking.
+TEST_F(ControllerRepositoryTest, PersistedProfileStateIsReadBack) {
+  loadPresets();
+  const auto keyboard = m_repo.createProfile("ReloadKeys", DeviceType::Keyboard);
+  const auto pad = m_repo.createProfile("ReloadPad", DeviceType::Gamepad);
+  ASSERT_TRUE(keyboard);
+  ASSERT_TRUE(pad);
+
+  SqliteControllerRepository reopened{":memory:", m_platformService};
+
+  // The kind was hardcoded to 0 on insert, so the keyboard's profile used to
+  // come back as a gamepad profile and be re-flagged in memory every launch.
+  const auto loadedKeyboard = reopened.getProfile(keyboard->getId());
+  ASSERT_TRUE(loadedKeyboard);
+  EXPECT_TRUE(loadedKeyboard->isKeyboardProfile());
+  EXPECT_EQ(loadedKeyboard->getPresetId(), "firelight");
+
+  const auto loadedPad = reopened.getProfile(pad->getId());
+  ASSERT_TRUE(loadedPad);
+  EXPECT_FALSE(loadedPad->isKeyboardProfile());
+  // Seeding writes through the mapping's sync callback, so it has to have
+  // reached the shortcuts row rather than just the profile in memory.
+  EXPECT_EQ(loadedPad->getShortcutMapping()->getBindings("fast_forward").size(),
+            1u);
+}
+
+TEST_F(ControllerRepositoryTest, ProfileWithNoPresetCatalogStartsUnbound) {
+  // No catalog loaded: creation must still work, just with nothing bound.
+  const auto profile = m_repo.createProfile("Bare", DeviceType::Gamepad);
+  ASSERT_TRUE(profile);
+  EXPECT_TRUE(profile->getShortcutMapping()->getBindings("fast_forward").empty());
 }
 
 TEST_F(ControllerRepositoryTest, SetProfileAnalogSettingsPersistsToProfile) {

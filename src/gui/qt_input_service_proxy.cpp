@@ -10,7 +10,44 @@
 
 #include <QApplication>
 
+#ifdef _WIN32
+#include <windows.h>
+// Must follow windows.h: it uses HANDLE/DWORD without declaring them.
+#include <tlhelp32.h>
+#endif
+
 namespace firelight::gui {
+
+namespace {
+// Looks for the Steam client by process name. Deliberately not the registry's
+// ActiveProcess/pid: that keeps a stale pid after a crash, and this warning is
+// only worth showing when Steam is actually there to interfere.
+bool steamClientRunning() {
+#ifdef _WIN32
+  const auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snapshot == INVALID_HANDLE_VALUE) {
+    return false;
+  }
+
+  PROCESSENTRY32W entry{};
+  entry.dwSize = sizeof(entry);
+  bool found = false;
+  if (Process32FirstW(snapshot, &entry)) {
+    do {
+      if (_wcsicmp(entry.szExeFile, L"steam.exe") == 0) {
+        found = true;
+        break;
+      }
+    } while (Process32NextW(snapshot, &entry));
+  }
+  CloseHandle(snapshot);
+  return found;
+#else
+  // Only Windows has the filter driver this warning is about.
+  return false;
+#endif
+}
+} // namespace
 
 static QMap<input::GamepadInput, Qt::Key> gamepadToQtKeyMap = {
     {input::DpadRight, Qt::Key_Right},
@@ -44,14 +81,6 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService) {
   connect(m_autoRepeatTimer, &QTimer::timeout, this,
           &QtInputServiceProxy::processAutoRepeat);
   m_autoRepeatTimer->start(16); // ~60 FPS processing
-
-  shortcutToggledConnection =
-      EventDispatcher::instance().subscribe<input::ShortcutEvent>(
-          [this](const input::ShortcutEvent &event) {
-            emit shortcutTriggered(event.playerIndex,
-                                   QString::fromStdString(event.id),
-                                   static_cast<int>(event.phase));
-          });
 
   gamepadInputConnection =
       EventDispatcher::instance().subscribe<input::GamepadInputEvent>(
@@ -125,6 +154,8 @@ void QtInputServiceProxy::setShortcutsInGame(const bool inGame) {
   m_inputService->setShortcutContext(inGame ? input::ScopeInGame
                                             : input::ScopeInMenu);
 }
+
+bool QtInputServiceProxy::isSteamRunning() const { return steamClientRunning(); }
 
 void QtInputServiceProxy::startAutoRepeat(int playerIndex,
                                           input::GamepadInput input) {

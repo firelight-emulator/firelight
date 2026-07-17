@@ -149,11 +149,12 @@ namespace libretro {
       }};
     m_envHandlers[RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK] = {
       "RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK", [this](void *data) -> bool {
-        auto ptr = (retro_keyboard_callback *) data;
-        ptr->callback = [](bool down, unsigned keycode, uint32_t character,
-                           uint16_t key_modifiers) {
-          printf("Calling the keyboard callback\n");
-        };
+        // The core hands us a function to call on every key; keep it. (This
+        // used to assign *into* ptr->callback, overwriting the core's own
+        // pointer with a stub — so cores that drive themselves from the
+        // keyboard, like DOS and Amiga, never saw a key.)
+        const auto *ptr = static_cast<retro_keyboard_callback *>(data);
+        keyboardCallback = ptr->callback;
         return true;
       }};
     m_envHandlers[RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE] = {

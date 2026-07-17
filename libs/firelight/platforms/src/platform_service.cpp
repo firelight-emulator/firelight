@@ -106,44 +106,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                     }
                 }
             },
-            .emulationSettings =
-            {
-                {
-                    .label = "Simulate LCD ghosting effects",
-                    .category = "Game Boy",
-                    .key = "gambatte_mix_frames",
-                    .description =
-                    "Simple: 50/50 mix of current and previous frames\nLCD "
-                    "Ghosting: Mimics natural LCD response times by combining "
-                    "multiple buffered frames",
-                    .defaultValue = "disabled",
-                    .type = settings::OPTIONS,
-                    .options = {
-                        {.label = "None", .value = "disabled"},
-                        {.label = "Simple (Accurate)", .value = "mix"},
-                        {.label = "Simple (Fast)", .value = "mix_fast"},
-                        {
-                            .label = "LCD Ghosting (Accurate)",
-                            .value = "lcd_ghosting"
-                        },
-                        {
-                            .label = "LCD Ghosting (Fast)",
-                            .value = "lcd_ghosting_fast"
-                        }
-                    }
-                },
-                {
-                    .label = "Allow opposing D-Pad directions",
-                    .category = "Game Boy",
-                    .key = "gambatte_up_down_allowed",
-                    .description = "Allows pressing up and down or left and right at "
-                    "the same time. Can cause glitches in some games.",
-                    .defaultValue = "disabled",
-                    .type = settings::BOOLEAN,
-                    .trueStringValue = "enabled",
-                    .falseStringValue = "disabled"
-                }
-            },
         });
         m_platforms.emplace_back(Platform{
             .id = PLATFORM_ID_GAMEBOY_COLOR,
@@ -170,88 +132,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                     }
                 }
             },
-            .emulationSettings = {
-                {
-                    .label = "Simulate LCD ghosting effects",
-                    .category = "Game Boy Color",
-                    .key = "gambatte_mix_frames",
-                    .description =
-                    "Simple: 50/50 mix of current and previous frames\nLCD "
-                    "Ghosting: Mimics natural LCD response times by combining "
-                    "multiple buffered frames",
-                    .defaultValue = "disabled",
-                    .type = settings::OPTIONS,
-                    .options = {
-                        {.label = "None", .value = "disabled"},
-                        {.label = "Simple (Accurate)", .value = "mix"},
-                        {.label = "Simple (Fast)", .value = "mix_fast"},
-                        {
-                            .label = "LCD Ghosting (Accurate)",
-                            .value = "lcd_ghosting"
-                        },
-                        {
-                            .label = "LCD Ghosting (Fast)",
-                            .value = "lcd_ghosting_fast"
-                        }
-                    }
-                },
-                {
-                    .label = "Allow opposing D-Pad directions",
-                    .category = "Game Boy Color",
-                    .key = "gambatte_up_down_allowed",
-                    .description = "Allows pressing up and down or left and right at "
-                    "the same time. Can cause glitches in some games.",
-                    .defaultValue = "disabled",
-                    .type = settings::BOOLEAN,
-                    .trueStringValue = "enabled",
-                    .falseStringValue = "disabled"
-                },
-                {
-                    .label = "Color correction",
-                    .category = "Color correction",
-                    .key = "gambatte_gbc_color_correction",
-                    .defaultValue = "GBC only",
-                    .description = "Adjusts output colors to match the display of "
-                    "real Game Boy Color hardware.",
-                    .type = settings::BOOLEAN,
-                    .trueStringValue = "GBC only",
-                    .falseStringValue = "disabled",
-                },
-                {
-                    .label = "Color correction mode",
-                    .category = "Color correction",
-                    .key = "gambatte_gbc_color_correction_mode",
-                    .defaultValue = "accurate",
-                    .description =
-                    "You can change this from Accurate to Fast if you are "
-                    "experiencing performance issues.\n\n"
-                    "Accurate: Produces colors identical to original hardware\n"
-                    "Fast: Darkens colors and reduces saturation",
-                    .type = settings::OPTIONS,
-                    .options = {
-                        {.label = "Accurate", .value = "accurate"},
-                        {.label = "Fast", .value = "fast"}
-                    }
-                },
-                {
-                    .label = "Frontlight position",
-                    .category = "Color correction",
-                    .key = "gambatte_gbc_frontlight_position",
-                    .defaultValue = "central",
-                    .description =
-                    "Simulates the physical response of the Game Boy Color LCD "
-                    "panel when illuminated from different angles.\n\n"
-                    "Central: Standard color reproduction\n"
-                    "Above screen: Increases brightness"
-                    "Below screen: Decreases brightness",
-                    .type = settings::OPTIONS,
-                    .options = {
-                        {.label = "Central", .value = "central"},
-                        {.label = "Above screen", .value = "above screen"},
-                        {.label = "Below screen", .value = "below screen"}
-                    }
-                }
-            }
         });
         m_platforms.emplace_back(Platform{
             .id = PLATFORM_ID_GAMEBOY_ADVANCE,
@@ -285,7 +165,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                     }
                 }
             },
-            .emulationSettings = {}
         });
         m_platforms.emplace_back(
             Platform{
@@ -324,7 +203,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
         m_platforms.emplace_back(
             Platform{
@@ -380,7 +258,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
         m_platforms.emplace_back(Platform{
             .id = PLATFORM_ID_N64,
@@ -418,7 +295,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                     }
                 }
             },
-            .emulationSettings = {}
         });
         m_platforms.emplace_back(Platform{
             .id = PLATFORM_ID_NINTENDO_DS,
@@ -461,118 +337,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                     }
                 }
             },
-            .emulationSettings = {
-                {
-                    .label = "Screen gap",
-                    .category = "Nintendo DS",
-                    .key = "melonds_screen_gap",
-                    .description = "Sets the number of pixels between the two screens.",
-                    .defaultValue = "0",
-                    .type = settings::OPTIONS,
-                    .options = {
-                        {.label = "0px", .value = "0"},
-                        {.label = "1px", .value = "1"},
-                        {.label = "2px", .value = "2"},
-                        {.label = "3px", .value = "3"},
-                        {.label = "4px", .value = "4"},
-                        {.label = "5px", .value = "5"},
-                        {.label = "6px", .value = "6"},
-                        {.label = "7px", .value = "7"},
-                        {.label = "8px", .value = "8"},
-                        {.label = "9px", .value = "9"},
-                        {.label = "10px", .value = "10"},
-                        {.label = "11px", .value = "11"},
-                        {.label = "12px", .value = "12"},
-                        {.label = "13px", .value = "13"},
-                        {.label = "14px", .value = "14"},
-                        {.label = "15px", .value = "15"},
-                        {.label = "16px", .value = "16"},
-                        {.label = "17px", .value = "17"},
-                        {.label = "18px", .value = "18"},
-                        {.label = "19px", .value = "19"},
-                        {.label = "20px", .value = "20"},
-                        {.label = "21px", .value = "21"},
-                        {.label = "22px", .value = "22"},
-                        {.label = "23px", .value = "23"},
-                        {.label = "24px", .value = "24"},
-                        {.label = "25px", .value = "25"},
-                        {.label = "26px", .value = "26"},
-                        {.label = "27px", .value = "27"},
-                        {.label = "28px", .value = "28"},
-                        {.label = "29px", .value = "29"},
-                        {.label = "30px", .value = "30"},
-                        {.label = "31px", .value = "31"},
-                        {.label = "32px", .value = "32"},
-                        {.label = "33px", .value = "33"},
-                        {.label = "34px", .value = "34"},
-                        {.label = "35px", .value = "35"},
-                        {.label = "36px", .value = "36"},
-                        {.label = "37px", .value = "37"},
-                        {.label = "38px", .value = "38"},
-                        {.label = "39px", .value = "39"},
-                        {.label = "40px", .value = "40"},
-                        {.label = "41px", .value = "41"},
-                        {.label = "42px", .value = "42"},
-                        {.label = "43px", .value = "43"},
-                        {.label = "44px", .value = "44"},
-                        {.label = "45px", .value = "45"},
-                        {.label = "46px", .value = "46"},
-                        {.label = "47px", .value = "47"},
-                        {.label = "48px", .value = "48"},
-                        {.label = "49px", .value = "49"},
-                        {.label = "50px", .value = "50"},
-                        {.label = "51px", .value = "51"},
-                        {.label = "52px", .value = "52"},
-                        {.label = "53px", .value = "53"},
-                        {.label = "54px", .value = "54"},
-                        {.label = "55px", .value = "55"},
-                        {.label = "56px", .value = "56"},
-                        {.label = "57px", .value = "57"},
-                        {.label = "58px", .value = "58"},
-                        {.label = "59px", .value = "59"},
-                        {.label = "60px", .value = "60"},
-                        {.label = "61px", .value = "61"},
-                        {.label = "62px", .value = "62"},
-                        {.label = "63px", .value = "63"},
-                        {.label = "64px", .value = "64"},
-                        {.label = "65px", .value = "65"},
-                        {.label = "66px", .value = "66"},
-                        {.label = "67px", .value = "67"},
-                        {.label = "68px", .value = "68"},
-                        {.label = "69px", .value = "69"},
-                        {.label = "70px", .value = "70"},
-                        {.label = "71px", .value = "71"},
-                        {.label = "72px", .value = "72"},
-                        {.label = "73px", .value = "73"},
-                        {.label = "74px", .value = "74"},
-                        {.label = "75px", .value = "75"},
-                        {.label = "76px", .value = "76"},
-                        {.label = "77px", .value = "77"},
-                        {.label = "78px", .value = "78"},
-                        {.label = "79px", .value = "79"},
-                        {.label = "80px", .value = "80"},
-                        {.label = "81px", .value = "81"},
-                        {.label = "82px", .value = "82"},
-                        {.label = "83px", .value = "83"},
-                        {.label = "84px", .value = "84"},
-                        {.label = "85px", .value = "85"},
-                        {.label = "86px", .value = "86"},
-                        {.label = "87px", .value = "87"},
-                        {.label = "88px", .value = "88"},
-                        {.label = "89px", .value = "89"},
-                        {.label = "90px", .value = "90"},
-                        {.label = "91px", .value = "91"},
-                        {.label = "92px", .value = "92"},
-                        {.label = "93px", .value = "93"},
-                        {.label = "94px", .value = "94"},
-                        {.label = "95px", .value = "95"},
-                        {.label = "96px", .value = "96"},
-                        {.label = "97px", .value = "97"},
-                        {.label = "98px", .value = "98"},
-                        {.label = "99px", .value = "99"}
-                    }
-                }
-            }
         });
 
         m_platforms.emplace_back(
@@ -600,7 +364,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
 
         m_platforms.emplace_back(
@@ -638,7 +401,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
         m_platforms.emplace_back(
             Platform{
@@ -695,7 +457,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
         m_platforms.emplace_back(
             Platform{
@@ -722,7 +483,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
         m_platforms.emplace_back(
             Platform{
@@ -754,7 +514,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
 
         m_platforms.emplace_back(Platform{
@@ -787,7 +546,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                     }
                 }
             },
-            .emulationSettings = {}
         });
         m_platforms.emplace_back(Platform{
             .id = PLATFORM_ID_SUPERGRAFX,
@@ -819,7 +577,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                     }
                 }
             },
-            .emulationSettings = {}
         });
         m_platforms.emplace_back(
             Platform{
@@ -848,7 +605,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
         m_platforms.emplace_back(Platform{
             .id = PLATFORM_ID_WONDERSWAN,
@@ -895,7 +651,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                     }
                 }
             },
-            .emulationSettings = {}
         });
         m_platforms.emplace_back(
             Platform{
@@ -922,7 +677,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
         m_platforms.emplace_back(
             Platform{
@@ -949,7 +703,6 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                         }
                     }
                 },
-                .emulationSettings = {}
             });
 
         // Modeled with legacy ids but without full controller/extension data yet

@@ -5,11 +5,9 @@
 
 namespace firelight::settings {
 
-// A setting override tier. Values resolve Game -> Platform -> Global -> default;
-// there is no stored "current level" per game — inheritance is the fallback
-// chain. `Unknown` is a sentinel for "not a real tier".
-enum SettingsLevel { Game, Platform, Global, Unknown };
-
+// Storage only: one explicit method per tier, no tier parameter. The tier
+// vocabulary (SettingsLevel) and the resolution chain live in SettingsService,
+// which is what actually decides between them.
 class ISettingsRepository {
 public:
   virtual ~ISettingsRepository() = default;

@@ -1,5 +1,6 @@
 #include <firelight/input/sqlite_controller_repository.hpp>
 #include <firelight/input/shortcut_mapping.hpp>
+#include <firelight/input/shortcut_registry.hpp>
 #include <firelight/migrations/migration_runner.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
@@ -98,7 +99,14 @@ namespace firelight::input {
         "gamepad_type INTEGER NOT NULL);");
     };
 
-    const std::vector<migrations::Migration> schema = {{1, createSchemaV1}};
+    // The preset a profile's shortcuts were seeded from, so the editor can show
+    // which rows have been changed since and reset them back.
+    const auto addPresetIdV2 = [&exec] {
+      exec("ALTER TABLE profiles ADD COLUMN preset_id TEXT NOT NULL DEFAULT '';");
+    };
+
+    const std::vector<migrations::Migration> schema = {{1, createSchemaV1},
+                                                       {2, addPresetIdV2}};
 
     QSqlQuery versionQuery("PRAGMA user_version", db);
     const int currentVersion =
@@ -193,6 +201,44 @@ namespace firelight::input {
     }
   }
 
+  namespace {
+    // Copies a preset's shipped bindings into a brand-new profile's mapping.
+    //
+    // A preset is a starting point, not a tier the engine resolves through: from
+    // here on the profile owns a flat mapping, so an action with no binding means
+    // "off" rather than "inherit", and resetting a row is a write.
+    //
+    // Sources the controller hasn't got are copied in too, deliberately. They can
+    // never match (the engine only ever sees codes a device actually reports), and
+    // a preset lists alternates precisely so the next one takes over — an N64 pad
+    // simply never satisfies the L3+R3 entry and lands on Select+Start. Filtering
+    // here would need the device, which a profile isn't tied to: profiles are
+    // shared between controllers, so one pad's shape must not be baked in.
+    void seedShortcuts(ShortcutMapping &mapping, const std::string &presetId,
+                       const DeviceType device) {
+      const auto *preset = ShortcutRegistry::instance().findPreset(presetId);
+      if (!preset) {
+        if (!presetId.empty()) {
+          spdlog::warn("Profile asks for shortcut preset '{}', which the catalog "
+                       "doesn't declare; it starts unbound",
+                       presetId);
+        }
+        return;
+      }
+
+      if (!preset->bindings.contains(device)) {
+        return;
+      }
+      for (const auto &[id, sources] : preset->bindings.at(device)) {
+        if (!sources.empty()) {
+          mapping.setBindings(id, sources);
+        }
+      }
+      // Mutating a mapping doesn't persist it; the caller syncs.
+      mapping.sync();
+    }
+  } // namespace
+
   void SqliteControllerRepository::loadProfileContents(
     const std::shared_ptr<GamepadProfile> &profile) {
     for (const auto &platform:
@@ -249,20 +295,29 @@ namespace firelight::input {
                       profile->getId(),
                       createShortcutsQuery.lastError().text().toStdString());
       }
-      profile->setShortcutMapping(std::make_shared<ShortcutMapping>(syncShortcuts));
+      auto shortcutMapping = std::make_shared<ShortcutMapping>(syncShortcuts);
+      seedShortcuts(*shortcutMapping, profile->getPresetId(),
+                    profile->isKeyboardProfile() ? DeviceType::Keyboard
+                                                 : DeviceType::Gamepad);
+      profile->setShortcutMapping(shortcutMapping);
     }
   }
 
   std::shared_ptr<GamepadProfile>
-  SqliteControllerRepository::createProfile(const std::string name) {
+  SqliteControllerRepository::createProfile(const std::string name,
+                                            const DeviceType device) {
     const auto now = QDateTime::currentMSecsSinceEpoch();
+    const auto presetId = ShortcutRegistry::instance().defaultPresetId();
+
     QSqlQuery query(getDatabase());
     query.prepare("INSERT INTO profiles (name, kind, builtin, based_on_type, "
-      "icon, analog_json, created_at, updated_at) VALUES (:name, 0, "
-      "0, -1, '', :analog, :createdAt, :updatedAt)");
+      "icon, analog_json, preset_id, created_at, updated_at) VALUES (:name, "
+      ":kind, 0, -1, '', :analog, :presetId, :createdAt, :updatedAt)");
     query.bindValue(":name", QString::fromStdString(name));
+    query.bindValue(":kind", device == DeviceType::Keyboard ? 1 : 0);
     query.bindValue(":analog",
                     QString::fromStdString(serializeAnalog(AnalogSettings{})));
+    query.bindValue(":presetId", QString::fromStdString(presetId));
     query.bindValue(":createdAt", now);
     query.bindValue(":updatedAt", now);
 
@@ -274,6 +329,10 @@ namespace firelight::input {
 
     auto profile = std::make_shared<GamepadProfile>(query.lastInsertId().toInt());
     profile->setName(name);
+    // Both are set before loadProfileContents, which seeds the profile's
+    // shortcuts from the preset for its kind of device.
+    profile->setIsKeyboardProfile(device == DeviceType::Keyboard);
+    profile->setPresetId(presetId);
     loadProfileContents(profile);
 
     m_profiles.emplace_back(profile);
@@ -303,6 +362,7 @@ namespace firelight::input {
     profile->setBuiltin(query.value("builtin").toInt() != 0);
     profile->setBasedOnType(query.value("based_on_type").toInt());
     profile->setIcon(query.value("icon").toString().toStdString());
+    profile->setPresetId(query.value("preset_id").toString().toStdString());
     profile->setDefaultAnalogSettings(
       deserializeAnalog(query.value("analog_json").toString().toStdString()));
 
@@ -444,6 +504,25 @@ namespace firelight::input {
 
     if (const auto profile = getProfile(profileId)) {
       profile->setDefaultAnalogSettings(settings);
+    }
+  }
+
+  void SqliteControllerRepository::setProfilePresetId(
+    const int profileId, const std::string &presetId) {
+    QSqlQuery query(getDatabase());
+    query.prepare("UPDATE profiles SET preset_id = :presetId, updated_at = "
+      ":updatedAt WHERE id = :id");
+    query.bindValue(":presetId", QString::fromStdString(presetId));
+    query.bindValue(":updatedAt", QDateTime::currentMSecsSinceEpoch());
+    query.bindValue(":id", profileId);
+    if (!query.exec()) {
+      spdlog::error("Failed to update preset for profile {}: {}", profileId,
+                    query.lastError().text().toStdString());
+      return;
+    }
+
+    if (const auto profile = getProfile(profileId)) {
+      profile->setPresetId(presetId);
     }
   }
 

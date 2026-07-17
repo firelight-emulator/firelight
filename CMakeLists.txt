@@ -160,6 +160,7 @@ set_source_files_properties(qml/Constants.qml PROPERTIES QT_QML_SINGLETON_TYPE T
 set_source_files_properties(qml/ColorPalette.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/WindowGeometry.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
@@ -201,6 +202,8 @@ target_link_libraries(firelight_emulation_lib PUBLIC
 )
 
 add_library(firelight_lib
+        src/app/emulation/shortcut_actions.cpp
+        src/app/emulation/shortcut_dispatcher.cpp
         src/app/audio/audio_manager.cpp
         src/app/audio/qt_microphone.cpp
         src/app/audio/qt_microphone.hpp
@@ -217,10 +220,15 @@ add_library(firelight_lib
         src/app/input/gui/controller_list_model.cpp
         src/gui/models/core_options_model.cpp
         src/gui/models/core_options_model.hpp
-        src/gui/models/emulation_settings_model.cpp
-        src/gui/models/emulation_settings_model.hpp
-        src/gui/qt_audio_settings_proxy.cpp
-        src/gui/qt_audio_settings_proxy.hpp
+        src/gui/models/settings_model.cpp
+        src/gui/models/settings_model.hpp
+        src/gui/models/settings_search_model.cpp
+        src/gui/models/settings_search_model.hpp
+        src/gui/models/setting_binding.cpp
+        src/gui/models/setting_binding.hpp
+        src/gui/qt_settings_catalog_proxy.cpp
+        src/gui/qt_settings_catalog_proxy.hpp
+        src/gui/settings_level_shim.hpp
         src/gui/qt_core_registry_proxy.cpp
         src/gui/qt_core_registry_proxy.hpp
         src/gui/qt_save_manager_proxy.cpp
@@ -466,15 +474,20 @@ endif ()
 # Friendly emulation settings + per-core option defaults (loaded at runtime by
 # EmulationService, resolved through CoreConfiguration).
 file(COPY ${CMAKE_SOURCE_DIR}/data/settings_catalog.json DESTINATION ${CMAKE_BINARY_DIR}/system)
+# Hotkey actions + their shipped bindings (loaded at runtime by ShortcutRegistry).
+file(COPY ${CMAKE_SOURCE_DIR}/data/shortcuts.json DESTINATION ${CMAKE_BINARY_DIR}/system)
 
-# The file(COPY) above only runs at configure time, so edits to the catalog
-# wouldn't reach the running app until a reconfigure. Redeploy it on every build.
+# The file(COPY) above only runs at configure time, so edits to the catalogs
+# wouldn't reach the running app until a reconfigure. Redeploy them on every build.
 add_custom_command(TARGET firelight POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:firelight>/system
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/data/settings_catalog.json
         $<TARGET_FILE_DIR:firelight>/system/settings_catalog.json
-        COMMENT "Deploying settings_catalog.json")
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_SOURCE_DIR}/data/shortcuts.json
+        $<TARGET_FILE_DIR:firelight>/system/shortcuts.json
+        COMMENT "Deploying settings_catalog.json + shortcuts.json")
 
 #if (DISCORD_SDK_RUNTIME_LIBRARY_FILE AND EXISTS "${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
 #    add_custom_command(TARGET firelight POST_BUILD
@@ -516,11 +529,13 @@ add_executable(fl_test
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
         tests/app/settings/sqlite_settings_repository_test.cpp
         tests/app/settings/settings_service_test.cpp
-        tests/app/settings/emulation_setting_test.cpp
+        tests/app/settings/setting_definition_test.cpp
         tests/app/settings/settings_catalog_test.cpp
+        tests/app/settings/settings_index_test.cpp
         tests/app/settings/sqlite_core_option_repository_test.cpp
         tests/app/gui/core_options_model_test.cpp
-        tests/app/gui/emulation_settings_model_test.cpp
+        tests/app/gui/settings_model_test.cpp
+        tests/app/gui/shortcuts_model_test.cpp
         tests/app/cli/cli_app_test.cpp
         tests/app/cli/launch_config_test.cpp
         tests/app/cli/rom_launch_test.cpp
@@ -535,8 +550,11 @@ add_executable(fl_test
         tests/app/library/sqlite_user_library_test.cpp
         tests/app/platforms/platform_service_test.cpp
         tests/app/emulation/emulation_service_test.cpp
+        tests/app/emulation/shortcut_actions_test.cpp
+        tests/app/emulation/shortcut_dispatcher_test.cpp
         tests/app/emulation/emulator_instance_test.cpp
         tests/app/emulation/emulator_instance_e2e_test.cpp
+        tests/app/emulation/hotkeys_disabled_test.cpp
         tests/app/emulation/core_configuration_test.cpp
         tests/app/emulation/core_registry_test.cpp
         tests/app/libretro/core_input_router_test.cpp
@@ -588,6 +606,12 @@ add_test(NAME QMLTests COMMAND fl_qml_test)
 #target_link_options(fl_test PUBLIC "-fprofile-instr-generate" "-fcoverage-mapping")
 
 add_dependencies(fl_test copy_resources)
+
+# The authored catalog, not the deployed copy: the shipped-catalog test should
+# guard the file a developer edits regardless of whether firelight was built.
+target_compile_definitions(fl_test PRIVATE
+        FL_SETTINGS_CATALOG_FILE="${CMAKE_SOURCE_DIR}/data/settings_catalog.json"
+        FL_SHORTCUTS_FILE="${CMAKE_SOURCE_DIR}/data/shortcuts.json")
 
 target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include src libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/saves/tests libs/firelight/activity/src libs/firelight/activity/include)
 target_link_libraries(fl_test PUBLIC firelight_lib ${GTEST_BOTH_LIBRARIES})
@@ -698,6 +722,7 @@ install(
         FILES
         ${CMAKE_SOURCE_DIR}/content.db
         ${CMAKE_SOURCE_DIR}/data/settings_catalog.json
+        ${CMAKE_SOURCE_DIR}/data/shortcuts.json
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
 

@@ -16,7 +16,8 @@ add_library(firelight_input STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/keyboard_input_handler.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sdl_controller.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sdl_input_service.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/shortcut_catalog.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/gamepad_input.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/keyboard_keycodes.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/firelight/input/keyboard_input_handler.hpp
 )
 target_include_directories(firelight_input
@@ -56,6 +57,11 @@ target_include_directories(firelight_input_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests
 )
+
+# The authored file, not the deployed copy: the shipped-catalog test should guard
+# what a developer edits regardless of whether firelight was built.
+target_compile_definitions(firelight_input_test PRIVATE
+        FL_SHORTCUTS_FILE="${CMAKE_SOURCE_DIR}/data/shortcuts.json")
 target_link_libraries(firelight_input_test
         PRIVATE firelight_input
         PRIVATE Qt6::Core

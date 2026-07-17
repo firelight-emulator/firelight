@@ -1,5 +1,7 @@
 #pragma once
 
+#include "audio_settings.hpp"
+
 #include <QAudioSink>
 #include <QMediaDevices>
 #include <atomic>
@@ -9,6 +11,8 @@
 
 #include <firelight/audio/audio_rate_controller.hpp>
 #include <firelight/audio/audio_resampler.hpp>
+#include <firelight/event_dispatcher.hpp>
+#include <firelight/settings/settings_service.hpp>
 #include "firelight/libretro/audio_output.hpp"
 
 // Threading: created on the render thread (injected into EmulatorInstance),
@@ -18,13 +22,25 @@
 class AudioManager : public QObject, public IAudioOutput {
   Q_OBJECT
 public:
+  // Both live in audio_settings.hpp so a caller can name a key without pulling
+  // Qt Multimedia in through this header. Read here rather than pushed in, which
+  // is what makes mute outlive a game: this class is rebuilt on every load, so
+  // it picks up the current value each time instead of starting unmuted.
+  static constexpr auto OUTPUT_DEVICE_KEY = firelight::audio::OUTPUT_DEVICE_KEY;
+  static constexpr auto MUTED_KEY = firelight::audio::MUTED_KEY;
+  static constexpr auto VOLUME_KEY = firelight::audio::VOLUME_KEY;
+
   explicit AudioManager(
+      firelight::settings::SettingsService &settingsService,
       std::function<void()> onAudioBufferLevelChanged = nullptr);
 
   size_t receive(const int16_t *data, size_t numFrames) override;
 
   void initialize(double new_freq) override;
 
+  // Transient silencing driven by the running emulator (pause, fast-forward) —
+  // not the user's mute, which this class reads from MUTED_KEY itself. Output is
+  // silent when either is set.
   void setMuted(bool muted) override;
 
   bool isMuted() const override;
@@ -54,6 +70,17 @@ public:
   ~AudioManager() override;
 
 private:
+  // The output the user picked, or the system default when unset or gone.
+  [[nodiscard]] QAudioDevice selectedOutputDevice() const;
+
+  // Re-reads MUTED_KEY into m_userMuted.
+  void refreshUserMuted();
+  // Re-reads VOLUME_KEY and applies it to the sink, if there is one.
+  void refreshVolume();
+
+  firelight::settings::SettingsService &m_settingsService;
+  ScopedConnection m_settingChangedConnection;
+  ScopedConnection m_settingResetConnection;
   std::function<void()> m_onAudioBufferLevelChanged;
 
   std::atomic<float> m_currentBufferLevel = 0.0f;
@@ -73,7 +100,15 @@ private:
   // calls — never across a core frame.
   mutable std::mutex m_sinkMutex;
 
-  bool m_isMuted = false;
+  // Transient, set by the emulator (pause / fast-forward). Written on the GUI
+  // thread, read by receive() on the render thread.
+  std::atomic<bool> m_isMuted{false};
+  // The user's MUTED_KEY setting, refreshed when it changes.
+  std::atomic<bool> m_userMuted{false};
+  // 0-1. Held so a sink created later (device change) starts at the right
+  // loudness rather than full.
+  std::atomic<float> m_volume{1.0f};
+
   int m_sampleRate = 0;       // the core's audio rate
   int m_deviceSampleRate = 0; // the output device's native rate (sink runs here)
 

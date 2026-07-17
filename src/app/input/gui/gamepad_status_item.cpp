@@ -67,14 +67,17 @@ void GamepadStatusItem::setPlayerNumber(const int playerNumber) {
 
   m_playerNumber = playerNumber;
   m_controller = getInputService()->getPlayerGamepad(playerNumber).get();
-  if (m_controller != nullptr) {
-    if (!m_isConnected) {
-      m_isConnected = true;
-      emit isConnectedChanged();
-    }
+
+  // An empty slot is normal — asking about player 2 with one pad plugged in, or
+  // about any player with none.
+  const bool connected = m_controller != nullptr;
+  if (m_isConnected != connected) {
+    m_isConnected = connected;
+    emit isConnectedChanged();
   }
 
-  m_name = QString::fromStdString(m_controller->getName());
+  m_name = connected ? QString::fromStdString(m_controller->getName())
+                     : QString();
   emit nameChanged();
 
   emit profileIdChanged();
@@ -127,12 +130,11 @@ QVariantMap GamepadStatusItem::getInputLabels() const {
 }
 
 int GamepadStatusItem::getProfileId() const {
-  if (m_isConnected) {
-    return m_controller->getProfile()->getId();
+  if (!m_controller) {
+    return 0;
   }
-
-  return 0;
-  // return m_controller->getProfileId();
+  const auto profile = m_controller->getProfile();
+  return profile ? profile->getId() : 0;
 }
 bool GamepadStatusItem::isButtonPressed(int input) const {
   if (!m_controller) {

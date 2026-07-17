@@ -17,15 +17,15 @@ ApplicationWindow {
     visibility: Window.Windowed
     visible: false
 
-    width: GeneralSettings.mainWindowWidth
-    height: GeneralSettings.mainWindowHeight
+    width: WindowGeometry.mainWindowWidth
+    height: WindowGeometry.mainWindowHeight
 
     minimumWidth: 800
     minimumHeight: 600
 
     Component.onCompleted: {
         WindowFrame.setWindow(root)
-        WindowFrame.setNativePosition(GeneralSettings.mainWindowX, GeneralSettings.mainWindowY)
+        WindowFrame.setNativePosition(WindowGeometry.mainWindowX, WindowGeometry.mainWindowY)
         visible = true
         frameReady = true
     }
@@ -46,17 +46,17 @@ ApplicationWindow {
     }
 
     onHeightChanged: {
-        GeneralSettings.mainWindowHeight = height;
+        WindowGeometry.mainWindowHeight = height;
     }
 
     onWidthChanged: {
-        GeneralSettings.mainWindowWidth = width;
+        WindowGeometry.mainWindowWidth = width;
     }
     onXChanged: {
-        if (frameReady) GeneralSettings.mainWindowX = WindowFrame.nativeX()
+        if (frameReady) WindowGeometry.mainWindowX = WindowFrame.nativeX()
     }
     onYChanged: {
-        if (frameReady) GeneralSettings.mainWindowY = WindowFrame.nativeY()
+        if (frameReady) WindowGeometry.mainWindowY = WindowFrame.nativeY()
     }
 
     FLFocusHighlight {

@@ -21,7 +21,9 @@ public:
   ~SqliteControllerRepository() override = default;
 
   std::shared_ptr<GamepadProfile> getProfile(int id) override;
-  std::shared_ptr<GamepadProfile> createProfile(std::string name) override;
+  std::shared_ptr<GamepadProfile>
+  createProfile(std::string name,
+                DeviceType device = DeviceType::Gamepad) override;
   std::vector<std::shared_ptr<GamepadProfile>> listProfiles() override;
   std::shared_ptr<GamepadProfile> cloneProfile(int sourceId,
                                                std::string newName) override;
@@ -29,6 +31,7 @@ public:
   bool renameProfile(int id, std::string newName) override;
   void setProfileAnalogSettings(int profileId,
                                 const AnalogSettings &settings) override;
+  void setProfilePresetId(int profileId, const std::string &presetId) override;
   std::string exportProfile(int id) override;
   std::shared_ptr<GamepadProfile> importProfile(const std::string &json) override;
 

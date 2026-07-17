@@ -33,9 +33,14 @@ public:
 
   // Switches shortcut scope between in-game and menu contexts (driven by the UI).
   Q_INVOKABLE void setShortcutsInGame(bool inGame);
+
+  // Whether the Steam client is running. Steam reads gamepads globally through
+  // its own filter driver, and its "Guide button focuses Steam" option fires
+  // even for games it didn't launch — nothing in this process can pre-empt it,
+  // so the Controllers page warns instead. Asked on demand rather than exposed
+  // as a property: Steam can come and go, and a cached answer would be a lie.
+  [[nodiscard]] Q_INVOKABLE bool isSteamRunning() const;
 signals:
-  // phase: 0 = Started, 1 = Ended (see input::ShortcutPhase).
-  void shortcutTriggered(int playerIndex, const QString &id, int phase);
   void prioritizeControllerOverKeyboardChanged();
   void onlyPlayerOneCanNavigateMenusChanged();
 
@@ -46,7 +51,6 @@ private:
 
   bool m_onlyPlayerOneCanNavigateMenus = true;
 
-  ScopedConnection shortcutToggledConnection;
   ScopedConnection gamepadInputConnection;
 
   // Auto-repeat functionality

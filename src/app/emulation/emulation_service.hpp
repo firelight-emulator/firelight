@@ -88,6 +88,9 @@ public:
 
   std::future<EmulatorInstance *> loadEntry(int entryId);
   void stopEmulation();
+  // Reboots the running game, if there is one. Takes m_instanceMutex so callers
+  // don't have to hold a raw instance pointer to do it.
+  void resetGame();
   EmulatorInstance *getCurrentEmulatorInstance();
 
   // Audio-buffer level of the running instance, or -1 if none. Safe to call from
@@ -95,6 +98,12 @@ public:
   // loadEntry/stopEmulation, so this reads it under m_instanceMutex rather than
   // handing out a raw pointer the caller might dereference after a reset().
   float currentAudioBufferLevel();
+
+  // Transient silencing of the running instance (pause, fast-forward) — not the
+  // user's audio-muted setting, which the audio output reads for itself. Guarded
+  // like currentAudioBufferLevel, and for the same reason.
+  void setCurrentAudioMuted(bool muted);
+  bool currentAudioMuted();
 
   // Sets the one-shot launch knobs applied to (and consumed by) the next
   // loadEntry. See LaunchOverrides. Not persisted.

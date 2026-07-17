@@ -84,6 +84,8 @@ void CoreSettingsApplier::refresh() {
 
   apply("rewind-enabled",
         [&] { m_instance.setRewindEnabled(value("rewind-enabled") == "true"); });
+  apply("hotkeys-disabled",
+        [&] { m_instance.setHotkeysDisabled(value("hotkeys-disabled") == "true"); });
   apply("picture-mode",
         [&] { m_instance.setPictureMode(value("picture-mode")); });
   apply("aspect-ratio",

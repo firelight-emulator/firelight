@@ -187,8 +187,8 @@ FocusScope {
                 label: "Edit profile"
 
                 onClicked: function () {
-                    Router.navigate("/controllers/profiles/" + content.index
-                                    + "?profileId=" + encodeURIComponent(content.model.profile_id))
+                    Router.navigate("/settings/controllers?profileId="
+                                    + encodeURIComponent(content.model.profile_id))
                 }
             }
 
@@ -408,6 +408,51 @@ FocusScope {
 
                     onClicked: function () {
                         Router.navigate("/controllers/manage")
+                    }
+                }
+            }
+
+            // Steam reads gamepads globally through its own driver, so its Guide
+            // shortcut fires even for games it didn't launch. We can't pre-empt
+            // it from in here — say so rather than let it look like our bug.
+            // Checked when the page opens; Steam may well have started since.
+            Rectangle {
+                id: steamWarning
+                property bool steamRunning: false
+
+                Component.onCompleted: steamRunning = InputService.isSteamRunning()
+
+                visible: steamRunning
+                Layout.fillWidth: true
+                Layout.bottomMargin: 8
+                implicitHeight: steamWarningRow.implicitHeight + 20
+                radius: 8
+                color: Theme.surface
+                border.width: 1
+                border.color: Theme.border
+
+                RowLayout {
+                    id: steamWarningRow
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 10
+
+                    Icon {
+                        name: "info"
+                        size: 20
+                        color: Theme.textMuted
+                        Layout.alignment: Qt.AlignTop
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Steam is running, and can take the Guide button before Firelight sees it. "
+                            + "If that's a problem, turn off \"Guide button focuses Steam\" in Steam's "
+                            + "Settings → Controller. Firelight doesn't bind Guide to anything."
+                        color: Theme.textMuted
+                        font.pixelSize: AppStyle.fontSizeSmall
+                        font.family: Constants.regularFontFamily
+                        wrapMode: Text.WordWrap
                     }
                 }
             }

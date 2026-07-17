@@ -13,25 +13,25 @@ ApplicationWindow {
     id: window
     objectName: "Application Window"
 
-    width: GeneralSettings.mainWindowWidth
-    height: GeneralSettings.mainWindowHeight
-    x: GeneralSettings.mainWindowX
-    y: GeneralSettings.mainWindowY
+    width: WindowGeometry.mainWindowWidth
+    height: WindowGeometry.mainWindowHeight
+    x: WindowGeometry.mainWindowX
+    y: WindowGeometry.mainWindowY
 
     onWidthChanged: {
-        GeneralSettings.mainWindowWidth = width
+        WindowGeometry.mainWindowWidth = width
     }
 
     onHeightChanged: {
-        GeneralSettings.mainWindowHeight = height
+        WindowGeometry.mainWindowHeight = height
     }
 
     onXChanged: {
-        GeneralSettings.mainWindowX = x
+        WindowGeometry.mainWindowX = x
     }
 
     onYChanged: {
-        GeneralSettings.mainWindowY = y
+        WindowGeometry.mainWindowY = y
     }
 
     // onActiveFocusItemChanged: {

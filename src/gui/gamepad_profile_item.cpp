@@ -10,6 +10,12 @@ void GamepadProfileItem::setId(const int id) {
     m_id = id;
 
     m_profile = getControllerProfileRepository()->getProfile(m_id);
+    m_shortcutsModel =
+        m_profile ? std::make_unique<ShortcutsModel>(
+                        m_profile->getId(), m_profile->isKeyboardProfile(),
+                        m_profile->getShortcutMapping(),
+                        m_profile->getPresetId())
+                  : nullptr;
     emit profileIdChanged(m_id);
     emit nameChanged(name());
     emit isKeyboardProfileChanged();
@@ -37,12 +43,7 @@ void GamepadProfileItem::setName(const QString &name) {
 }
 
 QAbstractListModel *GamepadProfileItem::getShortcutsModel() const {
-  if (!m_profile) {
-    return nullptr;
-  }
-
-  return new ShortcutsModel(m_profile->isKeyboardProfile(),
-                            m_profile->getShortcutMapping());
+  return m_shortcutsModel.get();
 }
 bool GamepadProfileItem::isKeyboardProfile() const {
   if (!m_profile) {

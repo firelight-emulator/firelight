@@ -15,6 +15,9 @@ FocusScope {
     required property Item control
     property string description: ""
 
+    property bool isFirstInSection: false
+    property bool isLastInSection: false
+
     // Place the control full-width below the label instead of to its right.
     property bool controlBelow: false
 
@@ -27,7 +30,6 @@ FocusScope {
 
     // Marks this row as a dependent sub-setting of the one above it: indented
     // with a quieter label, so two cues carry the relationship rather than one.
-    // SettingSubGroup sets this on its children.
     property bool subItem: false
     readonly property int contentIndent: subItem ? 40 : 16
 
@@ -79,7 +81,13 @@ FocusScope {
         anchors.right: parent.right
         anchors.top: content.top
         anchors.bottom: content.bottom
-        color: ColorPalette.neutral300
+
+        topLeftRadius: root.isFirstInSection ? 12 : 0
+        topRightRadius: root.isFirstInSection ? 12 : 0
+        bottomLeftRadius: root.isLastInSection ? 12 : 0
+        bottomRightRadius: root.isLastInSection ? 12: 0
+
+        color: Theme.textPrimary
         opacity: hover.hovered || (!InputMethodManager.usingMouse && root.activeFocus) ? 0.08 : 0
 
         Behavior on opacity {
@@ -117,7 +125,13 @@ FocusScope {
                 id: resetButton
                 visible: root.resettable
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                padding: 6
+                // Sized to the label so appearing and disappearing can't change
+                // the row's height — nothing should shift when a value changes.
+                Layout.preferredHeight: labelText.implicitHeight
+                leftPadding: 8
+                rightPadding: 8
+                topPadding: 0
+                bottomPadding: 0
                 focusPolicy: Qt.NoFocus
                 hoverEnabled: true
                 onClicked: root.reset()

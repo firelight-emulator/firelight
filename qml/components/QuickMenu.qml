@@ -1102,6 +1102,38 @@ Pane {
                              quickMenuStack.forceActiveFocus()
                          }
                      }
+                     // These route through the dispatcher rather than doing the
+                     // work here, so the menu and the hotkey can't drift: same
+                     // save slot, same hardcore gate, same toast.
+                     FirelightMenuItem {
+                         id: screenshotButton
+                         labelText: "Screenshot"
+                         Layout.fillWidth: true
+                         KeyNavigation.down: muteButton
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         Layout.preferredHeight: 40
+                         checkable: false
+                         alignRight: true
+                         onClicked: ShortcutDispatcher.trigger("screenshot")
+                     }
+                     SettingBinding {
+                         id: muteBinding
+                         key: "audio-muted"
+                     }
+
+                     FirelightMenuItem {
+                         id: muteButton
+                         // Follows the setting, so it stays right when the
+                         // hotkey is what changed it.
+                         labelText: muteBinding.value === "true" ? "Unmute" : "Mute"
+                         Layout.fillWidth: true
+                         KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
+                         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                         Layout.preferredHeight: 40
+                         checkable: false
+                         alignRight: true
+                         onClicked: ShortcutDispatcher.trigger("toggle_mute")
+                     }
                      FirelightMenuItem {
                          id: controlsButton
                          labelText: "Controls"
@@ -1174,7 +1206,7 @@ Pane {
             platformId: EmulationService.currentPlatformId
             // Default to editing this game's own overrides; the tab lets the
             // user switch to the platform tier. (Values inherit at runtime.)
-            level: 0
+            level: SettingsLevel.Game
             platformName: EmulationService.currentPlatformName
         }
     }

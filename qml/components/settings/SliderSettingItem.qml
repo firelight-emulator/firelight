@@ -6,7 +6,7 @@ import Firelight 1.0
 BaseSettingItem {
     id: root
 
-    controlBelow: true
+    controlBelow: false
 
     property real from: 0
     property real to: 10

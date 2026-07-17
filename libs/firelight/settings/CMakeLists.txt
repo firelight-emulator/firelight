@@ -7,6 +7,7 @@ add_library(firelight_settings STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_settings_repository.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/settings_service.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/settings_catalog.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/settings_index.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_core_option_repository.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/firelight/settings/sqlite_settings_repository.hpp
 )

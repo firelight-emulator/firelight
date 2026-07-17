@@ -11,14 +11,21 @@ FirelightDialog {
     required property var shortcut
     required property string shortcutName
     required property bool isKeyboard
+    // Input codes that count as a modifier when held. Comes from the model, so
+    // this list and the shipped presets can't drift apart.
+    property var modifierCandidates: []
 
     showButtons: false
     closePolicy: Popup.NoAutoClose
 
     signal mappingAdded(var shortcut, var modifiers, var input)
 
+    // Inputs held right now, in the order they went down.
+    property var heldInputs: []
+
     onAboutToShow: {
         frameAnimation.reset()
+        heldInputs = []
     }
 
     onOpened: function () {
@@ -32,33 +39,36 @@ FirelightDialog {
     Connections {
         target: gamepad
         enabled: root.visible && !root.isKeyboard
+        // The combo is read on release, not on press: any input can be a
+        // modifier, so while a button is going down there is no way to know
+        // whether it is the trigger or something being held for the next one.
+        // Waiting means "hold Select, press X" records Select+X rather than
+        // firing the instant Select goes down.
         function onInputChanged(input, activated) {
-            if (input === 12 || input === 13) { // GamepadInput enum
-                // Ignore Left Trigger and Right Trigger
+            if (activated) {
+                // They've started entering one; the give-up countdown is for
+                // deciding, not for how long a combo may be held.
+                timer.stop()
+                if (!root.heldInputs.includes(input)) {
+                    root.heldInputs = root.heldInputs.concat([input]);
+                }
                 return;
             }
-            if (activated) {
-                let modifiers = [];
-                if (gamepad.isButtonPressed(12)) {
-                    modifiers.push(12);
-                }
-                if (gamepad.isButtonPressed(13)) {
-                    modifiers.push(13);
-                }
 
-                console.log("Modifiers: " + modifiers)
-                mappingAdded(root.shortcut, modifiers, input);
-                root.accept()
-                // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
-                // if (root.buttons.length > root.currentIndex + 1) {
-                //     root.currentIndex++
-                //     timer.stop()
-                //     frameAnimation.reset()
-                //     timer.restart()
-                // } else {
-                //     root.accept()
-                // }
+            if (root.heldInputs.length === 0) {
+                return;
             }
+
+            // Last one down is the trigger; anything held alongside it modifies
+            // it. Sticks are excluded as modifiers — they drift, and a drifting
+            // axis would silently join the combo.
+            const trigger = root.heldInputs[root.heldInputs.length - 1];
+            const modifiers = root.heldInputs.slice(0, -1)
+                .filter(held => root.modifierCandidates.includes(held));
+
+            root.heldInputs = [];
+            mappingAdded(root.shortcut, modifiers, trigger);
+            root.accept()
         }
     }
 
@@ -132,7 +142,7 @@ FirelightDialog {
         Text {
             text: {
                 if (!root.isKeyboard) {
-                    "Press a button while holding Left Trigger and/or Right Trigger (optional) to assign it to:"
+                    "Press a button — hold others first to make a combo, like Select + X. Release to assign it to:"
                 } else {
                     "Press a key while holding Shift, Control, Alt, or Windows (optional) to assign it to:"
                 }

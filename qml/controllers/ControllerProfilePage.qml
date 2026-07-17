@@ -183,6 +183,7 @@ Pane {
                     shortcut: ""
                     gamepad: gamepadStatus
                     isKeyboard: profile.isKeyboardProfile
+                    modifierCandidates: shortcutsListView.model.modifierCandidates()
 
                     onMappingAdded: function(shortcut, modifiers, input) {
                         shortcutsListView.model.addBinding(shortcut, modifiers, input);

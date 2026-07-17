@@ -64,6 +64,17 @@ public:
   void run();
   void stop();
 
+  // Applies one SDL axis event to the device with this instance id: decodes it
+  // to digital directions and records each edge.
+  void handleAxisMotion(int instanceId, int sdlAxis, int value);
+
+  // The digital directions one SDL axis event implies, as (input, pressed)
+  // pairs. Both directions of a stick axis are always returned, so a stick
+  // flicked straight from one extreme to the other clears the direction it
+  // left instead of leaving it stuck on.
+  static std::vector<std::pair<GamepadInput, bool>>
+  decodeAxisMotion(int sdlAxis, int value);
+
   void changeGamepadOrder(const std::map<int, int> &oldToNewIndex) override;
 
   bool preferGamepadOverKeyboard() const override;
@@ -77,6 +88,8 @@ public:
                                          int gamepadType) override;
 
   void setShortcutContext(int scope) override;
+  void setHotkeysEnabled(bool enabled,
+                         std::optional<DeviceType> only = {}) override;
 
   void setKeyboard(std::shared_ptr<IGamepad> keyboard);
 
@@ -84,6 +97,11 @@ private:
   static constexpr int MAX_PLAYERS = 16;
 
   void openSdlGamepad(int deviceIndex);
+  // Records a digital edge for one gamepad input: feeds the shortcut engine and
+  // publishes the nav event. Repeats are dropped, so callers can pass the
+  // current state unconditionally rather than edge-detecting themselves.
+  void setGamepadInputState(int playerIndex, IGamepad *gamepad,
+                            GamepadInput input, bool pressed);
   // Locks m_devicesMutex internally; safe to call without holding it.
   std::shared_ptr<IGamepad> findGamepadByInstanceId(int instanceId);
   int getNextAvailablePlayerIndex() const;

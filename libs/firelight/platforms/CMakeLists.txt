@@ -14,5 +14,4 @@ target_include_directories(firelight_platforms
 
 target_link_libraries(firelight_platforms
         PUBLIC nlohmann_json::nlohmann_json
-        PUBLIC firelight_settings
 )

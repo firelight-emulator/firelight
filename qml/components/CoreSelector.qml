@@ -4,12 +4,12 @@ import QtQuick.Layouts
 import Firelight 1.0
 
 // Advanced control to choose which libretro core runs a platform, at a given
-// tier (level: 0 Game, 1 Platform). Writes the reserved "core" override via
+// tier (Game or Platform). Writes the reserved "core" override via
 // CoreRegistry; the settings/options below re-resolve automatically.
 RowLayout {
     id: root
 
-    property int level: 1 // Platform
+    property int level: SettingsLevel.Platform
     property int platformId: -1
     property string contentHash: ""
 

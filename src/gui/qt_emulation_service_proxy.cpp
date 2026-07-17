@@ -151,12 +151,7 @@ void QtEmulationServiceProxy::loadEntry(const int entryId) {
 void QtEmulationServiceProxy::stopEmulation() {
   m_emulationService->stopEmulation();
 }
-void QtEmulationServiceProxy::resetGame() {
-  const auto instance = m_emulationService->getCurrentEmulatorInstance();
-  if (instance) {
-    instance->reset();
-  }
-}
+void QtEmulationServiceProxy::resetGame() { m_emulationService->resetGame(); }
 
 int QtEmulationServiceProxy::controllerPortCount() const {
   const auto instance = m_emulationService->getCurrentEmulatorInstance();

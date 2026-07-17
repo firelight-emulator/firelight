@@ -353,6 +353,14 @@ namespace libretro {
     m_dll->cheatReset();
   }
 
+  void Core::sendKeyboardEvent(const bool down, const unsigned key,
+                               const uint32_t character,
+                               const uint16_t modifiers) {
+    if (keyboardCallback) {
+      keyboardCallback(down, key, character, modifiers);
+    }
+  }
+
   void Core::setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) {
     videoReceiver = receiver;
     m_callbackContext.video = receiver;

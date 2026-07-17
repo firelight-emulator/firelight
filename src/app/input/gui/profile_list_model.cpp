@@ -35,6 +35,8 @@ QVariant ProfileListModel::data(const QModelIndex &index, int role) const {
     return item.basedOnType;
   case Icon:
     return item.icon;
+  case IsKeyboard:
+    return item.isKeyboard;
   default:
     return {};
   }
@@ -44,7 +46,7 @@ QHash<int, QByteArray> ProfileListModel::roleNames() const {
   return {
       {ProfileId, "profileId"}, {Name, "name"},
       {Builtin, "builtin"},     {BasedOnType, "basedOnType"},
-      {Icon, "icon"},
+      {Icon, "icon"},         {IsKeyboard, "isKeyboard"},
   };
 }
 
@@ -66,6 +68,7 @@ void ProfileListModel::refresh() {
         profile->isBuiltin(),
         profile->getBasedOnType(),
         QString::fromStdString(profile->getIcon()),
+        profile->isKeyboardProfile(),
     });
   }
   endResetModel();

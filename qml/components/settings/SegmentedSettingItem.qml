@@ -13,7 +13,7 @@ BaseSettingItem {
     property string currentValue: ""
     signal changed(string value)
 
-    controlBelow: (options ? options.length : 0) >= 3
+    controlBelow: (options ? options.length : 0) >= 5
 
     control: Rectangle {
         id: segBox

@@ -81,6 +81,13 @@ public:
 
   // Sets which shortcuts are currently active (ScopeInGame / ScopeInMenu).
   virtual void setShortcutContext(int scope) = 0;
+
+  // Turns hotkeys off for every device, or only for one kind of device. Off
+  // hands each input straight to the game, which a system that wants the whole
+  // keyboard needs; `only` limits it to the keyboard so a controller keeps its
+  // hotkeys either way.
+  virtual void setHotkeysEnabled(bool enabled,
+                                 std::optional<DeviceType> only = {}) = 0;
 };
 
 } // namespace firelight::input

@@ -99,68 +99,33 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
     }
   }
 
-  switch (input) {
-  case GamepadInput::NorthFace:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_Y);
-  case GamepadInput::SouthFace:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_A);
-  case GamepadInput::EastFace:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_B);
-  case GamepadInput::WestFace:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_X);
-  case GamepadInput::DpadUp:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_DPAD_UP);
-  case GamepadInput::DpadDown:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_DPAD_DOWN);
-  case GamepadInput::DpadLeft:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_DPAD_LEFT);
-  case GamepadInput::DpadRight:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
-  case GamepadInput::Start:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_START);
-  case GamepadInput::Select:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_BACK);
-  case GamepadInput::LeftBumper:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
-  case GamepadInput::RightBumper:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
-  case GamepadInput::LeftTrigger: {
-    const auto settings =
-        m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
-                  : AnalogSettings{};
-    return SDL_GameControllerGetAxis(m_SDLController,
-                                     SDL_CONTROLLER_AXIS_TRIGGERLEFT) >
-           static_cast<int>(settings.leftTrigger.threshold * 32767.0f);
-  }
-  case GamepadInput::RightTrigger: {
-    const auto settings =
-        m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
-                  : AnalogSettings{};
-    return SDL_GameControllerGetAxis(m_SDLController,
-                                     SDL_CONTROLLER_AXIS_TRIGGERRIGHT) >
-           static_cast<int>(settings.rightTrigger.threshold * 32767.0f);
-  }
-  case GamepadInput::L3:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_LEFTSTICK);
-  case GamepadInput::R3:
-    return SDL_GameControllerGetButton(m_SDLController,
-                                       SDL_CONTROLLER_BUTTON_RIGHTSTICK);
-  default:
+  // No binding for this input, so it falls back to the physical button it
+  // defaults to (the identity, for a joypad input). Reading it through
+  // evaluateMapping rather than SDL directly keeps every physical read in one
+  // place — which is what lets a shortcut withhold its trigger from the game.
+  const auto physical = defaultPhysicalBinding(input);
+  if (classOf(physical) != GamepadInputClass::Joypad) {
     return false;
   }
+  return std::abs(evaluateMapping(physical)) >
+         digitalThreshold(physical, platformId, controllerTypeId);
+}
+
+int SdlController::digitalThreshold(const GamepadInput input,
+                                    const int platformId,
+                                    const int controllerTypeId) const {
+  // A trigger is analog, so how far counts as pressed is tunable per profile.
+  // Everything else is a button, and trips at half of its range.
+  if (input != GamepadInput::LeftTrigger && input != GamepadInput::RightTrigger) {
+    return 16383;
+  }
+  const auto settings =
+      m_profile ? m_profile->getAnalogSettings(platformId, controllerTypeId)
+                : AnalogSettings{};
+  const auto &trigger = input == GamepadInput::LeftTrigger
+                            ? settings.leftTrigger
+                            : settings.rightTrigger;
+  return static_cast<int>(trigger.threshold * 32767.0f);
 }
 
 bool SdlController::isVirtualInputActive(const int platformId,
@@ -412,6 +377,13 @@ bool SdlController::disconnect() {
 }
 
 int16_t SdlController::evaluateMapping(const GamepadInput input) const {
+  // A shortcut is using this input, so the game doesn't get to see it. Checked
+  // here because every physical read goes through this one switch — including
+  // the fall-through for inputs with no binding, and the light-gun/mouse path.
+  if (suppressor().isSuppressed(static_cast<int>(input))) {
+    return 0;
+  }
+
   switch (input) {
   case GamepadInput::SouthFace:
     return SDL_GameControllerGetButton(m_SDLController,
@@ -461,14 +433,16 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
     return SDL_GameControllerGetButton(m_SDLController,
                                        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) *
            32767;
+  // Unlike the buttons above, a trigger axis already reports 0..32767, so it is
+  // returned as-is. Scaling it would overflow the int16 this returns — a fully
+  // pressed trigger came out as 1, so a binding on one fired around half travel
+  // and then stopped.
   case GamepadInput::LeftTrigger:
     return SDL_GameControllerGetAxis(m_SDLController,
-                                     SDL_CONTROLLER_AXIS_TRIGGERLEFT) *
-           32767;
+                                     SDL_CONTROLLER_AXIS_TRIGGERLEFT);
   case GamepadInput::RightTrigger:
     return SDL_GameControllerGetAxis(m_SDLController,
-                                     SDL_CONTROLLER_AXIS_TRIGGERRIGHT) *
-           32767;
+                                     SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
   case GamepadInput::L3:
     return SDL_GameControllerGetButton(m_SDLController,
                                        SDL_CONTROLLER_BUTTON_LEFTSTICK) *

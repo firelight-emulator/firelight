@@ -27,6 +27,20 @@ MainWindow {
         id: routeOverlay
     }
 
+    // A hotkey has no other feedback: without this, a save state and a binding
+    // that silently doesn't work look identical. The wording is decided in C++.
+    Toast {
+        id: shortcutToast
+        z: 999
+
+        Connections {
+            target: ShortcutDispatcher
+            function onNotified(message) {
+                shortcutToast.show(message);
+            }
+        }
+    }
+
     Action {
         id: searchAction
         text: qsTr("&Copy")

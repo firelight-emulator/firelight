@@ -38,6 +38,7 @@ private:
     Builtin,
     BasedOnType,
     Icon,
+    IsKeyboard,
   };
 
   struct Item {
@@ -46,6 +47,7 @@ private:
     bool builtin = false;
     int basedOnType = -1;
     QString icon;
+    bool isKeyboard = false;
   };
 
   QList<Item> m_items;

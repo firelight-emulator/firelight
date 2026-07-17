@@ -1,0 +1,344 @@
+{
+  "_comment": "The emulator hotkeys: which actions exist, and what they're bound to out of the box. Parsed by ShortcutRegistry (libs/firelight/input); the app passes the path. Adding an action here is all it takes for it to appear in the shortcut editor \u00e2\u20ac\u201d but nothing will happen until something dispatches it, so add a handler too.",
+  "_activation": "'press' fires once on the rising edge. 'hold' fires again on release, which is what makes hold-to-fast-forward work. There is no 'toggle': an action like pause flips state that is global to the emulator, and the engine only ever sees one device, so it reports the edge and the handler owns the value.",
+  "_scope": "'in-game', 'in-menu', or 'always'. The engine only fires an action whose scope includes the current context.",
+  "_bindings": "A binding is a name, or names joined with '+' where everything before the last one must be held: 'Select+R3'. Gamepad names are the GamepadInput enum (include/firelight/input/gamepad_input.hpp); keyboard names are Qt::Key values ('Key_F1'), resolved through Qt's meta-object system. Each action takes a list, in preference order: seeding keeps the ones the controller actually has, so a pad with no R3 falls through to the next.",
+  "_combos": "Pad bindings are combos on purpose. When a shortcut fires, its trigger input is withheld from the game \u00e2\u20ac\u201d which is only safe if the combo can tell the two intents apart. Bind a bare button and that button stops reaching the game entirely while in-game.",
+  "_no_rewind": "There is deliberately no 'rewind' action. Rewinding here is ten snapshots taken every few seconds and picked from a menu (open_rewind_menu), not the frame-by-frame history a hold-to-rewind needs \u00e2\u20ac\u201d so declaring one would put a key in the editor that could never do anything. Add it when there's an engine behind it.",
+  "defaultPreset": "firelight",
+  "actions": [
+    {
+      "id": "fast_forward",
+      "label": "Fast forward",
+      "category": "Speed",
+      "activation": "hold",
+      "scope": "in-game"
+    },
+    {
+      "id": "toggle_fast_forward",
+      "label": "Toggle fast forward",
+      "category": "Speed",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "slow_motion",
+      "label": "Slow motion",
+      "category": "Speed",
+      "activation": "hold",
+      "scope": "in-game"
+    },
+    {
+      "id": "speed_up",
+      "label": "Speed up",
+      "category": "Speed",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "slow_down",
+      "label": "Slow down",
+      "category": "Speed",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "save_state",
+      "label": "Save state",
+      "category": "Save States",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "load_state",
+      "label": "Load state",
+      "category": "Save States",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "state_slot_next",
+      "label": "Next save slot",
+      "category": "Save States",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "state_slot_prev",
+      "label": "Previous save slot",
+      "category": "Save States",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "open_rewind_menu",
+      "label": "Open rewind menu",
+      "category": "System",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "open_quick_menu",
+      "label": "Open quick menu",
+      "category": "System",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "frame_advance",
+      "label": "Frame advance",
+      "category": "System",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "reset",
+      "label": "Reset game",
+      "category": "System",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "pause",
+      "label": "Pause",
+      "category": "System",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "exit_game",
+      "label": "Exit game",
+      "category": "System",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "screenshot",
+      "label": "Screenshot",
+      "category": "System",
+      "activation": "press",
+      "scope": "always"
+    },
+    {
+      "id": "capture_clip",
+      "label": "Capture video clip",
+      "category": "System",
+      "activation": "press",
+      "scope": "in-game"
+    },
+    {
+      "id": "volume_up",
+      "label": "Volume up",
+      "category": "System",
+      "activation": "press",
+      "scope": "always"
+    },
+    {
+      "id": "volume_down",
+      "label": "Volume down",
+      "category": "System",
+      "activation": "press",
+      "scope": "always"
+    },
+    {
+      "id": "toggle_mute",
+      "label": "Mute",
+      "category": "System",
+      "activation": "press",
+      "scope": "always"
+    },
+    {
+      "id": "toggle_fullscreen",
+      "label": "Fullscreen",
+      "category": "System",
+      "activation": "press",
+      "scope": "always"
+    },
+    {
+      "id": "toggle_hotkeys",
+      "label": "Turn hotkeys off",
+      "category": "System",
+      "activation": "press",
+      "scope": "always",
+      "_note": "The one action that still works while hotkeys are off \u00e2\u20ac\u201d otherwise there'd be no way back. Turning them off hands every input straight to the game, which is what a core that wants the whole keyboard (DOS, Amiga, MSX, ScummVM) needs. Affects only the device that pressed it, so a second pad keeps its hotkeys."
+    }
+  ],
+  "presets": [
+    {
+      "id": "firelight",
+      "label": "Firelight",
+      "_note": "Select is the modifier: no core reads it during play as often as the face buttons, and every pad has one. Guide/Home is deliberately unbound \u00e2\u20ac\u201d Steam claims it globally and we can't stop it.",
+      "gamepad": {
+        "fast_forward": [
+          "Select+RightTrigger"
+        ],
+        "slow_motion": [
+          "Select+LeftTrigger"
+        ],
+        "speed_up": [
+          "Select+DpadRight"
+        ],
+        "slow_down": [
+          "Select+DpadLeft"
+        ],
+        "save_state": [
+          "Select+RightBumper"
+        ],
+        "load_state": [
+          "Select+LeftBumper"
+        ],
+        "state_slot_next": [
+          "Select+DpadUp"
+        ],
+        "state_slot_prev": [
+          "Select+DpadDown"
+        ],
+        "open_quick_menu": [
+          "Select+Start"
+        ],
+        "open_rewind_menu": [
+          "Select+R3",
+          "Select+NorthFace"
+        ],
+        "pause": [
+          "Select+SouthFace"
+        ],
+        "screenshot": [
+          "Select+WestFace"
+        ],
+        "capture_clip": [
+          "Select+EastFace"
+        ]
+      },
+      "keyboard": {
+        "fast_forward": [
+          "Key_Tab"
+        ],
+        "speed_up": [
+          "Key_Equal"
+        ],
+        "slow_down": [
+          "Key_Minus"
+        ],
+        "save_state": [
+          "Key_F1"
+        ],
+        "load_state": [
+          "Key_F3"
+        ],
+        "state_slot_next": [
+          "Key_F2"
+        ],
+        "state_slot_prev": [
+          "Key_F4"
+        ],
+        "open_quick_menu": [
+          "Key_Escape"
+        ],
+        "open_rewind_menu": [
+          "Key_F5"
+        ],
+        "frame_advance": [
+          "Key_Backslash"
+        ],
+        "pause": [
+          "Key_P"
+        ],
+        "screenshot": [
+          "Key_F12"
+        ],
+        "capture_clip": [
+          "Key_F11"
+        ],
+        "toggle_mute": [
+          "Key_F9"
+        ],
+        "toggle_fullscreen": [
+          "Key_F10"
+        ]
+      }
+    },
+    {
+      "id": "retroarch-keyboard",
+      "label": "RetroArch (keyboard)",
+      "_note": "RetroArch's own shipped keyboard defaults, for people arriving from it. RetroArch ships no gamepad defaults at all \u00e2\u20ac\u201d the SELECT+ layout people associate with it comes from handheld distros, so it lives under 'handheld' below rather than being passed off as RetroArch's.",
+      "_omitted": "RetroArch's rewind (R), slow motion (E) and reset (H) are missing on purpose: RetroArch binds no triggers or sticks on the keyboard, so those keys are free there \u00e2\u20ac\u201d here they're the triggers and right stick. Binding them would fire the hotkey and press the button, and (once a shortcut withholds its trigger from the game) would cost the key for gameplay entirely. Rebind them yourself if you'd rather have the hotkey.",
+      "keyboard": {
+        "fast_forward": [
+          "Key_Space"
+        ],
+        "save_state": [
+          "Key_F2"
+        ],
+        "load_state": [
+          "Key_F4"
+        ],
+        "state_slot_next": [
+          "Key_F7"
+        ],
+        "state_slot_prev": [
+          "Key_F6"
+        ],
+        "open_quick_menu": [
+          "Key_F1"
+        ],
+        "pause": [
+          "Key_P"
+        ],
+        "exit_game": [
+          "Key_Escape"
+        ],
+        "screenshot": [
+          "Key_F8"
+        ],
+        "toggle_mute": [
+          "Key_F9"
+        ]
+      }
+    },
+    {
+      "id": "handheld",
+      "label": "Handheld (SELECT + button)",
+      "_note": "The combo layout Batocera/RetroPie generate into retroarch.cfg. Familiar to anyone coming from a handheld distro.",
+      "gamepad": {
+        "fast_forward": [
+          "Select+RightBumper"
+        ],
+        "open_rewind_menu": [
+          "Select+LeftBumper"
+        ],
+        "save_state": [
+          "Select+RightTrigger"
+        ],
+        "load_state": [
+          "Select+LeftTrigger"
+        ],
+        "state_slot_next": [
+          "Select+DpadRight"
+        ],
+        "state_slot_prev": [
+          "Select+DpadLeft"
+        ],
+        "open_quick_menu": [
+          "Select+SouthFace"
+        ],
+        "reset": [
+          "Select+NorthFace"
+        ],
+        "exit_game": [
+          "Select+Start"
+        ],
+        "screenshot": [
+          "Select+WestFace"
+        ]
+      }
+    },
+    {
+      "id": "none",
+      "label": "None",
+      "_note": "Binds nothing, for starting clean.",
+      "gamepad": {},
+      "keyboard": {}
+    }
+  ]
+}

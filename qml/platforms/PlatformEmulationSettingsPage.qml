@@ -65,14 +65,14 @@ FocusScope {
         CoreSelector {
             Layout.fillWidth: true
             Layout.bottomMargin: 8
-            level: 1 // Platform tier
+            level: SettingsLevel.Platform
             platformId: root.platformId
         }
 
         EmulationSettingsSurface {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            level: 1 // Platform tier
+            level: SettingsLevel.Platform
             platformId: root.platformId
         }
     }

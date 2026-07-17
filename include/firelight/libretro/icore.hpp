@@ -117,6 +117,15 @@ public:
   virtual void setCheat(unsigned index, bool enabled, const std::string &code) = 0;
   // Clears all applied cheats.
   virtual void clearCheats() = 0;
+
+  // Hands a key press/release to a core that asked for the keyboard. `key` is a
+  // RETROK_* value and `character` its unicode codepoint (0 if none). A no-op
+  // for the cores that never asked, which is most of them.
+  virtual void sendKeyboardEvent(bool down, unsigned key, uint32_t character,
+                                 uint16_t modifiers) = 0;
+  // Whether the core asked for the keyboard at all — the signal behind
+  // "automatically disable keyboard hotkeys".
+  [[nodiscard]] virtual bool wantsKeyboard() const = 0;
 };
 
 } // namespace libretro

@@ -1,6 +1,7 @@
 #include "shortcuts_model.hpp"
 
 #include <firelight/input/keyboard_input_handler.hpp>
+#include <firelight/input/controller_repository.hpp>
 #include <firelight/input/shortcut_registry.hpp>
 #include <firelight/input/gamepad_input.hpp>
 
@@ -10,11 +11,34 @@
 namespace firelight::gui {
 
 ShortcutsModel::ShortcutsModel(
-    const bool isKeyboard,
-    std::shared_ptr<input::ShortcutMapping> shortcutMapping)
-    : QAbstractListModel(nullptr),
-      m_shortcutMapping(std::move(shortcutMapping)), m_isKeyboard(isKeyboard) {
+    const int profileId, const bool isKeyboard,
+    std::shared_ptr<input::ShortcutMapping> shortcutMapping,
+    std::string presetId)
+    : QAbstractListModel(nullptr), m_profileId(profileId),
+      m_shortcutMapping(std::move(shortcutMapping)), m_isKeyboard(isKeyboard),
+      m_presetId(std::move(presetId)) {
   rebuild();
+}
+
+DeviceType ShortcutsModel::deviceType() const {
+  return m_isKeyboard ? DeviceType::Keyboard : DeviceType::Gamepad;
+}
+
+std::vector<input::InputSource>
+ShortcutsModel::presetSourcesFor(const input::ShortcutId &id) const {
+  const auto *preset =
+      input::ShortcutRegistry::instance().findPreset(m_presetId);
+  if (!preset) {
+    return {};
+  }
+  return preset->sourcesFor(deviceType(), id);
+}
+
+bool ShortcutsModel::differsFromPreset(const input::ShortcutId &id) const {
+  if (!m_shortcutMapping) {
+    return false;
+  }
+  return m_shortcutMapping->getBindings(id) != presetSourcesFor(id);
 }
 
 QString ShortcutsModel::labelForBindings(
@@ -63,6 +87,7 @@ void ShortcutsModel::rebuild() {
       item.hasBinding = !bindings.empty();
       item.bindingsLabel =
           item.hasBinding ? labelForBindings(bindings) : QStringLiteral("Not bound");
+      item.isModified = differsFromPreset(action.id);
     } else {
       item.bindingsLabel = QStringLiteral("Not bound");
     }
@@ -81,6 +106,7 @@ void ShortcutsModel::refreshRow(const QString &id) {
   item.hasBinding = !bindings.empty();
   item.bindingsLabel =
       item.hasBinding ? labelForBindings(bindings) : QStringLiteral("Not bound");
+  item.isModified = differsFromPreset(id.toStdString());
   emit dataChanged(index(row), index(row));
 }
 
@@ -118,6 +144,8 @@ QVariant ShortcutsModel::data(const QModelIndex &index, const int role) const {
     return item.hasBinding;
   case BindingsLabelRole:
     return item.bindingsLabel;
+  case IsModifiedRole:
+    return item.isModified;
   default:
     return {};
   }
@@ -128,6 +156,7 @@ QHash<int, QByteArray> ShortcutsModel::roleNames() const {
       {ShortcutIdRole, "shortcutId"}, {NameRole, "name"},
       {CategoryRole, "category"},     {ActivationRole, "activation"},
       {HasBindingRole, "hasBinding"}, {BindingsLabelRole, "bindingsLabel"},
+      {IsModifiedRole, "isModified"},
   };
 }
 
@@ -155,6 +184,72 @@ void ShortcutsModel::clearBindings(const QString &shortcutId) {
   m_shortcutMapping->setBindings(shortcutId.toStdString(), {});
   m_shortcutMapping->sync();
   refreshRow(shortcutId);
+}
+
+void ShortcutsModel::resetToDefault(const QString &shortcutId) {
+  if (!m_shortcutMapping) {
+    return;
+  }
+  const auto id = shortcutId.toStdString();
+  m_shortcutMapping->setBindings(id, presetSourcesFor(id));
+  m_shortcutMapping->sync();
+  refreshRow(shortcutId);
+}
+
+void ShortcutsModel::applyPreset(const QString &presetId) {
+  const auto id = presetId.toStdString();
+  const auto *preset = input::ShortcutRegistry::instance().findPreset(id);
+  if (!preset || !m_shortcutMapping) {
+    return;
+  }
+
+  m_presetId = id;
+  if (m_profileId >= 0) {
+    if (const auto repository = getControllerProfileRepository()) {
+      repository->setProfilePresetId(m_profileId, id);
+    }
+  }
+
+  // Every action, not just the ones the preset names: one it leaves out is one
+  // it wants unbound, so a leftover binding from the previous preset would
+  // survive as a phantom.
+  for (const auto &action : input::ShortcutRegistry::instance().listActions()) {
+    m_shortcutMapping->setBindings(action.id,
+                                   preset->sourcesFor(deviceType(), action.id));
+  }
+  m_shortcutMapping->sync();
+
+  rebuild();
+  emit presetIdChanged();
+}
+
+QString ShortcutsModel::presetId() const {
+  return QString::fromStdString(m_presetId);
+}
+
+QList<int> ShortcutsModel::modifierCandidates() const {
+  if (m_isKeyboard) {
+    return {};
+  }
+  QList<int> codes;
+  for (const auto input : input::modifierCandidates()) {
+    codes.append(static_cast<int>(input));
+  }
+  return codes;
+}
+
+QVariantList ShortcutsModel::presetOptions() const {
+  QVariantList options;
+  for (const auto &preset : input::ShortcutRegistry::instance().presets()) {
+    if (!preset.appliesTo(deviceType())) {
+      continue;
+    }
+    options.append(QVariantMap{
+        {"id", QString::fromStdString(preset.id)},
+        {"label", QString::fromStdString(preset.label)},
+    });
+  }
+  return options;
 }
 
 } // namespace firelight::gui

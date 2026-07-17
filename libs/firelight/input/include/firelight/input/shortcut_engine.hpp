@@ -21,8 +21,14 @@ public:
   // for a controller or a Qt::Key for the keyboard.
   void onInput(int playerIndex, IGamepad *device, int code, bool pressed);
 
-  // Forget a device's held/latched state (e.g. on disconnect).
+  // Forget a device's held state (e.g. on disconnect).
   void forgetDevice(IGamepad *device);
+
+  // Whether a device's hotkeys fire at all. Off hands every input straight to
+  // the game, for a core that wants the whole keyboard. Per device, so turning
+  // them off on one pad leaves another's alone even on a shared profile.
+  [[nodiscard]] bool hotkeysEnabled(IGamepad *device) const;
+  void setHotkeysEnabled(IGamepad *device, bool enabled);
 
 private:
   [[nodiscard]] bool isSourceSatisfied(IGamepad *device,
@@ -37,7 +43,11 @@ private:
   std::map<IGamepad *, std::map<int, bool>> m_held;
   std::map<IGamepad *, std::map<ShortcutId, bool>> m_satisfied;
   std::map<IGamepad *, std::map<ShortcutId, bool>> m_holdActive;
-  std::map<IGamepad *, std::map<ShortcutId, bool>> m_toggleLatch;
+  // Absent means on. Keyed by device rather than profile because it answers
+  // "is this controller driving the menus right now", which two pads sharing a
+  // profile can answer differently. (Unlike the toggle latch deleted earlier,
+  // the state here really is per-device, so this is where a latch belongs.)
+  std::map<IGamepad *, bool> m_hotkeysDisabled;
 };
 
 } // namespace firelight::input

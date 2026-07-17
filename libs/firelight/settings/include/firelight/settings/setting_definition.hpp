@@ -10,12 +10,12 @@
 namespace firelight::settings {
 
 // Value semantics of a setting. The concrete UI control is chosen separately
-// (see EmulationSetting::widget) so, e.g., an INTEGER can render as a slider or
+// (see SettingDefinition::widget) so, e.g., an INTEGER can render as a slider or
 // a spinbox and a CUSTOM setting can use a bespoke delegate. STRING is a
 // free-form string value (text field, color, file/folder path).
-enum EmulationSettingType { BOOLEAN, OPTIONS, INTEGER, STRING, CUSTOM };
+enum class SettingType { BOOLEAN, OPTIONS, INTEGER, STRING, CUSTOM };
 
-struct EmulationSettingOption {
+struct SettingOption {
   std::string label;
   std::string value;
 };
@@ -51,17 +51,29 @@ struct CoreOptionMapping {
   std::map<std::string, std::string> valueMap;
 };
 
-struct EmulationSetting {
+// One declared setting: what it is and where it lives. App settings and
+// emulation settings share this shape — an app setting is simply one with no
+// core mapping, read only at the global tier. Which array a setting is authored
+// in decides that, not a field here.
+struct SettingDefinition {
   std::string label;
-  std::string category;
   std::string key;
   std::string description;
   std::string defaultValue;
-  EmulationSettingType type;
+  SettingType type = SettingType::OPTIONS;
+  // The SettingsGroup this row belongs to; the group in turn names the page.
+  // Empty => the setting still resolves and still indexes, but no group-filtered
+  // view renders it.
+  std::string groupId;
+  // Terms search should match beyond label/description: the words users actually
+  // think in ("vsync" for Sync method).
+  std::vector<std::string> keywords;
+  // Sort position within the group; ties keep declaration order.
+  int order = 0;
   bool requiresRestart = false;
   std::string trueStringValue = "true";
   std::string falseStringValue = "false";
-  std::vector<EmulationSettingOption> options;
+  std::vector<SettingOption> options;
   // INTEGER numeric range (slider / spinbox).
   double minValue = 0.0;
   double maxValue = 0.0;
@@ -85,6 +97,10 @@ struct EmulationSetting {
   // Eligible platform ids for a library-game-source setting (empty => any
   // platform). e.g. {1, 2} for Game Boy / Game Boy Color.
   std::vector<int> gamePickerPlatformIds;
+  // Like libraryGameSource, but the options are the machine's audio output
+  // devices, enumerated at runtime by the app layer. The stored value is the
+  // device description, or "" for the system default.
+  bool audioDeviceSource = false;
   // Placeholder text for a `text` widget (shown when empty).
   std::string placeholder;
   // Accepted file extensions for a `file-picker` widget (no dot, e.g. "gba");
@@ -97,13 +113,32 @@ struct EmulationSetting {
   std::vector<SettingCondition> enabledWhen;
 };
 
+// A settings page: one entry in the settings nav, one route.
+struct SettingsPage {
+  std::string id;
+  std::string label;
+  std::string icon;
+  std::string route;
+  int order = 0;
+  // Terms that should match the page itself, distinct from its settings'.
+  std::vector<std::string> keywords;
+};
+
+// A titled group of rows within a page — the section card the rows render into.
+struct SettingsGroup {
+  std::string id;
+  std::string pageId;
+  std::string label;
+  int order = 0;
+};
+
 // Whether a setting should be shown / editable given the current values of the
 // settings it depends on (resolver returns another setting's effective value).
-inline bool settingIsVisible(const EmulationSetting &setting,
+inline bool settingIsVisible(const SettingDefinition &setting,
                              const SettingValueResolver &resolve) {
   return conditionsHold(setting.visibleWhen, resolve);
 }
-inline bool settingIsEnabled(const EmulationSetting &setting,
+inline bool settingIsEnabled(const SettingDefinition &setting,
                              const SettingValueResolver &resolve) {
   return conditionsHold(setting.enabledWhen, resolve);
 }
@@ -111,7 +146,7 @@ inline bool settingIsEnabled(const EmulationSetting &setting,
 // Resolves the concrete (coreKey, coreValue) pairs a friendly setting value
 // implies via its mapping. Empty if the setting has no core mapping.
 inline std::vector<std::pair<std::string, std::string>>
-resolveCoreOptionValues(const EmulationSetting &setting,
+resolveCoreOptionValues(const SettingDefinition &setting,
                         const std::string &friendlyValue) {
   std::vector<std::pair<std::string, std::string>> result;
   result.reserve(setting.mapping.size());

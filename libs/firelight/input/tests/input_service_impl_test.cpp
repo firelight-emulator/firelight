@@ -2,6 +2,9 @@
 #include "test_gamepad.hpp"
 
 #include <gtest/gtest.h>
+#include <firelight/input/gamepad_profile.hpp>
+#include <firelight/input/shortcut_mapping.hpp>
+#include <firelight/input/shortcut_registry.hpp>
 #include <firelight/input/sqlite_controller_repository.hpp>
 #include <firelight/input/sdl_input_service.hpp>
 #include <firelight/platforms/platform_service.hpp>
@@ -496,6 +499,93 @@ TEST_F(InputServiceImplTest, ConcurrentReadsDuringOrderChangesAreSafe) {
   EXPECT_NE(inputService.getPlayerGamepad(0), nullptr);
   EXPECT_NE(inputService.getPlayerGamepad(1), nullptr);
   EXPECT_NE(inputService.getPlayerGamepad(0), inputService.getPlayerGamepad(1));
+}
+
+TEST_F(InputServiceImplTest, AxisDecodeSetsBothStickDirections) {
+  using input::SDLInputService;
+
+  const auto centered =
+      SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, 0);
+  ASSERT_EQ(centered.size(), 2u);
+  EXPECT_EQ(centered[0], std::make_pair(input::LeftStickLeft, false));
+  EXPECT_EQ(centered[1], std::make_pair(input::LeftStickRight, false));
+
+  const auto right =
+      SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, 20000);
+  EXPECT_EQ(right[0], std::make_pair(input::LeftStickLeft, false));
+  EXPECT_EQ(right[1], std::make_pair(input::LeftStickRight, true));
+
+  // The opposite direction is reported as released rather than left alone, so
+  // flicking extreme-to-extreme without passing through the deadzone doesn't
+  // leave it stuck on.
+  const auto left =
+      SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, -20000);
+  EXPECT_EQ(left[0], std::make_pair(input::LeftStickLeft, true));
+  EXPECT_EQ(left[1], std::make_pair(input::LeftStickRight, false));
+}
+
+TEST_F(InputServiceImplTest, AxisDecodeTreatsTriggersAsOneDirection) {
+  using input::SDLInputService;
+
+  const auto released =
+      SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0);
+  ASSERT_EQ(released.size(), 1u);
+  EXPECT_EQ(released[0], std::make_pair(input::RightTrigger, false));
+
+  const auto pulled = SDLInputService::decodeAxisMotion(
+      SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 20000);
+  ASSERT_EQ(pulled.size(), 1u);
+  EXPECT_EQ(pulled[0], std::make_pair(input::RightTrigger, true));
+
+  EXPECT_TRUE(SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_MAX, 20000)
+                  .empty());
+}
+
+// Triggers are axes, not buttons, so a shortcut bound to one only fires if the
+// axis path reaches the shortcut engine.
+TEST_F(InputServiceImplTest, TriggerAxisFiresShortcutBoundToIt) {
+  input::ShortcutRegistry::instance().clear();
+  input::ShortcutAction action;
+  action.id = "fast_forward";
+  action.activation = input::ActivationType::Press;
+  action.scope = input::ScopeAlways;
+  input::ShortcutRegistry::instance().registerAction(action);
+
+  std::vector<input::ShortcutEvent> fired;
+  auto handler = EventDispatcher::instance().subscribe<input::ShortcutEvent>(
+      [&fired](const input::ShortcutEvent &event) { fired.push_back(event); });
+
+  input::SDLInputService inputService(m_repo);
+  auto gamepad = std::make_shared<input::TestGamepad>(7);
+  inputService.addGamepad(gamepad);
+
+  // After adding: addGamepad resolves the device's profile from the repository,
+  // which would replace one set beforehand.
+  auto profile = std::make_shared<input::GamepadProfile>(1);
+  auto mapping = std::make_shared<input::ShortcutMapping>();
+  input::InputSource trigger;
+  trigger.type = input::SourceType::AxisPositive;
+  trigger.code = input::RightTrigger;
+  mapping->setBindings("fast_forward", {trigger});
+  profile->setShortcutMapping(mapping);
+  gamepad->setProfile(profile);
+
+  inputService.handleAxisMotion(7, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 20000);
+  ASSERT_EQ(fired.size(), 1u);
+  EXPECT_EQ(fired[0].id, "fast_forward");
+  EXPECT_EQ(fired[0].phase, input::ShortcutPhase::Started);
+
+  // Still held: no second edge.
+  inputService.handleAxisMotion(7, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 25000);
+  EXPECT_EQ(fired.size(), 1u);
+
+  inputService.handleAxisMotion(7, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0);
+  EXPECT_EQ(fired.size(), 1u);
+
+  inputService.handleAxisMotion(7, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 20000);
+  EXPECT_EQ(fired.size(), 2u);
+
+  input::ShortcutRegistry::instance().clear();
 }
 
 } // namespace firelight::db

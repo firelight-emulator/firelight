@@ -31,6 +31,10 @@ namespace firelight {
     class IActivityLog;
   }
 
+  namespace emulation {
+    class ShortcutActions;
+  }
+
   namespace saves {
     class ISaveManager;
   }
@@ -77,6 +81,7 @@ namespace firelight {
     static void setSaveManager(saves::ISaveManager *manager);
 
     static void setAchievementManager(achievements::RAClient *manager);
+    static void setShortcutActions(emulation::ShortcutActions *actions);
 
     static void setGameImageProvider(gui::GameImageProvider *provider);
 
@@ -104,6 +109,9 @@ namespace firelight {
     static saves::ISaveManager *getSaveManager();
 
     static achievements::RAClient *getAchievementManager();
+    // What every emulator hotkey does. EmulatorItem registers itself with it
+    // as the controller to act on.
+    static emulation::ShortcutActions *getShortcutActions();
 
     static gui::GameImageProvider *getGameImageProvider();
 
@@ -123,6 +131,7 @@ namespace firelight {
     static activity::IActivityLog *s_activityService;
     static saves::ISaveManager *s_saveManager;
     static achievements::RAClient *s_achievementManager;
+    static emulation::ShortcutActions *s_shortcutActions;
     static gui::GameImageProvider *s_gameImageProvider;
     static mods::IModRepository *s_modRepository;
     static discord::IDiscordManager *s_discordManager;
