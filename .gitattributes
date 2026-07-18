@@ -1,0 +1,41 @@
+# Line endings are LF in the repository and in the working tree. The toolchain
+# here is MSYS2/MinGW and Qt, both of which read LF natively on Windows.
+* text=auto eol=lf
+
+# Text
+*.cpp   text
+*.hpp   text
+*.h     text
+*.qml   text
+*.js    text
+*.json  text
+*.md    text
+*.txt   text
+*.cmake text
+*.yml   text
+*.ini   text
+*.svg   text
+*.fsh   text
+*.vsh   text
+*.csh   text
+
+# Binary - never converted
+*.png   binary
+*.jpg   binary
+*.wav   binary
+*.ttf   binary
+*.dll   binary
+*.so    binary
+*.lib   binary
+*.db    binary
+*.zip   binary
+*.z64   binary
+*.ups   binary
+*.bps   binary
+*.dat   binary
+*.pgf   binary
+*.zim   binary
+
+# Vendored sources are normalized along with everything else. Exempting them
+# would leave the ones already stored as LF permanently dirty, since their
+# working-tree copies are CRLF
