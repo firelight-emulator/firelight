@@ -79,7 +79,7 @@ naming rules. Run the formatters rather than hand-aligning. Line endings are LF 
 - `id` is `root` for non-controls, `control` for controls, otherwise descriptive
 - Signal handlers on one line when they fit, otherwise multi-line; always braces where relevant
 - Move a component into its own file once a second file uses it
-- Reusable building blocks stay separate from full pages
+- Reusable building blocks live in `qml/components/v2/`; full pages live in `qml/components/v2/pages/`
 - **Always write property names explicitly**, even where a linter calls them redundant. `qmlformat`'s
   `NormalizeOrder` and `GroupAttributesTogether` reorder attributes and drop comments, which is what
   strips them — both are off in `.qmlformat.ini` and must stay off
