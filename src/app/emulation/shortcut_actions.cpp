@@ -65,7 +65,7 @@ void ShortcutActions::stepSpeed(const bool faster) {
     return;
   }
   // Doubling/halving rather than stepping by one: 1x -> 2x -> 4x going up, and
-  // 1x -> 0.5x -> 0.25x going down, so one action covers both ends.
+  // 1x -> 0.5x -> 0.25x going down, so one action covers both ends
   const auto current = m_controller->playbackMultiplier();
   const auto next = faster ? current * 2.0f : current / 2.0f;
   const auto clamped = std::clamp(next, MIN_SPEED, MAX_SPEED);
@@ -74,7 +74,7 @@ void ShortcutActions::stepSpeed(const bool faster) {
 }
 
 void ShortcutActions::setSaveSlot(const int slot) {
-  // Wraps, so holding the key cycles rather than getting stuck at an end.
+  // Wraps, so holding the key cycles rather than getting stuck at an end
   m_saveSlot = slot < 1 ? MAX_SAVE_SLOT : (slot > MAX_SAVE_SLOT ? 1 : slot);
   notify("Save slot " + std::to_string(m_saveSlot));
 }
@@ -91,7 +91,7 @@ void ShortcutActions::stepVolume(const int delta) {
   m_settingsService.setGlobalValue(audio::VOLUME_KEY, std::to_string(next));
 
   // Turning it up is also how you undo a mute — leaving it silent while the
-  // number climbs would look broken.
+  // number climbs would look broken
   if (delta > 0 && m_settingsService.getGlobalValue(audio::MUTED_KEY)
                            .value_or("false") == "true") {
     m_settingsService.setGlobalValue(audio::MUTED_KEY, "false");
@@ -107,7 +107,7 @@ void ShortcutActions::notify(const std::string &message) const {
 
 std::string ShortcutActions::speedLabel(const float multiplier) {
   // 2 -> "2x", 0.5 -> "0.5x": trailing zeroes read like precision that isn't
-  // there.
+  // there
   auto text = std::to_string(multiplier);
   text.erase(text.find_last_not_of('0') + 1);
   if (text.ends_with('.')) {
@@ -124,7 +124,7 @@ void ShortcutActions::handle(const input::ShortcutId &id,
 
   const bool started = phase == input::ShortcutPhase::Started;
 
-  // Hold actions are the only ones that do anything on release.
+  // Hold actions are the only ones that do anything on release
   if (id == "fast_forward") {
     started ? beginHold(id, FAST_FORWARD_SPEED) : endHold(id);
     return;
@@ -192,7 +192,7 @@ void ShortcutActions::handle(const input::ShortcutId &id,
     }
   } else if (id == "toggle_mute") {
     // Mute is a setting, not emulator state, so it works with no game running
-    // and outlives the one you're playing.
+    // and outlives the one you're playing
     const auto muted =
         m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or("false") ==
         "true";
@@ -206,7 +206,7 @@ void ShortcutActions::handle(const input::ShortcutId &id,
   } else if (id == "open_rewind_menu") {
     // The intent, not the command: opening this menu means asking for the
     // rewind points and showing them when they arrive, and the UI already owns
-    // both halves along with the rewind-enabled check.
+    // both halves along with the rewind-enabled check
     if (m_intents.openRewindMenu) {
       m_intents.openRewindMenu();
     }

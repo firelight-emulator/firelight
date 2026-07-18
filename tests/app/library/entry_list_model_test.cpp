@@ -16,7 +16,7 @@
 // Verifies that EntryListModel stays in sync with the library incrementally:
 // EntryCreatedEvent inserts a row, EntryUpdatedEvent removes a now-hidden entry
 // and re-inserts an unhidden one -- all without a full model reset. The events
-// are delivered via a queued invocation, so each test pumps the event loop.
+// are delivered via a queued invocation, so each test pumps the event loop
 namespace firelight::library {
 namespace {
 
@@ -52,7 +52,7 @@ protected:
   int rows() { return m_model.rowCount(QModelIndex()); }
 };
 
-// A newly-created entry appears as a row without a reset.
+// A newly-created entry appears as a row without a reset
 TEST_F(EntryListModelSyncTest, CreateEventInsertsRow) {
   ASSERT_EQ(rows(), 0);
 
@@ -64,7 +64,7 @@ TEST_F(EntryListModelSyncTest, CreateEventInsertsRow) {
 }
 
 // Hiding an entry (as its content disappears) removes its row; unhiding it
-// re-inserts it.
+// re-inserts it
 TEST_F(EntryListModelSyncTest, HidingRemovesAndUnhidingReinserts) {
   Entry e = makeEntry("Beta", "hashB", 3);
   ASSERT_TRUE(m_repo.createEntry(e));
@@ -84,7 +84,7 @@ TEST_F(EntryListModelSyncTest, HidingRemovesAndUnhidingReinserts) {
   EXPECT_EQ(rows(), 1);
 }
 
-// A visible entry that is updated is refreshed in place, not duplicated.
+// A visible entry that is updated is refreshed in place, not duplicated
 TEST_F(EntryListModelSyncTest, UpdateOfVisibleEntryDoesNotDuplicate) {
   Entry e = makeEntry("Gamma", "hashC", 3);
   ASSERT_TRUE(m_repo.createEntry(e));

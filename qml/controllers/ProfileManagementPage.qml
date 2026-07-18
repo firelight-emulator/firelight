@@ -6,7 +6,7 @@ import Firelight 1.0
 
 // Standalone controller-profile manager: create, clone, rename, delete, and
 // import/export profiles. Self-contained; bind nothing — it loads all profiles
-// from the input service.
+// from the input service
 FocusScope {
     id: root
 

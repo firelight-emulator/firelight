@@ -12,7 +12,7 @@ namespace firelight::settings {
 // Backs the "advanced" core-options editor: lists the raw libretro options a
 // core declared (cached by ICoreOptionRepository, populated after a core loads)
 // and lets the user override any of them at the current tier (Game / Platform /
-// Global). Definitions come from the repository; values from SettingsService.
+// Global). Definitions come from the repository; values from SettingsService
 class CoreOptionsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY
@@ -20,10 +20,10 @@ class CoreOptionsModel : public QAbstractListModel, public ServiceAccessor {
   Q_PROPERTY(int level READ getLevel WRITE setLevel NOTIFY levelChanged)
   Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
                  contentHashChanged)
-  // Only options in this category are listed ("" = top-level/uncategorized).
+  // Only options in this category are listed ("" = top-level/uncategorized)
   Q_PROPERTY(QString categoryFilter READ getCategoryFilter WRITE
                  setCategoryFilter NOTIFY categoryFilterChanged)
-  // Distinct non-empty categories the core declares, as [{key, label}].
+  // Distinct non-empty categories the core declares, as [{key, label}]
   Q_PROPERTY(QVariantList categories READ categories NOTIFY categoriesChanged)
 public:
   explicit CoreOptionsModel(QObject *parent = nullptr);
@@ -41,7 +41,7 @@ public:
   void setCategoryFilter(const QString &categoryFilter);
 
   // Distinct non-empty categories this core declares, as [{key, label}] — used
-  // to build the drill-in entries in the top-level advanced view.
+  // to build the drill-in entries in the top-level advanced view
   [[nodiscard]] QVariantList categories() const;
 
   int rowCount(const QModelIndex &parent) const override;
@@ -52,7 +52,7 @@ public:
                int role) override;
 
   // Clears this tier's override for the row so it falls back to the inherited
-  // value (lower tier -> the core's declared default).
+  // value (lower tier -> the core's declared default)
   Q_INVOKABLE void resetValue(int row);
 
 signals:
@@ -86,11 +86,11 @@ private:
     QString categoryLabel;
   };
 
-  // Reloads option definitions from the repository (platform's core).
+  // Reloads option definitions from the repository (platform's core)
   void rebuild();
-  // Recomputes each row's effective value + whether it's overridden here.
+  // Recomputes each row's effective value + whether it's overridden here
   void refreshValues();
-  // First override at m_level or a lower tier (toward Global); nullopt if none.
+  // First override at m_level or a lower tier (toward Global); nullopt if none
   std::optional<std::string> resolveValue(const std::string &key);
 
   SettingsService *m_settingsService = SettingsService::instance();

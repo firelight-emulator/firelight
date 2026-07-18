@@ -17,7 +17,7 @@ void ShortcutEngine::setContext(const int scope) {
 
   // Entering or leaving gameplay drops every mask. A ScopeAlways action firing
   // in a menu suppresses an input nothing is reading, and that mask would
-  // otherwise still be there when the game came back.
+  // otherwise still be there when the game came back
   for (const auto &[device, held] : m_held) {
     device->suppressor().clear();
   }
@@ -38,7 +38,7 @@ void ShortcutEngine::setHotkeysEnabled(IGamepad *device, const bool enabled) {
   m_hotkeysDisabled[device] = !enabled;
   if (!enabled) {
     // Anything this device was withholding goes back to the game immediately;
-    // handing the game its inputs is the entire point of turning these off.
+    // handing the game its inputs is the entire point of turning these off
     device->suppressor().clear();
   }
 }
@@ -84,7 +84,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
   }
 
   // Detect edges under the lock, buffering events, then publish them after
-  // releasing so a subscriber can't re-enter the engine and deadlock.
+  // releasing so a subscriber can't re-enter the engine and deadlock
   std::vector<ShortcutEvent> events;
   std::vector<HotkeysToggledEvent> toggles;
   {
@@ -92,7 +92,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
     m_held[device][code] = pressed;
 
     // The game gets this input back the moment it's physically let go, whether
-    // or not the shortcut it fired is still active.
+    // or not the shortcut it fired is still active
     if (!pressed) {
       device->suppressor().release(code);
     }
@@ -116,7 +116,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
         continue;
       }
       // While a device's hotkeys are off, every input belongs to the game —
-      // except the one that turns them back on, or there'd be no way back.
+      // except the one that turns them back on, or there'd be no way back
       if (disabled && id != TOGGLE_HOTKEYS_ID) {
         continue;
       }
@@ -143,12 +143,12 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
       // Withhold the input that fired this from the game, until it is physically
       // released. Done here, under the lock and before the event is published,
       // because a subscriber runs a queued hop later — by which time the core
-      // would already have sampled the button for a frame or more.
+      // would already have sampled the button for a frame or more
       //
       // Only the trigger, never the modifiers: a modifier was already down when
       // the combo completed, so masking it now would hand the core a release it
       // never got, and unmasking would hand it a second press. That leak is why
-      // a modifier belongs on a button the game rarely reads.
+      // a modifier belongs on a button the game rarely reads
       if (rising && inScope) {
         device->suppressor().suppress(satisfiedBy);
       }
@@ -157,7 +157,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
       case ActivationType::Press:
         if (rising && inScope) {
           // Handled here rather than downstream because it is the one action
-          // about the device itself, and the device is only known here.
+          // about the device itself, and the device is only known here
           if (id == TOGGLE_HOTKEYS_ID) {
             m_hotkeysDisabled[device] = !disabled;
             if (!disabled) {
@@ -180,7 +180,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
                                          .id = id,
                                          .phase = ShortcutPhase::Started});
         } else if (!satisfied && active) {
-          // Release a hold that we started, even if we've left its scope.
+          // Release a hold that we started, even if we've left its scope
           active = false;
           events.push_back(ShortcutEvent{.playerIndex = playerIndex,
                                          .id = id,

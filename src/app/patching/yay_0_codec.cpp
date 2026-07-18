@@ -15,7 +15,7 @@ struct Header {
 // https://github.com/pmret/papermario/blob/main/tools/splat/util/n64/Yay0decompress.c
 std::vector<uint8_t> Yay0Codec::decompress(const uint8_t *data) {
 
-  // Fun little test that checks if the system is big or little endian.
+  // Fun little test that checks if the system is big or little endian
   unsigned int num = 1;
   const char *test = reinterpret_cast<char *>(&num);
 

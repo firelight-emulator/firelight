@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Appears anywhere in the app when the host starts a game: guests ready up,
-// the host watches the count and launches (or cancels).
+// the host watches the count and launches (or cancels)
 Rectangle {
     id: root
 

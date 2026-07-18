@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // Standalone editor for a profile's analog stick/trigger tuning. Bind
 // `profileId` to the profile being edited. Every change is persisted
-// immediately via AnalogSettingsModel.
+// immediately via AnalogSettingsModel
 FocusScope {
     id: root
 
@@ -16,7 +16,7 @@ FocusScope {
         profileId: root.profileId
     }
 
-    // A labeled slider row with a live value readout.
+    // A labeled slider row with a live value readout
     component TuningSlider: ColumnLayout {
         id: ts
         property string label: ""
@@ -58,7 +58,7 @@ FocusScope {
         }
     }
 
-    // Circular visualization of a stick's inner/outer deadzone.
+    // Circular visualization of a stick's inner/outer deadzone
     component DeadzoneViz: Item {
         id: viz
         property real inner: 0
@@ -79,26 +79,26 @@ FocusScope {
                 const cy = height / 2;
                 const R = Math.min(width, height) / 2 - 4;
 
-                // Active region (outer boundary minus outer deadzone).
+                // Active region (outer boundary minus outer deadzone)
                 ctx.fillStyle = "rgba(209, 76, 32, 0.28)";
                 ctx.beginPath();
                 ctx.arc(cx, cy, R * (1 - viz.outer), 0, 2 * Math.PI);
                 ctx.fill();
 
-                // Inner deadzone disc.
+                // Inner deadzone disc
                 ctx.fillStyle = "rgba(255, 255, 255, 0.14)";
                 ctx.beginPath();
                 ctx.arc(cx, cy, R * viz.inner, 0, 2 * Math.PI);
                 ctx.fill();
 
-                // Full-range boundary.
+                // Full-range boundary
                 ctx.strokeStyle = "#888888";
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(cx, cy, R, 0, 2 * Math.PI);
                 ctx.stroke();
 
-                // Crosshair.
+                // Crosshair
                 ctx.strokeStyle = "#555555";
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -111,11 +111,11 @@ FocusScope {
         }
     }
 
-    // A full tuning panel for one stick (sliders + visualizer).
+    // A full tuning panel for one stick (sliders + visualizer)
     component StickPanel: RowLayout {
         id: panel
         property string title: ""
-        // Bound to the model's properties by the caller.
+        // Bound to the model's properties by the caller
         property real inner: 0
         property real outer: 0
         property real sensitivity: 1

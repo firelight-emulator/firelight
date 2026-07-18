@@ -14,17 +14,17 @@ struct StreamEncoderConfig {
   int height = 0;
   int fps = 60;
   // Rate of the PCM handed to pushAudio (the core's rate); output is always
-  // 48 kHz Opus.
+  // 48 kHz Opus
   int inputSampleRate = 48000;
   int channels = 2;
   int bitrateKbps = 4000;
 };
 
 // Live game-stream encoder: H.264 (bitrate-capped, self-contained IDRs) +
-// Opus, emitting packets continuously through callbacks — no ring, no file.
+// Opus, emitting packets continuously through callbacks — no ring, no file
 // Video encodes on a worker thread (bounded hand-off queue, drop-oldest);
-// audio encodes inline on the calling thread (Opus frames are tiny).
-// Set callbacks before start(); they fire on internal threads.
+// audio encodes inline on the calling thread (Opus frames are tiny)
+// Set callbacks before start(); they fire on internal threads
 class StreamEncoder final : public IClipSink {
 public:
   StreamEncoder();
@@ -42,11 +42,11 @@ public:
   void stop();
   [[nodiscard]] bool isRunning() const;
 
-  // The next encoded frame becomes an IDR (join/reconnect recovery).
+  // The next encoded frame becomes an IDR (join/reconnect recovery)
   void requestKeyframe();
-  // H.264 SPS/PPS for the receiver's decoder setup.
+  // H.264 SPS/PPS for the receiver's decoder setup
   [[nodiscard]] std::vector<uint8_t> extradata() const;
-  // Blocks until queued video frames are encoded (tests).
+  // Blocks until queued video frames are encoded (tests)
   void flush();
 
   void pushVideoFrame(const QImage &frame, int64_t ptsMs) override;

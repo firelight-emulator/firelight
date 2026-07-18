@@ -61,7 +61,7 @@ bool ClipMuxer::writeMp4(const ClipSnapshot &snap, const QString &path) {
     }
 
     // Rebase so the first packet is t=0; convert from microseconds to whatever
-    // timescale the muxer settled on for the stream after the header.
+    // timescale the muxer settled on for the stream after the header
     const int64_t base = snap.video.front().ptsUs;
     const AVRational us{1, 1'000'000};
     AVPacket *pkt = av_packet_alloc();

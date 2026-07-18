@@ -15,7 +15,7 @@ namespace firelight::input {
     // each emulated input (GamepadInput) it stores a list of physical Bindings
     // whose evaluated results are combined. It may also carry an analog-tuning
     // override that takes precedence over the profile's default AnalogSettings on
-    // this platform.
+    // this platform
     class InputMapping {
     public:
         explicit InputMapping(
@@ -41,7 +41,7 @@ namespace firelight::input {
         void setControllerType(int controllerType);
 
         // --- Binding API ---
-        // Returns the bindings for an emulated input, or an empty list if unbound.
+        // Returns the bindings for an emulated input, or an empty list if unbound
         const std::vector<Binding> &getBindings(GamepadInput input) const;
 
         void setBindings(GamepadInput input, std::vector<Binding> bindings);

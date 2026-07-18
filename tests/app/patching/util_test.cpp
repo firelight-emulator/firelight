@@ -11,7 +11,7 @@ using namespace firelight::patching;
  * 
  * Tests utility functions used in patch format implementations, particularly
  * the Variable Length Value (VLV) encoding/decoding functionality used in
- * various patch formats for compact integer representation.
+ * various patch formats for compact integer representation
  */
 class UtilTest : public testing::Test {};
 
@@ -19,7 +19,7 @@ class UtilTest : public testing::Test {};
  * @brief Test reading single-byte VLV values
  * 
  * Verifies that Variable Length Values encoded in a single byte (with the
- * high bit set to indicate termination) are correctly decoded.
+ * high bit set to indicate termination) are correctly decoded
  */
 TEST_F(UtilTest, readVLV_SingleByte) {
     // Test single byte values with high bit set (terminates immediately)
@@ -37,7 +37,7 @@ TEST_F(UtilTest, readVLV_SingleByte) {
  * 
  * Verifies that Variable Length Values spanning multiple bytes are correctly
  * decoded, with continuation bytes (high bit clear) and termination byte
- * (high bit set) handled properly.
+ * (high bit set) handled properly
  */
 TEST_F(UtilTest, readVLV_MultiByte) {
     // Test multi-byte value: 0x00 (continue), 0x81 (stop, value=1)
@@ -56,7 +56,7 @@ TEST_F(UtilTest, readVLV_MultiByte) {
  * @brief Test reading larger multi-byte VLV values
  * 
  * Verifies that Variable Length Values spanning three bytes are correctly
- * decoded with proper accumulation and bit shifting operations.
+ * decoded with proper accumulation and bit shifting operations
  */
 TEST_F(UtilTest, readVLV_LargerMultiByte) {
     // Test: 0x00 (continue), 0x00 (continue), 0x81 (stop, value=1)
@@ -76,7 +76,7 @@ TEST_F(UtilTest, readVLV_LargerMultiByte) {
  * @brief Test reading VLV-encoded zero value
  * 
  * Verifies that a zero value encoded in VLV format (single byte with
- * high bit set) is correctly decoded to zero.
+ * high bit set) is correctly decoded to zero
  */
 TEST_F(UtilTest, readVLV_Zero) {
     // Test zero value with high bit set to terminate
@@ -93,7 +93,7 @@ TEST_F(UtilTest, readVLV_Zero) {
  * @brief Test reading maximum single-byte VLV value
  * 
  * Verifies that the maximum value that can be encoded in a single VLV byte
- * (127, represented as 0xFF) is correctly decoded.
+ * (127, represented as 0xFF) is correctly decoded
  */
 TEST_F(UtilTest, readVLV_MaxSingleByte) {
     // Test maximum single byte value (0xFF = 127 + high bit)
@@ -110,7 +110,7 @@ TEST_F(UtilTest, readVLV_MaxSingleByte) {
  * @brief Test VLV reading with empty data throws exception
  * 
  * Verifies that attempting to read a VLV from empty data throws a
- * std::runtime_error exception for proper error handling.
+ * std::runtime_error exception for proper error handling
  */
 TEST_F(UtilTest, readVLV_EmptyData) {
     // Test empty data - should throw exception
@@ -124,7 +124,7 @@ TEST_F(UtilTest, readVLV_EmptyData) {
  * @brief Test VLV reading with out-of-bounds index throws exception
  * 
  * Verifies that attempting to read a VLV starting beyond the data size
- * throws a std::runtime_error exception.
+ * throws a std::runtime_error exception
  */
 TEST_F(UtilTest, readVLV_IndexOutOfBounds) {
     // Test index beyond data size
@@ -138,7 +138,7 @@ TEST_F(UtilTest, readVLV_IndexOutOfBounds) {
  * @brief Test VLV reading with incomplete multi-byte sequence throws exception
  * 
  * Verifies that an incomplete multi-byte VLV sequence (missing termination
- * byte with high bit set) throws a std::runtime_error exception.
+ * byte with high bit set) throws a std::runtime_error exception
  */
 TEST_F(UtilTest, readVLV_IncompleteMultiByte) {
     // Test incomplete multi-byte sequence - should throw exception
@@ -152,7 +152,7 @@ TEST_F(UtilTest, readVLV_IncompleteMultiByte) {
  * @brief Test reading multiple consecutive VLV values
  * 
  * Verifies that multiple VLV values can be read sequentially from the same
- * data buffer, with the index properly advancing after each read operation.
+ * data buffer, with the index properly advancing after each read operation
  */
 TEST_F(UtilTest, readVLV_MultipleValues) {
     // Test reading multiple values from same data

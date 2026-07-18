@@ -9,7 +9,7 @@ namespace firelight::achievements {
  *
  * Provides persistent storage for achievement data using SQLite database
  * backend. Supports both file-based and in-memory database configurations for
- * production use and testing respectively.
+ * production use and testing respectively
  *
  * Database Schema:
  * - achievement_sets: Game achievement collections with metadata
@@ -21,7 +21,7 @@ namespace firelight::achievements {
  * use
  *
  * All write operations use upsert semantics (INSERT ... ON CONFLICT DO UPDATE)
- * to handle both creation and modification scenarios gracefully.
+ * to handle both creation and modification scenarios gracefully
  */
 class SqliteAchievementRepository final : public IAchievementRepository {
 public:
@@ -30,7 +30,7 @@ public:
    *
    * Creates or opens the SQLite database at the specified path and sets up
    * all required tables with proper schema and constraints. Use ":memory:"
-   * for in-memory database suitable for testing.
+   * for in-memory database suitable for testing
    *
    * @param dbPath Path to the SQLite database file, or ":memory:" for in-memory
    * DB
@@ -51,12 +51,12 @@ public:
    * Executes a SELECT query to fetch all user records from the users table,
    * ordered alphabetically by username. Each user record includes complete
    * information: username, authentication token, normal mode points, and
-   * hardcore mode points.
+   * hardcore mode points
    *
    * The method constructs User objects from the database results and returns
    * them in a vector. If no users exist, an empty vector is returned. Database
    * errors are logged and result in an empty vector return rather than throwing
-   * exceptions.
+   * exceptions
    *
    * SQL Query: `SELECT username, token, points, score FROM users
    * ORDER BY username`
@@ -84,7 +84,7 @@ public:
    * @brief Creates or updates an achievement set in the database
    *
    * Stores achievement set metadata including name, icon URL, point totals,
-   * and achievement counts. Uses upsert semantics.
+   * and achievement counts. Uses upsert semantics
    *
    * @param achievementSet The achievement set data to store
    * @return true if the operation succeeded, false on database error
@@ -96,7 +96,7 @@ public:
    *
    * Fetches the achievement set metadata and all associated achievements,
    * ordered by display order. Populates the achievements vector with
-   * complete achievement data including all metadata fields.
+   * complete achievement data including all metadata fields
    *
    * @param gameId The unique identifier of the achievement set
    * @return The list of achievement sets if found, empty vector otherwise
@@ -107,10 +107,10 @@ public:
   /**
    * @brief Retrieves achievement set by game content hash
    *
-   * Looks up an achievement set using the game's content hash mapping.
+   * Looks up an achievement set using the game's content hash mapping
    * Only includes achievements with active flags (flags == 3) and calculates
    * total points from included achievements. Used for automatic achievement
-   * loading when games are launched.
+   * loading when games are launched
    *
    * @param contentHash The game's content fingerprint hash
    * @return The achievement set if mapping exists, std::nullopt otherwise
@@ -130,12 +130,12 @@ public:
    *
    * Executes a SQL query to perform reverse lookup from achievement set ID to
    * its associated content hash. Queries the hashes table to find the hash
-   * value that has been mapped to the specified achievement set ID.
+   * value that has been mapped to the specified achievement set ID
    *
    * The method performs a simple SELECT query against the hashes table with
-   * the achievement_set_id as the key, returning the associated hash string.
+   * the achievement_set_id as the key, returning the associated hash string
    * Database errors are logged and result in std::nullopt return values for
-   * graceful error handling.
+   * graceful error handling
    *
    * SQL Query: `SELECT hash FROM hashes WHERE achievement_set_id = :gameId`
    *
@@ -172,7 +172,7 @@ public:
    *
    * Stores complete achievement data including name, description, points,
    * icon URL, type, display order, flags, and set association. Uses upsert
-   * semantics for both creation and updates.
+   * semantics for both creation and updates
    *
    * @param achievement The achievement data to store
    * @return true if the operation succeeded, false on database error
@@ -189,7 +189,7 @@ public:
    *
    * Tracks incremental progress (numerator/denominator) for achievements
    * that require multiple steps or accumulated actions. Uses composite
-   * primary key of username and achievement ID for upsert behavior.
+   * primary key of username and achievement ID for upsert behavior
    *
    * @param progress The progress data to store or update
    * @return true if the operation succeeded, false on database error
@@ -203,7 +203,7 @@ public:
    *
    * Creates or updates a mapping between a game's content hash and its
    * achievement set. This enables automatic achievement loading based on
-   * game content fingerprinting. Uses upsert semantics to allow remapping.
+   * game content fingerprinting. Uses upsert semantics to allow remapping
    *
    * @param contentHash The game's content hash
    * @param gameId The achievement set ID to associate
@@ -221,7 +221,7 @@ public:
    * @brief Retrieves user unlock status for a specific achievement
    *
    * Fetches complete unlock data including normal and hardcore mode status,
-   * unlock timestamps, and synchronization status with remote services.
+   * unlock timestamps, and synchronization status with remote services
    *
    * @param username The username to query unlock status for
    * @param achievementId The achievement ID to check
@@ -235,7 +235,7 @@ public:
    *
    * Records achievement completion status for both normal and hardcore modes,
    * including unlock timestamps and sync status with remote services. Uses
-   * upsert semantics based on the combination of username and achievement ID.
+   * upsert semantics based on the combination of username and achievement ID
    *
    * @param unlock The unlock data to store or update
    * @return true if the operation succeeded, false on database error
@@ -247,7 +247,7 @@ public:
    *
    * Fetches all achievement unlock records for a given user within a specific
    * achievement set, ordered by the achievement's display order. This is useful
-   * for displaying a user's progress through all achievements in a game.
+   * for displaying a user's progress through all achievements in a game
    *
    * @param username The username to query unlock records for
    * @param gameId The achievement set ID to filter unlocks by
@@ -262,11 +262,11 @@ public:
    * Fetches all achievement unlock records for a given user that have not yet
    * been synchronized with remote services (synced = false). This is essential
    * for offline achievement tracking, allowing the system to identify which
-   * unlocks need to be uploaded when connectivity is restored.
+   * unlocks need to be uploaded when connectivity is restored
    *
    * The method returns unlocks across all achievement sets for the specified
    * user, regardless of the achievement set they belong to. This provides a
-   * comprehensive view of all pending synchronization work for a user.
+   * comprehensive view of all pending synchronization work for a user
    *
    * Use cases:
    * - Offline achievement synchronization when connectivity is restored

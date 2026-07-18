@@ -28,7 +28,7 @@ bool startsWith(const std::vector<uint8_t> &bytes, const uint8_t *signature,
 }
 
 // Maps a Firelight platform id to the rcheevos console id used for buffer-based
-// content hashing of cartridge systems that rcheevos handles directly.
+// content hashing of cartridge systems that rcheevos handles directly
 uint32_t rcConsoleForPlatform(int platformId) {
   switch (platformId) {
   case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY:
@@ -86,7 +86,7 @@ std::string ContentHasher::md5(const uint8_t *data, const size_t len) {
   md5_state_t state;
   md5_init(&state);
   // md5_append takes an int length; feed it in chunks to stay correct for very
-  // large inputs.
+  // large inputs
   size_t offset = 0;
   while (offset < len) {
     const size_t chunk = std::min<size_t>(len - offset, 1u << 20);

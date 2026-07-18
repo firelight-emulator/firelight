@@ -12,8 +12,8 @@ namespace firelight::gui {
         return 2;
     }
 
-    // Removes items beyond m_maxResultsPerCategory within each category.
-    // Must be called after m_visibleItems is sorted by category.
+    // Removes items beyond m_maxResultsPerCategory within each category
+    // Must be called after m_visibleItems is sorted by category
     void SearchResultsListModel::trimToLimit() {
         if (m_maxResultsPerCategory <= 0) return;
         QString current;

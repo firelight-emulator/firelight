@@ -8,7 +8,7 @@ QImage GameImageProvider::requestImage(const QString &id, QSize *size,
                                        const QSize &requestedSize) {
   // Copy the stored image out under the lock, then scale outside it: QImage is
   // copy-on-write, so the copy is cheap and stays valid even if another thread
-  // replaces the map entry while we scale.
+  // replaces the map entry while we scale
   QImage image;
   {
     std::lock_guard lock(m_mutex);
@@ -58,7 +58,7 @@ void GameImageProvider::removeImageWithUrl(const QString &url) {
 
   std::lock_guard lock(m_mutex);
   // erase(find(...)) is undefined behavior when the id isn't present, so only
-  // erase a real hit.
+  // erase a real hit
   if (const auto it = m_images.find(id); it != m_images.end()) {
     m_images.erase(it);
   }

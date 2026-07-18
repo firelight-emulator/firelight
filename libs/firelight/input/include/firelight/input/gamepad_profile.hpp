@@ -20,17 +20,17 @@ public:
   void setIsKeyboardProfile(bool isKeyboardProfile);
 
   // Built-in profiles ship with the app and are read-only; editing one should
-  // clone it to a user profile first.
+  // clone it to a user profile first
   [[nodiscard]] bool isBuiltin() const;
   void setBuiltin(bool builtin);
 
-  // The GamepadType this profile was designed for (-1 = generic / any).
+  // The GamepadType this profile was designed for (-1 = generic / any)
   [[nodiscard]] int getBasedOnType() const;
   void setBasedOnType(int type);
 
   // The preset this profile's shortcuts were seeded from. Kept so the editor can
   // show which rows differ from it and reset them back — the bindings themselves
-  // are the profile's own from the moment it's created, not resolved through it.
+  // are the profile's own from the moment it's created, not resolved through it
   [[nodiscard]] std::string getPresetId() const;
   void setPresetId(std::string presetId);
 
@@ -49,12 +49,12 @@ public:
   [[nodiscard]] std::shared_ptr<ShortcutMapping> getShortcutMapping() const;
 
   // Profile-wide analog defaults. A platform mapping may override these via
-  // InputMapping::setAnalogOverride.
+  // InputMapping::setAnalogOverride
   [[nodiscard]] const AnalogSettings &getDefaultAnalogSettings() const;
   void setDefaultAnalogSettings(const AnalogSettings &settings);
 
   // Resolves the analog settings to use for a platform: the platform mapping's
-  // override if present, otherwise the profile default.
+  // override if present, otherwise the profile default
   [[nodiscard]] AnalogSettings getAnalogSettings(int platformId,
                                                  int controllerType) const;
 

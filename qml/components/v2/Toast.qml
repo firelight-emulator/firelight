@@ -3,7 +3,7 @@ import Firelight 1.0
 
 // A brief message over everything else. Deliberately not interactive and never
 // focusable: it reports what just happened, and a hotkey firing must not steal
-// input from the game.
+// input from the game
 Rectangle {
     id: root
 
@@ -13,7 +13,7 @@ Rectangle {
         label.text = message;
         opacity = 1;
         // Restart rather than queue: the last thing you did is the thing worth
-        // reading, and holding speed_up spams these.
+        // reading, and holding speed_up spams these
         hideTimer.restart();
     }
 

@@ -12,7 +12,7 @@ FirelightDialog {
     required property string shortcutName
     required property bool isKeyboard
     // Input codes that count as a modifier when held. Comes from the model, so
-    // this list and the shipped presets can't drift apart.
+    // this list and the shipped presets can't drift apart
     property var modifierCandidates: []
 
     showButtons: false
@@ -20,7 +20,7 @@ FirelightDialog {
 
     signal mappingAdded(var shortcut, var modifiers, var input)
 
-    // Inputs held right now, in the order they went down.
+    // Inputs held right now, in the order they went down
     property var heldInputs: []
 
     onAboutToShow: {
@@ -41,13 +41,13 @@ FirelightDialog {
         enabled: root.visible && !root.isKeyboard
         // The combo is read on release, not on press: any input can be a
         // modifier, so while a button is going down there is no way to know
-        // whether it is the trigger or something being held for the next one.
+        // whether it is the trigger or something being held for the next one
         // Waiting means "hold Select, press X" records Select+X rather than
-        // firing the instant Select goes down.
+        // firing the instant Select goes down
         function onInputChanged(input, activated) {
             if (activated) {
                 // They've started entering one; the give-up countdown is for
-                // deciding, not for how long a combo may be held.
+                // deciding, not for how long a combo may be held
                 timer.stop()
                 if (!root.heldInputs.includes(input)) {
                     root.heldInputs = root.heldInputs.concat([input]);
@@ -61,7 +61,7 @@ FirelightDialog {
 
             // Last one down is the trigger; anything held alongside it modifies
             // it. Sticks are excluded as modifiers — they drift, and a drifting
-            // axis would silently join the combo.
+            // axis would silently join the combo
             const trigger = root.heldInputs[root.heldInputs.length - 1];
             const modifiers = root.heldInputs.slice(0, -1)
                 .filter(held => root.modifierCandidates.includes(held));

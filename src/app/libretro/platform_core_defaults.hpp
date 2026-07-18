@@ -7,7 +7,7 @@
 // Legacy Firelight-recommended per-platform core-option defaults. Fallback for
 // cores whose defaults are not yet in settings_catalog.json (the preferred
 // source). Consumed only by CoreConfiguration; slated for removal as cores move
-// into the catalog (config Phase 5). Moved here verbatim from PlatformMetadata.
+// into the catalog (config Phase 5). Moved here verbatim from PlatformMetadata
 namespace firelight {
 
   const static std::map<int, std::map<std::string, std::string> >
@@ -246,7 +246,7 @@ namespace firelight {
     }
   };
 
-// A recommended default for a core option on a platform, if one is defined.
+// A recommended default for a core option on a platform, if one is defined
 inline std::optional<std::string>
 defaultCoreOptionForPlatform(const int platformId, const std::string &key) {
   const auto platformIt = defaultPlatformValues.find(platformId);

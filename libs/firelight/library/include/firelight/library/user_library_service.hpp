@@ -9,11 +9,11 @@ namespace firelight::library {
 // The app-facing curation surface for the user library. A thin, concrete facade
 // over the repository (no Qt, no QObject): it exposes only the operations the GUI
 // and emulation need — browsing/updating entries, managing folders, and managing
-// content directories — and keeps the full CRUD contract out of the app.
+// content directories — and keeps the full CRUD contract out of the app
 //
 // It also owns the guarantee that a default content directory always exists: on
 // construction it creates that directory on disk and ensures it is watched, so
-// the user never has to pick or configure a primary games folder.
+// the user never has to pick or configure a primary games folder
 class UserLibraryService {
 public:
   UserLibraryService(IUserLibraryRepository &repository,

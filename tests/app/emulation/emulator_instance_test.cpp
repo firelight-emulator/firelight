@@ -19,7 +19,7 @@ namespace firelight::emulation {
  *
  * Tests EmulatorInstance behavior with settings changes, including game-level
  * and platform-level setting updates, settings level transitions, and
- * settings isolation between different content hashes and platforms.
+ * settings isolation between different content hashes and platforms
  */
 class EmulatorInstanceTest : public testing::Test {
 protected:
@@ -64,7 +64,7 @@ protected:
  *
  * Verifies that when game-specific settings are changed, the EmulatorInstance
  * receives the updates and reflects the new values. Tests the picture-mode
- * setting change from default to integer-scale.
+ * setting change from default to integer-scale
  */
 TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
@@ -88,7 +88,7 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
   // Check initial picture mode value
   EXPECT_EQ("aspect-ratio-fill", instance->getPictureMode());
 
-  // Change game setting — a game override applies immediately.
+  // Change game setting — a game override applies immediately
   m_settingsService->setGameValue(m_testContentHash, "picture-mode",
                                   "integer-scale");
 
@@ -97,11 +97,11 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
 }
 
 /**
- * @brief Sync-method and target-framerate resolve and react to setting changes.
+ * @brief Sync-method and target-framerate resolve and react to setting changes
  *
  * These drive the frame-pacing strategy. With no override they fall back to the
  * defaults (audio / 60), and a game override updates the live instance via the
- * GameSettingChangedEvent -> refreshAllSettings path.
+ * GameSettingChangedEvent -> refreshAllSettings path
  */
 TEST_F(EmulatorInstanceTest, SyncSettingsUpdateInstance) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
@@ -122,11 +122,11 @@ TEST_F(EmulatorInstanceTest, SyncSettingsUpdateInstance) {
   auto instance = m_emulationService->getCurrentEmulatorInstance();
   ASSERT_NE(instance, nullptr);
 
-  // No overrides yet -> defaults.
+  // No overrides yet -> defaults
   EXPECT_EQ("audio", instance->getSyncMethod());
   EXPECT_EQ(60, instance->getTargetFramerate());
 
-  // Game overrides update the live instance.
+  // Game overrides update the live instance
   m_settingsService->setGameValue(m_testContentHash, "sync-method", "monitor");
   EXPECT_EQ("monitor", instance->getSyncMethod());
 
@@ -140,7 +140,7 @@ TEST_F(EmulatorInstanceTest, SyncSettingsUpdateInstance) {
  * Verifies that when platform-specific settings are changed, the
  * EmulatorInstance receives the updates when configured to use platform-level
  * settings. Tests aspect-ratio setting change from emulator-corrected to
- * pixel-perfect.
+ * pixel-perfect
  */
 TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
@@ -166,7 +166,7 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
   // Check initial aspect ratio mode value
   EXPECT_EQ("emulator-corrected", instance->getAspectRatioMode());
 
-  // Change platform setting — with no game override, it applies to this game.
+  // Change platform setting — with no game override, it applies to this game
   m_settingsService->setPlatformValue(3, "aspect-ratio", "pixel-perfect");
 
   // Verify the instance received the update
@@ -215,11 +215,11 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
 // }
 
 /**
- * @brief Test that settings resolve by inheritance (game overrides platform).
+ * @brief Test that settings resolve by inheritance (game overrides platform)
  *
  * There is no stored "settings level": the running game resolves each setting
  * as game override -> platform override -> global -> default. A platform value
- * applies when there's no game override; a game override then shadows it.
+ * applies when there's no game override; a game override then shadows it
  */
 TEST_F(EmulatorInstanceTest, GameValueOverridesPlatformValue) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
@@ -241,11 +241,11 @@ TEST_F(EmulatorInstanceTest, GameValueOverridesPlatformValue) {
   auto instance = m_emulationService->getCurrentEmulatorInstance();
   ASSERT_FALSE(instance->isInitialized());
 
-  // With no game override, the platform value applies.
+  // With no game override, the platform value applies
   m_settingsService->setPlatformValue(3, "picture-mode", "stretch");
   EXPECT_EQ("stretch", instance->getPictureMode());
 
-  // A game override shadows the platform value.
+  // A game override shadows the platform value
   m_settingsService->setGameValue(m_testContentHash, "picture-mode",
                                   "integer-scale");
   EXPECT_EQ("integer-scale", instance->getPictureMode());
@@ -257,7 +257,7 @@ TEST_F(EmulatorInstanceTest, GameValueOverridesPlatformValue) {
  * Verifies that when multiple game settings are changed at once, the
  * EmulatorInstance properly updates all affected properties. Tests
  * picture-mode, aspect-ratio, and rewind-enabled settings being changed
- * together.
+ * together
  */
 TEST_F(EmulatorInstanceTest, MultipleSettingsChangeSimultaneously) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
@@ -299,7 +299,7 @@ TEST_F(EmulatorInstanceTest, MultipleSettingsChangeSimultaneously) {
  *
  * Verifies that game settings changes for a different content hash do not
  * affect the current EmulatorInstance. Tests settings isolation between
- * different games.
+ * different games
  */
 TEST_F(EmulatorInstanceTest, WrongContentHashIgnoresGameSettings) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
@@ -338,7 +338,7 @@ TEST_F(EmulatorInstanceTest, WrongContentHashIgnoresGameSettings) {
  *
  * Verifies that platform settings changes for a different platform ID do not
  * affect the current EmulatorInstance. Tests settings isolation between
- * different platforms.
+ * different platforms
  */
 TEST_F(EmulatorInstanceTest, WrongPlatformIdIgnoresPlatformSettings) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
@@ -372,14 +372,14 @@ TEST_F(EmulatorInstanceTest, WrongPlatformIdIgnoresPlatformSettings) {
 }
 
 /**
- * @brief Disc-control passes through to the core and swapDisc publishes an event.
+ * @brief Disc-control passes through to the core and swapDisc publishes an event
  *
  * Uses a FakeCore configured with a 3-disc set: the instance reports the count,
  * a valid swap changes the current index and emits a DiscChangedEvent, and an
- * out-of-range swap is rejected without an event.
+ * out-of-range swap is rejected without an event
  */
 TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
-  // Rebuild the service with a factory that hands out a multi-disc FakeCore.
+  // Rebuild the service with a factory that hands out a multi-disc FakeCore
   m_emulationService = std::make_unique<EmulationService>(
       *m_service, *m_resolver, *m_settingsService, EmulationContext{},
       [](const firelight::libretro::CoreRunConfig &)
@@ -421,13 +421,13 @@ TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
   EXPECT_EQ(3u, events[0].count);
   EXPECT_EQ(m_testContentHash, events[0].contentHash);
 
-  // Out of range -> rejected, no new event.
+  // Out of range -> rejected, no new event
   EXPECT_FALSE(instance->swapDisc(5));
   EXPECT_EQ(1u, events.size());
 }
 
 /**
- * @brief A CLI --save-slot override applies to the next launch, then is consumed.
+ * @brief A CLI --save-slot override applies to the next launch, then is consumed
  */
 TEST_F(EmulatorInstanceTest, SaveSlotOverrideAppliesOnceThenConsumed) {
   library::ContentFile info{.m_fileSizeBytes = 16777216,
@@ -443,14 +443,14 @@ TEST_F(EmulatorInstanceTest, SaveSlotOverrideAppliesOnceThenConsumed) {
       m_testContentHash);
   ASSERT_TRUE(entry.has_value());
 
-  // Override the save slot for the next launch.
+  // Override the save slot for the next launch
   m_emulationService->setPendingLaunchOverrides({.saveSlot = 7});
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
   auto *first = m_emulationService->getCurrentEmulatorInstance();
   ASSERT_NE(first, nullptr);
   EXPECT_EQ(7, first->getSaveSlotNumber());
 
-  // The override is one-shot: a second launch uses the entry's own active slot.
+  // The override is one-shot: a second launch uses the entry's own active slot
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
   auto *second = m_emulationService->getCurrentEmulatorInstance();
   ASSERT_NE(second, nullptr);
@@ -459,7 +459,7 @@ TEST_F(EmulatorInstanceTest, SaveSlotOverrideAppliesOnceThenConsumed) {
 
 /**
  * @brief The core's advertised port devices are exposed, and selecting one
- * calls the core and persists the choice per-game.
+ * calls the core and persists the choice per-game
  */
 TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   FakeCore *fake = nullptr;
@@ -469,7 +469,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
           -> std::unique_ptr<::libretro::ICore> {
         auto core = std::make_unique<FakeCore>();
         // Advertise the ids the snes9x catalog knows (SNES == platform 6):
-        // standard pad, SNES Mouse, Super Scope.
+        // standard pad, SNES Mouse, Super Scope
         core->setControllerDevices(
             {{{1, "SNES Pad"}, {2, "Mouse"}, {260, "Super Scope"}}});
         fake = core.get();
@@ -479,7 +479,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
 
   library::ContentFile info{.m_fileSizeBytes = 16777216,
                             // A real file must exist on disk (content is ignored
-                            // by the fake core); the platform selects the core.
+                            // by the fake core); the platform selects the core
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = m_testContentHash,
                             .m_inArchive = false,
@@ -504,7 +504,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
 
   // The curated variants are surfaced console-natively (the standard pad plus
   // the SNES Mouse / Super Scope the snes9x catalog knows, cross-referenced with
-  // the core's advertisement), default first.
+  // the core's advertisement), default first
   const auto variants = instance->getAvailableControllerVariants(0);
   ASSERT_EQ(variants.size(), 3u);
   EXPECT_TRUE(variants.front().isDefault);
@@ -520,7 +520,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   }
   EXPECT_TRUE(hasSuperScope);
 
-  // Selecting a variant drives the core and persists per-game (by coreDeviceId).
+  // Selecting a variant drives the core and persists per-game (by coreDeviceId)
   instance->setPortControllerVariant(0, 260);
   ASSERT_FALSE(fake->portDeviceCalls().empty());
   EXPECT_EQ(fake->portDeviceCalls().back().first, 0u);
@@ -546,16 +546,16 @@ TEST(CoreStateContractTest, SerializeRoundTripAndRejectsSizeMismatch) {
 
   EXPECT_EQ(core.getSerializeSize(), saved.size());
 
-  // Diverge from the snapshot.
+  // Diverge from the snapshot
   core.run(0);
   core.run(0);
   ASSERT_NE(core.frameCount(), savedFrame);
 
-  // A correctly-sized state restores and reports success.
+  // A correctly-sized state restores and reports success
   EXPECT_TRUE(core.deserializeState(saved));
   EXPECT_EQ(core.frameCount(), savedFrame);
 
-  // Wrong-sized states are refused and leave the core untouched.
+  // Wrong-sized states are refused and leave the core untouched
   const std::vector<uint8_t> tooLong(saved.size() + 1, 0);
   EXPECT_FALSE(core.deserializeState(tooLong));
   EXPECT_EQ(core.frameCount(), savedFrame);

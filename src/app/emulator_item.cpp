@@ -23,7 +23,7 @@ void EmulatorItem::feedPointer(const QPointF &pos) {
   // Off-screen is authoritatively derived from whether the cursor is actually
   // over the game surface (light guns read this; when off-screen some cores —
   // e.g. FCEUmm's Zapper — zero the aim). Clamp the normalized position to
-  // [-1, 1] so an out-of-bounds drag can't overflow the int16 the core reads.
+  // [-1, 1] so an out-of-bounds drag can't overflow the int16 the core reads
   const bool offscreen = !bounds.contains(pos);
   const auto x = std::clamp(
       (pos.x() - bounds.width() / 2) / (bounds.width() / 2), -1.0, 1.0);
@@ -34,7 +34,7 @@ void EmulatorItem::feedPointer(const QPointF &pos) {
   input->updateMouseState(x, y, m_mousePressed);
   input->updateMouseOffscreen(offscreen);
 
-  // Relative motion for RETRO_DEVICE_MOUSE: pixel delta since the last event.
+  // Relative motion for RETRO_DEVICE_MOUSE: pixel delta since the last event
   if (m_hasLastMousePos) {
     input->updateMouseMotion(
         static_cast<int>(std::lround(pos.x() - m_lastMousePos.x())),
@@ -50,7 +50,7 @@ void EmulatorItem::mouseMoveEvent(QMouseEvent *event) {
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   // The emulator a hotkey acts on. Registered from here rather than when the
-  // game starts, because the ScopeAlways actions can fire before then.
+  // game starts, because the ScopeAlways actions can fire before then
   if (const auto actions = getShortcutActions()) {
     actions->setController(this);
   }
@@ -62,7 +62,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
   m_threadPool.setMaxThreadCount(1);
 
-  // Re-pace when the sync method or target framerate changes (any tier).
+  // Re-pace when the sync method or target framerate changes (any tier)
   m_settingChangedConnection =
       EventDispatcher::instance()
           .subscribe<firelight::settings::EmulationSettingChangedEvent>(
@@ -95,20 +95,20 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   connect(&m_emulationTimer, &QChronoTimer::timeout, [this] {
     // Audio-driven pacing: submit a frame whenever the audio buffer has room to
     // accept another, instead of spinning to a wall-clock target. The audio
-    // device's consumption rate becomes the master clock.
+    // device's consumption rate becomes the master clock
     if (m_audioSyncActive.load()) {
       // When paused, no audio is produced so the buffer would sit empty and we'd
       // submit a frame every tick — skip entirely (the renderer holds the pause
-      // image).
+      // image)
       if (m_paused) {
         return;
       }
-      // Read the level through the service, which guards the instance's lifetime.
+      // Read the level through the service, which guards the instance's lifetime
       // Dereferencing a raw instance pointer here races loadEntry/stopEmulation
-      // freeing it on the GUI thread (a use-after-free on game load/unload).
+      // freeing it on the GUI thread (a use-after-free on game load/unload)
       const float level = firelight::emulation::EmulationService::getInstance()
                               ->currentAudioBufferLevel();
-      // Keep the buffer around half full; below that, room for another frame.
+      // Keep the buffer around half full; below that, room for another frame
       if (m_renderer && level >= 0.0f && level < 0.5f) {
         m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
         QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
@@ -130,7 +130,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     static int64_t rollingSumOfAbsoluteDifferencesNs = 0;
 
     if (previousFrameActualEndTimeNs == 0) {
-      // First call, or after a reset. Perform work and set the baseline.
+      // First call, or after a reset. Perform work and set the baseline
       // CALL YOUR FRAME UPDATE/WORK FUNCTION HERE (e.g.,
       // your_main_update_function();)
 
@@ -142,8 +142,8 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
       return;
     }
 
-    // Determine the target end time for *this* frame's spin.
-    // Add the adaptive timingCorrectionNs here.
+    // Determine the target end time for *this* frame's spin
+    // Add the adaptive timingCorrectionNs here
     int64_t intendedTargetFrameEndTimeNs =
         previousFrameActualEndTimeNs + actualTargetNs + timingCorrectionNs;
     int64_t spinStartTimeNs =
@@ -154,10 +154,10 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
       while (
           std::chrono::high_resolution_clock::now().time_since_epoch().count() <
           intendedTargetFrameEndTimeNs) {
-        // This is a hard spin, consumes 100% CPU on one core.
+        // This is a hard spin, consumes 100% CPU on one core
         // Optional: If there's significant time left (e.g., > 0.2-0.5 ms),
         // you could std::this_thread::yield(); or a platform-specific short
-        // pause to reduce CPU load, at the cost of slightly less precision.
+        // pause to reduce CPU load, at the cost of slightly less precision
         // Example:
         // if (intendedTargetFrameEndTimeNs -
         //         std::chrono::high_resolution_clock::now()
@@ -253,7 +253,7 @@ EmulatorItem::~EmulatorItem() {
   // torn-down thread's timer dispatcher ("Timers cannot be stopped from another
   // thread") and can fault at shutdown (0xC0000005). A blocking queued call is
   // safe here: the timeout handler only enqueues render commands (never blocks
-  // on the GUI thread), so it can't deadlock, and the thread is always running.
+  // on the GUI thread), so it can't deadlock, and the thread is always running
   QMetaObject::invokeMethod(&m_emulationTimer, "stop",
                             Qt::BlockingQueuedConnection);
   m_emulationThread.quit();
@@ -277,7 +277,7 @@ void EmulatorItem::advanceOneFrame() {
     return;
   }
   // Pause first so the pacing thread stops queueing frames of its own, then
-  // hand the renderer exactly one — the same command the pacer would have sent.
+  // hand the renderer exactly one — the same command the pacer would have sent
   setPaused(true);
   m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
   update();
@@ -364,7 +364,7 @@ double EmulatorItem::monitorPacingRate(const double coreFps,
   }
   // Divide the refresh rate down to the integer fraction closest to the content
   // rate (e.g. 120 Hz / 2 = 60 for a 60 fps game; 144 Hz / 2 = 72, which won't
-  // match below).
+  // match below)
   const double multiple = std::round(refreshHz / coreFps);
   if (multiple < 1.0) {
     return 0.0;
@@ -396,31 +396,31 @@ void EmulatorItem::reconfigurePacing() {
     }
   }
 
-  // Audio sync needs a working audio device; otherwise fall back to wall-clock.
+  // Audio sync needs a working audio device; otherwise fall back to wall-clock
   const bool audioAvailable = emulator->getAudioBufferLevel() >= 0.0f;
   m_audioSyncActive = (method == SyncMethod::Audio) && audioAvailable;
 
   // Only sync-to-monitor bends audio to the display rate; other modes play audio
-  // at the core's native rate.
+  // at the core's native rate
   double audioRatio = 1.0;
   int64_t targetNs = 0;
 
   if (method == SyncMethod::Monitor) {
     // Match the display only when it divides down close to the content rate
     // (e.g. 60/120/240 Hz for a 60 fps game); otherwise fall back to native so we
-    // never over/underspeed the game (e.g. on a 144 Hz display).
+    // never over/underspeed the game (e.g. on a 144 Hz display)
     if (const double rate = monitorPacingRate(coreFps, refreshHz); rate > 0.0) {
       targetNs = static_cast<int64_t>(1e9 / rate);
       audioRatio = rate / coreFps;
     }
-    // else: leave targetNs 0 -> native fallback below.
+    // else: leave targetNs 0 -> native fallback below
   } else {
     targetNs = computeTargetIntervalNs(method, coreFps, targetFramerate, refreshHz);
   }
 
   if (targetNs <= 0) {
     // Native pacing (also the fallback for audio-with-no-device and for a monitor
-    // that doesn't line up with the content rate).
+    // that doesn't line up with the content rate)
     targetNs = static_cast<int64_t>(1e9 / coreFps);
   }
 
@@ -509,7 +509,7 @@ void EmulatorItem::hoverLeaveEvent(QHoverEvent *event) {
   // relative motion should not jump across the gap on re-entry. Ignore the
   // spurious leave Qt emits when a mouse-button grab begins (a button is held
   // and the cursor is still over the surface) — otherwise pulling the trigger
-  // would momentarily flag off-screen and zero the aim.
+  // would momentarily flag off-screen and zero the aim
   m_hasLastMousePos = false;
   if (!m_mousePressed && !m_mouseRightPressed && !m_mouseMiddlePressed) {
     getInputService()->updateMouseOffscreen(true);
@@ -531,7 +531,7 @@ void EmulatorItem::mousePressEvent(QMouseEvent *event) {
     break;
   }
   // Refresh the aim from the click location (and clear off-screen) so a light
-  // gun fires exactly where the cursor is, even if hover updates were stale.
+  // gun fires exactly where the cursor is, even if hover updates were stale
   feedPointer(event->position());
   getInputService()->updateMouseButtons(m_mousePressed, m_mouseRightPressed,
                                         m_mouseMiddlePressed);
@@ -582,7 +582,7 @@ void EmulatorItem::startGame() {
     emit gameNameChanged();
 
     // Qt owns the renderer, so it will destroy it. EmulatorItem is the
-    // ServiceAccessor; it hands the renderer its dependencies directly.
+    // ServiceAccessor; it hands the renderer its dependencies directly
     m_renderer = new EmulatorItemRenderer(
         window()->rendererInterface()->graphicsApi(), window(), emuInstance,
         getActivityService(), getAchievementManager(), getGameImageProvider(),
@@ -601,7 +601,7 @@ void EmulatorItem::startGame() {
 
     // Setting these causes the item's geometry to be visible, and the renderer
     // is initialized. If an item is not visible, the renderer is not
-    // initialized.
+    // initialized
     m_coreBaseWidth = 1;
     m_coreBaseHeight = 1;
     m_calculatedAspectRatio = 1;

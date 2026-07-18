@@ -6,7 +6,7 @@
 
 namespace firelight::cli {
 
-// What the parsed command line asks the app to do.
+// What the parsed command line asks the app to do
 enum class CliAction {
   RunGui,       // launch the normal GUI (optionally auto-launching romPath)
   RunScan,      // run the headless `scan` subcommand, then exit
@@ -17,7 +17,7 @@ enum class CliAction {
 };
 
 // The result of parsing argv. A plain struct (no Qt, no CLI11 in the header) so
-// it's trivially unit-testable.
+// it's trivially unit-testable
 struct CliOptions {
   CliAction action = CliAction::RunGui;
   int exitCode = 0; // meaningful only when action == Exit
@@ -38,18 +38,18 @@ struct CliOptions {
   std::string core;         // --core NAME; per-launch core override
 
   // Inline `--set key=value` emulation overrides (already split on the first
-  // '='), applied for this launch only.
+  // '='), applied for this launch only
   std::vector<std::pair<std::string, std::string>> sets;
 
   // RetroAchievements credentials, from the startup `--ra-*` flags or the
-  // `login` subcommand's `--username/--password/--token`.
+  // `login` subcommand's `--username/--password/--token`
   std::string raUsername;
   std::string raPassword;
   std::string raToken;
 };
 
 // Parses argv with CLI11. On --help/--version or a parse error, prints the
-// appropriate output and returns action == Exit with the process exit code.
+// appropriate output and returns action == Exit with the process exit code
 CliOptions parseCli(int argc, char **argv);
 
 } // namespace firelight::cli

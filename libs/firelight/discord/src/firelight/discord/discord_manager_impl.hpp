@@ -23,7 +23,7 @@ namespace firelight::discord {
 
         void setRichPresenceMessage(const std::string &message) override;
 
-        // The one process-wide SDK client; the lobby backend shares it.
+        // The one process-wide SDK client; the lobby backend shares it
         discordpp::Client &client() { return m_client; }
 
     private:

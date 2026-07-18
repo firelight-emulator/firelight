@@ -3,7 +3,7 @@ import QtQuick.Controls
 import Firelight 1.0
 
 // A single-select segmented button group (e.g. Day / Week / Month). Feed
-// `segments` a list of labels; `currentIndex` is the selection.
+// `segments` a list of labels; `currentIndex` is the selection
 //
 //   FLSegmentedControl { segments: ["Day", "Week", "Month"]; onActivated: ... }
 Row {
@@ -49,7 +49,7 @@ Row {
                 color: seg.selected ? Theme.surfaceHover : segHover.hovered ? Theme.surfaceElevated : "transparent"
                 border.width: 1
                 border.color: Theme.border
-                // Round only the outer corners of the first/last segment.
+                // Round only the outer corners of the first/last segment
                 topLeftRadius: seg.index === 0 ? AppStyle.radiusMd : 0
                 bottomLeftRadius: seg.index === 0 ? AppStyle.radiusMd : 0
                 topRightRadius: seg.index === control.segments.length - 1 ? AppStyle.radiusMd : 0

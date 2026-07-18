@@ -12,7 +12,7 @@ namespace firelight::emulation {
 // A minimal in-memory ICore for tests: no DLL is opened, so there is no
 // process-exit on teardown and no real-hardware dependency. It models just
 // enough to exercise EmulatorInstance's flow: a SAVE_RAM buffer and a frame
-// counter that run() advances, both captured/restored by serialize/deserialize.
+// counter that run() advances, both captured/restored by serialize/deserialize
 class FakeCore : public ::libretro::ICore {
 public:
   static constexpr std::size_t SRAM_SIZE = 32;
@@ -30,7 +30,7 @@ public:
   void setSaveDirectory(const std::string &dir) override { m_saveDir = dir; }
 
   // When set, the fake declares a couple of core options on init(), exercising
-  // the frontend's option-capture/persistence path.
+  // the frontend's option-capture/persistence path
   void setConfigProvider(
       std::shared_ptr<firelight::libretro::IConfigurationProvider> provider) {
     m_configProvider = std::move(provider);
@@ -60,7 +60,7 @@ public:
   }
   bool loadGame(::libretro::Game *) override {
     m_gameLoaded = true;
-    // A real core registers its keyboard callback while loading, never before.
+    // A real core registers its keyboard callback while loading, never before
     if (m_registersKeyboardOnLoad) {
       m_wantsKeyboard = true;
     }
@@ -196,7 +196,7 @@ public:
 
 private:
   // Mutable because ICore::deserializeState is const (matching the real Core's
-  // signature) yet must restore emulator state.
+  // signature) yet must restore emulator state
   mutable int m_frameCount = 0;
   mutable std::vector<char> m_sram;
   bool m_inited = false;

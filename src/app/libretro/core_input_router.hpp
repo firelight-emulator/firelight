@@ -13,7 +13,7 @@
 namespace firelight::libretro {
 
 // Per-frame input snapshot + libretro input-state translation (joypad, analog,
-// mouse, light gun) over the retropad + pointer providers.
+// mouse, light gun) over the retropad + pointer providers
 class CoreInputRouter {
 public:
   static constexpr int MAX_INPUT_PORTS = 8;
@@ -36,7 +36,7 @@ public:
   void setPortInputDeviceClass(const unsigned port, const int deviceClass) {
     m_portInputClass[port] = deviceClass;
   }
-  // GamepadInputClass value; Joypad when unset.
+  // GamepadInputClass value; Joypad when unset
   [[nodiscard]] int getPortInputClass(unsigned port) const;
 
   void setAnalogPointerSpeed(const double stepPerFrame) {
@@ -49,7 +49,7 @@ public:
     return m_mouseControlsPointerDevices;
   }
 
-  // Snapshots pointer motion + each port's joypad state once per frame.
+  // Snapshots pointer motion + each port's joypad state once per frame
   void pollInput();
 
   [[nodiscard]] int16_t readInputState(unsigned port, unsigned device,

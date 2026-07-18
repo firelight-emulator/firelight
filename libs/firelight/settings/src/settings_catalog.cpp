@@ -46,7 +46,7 @@ void parseStringArray(const nlohmann::json &j, const char *field,
 }
 
 // Author-friendly `type` aliases. Each implies a widget; an explicit `widget`
-// overrides it. Value semantics collapse to the SettingType set.
+// overrides it. Value semantics collapse to the SettingType set
 bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   if (typeStr == "boolean" || typeStr == "toggle") {
     s.type = SettingType::BOOLEAN;
@@ -65,13 +65,13 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   } else if (typeStr == "game-picker") {
     // A dropdown whose options are the user's eligible library games (filled in
     // by the app layer at runtime); value semantics are OPTIONS (the chosen
-    // game's content hash).
+    // game's content hash)
     s.type = SettingType::OPTIONS;
     s.widget = "dropdown";
     s.libraryGameSource = true;
   } else if (typeStr == "audio-device") {
     // A dropdown of the machine's audio outputs, filled in by the app layer at
-    // runtime (the settings lib knows nothing about hardware).
+    // runtime (the settings lib knows nothing about hardware)
     s.type = SettingType::OPTIONS;
     s.widget = "dropdown";
     s.audioDeviceSource = true;
@@ -91,7 +91,7 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
     s.directoryMode = true;
   } else if (typeStr == "multi-select" || typeStr == "multiselect") {
     // A checklist over `options`; the value is a JSON array of selected option
-    // values (serialized/parsed in the UI delegate).
+    // values (serialized/parsed in the UI delegate)
     s.type = SettingType::OPTIONS;
     s.widget = "multi-select";
   } else if (typeStr == "segmented") {
@@ -156,7 +156,7 @@ SettingDefinition parseSetting(const nlohmann::json &j,
 
   s.placeholder = j.value("placeholder", std::string{});
   parseStringArray(j, "extensions", s.fileExtensions);
-  // A file-picker can opt into directory mode explicitly, too.
+  // A file-picker can opt into directory mode explicitly, too
   s.directoryMode = j.value("directory", s.directoryMode);
 
   if (j.contains("mapping")) {
@@ -179,7 +179,7 @@ SettingDefinition parseSetting(const nlohmann::json &j,
 
 // App settings are single-valued and never reach a core, so the core-facing
 // fields are meaningless there. Strip them rather than let them look load-
-// bearing.
+// bearing
 SettingDefinition parseAppSetting(const nlohmann::json &j,
                                   std::vector<std::string> &problems) {
   auto s = parseSetting(j, problems);
@@ -360,7 +360,7 @@ std::vector<std::string> SettingsCatalog::validate() const {
       problems.push_back("setting '" + s.key +
                          "' is custom but names no widget");
     }
-    // Runtime-sourced options are authored empty on purpose.
+    // Runtime-sourced options are authored empty on purpose
     if (s.type == SettingType::OPTIONS && s.options.empty() &&
         !s.libraryGameSource && !s.audioDeviceSource) {
       problems.push_back("setting '" + s.key + "' has no options");

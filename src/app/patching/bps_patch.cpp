@@ -46,7 +46,7 @@ BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
 
     switch (action.type) {
     case SOURCE_READ_ACTION:
-      // No additional data to read; intentionally empty.
+      // No additional data to read; intentionally empty
       break;
     case TARGET_READ_ACTION:
       for (size_t i = 0; i < action.length; ++i) {

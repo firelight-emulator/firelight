@@ -11,7 +11,7 @@ class EmulatorInstance;
 
 // Resolves this game's common settings (game -> platform -> global -> catalog
 // default) and applies them to the EmulatorInstance, refreshing whenever a
-// change at any tier could affect the effective value.
+// change at any tier could affect the effective value
 class CoreSettingsApplier {
 public:
   CoreSettingsApplier(EmulatorInstance &instance,

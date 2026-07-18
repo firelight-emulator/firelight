@@ -6,11 +6,11 @@
 #include <string>
 
 namespace firelight::saves {
-// Sqlite/filesystem-backed implementation of the ISaveManager domain contract.
+// Sqlite/filesystem-backed implementation of the ISaveManager domain contract
 // Announces suspend-point changes through the EventDispatcher (see
 // save_events.hpp) rather than Qt signals, so it is a plain, Qt-free class. The
 // save directory is held in memory; persistence of that setting is the app
-// layer's job (QtSaveManagerProxy), which passes the resolved directory in.
+// layer's job (QtSaveManagerProxy), which passes the resolved directory in
 class SaveManager final : public ISaveManager {
 public:
   SaveManager(const std::string &saveDir, ISaveDatabase &saveDatabase);

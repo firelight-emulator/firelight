@@ -39,7 +39,7 @@ struct StreamEncoder::Impl {
 
   StreamEncoderConfig config;
 
-  // Video: worker-thread encode, hand-off queue fed by the render thread.
+  // Video: worker-thread encode, hand-off queue fed by the render thread
   AVCodecContext *videoCodec = nullptr;
   SwsContext *sws = nullptr;
   int swsSrcW = 0;
@@ -58,7 +58,7 @@ struct StreamEncoder::Impl {
   std::thread worker;
   std::atomic<bool> running{false};
 
-  // Audio: inline encode on the calling thread behind its own mutex.
+  // Audio: inline encode on the calling thread behind its own mutex
   std::mutex audioMutex;
   AVCodecContext *audioCodec = nullptr;
   SwrContext *swr = nullptr;
@@ -108,7 +108,7 @@ struct StreamEncoder::Impl {
     videoCodec->rc_buffer_size = static_cast<int>(bitrate / 2);
     av_opt_set(videoCodec->priv_data, "preset", "veryfast", 0);
     av_opt_set(videoCodec->priv_data, "tune", "zerolatency", 0);
-    // Self-contained IDRs so a receiver can join mid-stream.
+    // Self-contained IDRs so a receiver can join mid-stream
     av_opt_set(videoCodec->priv_data, "forced-idr", "1", 0);
     av_opt_set(videoCodec->priv_data, "x264-params", "repeat-headers=1", 0);
 
@@ -317,7 +317,7 @@ struct StreamEncoder::Impl {
       return;
     }
 
-    // Resample the core-rate input to 48 kHz and append to the pending PCM.
+    // Resample the core-rate input to 48 kHz and append to the pending PCM
     const int maxOut = swr_get_out_samples(swr, static_cast<int>(numFrames));
     std::vector<int16_t> resampled(static_cast<size_t>(maxOut) * 2);
     auto *outPlane = reinterpret_cast<uint8_t *>(resampled.data());

@@ -18,7 +18,7 @@ void CheatEngine::apply(::libretro::ICore &core) const {
     return;
   }
   // The unsigned-id overload returns the live writable RAM pointer (the same one
-  // rcheevos reads); the MemoryType overload would copy save data instead.
+  // rcheevos reads); the MemoryType overload would copy save data instead
   const auto ramId = static_cast<unsigned>(::libretro::SYSTEM_RAM);
   auto *ram = static_cast<uint8_t *>(core.getMemoryData(ramId));
   const std::size_t size = core.getMemorySize(ramId);

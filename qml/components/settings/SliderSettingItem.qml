@@ -40,7 +40,7 @@ BaseSettingItem {
 
         Text {
             // Fractional sliders (e.g. tint at step 0.01) need decimals; integer
-            // sliders (volume, tile size) shouldn't read "100.00".
+            // sliders (volume, tile size) shouldn't read "100.00"
             Layout.preferredWidth: Math.round(52 * AppStyle.scale)
             text: theControl.value.toFixed(root.stepSize < 1 ? 2 : 0)
             color: Theme.textPrimary

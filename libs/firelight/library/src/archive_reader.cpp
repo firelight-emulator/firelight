@@ -32,7 +32,7 @@ std::string baseNameOf(const char *entryPath) {
   return std::filesystem::path(entryPath).filename().string();
 }
 
-// Reads all data blocks of the archive's current entry into a buffer.
+// Reads all data blocks of the archive's current entry into a buffer
 std::vector<uint8_t> readCurrentEntry(archive *a) {
   std::vector<uint8_t> bytes;
   const void *buffer;

@@ -39,7 +39,7 @@ namespace firelight::emulation {
 // The app-layer services EmulationService/EmulatorInstance depend on, threaded
 // explicitly from main.cpp instead of reached through a global locator. Any
 // member may be null in tests that don't exercise that path — the consumers
-// null-guard the optional services (input, achievements, save manager).
+// null-guard the optional services (input, achievements, save manager)
 struct EmulationContext {
   input::InputService *inputService = nullptr;
   achievements::IAchievementClient *achievementManager = nullptr;
@@ -53,13 +53,13 @@ struct EmulationContext {
   // Netplay seams. retropadProvider (when set) answers the core's per-port
   // reads instead of inputService directly, so remote players can occupy
   // ports. netplayStreamSink receives every rendered frame + audio while a
-  // host stream is armed (a cheap no-op otherwise).
+  // host stream is armed (a cheap no-op otherwise)
   libretro::IRetropadProvider *retropadProvider = nullptr;
   media::IClipSink *netplayStreamSink = nullptr;
 
   // Audio output + microphone are created on the render thread inside
   // EmulatorInstance::initialize(); main.cpp injects the Qt-Multimedia impls
-  // (AudioManager / QtMicrophone). Null in headless/tests -> no audio.
+  // (AudioManager / QtMicrophone). Null in headless/tests -> no audio
   std::function<std::shared_ptr<IAudioOutput>()> audioOutputFactory;
   std::function<std::unique_ptr<libretro::IAudioInputProvider>()>
       audioInputFactory;

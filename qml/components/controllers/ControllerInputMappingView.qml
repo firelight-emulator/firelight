@@ -23,7 +23,7 @@ FocusScope {
 
     // Image for the currently-selected controller type. controllerImages is
     // aligned 1:1 with controllerTypeIds, so look up by the type's position
-    // rather than assuming contiguous 1-based ids (e.g. NES = 1, 3).
+    // rather than assuming contiguous 1-based ids (e.g. NES = 1, 3)
     readonly property string controllerImageUrl: {
         const ids = platformMetadataModel ? platformMetadataModel.controllerTypeIds : undefined
         const idx = ids ? ids.indexOf(root.controllerType) : -1
@@ -80,7 +80,7 @@ FocusScope {
         }
     }
 
-    // Per-button editor for turbo/autofire, toggle, and alternate bindings.
+    // Per-button editor for turbo/autofire, toggle, and alternate bindings
     Popup {
         id: bindingOptionsPopup
 
@@ -139,7 +139,7 @@ FocusScope {
             // Device-class selector (e.g. Gamepad / Mouse / Light Gun): switches
             // which controller type's bindings this view edits. Hidden when the
             // platform only has one type. Uses the actual controller-type ids
-            // (they aren't contiguous — NES is 1 and 3, no 2).
+            // (they aren't contiguous — NES is 1 and 3, no 2)
             Flow {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillWidth: true

@@ -25,7 +25,7 @@ private:
   QStringList m_ids;
   QMap<QString, QImage> m_images{};
   // Guards m_images: requestImage() runs on QML's image thread while
-  // setImage()/removeImageWithUrl() are called from the render and GUI threads.
+  // setImage()/removeImageWithUrl() are called from the render and GUI threads
   std::mutex m_mutex;
   // emulation::RewindModel *m_rewindModel;
 };

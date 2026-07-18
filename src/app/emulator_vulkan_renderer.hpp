@@ -19,22 +19,22 @@ public:
   EmulatorVulkanRenderer() = default;
   ~EmulatorVulkanRenderer();
 
-  // Called from render() on first Vulkan frame after the emulator is loaded.
-  // negotiation must be non-null. resetCallback is called at the end of init.
+  // Called from render() on first Vulkan frame after the emulator is loaded
+  // negotiation must be non-null. resetCallback is called at the end of init
   bool initialize(QRhi *rhi,
                   const retro_hw_render_context_negotiation_interface_vulkan *negotiation,
                   VkSurfaceKHR surface,
                   std::function<void()> resetCallback);
 
-  // Safe to call multiple times; no-op if already destroyed.
+  // Safe to call multiple times; no-op if already destroyed
   void destroy();
 
-  // Runs the emulator frame(s), blits core → shared image.
-  // targetSize must be colorTexture()->pixelSize() so the shared image matches.
+  // Runs the emulator frame(s), blits core → shared image
+  // targetSize must be colorTexture()->pixelSize() so the shared image matches
   void renderFrame(firelight::emulation::EmulatorInstance *emulator,
                    float playbackMultiplier, QSize targetSize, QRhi *rhi);
 
-  // Called from receive() when data == RETRO_HW_FRAME_BUFFER_VALID.
+  // Called from receive() when data == RETRO_HW_FRAME_BUFFER_VALID
   void setRenderDimensions(uint32_t w, uint32_t h);
 
   bool isInitialized() const { return m_vulkanInitialized; }

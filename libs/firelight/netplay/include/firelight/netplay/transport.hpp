@@ -12,19 +12,19 @@ namespace firelight::netplay {
 enum class ChannelKind : uint8_t { Control = 0, Video = 1, Audio = 2, Input = 3 };
 
 // One established peer connection. Control/Video are reliable+ordered,
-// Audio/Input are unreliable — implementations map ChannelKind accordingly.
+// Audio/Input are unreliable — implementations map ChannelKind accordingly
 class IPeerLink {
 public:
   virtual ~IPeerLink() = default;
 
   virtual void send(ChannelKind channel, std::span<const uint8_t> data) = 0;
-  // Bytes queued but not yet handed to the network — the backpressure probe.
+  // Bytes queued but not yet handed to the network — the backpressure probe
   [[nodiscard]] virtual size_t bufferedBytes(ChannelKind channel) const = 0;
   [[nodiscard]] virtual int roundTripMs() const = 0;
 };
 
 // Ordering contract: peerConnected fires before any messageReceived from that
-// peer, and no messageReceived fires after its peerDisconnected.
+// peer, and no messageReceived fires after its peerDisconnected
 struct TransportEvents {
   std::function<void(PlayerId, IPeerLink &)> peerConnected;
   std::function<void(PlayerId)> peerDisconnected;

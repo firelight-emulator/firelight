@@ -98,7 +98,7 @@ void InputMapping::deserialize(const std::string &data) {
 
   const auto j = nlohmann::json::parse(data, nullptr, false);
   // Tolerate legacy/invalid blobs (clean break: unparseable data resets to
-  // defaults rather than throwing).
+  // defaults rather than throwing)
   if (j.is_discarded() || !j.is_object() || !j.contains("bindings")) {
     return;
   }

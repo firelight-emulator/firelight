@@ -10,7 +10,7 @@
  * 
  * Tests the IPS patch format implementation, including patch parsing, validation,
  * and ROM patching operations. IPS is a binary patch format commonly used for
- * ROM hacking and game modifications.
+ * ROM hacking and game modifications
  */
 class IPSPatchTest : public testing::Test {};
 
@@ -19,7 +19,7 @@ class IPSPatchTest : public testing::Test {};
  * 
  * Verifies that an IPS patch file is correctly parsed, with all patch records
  * extracted with proper offset, data size, and repeat count values. Tests against
- * a well-formatted IPS file with 163 expected patch records.
+ * a well-formatted IPS file with 163 expected patch records
  */
 TEST_F(IPSPatchTest, ConstructorTest) {
   // Each one is offset, size, repeat
@@ -100,7 +100,7 @@ TEST_F(IPSPatchTest, ConstructorTest) {
  * 
  * Verifies that an IPS patch can be successfully applied to ROM data,
  * producing a non-empty patched ROM. Tests the core patching functionality
- * using a 4MB test ROM and a well-formatted IPS patch file.
+ * using a 4MB test ROM and a well-formatted IPS patch file
  */
 TEST_F(IPSPatchTest, PatchRomTest) {
   const std::vector<uint8_t> romData(4000000);

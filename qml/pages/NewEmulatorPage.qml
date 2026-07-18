@@ -14,7 +14,7 @@ FocusScope {
     objectName: "emulatorPage"
 
     // Only the shortcuts that need the UI arrive here; ShortcutActions does the
-    // rest in C++, including deciding what's allowed in hardcore mode.
+    // rest in C++, including deciding what's allowed in hardcore mode
     Connections {
         target: ShortcutDispatcher
 
@@ -28,7 +28,7 @@ FocusScope {
     property bool paused
 
     // Start muted for this session only (CLI `--mute`); OR-ed into the emulator's
-    // muted state so it doesn't fight the derived pause/fast-forward muting.
+    // muted state so it doesn't fight the derived pause/fast-forward muting
     property bool startMuted: false
 
     signal closing()
@@ -39,16 +39,16 @@ FocusScope {
     // In-game shortcut scope while this page is the active stack item; an
     // overlay pushed on top (or leaving) drops back to menu scope. Without this
     // the engine stays in menu scope and only ScopeAlways shortcuts (e.g.
-    // screenshot) fire — in-game ones like capture_clip never trigger.
+    // screenshot) fire — in-game ones like capture_clip never trigger
     // In-game shortcut scope: only while the game is actually the live, focused
     // thing — not while paused (quick menu / backgrounded) or under an in-game
-    // overlay (e.g. the rewind menu on overlayStack).
+    // overlay (e.g. the rewind menu on overlayStack)
     property bool shortcutsInGame: !root.paused && overlayStack.depth === 0
     onShortcutsInGameChanged: InputService.setShortcutsInGame(shortcutsInGame)
     Component.onDestruction: InputService.setShortcutsInGame(false)
 
     // Consume any per-launch start knobs (CLI --mute / --pause). These are
-    // one-shot on StartupOptions, so only the CLI-launched game is affected.
+    // one-shot on StartupOptions, so only the CLI-launched game is affected
     Component.onCompleted: {
         InputService.setShortcutsInGame(shortcutsInGame)
         root.startMuted = StartupOptions.consumeStartMuted()
@@ -175,8 +175,8 @@ FocusScope {
             // Calculate the ratio of the container itself
             const containerRatio = root.width / root.height
 
-            // If the container is wider than the target aspect ratio, fit to height.
-            // Otherwise, fit to width.
+            // If the container is wider than the target aspect ratio, fit to height
+            // Otherwise, fit to width
             if (containerRatio > aspectRatio) {
                 return root.height / (emulator.videoWidth / aspectRatio)
             } else {
@@ -443,7 +443,7 @@ FocusScope {
     }
 
     // Transient in-game overlays (e.g. the rewind menu) live here, so the page is
-    // self-contained and needs no external stack. Empty (depth 0) while playing.
+    // self-contained and needs no external stack. Empty (depth 0) while playing
     StackView {
         id: overlayStack
         anchors.fill: parent

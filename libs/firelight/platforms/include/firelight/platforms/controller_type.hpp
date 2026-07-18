@@ -13,7 +13,7 @@ namespace firelight::platforms {
 // device class, so `id` mirrors `deviceClass` (Joypad=1, Mouse=2, Lightgun=3)
 // and existing joypad mappings (key 1) stay valid. Which concrete device
 // variants (3-button vs 6-button, Menacer vs Justifier, …) are *selectable*
-// comes from the per-core catalog, not from here.
+// comes from the per-core catalog, not from here
 struct ControllerType {
   unsigned id = 0;
   std::string name;

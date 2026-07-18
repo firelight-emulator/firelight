@@ -57,7 +57,7 @@ TEST_F(ShortcutRegistryTest, ParsesBareInputAndCombo) {
   EXPECT_EQ(bare->code, GamepadInput::R3);
   EXPECT_TRUE(bare->modifiers.empty());
 
-  // Everything before the last '+' is a modifier that must be held.
+  // Everything before the last '+' is a modifier that must be held
   const auto combo = parseInputSource("Select+RightTrigger", DeviceType::Gamepad);
   ASSERT_TRUE(combo.has_value());
   EXPECT_EQ(combo->code, GamepadInput::RightTrigger);
@@ -72,12 +72,12 @@ TEST_F(ShortcutRegistryTest, ParsesBareInputAndCombo) {
 
 TEST_F(ShortcutRegistryTest, RejectsNamesTheDeviceDoesNotHave) {
   // A name is resolved against the device it's for, so neither vocabulary leaks
-  // into the other.
+  // into the other
   EXPECT_FALSE(parseInputSource("Key_F1", DeviceType::Gamepad).has_value());
   EXPECT_FALSE(parseInputSource("R3", DeviceType::Keyboard).has_value());
   EXPECT_FALSE(parseInputSource("Nonsense", DeviceType::Gamepad).has_value());
   EXPECT_FALSE(parseInputSource("", DeviceType::Gamepad).has_value());
-  // A bad modifier fails the whole binding rather than silently dropping it.
+  // A bad modifier fails the whole binding rather than silently dropping it
   EXPECT_FALSE(parseInputSource("Nope+R3", DeviceType::Gamepad).has_value());
 }
 
@@ -111,7 +111,7 @@ TEST_F(ShortcutRegistryTest, LoadsActionsAndPresets) {
   EXPECT_TRUE(preset->appliesTo(DeviceType::Keyboard));
 
   // Several sources per action, in preference order: seeding keeps the ones the
-  // controller actually has.
+  // controller actually has
   const auto &sources =
       preset->sourcesFor(DeviceType::Gamepad, "fast_forward");
   ASSERT_EQ(sources.size(), 2u);
@@ -131,7 +131,7 @@ TEST_F(ShortcutRegistryTest, RefusesAFileItCannotHonor) {
       registry.loadFromString(R"({"actions": [{"id": "a", "scope": "wat"}]})"));
   EXPECT_FALSE(registry.loadFromString(R"({"actions": [{"label": "no id"}]})"));
   // A binding naming an input the device hasn't got is a mistake in the file,
-  // not something to quietly skip.
+  // not something to quietly skip
   EXPECT_FALSE(registry.loadFromString(R"({
     "actions": [{"id": "a"}],
     "presets": [{"id": "p", "gamepad": {"a": ["Key_F1"]}}]
@@ -142,7 +142,7 @@ TEST_F(ShortcutRegistryTest, ValidateReportsWhatWouldSilentlyNotFire) {
   auto &registry = ShortcutRegistry::instance();
 
   // An action nobody declared: the engine skips unknown ids, so this would just
-  // never fire, with nothing logged.
+  // never fire, with nothing logged
   ASSERT_TRUE(registry.loadFromString(R"({
     "defaultPreset": "p",
     "actions": [{"id": "real"}],
@@ -153,7 +153,7 @@ TEST_F(ShortcutRegistryTest, ValidateReportsWhatWouldSilentlyNotFire) {
   EXPECT_NE(problems[0].find("typo"), std::string::npos);
 
   // A keyboard shortcut sitting on a gameplay key would fire the shortcut and
-  // press the button.
+  // press the button
   ASSERT_TRUE(registry.loadFromString(R"({
     "defaultPreset": "p",
     "actions": [{"id": "real"}],
@@ -163,7 +163,7 @@ TEST_F(ShortcutRegistryTest, ValidateReportsWhatWouldSilentlyNotFire) {
   ASSERT_EQ(problems.size(), 1u);
   EXPECT_NE(problems[0].find("gameplay"), std::string::npos);
 
-  // A defaultPreset that doesn't exist means new profiles silently get nothing.
+  // A defaultPreset that doesn't exist means new profiles silently get nothing
   ASSERT_TRUE(registry.loadFromString(R"({
     "defaultPreset": "missing",
     "actions": [{"id": "real"}],
@@ -175,7 +175,7 @@ TEST_F(ShortcutRegistryTest, ValidateReportsWhatWouldSilentlyNotFire) {
 }
 
 // The file we ship, not a fixture: it's the thing that decides whether hotkeys
-// work on a fresh install.
+// work on a fresh install
 TEST_F(ShortcutRegistryTest, ShippedCatalogIsGood) {
   auto &registry = ShortcutRegistry::instance();
   ASSERT_TRUE(registry.loadFromFile(FL_SHORTCUTS_FILE));
@@ -193,7 +193,7 @@ TEST_F(ShortcutRegistryTest, ShippedCatalogIsGood) {
   EXPECT_TRUE(preset->appliesTo(DeviceType::Keyboard));
 
   // Steam claims Guide globally and out of process, so binding it would look
-  // broken through no fault of ours.
+  // broken through no fault of ours
   for (const auto &[device, byId] : preset->bindings) {
     for (const auto &[id, sources] : byId) {
       for (const auto &source : sources) {

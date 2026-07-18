@@ -11,7 +11,7 @@ namespace firelight::library {
 // Reads an entire file into memory with a single sized read. This is markedly
 // faster than the std::istreambuf_iterator idiom for large files (e.g. DS ROMs,
 // which run to hundreds of MB), which reads a byte at a time and repeatedly
-// reallocates. Returns an empty vector if the file can't be sized or opened.
+// reallocates. Returns an empty vector if the file can't be sized or opened
 inline std::vector<uint8_t> readAllBytes(const std::string &path) {
   std::error_code ec;
   const auto size = std::filesystem::file_size(path, ec);

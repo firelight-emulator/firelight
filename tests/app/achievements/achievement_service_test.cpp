@@ -13,7 +13,7 @@ namespace firelight::achievements {
  *
  * Comprehensive test suite for the AchievementService class using an in-memory
  * SQLite database for testing. Tests cover service delegation, patch response
- * processing, start session response processing, and edge cases.
+ * processing, start session response processing, and edge cases
  */
 class AchievementServiceTest : public testing::Test {
 protected:
@@ -165,7 +165,7 @@ protected:
   }
 
   // Sets up the game -> achievement_set -> achievement chain required for
-  // getAllUserUnlocks to find records via its 3-way JOIN.
+  // getAllUserUnlocks to find records via its 3-way JOIN
   void setupAchievementHierarchy(unsigned gameId, unsigned setId,
                                  std::vector<unsigned> achievementIds) {
     ASSERT_TRUE(service->create(createTestGame(gameId)));
@@ -176,7 +176,7 @@ protected:
     }
   }
 
-  // Pre-seeds a user_unlock row directly, bypassing the auto-create path.
+  // Pre-seeds a user_unlock row directly, bypassing the auto-create path
   void seedUserUnlock(const std::string &username, unsigned achievementId,
                       bool earned, bool earnedHardcore, uint64_t ts,
                       uint64_t tsHardcore, bool synced = true) {
@@ -458,7 +458,7 @@ TEST_F(AchievementServiceTest, UpdateAchievementProgress_Success) {
 // }
 
 TEST_F(AchievementServiceTest, GetUserUnlock_NotFound) {
-  // A missing unlock is auto-created as a default (unearned, already synced).
+  // A missing unlock is auto-created as a default (unearned, already synced)
   auto result = service->getUserUnlock("nonexistent", 999);
 
   ASSERT_TRUE(result.has_value());
@@ -787,7 +787,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_NonExistentSetId) {
   EXPECT_TRUE(result);
 
   // With no hierarchy for game 999, the achievement isn't reconciled, so its
-  // auto-created unlock stays unearned.
+  // auto-created unlock stays unearned
   auto unlock = service->getUserUnlock("testuser", 1);
   ASSERT_TRUE(unlock.has_value());
   EXPECT_FALSE(unlock->earned);
@@ -816,7 +816,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_ZeroTimestamps) {
 // achievement_sets WHERE game_id = ?), so tests that exercise the update
 // loop must first set up the full game → achievement_set → achievement
 // hierarchy via setupAchievementHierarchy(), then pre-seed the user_unlock
-// row via seedUserUnlock() so the row is visible to that JOIN.
+// row via seedUserUnlock() so the row is visible to that JOIN
 // ============================================================
 
 TEST_F(AchievementServiceTest,
@@ -860,7 +860,7 @@ TEST_F(AchievementServiceTest,
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, false, false, 0, 0);
 
-  // Non-hardcore and hardcore timestamps differ — both should be preserved.
+  // Non-hardcore and hardcore timestamps differ — both should be preserved
   auto response = createTestStartSessionResponse(
       {createTestUnlock(100, 1609459200)}, {createTestUnlock(100, 1609545600)});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
@@ -888,7 +888,7 @@ TEST_F(
   EXPECT_TRUE(unlock->earned);
   EXPECT_TRUE(unlock->earnedHardcore);
   // When no prior non-hardcore timestamp exists, the hardcore timestamp fills
-  // both.
+  // both
   EXPECT_EQ(unlock->unlockTimestamp, 1609545600u);
   EXPECT_EQ(unlock->unlockTimestampHardcore, 1609545600u);
 }
@@ -897,7 +897,7 @@ TEST_F(
     AchievementServiceTest,
     ProcessStartSessionResponse_HardcoreOnlyUnlock_ExistingNonHardcoreTimestampPreserved) {
   setupAchievementHierarchy(1, 10, {100});
-  // Already earned non-hardcore; now getting the hardcore unlock.
+  // Already earned non-hardcore; now getting the hardcore unlock
   seedUserUnlock("testuser", 100, true, false, 1609459200, 0);
 
   auto response =
@@ -993,7 +993,7 @@ TEST_F(
   EXPECT_TRUE(unlock->earnedHardcore);
 }
 
-// User isolation: only the specified user's records are modified.
+// User isolation: only the specified user's records are modified
 TEST_F(AchievementServiceTest,
        ProcessStartSessionResponse_MultipleUsers_OnlySpecifiedUserAffected) {
   setupAchievementHierarchy(1, 10, {100});
@@ -1008,7 +1008,7 @@ TEST_F(AchievementServiceTest,
   ASSERT_TRUE(user1Unlock.has_value());
   EXPECT_FALSE(user1Unlock->earned);
 
-  // user2's record must be completely untouched.
+  // user2's record must be completely untouched
   auto user2Unlock = service->getUserUnlock("user2", 100);
   ASSERT_TRUE(user2Unlock.has_value());
   EXPECT_TRUE(user2Unlock->earned);
@@ -1024,7 +1024,7 @@ TEST_F(AchievementServiceTest,
   seedUserUnlock("testuser", 100, true, false, 1609459200, 0);
   seedUserUnlock("testuser", 200, true, false, 1609459200, 0);
 
-  // Empty response for game 1 — only achievement 100 should be relocked.
+  // Empty response for game 1 — only achievement 100 should be relocked
   auto response = createTestStartSessionResponse({}, {});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
@@ -1032,7 +1032,7 @@ TEST_F(AchievementServiceTest,
   ASSERT_TRUE(unlock100.has_value());
   EXPECT_FALSE(unlock100->earned);
 
-  // Achievement 200 belongs to game 2 and must remain earned.
+  // Achievement 200 belongs to game 2 and must remain earned
   auto unlock200 = service->getUserUnlock("testuser", 200);
   ASSERT_TRUE(unlock200.has_value());
   EXPECT_TRUE(unlock200->earned);
@@ -1040,7 +1040,7 @@ TEST_F(AchievementServiceTest,
 }
 
 // Idempotency: an already-earned achievement that is still in the response
-// remains earned with its timestamp intact.
+// remains earned with its timestamp intact
 TEST_F(AchievementServiceTest,
        ProcessStartSessionResponse_AlreadyEarned_StillInResponse_RemainsEarned) {
   setupAchievementHierarchy(1, 10, {100});
@@ -1060,7 +1060,7 @@ TEST_F(AchievementServiceTest,
 // The break triggered by UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID in the Unlocks
 // list stops the auto-creation loop early, but the update loop's find_if
 // scans the full list, so an existing record for an achievement that appears
-// after the unsupported ID is still updated correctly.
+// after the unsupported ID is still updated correctly
 TEST_F(
     AchievementServiceTest,
     ProcessStartSessionResponse_UnsupportedEmulatorMidList_UpdateLoopScansFullList) {
@@ -1079,7 +1079,7 @@ TEST_F(
   EXPECT_TRUE(unsupportedUnlock->earned);
 
   // Achievement 100 appears after UNSUPPORTED_EMULATOR in the list. The update
-  // loop's find_if scans the full list and still marks it earned.
+  // loop's find_if scans the full list and still marks it earned
   auto unlock100 = service->getUserUnlock("testuser", 100);
   ASSERT_TRUE(unlock100.has_value());
   EXPECT_TRUE(unlock100->earned);

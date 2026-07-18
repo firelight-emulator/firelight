@@ -117,7 +117,7 @@ namespace firelight::gui {
     if (parentId >= 0) {
       getLibraryService()->setFolderParent(folder.id, parentId);
     }
-    // Reordering under a parent changes positions; re-pull the ordered list.
+    // Reordering under a parent changes positions; re-pull the ordered list
     beginResetModel();
     m_items = getLibraryService()->listFolders();
     endResetModel();
@@ -232,7 +232,7 @@ namespace firelight::gui {
       return false;
     }
 
-    // Positions changed; re-pull the ordered list so the model reflects it.
+    // Positions changed; re-pull the ordered list so the model reflects it
     beginResetModel();
     m_items = getLibraryService()->listFolders();
     endResetModel();

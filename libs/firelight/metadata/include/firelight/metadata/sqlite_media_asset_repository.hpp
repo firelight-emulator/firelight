@@ -12,7 +12,7 @@ namespace SQLite {
 
 namespace firelight::metadata {
     /**
-     * Sqlite implementation of the IMediaAssetRepository interface.
+     * Sqlite implementation of the IMediaAssetRepository interface
      */
     class SqliteMediaAssetRepository final : public IMediaAssetRepository {
     public:

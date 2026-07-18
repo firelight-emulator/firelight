@@ -8,13 +8,13 @@
 
 namespace firelight::netplay {
 
-// Size of one serialized retropad frame (input::InputFrame's wire format).
+// Size of one serialized retropad frame (input::InputFrame's wire format)
 // Carried as opaque bytes so this lib doesn't depend on the input module; the
-// app glue static_asserts the two constants agree.
+// app glue static_asserts the two constants agree
 inline constexpr size_t RETROPAD_FRAME_BYTES = 10;
 using RetropadFrameBytes = std::array<uint8_t, RETROPAD_FRAME_BYTES>;
 
-// Binary packets for the Video/Audio/Input channels (little-endian headers).
+// Binary packets for the Video/Audio/Input channels (little-endian headers)
 
 struct VideoPacket {
   uint32_t seq = 0;
@@ -31,9 +31,9 @@ struct AudioPacket {
 };
 
 // Guest -> host controller state. frames are newest-first with a few older
-// duplicates for loss tolerance; the host applies the highest unseen seq.
+// duplicates for loss tolerance; the host applies the highest unseen seq
 // displayedPtsMs is the video pts the guest was watching at capture time (the
-// frame reference host-side rollback would use; unused in v1).
+// frame reference host-side rollback would use; unused in v1)
 struct InputPacket {
   uint32_t seq = 0;
   uint32_t displayedPtsMs = 0;

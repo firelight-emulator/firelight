@@ -12,7 +12,7 @@ class Database;
 
 namespace firelight::media {
 
-// SQLite-backed capture index (captures.db).
+// SQLite-backed capture index (captures.db)
 class SqliteGameCaptureRepository final : public IGameCaptureRepository {
 public:
   explicit SqliteGameCaptureRepository(std::string databaseFile);

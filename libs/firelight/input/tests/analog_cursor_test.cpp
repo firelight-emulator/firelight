@@ -18,7 +18,7 @@ TEST(AnalogCursorTest, GlideDeltaScalesWithDeflection) {
   const int full = libretro::cursorGlideDelta(32767, 0.025);
   const int half = libretro::cursorGlideDelta(16384, 0.025);
   EXPECT_GT(full, 0);
-  // Roughly proportional to how far the stick is pushed.
+  // Roughly proportional to how far the stick is pushed
   EXPECT_NEAR(half, full / 2, 2);
 }
 

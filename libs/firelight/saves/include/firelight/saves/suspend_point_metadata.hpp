@@ -5,7 +5,7 @@
 
 namespace firelight::saves {
 // Index row for a suspend point (save state). The state bytes live on disk;
-// this row carries the lock flag and timestamps (int64 milliseconds).
+// this row carries the lock flag and timestamps (int64 milliseconds)
 struct SuspendPointMetadata {
   int id = -1;
   std::string contentId;

@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import Firelight 1.0
 
 // Right-dock details for the last-clicked game. `data` is a plain snapshot
-// object (see GameView.focusSnapshot); null shows an empty state.
+// object (see GameView.focusSnapshot); null shows an empty state
 Rectangle {
     id: panel
 
@@ -31,7 +31,7 @@ Rectangle {
         return (!ms || ms <= 0) ? "Never" : Qt.formatDateTime(new Date(ms), "MMM d, yyyy");
     }
 
-    // Left hairline separating the dock from the grid.
+    // Left hairline separating the dock from the grid
     Rectangle {
         anchors.left: parent.left
         anchors.top: parent.top
@@ -96,7 +96,7 @@ Rectangle {
 
         Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.textPrimary; opacity: 0.12 }
 
-        // Stat rows.
+        // Stat rows
         GridLayout {
             Layout.fillWidth: true
             columns: 2
@@ -135,7 +135,7 @@ Rectangle {
             }
         }
 
-        // Achievement progress.
+        // Achievement progress
         ColumnLayout {
             Layout.fillWidth: true
             Layout.topMargin: AppStyle.spacingXs
@@ -176,7 +176,7 @@ Rectangle {
             }
         }
 
-        // Description (the scrollable bulk).
+        // Description (the scrollable bulk)
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -195,7 +195,7 @@ Rectangle {
             }
         }
 
-        // Actions (pinned).
+        // Actions (pinned)
         RowLayout {
             Layout.fillWidth: true
             spacing: AppStyle.spacingSm

@@ -95,7 +95,7 @@ NetplayService::NetplayService(
                                  std::span<const uint8_t> data) {
     switch (channel) {
     case ChannelKind::Input: {
-      // Host: a guest's controller state for their slot.
+      // Host: a guest's controller state for their slot
       if (const auto packet = decodeInputPacket(data);
           packet && !packet->frames.empty()) {
         m_retropadProvider.padForMember(id)->applyFrame(
@@ -208,7 +208,7 @@ bool NetplayService::startGame() {
       m_session.phase() != GamePhase::Idle) {
     return false;
   }
-  // The encoder announces its config once frames flow (announceStreamConfig).
+  // The encoder announces its config once frames flow (announceStreamConfig)
   m_session.startGame(std::nullopt);
   return true;
 }
@@ -218,7 +218,7 @@ void NetplayService::confirmLaunch() {
     return;
   }
   // Remote inputs would trip RetroAchievements hardcore; suppress for the
-  // duration of the online game.
+  // duration of the online game
   if (m_achievementClient &&
       m_session.slotTable().anyRemoteOccupant(m_session.lobby().hostId) &&
       m_achievementClient->hardcoreModeActive()) {
@@ -264,7 +264,7 @@ int NetplayService::selectedEntryId() const {
   if (m_selectedEntryId >= 0) {
     return m_selectedEntryId;
   }
-  // Guests (and a host after restart) can resolve through the content hash.
+  // Guests (and a host after restart) can resolve through the content hash
   if (const auto game = m_session.game()) {
     if (const auto entry = m_library.getEntryWithContentHash(game->contentHash)) {
       return entry->id;

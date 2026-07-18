@@ -5,7 +5,7 @@
 
 // RETROK_* / RETROKMOD_* values, copied rather than pulled in: this library
 // doesn't otherwise depend on the libretro headers, and these are frozen ABI —
-// they can't change without breaking every core.
+// they can't change without breaking every core
 namespace {
 enum {
   RETROK_BACKSPACE = 8,
@@ -52,8 +52,8 @@ enum {
 namespace firelight::input {
 
 unsigned retroKeyFor(const int qtKey) {
-  // Letters and digits are contiguous in both, so they map arithmetically.
-  // RETROK follows ASCII, and its letters are lowercase.
+  // Letters and digits are contiguous in both, so they map arithmetically
+  // RETROK follows ASCII, and its letters are lowercase
   if (qtKey >= Qt::Key_A && qtKey <= Qt::Key_Z) {
     return RETROK_a + (qtKey - Qt::Key_A);
   }

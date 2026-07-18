@@ -79,7 +79,7 @@
 //
 // /* Open a file for reading or writing. If path points to a directory, this
 // will
-//  * fail. Returns the opaque file handle, or NULL for error.
+//  * fail. Returns the opaque file handle, or NULL for error
 //  * Introduced in VFS API v1 */
 // typedef struct retro_vfs_file_handle *(RETRO_CALLCONV *retro_vfs_open_t)(
 //     const char *path, unsigned mode, unsigned hints);
@@ -94,7 +94,7 @@
 // typedef int(RETRO_CALLCONV *retro_vfs_close_t)(
 //     struct retro_vfs_file_handle *stream);
 //
-// /* Return the size of the file in bytes, or -1 for error.
+// /* Return the size of the file in bytes, or -1 for error
 //  * Introduced in VFS API v1 */
 // typedef int64_t(RETRO_CALLCONV *retro_vfs_size_t)(
 //     struct retro_vfs_file_handle *stream);
@@ -104,7 +104,7 @@
 // typedef int64_t(RETRO_CALLCONV *retro_vfs_truncate_t)(
 //     struct retro_vfs_file_handle *stream, int64_t length);
 //
-// /* Get the current read / write position for the file. Returns -1 for error.
+// /* Get the current read / write position for the file. Returns -1 for error
 //  * Introduced in VFS API v1 */
 // typedef int64_t(RETRO_CALLCONV *retro_vfs_tell_t)(
 //     struct retro_vfs_file_handle *stream);

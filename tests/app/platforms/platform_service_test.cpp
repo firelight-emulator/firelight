@@ -40,7 +40,7 @@ TEST_F(PlatformServiceTest, AllPlatformsPresent) {
   using PS = firelight::platforms::PlatformService;
   const PS service;
   // Fully-modeled platforms (with controller data) plus the identity-only
-  // RetroAchievements-coverage consoles are all registered.
+  // RetroAchievements-coverage consoles are all registered
   EXPECT_GT(service.listPlatforms().size(), 60u);
   for (const int id : {PS::PLATFORM_ID_GAMEBOY, PS::PLATFORM_ID_N64,
                        PS::PLATFORM_ID_SNES, PS::PLATFORM_ID_PS1,
@@ -71,7 +71,7 @@ TEST_F(PlatformServiceTest, MouseAndLightGunDisplayEntriesArePresent) {
     }
   }
   // Every platform still has its standard controller, plus the WS2 mouse/light
-  // gun display entries on the platforms that support them.
+  // gun display entries on the platforms that support them
   EXPECT_GE(joypad, 17);
   EXPECT_GT(mouse, 0);
   EXPECT_GT(lightgun, 0);
@@ -87,11 +87,11 @@ TEST_F(PlatformServiceTest, PlatformIdForExtensionMapsKnownExtensions) {
   EXPECT_EQ(service.platformIdForExtension("n64"), PS::PLATFORM_ID_N64);
   EXPECT_EQ(service.platformIdForExtension("z64"), PS::PLATFORM_ID_N64);
 
-  // Lookup is case-insensitive.
+  // Lookup is case-insensitive
   EXPECT_EQ(service.platformIdForExtension("GB"), PS::PLATFORM_ID_GAMEBOY);
   EXPECT_EQ(service.platformIdForExtension("N64"), PS::PLATFORM_ID_N64);
 
-  // Unknown extensions fall through to PLATFORM_ID_UNKNOWN.
+  // Unknown extensions fall through to PLATFORM_ID_UNKNOWN
   EXPECT_EQ(service.platformIdForExtension("xyz"), PS::PLATFORM_ID_UNKNOWN);
   EXPECT_EQ(service.platformIdForExtension(""), PS::PLATFORM_ID_UNKNOWN);
 }
@@ -100,7 +100,7 @@ TEST_F(PlatformServiceTest, PlatformIdForRcConsoleMapsConsoles) {
   using PS = firelight::platforms::PlatformService;
   const PS service;
 
-  // Consoles modeled with legacy platform ids map to them directly.
+  // Consoles modeled with legacy platform ids map to them directly
   EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_NINTENDO),
             PS::PLATFORM_ID_NES);
   EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_SUPER_NINTENDO),
@@ -112,12 +112,12 @@ TEST_F(PlatformServiceTest, PlatformIdForRcConsoleMapsConsoles) {
   EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_PLAYSTATION_2),
             PS::PLATFORM_ID_PS2);
 
-  // Unknown maps to PLATFORM_ID_UNKNOWN.
+  // Unknown maps to PLATFORM_ID_UNKNOWN
   EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_UNKNOWN),
             PS::PLATFORM_ID_UNKNOWN);
 
   // Consoles Firelight doesn't fully model map to the provisional id
-  // (1000 + rc console id) that identifies them by name only.
+  // (1000 + rc console id) that identifies them by name only
   EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_ATARI_LYNX),
             1000 + RC_CONSOLE_ATARI_LYNX);
   EXPECT_TRUE(
@@ -125,7 +125,7 @@ TEST_F(PlatformServiceTest, PlatformIdForRcConsoleMapsConsoles) {
 }
 
 // RA-coverage consoles Firelight doesn't fully model still resolve to an
-// identity-only platform whose name renders in the library.
+// identity-only platform whose name renders in the library
 TEST_F(PlatformServiceTest, RaCoverageConsoleHasIdentityPlatform) {
   const firelight::platforms::PlatformService service;
 
@@ -134,13 +134,13 @@ TEST_F(PlatformServiceTest, RaCoverageConsoleHasIdentityPlatform) {
   EXPECT_EQ(lynx->name, "Atari Lynx");
   EXPECT_EQ(lynx->retroAchievementsId,
             static_cast<unsigned>(RC_CONSOLE_ATARI_LYNX));
-  // Identity-only: no controller/extension data.
+  // Identity-only: no controller/extension data
   EXPECT_TRUE(lynx->controllerTypes.empty());
   EXPECT_TRUE(lynx->fileAssociations.empty());
 }
 
 // The Discord large-image key defaults to the slug, except where a platform sets
-// an explicit override (Nintendo DS -> "ds").
+// an explicit override (Nintendo DS -> "ds")
 TEST_F(PlatformServiceTest, DiscordImageFallsBackToSlug) {
   using PS = firelight::platforms::PlatformService;
   const PS service;
@@ -157,7 +157,7 @@ TEST_F(PlatformServiceTest, DiscordImageFallsBackToSlug) {
 }
 
 // Platform survives a JSON round-trip on its serialized fields (the model keeps
-// to_json/from_json so platform data could later be externalized to a file).
+// to_json/from_json so platform data could later be externalized to a file)
 TEST_F(PlatformServiceTest, PlatformJsonRoundTrip) {
   firelight::platforms::Platform original;
   original.id = 42;

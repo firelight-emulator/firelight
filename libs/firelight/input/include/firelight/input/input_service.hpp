@@ -27,7 +27,7 @@ struct GamepadInputEvent {
 };
 
 // Raw keyboard key transition, published by the keyboard handler so the shortcut
-// engine can treat the keyboard like any other device.
+// engine can treat the keyboard like any other device
 struct KeyboardKeyEvent {
   int playerIndex;
   int key; // Qt::Key
@@ -57,7 +57,7 @@ public:
   // Additional mouse feed for RETRO_DEVICE_MOUSE / light guns. Default no-ops so
   // non-SDL/test implementations need not care. `dx/dy` accumulate relative
   // motion (in mouse units) consumed once per frame by getRelativeMotion();
-  // buttons are the full L/R/M state; offscreen flags the light-gun off-screen.
+  // buttons are the full L/R/M state; offscreen flags the light-gun off-screen
   virtual void updateMouseButtons(bool left, bool right, bool middle) {}
   virtual void updateMouseMotion(int dx, int dy) {}
   virtual void updateMouseOffscreen(bool offscreen) {}
@@ -65,27 +65,27 @@ public:
   // Applies the input context for a launched game: any per-game profile
   // override (by content hash) and the platform's preferred controller type
   // (promoting a matching controller to player 1). Pass an empty hash to skip
-  // the override lookup.
+  // the override lookup
   virtual void applyGameContext(std::optional<std::string> contentHash,
                                 int platformId) = 0;
   // Clears the per-game override, restoring device-default profiles. Player
-  // slot order is left as-is.
+  // slot order is left as-is
   virtual void clearGameContext() = 0;
 
   // Sets a one-shot, non-persisted preferred controller type for a platform
   // (CLI `--controller`), consulted by the next applyGameContext with higher
   // priority than the stored platform preference. Not persisted. Default no-op
-  // so non-SDL/test implementations need not care.
+  // so non-SDL/test implementations need not care
   virtual void setSessionPreferredControllerType(int platformId,
                                                  int gamepadType) {}
 
-  // Sets which shortcuts are currently active (ScopeInGame / ScopeInMenu).
+  // Sets which shortcuts are currently active (ScopeInGame / ScopeInMenu)
   virtual void setShortcutContext(int scope) = 0;
 
   // Turns hotkeys off for every device, or only for one kind of device. Off
   // hands each input straight to the game, which a system that wants the whole
   // keyboard needs; `only` limits it to the keyboard so a controller keeps its
-  // hotkeys either way.
+  // hotkeys either way
   virtual void setHotkeysEnabled(bool enabled,
                                  std::optional<DeviceType> only = {}) = 0;
 };

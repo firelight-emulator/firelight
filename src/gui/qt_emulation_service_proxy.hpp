@@ -52,14 +52,14 @@ public:
   Q_INVOKABLE void resetGame();
 
   // --- per-game controller device selection (Mouse / Light Gun / Gamepad) ---
-  // Number of controller ports the running game's core exposes.
+  // Number of controller ports the running game's core exposes
   Q_INVOKABLE int controllerPortCount() const;
   // For `port`, the selectable device variants as a list of maps:
   // { coreDeviceId:int, name:string, deviceClass:int (1=Joypad,2=Mouse,
   // 3=LightGun), isCurrent:bool }. Empty (or a single entry) means no real
-  // choice — the UI hides ports with nothing to pick.
+  // choice — the UI hides ports with nothing to pick
   Q_INVOKABLE QVariantList controllerVariantsForPort(int port) const;
-  // Selects a variant for `port` (applies live + persists for this game).
+  // Selects a variant for `port` (applies live + persists for this game)
   Q_INVOKABLE void setControllerVariant(int port, int coreDeviceId);
 
 signals:

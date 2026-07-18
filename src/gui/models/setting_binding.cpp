@@ -70,7 +70,7 @@ void SettingBinding::setValue(const QString &value) {
     return;
   }
   // The write publishes a change event, which lands back in refresh() and emits
-  // valueChanged.
+  // valueChanged
   service->setGlobalValue(m_key.toStdString(), value.toStdString());
   refresh();
 }

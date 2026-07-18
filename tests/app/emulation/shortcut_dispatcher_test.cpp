@@ -28,7 +28,7 @@ public:
 } // namespace
 
 // Who pressed it. The dispatcher is the only thing that knows, so the co-op
-// policy lives there rather than in the actions.
+// policy lives there rather than in the actions
 class ShortcutDispatcherTest : public testing::Test {
 protected:
   settings::SqliteSettingsRepository m_repo{":memory:"};
@@ -56,7 +56,7 @@ protected:
   }
 
   // The dispatcher hops to the GUI thread, so the queued call needs the event
-  // loop to turn over before anything has happened.
+  // loop to turn over before anything has happened
   void fire(const int playerIndex, const std::string &id) {
     EventDispatcher::instance().publish(input::ShortcutEvent{
         .playerIndex = playerIndex, .id = id,
@@ -83,7 +83,7 @@ TEST_F(ShortcutDispatcherTest, PlayerOneOnlyBlocksTheOtherPlayers) {
 }
 
 // -1 means nothing device-specific fired it. That's the app itself, not a
-// second player, so the policy must not swallow it.
+// second player, so the policy must not swallow it
 TEST_F(ShortcutDispatcherTest, PlayerOneOnlyStillAllowsDevicelessEvents) {
   m_onlyPlayerOne = true;
 
@@ -91,16 +91,16 @@ TEST_F(ShortcutDispatcherTest, PlayerOneOnlyStillAllowsDevicelessEvents) {
   EXPECT_EQ(m_controller.written.size(), 1u);
 }
 
-// The quick menu's route in: same object, same slot, same hardcore gate.
+// The quick menu's route in: same object, same slot, same hardcore gate
 TEST_F(ShortcutDispatcherTest, TriggerRunsTheActionImmediately) {
   m_dispatcher->trigger("save_state");
 
-  // No hop and no event loop: a click is already on the GUI thread.
+  // No hop and no event loop: a click is already on the GUI thread
   EXPECT_EQ(m_controller.written.size(), 1u);
 }
 
 // A menu button is whoever is holding the mouse, so the co-op policy — which is
-// about which *pad* fired it — must not swallow it.
+// about which *pad* fired it — must not swallow it
 TEST_F(ShortcutDispatcherTest, TriggerIgnoresThePlayerPolicy) {
   m_onlyPlayerOne = true;
 

@@ -12,7 +12,7 @@ namespace firelight::netplay {
 class FakeTransport;
 
 // Wires FakeTransports together by PlayerId, delivering everything
-// synchronously — the fake stand-in for the network.
+// synchronously — the fake stand-in for the network
 struct FakeTransportHub {
   std::map<PlayerId, FakeTransport *> transports;
 };
@@ -35,7 +35,7 @@ public:
   void handleSignal(const PlayerId from, const std::string &payload) override {
     if (payload == "offer") {
       // Establish before answering: peerConnected must precede any
-      // messageReceived from that peer (the ordering real transports give).
+      // messageReceived from that peer (the ordering real transports give)
       establishWith(from);
       if (m_signalOut) {
         m_signalOut(from, "answer");
@@ -65,7 +65,7 @@ public:
     }
   }
 
-  // Drops both ends without any lobby change — a network blip.
+  // Drops both ends without any lobby change — a network blip
   void dropLink(const PlayerId memberId) { closePeer(memberId); }
 
 private:

@@ -7,7 +7,7 @@ import Firelight 1.0
 Item {
     id: root
 
-    // When set, the gallery is pre-filtered to a single game's captures.
+    // When set, the gallery is pre-filtered to a single game's captures
     property string gameContentHash: ""
 
     property string typeFilter: "all" // "all" | "screenshot" | "clip"
@@ -66,7 +66,7 @@ Item {
                 Layout.fillWidth: true
             }
 
-            // Capture-type filter.
+            // Capture-type filter
             FLSegmentedControl {
                 readonly property var typeValues: ["all", "screenshot", "clip"]
                 segments: ["All", "Screenshots", "Clips"]

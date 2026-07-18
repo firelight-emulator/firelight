@@ -16,7 +16,7 @@ std::shared_ptr<GamepadProfile> SdlController::getProfile() const {
 }
 void SdlController::setProfile(const std::shared_ptr<GamepadProfile> &profile) {
   m_profile = profile;
-  // Drop any latched toggle/turbo state from the previous profile.
+  // Drop any latched toggle/turbo state from the previous profile
   m_togglePrevRaw.clear();
   m_toggleLatch.clear();
 }
@@ -33,7 +33,7 @@ SdlController::SdlController(SDL_GameController *t_controller)
 }
 
 bool SdlController::evaluateBindingDigital(const Binding &binding) const {
-  // All combo modifiers must be held for the binding to be active.
+  // All combo modifiers must be held for the binding to be active
   for (const auto mod : binding.source.modifiers) {
     if (std::abs(evaluateMapping(static_cast<GamepadInput>(mod))) <= 16383) {
       return false;
@@ -57,7 +57,7 @@ bool SdlController::evaluateBindingWithModes(const GamepadInput target,
     const uint64_t key = (static_cast<uint64_t>(target) << 8) | index;
     const bool previous = m_togglePrevRaw[key];
     if (active && !previous) {
-      // Flip the latch on the rising edge of the source.
+      // Flip the latch on the rising edge of the source
       m_toggleLatch[key] = !m_toggleLatch[key];
     }
     m_togglePrevRaw[key] = active;
@@ -69,7 +69,7 @@ bool SdlController::evaluateBindingWithModes(const GamepadInput target,
     const double t = std::chrono::duration<double>(
                          std::chrono::steady_clock::now().time_since_epoch())
                          .count();
-    // Square wave: "pressed" for the first half of each autofire cycle.
+    // Square wave: "pressed" for the first half of each autofire cycle
     return std::fmod(t * rate, 1.0) < 0.5;
   }
 
@@ -87,7 +87,7 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
       const auto &bindings = mapping->getBindings(input);
       if (!bindings.empty()) {
         // Evaluate every binding (so toggle/turbo state stays current) and OR
-        // the results together.
+        // the results together
         bool active = false;
         for (std::size_t i = 0; i < bindings.size(); ++i) {
           if (evaluateBindingWithModes(input, i, bindings[i])) {
@@ -102,7 +102,7 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
   // No binding for this input, so it falls back to the physical button it
   // defaults to (the identity, for a joypad input). Reading it through
   // evaluateMapping rather than SDL directly keeps every physical read in one
-  // place — which is what lets a shortcut withhold its trigger from the game.
+  // place — which is what lets a shortcut withhold its trigger from the game
   const auto physical = defaultPhysicalBinding(input);
   if (classOf(physical) != GamepadInputClass::Joypad) {
     return false;
@@ -114,8 +114,8 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
 int SdlController::digitalThreshold(const GamepadInput input,
                                     const int platformId,
                                     const int controllerTypeId) const {
-  // A trigger is analog, so how far counts as pressed is tunable per profile.
-  // Everything else is a button, and trips at half of its range.
+  // A trigger is analog, so how far counts as pressed is tunable per profile
+  // Everything else is a button, and trips at half of its range
   if (input != GamepadInput::LeftTrigger && input != GamepadInput::RightTrigger) {
     return 16383;
   }
@@ -133,7 +133,7 @@ bool SdlController::isVirtualInputActive(const int platformId,
                                          const int virtualInput) {
   // Mouse/light-gun buttons are only ever driven by an explicit mapping (a
   // gamepad button bound to e.g. a light-gun trigger). Unmapped => not active;
-  // the physical mouse is handled by the pointer provider in the core callback.
+  // the physical mouse is handled by the pointer provider in the core callback
   if (m_profile == nullptr) {
     return false;
   }
@@ -156,7 +156,7 @@ bool SdlController::isVirtualInputActive(const int platformId,
   // No explicit binding: fall back to the default physical button so a gamepad
   // can fire a light-gun / mouse button out of the box (mirrors the joypad
   // identity default). Abstract inputs with no sensible default map to
-  // themselves and are treated as unbound.
+  // themselves and are treated as unbound
   const auto phys = defaultPhysicalBinding(input);
   if (phys == input) {
     return false;
@@ -379,7 +379,7 @@ bool SdlController::disconnect() {
 int16_t SdlController::evaluateMapping(const GamepadInput input) const {
   // A shortcut is using this input, so the game doesn't get to see it. Checked
   // here because every physical read goes through this one switch — including
-  // the fall-through for inputs with no binding, and the light-gun/mouse path.
+  // the fall-through for inputs with no binding, and the light-gun/mouse path
   if (suppressor().isSuppressed(static_cast<int>(input))) {
     return 0;
   }
@@ -436,7 +436,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
   // Unlike the buttons above, a trigger axis already reports 0..32767, so it is
   // returned as-is. Scaling it would overflow the int16 this returns — a fully
   // pressed trigger came out as 1, so a binding on one fired around half travel
-  // and then stopped.
+  // and then stopped
   case GamepadInput::LeftTrigger:
     return SDL_GameControllerGetAxis(m_SDLController,
                                      SDL_CONTROLLER_AXIS_TRIGGERLEFT);

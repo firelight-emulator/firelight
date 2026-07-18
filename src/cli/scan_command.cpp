@@ -18,7 +18,7 @@ namespace firelight::cli {
 
 int runScan(int argc, char **argv, const CliOptions &opts) {
   // A Core (non-GUI) application: the scanner uses QtConcurrent + signals, so we
-  // need an event loop, but no window/QML.
+  // need an event loop, but no window/QML
   QCoreApplication app(argc, argv);
 
   const auto dirs = resolveDataDirs(opts);
@@ -28,12 +28,12 @@ int runScan(int argc, char **argv, const CliOptions &opts) {
   library::SqliteUserLibraryRepository repository(dirs.appDataPath +
                                                   "/library.db");
   // Turns scanned content files into run configurations + entries; must outlive
-  // the scan.
+  // the scan
   library::LibraryIngestService ingest(repository);
   platforms::PlatformService platformService;
   library::LibraryScanner2 scanner(repository, platformService);
   // Guarantees the default content directory exists and is registered before we
-  // scan (a fresh install has nothing to scan otherwise).
+  // scan (a fresh install has nothing to scan otherwise)
   library::UserLibraryService libraryService(repository,
                                              dirs.romsPath.toStdString());
 

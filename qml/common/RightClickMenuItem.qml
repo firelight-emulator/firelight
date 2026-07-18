@@ -14,7 +14,7 @@ MenuItem {
     implicitHeight: AppStyle.controlHeight
     // Derive from the content's *implicit* width (intrinsic), not contentItem.width
     // — the Menu drives item width from its own implicitWidth, so reading the
-    // laid-out width here closes a binding loop that a scale change re-triggers.
+    // laid-out width here closes a binding loop that a scale change re-triggers
     implicitWidth: {
         var cw = contentItem.implicitWidth
         if (control.maxWidth > 0 && cw > control.maxWidth) cw = control.maxWidth
@@ -42,7 +42,7 @@ MenuItem {
         implicitHeight: Math.round(40 * AppStyle.scale)
         visible: control.subMenu
         // Coords are fractions of the (scaled) canvas so the triangle grows with
-        // the UI; beginPath keeps repaints from accumulating stale segments.
+        // the UI; beginPath keeps repaints from accumulating stale segments
         onPaint: {
             var ctx = getContext("2d")
             ctx.clearRect(0, 0, width, height)

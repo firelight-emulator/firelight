@@ -11,7 +11,7 @@ namespace firelight::emulation {
 
 namespace {
 // Records what a shortcut asked the emulator to do, so a test can assert on the
-// action rather than on a running core.
+// action rather than on a running core
 class FakeController final : public IEmulatorController {
 public:
   float multiplier = 1.0f;
@@ -75,7 +75,7 @@ protected:
                             ShortcutActions::Intents{}};
 };
 
-// A hotkey's only feedback is the toast, so the wording is behaviour.
+// A hotkey's only feedback is the toast, so the wording is behaviour
 TEST_F(ShortcutActionsTest, SavingAndLoadingNameTheSlot) {
   press("save_state");
   EXPECT_EQ(m_messages.back(), "Saved to slot 1");
@@ -96,7 +96,7 @@ TEST_F(ShortcutActionsTest, SpeedMessagesReadAsMultipliers) {
   EXPECT_EQ(m_messages.back(), "Speed 0.5x");
 }
 
-// Releasing a hold has to say what you went back to, not what you left.
+// Releasing a hold has to say what you went back to, not what you left
 TEST_F(ShortcutActionsTest, ReleasingAHoldReportsTheRestoredSpeed) {
   m_controller.multiplier = 2.0f;
   press("fast_forward");
@@ -121,7 +121,7 @@ TEST_F(ShortcutActionsTest, VolumeStepsAndClampsAtTheEnds) {
   EXPECT_EQ(m_settingsService.getGlobalValue(audio::VOLUME_KEY), "0");
 }
 
-// Turning it up while muted has to make sound, or it looks broken.
+// Turning it up while muted has to make sound, or it looks broken
 TEST_F(ShortcutActionsTest, VolumeUpUnmutes) {
   press("toggle_mute");
   ASSERT_EQ(m_settingsService.getGlobalValue(audio::MUTED_KEY), "true");
@@ -130,7 +130,7 @@ TEST_F(ShortcutActionsTest, VolumeUpUnmutes) {
   EXPECT_EQ(m_settingsService.getGlobalValue(audio::MUTED_KEY), "false");
 }
 
-// Volume down is not a mute: it must leave the mute state alone.
+// Volume down is not a mute: it must leave the mute state alone
 TEST_F(ShortcutActionsTest, VolumeDownLeavesMuteAlone) {
   press("toggle_mute");
   press("volume_down");
@@ -152,7 +152,7 @@ TEST_F(ShortcutActionsTest, MuteReportsTheStateItSwitchedTo) {
 }
 
 // Frame advance is pressed repeatedly by design; a toast per frame would be
-// noise on top of the thing you're trying to look at.
+// noise on top of the thing you're trying to look at
 TEST_F(ShortcutActionsTest, FrameAdvanceSaysNothing) {
   press("frame_advance");
   EXPECT_TRUE(m_messages.empty());
@@ -160,7 +160,7 @@ TEST_F(ShortcutActionsTest, FrameAdvanceSaysNothing) {
 
 TEST_F(ShortcutActionsTest, HoldFastForwardRestoresThePreviousSpeed) {
   // Not 1x: releasing a hold has to put back whatever you were at, which is the
-  // whole reason the speed is remembered when the hold starts.
+  // whole reason the speed is remembered when the hold starts
   m_controller.multiplier = 2.0f;
 
   press("fast_forward");
@@ -175,7 +175,7 @@ TEST_F(ShortcutActionsTest, ASecondHoldDoesNotClobberTheRestorePoint) {
   const auto fastForwarding = m_controller.multiplier;
 
   // Slow motion arriving mid-fast-forward must not record 4x as the speed to
-  // restore, or releasing would leave the game stuck fast.
+  // restore, or releasing would leave the game stuck fast
   press("slow_motion");
   EXPECT_FLOAT_EQ(m_controller.multiplier, fastForwarding);
 
@@ -232,7 +232,7 @@ TEST_F(ShortcutActionsTest, SlotCursorWrapsRatherThanSticking) {
 
 TEST_F(ShortcutActionsTest, PauseFlipsWhicheverDevicePressedIt) {
   // The engine reports an edge and this owns the value, so two presses from
-  // anywhere have to alternate rather than re-assert the same state.
+  // anywhere have to alternate rather than re-assert the same state
   press("pause");
   EXPECT_TRUE(m_controller.isPaused);
   press("pause");
@@ -249,7 +249,7 @@ TEST_F(ShortcutActionsTest, MuteTogglesTheSettingSoItOutlivesTheGame) {
 }
 
 TEST_F(ShortcutActionsTest, MuteAndScreenshotWorkWithNoGameRunning) {
-  // Both are ScopeAlways, so they fire in the library where there's no emulator.
+  // Both are ScopeAlways, so they fire in the library where there's no emulator
   m_actions.setController(nullptr);
 
   press("toggle_mute");
@@ -274,7 +274,7 @@ TEST_F(ShortcutActionsTest, HardcoreModeBlocksTheActionsThatCheat) {
   EXPECT_EQ(m_controller.framesAdvanced, 0);
   EXPECT_FLOAT_EQ(m_controller.multiplier, 1.0f);
 
-  // Saving and going faster aren't cheating.
+  // Saving and going faster aren't cheating
   press("save_state");
   press("speed_up");
   EXPECT_EQ(m_controller.written.size(), 1u);
@@ -297,7 +297,7 @@ TEST_F(ShortcutActionsTest, ReleaseIsIgnoredByEverythingButHolds) {
 }
 
 // The failure this phase exists to prevent: an action declared in the shipped
-// catalog that nothing dispatches. Every one used to be exactly that.
+// catalog that nothing dispatches. Every one used to be exactly that
 TEST_F(ShortcutActionsTest, EveryShippedActionActuallyDoesSomething) {
   auto &registry = input::ShortcutRegistry::instance();
   ASSERT_TRUE(registry.loadFromFile(FL_SHORTCUTS_FILE));
@@ -306,14 +306,14 @@ TEST_F(ShortcutActionsTest, EveryShippedActionActuallyDoesSomething) {
   for (const auto &action : registry.listActions()) {
     // The one action ShortcutActions is right to ignore: it turns off the
     // hotkeys of the device that pressed it, and only the engine knows which
-    // device that was. ShortcutEngine tests cover it.
+    // device that was. ShortcutEngine tests cover it
     if (action.id == input::TOGGLE_HOTKEYS_ID) {
       continue;
     }
 
     FakeController controller;
     // Clearing the controller drops any hold left over from a previous action,
-    // which would otherwise (correctly) make the next hold a no-op.
+    // which would otherwise (correctly) make the next hold a no-op
     m_actions.setController(nullptr);
     m_actions.setController(&controller);
     const auto quickMenus = m_quickMenus;
@@ -336,7 +336,7 @@ TEST_F(ShortcutActionsTest, EveryShippedActionActuallyDoesSomething) {
         m_settingsService.getGlobalValue(audio::MUTED_KEY) != muted ||
         m_settingsService.getGlobalValue(audio::VOLUME_KEY) != volume;
     const bool touchedLifecycle = m_resets > 0 || m_exits > 0;
-    // The slot cursor is the only visible effect of the slot steppers.
+    // The slot cursor is the only visible effect of the slot steppers
     const bool movedSlotCursor =
         action.id == "state_slot_next" || action.id == "state_slot_prev";
     m_resets = 0;

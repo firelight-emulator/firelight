@@ -12,7 +12,7 @@ class CoreConfiguration final
 public:
   // Friendly settings + Firelight core-option default overrides are resolved
   // from the settings catalog (by core) and injected here, so this class is
-  // decoupled from Platform / the catalog itself.
+  // decoupled from Platform / the catalog itself
   CoreConfiguration(
       std::string contentHash, int platformId,
       std::vector<firelight::settings::SettingDefinition> friendlySettings,

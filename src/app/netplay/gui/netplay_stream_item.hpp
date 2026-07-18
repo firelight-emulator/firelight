@@ -10,7 +10,7 @@
 namespace firelight::gui {
 
 // Displays the incoming game stream: frames are handed in from decode
-// threads and uploaded as scene-graph textures on the render thread.
+// threads and uploaded as scene-graph textures on the render thread
 // (Not final: qmlRegisterType subclasses it.)
 class NetplayStreamItem : public QQuickItem {
   Q_OBJECT
@@ -20,7 +20,7 @@ class NetplayStreamItem : public QQuickItem {
 public:
   explicit NetplayStreamItem(QQuickItem *parent = nullptr);
 
-  // Any thread.
+  // Any thread
   void presentFrame(media::StreamVideoFrame frame);
 
   [[nodiscard]] int frameWidth() const { return m_frameWidth; }

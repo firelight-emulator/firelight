@@ -46,7 +46,7 @@ private:
   std::shared_ptr<input::GamepadProfile> m_profile;
   // One model per profile, rebuilt when the profile changes. Handing out a new
   // one per read would leave every caller mutating a copy the view isn't
-  // showing, and let the JS engine own (and collect) it.
+  // showing, and let the JS engine own (and collect) it
   std::unique_ptr<ShortcutsModel> m_shortcutsModel;
 };
 

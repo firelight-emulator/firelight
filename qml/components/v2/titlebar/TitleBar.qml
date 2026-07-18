@@ -160,7 +160,7 @@ FocusScope {
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
             // Shrinks as the window narrows. The wider panel sets the mirrored
-            // margin on the shorter side so the bar stays exactly centred.
+            // margin on the shorter side so the bar stays exactly centred
             width: Math.min(600, Math.max(0,
                 parent.width - Math.max(leftContentArea.width, rightContentArea.width) * 2 - 32))
         }

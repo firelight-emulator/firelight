@@ -50,7 +50,7 @@ namespace firelight::gui {
         // Aligned 1:1 with ControllerTypeIds / ControllerTypeNames: index i is
         // the image for controllerTypes[i]. Types without an image get an empty
         // placeholder so callers can index via controllerTypeIds.indexOf(type)
-        // instead of assuming contiguous 1-based ids.
+        // instead of assuming contiguous 1-based ids
         QStringList controllerImageUrls;
         for (const auto &controllerType: item.controllerTypes) {
           controllerImageUrls.append(

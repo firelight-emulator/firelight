@@ -3,7 +3,7 @@ import QtQuick.Controls
 import Firelight 1.0
 
 // Tab strip with an underline indicator. Feed `tabs` a list of labels; the
-// selected index is `currentIndex`. Metrics from AppStyle, colors from Theme.
+// selected index is `currentIndex`. Metrics from AppStyle, colors from Theme
 //
 //   FLTabBar { tabs: ["Quick Menu", "Achievements", "Settings"] }
 TabBar {

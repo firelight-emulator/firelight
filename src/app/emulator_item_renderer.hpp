@@ -51,11 +51,11 @@ namespace firelight {
 
 // Threading: created, used, and destroyed on the QML render thread — Qt drives
 // initialize()/synchronize()/render() there, which is also where the
-// EmulatorCommand queue (incl. RunFrame -> EmulatorInstance) is drained.
+// EmulatorCommand queue (incl. RunFrame -> EmulatorInstance) is drained
 // submitCommand() enqueues from the GUI and pacing threads while the render
 // thread drains it in synchronize(), so all access goes through
 // m_commandQueueMutex (QQueue isn't thread-safe — a concurrent enqueue realloc
-// racing a dequeue corrupts the heap).
+// racing a dequeue corrupts the heap)
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver {
@@ -142,7 +142,7 @@ private:
 
   // Services, injected by EmulatorItem (which is the ServiceAccessor). The
   // renderer is one level removed from QML, so it takes its dependencies rather
-  // than reaching into the locator itself.
+  // than reaching into the locator itself
   firelight::activity::IActivityLog *m_activityLog;
   firelight::achievements::RAClient *m_achievementManager;
   firelight::gui::GameImageProvider *m_gameImageProvider;
@@ -151,7 +151,7 @@ private:
 
   // Instant-replay recorder: fed the software-rendered frames in receive(); its
   // rolling window is snapshotted + muxed to mp4 on CaptureVideoClip. Software
-  // cores only — HW (Vulkan) cores don't deliver pixels to receive().
+  // cores only — HW (Vulkan) cores don't deliver pixels to receive()
   std::unique_ptr<firelight::media::ClipRecorder> m_clipRecorder;
   double m_clipFps = 60.0;
   int m_clipWidth = 0;
@@ -162,12 +162,12 @@ private:
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;
   // Guards m_commandQueue against concurrent enqueue (GUI/pacing threads) and
-  // drain (render thread).
+  // drain (render thread)
   std::mutex m_commandQueueMutex;
   // Capture commands deferred one frame to wait for a fresh readback. Only ever
-  // touched on the render thread (in synchronize), so it needs no lock.
+  // touched on the render thread (in synchronize), so it needs no lock
   QQueue<EmulatorCommand> m_deferredCommands;
-  // Forces a single framebuffer readback next frame (idle HW cores).
+  // Forces a single framebuffer readback next frame (idle HW cores)
   bool m_captureNextFrame = false;
 
   QImage m_overlayImage;
@@ -233,21 +233,21 @@ private:
 
   // Reads the composited colorTexture() back to a CPU QImage (m_currentImage)
   // and feeds it to the clip recorder and netplay stream. Works for software
-  // and hardware cores alike, since both fill colorTexture().
+  // and hardware cores alike, since both fill colorTexture()
   void scheduleFrameReadback(QRhiResourceUpdateBatch *batch);
 
   // Whether anything needs a per-frame CPU copy right now (instant replay on,
   // host stream armed, or a one-shot capture pending). HW cores skip the
-  // readback when nothing does.
+  // readback when nothing does
   [[nodiscard]] bool anyFrameConsumerActive() const;
 
   // Holds a capture command back one frame so a fresh readback can land first
-  // (HW cores that were idle). Returns true if the command was deferred.
+  // (HW cores that were idle). Returns true if the command was deferred
   bool deferCaptureUntilFrameReady(const EmulatorCommand &command);
 
-  // Pushes the latest frame into the instant-replay recorder.
+  // Pushes the latest frame into the instant-replay recorder
   void feedClipRecorder(const QImage &frame);
-  // Pushes the latest frame into the netplay host stream.
+  // Pushes the latest frame into the netplay host stream
   void feedNetplayStream(const QImage &frame);
 
   bool m_usingHardwareRenderer = false;
@@ -255,7 +255,7 @@ private:
 
   // ── Vulkan ───────────────────────────────────────────────────────────────
   // Stored here because setHwRenderContextNegotiationInterface() may be called
-  // before the first render() where initialize() is invoked.
+  // before the first render() where initialize() is invoked
   const retro_hw_render_context_negotiation_interface_vulkan *m_negotiation = nullptr;
 
   std::unique_ptr<EmulatorVulkanRenderer> m_vulkanRenderer;

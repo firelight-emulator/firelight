@@ -15,7 +15,7 @@
 
 // Verifies MetadataService auto-population: the shipped-source name/metadata/art
 // is written onto the entry and seeded into the media store, a user-renamed
-// entry keeps its name, and the EntryCreatedEvent path triggers population.
+// entry keeps its name, and the EntryCreatedEvent path triggers population
 namespace firelight::metadata {
 namespace {
 
@@ -57,13 +57,13 @@ protected:
   SqliteGameMetadataSource source{metadataDbPath};
 
   void TearDown() override {
-    // The source member still holds the file open here; best-effort cleanup.
+    // The source member still holds the file open here; best-effort cleanup
     std::error_code ec;
     std::filesystem::remove(metadataDbPath, ec);
   }
 
   // Creates an entry. EntryCreatedEvent fires here; construct the service after
-  // this call to avoid a concurrent async populate in the deterministic tests.
+  // this call to avoid a concurrent async populate in the deterministic tests
   int makeEntry(const std::string &name, const std::string &hash,
                 unsigned platformId) {
     library::Entry entry;
@@ -90,7 +90,7 @@ TEST_F(MetadataServiceTest, PopulatesNameArtAndMetadata) {
   EXPECT_EQ(entry->icon1x1SourceUrl, "https://cdn/icon.png");
   EXPECT_EQ(entry->boxartFrontSourceUrl, "https://cdn/box.png");
 
-  // Media store seeded with the RA defaults, icon selected.
+  // Media store seeded with the RA defaults, icon selected
   const auto icon = media.selectedFor("hashA", MediaType::Icon);
   ASSERT_TRUE(icon.has_value());
   EXPECT_EQ(icon->remoteUrl, "https://cdn/icon.png");
@@ -111,7 +111,7 @@ TEST_F(MetadataServiceTest, DoesNotOverrideUserRenamedName) {
   const auto after = library.getEntry(id);
   ASSERT_TRUE(after.has_value());
   EXPECT_EQ(after->displayName, "My Cool Name"); // not overridden
-  // ...but the rest of the metadata + art still fills in.
+  // ...but the rest of the metadata + art still fills in
   EXPECT_EQ(after->developer, "Nintendo R&D1");
   EXPECT_EQ(after->icon1x1SourceUrl, "https://cdn/icon.png");
 }
@@ -144,7 +144,7 @@ TEST_F(MetadataServiceTest, EntryCreatedEventTriggersPopulation) {
 }
 
 // Picking an online candidate stores it (selected) and reprojects onto the
-// entry's icon column.
+// entry's icon column
 TEST_F(MetadataServiceTest, ApplyCandidateSelectsAndReprojects) {
   const int id = makeEntry("mario.sfc", "hashA", 6);
   MetadataService service(library, source, media, mediaDir);
@@ -170,7 +170,7 @@ TEST_F(MetadataServiceTest, ApplyCandidateSelectsAndReprojects) {
   EXPECT_EQ(entry->icon1x1SourceUrl, "https://sgdb/custom-icon_thumb.png");
 }
 
-// Selecting a previously-stored asset flips the selection back to it.
+// Selecting a previously-stored asset flips the selection back to it
 TEST_F(MetadataServiceTest, SelectAssetSwitchesBack) {
   const int id = makeEntry("mario.sfc", "hashA", 6);
   MetadataService service(library, source, media, mediaDir);
@@ -190,11 +190,11 @@ TEST_F(MetadataServiceTest, SelectAssetSwitchesBack) {
   EXPECT_EQ(entry->icon1x1SourceUrl, raIcon->remoteUrl);
 }
 
-// Importing a local image copies it into the media dir and selects it.
+// Importing a local image copies it into the media dir and selects it
 TEST_F(MetadataServiceTest, ImportLocalImageCopiesAndSelects) {
   const int id = makeEntry("mario.sfc", "hashA", 6);
 
-  // A throwaway source image on disk.
+  // A throwaway source image on disk
   std::error_code ec;
   std::filesystem::create_directories(mediaDir, ec);
   const auto src = (std::filesystem::path(mediaDir) / "src.png").string();

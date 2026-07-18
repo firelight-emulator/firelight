@@ -10,7 +10,7 @@ namespace firelight::input {
 
 // QML-facing list of controller profiles with create/clone/rename/delete and
 // JSON import/export. All operations delegate to the InputService/repository
-// and refresh the model.
+// and refresh the model
 class ProfileListModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
 
@@ -26,7 +26,7 @@ public:
   Q_INVOKABLE int cloneProfile(int sourceId, const QString &name);
   Q_INVOKABLE bool renameProfile(int id, const QString &name);
   Q_INVOKABLE bool deleteProfile(int id);
-  // Writes a profile to a .json file (fileUrl may be a file:// URL or path).
+  // Writes a profile to a .json file (fileUrl may be a file:// URL or path)
   Q_INVOKABLE bool exportProfile(int id, const QUrl &fileUrl);
   // Reads a profile from a .json file; returns the new profile id or -1.
   Q_INVOKABLE int importProfile(const QUrl &fileUrl);

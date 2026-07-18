@@ -7,11 +7,11 @@ namespace firelight::gui {
 
 /**
  * @class WindowResizeHandler
- * @brief Emits signals when the window is resized.
+ * @brief Emits signals when the window is resized
  *
  * This class emits signals when the window starts resizing and when it finishes
  * (after a short delay). It is intended to be used as an event filter for the
- * main window.
+ * main window
  */
 class WindowResizeHandler final : public QObject {
   Q_OBJECT

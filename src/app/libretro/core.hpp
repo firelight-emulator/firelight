@@ -25,7 +25,7 @@ using std::string;
 using std::vector;
 
 namespace libretro {
-    // MemoryType now lives in firelight/libretro/icore.hpp.
+    // MemoryType now lives in firelight/libretro/icore.hpp
 
     typedef void (*RetroSetEnvironment)(bool (*)(unsigned cmd, void *data));
 
@@ -46,7 +46,7 @@ namespace libretro {
 
     // What the libretro C callbacks (video/audio/input/env/mic/rumble) reach the
     // active core through, without exposing Core's members. Populated by Core as
-    // receivers/providers are set; read by the callbacks via a file-scope pointer.
+    // receivers/providers are set; read by the callbacks via a file-scope pointer
     struct CoreCallbackContext {
         Core *core = nullptr;
         firelight::libretro::CoreInputRouter *input = nullptr;
@@ -132,10 +132,10 @@ namespace libretro {
         void setMouseControlsPointerDevices(bool enabled) override;
 
         // The user-selected input device class for `port` (GamepadInputClass value;
-        // 1=Joypad when unset). Gates mouse/light-gun handling on the selected device.
+        // 1=Joypad when unset). Gates mouse/light-gun handling on the selected device
         [[nodiscard]] int getPortInputClass(unsigned port) const;
 
-        // Whether the physical mouse may drive light-gun / mouse devices (the toggle).
+        // Whether the physical mouse may drive light-gun / mouse devices (the toggle)
         [[nodiscard]] bool mouseControlsPointerDevices() const {
             return m_input.mouseControlsPointerDevices();
         }
@@ -163,7 +163,7 @@ namespace libretro {
         firelight::libretro::IVideoDataReceiver *videoReceiver = nullptr;
         firelight::libretro::CoreInputRouter m_input;
         // Backs the file-scope pointer the C callbacks read; kept current by the
-        // receiver/provider setters.
+        // receiver/provider setters
         CoreCallbackContext m_callbackContext;
 
         std::shared_ptr<IAudioOutput> audioReceiver;
@@ -175,25 +175,25 @@ namespace libretro {
 
         vector<string> environmentCalls;
 
-        // One environment-call handler: its debug name + the body that services it.
+        // One environment-call handler: its debug name + the body that services it
         struct EnvHandler {
             const char *name;
             std::function<bool(void *data)> handler;
         };
-        // cmd -> handler, built once (lazily) and dispatched by handleEnvironmentCall.
+        // cmd -> handler, built once (lazily) and dispatched by handleEnvironmentCall
         std::unordered_map<unsigned, EnvHandler> m_envHandlers;
         void buildEnvironmentHandlers();
 
         retro_system_info *retroSystemInfo;
 
-        // Informational to frontend.
+        // Informational to frontend
         bool canRunWithNoGame = false;
         unsigned performanceLevel = 0;
         bool supportsAchievements = false;
         bool shutdown = false;
         vector<retro_input_descriptor> inputDescriptors;
 
-        // Informational to core.
+        // Informational to core
         string systemDirectory;
         string coreAssetsDirectory;
         string m_saveDirectory;
@@ -206,7 +206,7 @@ namespace libretro {
         unsigned diskControlInterfaceVersion;
         retro_disk_control_ext_callback *diskControlExtCallback;
         // The disc-control interface a multi-disc core registers, stored by value
-        // (the struct the core passes via the environment call may be transient).
+        // (the struct the core passes via the environment call may be transient)
         retro_disk_control_callback m_diskControl{};
         retro_disk_control_ext_callback m_diskControlExt{};
         bool m_hasDiskControl = false;
@@ -247,17 +247,17 @@ namespace libretro {
 
         unsigned numActiveInputDevices;
         bool supportsInputBitmasks;
-        // Per-port device options the core advertised via SET_CONTROLLER_INFO.
+        // Per-port device options the core advertised via SET_CONTROLLER_INFO
         std::vector<std::vector<ControllerDeviceOption> > m_controllerDevices;
         uint64_t inputDeviceCapabilitiesBitmask;
         // What the core wants called on every key, or null if it doesn't read
         // the keyboard. Stored from SET_KEYBOARD_CALLBACK; the cores that need
-        // it are the computer ones (DOS, Amiga, MSX, ScummVM).
+        // it are the computer ones (DOS, Amiga, MSX, ScummVM)
         retro_keyboard_event_t keyboardCallback = nullptr;
 
         void recordPotentialAPIViolation(const string &msg);
 
-        // The loaded core DLL + its resolved retro_* entry points.
+        // The loaded core DLL + its resolved retro_* entry points
         std::unique_ptr<LibretroDll> m_dll;
     };
 } // namespace libretro

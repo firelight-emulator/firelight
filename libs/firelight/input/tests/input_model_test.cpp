@@ -36,7 +36,7 @@ TEST(InputModelTest, BindingDefaultsRoundTrip) {
   binding.source.code = GamepadInput::SouthFace;
 
   const nlohmann::json j = binding;
-  // Defaults should not be serialized.
+  // Defaults should not be serialized
   EXPECT_FALSE(j.contains("toggle"));
   EXPECT_FALSE(j.contains("turbo"));
   EXPECT_FALSE(j.contains("threshold"));
@@ -74,7 +74,7 @@ TEST(InputModelTest, AnalogSettingsRoundTrip) {
 
 TEST(InputModelTest, ApplyAxisSettingsZerosInsideDeadzone) {
   AxisSettings settings; // innerDeadzone == 0.25
-  // 0.25 * 32767 ~= 8191; matches the previous hardcoded +-8192 behavior.
+  // 0.25 * 32767 ~= 8191; matches the previous hardcoded +-8192 behavior
   EXPECT_EQ(settings.apply(8000), 0);
   EXPECT_EQ(settings.apply(-8000), 0);
 }
@@ -82,14 +82,14 @@ TEST(InputModelTest, ApplyAxisSettingsZerosInsideDeadzone) {
 TEST(InputModelTest, ApplyAxisSettingsPassesFullDeflection) {
   AxisSettings settings;
   EXPECT_EQ(settings.apply(32767), 32767);
-  // Negative full deflection stays near the negative extreme.
+  // Negative full deflection stays near the negative extreme
   EXPECT_LT(settings.apply(-32767), -32000);
 }
 
 TEST(InputModelTest, ApplyAxisSettingsRescalesAfterDeadzone) {
   AxisSettings settings;
   settings.innerDeadzone = 0.5f;
-  // Just past the deadzone should be near zero, not a sudden jump to half.
+  // Just past the deadzone should be near zero, not a sudden jump to half
   const auto justPast = settings.apply(static_cast<int>(0.51f * 32767));
   EXPECT_GT(justPast, 0);
   EXPECT_LT(justPast, 2000);
@@ -165,7 +165,7 @@ TEST(InputModelTest, InputMappingJsonRoundTrip) {
 
 TEST(InputModelTest, InputMappingToleratesLegacyData) {
   InputMapping mapping(1, 1, 1, 1);
-  // Old CSV-style blob must not throw; it simply resets to no bindings.
+  // Old CSV-style blob must not throw; it simply resets to no bindings
   EXPECT_NO_THROW(mapping.deserialize("0:8,1:9,4:4,"));
   EXPECT_TRUE(mapping.getAllBindings().empty());
 }
@@ -184,11 +184,11 @@ TEST(InputModelTest, InputMappingRemoveAndClear) {
   EXPECT_EQ(mapping.getBindings(GamepadInput::DpadUp).front().source.code,
             GamepadInput::EastFace);
 
-  // Removing the last binding prunes the entry entirely.
+  // Removing the last binding prunes the entry entirely
   mapping.removeBinding(GamepadInput::DpadUp, 0);
   EXPECT_TRUE(mapping.getAllBindings().empty());
 
-  // setBindings with an empty list also clears.
+  // setBindings with an empty list also clears
   mapping.setBindings(GamepadInput::DpadDown, {a});
   mapping.setBindings(GamepadInput::DpadDown, {});
   EXPECT_TRUE(mapping.getBindings(GamepadInput::DpadDown).empty());
@@ -198,7 +198,7 @@ TEST(InputModelTest, ApplyAxisSettingsSensitivityClampsToFull) {
   AxisSettings settings;
   settings.innerDeadzone = 0.0f;
   settings.sensitivity = 2.0f;
-  // A half-deflection at 2x gain saturates at full range.
+  // A half-deflection at 2x gain saturates at full range
   EXPECT_EQ(settings.apply(20000), 32767);
 }
 
@@ -218,7 +218,7 @@ TEST(InputModelTest, ApplyAxisSettingsExponentialLowersMidRange) {
   expo.curveExponent = 2.0f;
 
   const auto half = static_cast<int>(0.5f * 32767);
-  // An exponential curve pulls mid-range values below the linear response.
+  // An exponential curve pulls mid-range values below the linear response
   EXPECT_LT(expo.apply(half), linear.apply(half));
 }
 

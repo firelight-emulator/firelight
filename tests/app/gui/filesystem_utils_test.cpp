@@ -6,10 +6,10 @@
 
 // Covers FilesystemUtils::readTextFile, which loads bundled help articles for
 // the in-app Help section (and any other text resource). The qrc:/ path is
-// exercised by the app at runtime (the fl_test binary has no resources linked).
+// exercised by the app at runtime (the fl_test binary has no resources linked)
 namespace firelight::gui {
 
-// A plain filesystem path round-trips.
+// A plain filesystem path round-trips
 TEST(FilesystemUtilsTest, ReadsPlainFilePath) {
   QTemporaryFile file;
   ASSERT_TRUE(file.open());
@@ -19,7 +19,7 @@ TEST(FilesystemUtilsTest, ReadsPlainFilePath) {
             QStringLiteral("hello world"));
 }
 
-// A file:// URL is resolved to a local path (notably file:///C:/... on Windows).
+// A file:// URL is resolved to a local path (notably file:///C:/... on Windows)
 TEST(FilesystemUtilsTest, ReadsFileUrl) {
   QTemporaryFile file;
   ASSERT_TRUE(file.open());
@@ -29,7 +29,7 @@ TEST(FilesystemUtilsTest, ReadsFileUrl) {
   EXPECT_EQ(FilesystemUtils::readTextFile(url), QStringLiteral("hello world"));
 }
 
-// Missing files (plain path or URL) return an empty string, never throw.
+// Missing files (plain path or URL) return an empty string, never throw
 TEST(FilesystemUtilsTest, MissingFileReturnsEmpty) {
   EXPECT_TRUE(FilesystemUtils::readTextFile("/no/such/file_xyz.md").isEmpty());
   EXPECT_TRUE(

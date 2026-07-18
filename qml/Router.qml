@@ -5,7 +5,7 @@ import "routing.js" as Routing
 
 // App-wide URL navigation. Single source of truth for the current path, params,
 // and history; the view layer (RouteView, nav popup) mirrors it. All logic lives
-// in routing.js — this only holds state and emits change notifications.
+// in routing.js — this only holds state and emits change notifications
 QtObject {
     id: root
 
@@ -19,10 +19,10 @@ QtObject {
     property bool canGoForward: false
 
     // True when the current route is presented as an overlay/popup over whatever
-    // view is behind it, rather than replacing the content area.
+    // view is behind it, rather than replacing the content area
     readonly property bool overlay: Routing.routeIsOverlay(matchedPattern, routes)
 
-    // "none" | "push" | "replace" | "pop" — how the view should animate the move.
+    // "none" | "push" | "replace" | "pop" — how the view should animate the move
     signal navigated(string transition)
 
     property var _state: Routing.initialHistory()
@@ -68,7 +68,7 @@ QtObject {
         return Routing.isActive(path, prefix);
     }
 
-    // Pure matcher exposed so nested outlets can resolve their own sub-paths.
+    // Pure matcher exposed so nested outlets can resolve their own sub-paths
     function match(rawPath, patternList) {
         return Routing.match(Routing.parse(rawPath).path, patternList);
     }

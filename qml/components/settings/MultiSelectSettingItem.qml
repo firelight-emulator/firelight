@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // Multi-select setting: a full-width wrap of toggleable chips over `options`
 // ({label, value}). `value` is a JSON array of the selected option values;
-// emits `changed` with the new JSON array string when the selection changes.
+// emits `changed` with the new JSON array string when the selection changes
 BaseSettingItem {
     id: root
 

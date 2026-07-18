@@ -23,7 +23,7 @@ TEST(GamepadProfileTest, AddMappingDeDupsByPlatformAndType) {
   profile.addMapping(first);
   profile.addMapping(second);
 
-  // The first mapping wins; the duplicate is ignored.
+  // The first mapping wins; the duplicate is ignored
   EXPECT_EQ(profile.getMappingForPlatformAndController(5, 1), first);
 }
 
@@ -36,10 +36,10 @@ TEST(GamepadProfileTest, AnalogSettingsFallBackToDefault) {
   profileDefault.leftStick.innerDeadzone = 0.3f;
   profile.setDefaultAnalogSettings(profileDefault);
 
-  // No per-platform override -> profile default.
+  // No per-platform override -> profile default
   EXPECT_EQ(profile.getAnalogSettings(5, 1), profileDefault);
 
-  // With an override on the platform mapping -> the override wins.
+  // With an override on the platform mapping -> the override wins
   AnalogSettings override;
   override.leftStick.innerDeadzone = 0.05f;
   mapping->setAnalogOverride(override);

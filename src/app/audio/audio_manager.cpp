@@ -14,7 +14,7 @@ QAudioDevice AudioManager::selectedOutputDevice() const {
       }
     }
     // The chosen device is gone (unplugged, or renamed by the OS). Fall back
-    // rather than play nothing.
+    // rather than play nothing
     spdlog::warn("Audio output '{}' not found; using the system default",
                  chosen);
   }
@@ -34,7 +34,7 @@ AudioManager::AudioManager(
   refreshVolume();
 
   // Picking a different output (or muting, or moving the slider) applies
-  // straight away, the same as the device list changing under us.
+  // straight away, the same as the device list changing under us
   const auto onKey = [this](const std::string &key) {
     if (key == OUTPUT_DEVICE_KEY) {
       reinitializeAudioDevice();
@@ -75,7 +75,7 @@ void AudioManager::refreshVolume() {
   std::lock_guard lock(m_sinkMutex);
   if (m_audioSink) {
     // Perceptual, not linear: halfway along the slider should sound halfway,
-    // and a linear 0.5 doesn't.
+    // and a linear 0.5 doesn't
     m_audioSink->setVolume(QtAudio::convertVolume(
         m_volume.load(), QtAudio::LogarithmicVolumeScale,
         QtAudio::LinearVolumeScale));
@@ -89,7 +89,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
 
   // Note: we run this path even when muted (writing silence below) so the audio
   // buffer keeps draining at the device rate — the "audio" sync method paces the
-  // emulation off this buffer's occupancy and must not stall when muted.
+  // emulation off this buffer's occupancy and must not stall when muted
   std::lock_guard lock(m_sinkMutex);
   if (m_audioDevice && m_audioSink) {
     // Added m_audioSink check
@@ -104,7 +104,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
 
     // Steer the buffer toward ~50% full by nudging the resample rate, unless the
-    // user has disabled Dynamic Rate Control (advanced setting).
+    // user has disabled Dynamic Rate Control (advanced setting)
     const int delta =
         m_drcEnabled.load()
           ? m_rateController.computeCompensation(
@@ -118,14 +118,14 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
 
     if (m_isMuted || m_userMuted) {
-      // Keep the buffer flowing (for pacing) but play silence.
+      // Keep the buffer flowing (for pacing) but play silence
       std::memset(output.data(), 0, output.size() * sizeof(int16_t));
     }
     m_audioDevice->write(reinterpret_cast<const char *>(output.data()),
                          output.size() * sizeof(int16_t)); // stereo, s16
 
     // Once we've pre-buffered ~half the sink, begin playback. Writes above fill
-    // the sink while it's suspended, so playback starts from a healthy buffer.
+    // the sink while it's suspended, so playback starts from a healthy buffer
     if (m_priming) {
       const auto filled = bufferTotalCapacity - m_audioSink->bytesFree();
       if (filled >= bufferTotalCapacity / 2) {
@@ -138,7 +138,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   return numFrames;
 }
 
-// Callers (initialize / reinitializeAudioDevice) hold m_sinkMutex.
+// Callers (initialize / reinitializeAudioDevice) hold m_sinkMutex
 void AudioManager::openAudioSink() {
   const QAudioDevice dev = selectedOutputDevice();
 
@@ -198,7 +198,7 @@ void AudioManager::setPaused(const bool paused) {
     m_audioSink->suspend(); // halt playback, keep the buffered audio
   } else if (!m_priming) {
     // While priming the sink is intentionally suspended until pre-buffered;
-    // receive() resumes it. Don't let an early unpause start it underrunning.
+    // receive() resumes it. Don't let an early unpause start it underrunning
     m_audioSink->resume();
   }
 }
@@ -208,7 +208,7 @@ float AudioManager::getBufferLevel() const {
   // this value from another thread; a cached value only refreshed while we're
   // feeding the sink would freeze once the buffer fills and we stop feeding it,
   // stalling emulation. bytesFree()/bufferSize() are cheap reads, but the sink
-  // isn't thread-safe, so serialize against receive()/reinit on other threads.
+  // isn't thread-safe, so serialize against receive()/reinit on other threads
   std::lock_guard lock(m_sinkMutex);
   if (m_audioSink) {
     const auto capacity = m_audioSink->bufferSize();

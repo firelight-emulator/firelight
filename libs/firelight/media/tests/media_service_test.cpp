@@ -21,7 +21,7 @@ QImage solidImage(const QColor &color) {
   return image;
 }
 
-// A MediaService backed by a fresh captures.db in a scratch directory.
+// A MediaService backed by a fresh captures.db in a scratch directory
 struct Fixture {
   QString base;
   std::unique_ptr<SqliteGameCaptureRepository> repo;
@@ -98,7 +98,7 @@ TEST(MediaServiceTest, SeparateContentHashesGetSeparateDirs) {
 TEST(MediaServiceTest, ReconcileIndexesOrphansAndPrunesMissing) {
   Fixture f(uniqueTempDir("fl_media_reconcile"));
 
-  // A screenshot placed on disk without going through saveScreenshot.
+  // A screenshot placed on disk without going through saveScreenshot
   const std::string gameDir =
       (f.base + "/screenshots/gameX").toStdString();
   std::filesystem::create_directories(gameDir);
@@ -110,7 +110,7 @@ TEST(MediaServiceTest, ReconcileIndexesOrphansAndPrunesMissing) {
   ASSERT_EQ(rows.size(), 1u);
   EXPECT_EQ(rows[0].timestamp, 12345);
 
-  // Delete the file behind the app's back; reconcile prunes the row.
+  // Delete the file behind the app's back; reconcile prunes the row
   std::filesystem::remove(file.toStdString());
   f.service->reconcile();
   EXPECT_TRUE(f.repo->listAll().empty());

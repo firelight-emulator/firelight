@@ -6,7 +6,7 @@ import Firelight 1.0
 
 // File / folder path setting. `value` is a filesystem path; `directoryMode`
 // picks a folder instead of a file; `extensions` (no dot) filters files. Emits
-// `chosen` when a path is picked or cleared.
+// `chosen` when a path is picked or cleared
 BaseSettingItem {
     id: root
 

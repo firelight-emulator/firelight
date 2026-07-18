@@ -20,7 +20,7 @@ CoreOption option(std::string key, std::string defaultValue,
 } // namespace
 
 // A DB created before category columns existed must be migrated on open,
-// otherwise reads/writes referencing category_key fail and return nothing.
+// otherwise reads/writes referencing category_key fail and return nothing
 TEST(SqliteCoreOptionRepositoryTest, MigratesLegacyTableMissingCategoryColumns) {
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
@@ -38,7 +38,7 @@ TEST(SqliteCoreOptionRepositoryTest, MigratesLegacyTableMissingCategoryColumns) 
   }
 
   // Opening through the repository migrates the schema; the legacy row reads
-  // back with an empty category, and new category-aware writes work.
+  // back with an empty category, and new category-aware writes work
   SqliteCoreOptionRepository repo(path);
   auto read = repo.getCoreOptions("core");
   ASSERT_EQ(read.size(), 1u);
@@ -72,7 +72,7 @@ TEST(SqliteCoreOptionRepositoryTest, RoundTripsOptionsInOrder) {
   EXPECT_EQ(read[0].values[1].value, "off");
   EXPECT_EQ(read[0].values[1].label, "Off");
 
-  // Insertion order is preserved.
+  // Insertion order is preserved
   EXPECT_EQ(read[1].key, "opt_b");
 }
 

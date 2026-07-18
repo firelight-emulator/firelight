@@ -9,7 +9,7 @@ namespace firelight::shop {
   public:
     /**
      * @enum Roles
-     * @brief The roles that can be used with this model.
+     * @brief The roles that can be used with this model
      */
     enum Roles {
       Id = Qt::UserRole + 1,
@@ -40,7 +40,7 @@ namespace firelight::shop {
   private:
     /**
      * @struct Item
-     * @brief A struct representing an item in the model.
+     * @brief A struct representing an item in the model
      */
     struct Item {
       int id;

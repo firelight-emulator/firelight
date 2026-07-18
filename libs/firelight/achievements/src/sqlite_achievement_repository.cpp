@@ -13,7 +13,7 @@ namespace firelight::achievements {
  * @brief Constructs the SQLite achievement repository
  *
  * Initializes the database connection and creates all required tables with
- * proper schema and constraints. The database is created if it doesn't exist.
+ * proper schema and constraints. The database is created if it doesn't exist
  *
  * Database Schema Overview:
  * - hashes: Maps game content hashes to achievement set IDs for automatic
@@ -158,7 +158,7 @@ SqliteAchievementRepository::SqliteAchievementRepository(std::string dbPath)
  * @brief Retrieves user data by username from the SQLite database
  *
  * Queries the users table to fetch complete user information including
- * authentication token and point totals for both normal and hardcore modes.
+ * authentication token and point totals for both normal and hardcore modes
  *
  * @param username The username to query for
  * @return User data if found, std::nullopt if not found or on database error
@@ -230,7 +230,7 @@ std::vector<User> SqliteAchievementRepository::listUsers() const {
  *
  * Inserts new user data or updates existing user information including
  * authentication token and point totals. Uses SQLite's ON CONFLICT DO UPDATE
- * for upsert semantics based on the username primary key.
+ * for upsert semantics based on the username primary key
  *
  * @param user The user data to store or update
  * @return true if the operation succeeded, false on database error
@@ -439,7 +439,7 @@ bool SqliteAchievementRepository::create(const Achievement achievement) {
  * Queries the achievements table to fetch complete achievement information
  * including title, description, points, type, display order, flags, and parent
  * achievement set ID. Used for displaying achievement details or validating
- * individual achievement data.
+ * individual achievement data
  *
  * @param achievementId The unique ID of the achievement to retrieve
  * @return Achievement data if found, std::nullopt if not found or on database
@@ -691,7 +691,7 @@ SqliteAchievementRepository::getAchievementSetByContentHash(
  *
  * Queries the hashes table to find the achievement set ID that has been mapped
  * to the specified content hash. This enables reverse lookups from content hash
- * to achievement set ID.
+ * to achievement set ID
  *
  * @param contentHash The content hash to look up in the database
  * @return The achievement set ID if found, std::nullopt if not found or on

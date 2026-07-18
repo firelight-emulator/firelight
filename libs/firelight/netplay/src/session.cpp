@@ -430,7 +430,7 @@ void NetplaySession::wireBackendEvents() {
       if (!m_inLobby) {
         return;
       }
-      // Slot names are the host's to keep current; guests get the broadcast.
+      // Slot names are the host's to keep current; guests get the broadcast
       if (m_isHost) {
         renamedSlots = !m_slots.slotsFor(memberId).empty();
         m_slots.renameMember(memberId, newName);
@@ -487,7 +487,7 @@ void NetplaySession::wireTransportEvents() {
         return;
       }
       m_peers[memberId] = Peer{.link = &link, .admitted = false};
-      // Guests speak first; the host admits on Hello.
+      // Guests speak first; the host admits on Hello
       sendHello = !m_isHost;
     }
     if (sendHello) {
@@ -638,7 +638,7 @@ void NetplaySession::handleControlMessage(const PlayerId from,
         } else if constexpr (std::is_same_v<T, Ping>) {
           sendControl(from, Pong{.t = message.t});
         } else if constexpr (std::is_same_v<T, Pong>) {
-          // RTT bookkeeping arrives with the transport phase.
+          // RTT bookkeeping arrives with the transport phase
         }
       },
       *decoded);

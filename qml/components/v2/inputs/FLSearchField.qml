@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import Firelight 1.0
 
 // Search input: leading magnifier, placeholder, trailing clear. size sm
-// (toolbar) | lg (page header). Pill-shaped; scales with the UI.
+// (toolbar) | lg (page header). Pill-shaped; scales with the UI
 FocusScope {
     id: root
 

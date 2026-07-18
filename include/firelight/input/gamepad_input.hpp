@@ -7,7 +7,7 @@
 namespace firelight::input {
   // Namespacing masks for non-JOYPAD device inputs. The low byte of a masked
   // value is the raw RETRO_DEVICE_ID_* for that device, so the runtime can
-  // recover it with `input & 0xFF` and detect the class with these masks.
+  // recover it with `input & 0xFF` and detect the class with these masks
   constexpr int MOUSE_INPUT_MASK = 1 << 9; // 512
   constexpr int LIGHTGUN_INPUT_MASK = 1 << 10; // 1024
 
@@ -39,7 +39,7 @@ namespace firelight::input {
     None = 264, // RETRO_DEVICE_ID_JOYPAD_MASK | 8
     Home = 265,
 
-    // Mouse device inputs (RETRO_DEVICE_MOUSE). Low byte = RETRO_DEVICE_ID_MOUSE_*.
+    // Mouse device inputs (RETRO_DEVICE_MOUSE). Low byte = RETRO_DEVICE_ID_MOUSE_*
     MouseX = MOUSE_INPUT_MASK | 0, // 512  relative X
     MouseY = MOUSE_INPUT_MASK | 1, // 513  relative Y
     MouseLeft = MOUSE_INPUT_MASK | 2, // 514
@@ -50,8 +50,8 @@ namespace firelight::input {
     MouseButton4 = MOUSE_INPUT_MASK | 9, // 521
     MouseButton5 = MOUSE_INPUT_MASK | 10, // 522
 
-    // Light gun inputs (RETRO_DEVICE_LIGHTGUN). Low byte = RETRO_DEVICE_ID_LIGHTGUN_*.
-    // Aim (SCREEN_X/Y) is sourced from the pointer, not a bindable input.
+    // Light gun inputs (RETRO_DEVICE_LIGHTGUN). Low byte = RETRO_DEVICE_ID_LIGHTGUN_*
+    // Aim (SCREEN_X/Y) is sourced from the pointer, not a bindable input
     LightgunTrigger = LIGHTGUN_INPUT_MASK | 2, // 1026
     LightgunAuxA = LIGHTGUN_INPUT_MASK | 3, // 1027
     LightgunAuxB = LIGHTGUN_INPUT_MASK | 4, // 1028
@@ -65,9 +65,9 @@ namespace firelight::input {
     LightgunReload = LIGHTGUN_INPUT_MASK | 16, // 1040
   };
 
-  // The device class a GamepadInput belongs to, derived from its namespace mask.
+  // The device class a GamepadInput belongs to, derived from its namespace mask
   // Values double as the input-mapping key (controllerType): Joypad == 1 keeps
-  // existing persisted joypad mappings valid.
+  // existing persisted joypad mappings valid
   enum class GamepadInputClass { Joypad = 1, Mouse = 2, Lightgun = 3 };
 
   constexpr GamepadInputClass classOf(const GamepadInput input) {
@@ -80,7 +80,7 @@ namespace firelight::input {
     return GamepadInputClass::Joypad;
   }
 
-  // The raw RETRO_DEVICE_ID_* for a mouse/lightgun input (low byte).
+  // The raw RETRO_DEVICE_ID_* for a mouse/lightgun input (low byte)
   constexpr unsigned retroDeviceId(const GamepadInput input) {
     return static_cast<unsigned>(input) & 0xFFu;
   }
@@ -89,7 +89,7 @@ namespace firelight::input {
   // hasn't set an explicit binding. For most inputs this is the identity (the
   // input's own value is already a physical button, e.g. NES A == EastFace); the
   // abstract light-gun / mouse buttons default to sensible face buttons / D-pad so
-  // a gamepad can fire them out of the box (aim comes from the stick separately).
+  // a gamepad can fire them out of the box (aim comes from the stick separately)
   constexpr GamepadInput defaultPhysicalBinding(const GamepadInput input) {
     switch (input) {
       case LightgunTrigger:
@@ -122,9 +122,9 @@ namespace firelight::input {
 
   // The inputs a shortcut editor offers as a combo modifier — every digital
   // joypad button. A binding's modifiers can be any input, so this is only what
-  // the UI watches for being held; it is not a restriction the engine enforces.
+  // the UI watches for being held; it is not a restriction the engine enforces
   // Sticks are out (a modifier has to be comfortably holdable), as are the
-  // mouse/light-gun namespaces (not a physical pad).
+  // mouse/light-gun namespaces (not a physical pad)
   inline const std::array<GamepadInput, 16> &modifierCandidates() {
     static constexpr std::array<GamepadInput, 16> CANDIDATES = {
         SouthFace,   EastFace,    WestFace,     NorthFace,
@@ -138,12 +138,12 @@ namespace firelight::input {
   // writes "R3", not 15). Deliberately separate from displayName(): that is prose
   // for the UI and free to be reworded, whereas these are identifiers that would
   // break the file if they changed. Returns nullopt for an unknown name so the
-  // catalog can report it rather than silently resolving to some other button.
+  // catalog can report it rather than silently resolving to some other button
   std::optional<GamepadInput> gamepadInputFromName(std::string_view name);
 
-  // Device-neutral display name for an input (e.g. "South Face", "D-Pad Up").
+  // Device-neutral display name for an input (e.g. "South Face", "D-Pad Up")
   // Platforms provide their own per-button labels ("A", "B", …) in their
-  // controller definitions; this is the generic fallback used by input UIs.
+  // controller definitions; this is the generic fallback used by input UIs
   inline const char *displayName(const GamepadInput input) {
     switch (input) {
       case SouthFace:

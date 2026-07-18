@@ -9,7 +9,7 @@
 
 namespace firelight::saves {
 // Persistence contract for the save/suspend-point metadata index. Qt-free so it
-// can be used from the save worker thread. Backed by SqliteSaveDatabase.
+// can be used from the save worker thread. Backed by SqliteSaveDatabase
 class ISaveDatabase {
 public:
   virtual ~ISaveDatabase() = default;

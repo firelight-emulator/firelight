@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
     // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
     // Make CLI output visible when launched from a terminal (Windows GUI apps
-    // have no console by default).
+    // have no console by default)
     firelight::cli::attachParentConsole();
 
     std::set_terminate([]() {
@@ -235,10 +235,10 @@ int main(int argc, char *argv[]) {
     }
 
     // ===== Check for single-instance mode =======================================================
-    // If the user requested single-instance mode, check if another instance is already running.
+    // If the user requested single-instance mode, check if another instance is already running
     // If so, forward the launch request to that instance and exit. Otherwise, continue launching
     // this instance and a little bit later we'll start listening for incoming launch requests from
-    // future instances.
+    // future instances
     // ============================================================================================
     const auto singleInstanceName =
             firelight::cli::singleInstanceServerName(defaultAppDataPathString);
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
                                                 gameCaptureRepository);
     firelight::ServiceAccessor::setMediaService(&mediaService);
     // Sync the index with the captures folder (picks up files added/removed
-    // outside the app; regenerates any missing clip posters).
+    // outside the app; regenerates any missing clip posters)
     mediaService.reconcile();
 
     // Discord service
@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
 
     // Save data service. The persisted save-directory override lives in the app
     // layer now (the Qt-free SaveManager no longer owns QSettings); resolve it
-    // here and pass the result in. QtSaveManagerProxy writes it back on change.
+    // here and pass the result in. QtSaveManagerProxy writes it back on change
     QSettings savesSettings;
     const auto resolvedSaveDir =
             savesSettings.value("Saves/SaveDirectory", savesPath)
@@ -305,13 +305,13 @@ int main(int argc, char *argv[]) {
     firelight::library::SqliteUserLibraryRepository userLibrary(libraryDbPath);
 
     // Drives content-file -> run-configuration -> entry orchestration off the
-    // repository's events. Must outlive scanning.
+    // repository's events. Must outlive scanning
     firelight::library::LibraryIngestService libIngestService(userLibrary);
 
     // Auto-populates entry name/metadata/art from the shipped offline metadata
     // DB when a game is added (and backfills existing entries). Constructed
     // before scanning so it catches the initial scan's new entries; the read-only
-    // metadata source tolerates a missing shipped DB.
+    // metadata source tolerates a missing shipped DB
     firelight::metadata::SqliteGameMetadataSource gameMetadataSource(
         (defaultAppDataPathString + "/metadata.db").toStdString());
     firelight::metadata::SqliteMediaAssetRepository mediaAssetRepository(
@@ -324,7 +324,7 @@ int main(int argc, char *argv[]) {
     // Optional online art provider backing the "Change artwork" picker. The key
     // is a user setting (empty until supplied); the provider stays unconfigured
     // and no-ops until then. cpr lives here in the app so the metadata module
-    // stays HTTP-dependency-free.
+    // stays HTTP-dependency-free
     firelight::metadata::CprHttpClient cprHttpClient;
     firelight::metadata::SteamGridDbArtProvider steamGridDbArtProvider(
         cprHttpClient, "");
@@ -342,7 +342,7 @@ int main(int argc, char *argv[]) {
         controllerRepositoryDbPath, platformService);
 
     // Resolved relative to the executable, not the working directory — same as
-    // the settings catalog below, and for the same reason.
+    // the settings catalog below, and for the same reason
     const auto shortcutsPath =
             (QCoreApplication::applicationDirPath() + "/system/shortcuts.json")
             .toStdString();
@@ -363,7 +363,7 @@ int main(int argc, char *argv[]) {
 
     // Settings service. Constructed before anything that reads a setting —
     // AudioManager takes it by reference, and the netplay factory below builds
-    // one on demand.
+    // one on demand
     firelight::settings::SqliteSettingsRepository settingsRepository(
         (defaultAppDataPathString + "/settings.db").toStdString());
 
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
         });
 
     // Caches each core's declared options (populated after a core loads) so the
-    // advanced options editor can list them without the core running.
+    // advanced options editor can list them without the core running
     firelight::settings::SqliteCoreOptionRepository coreOptionRepository(
         (defaultAppDataPathString + "/settings.db").toStdString());
     firelight::ServiceAccessor::setCoreOptionRepository(&coreOptionRepository);
@@ -404,7 +404,7 @@ int main(int argc, char *argv[]) {
     // compat db) from <system>/PPSSPP. These aren't part of the core DLL, so the
     // app can't run PSP games without them. Seed the writable core-system copy
     // once from the assets bundled next to the executable. Idempotent: keyed on a
-    // marker asset so it only runs when the destination hasn't been seeded yet.
+    // marker asset so it only runs when the destination hasn't been seeded yet
     {
         namespace fs = std::filesystem;
         const fs::path ppssppDest =
@@ -433,7 +433,7 @@ int main(int argc, char *argv[]) {
     // game is running the EmulatorItem's teardown calls back into the Discord
     // manager (to clear rich presence). If it were declared later it would be
     // destroyed first, and that call would hit freed memory (Discord SDK assert
-    // / crash). `initialize()` still runs later, once the window exists.
+    // / crash). `initialize()` still runs later, once the window exists
 
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
@@ -442,12 +442,12 @@ int main(int argc, char *argv[]) {
 
     // Thin QML adapter over the (Qt-notification-free) save manager; exposes the
     // save directory as a bindable property for the settings UI. Declared here so
-    // it outlives the QML engine registered below.
+    // it outlives the QML engine registered below
 
     // TODO: Move this to before service?
     // Re-watch/re-scan as content directories come and go. Subscribed before the
     // service guarantees the default directory below, so the initial seed of a
-    // fresh install is caught here.
+    // fresh install is caught here
     const auto contentDirAddedConn = EventDispatcher::instance().subscribe<
         firelight::library::ContentDirectoryAddedEvent>(
         [&](const firelight::library::ContentDirectoryAddedEvent &e) {
@@ -469,7 +469,7 @@ int main(int argc, char *argv[]) {
         });
 
     // Pause library scanning while a game is running so background hashing/IO
-    // never contends with the emulator; resume (and catch up) when it stops.
+    // never contends with the emulator; resume (and catch up) when it stops
     const auto scanSuspendConn = EventDispatcher::instance().subscribe<
         firelight::emulation::EmulationStartedEvent>(
         [&](const firelight::emulation::EmulationStartedEvent &) {
@@ -482,19 +482,19 @@ int main(int argc, char *argv[]) {
         });
 
     // The app-facing curation surface; also guarantees the default content
-    // directory exists and is watched (fires the add event above when seeding).
+    // directory exists and is watched (fires the add event above when seeding)
 
     libScanner2.scanAll();
 
     // A ROM path passed on the command line resolves to a library entry that the
-    // root window auto-launches once loaded (-1 when absent/unresolved).
+    // root window auto-launches once loaded (-1 when absent/unresolved)
     const int startupLaunchEntryId =
             firelight::cli::resolveRomEntryId(cliOptions.romPath, userLibraryService,
                                               platformService);
 
     // If we're the primary --single-instance process, start listening for
     // launches forwarded from secondary processes. Exposed to QML below so the
-    // root window turns launchRequested into window.startGame(entryId).
+    // root window turns launchRequested into window.startGame(entryId)
     std::unique_ptr<firelight::cli::SingleInstanceServer> singleInstanceServer;
     if (cliOptions.singleInstance) {
         singleInstanceServer =
@@ -508,13 +508,13 @@ int main(int argc, char *argv[]) {
     firelight::library::EntryListModel entryListModel(
         userLibraryService, activityLog, platformService, achievementService);
 
-    // Gallery model over the capture index (screenshots + clips).
+    // Gallery model over the capture index (screenshots + clips)
     firelight::gui::CaptureListModel captureListModel(gameCaptureRepository,
                                                       userLibraryService);
 
     // No scanFinished -> reset: the model keeps itself in sync incrementally via
     // EntryCreatedEvent/EntryUpdatedEvent (see EntryListModel), so scans update
-    // the list in place without a full reset (no flicker / scroll loss).
+    // the list in place without a full reset (no flicker / scroll loss)
 
     firelight::gui::PlatformListModel platformListModel(platformService);
     // firelight::shop::ShopItemModel shopItemModel(contentDatabase);
@@ -528,15 +528,15 @@ int main(int argc, char *argv[]) {
 
     // Backs SettingsService (below) via the std-typed ISettingsRepository. Not a
     // QObject and not exposed to QML — the GUI reads settings through
-    // SettingsService, not this repository.
+    // SettingsService, not this repository
 
     //   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
     // Friendly emulation settings + per-core option defaults. Loaded once into
-    // the shared catalog; the emulation path and settings UI read from it.
+    // the shared catalog; the emulation path and settings UI read from it
     // Resolve relative to the executable, not the working directory, so it loads
     // regardless of where the app is launched from (e.g. `firelight <rom>` from a
-    // terminal in any directory).
+    // terminal in any directory)
     const auto catalogPath =
             (QCoreApplication::applicationDirPath() + "/system/settings_catalog.json")
             .toStdString();
@@ -589,7 +589,7 @@ int main(int argc, char *argv[]) {
         "Firelight", 1, 0, "SettingsSearchModel");
     qmlRegisterType<firelight::settings::SettingBinding>("Firelight", 1, 0,
                                                          "SettingBinding");
-    // Lets QML say `level: SettingsLevel.Global` instead of `level: 2`.
+    // Lets QML say `level: SettingsLevel.Global` instead of `level: 2`
     qmlRegisterUncreatableMetaObject(
         firelight::gui::SettingsLevelShim::staticMetaObject, "Firelight", 1, 0,
         "SettingsLevel", "SettingsLevel is an enum, not a type");
@@ -627,7 +627,7 @@ int main(int argc, char *argv[]) {
         .retropadProvider = &netplayService.retropadProvider(),
         .netplayStreamSink = &netplayService.streamSender(),
         // The tee mirrors PCM into the netplay stream (a no-op unless a host
-        // stream is armed) on its way to the real output.
+        // stream is armed) on its way to the real output
         .audioOutputFactory =
         [&netplayService, &settingsService] {
             return std::make_shared<firelight::netplay::TeeAudioOutput>(
@@ -646,21 +646,21 @@ int main(int argc, char *argv[]) {
     // What the emulator hotkeys do, and the dispatcher that feeds them. Both
     // live as long as the app, so a shortcut arriving from the SDL thread can
     // never reach a half-destroyed subscriber. The three UI-bound actions come
-    // back out as signals for QML.
+    // back out as signals for QML
     firelight::emulation::ShortcutActions shortcutActions(
         settingsService, [&raClient] { return raClient.hardcoreModeActive(); },
         firelight::emulation::ShortcutActions::Intents{});
     firelight::ServiceAccessor::setShortcutActions(&shortcutActions);
-    // Co-op: without this, any pad can exit the game or save over your slot.
+    // Co-op: without this, any pad can exit the game or save over your slot
     // Off by default — a single-player setup is one player, and silently
-    // ignoring a hotkey is worse than the thing it prevents.
+    // ignoring a hotkey is worse than the thing it prevents
     firelight::emulation::ShortcutDispatcher shortcutDispatcher(
         shortcutActions, [&settingsService](const int playerIndex) {
             if (settingsService.getGlobalValue("only-player-one-hotkeys")
                         .value_or("false") != "true") {
                 return true;
             }
-            // -1 is "no device behind it" (a menu or a test), which is us.
+            // -1 is "no device behind it" (a menu or a test), which is us
             return playerIndex <= 0;
         });
     shortcutActions.setIntents({
@@ -675,12 +675,12 @@ int main(int argc, char *argv[]) {
     });
 
     // --- Apply per-launch CLI configuration as session overrides ------------
-    // These affect only this run and are never written to the settings DB.
+    // These affect only this run and are never written to the settings DB
     {
         using firelight::settings::SettingsCatalog;
 
         // Emulation setting overrides: the bulk --settings-file first, then
-        // inline --set on top (explicit inline wins).
+        // inline --set on top (explicit inline wins)
         std::vector<std::pair<std::string, std::string> > overrides;
         if (!cliOptions.settingsFile.empty()) {
             try {
@@ -699,7 +699,7 @@ int main(int argc, char *argv[]) {
         if (!overrides.empty()) {
             // Known friendly keys (common + every core's friendly settings) for a
             // typo warning. Raw core option keys can't be listed here, so unknown
-            // keys are still applied (they may be valid advanced core options).
+            // keys are still applied (they may be valid advanced core options)
             std::set<std::string> knownKeys;
             for (const auto &s: SettingsCatalog::instance().commonSettings()) {
                 knownKeys.insert(s.key);
@@ -721,17 +721,17 @@ int main(int argc, char *argv[]) {
         }
 
         // Force a specific core for this launch (guarded by platform support in
-        // CoreRegistry::resolveCoreName).
+        // CoreRegistry::resolveCoreName)
         if (!cliOptions.core.empty()) {
             firelight::CoreRegistry::instance().setSessionCoreOverride(
                 cliOptions.core);
         }
 
-        // Save slot, muted, and preferred controller apply to the launched game.
+        // Save slot, muted, and preferred controller apply to the launched game
         const bool haveRom = startupLaunchEntryId >= 0;
         firelight::emulation::LaunchOverrides launch;
         // Born-muted at instance creation (robust against QML binding timing);
-        // StartupOptions also carries it so the QML muted binding stays true.
+        // StartupOptions also carries it so the QML muted binding stays true
         launch.muted = cliOptions.muted;
         if (cliOptions.saveSlot >= 0) {
             if (haveRom) {
@@ -836,7 +836,7 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty(
         "EmulationService", new firelight::gui::QtEmulationServiceProxy());
     // Only the shortcuts that genuinely need the UI reach QML; the rest are
-    // handled in ShortcutActions.
+    // handled in ShortcutActions
     engine.rootContext()->setContextProperty("ShortcutDispatcher",
                                              &shortcutDispatcher);
     engine.rootContext()->setContextProperty("AchievementService", &achievementServiceProxy);
@@ -860,7 +860,7 @@ int main(int argc, char *argv[]) {
 
     // Startup values from the CLI (e.g. a ROM to auto-launch, per-launch window
     // knobs, a pending RetroAchievements login). Registered before loadFromModule
-    // so the root window sees it in Component.onCompleted.
+    // so the root window sees it in Component.onCompleted
     firelight::cli::StartupOptions::Data startupData;
     startupData.launchEntryId = startupLaunchEntryId;
     startupData.startMuted = cliOptions.muted;
@@ -879,7 +879,7 @@ int main(int argc, char *argv[]) {
         new firelight::cli::StartupOptions(std::move(startupData)));
 
     // The single-instance listener (null unless --single-instance). The root
-    // window connects to its launchRequested(entryId) to play a forwarded ROM.
+    // window connects to its launchRequested(entryId) to play a forwarded ROM
     engine.rootContext()->setContextProperty(
         "SingleInstance", singleInstanceServer.get());
 
@@ -897,7 +897,7 @@ int main(int argc, char *argv[]) {
     // through the KHR entry points and crash if those extensions aren't enabled;
     // cores that request 1.1+ (parallel-RDP) get them as core functions. The
     // apiVersion must stay >= 1.1 so those 1.1 cores keep working. Must be set
-    // before the window is exposed. Static so it outlives the window.
+    // before the window is exposed. Static so it outlives the window
     static QVulkanInstance vulkanInstance;
     if (window) {
         vulkanInstance.setApiVersion(QVersionNumber(1, 3));
@@ -942,11 +942,11 @@ int main(int argc, char *argv[]) {
     auto inputLoopFuture = QtConcurrent::run([&] { inputService.run(); });
 
     // discordManager is declared earlier (so it outlives the engine); just
-    // initialize it now that the window/render loop exists.
+    // initialize it now that the window/render loop exists
     discordManager.initialize();
 
     // Pump SDK callbacks on the main thread. A render-driven pump would stall
-    // on static scenes, freezing lobby/chat events while idling in menus.
+    // on static scenes, freezing lobby/chat events while idling in menus
     QTimer discordCallbackTimer;
     discordCallbackTimer.setInterval(16);
     QObject::connect(&discordCallbackTimer, &QTimer::timeout,
@@ -972,7 +972,7 @@ int main(int argc, char *argv[]) {
     // is the core's video receiver) is torn down, so the core is destroyed while
     // the receiver is still alive. This mirrors the in-app "stop game" path;
     // otherwise the engine is destroyed first and the core's destructor
-    // dereferences the freed receiver (crash on exit while a game is running).
+    // dereferences the freed receiver (crash on exit while a game is running)
     emuService.stopEmulation();
 
     inputService.stop();

@@ -17,7 +17,7 @@ ListView {
     property string sortRole: "displayName"
     property bool sortAscending: true
 
-    // Multi-select state owned by GameView and bound in.
+    // Multi-select state owned by GameView and bound in
     property var selectedIds: ({})
 
     signal gameClicked(int entryId, int rowIndex, int modifiers)
@@ -278,7 +278,7 @@ ListView {
              id: rowTap
              acceptedButtons: Qt.LeftButton
              // Default (DragThreshold) policy takes only a passive grab, so it
-             // cooperates with the row's folder-drag DragHandler.
+             // cooperates with the row's folder-drag DragHandler
              onSingleTapped: {
                  root.gameClicked(delegateButton.model.entryId, delegateButton.index, rowTap.point.modifiers)
                  root.gameFocused(root.focusSnapshot(delegateButton.model))

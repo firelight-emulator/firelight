@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // Pick one of a few options, all visible at once. `options` is [{label, value}];
 // `currentValue` is the selected value; emits `changed` on selection. Sits to
-// the side for 2 options, full-width below for 3+.
+// the side for 2 options, full-width below for 3+
 BaseSettingItem {
     id: root
 
@@ -38,7 +38,7 @@ BaseSettingItem {
                     readonly property bool on: root.currentValue === modelData.value
 
                     Layout.fillWidth: root.controlBelow
-                    // Fills the box so segment height tracks the scaled box.
+                    // Fills the box so segment height tracks the scaled box
                     Layout.fillHeight: true
                     implicitWidth: segLabel.implicitWidth + AppStyle.spacingMd * 2
                     focusPolicy: Qt.NoFocus

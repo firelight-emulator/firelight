@@ -11,7 +11,7 @@ TEST(SingleInstanceTest, ServerNameIsDeterministic) {
 }
 
 TEST(SingleInstanceTest, ServerNameIsScopedToDataDir) {
-  // Distinct data dirs (e.g. different --config-dir) must not collide.
+  // Distinct data dirs (e.g. different --config-dir) must not collide
   const auto a = singleInstanceServerName("C:/Users/x/AppData/Firelight");
   const auto b = singleInstanceServerName("C:/tmp/other-instance");
   EXPECT_NE(a, b);

@@ -18,7 +18,7 @@ struct HttpResponse {
 };
 
 // Minimal HTTP client seam so art providers can be unit-tested with a fake and
-// the module stays free of a concrete HTTP dependency (cpr lives in the app).
+// the module stays free of a concrete HTTP dependency (cpr lives in the app)
 class IHttpClient {
 public:
   virtual ~IHttpClient() = default;

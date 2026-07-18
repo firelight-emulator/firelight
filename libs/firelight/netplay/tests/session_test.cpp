@@ -9,7 +9,7 @@
 namespace firelight::netplay {
 
 namespace {
-// One simulated machine: identity + backend + transport + session.
+// One simulated machine: identity + backend + transport + session
 struct Client {
   Client(const std::shared_ptr<FakeLobbyHub> &lobbyHub,
          const std::shared_ptr<FakeTransportHub> &transportHub,
@@ -145,7 +145,7 @@ TEST_F(SessionTest, JoinMidGameGetsFullSnapshot) {
   EXPECT_EQ(guest2.session.streamConfig()->width, 320);
   EXPECT_EQ(guest2.session.slotTable().occupiedCount(), 2);
 
-  // Host can seat the newcomer mid-game.
+  // Host can seat the newcomer mid-game
   host.session.assignSlot(2, 3, 0);
   EXPECT_EQ(guest2.session.slotTable().slot(2)->displayName, "GuestTwo");
   EXPECT_EQ(guest.session.slotTable().slot(2)->displayName, "GuestTwo");
@@ -162,7 +162,7 @@ TEST_F(SessionTest, BackToBackGamesKeepLobbyIntact) {
   host.session.markStreamStarted();
   host.session.endGame("finished");
 
-  // Ready flags reset for the next game; membership and slots survive.
+  // Ready flags reset for the next game; membership and slots survive
   EXPECT_FALSE(host.session.slotTable().slot(1)->ready);
   EXPECT_EQ(guest.session.slotTable().occupiedCount(), 2);
   EXPECT_TRUE(guest.session.inLobby());
@@ -182,7 +182,7 @@ TEST_F(SessionTest, ProtocolMismatchIsRejected) {
   join(guest);
 
   // A raw client that speaks an old protocol version: uses the transport
-  // directly and hand-crafts its Hello.
+  // directly and hand-crafts its Hello
   FakeTransport rawTransport(transportHub, 99);
   std::string rejectCode;
   IPeerLink *rawLink = nullptr;
@@ -202,14 +202,14 @@ TEST_F(SessionTest, ProtocolMismatchIsRejected) {
   };
   rawTransport.setEvents(std::move(rawEvents));
   rawTransport.setSignalOut([&](const PlayerId to, const std::string &payload) {
-    // Signaling normally rides the lobby; deliver directly for the raw peer.
+    // Signaling normally rides the lobby; deliver directly for the raw peer
     if (auto *hostTransport = &host.transport) {
       hostTransport->handleSignal(99, payload);
     }
     (void)to;
   });
   // The host's answer signal has nowhere to go (99 isn't a lobby member), so
-  // complete the raw side's handshake by hand.
+  // complete the raw side's handshake by hand
   rawTransport.connectToPeer(1, true);
   rawTransport.handleSignal(1, "answer");
   ASSERT_NE(rawLink, nullptr);
@@ -233,7 +233,7 @@ TEST_F(SessionTest, ReconnectReplaysSnapshot) {
   host.session.startGame(StreamConfig{.width = 256});
   host.session.markStreamStarted();
 
-  // Network blip: both ends lose the link, nobody leaves the lobby.
+  // Network blip: both ends lose the link, nobody leaves the lobby
   guest.transport.dropLink(1);
   EXPECT_TRUE(guest.session.connectedPeers().empty());
   EXPECT_TRUE(host.session.connectedPeers().empty());
@@ -244,7 +244,7 @@ TEST_F(SessionTest, ReconnectReplaysSnapshot) {
   EXPECT_EQ(guest.session.connectedPeers(), std::vector<PlayerId>{1});
   EXPECT_EQ(guest.session.phase(), GamePhase::InGame);
   EXPECT_EQ(guest.session.streamConfig()->width, 256);
-  // The slot survived the drop, so the guest can keep playing.
+  // The slot survived the drop, so the guest can keep playing
   EXPECT_EQ(host.session.slotTable().slot(1)->displayName, "GuestOne");
 }
 
@@ -319,7 +319,7 @@ TEST_F(SessionTest, PacketsBypassControlAndReachSink) {
   EXPECT_EQ(receivedChannel, ChannelKind::Input);
   EXPECT_EQ(received, inputBytes);
 
-  // And host -> guests on the stream channels.
+  // And host -> guests on the stream channels
   std::vector<uint8_t> guestReceived;
   SessionEvents guestEvents;
   guestEvents.packetReceived = [&](PlayerId, ChannelKind,

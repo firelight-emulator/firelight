@@ -47,7 +47,7 @@ protected:
     return cf;
   }
 
-  // Writes a single-entry .zip and returns its path.
+  // Writes a single-entry .zip and returns its path
   std::string writeZip(const std::string &zipName, const std::string &entryName,
                        const std::vector<uint8_t> &bytes) {
     const std::string zipPath =
@@ -70,7 +70,7 @@ protected:
 };
 
 // A loose cartridge on disk is read in full and hashed with the platform's
-// normalization (Game Boy = whole-file MD5, bytes unchanged).
+// normalization (Game Boy = whole-file MD5, bytes unchanged)
 TEST_F(ContentLoaderTest, LoadsLooseCartridgeAndHashesIt) {
   ASSERT_TRUE(tempDir.isValid());
   const auto rom = makeRom(4096, 1);
@@ -85,7 +85,7 @@ TEST_F(ContentLoaderTest, LoadsLooseCartridgeAndHashesIt) {
 }
 
 // The same bytes inside an archive load to the same content hash as on disk, so
-// a ROM is identified identically however it is stored.
+// a ROM is identified identically however it is stored
 TEST_F(ContentLoaderTest, InArchiveMatchesLooseFile) {
   ASSERT_TRUE(tempDir.isValid());
   const auto rom = makeRom(2048, 7);
@@ -110,7 +110,7 @@ TEST_F(ContentLoaderTest, InArchiveMatchesLooseFile) {
 }
 
 // NES iNES-header stripping: the 16-byte header is excluded from the hash, so a
-// headered and header-stripped dump of the same PRG/CHR data hash identically.
+// headered and header-stripped dump of the same PRG/CHR data hash identically
 TEST_F(ContentLoaderTest, NesHeaderIsStrippedFromHash) {
   ASSERT_TRUE(tempDir.isValid());
   const auto body = makeRom(1024, 3);
@@ -126,11 +126,11 @@ TEST_F(ContentLoaderTest, NesHeaderIsStrippedFromHash) {
   ASSERT_TRUE(loaded.valid);
   // Bytes are handed to the core unchanged (header included)...
   EXPECT_EQ(loaded.contentBytes, headered);
-  // ...but the canonical hash is over the header-stripped body only.
+  // ...but the canonical hash is over the header-stripped body only
   EXPECT_EQ(loaded.contentHash, ContentHasher::md5(body.data(), body.size()));
 }
 
-// A missing file yields an invalid result with no bytes (never a bogus hash).
+// A missing file yields an invalid result with no bytes (never a bogus hash)
 TEST_F(ContentLoaderTest, MissingFileIsInvalid) {
   const auto loaded = loader.load(
       cartridgeOnDisk(tempDir.filePath("nope.gb").toStdString(),
@@ -141,7 +141,7 @@ TEST_F(ContentLoaderTest, MissingFileIsInvalid) {
 }
 
 // Disc content is opened from its path by the core, so load() only forwards the
-// scan-time content hash and reads no bytes.
+// scan-time content hash and reads no bytes
 TEST_F(ContentLoaderTest, DiscForwardsScanTimeHashWithoutReadingBytes) {
   ContentFile disc;
   disc.m_type = ContentType::Disc;
@@ -164,7 +164,7 @@ TEST_F(ContentLoaderTest, DiscWithoutHashIsInvalid) {
 }
 
 // applyPatch on content with no bytes is a no-op (nothing to patch), leaving the
-// content untouched rather than producing a hash of empty bytes.
+// content untouched rather than producing a hash of empty bytes
 TEST_F(ContentLoaderTest, ApplyPatchOnEmptyContentIsNoOp) {
   LoadedContent content; // no bytes, invalid
   content.contentHash = "original";
@@ -177,7 +177,7 @@ TEST_F(ContentLoaderTest, ApplyPatchOnEmptyContentIsNoOp) {
 }
 
 // A real IPS patch is applied to loaded bytes and the content hash is recomputed
-// over the patched result.
+// over the patched result
 TEST_F(ContentLoaderTest, ApplyIpsPatchRewritesBytesAndHash) {
   ASSERT_TRUE(tempDir.isValid());
   const auto rom = makeRom(64, 9);

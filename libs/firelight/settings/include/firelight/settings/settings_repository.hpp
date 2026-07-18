@@ -7,7 +7,7 @@ namespace firelight::settings {
 
 // Storage only: one explicit method per tier, no tier parameter. The tier
 // vocabulary (SettingsLevel) and the resolution chain live in SettingsService,
-// which is what actually decides between them.
+// which is what actually decides between them
 class ISettingsRepository {
 public:
   virtual ~ISettingsRepository() = default;

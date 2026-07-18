@@ -8,7 +8,7 @@ namespace firelight::audio {
 
 // Captures the system default input device via Qt Multimedia and presents it to
 // a libretro core as a microphone. One microphone, opened lazily when a core
-// asks for it.
+// asks for it
 class QtMicrophone final : public firelight::libretro::IAudioInputProvider {
 public:
   QtMicrophone();

@@ -9,7 +9,7 @@ namespace firelight::achievements {
  *
  * Comprehensive test suite for the SQLite-based achievement repository
  * implementation, covering CRUD operations for achievement sets, achievements,
- * progress tracking, and hash-based lookups.
+ * progress tracking, and hash-based lookups
  */
 class SqliteAchievementRepositoryTest : public testing::Test {
 protected:
@@ -415,7 +415,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetAchievementSet_ExistingSet) {
   EXPECT_EQ(result[0].id, achievementSet.id);
   EXPECT_EQ(result[0].title, achievementSet.title);
   EXPECT_EQ(result[0].imageIconUrl, achievementSet.imageIconUrl);
-  // numAchievements/totalPoints are computed from active achievement rows.
+  // numAchievements/totalPoints are computed from active achievement rows
   EXPECT_EQ(result[0].numAchievements, 0);
   EXPECT_EQ(result[0].totalPoints, 0);
   EXPECT_TRUE(result[0].achievements.empty());
@@ -891,7 +891,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetUserUnlock_ExistingUnlock) {
 }
 
 TEST_F(SqliteAchievementRepositoryTest, GetUserUnlock_NonExistentUnlock) {
-  // A missing unlock is auto-created as a default (unearned, already synced).
+  // A missing unlock is auto-created as a default (unearned, already synced)
   auto result = repository->getUserUnlock("nonexistent", 999);
 
   ASSERT_TRUE(result.has_value());
@@ -1046,7 +1046,7 @@ TEST_F(SqliteAchievementRepositoryTest, SetGameHash_Success) {
 TEST_F(SqliteAchievementRepositoryTest, SetGameHash_UpsertBehavior) {
   const std::string contentHash = "abc123def456";
 
-  // A content hash maps to a single game; re-setting it upserts (game_hashes).
+  // A content hash maps to a single game; re-setting it upserts (game_hashes)
   EXPECT_TRUE(repository->setGameId(contentHash, 1));
   EXPECT_TRUE(repository->setGameId(contentHash, 2));
 

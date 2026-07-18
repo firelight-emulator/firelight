@@ -8,7 +8,7 @@
 
 namespace firelight::input {
 // Axis magnitude past which a stick counts as a directional press for menu
-// navigation (25% of the int16 range).
+// navigation (25% of the int16 range)
 constexpr int NAV_STICK_THRESHOLD = 8192;
 SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
     : m_gamepadRepository(gamepadRepository) {
@@ -22,12 +22,12 @@ SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
   SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 
   // Feed keyboard key events into the shortcut engine (the keyboard is treated
-  // like any other device).
+  // like any other device)
   m_keyboardKeyConnection =
       EventDispatcher::instance().subscribe<KeyboardKeyEvent>(
           [this](const KeyboardKeyEvent &event) {
             // Snapshot the keyboard under the device lock, then feed the engine
-            // without holding it (the engine takes its own lock).
+            // without holding it (the engine takes its own lock)
             std::shared_ptr<IGamepad> keyboard;
             {
               std::shared_lock lock(m_devicesMutex);
@@ -44,7 +44,7 @@ SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
 void SDLInputService::setHotkeysEnabled(const bool enabled,
                                         const std::optional<DeviceType> only) {
   // Snapshot under the lock, then talk to the engine without it: the engine
-  // takes its own, and the device collections are read by other threads.
+  // takes its own, and the device collections are read by other threads
   std::vector<std::shared_ptr<IGamepad>> devices;
   {
     std::shared_lock lock(m_devicesMutex);
@@ -74,7 +74,7 @@ std::shared_ptr<GamepadProfile> SDLInputService::resolveProfileForGamepad(
     const std::shared_ptr<IGamepad> &gamepad) {
   std::shared_ptr<GamepadProfile> profile;
 
-  // A per-game override (if active) wins over the device's stored default.
+  // A per-game override (if active) wins over the device's stored default
   if (m_gameProfileOverride.has_value()) {
     profile = m_gamepadRepository.getProfile(*m_gameProfileOverride);
   }
@@ -94,7 +94,7 @@ std::shared_ptr<GamepadProfile> SDLInputService::resolveProfileForGamepad(
   }
 
   // Flag keyboard profiles for the UI (key labels vs button labels). Derived
-  // from the device type, so the keyboard is not a separate code path.
+  // from the device type, so the keyboard is not a separate code path
   if (profile && gamepad->getDeviceType() == DeviceType::Keyboard) {
     profile->setIsKeyboardProfile(true);
   }
@@ -122,7 +122,7 @@ void SDLInputService::assignPlayerSlot(
   const int nextSlot = getNextAvailablePlayerIndex();
 
   // When gamepads are preferred, a new gamepad bumps the keyboard out of the
-  // earliest slot it occupies.
+  // earliest slot it occupies
   if (gamepad->getDeviceType() == DeviceType::Gamepad &&
       m_preferGamepadOverKeyboard && m_keyboard) {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
@@ -171,7 +171,7 @@ void SDLInputService::reapplyDeviceProfiles() {
 
 bool SDLInputService::promoteDeviceToPlayerOne(
     const std::shared_ptr<IGamepad> &gamepad) {
-  // Precondition: m_devicesMutex is held by the caller.
+  // Precondition: m_devicesMutex is held by the caller
   const int current = gamepad->getPlayerIndex();
   if (current == 0) {
     return false; // already player one
@@ -181,7 +181,7 @@ bool SDLInputService::promoteDeviceToPlayerOne(
   const auto occupant = slotIt != m_playerSlots.end() ? slotIt->second : nullptr;
   assignToSlot(0, gamepad);
 
-  // Move whoever held player one into the promoted device's old slot.
+  // Move whoever held player one into the promoted device's old slot
   if (current >= 0) {
     if (occupant) {
       assignToSlot(current, occupant);
@@ -189,7 +189,7 @@ bool SDLInputService::promoteDeviceToPlayerOne(
       m_playerSlots.erase(current);
     }
   } else if (occupant) {
-    // The promoted device had no slot; give the old occupant the next free one.
+    // The promoted device had no slot; give the old occupant the next free one
     const int free = getNextAvailablePlayerIndex();
     if (free != -1) {
       assignToSlot(free, occupant);
@@ -206,7 +206,7 @@ void SDLInputService::applyGameContext(std::optional<std::string> contentHash,
   bool orderChanged = false;
   {
     std::unique_lock lock(m_devicesMutex);
-    // 1. Per-game profile override.
+    // 1. Per-game profile override
     m_gameProfileOverride =
         contentHash.has_value()
             ? m_gamepadRepository.getGameProfileOverride(*contentHash)
@@ -215,7 +215,7 @@ void SDLInputService::applyGameContext(std::optional<std::string> contentHash,
 
     // 2. Preferred controller type for this platform: if a connected controller
     //    matches, promote it to player one. A CLI `--controller` session
-    //    override for this platform wins over the stored preference.
+    //    override for this platform wins over the stored preference
     if (platformId >= 0) {
       const auto sessionIt = m_sessionPreferredTypes.find(platformId);
       const std::optional<int> preferred =
@@ -280,10 +280,10 @@ bool SDLInputService::removeGamepadByInstanceId(int instanceId) {
 
   if (removed) {
     spdlog::info("Removing gamepad: {}", instanceId);
-    // Both take their own locks; do them outside m_devicesMutex.
+    // Both take their own locks; do them outside m_devicesMutex
     m_shortcutEngine.forgetDevice(removed.get());
     // Held inputs are keyed by slot, so leaving them behind would make the next
-    // device in this slot look like it was already holding them.
+    // device in this slot look like it was already holding them
     m_gamepadLastStates.erase(removedSlot);
     publishDisconnected(removedSlot);
   }
@@ -330,7 +330,7 @@ SDLInputService::findGamepadByInstanceId(const int instanceId) {
 std::shared_ptr<libretro::IRetroPad>
 SDLInputService::getRetropadForPlayerIndex(const int t_player) {
   // Upcast IGamepad -> IRetroPad, sharing ownership so the caller can hold the
-  // device across an unplug. Null if the slot is empty.
+  // device across an unplug. Null if the slot is empty
   return getPlayerGamepad(t_player);
 }
 
@@ -352,9 +352,9 @@ void SDLInputService::nudgeCursor(const int dx, const int dy) {
   m_mouseY.store(static_cast<int16_t>(
       std::clamp(m_mouseY.load() + dy, -32767, 32767)));
   // A gamepad is actively aiming, so the "gun" is on-screen; clear any stale
-  // off-screen flag left by the mouse leaving the game surface.
+  // off-screen flag left by the mouse leaving the game surface
   m_mouseOffscreen.store(false);
-  // Feed relative motion too so RETRO_DEVICE_MOUSE devices react to the stick.
+  // Feed relative motion too so RETRO_DEVICE_MOUSE devices react to the stick
   m_mouseRelX.fetch_add(dx);
   m_mouseRelY.fetch_add(dy);
 }
@@ -418,7 +418,7 @@ SDLInputService::decodeAxisMotion(const int sdlAxis, const int value) {
     return {{RightStickUp, value < -NAV_STICK_THRESHOLD},
             {RightStickDown, value > NAV_STICK_THRESHOLD}};
   // Triggers rest at zero and only travel positive, so there is no opposite
-  // direction to clear.
+  // direction to clear
   case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
     return {{LeftTrigger, value >= NAV_STICK_THRESHOLD}};
   case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
@@ -600,7 +600,7 @@ void SDLInputService::setKeyboard(std::shared_ptr<IGamepad> keyboard) {
     std::unique_lock lock(m_devicesMutex);
     m_keyboard = std::move(keyboard);
     // The keyboard uses the same profile-resolution and slot-assignment path as
-    // any other device (its DeviceType is Keyboard).
+    // any other device (its DeviceType is Keyboard)
     m_keyboard->setProfile(resolveProfileForGamepad(m_keyboard));
     assignPlayerSlot(m_keyboard);
     assigned = m_keyboard;
@@ -619,7 +619,7 @@ void SDLInputService::openSdlGamepad(const int deviceIndex) {
   const auto joystick = SDL_GameControllerGetJoystick(gameController);
   auto joystickInstanceId = SDL_JoystickInstanceID(joystick);
 
-  // Dedup against already-open devices (addGamepad takes the lock itself).
+  // Dedup against already-open devices (addGamepad takes the lock itself)
   if (findGamepadByInstanceId(joystickInstanceId)) {
     spdlog::debug("Gamepad already exists: {}", joystickInstanceId);
     return;

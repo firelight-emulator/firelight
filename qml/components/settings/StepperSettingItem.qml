@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // A precise number nudged up or down. `value` is the current number; emits
 // `changed` with the new value, clamped to [from, to]. `suffix` is an optional
-// unit (e.g. "s").
+// unit (e.g. "s")
 BaseSettingItem {
     id: root
 

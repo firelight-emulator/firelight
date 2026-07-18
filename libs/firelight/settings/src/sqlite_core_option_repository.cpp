@@ -29,7 +29,7 @@ SqliteCoreOptionRepository::SqliteCoreOptionRepository(std::string databaseFile)
 
   // Migrate DBs created before category columns existed. CREATE TABLE IF NOT
   // EXISTS won't add columns to an existing table, so add them here; otherwise
-  // reads/writes referencing them fail on older databases.
+  // reads/writes referencing them fail on older databases
   const auto hasColumn = [this](const char *name) {
     SQLite::Statement query(*m_database, "PRAGMA table_info(core_options)");
     while (query.executeStep()) {
@@ -55,7 +55,7 @@ void SqliteCoreOptionRepository::upsertCoreOptions(
     const std::string &coreName, const std::vector<CoreOption> &options) {
   try {
     // Replace-all: a core's declared option set is authoritative, so options it
-    // no longer declares should disappear from the cache.
+    // no longer declares should disappear from the cache
     SQLite::Transaction transaction(*m_database);
     {
       SQLite::Statement del(*m_database,

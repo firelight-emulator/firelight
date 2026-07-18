@@ -17,11 +17,11 @@ class KeyboardInputHandler final : public QObject, public IGamepad {
 public:
   KeyboardInputHandler();
 
-  // The keys a console input falls back to when the profile has no binding.
+  // The keys a console input falls back to when the profile has no binding
   // Built on first use rather than in the constructor, so callers that only want
   // to know the defaults (the shortcut catalog, validating that a shipped
   // keyboard shortcut doesn't sit on a gameplay key) don't need a handler to
-  // exist first.
+  // exist first
   static const QMap<GamepadInput, Qt::Key> &defaultKeyMap();
   static Qt::Key getDefaultKey(GamepadInput input);
   static QString getKeyLabel(Qt::Key key);
@@ -71,7 +71,7 @@ private:
   QMap<Qt::Key, bool> m_keyStates;
   // m_keyStates is written on the GUI thread (eventFilter) and read on the render
   // thread (input poll during core->run). QMap isn't thread-safe and operator[]
-  // mutates the tree, so every access is serialized here.
+  // mutates the tree, so every access is serialized here
   std::mutex m_keyStatesMutex;
 
   std::shared_ptr<GamepadProfile> m_profile;

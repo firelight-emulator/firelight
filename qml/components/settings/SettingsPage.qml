@@ -9,10 +9,10 @@ import Firelight 1.0
 //     SettingsPage { page: "appearance" }
 //
 // The group list comes from the catalog rather than being spelled out here, so a
-// new group appears just by being declared — no page can silently omit one.
+// new group appears just by being declared — no page can silently omit one
 //
 // `level`/`platformId`/`contentHash` only matter for emulation settings; app
-// settings ignore them and always use the global tier.
+// settings ignore them and always use the global tier
 FocusScope {
     id: root
 
@@ -43,7 +43,7 @@ FocusScope {
                 level: root.level
                 platformId: root.platformId
                 contentHash: root.contentHash
-                // Only the first card sits flush with the top of the page.
+                // Only the first card sits flush with the top of the page
                 showTopPadding: index > 0
             }
         }

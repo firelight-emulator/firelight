@@ -5,7 +5,7 @@
 namespace firelight::emulation {
 
 // Records the hotkey calls EmulatorInstance makes; every other method is an
-// inert stub.
+// inert stub
 class FakeInputService final : public input::InputService {
 public:
   struct HotkeyCall {
@@ -20,7 +20,7 @@ public:
   }
 
   // True when hotkeys are on for every device: the last blanket call enabled
-  // them and nothing has since turned the keyboard off.
+  // them and nothing has since turned the keyboard off
   [[nodiscard]] bool hotkeysFullyEnabled() const {
     bool enabled = true;
     bool keyboardEnabled = true;

@@ -117,7 +117,7 @@ struct RtcTransport::Impl {
   // libdatachannel fires callbacks while holding connection-internal locks
   // (with host-only candidates, even synchronously inside setRemoteDescription)
   // — calling back into the connection from a callback can deadlock. Work that
-  // re-enters the connection is queued onto this worker instead.
+  // re-enters the connection is queued onto this worker instead
   std::mutex taskMutex;
   std::condition_variable taskCv;
   std::deque<std::function<void()>> tasks;
@@ -162,7 +162,7 @@ struct RtcTransport::Impl {
     return configuration;
   }
 
-  // Caller holds mutex. Creates the peer connection + shared handlers.
+  // Caller holds mutex. Creates the peer connection + shared handlers
   Peer &createPeer(const PlayerId memberId) {
     auto &peer = peers[memberId];
     peer = Peer{};
@@ -244,7 +244,7 @@ struct RtcTransport::Impl {
     });
 
     // A channel that was already open before the handler was set (possible
-    // with a fast in-process connection) never fires onOpen again.
+    // with a fast in-process connection) never fires onOpen again
     if (channel->isOpen()) {
       channelOpened(memberId, kind);
     }
@@ -289,7 +289,7 @@ struct RtcTransport::Impl {
       return;
     }
     // The consumer's first sends (Hello etc.) happen inside peerConnected;
-    // fire it off-callback so those sends don't re-enter channel internals.
+    // fire it off-callback so those sends don't re-enter channel internals
     post([this, memberId] {
       IPeerLink *link = nullptr;
       {
@@ -321,7 +321,7 @@ void RtcTransport::connectToPeer(const PlayerId memberId,
   {
     std::lock_guard lock(m_impl->mutex);
     auto &peer = m_impl->createPeer(memberId);
-    // Creating the channels triggers negotiation + candidate gathering.
+    // Creating the channels triggers negotiation + candidate gathering
     for (size_t i = 0; i < CHANNEL_LABELS.size(); ++i) {
       created[i] = peer.connection->createDataChannel(
           CHANNEL_LABELS[i], initFor(static_cast<ChannelKind>(i)));

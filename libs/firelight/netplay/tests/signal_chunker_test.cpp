@@ -35,7 +35,7 @@ TEST(SignalChunkerTest, LargePayloadSplitsAndReassemblesOutOfOrder) {
   ASSERT_GT(chunks.size(), 2u);
 
   SignalReassembler reassembler;
-  // Deliver in reverse order; only the last-arriving chunk completes it.
+  // Deliver in reverse order; only the last-arriving chunk completes it
   for (size_t i = chunks.size(); i-- > 1;) {
     EXPECT_FALSE(reassembler.accept(7, chunks[i]).has_value());
   }
@@ -49,7 +49,7 @@ TEST(SignalChunkerTest, SendersAndSignalsDoNotMix) {
   const auto second = chunkSignal("payload-two", 4, "sigB");
 
   SignalReassembler reassembler;
-  // Same signal id from two senders, plus two signals from one sender.
+  // Same signal id from two senders, plus two signals from one sender
   for (size_t i = 0; i + 1 < first.size(); ++i) {
     EXPECT_FALSE(reassembler.accept(1, first[i]).has_value());
     EXPECT_FALSE(reassembler.accept(2, first[i]).has_value());

@@ -25,7 +25,7 @@ namespace firelight::gui {
 // an async SteamGridDB search, and actions to select a stored asset, apply an
 // online candidate, or import a local image. Every mutating action goes through
 // MetadataService, which reprojects the entry's art columns and emits
-// EntryUpdatedEvent so the library tile refreshes in place.
+// EntryUpdatedEvent so the library tile refreshes in place
 class QtGameArtProxy final : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool providerConfigured READ providerConfigured NOTIFY
@@ -50,29 +50,29 @@ public:
 
   // The stored candidates for a (game, type), newest first:
   // [{assetId, source, url, selected, width, height}]. Read on the GUI thread;
-  // the media store is internally synchronized.
+  // the media store is internally synchronized
   Q_INVOKABLE QVariantList storedAssets(const QString &contentHash,
                                         int mediaType);
 
   // Kicks off an async provider search on a worker thread. Emits
   // searchResultsReady(contentHash, mediaType) when it finishes (also on
-  // failure, with an empty result set); the picker then reads searchResults().
+  // failure, with an empty result set); the picker then reads searchResults()
   Q_INVOKABLE void search(const QString &contentHash, const QString &gameName,
                           int platformId, int mediaType);
 
   // The most-recent search results for a (game, type), index-addressable:
-  // [{url, thumbUrl, externalId, width, height}].
+  // [{url, thumbUrl, externalId, width, height}]
   Q_INVOKABLE QVariantList searchResults(const QString &contentHash,
                                          int mediaType);
 
-  // Makes an already-stored asset the selection for its (game, type).
+  // Makes an already-stored asset the selection for its (game, type)
   Q_INVOKABLE void selectStored(const QString &contentHash, int assetId);
 
-  // Applies search-result [index] for (game, type) as a new, selected asset.
+  // Applies search-result [index] for (game, type) as a new, selected asset
   Q_INVOKABLE void applyOnline(const QString &contentHash, int mediaType,
                                int index);
 
-  // Copies a local image file into the managed media dir and selects it.
+  // Copies a local image file into the managed media dir and selects it
   Q_INVOKABLE bool importImage(const QString &contentHash, int mediaType,
                                const QUrl &fileUrl);
 
@@ -80,10 +80,10 @@ signals:
   void providerConfiguredChanged();
   void searchingChanged();
   // Fired on the GUI thread when a search finishes; the picker reads
-  // searchResults() in response.
+  // searchResults() in response
   void searchResultsReady(const QString &contentHash, int mediaType);
   // Fired after any selection/apply/import so the picker re-reads storedAssets()
-  // and highlights the new selection.
+  // and highlights the new selection
   void assetsChanged(const QString &contentHash, int mediaType);
 
 private:
@@ -98,7 +98,7 @@ private:
   int m_pendingSearches = 0; // GUI-thread only
 
   // Last search results per (contentHash, mediaType). Touched only on the GUI
-  // thread (workers marshal their results here), so no lock is needed.
+  // thread (workers marshal their results here), so no lock is needed
   QHash<QString, QVector<metadata::ArtCandidate>> m_results;
 };
 

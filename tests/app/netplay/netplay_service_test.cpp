@@ -56,10 +56,10 @@ TEST_F(NetplayServiceTest, MembersAreAutoSeatedIntoSlots) {
   EXPECT_EQ(table.slot(1)->memberId, 2u);
   EXPECT_EQ(table.slot(1)->displayName, "Guest");
 
-  // The guest sees the same seating.
+  // The guest sees the same seating
   EXPECT_EQ(guest.session().slotTable().occupiedCount(), 2);
 
-  // A host-cleared slot stays cleared; auto-seating only covers new arrivals.
+  // A host-cleared slot stays cleared; auto-seating only covers new arrivals
   host.clearSlot(1);
   host.session().sendChat("nudge"); // any lobbyChanged won't re-seat
   EXPECT_FALSE(host.session().slotTable().slot(1).has_value());
@@ -68,14 +68,14 @@ TEST_F(NetplayServiceTest, MembersAreAutoSeatedIntoSlots) {
 TEST_F(NetplayServiceTest, ReadyCheckPhasesFlowToGuests) {
   hostUpAndJoin();
 
-  // No game selected yet -> can't start.
+  // No game selected yet -> can't start
   EXPECT_FALSE(host.startGame());
 
   host.session().selectGame({.gameName = "Mario Kart", .contentHash = "mk"});
   EXPECT_TRUE(host.startGame());
   EXPECT_EQ(guest.session().phase(), GamePhase::Starting);
 
-  // Guests can't start games.
+  // Guests can't start games
   EXPECT_FALSE(guest.startGame());
 
   guest.setReady(true);
@@ -87,7 +87,7 @@ TEST_F(NetplayServiceTest, ReadyCheckPhasesFlowToGuests) {
   host.endGame();
   EXPECT_EQ(guest.session().phase(), GamePhase::Idle);
   EXPECT_TRUE(guest.session().inLobby());
-  // Double-start guard: a second ready check works after the game ended.
+  // Double-start guard: a second ready check works after the game ended
   EXPECT_TRUE(host.startGame());
 }
 
@@ -95,7 +95,7 @@ TEST_F(NetplayServiceTest, RenamesReachSlotsAndMembersEverywhere) {
   hostUpAndJoin();
 
   guest.setPlayerName("Zelda");
-  // The host's slot table carries the new name and broadcasts it.
+  // The host's slot table carries the new name and broadcasts it
   EXPECT_EQ(host.session().slotTable().slot(1)->displayName, "Zelda");
   EXPECT_EQ(guest.session().slotTable().slot(1)->displayName, "Zelda");
 
@@ -130,13 +130,13 @@ TEST_F(NetplayServiceTest, GuestInputReachesHostRemotePad) {
   guest.setReady(true);
   host.confirmLaunch();
 
-  // While hosting a live game, port 1 answers with the guest's remote pad.
+  // While hosting a live game, port 1 answers with the guest's remote pad
   EXPECT_TRUE(host.retropadProvider().active());
   const auto pad = host.retropadProvider().getRetropadForPlayerIndex(1);
   ASSERT_NE(pad, nullptr);
   EXPECT_FALSE(pad->isButtonPressed(0, 1, libretro::IRetroPad::SouthFace));
 
-  // The guest sends a pressed frame over the input channel.
+  // The guest sends a pressed frame over the input channel
   input::InputFrame frame;
   frame.setButton(0, true); // SouthFace / RETRO_DEVICE_ID_JOYPAD_B
   frame.leftStickX = 12000;
@@ -150,7 +150,7 @@ TEST_F(NetplayServiceTest, GuestInputReachesHostRemotePad) {
   EXPECT_EQ(pad->getLeftStickXPosition(0, 1), 12000);
 
   // Empty slots answer nothing while online; ending the game restores the
-  // pass-through provider.
+  // pass-through provider
   EXPECT_EQ(host.retropadProvider().getRetropadForPlayerIndex(5), nullptr);
   host.endGame();
   EXPECT_FALSE(host.retropadProvider().active());
@@ -164,7 +164,7 @@ TEST_F(NetplayServiceTest, StreamConfigReachesGuestReceiver) {
 
   // The host announces a config mid-game (as the encoder would); the guest's
   // receiver takes it without a valid extradata blob being decodable — the
-  // decoder rejects garbage extradata gracefully.
+  // decoder rejects garbage extradata gracefully
   host.session().announceStreamConfig(StreamConfig{
       .extradataB64 = "!!!not-base64!!!", .width = 240, .height = 160});
   EXPECT_EQ(guest.session().streamConfig()->width, 240);

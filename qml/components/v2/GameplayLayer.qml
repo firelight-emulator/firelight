@@ -14,7 +14,7 @@ import Firelight 1.0
 //
 // Launch fades to black on gameLoadStarted and reveals only once BOTH the fade
 // finished and the game is ready. "Back to Menu" shrinks it to the bar (kept
-// alive, resumable); only "Close Game" tears it down.
+// alive, resumable); only "Close Game" tears it down
 Item {
     id: gameplay
 
@@ -27,7 +27,7 @@ Item {
     readonly property bool launching: mode === "launching"
     property int barHeight: 72
 
-    // Reveal is gated on both, so we always fully fade to black before the game.
+    // Reveal is gated on both, so we always fully fade to black before the game
     property bool _blackFull: false
     property bool _gameReady: false
 
@@ -36,7 +36,7 @@ Item {
     clip: true
 
     // Height is driven by state; only the shrink/grow between full and bar (and
-    // the close-away) animate — launch snaps to full and lets the black cover fade.
+    // the close-away) animate — launch snaps to full and lets the black cover fade
     state: mode === "none" ? "none"
          : mode === "backgrounded" ? "docked"
          : "full"
@@ -72,7 +72,7 @@ Item {
     ]
 
     // Focus after the state settles (enabled/visible have updated), so keys —
-    // notably Esc → quick menu — reach the emulator when it's foregrounded.
+    // notably Esc → quick menu — reach the emulator when it's foregrounded
     onModeChanged: {
         if (mode === "playing") {
             Qt.callLater(function () { emulatorLoader.forceActiveFocus(); });
@@ -103,7 +103,7 @@ Item {
         mode = "backgrounded";
     }
 
-    // Dark backdrop so the shrunk game reads as a bar.
+    // Dark backdrop so the shrunk game reads as a bar
     Rectangle {
         anchors.fill: parent
         color: Theme.background
@@ -141,7 +141,7 @@ Item {
         Keys.onEscapePressed: gameplay.foreground()
     }
 
-    // Freeze the game unless it's the foregrounded, playing thing.
+    // Freeze the game unless it's the foregrounded, playing thing
     Binding {
         target: emulatorLoader.item
         property: "paused"
@@ -149,7 +149,7 @@ Item {
         when: emulatorLoader.status === Loader.Ready
     }
 
-    // Docked-bar chrome (only when shrunk): tap anywhere to resume, X to close.
+    // Docked-bar chrome (only when shrunk): tap anywhere to resume, X to close
     MouseArea {
         anchors.fill: parent
         visible: gameplay.mode === "backgrounded"
@@ -167,7 +167,7 @@ Item {
         }
     }
 
-    // Fade-to-black cover for launch. Sits over everything.
+    // Fade-to-black cover for launch. Sits over everything
     Rectangle {
         id: blackCover
         anchors.fill: parent
@@ -205,13 +205,13 @@ Item {
         }
 
         function onEmulationStopped() {
-            // External-launcher mode: the app exists only to run this one game.
+            // External-launcher mode: the app exists only to run this one game
             if (StartupOptions.exitOnClose) {
                 Qt.quit();
                 return;
             }
             // Drop the old page. Keep launching mode if this stop is part of a
-            // relaunch (loadEntry stops the previous game before loading the new).
+            // relaunch (loadEntry stops the previous game before loading the new)
             emulatorLoader.source = "";
             if (gameplay.mode !== "launching") {
                 gameplay.mode = "none";

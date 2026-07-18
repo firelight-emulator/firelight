@@ -7,7 +7,7 @@
 
 namespace firelight::metadata {
   /**
-   * Represents the place a media asset can come from.
+   * Represents the place a media asset can come from
    */
   enum class MediaSource {
     RetroAchievements,
@@ -23,7 +23,7 @@ namespace firelight::metadata {
   /**
    * A single media asset for a game that is actually stored somewhere (local or remote) and can be displayed in
    * the UI. This is what gets created/stored when a user selects an asset from a search result, and is what gets
-   * displayed in the UI.
+   * displayed in the UI
    */
   struct MediaAsset {
     int id = -1;
@@ -40,15 +40,15 @@ namespace firelight::metadata {
     uint64_t createdAt = 0;
 
     /**
-     * @return The source used to actually display the asset.
+     * @return The source used to actually display the asset
      */
     [[nodiscard]] std::string displaySource() const {
       return !remoteUrl.empty() ? remoteUrl : localPath;
     }
 
     /**
-     * @return The source used to display a small version of the asset (thumbnail).
-     *   If no thumbnail is available, falls back to the display source.
+     * @return The source used to display a small version of the asset (thumbnail)
+     *   If no thumbnail is available, falls back to the display source
      */
     [[nodiscard]] std::string displayThumb() const {
       return !thumbUrl.empty() ? thumbUrl : displaySource();

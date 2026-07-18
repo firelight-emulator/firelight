@@ -10,7 +10,7 @@
 namespace firelight::cli {
 
 namespace {
-// Timeouts for the tiny local handshake; a live instance answers in <1ms.
+// Timeouts for the tiny local handshake; a live instance answers in <1ms
 constexpr int CONNECT_TIMEOUT_MS = 300;
 constexpr int IO_TIMEOUT_MS = 300;
 } // namespace
@@ -29,7 +29,7 @@ bool forwardLaunchToRunningInstance(const QString &serverName,
   if (!socket.waitForConnected(CONNECT_TIMEOUT_MS)) {
     return false; // no primary is listening -> we are it
   }
-  // v1 payload: the ROM path (empty just pings the running instance).
+  // v1 payload: the ROM path (empty just pings the running instance)
   QByteArray payload = QByteArray::fromStdString(opts.romPath);
   payload.append('\n');
   socket.write(payload);
@@ -50,7 +50,7 @@ SingleInstanceServer::SingleInstanceServer(
 }
 
 bool SingleInstanceServer::start() {
-  // A prior crash can leave a stale socket file; clear it before listening.
+  // A prior crash can leave a stale socket file; clear it before listening
   QLocalServer::removeServer(m_serverName);
   if (!m_server.listen(m_serverName)) {
     spdlog::warn("Single-instance: could not listen on {} ({})",

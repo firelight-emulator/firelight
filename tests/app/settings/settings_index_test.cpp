@@ -61,12 +61,12 @@ const SettingSearchResult *find(const std::vector<SettingSearchResult> &v,
 
 TEST(SettingsIndexTest, IndexesEveryPageAndSetting) {
   const auto index = indexFor(INDEX_JSON);
-  // 2 pages + 1 app + 2 common + 1 core setting.
+  // 2 pages + 1 app + 2 common + 1 core setting
   EXPECT_EQ(index.size(), 6u);
 }
 
 TEST(SettingsIndexTest, FindsSettingByKeywordNotInItsLabel) {
-  // The whole point of the index: "vsync" appears in no label or page name.
+  // The whole point of the index: "vsync" appears in no label or page name
   const auto results = indexFor(INDEX_JSON).search("vsync");
   ASSERT_FALSE(results.empty());
   EXPECT_EQ(results.front().key, "sync-method");
@@ -85,7 +85,7 @@ TEST(SettingsIndexTest, ResultCarriesWhereItLives) {
 
 TEST(SettingsIndexTest, ResolvesRouteForCoreSpecificSettings) {
   // A core's settings are declared under `cores`, but their group still lands
-  // them on a page.
+  // them on a page
   const auto results = indexFor(INDEX_JSON).search("gba-color-correction");
   ASSERT_FALSE(results.empty());
   EXPECT_EQ(results.front().route, "/settings/emulation");
@@ -102,7 +102,7 @@ TEST(SettingsIndexTest, MatchesPagesByNameAndKeyword) {
   EXPECT_TRUE(byName.front().key.empty());
 
   // "theme" is a page keyword, and also the name of a group — the page hit is
-  // what's navigable.
+  // what's navigable
   const auto byKeyword = index.search("theme");
   ASSERT_FALSE(byKeyword.empty());
   EXPECT_EQ(byKeyword.front().pageId, "appearance");
@@ -111,12 +111,12 @@ TEST(SettingsIndexTest, MatchesPagesByNameAndKeyword) {
 TEST(SettingsIndexTest, RanksStrongerMatchesFirst) {
   const auto index = indexFor(INDEX_JSON);
 
-  // An exact label beats a description-only mention.
+  // An exact label beats a description-only mention
   const auto results = index.search("sync method");
   ASSERT_FALSE(results.empty());
   EXPECT_EQ(results.front().key, "sync-method");
 
-  // A label prefix beats a keyword hit elsewhere.
+  // A label prefix beats a keyword hit elsewhere
   const auto accent = index.search("accent");
   ASSERT_FALSE(accent.empty());
   EXPECT_EQ(accent.front().key, "accent-color");
@@ -144,7 +144,7 @@ TEST(SettingsIndexTest, EmptyQueryMatchesNothing) {
 
 TEST(SettingsIndexTest, HonorsLimit) {
   const auto index = indexFor(INDEX_JSON);
-  // "e" appears all over; the cap is what keeps the results list sane.
+  // "e" appears all over; the cap is what keeps the results list sane
   EXPECT_LE(index.search("e", 2).size(), 2u);
   EXPECT_GT(index.search("e", 0).size(), 2u);
 }
@@ -154,7 +154,7 @@ TEST(SettingsIndexTest, SurfacesAdvancedSettingsAndFlagsThem) {
   const auto *hit = find(results, "target-framerate");
   ASSERT_NE(hit, nullptr);
   // Findable even though the page hides it by default; the flag lets the UI
-  // decide what to do about that.
+  // decide what to do about that
   EXPECT_TRUE(hit->advanced);
 }
 

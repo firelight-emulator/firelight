@@ -12,7 +12,7 @@ LoadedContent ContentLoader::load(const ContentFile &info) const {
   // Disc images are opened by the core directly from their file path (the
   // libretro core sets need_fullpath). We don't read the (potentially multi-GB)
   // image into memory, and we reuse the canonical hash computed at scan time --
-  // the buffer-based hash used for cartridges does not work for disc systems.
+  // the buffer-based hash used for cartridges does not work for disc systems
   if (info.m_type == ContentType::Disc) {
     LoadedContent content;
     content.contentHash = info.m_contentHash;

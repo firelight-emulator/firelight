@@ -34,7 +34,7 @@ const static std::map<int, GamepadInput> sdlToGamepadInputs = {
 // Threading: run() is a blocking SDL event loop on its own thread (device
 // add/remove, button/axis updates). The emulation/render thread reads pad and
 // pointer state each frame, and the GUI thread pushes mouse updates — shared
-// state is guarded by the mutexes/atomics below.
+// state is guarded by the mutexes/atomics below
 class SDLInputService final : public InputService {
 public:
   explicit SDLInputService(IControllerRepository &gamepadRepository);
@@ -65,13 +65,13 @@ public:
   void stop();
 
   // Applies one SDL axis event to the device with this instance id: decodes it
-  // to digital directions and records each edge.
+  // to digital directions and records each edge
   void handleAxisMotion(int instanceId, int sdlAxis, int value);
 
   // The digital directions one SDL axis event implies, as (input, pressed)
   // pairs. Both directions of a stick axis are always returned, so a stick
   // flicked straight from one extreme to the other clears the direction it
-  // left instead of leaving it stuck on.
+  // left instead of leaving it stuck on
   static std::vector<std::pair<GamepadInput, bool>>
   decodeAxisMotion(int sdlAxis, int value);
 
@@ -99,28 +99,28 @@ private:
   void openSdlGamepad(int deviceIndex);
   // Records a digital edge for one gamepad input: feeds the shortcut engine and
   // publishes the nav event. Repeats are dropped, so callers can pass the
-  // current state unconditionally rather than edge-detecting themselves.
+  // current state unconditionally rather than edge-detecting themselves
   void setGamepadInputState(int playerIndex, IGamepad *gamepad,
                             GamepadInput input, bool pressed);
-  // Locks m_devicesMutex internally; safe to call without holding it.
+  // Locks m_devicesMutex internally; safe to call without holding it
   std::shared_ptr<IGamepad> findGamepadByInstanceId(int instanceId);
   int getNextAvailablePlayerIndex() const;
   bool moveGamepadToPlayerIndex(int oldIndex, int newIndex);
   // Resolves the profile a gamepad should use: the active per-game override if
-  // any, otherwise the device's stored default (creating one if needed).
+  // any, otherwise the device's stored default (creating one if needed)
   std::shared_ptr<GamepadProfile>
   resolveProfileForGamepad(const std::shared_ptr<IGamepad> &gamepad);
   // Places a connected device into a player slot, honoring the
-  // prefer-gamepad-over-keyboard rule. Shared by gamepads and the keyboard.
+  // prefer-gamepad-over-keyboard rule. Shared by gamepads and the keyboard
   void assignPlayerSlot(const std::shared_ptr<IGamepad> &gamepad);
   void assignToSlot(int slot, const std::shared_ptr<IGamepad> &gamepad);
   void publishConnected(const std::shared_ptr<IGamepad> &gamepad);
   void publishDisconnected(int playerIndex);
   // Re-resolves every connected gamepad's profile (used when the game context
-  // changes). Moves a device into player one, displacing the current occupant.
+  // changes). Moves a device into player one, displacing the current occupant
   void reapplyDeviceProfiles();
   // Returns true if the slot order actually changed (caller publishes the event
-  // after releasing the lock).
+  // after releasing the lock)
   bool promoteDeviceToPlayerOne(const std::shared_ptr<IGamepad> &gamepad);
 
   IControllerRepository &m_gamepadRepository;
@@ -131,11 +131,11 @@ private:
   // getRetropadForPlayerIndex every frame, listGamepads) take a shared lock and
   // run concurrently; mutators take a unique lock. Connect/disconnect/order
   // events are published *outside* the lock because subscribers (e.g.
-  // ControllerListModel) call back in to read slots.
+  // ControllerListModel) call back in to read slots
   std::shared_mutex m_devicesMutex;
   std::optional<int> m_gameProfileOverride;
   // CLI `--controller`: platformId -> gamepad type, wins over the stored
-  // platform preference in applyGameContext. Guarded by m_devicesMutex.
+  // platform preference in applyGameContext. Guarded by m_devicesMutex
   std::map<int, int> m_sessionPreferredTypes;
   std::vector<std::shared_ptr<IGamepad>> m_gamepads;
   std::map<int, std::shared_ptr<IGamepad>> m_playerSlots;
@@ -154,14 +154,14 @@ private:
 
   // Cursor position (±32767). Written absolutely by the UI thread on mouse
   // events and incrementally by the emulation thread's analog-stick glide
-  // (nudgeCursor), read from the render thread — atomic so no lock is needed.
+  // (nudgeCursor), read from the render thread — atomic so no lock is needed
   std::atomic<int16_t> m_mouseX{0};
   std::atomic<int16_t> m_mouseY{0};
   std::atomic<bool> m_mousePressed{false};
   // Right/middle buttons, relative motion, and off-screen state for
   // RETRO_DEVICE_MOUSE and the light gun. Written from the UI thread on mouse
   // events, read from the render thread via the pointer provider — atomic so
-  // no lock is needed. Relative motion accumulates and is consumed per frame.
+  // no lock is needed. Relative motion accumulates and is consumed per frame
   std::atomic<bool> m_mouseRightPressed{false};
   std::atomic<bool> m_mouseMiddlePressed{false};
   std::atomic<int> m_mouseRelX{0};

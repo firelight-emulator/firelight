@@ -8,7 +8,7 @@
 namespace firelight::library {
 
 namespace {
-// Case-insensitive ASCII substring test. An empty needle matches anything.
+// Case-insensitive ASCII substring test. An empty needle matches anything
 bool containsCaseInsensitive(const std::string &haystack,
                              const std::string &needle) {
   if (needle.empty()) {
@@ -93,7 +93,7 @@ SmartFolderCriteria SmartFolderCriteria::parse(const std::string &json) {
 std::string SmartFolderCriteria::toJson() const {
   nlohmann::json j = nlohmann::json::object();
   // Only emit set/non-empty fields, so the stored JSON stays minimal and an
-  // unset criterion round-trips back to "ignored".
+  // unset criterion round-trips back to "ignored"
   if (!contentDirectoryIds.empty()) {
     j["contentDirectoryIds"] = contentDirectoryIds;
   }
@@ -207,7 +207,7 @@ bool SmartFolderCriteria::matches(const EntryFields &entry,
     return false;
   }
   // An unknown release year (0) satisfies no year bound, so a year-range folder
-  // excludes entries with unknown years.
+  // excludes entries with unknown years
   if (criteria.yearMin.has_value() && entry.releaseYear < *criteria.yearMin) {
     return false;
   }
@@ -228,7 +228,7 @@ bool SmartFolderCriteria::matches(const EntryFields &entry,
     return false;
   }
   if (criteria.playedWithinDays.has_value()) {
-    // Never-played entries fall outside any recency window.
+    // Never-played entries fall outside any recency window
     if (entry.lastPlayedMillis == 0) {
       return false;
     }

@@ -8,7 +8,7 @@ namespace firelight::input {
 struct DeviceIdentifier {
   // Devices are identified by their stable USB-style ids (vendor, product,
   // version). Two identical models share one identity/profile; the keyboard
-  // uses the sentinel (-1, -1, -1).
+  // uses the sentinel (-1, -1, -1)
   std::string deviceName;
   DeviceType type = DeviceType::Gamepad;
   int vendorId = 0;

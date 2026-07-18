@@ -28,9 +28,9 @@ namespace firelight::libretro {
 
         virtual void getHwRenderInterface(retro_hw_render_interface **iface) = 0;
 
-        // Called by Core::~Core() after context_destroy but before coreLib->unload().
+        // Called by Core::~Core() after context_destroy but before coreLib->unload()
         // Renderer must destroy all resources that require DLL function pointers here
-        // (destroy_device, etc.). Default no-op for non-Vulkan renderers.
+        // (destroy_device, etc.). Default no-op for non-Vulkan renderers
         virtual void destroyHwContext() {
         }
     };

@@ -7,7 +7,7 @@ import Firelight 1.0
 // it, the control to the right (or full-width below when `controlBelow`), and a
 // full-bleed hairline between rows. A subtle highlight appears on hover or
 // gamepad/keyboard focus. Default children land in an indented slot for nested
-// sub-settings.
+// sub-settings
 FocusScope {
     id: root
 
@@ -18,41 +18,41 @@ FocusScope {
     property bool isFirstInSection: false
     property bool isLastInSection: false
 
-    // Place the control full-width below the label instead of to its right.
+    // Place the control full-width below the label instead of to its right
     property bool controlBelow: false
 
-    // Bind to whatever a dependent setting hangs off of.
+    // Bind to whatever a dependent setting hangs off of
     property bool shown: true
 
     // The between-rows divider. SettingsSection turns it off for a group's last
-    // row so the card doesn't end with a line.
+    // row so the card doesn't end with a line
     property bool showDivider: true
 
     // Marks this row as a dependent sub-setting of the one above it: indented
-    // with a quieter label, so two cues carry the relationship rather than one.
+    // with a quieter label, so two cues carry the relationship rather than one
     property bool subItem: false
     readonly property int contentIndent: subItem ? 40 : 16
 
-    // Sub-settings rendered indented below the row.
+    // Sub-settings rendered indented below the row
     default property alias nestedContent: nestedColumn.data
 
     // Shown when this setting has an override at the current tier; emits reset()
-    // so the caller can clear it (falling back to the inherited value).
+    // so the caller can clear it (falling back to the inherited value)
     property bool resettable: false
     signal reset()
 
     property var onClicked: null
 
     // Rows always span their column; a row with no width renders nothing, and
-    // callers shouldn't have to remember this at every use site.
+    // callers shouldn't have to remember this at every use site
     Layout.fillWidth: true
 
     // Dependent rows swap in instantly. Animating the height cascades into the
-    // card and everything below it, which reads worse than a clean swap.
+    // card and everything below it, which reads worse than a clean swap
     visible: shown
     implicitHeight: content.implicitHeight
 
-    // The single `control` lives either in the side slot or the below slot.
+    // The single `control` lives either in the side slot or the below slot
     Binding {
         target: root.control
         property: "parent"
@@ -75,7 +75,7 @@ FocusScope {
         onTapped: if (root.onClicked) root.onClicked()
     }
 
-    // Full-bleed hover / focus highlight behind the row.
+    // Full-bleed hover / focus highlight behind the row
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
@@ -126,7 +126,7 @@ FocusScope {
                 visible: root.resettable
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 // Sized to the label so appearing and disappearing can't change
-                // the row's height — nothing should shift when a value changes.
+                // the row's height — nothing should shift when a value changes
                 Layout.preferredHeight: labelText.implicitHeight
                 leftPadding: 8
                 rightPadding: 8
@@ -159,7 +159,7 @@ FocusScope {
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 // A control that asks for more than it can have — a long file
                 // path, say — would otherwise squeeze the label to nothing and
-                // draw straight over it. Cap it and let the control shrink.
+                // draw straight over it. Cap it and let the control shrink
                 Layout.maximumWidth: Math.round(root.width * 0.6)
                 implicitWidth: (!root.controlBelow && root.control) ? root.control.implicitWidth : 0
                 implicitHeight: (!root.controlBelow && root.control) ? root.control.implicitHeight : 0
@@ -177,7 +177,7 @@ FocusScope {
         }
 
         // Full width, below the label AND the control — a wide control must never
-        // squeeze the description into a narrow column.
+        // squeeze the description into a narrow column
         Text {
             id: descText
             Layout.fillWidth: true

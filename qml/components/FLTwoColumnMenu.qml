@@ -12,7 +12,7 @@ FocusScope {
     property var pages: []
 
     // Optional URL section name per menu item (parallel to menuItems), so a menu
-    // can be driven by / reflected into a route like /settings/appearance.
+    // can be driven by / reflected into a route like /settings/appearance
     property var routeNames: []
     readonly property string currentSection: (currentIndex >= 0 && currentIndex < routeNames.length) ? routeNames[currentIndex] : ""
 

@@ -8,13 +8,13 @@
 
 namespace firelight::media {
 
-// The gallery's index of captured screenshots/clips.
+// The gallery's index of captured screenshots/clips
 class IGameCaptureRepository {
 public:
   virtual ~IGameCaptureRepository() = default;
 
   // Inserts `capture` (a no-op if its filePath is already indexed) and sets its
-  // id. Returns whether a valid id is now set.
+  // id. Returns whether a valid id is now set
   virtual bool add(GameCapture &capture) = 0;
 
   virtual std::vector<GameCapture> listAll() = 0;
@@ -25,7 +25,7 @@ public:
   virtual bool setFavorite(int id, bool favorite) = 0;
   virtual bool remove(int id) = 0;
 
-  // Whether a capture with this file path is already indexed (used by reconcile).
+  // Whether a capture with this file path is already indexed (used by reconcile)
   virtual bool existsForPath(const std::string &filePath) = 0;
 };
 

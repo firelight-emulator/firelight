@@ -16,8 +16,8 @@
 
 // Threading: a QML item — constructed and driven (properties/slots) on the GUI
 // thread. Owns the frame-pacing thread (m_emulationThread), whose timer fires
-// there and enqueues RunFrame onto the renderer (drained on the render thread).
-// m_paused is atomic because the pacing thread reads it each tick.
+// there and enqueues RunFrame onto the renderer (drained on the render thread)
+// m_paused is atomic because the pacing thread reads it each tick
 class EmulatorItem : public QQuickRhiItem,
                      public firelight::ServiceAccessor,
                      public firelight::emulation::IEmulatorController {
@@ -77,7 +77,7 @@ public:
   bool m_canUndoLoadSuspendPoint = false;
 
   // Emulator state. Atomic: written on the GUI thread (setPaused), read on the
-  // frame-pacing thread.
+  // frame-pacing thread
   std::atomic<bool> m_paused = false;
 
   uint m_coreBaseWidth = 0;
@@ -94,7 +94,7 @@ public:
 
   void setPaused(bool paused) override;
 
-  // Runs a single frame and pauses again, so a paused game can be stepped.
+  // Runs a single frame and pauses again, so a paused game can be stepped
   Q_INVOKABLE void advanceOneFrame() override;
 
   bool isRewindEnabled() const;
@@ -109,7 +109,7 @@ public:
 
   Q_INVOKABLE void writeSuspendPoint(int index) override;
 
-  // Captures the current frame to disk (bound to the "screenshot" shortcut).
+  // Captures the current frame to disk (bound to the "screenshot" shortcut)
   Q_INVOKABLE void captureScreenshot() override;
 
   Q_INVOKABLE void captureVideoClip() override;
@@ -156,8 +156,8 @@ public slots:
   void startGame();
 
   // Recomputes the frame-pacing target/mode from the current sync-method /
-  // target-framerate settings, the core fps, and the display refresh rate.
-  // Must run on the GUI thread (reads window()/screen()).
+  // target-framerate settings, the core fps, and the display refresh rate
+  // Must run on the GUI thread (reads window()/screen())
   void reconfigurePacing();
 
 signals:
@@ -211,11 +211,11 @@ private:
   QThread m_emulationThread;
   QChronoTimer m_emulationTimer{};
   // Wall-clock target interval for native/monitor/fixed pacing. Written on the
-  // GUI thread (reconfigurePacing), read on the emulation thread.
+  // GUI thread (reconfigurePacing), read on the emulation thread
   std::atomic<int64_t> m_emulationTimingTargetNs = 16666667;
-  // When true, pace off audio buffer occupancy instead of the wall clock.
+  // When true, pace off audio buffer occupancy instead of the wall clock
   std::atomic<bool> m_audioSyncActive = false;
-  // Core's native fps, cached from the renderer geometry callback.
+  // Core's native fps, cached from the renderer geometry callback
   std::atomic<double> m_coreFps = 60.0;
 
   ScopedConnection m_settingChangedConnection;
@@ -223,18 +223,18 @@ private:
   bool m_mousePressed = false;
   bool m_mouseRightPressed = false;
   bool m_mouseMiddlePressed = false;
-  // Last pointer position (item pixels) for computing relative mouse motion.
+  // Last pointer position (item pixels) for computing relative mouse motion
   QPointF m_lastMousePos;
   bool m_hasLastMousePos = false;
 
   // Normalizes a pointer position, feeds absolute + relative motion to the
-  // input service, and clears the light-gun off-screen flag.
+  // input service, and clears the light-gun off-screen flag
   void feedPointer(const QPointF &pos);
 
   void updateGeometry(unsigned int width, unsigned int height,
                       float aspectRatio);
 
-  // Frame-pacing strategy (maps to the "sync-method" emulation setting).
+  // Frame-pacing strategy (maps to the "sync-method" emulation setting)
   enum class SyncMethod { Native, Monitor, Fixed, Audio };
   static SyncMethod syncMethodFromString(const std::string &method);
 
@@ -243,7 +243,7 @@ private:
   //   Fixed  -> 1e9 / targetFramerate
   // Returns 0 for Audio (audio-driven) and Monitor (resolved via
   // monitorPacingRate, which needs the refresh/content-rate relationship), or
-  // when the input is non-positive.
+  // when the input is non-positive
   static int64_t computeTargetIntervalNs(SyncMethod method, double coreFps,
                                           int targetFramerate, double refreshHz);
 
@@ -251,6 +251,6 @@ private:
   // up with the content rate (caller falls back to native). Divides the refresh
   // rate down to the nearest integer fraction and only matches when that lands
   // within tolerance of coreFps — so 60/120/240 Hz match a 60 fps game but 144 Hz
-  // (2.4x) does not, avoiding a sped-up game on high-refresh displays.
+  // (2.4x) does not, avoiding a sped-up game on high-refresh displays
   static double monitorPacingRate(double coreFps, double refreshHz);
 };

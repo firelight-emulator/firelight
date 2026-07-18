@@ -86,7 +86,7 @@ FocusScope {
                         font.pixelSize: AppStyle.fontSizeSmall
                         Layout.alignment: Qt.AlignLeft
                         font.family: Constants.regularFontFamily
-                        // font.weight: Font.
+                        // font.weight: Font
                         wrapMode: Text.WordWrap
                         color: Theme.textMuted
                     }

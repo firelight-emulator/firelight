@@ -13,7 +13,7 @@ SplitView {
 
     clip: true
 
-    // Collapse the sidebar to an icon-only rail to reclaim grid width.
+    // Collapse the sidebar to an icon-only rail to reclaim grid width
     property bool sidebarCollapsed: false
 
     CreateFolderDialog {
@@ -35,7 +35,7 @@ SplitView {
         id: smartFolderDialog
     }
 
-    // Owned platforms first: hide platforms with no games until "Show all".
+    // Owned platforms first: hide platforms with no games until "Show all"
     property bool showAllPlatforms: false
     SortFilterProxyModel {
         id: ownedPlatformsModel
@@ -44,7 +44,7 @@ SplitView {
             enabled: !splitView.showAllPlatforms
             // Counts populate after entries finish loading; binding the map here
             // re-invalidates the filter when it changes, so owned platforms
-            // appear once the library is ready instead of staying empty.
+            // appear once the library is ready instead of staying empty
             property var counts: LibraryEntryModel.countByPlatform
             onCountsChanged: invalidate()
             function filter(data): bool {
@@ -55,7 +55,7 @@ SplitView {
 
     // Folder tree: the folder model is flat, so flatten its parentId/position
     // into a pre-ordered, depth-tagged list gated by an expanded set. Collapsed
-    // folders (id present with value false) hide their descendants.
+    // folders (id present with value false) hide their descendants
     property var expandedFolders: ({})
     property var folderRows: []
 
@@ -100,7 +100,7 @@ SplitView {
     }
 
     // A folder + every folder nested under it, split by kind (manual vs smart),
-    // so selecting a parent scope shows all of its descendants' games too.
+    // so selecting a parent scope shows all of its descendants' games too
     function collectFolderSubtree(folderId) {
         var kids = {};
         var typeOf = {};
@@ -120,7 +120,7 @@ SplitView {
     }
 
     // Moves `draggedId` next to `targetFolderId` (into the target's parent scope,
-    // just before or after it) and renumbers that scope's positions.
+    // just before or after it) and renumbers that scope's positions
     function reorderFolderTo(draggedId, targetFolderId, before) {
         var parentOf = {};
         var byParent = {};
@@ -205,7 +205,7 @@ SplitView {
         readonly property int fullWidth: Math.round(280 * AppStyle.scale)
         readonly property int railWidth: Math.round(56 * AppStyle.scale)
         // Animating a local property (not SplitView.preferredWidth directly, which
-        // can't take a Behavior) makes the collapse glide.
+        // can't take a Behavior) makes the collapse glide
         property real animatedWidth: splitView.sidebarCollapsed ? railWidth : fullWidth
         Behavior on animatedWidth { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
 
@@ -507,7 +507,7 @@ SplitView {
                                 // Drag a folder onto another to re-nest it, or onto a
                                 // row's top/bottom edge to reorder. mimeData + active
                                 // are set imperatively in the grab callback (a
-                                // declarative Drag.active binding never starts the drag).
+                                // declarative Drag.active binding never starts the drag)
                                 Drag.dragType: Drag.Automatic
                                 Drag.supportedActions: Qt.MoveAction
 
@@ -543,14 +543,14 @@ SplitView {
                                 // Folder drops: top/bottom edge reorders next to this row,
                                 // middle nests into it (cycle-guarded). Game drops add to
                                 // this folder (manual folders only). dropZone tracks the
-                                // hover position live so the row can show nest vs reorder.
+                                // hover position live so the row can show nest vs reorder
                                 DropArea {
                                     id: dropArea
 
                                     anchors.fill: parent
 
                                     // "top"/"bottom" = reorder before/after, "into" = nest,
-                                    // "none" = not hovering.
+                                    // "none" = not hovering
                                     property string dropZone: "none"
 
                                     function updateZone(drag) {
@@ -591,7 +591,7 @@ SplitView {
                                 }
 
                                 // Insertion indicator when reordering (nesting uses the
-                                // row highlight instead).
+                                // row highlight instead)
                                 Rectangle {
                                     z: 3
                                     visible: dropArea.dropZone === "top"

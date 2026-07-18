@@ -30,7 +30,7 @@ IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
   const std::string suffix = suffixOf(path);
 
   // Disc images share extensions across many consoles, so the platform can only
-  // be determined from the contents (delegated to DiscInspector).
+  // be determined from the contents (delegated to DiscInspector)
   if (firelight::library::isDiscExtension(suffix)) {
     content.isDisc = true;
     std::error_code ec;

@@ -13,7 +13,7 @@ namespace firelight::netplay {
 class FakeLobbyBackend;
 
 // One in-memory lobby shared by every FakeLobbyBackend attached to the hub —
-// the fake stand-in for the provider's servers.
+// the fake stand-in for the provider's servers
 struct FakeLobbyHub {
   std::string joinCode;
   PlayerId hostId = 0;

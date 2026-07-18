@@ -18,7 +18,7 @@ QString resolvePath(const QString &url) {
   return url;
 }
 
-// Average color over rows [y0, y1), skipping near-transparent pixels.
+// Average color over rows [y0, y1), skipping near-transparent pixels
 QColor averageBand(const QImage &img, const int y0, const int y1) {
   quint64 r = 0, g = 0, b = 0, count = 0;
   for (int y = y0; y < y1; ++y) {
@@ -48,7 +48,7 @@ QVariantMap ImageUtils::samplePalette(const QString &url) const {
   QImageReader reader(resolvePath(url));
   reader.setAutoTransform(true);
   // A coarse average is all we need, so downscale large images (and gif first
-  // frames) while reading to keep this cheap.
+  // frames) while reading to keep this cheap
   if (const QSize orig = reader.size();
       orig.isValid() && (orig.width() > 128 || orig.height() > 128)) {
     reader.setScaledSize(orig.scaled(128, 128, Qt::KeepAspectRatio));

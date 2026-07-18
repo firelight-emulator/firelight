@@ -14,7 +14,7 @@ namespace firelight::input {
 class SqliteControllerRepository final : public IControllerRepository {
 public:
   // `platformService` supplies the platform list used to seed per-platform
-  // profile mappings (injected rather than reached via a global singleton).
+  // profile mappings (injected rather than reached via a global singleton)
   SqliteControllerRepository(QString dbFilePath,
                              platforms::PlatformService &platformService);
 
@@ -60,7 +60,7 @@ private:
   std::shared_ptr<InputMapping>
   getOrCreateMapping(int profileId, int platformId, int controllerTypeId);
   // Loads a profile's per-platform mappings and shortcut mapping into it
-  // (shared by createProfile/getProfile).
+  // (shared by createProfile/getProfile)
   void loadProfileContents(const std::shared_ptr<GamepadProfile> &profile);
 
   int m_keyboardProfileId;

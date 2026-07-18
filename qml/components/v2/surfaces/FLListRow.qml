@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // A standard selectable row: optional leading icon, a label, and an optional
 // trailing item (placed as a child). Height derives from content and is floored
-// at rowHeight, so it reflows when text grows.
+// at rowHeight, so it reflows when text grows
 //
 //   FLListRow { iconName: "settings"; label: "Appearance" }
 ItemDelegate {

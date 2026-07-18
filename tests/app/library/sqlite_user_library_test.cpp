@@ -9,7 +9,7 @@ class SqliteUserLibraryTest : public testing::Test {};
 
 // Counts the repository's content/run-configuration events (the EventDispatcher
 // replacement for the old Qt signals). Subscriptions are released when it goes
-// out of scope.
+// out of scope
 struct LibraryEventCounters {
   int contentFileAdded = 0;
   int runConfigCreated = 0;
@@ -486,7 +486,7 @@ TEST_F(SqliteUserLibraryTest, SmartFolderTypeAndFilterJsonRoundTripTest) {
   ASSERT_EQ(folders[0].type, static_cast<int>(library::FolderType::Smart));
   ASSERT_EQ(folders[0].filterJson, R"({"platformIds":[3],"favorite":true})");
 
-  // A plain folder defaults to Manual with no criteria.
+  // A plain folder defaults to Manual with no criteria
   auto manual = library::FolderInfo{.displayName = "Manual"};
   ASSERT_TRUE(library.create(manual));
   folders = library.listFolders();
@@ -498,7 +498,7 @@ TEST_F(SqliteUserLibraryTest, SmartFolderTypeAndFilterJsonRoundTripTest) {
     }
   }
 
-  // Updating criteria persists.
+  // Updating criteria persists
   info.filterJson = R"({"pathContains":"snes"})";
   ASSERT_TRUE(library.update(info));
   for (const auto &f : library.listFolders()) {
@@ -585,7 +585,7 @@ TEST_F(SqliteUserLibraryTest, EntryProvenancePopulatedTest) {
 
 namespace {
 // Finds a folder by id in a listFolders() result, or a default-constructed
-// FolderInfo (id -1) if absent.
+// FolderInfo (id -1) if absent
 library::FolderInfo findFolder(const std::vector<library::FolderInfo> &folders,
                                int id) {
   for (const auto &f : folders) {
@@ -611,7 +611,7 @@ TEST_F(SqliteUserLibraryTest, FolderColorAndSortRoundTripTest) {
   ASSERT_EQ(stored.sortRole, "lastPlayedAt");
   ASSERT_FALSE(stored.sortAscending);
 
-  // Update changes appearance.
+  // Update changes appearance
   info.color = "#00ff00";
   info.sortRole = "displayName";
   info.sortAscending = true;
@@ -637,7 +637,7 @@ TEST_F(SqliteUserLibraryTest, FolderPositionAutoAssignedTest) {
   EXPECT_EQ(b.position, 1);
   EXPECT_EQ(c.position, 2);
 
-  // listFolders returns them in position order.
+  // listFolders returns them in position order
   auto folders = library.listFolders();
   ASSERT_EQ(folders.size(), 3);
   EXPECT_EQ(folders[0].id, a.id);
@@ -655,7 +655,7 @@ TEST_F(SqliteUserLibraryTest, ReorderFoldersTest) {
   ASSERT_TRUE(library.create(b));
   ASSERT_TRUE(library.create(c));
 
-  // New order: c, a, b (parent -1 = root).
+  // New order: c, a, b (parent -1 = root)
   ASSERT_TRUE(library.reorderFolders(-1, {c.id, a.id, b.id}));
 
   auto folders = library.listFolders();
@@ -678,7 +678,7 @@ TEST_F(SqliteUserLibraryTest, SetFolderParentMovesAndAppendsTest) {
   ASSERT_TRUE(library.create(child));
   ASSERT_TRUE(library.create(sibling));
 
-  // Move both under parent; each appends at the end of parent's scope.
+  // Move both under parent; each appends at the end of parent's scope
   ASSERT_TRUE(library.setFolderParent(child.id, parent.id));
   ASSERT_TRUE(library.setFolderParent(sibling.id, parent.id));
 
@@ -701,7 +701,7 @@ TEST_F(SqliteUserLibraryTest, EntryProvenanceUsesArchivePathTest) {
 
   // An archived entry's on-disk location is the archive path; provenance
   // resolves against that, and contentPaths reports it (so "path contains"
-  // works for archived content too).
+  // works for archived content too)
   library::ContentFile file{.m_fileSizeBytes = 100,
                             .m_filePath = "game.sfc",
                             .m_fileMd5 = "eee",

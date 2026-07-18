@@ -84,7 +84,7 @@ TEST(LaunchConfigTest, MalformedJsonThrows) {
 }
 
 TEST(LaunchConfigTest, JsonArrayIsRejected) {
-  // A JSON document that isn't an object of key/value pairs is an error.
+  // A JSON document that isn't an object of key/value pairs is an error
   const auto path = writeTempFile("fl_arr.json", R"(["a", "b"])");
   EXPECT_THROW(loadOverrideFile(path), std::runtime_error);
   std::filesystem::remove(path);
@@ -108,7 +108,7 @@ TEST(LaunchConfigTest, ParseControllerTypeKnownNames) {
   EXPECT_EQ(parseControllerType("xbox360"), MICROSOFT_XBOX_360);
   EXPECT_EQ(parseControllerType("dualshock4"), SONY_DUALSHOCK_4);
   EXPECT_EQ(parseControllerType("switch-pro"), NINTENDO_SWITCH_PRO);
-  // Case-insensitive.
+  // Case-insensitive
   EXPECT_EQ(parseControllerType("DualSense"), SONY_DUALSENSE);
 }
 

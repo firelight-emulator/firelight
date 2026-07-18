@@ -13,7 +13,7 @@ namespace firelight::saves {
 
 // In-memory ISaveDatabase for tests. SaveManager persists metadata from a
 // background thread, so this fake is thread-safe and lets tests assert
-// create/update counts.
+// create/update counts
 class FakeSaveDatabase : public ISaveDatabase {
 public:
   bool createSavefileMetadata(SavefileMetadata &metadata) override {

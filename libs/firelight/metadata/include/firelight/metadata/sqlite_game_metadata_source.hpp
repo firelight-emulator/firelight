@@ -11,7 +11,7 @@ namespace SQLite {
 
 namespace firelight::metadata {
   /**
-   * Read-only source for the game metadata database that gets shipped with the app.
+   * Read-only source for the game metadata database that gets shipped with the app
    */
   class SqliteGameMetadataSource final : public IGameMetadataSource {
   public:

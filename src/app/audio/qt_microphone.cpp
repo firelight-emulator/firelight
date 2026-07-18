@@ -7,7 +7,7 @@
 #include <QMediaDevices>
 #include <spdlog/spdlog.h>
 
-// Completes the opaque libretro handle with the Qt capture state.
+// Completes the opaque libretro handle with the Qt capture state
 struct retro_microphone {
   std::unique_ptr<QAudioSource> source;
   QIODevice *io = nullptr;

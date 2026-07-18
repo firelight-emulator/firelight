@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import Firelight 1.0
 
 // What a guest sees while the host's game is live: the incoming stream,
-// scaled to fit, with their inputs already ticking back to the host.
+// scaled to fit, with their inputs already ticking back to the host
 Rectangle {
     id: root
 

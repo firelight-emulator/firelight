@@ -10,7 +10,7 @@ TEST(SqliteCheatRepositoryTest, RoundTripsTypedCheatsWithPokes) {
 
   EXPECT_TRUE(repo.getCheats(hash).empty());
 
-  // A RAM cheat (GameShark-style) carries resolved pokes.
+  // A RAM cheat (GameShark-style) carries resolved pokes
   Cheat a{.contentHash = hash,
           .name = "Infinite Lives",
           .type = CheatType::GameShark,
@@ -22,7 +22,7 @@ TEST(SqliteCheatRepositoryTest, RoundTripsTypedCheatsWithPokes) {
   EXPECT_GT(a.id, 0);
   EXPECT_EQ(a.ordinal, 0);
 
-  // A core-applied cheat (Game Genie) has a raw code and no pokes.
+  // A core-applied cheat (Game Genie) has a raw code and no pokes
   Cheat b{.contentHash = hash,
           .name = "Moon Jump",
           .type = CheatType::GameGenie,
@@ -48,7 +48,7 @@ TEST(SqliteCheatRepositoryTest, RoundTripsTypedCheatsWithPokes) {
   EXPECT_TRUE(cheats[1].pokes.empty());
   EXPECT_TRUE(cheats[1].isCoreApplied()); // no pokes + a code -> core-applied
 
-  // Toggle + full edit persist.
+  // Toggle + full edit persist
   EXPECT_TRUE(repo.setEnabled(b.id, true));
   EXPECT_TRUE(repo.getCheats(hash)[1].enabled);
 
@@ -60,10 +60,10 @@ TEST(SqliteCheatRepositoryTest, RoundTripsTypedCheatsWithPokes) {
   EXPECT_EQ(cheats[1].name, "Moon Jump!");
   EXPECT_FALSE(cheats[1].affectsHardcore);
 
-  // Scoped per game.
+  // Scoped per game
   EXPECT_TRUE(repo.getCheats("some-other-hash").empty());
 
-  // Remove.
+  // Remove
   EXPECT_TRUE(repo.removeCheat(a.id));
   ASSERT_EQ(repo.getCheats(hash).size(), 1u);
   EXPECT_FALSE(repo.removeCheat(999999));

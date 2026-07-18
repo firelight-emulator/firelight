@@ -25,9 +25,9 @@ DiscInspector::DiscInspector(platforms::IPlatformService &platformService)
 
 namespace {
 
-// Upper bound on how much we'll extract from an archive to identify a disc.
+// Upper bound on how much we'll extract from an archive to identify a disc
 // CD-based systems all fit well under this; oversized DVD images zipped up are
-// skipped rather than risk filling the user's temp drive.
+// skipped rather than risk filling the user's temp drive
 constexpr int64_t MAX_IN_ARCHIVE_DISC_EXTRACT_BYTES = 2LL * 1024 * 1024 * 1024;
 
 std::string toLower(std::string s) {
@@ -48,7 +48,7 @@ std::string suffixOf(const std::string &name) {
   return toLower(name.substr(dot + 1));
 }
 
-// A unique temporary directory removed when this object goes out of scope.
+// A unique temporary directory removed when this object goes out of scope
 class TempDir {
 public:
   TempDir() {
@@ -92,7 +92,7 @@ bool DiscInspector::isSaturn(rc_hash_iterator &iterator) {
   }
 
   // Mirror rcheevos' rc_hash_sega_cd: open the first track and read absolute
-  // sector 0, where the 16-byte volume magic lives.
+  // sector 0, where the 16-byte volume magic lives
   void *track = cdreader.open_track_iterator(iterator.path, 1, &iterator);
   if (!track) {
     return false;
@@ -118,7 +118,7 @@ DiscInspector::sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes) {
     std::string line = text.substr(start, end - start);
     start = (newline == std::string::npos) ? text.size() + 1 : newline + 1;
 
-    // Trim surrounding whitespace (including any \r).
+    // Trim surrounding whitespace (including any \r)
     size_t b = 0;
     size_t e = line.size();
     while (b < e && std::isspace(static_cast<unsigned char>(line[b]))) {
@@ -134,7 +134,7 @@ DiscInspector::sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes) {
 
     candidates.push_back(line); // whole line (m3u entries, may contain spaces)
 
-    // Quoted strings (cue FILE "name.bin").
+    // Quoted strings (cue FILE "name.bin")
     size_t p = 0;
     bool inQuote = false;
     std::string quoted;
@@ -151,7 +151,7 @@ DiscInspector::sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes) {
       ++p;
     }
 
-    // Whitespace-separated fields (gdi track rows).
+    // Whitespace-separated fields (gdi track rows)
     std::string field;
     for (const char c : line) {
       if (std::isspace(static_cast<unsigned char>(c))) {
@@ -185,14 +185,14 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
 
   // rcheevos tries each candidate console (chosen by extension) in order,
   // running that console's content fingerprint. The first one that matches is
-  // the real platform, and the hash it produces is the canonical RA hash.
+  // the real platform, and the hash it produces is the canonical RA hash
   char hash[33];
   while (rc_hash_iterate(hash, &iterator)) {
     const int rcConsole = iterator.consoles[iterator.index - 1];
     int platformId = m_platformService.platformIdForRcConsole(rcConsole);
     if (platformId != firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN) {
       // rcheevos uses the Sega CD console as an umbrella that also matches Sega
-      // Saturn discs; disambiguate via the sector-0 magic.
+      // Saturn discs; disambiguate via the sector-0 magic
       if (rcConsole == RC_CONSOLE_SEGA_CD && isSaturn(iterator)) {
         platformId = firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN;
       }
@@ -268,7 +268,7 @@ DiscIdentity DiscInspector::inspectArchiveEntry(
   }
 
   // Minimal set: the target plus the files a cue/gdi/m3u sheet references
-  // (resolved transitively, since an m3u can point at cue sheets).
+  // (resolved transitively, since an m3u can point at cue sheets)
   std::set<std::string> wanted;
   std::vector<std::string> worklist{targetBaseLower};
   while (!worklist.empty()) {

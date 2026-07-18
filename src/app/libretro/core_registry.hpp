@@ -16,7 +16,7 @@ class SettingsService;
 // A libretro core Firelight knows about. `id` is the DLL base name (e.g.
 // "mupen64plus_libretro"), which is also the key the settings/core-options
 // catalogs use. Bundled cores ship in system/_cores; user-supplied cores
-// (a later phase) will set `bundled = false` and carry their own path.
+// (a later phase) will set `bundled = false` and carry their own path
 struct CoreInfo {
   std::string id;
   std::string displayName;
@@ -24,7 +24,7 @@ struct CoreInfo {
   bool bundled = true;
 };
 
-// One core as offered for a specific platform (default marked).
+// One core as offered for a specific platform (default marked)
 struct PlatformCore {
   std::string id;
   std::string displayName;
@@ -37,42 +37,42 @@ struct PlatformCore {
 // runtime SET_CONTROLLER_INFO advertisement (ICore::getControllerDevices) to
 // decide availability + the exact device id, and augmented by any uncatalogued
 // devices the core reports (advanced only). `deviceClass` selects which
-// platform display + bindings apply (Joypad variants share one bindings set).
+// platform display + bindings apply (Joypad variants share one bindings set)
 struct CoreDeviceVariant {
   unsigned coreDeviceId = 1; // RETRO_DEVICE_* (possibly a SUBCLASS)
   input::GamepadInputClass deviceClass = input::GamepadInputClass::Joypad;
   std::string friendlyName;
   // Core options to force when this variant is chosen so the core queries the
-  // expected input protocol (e.g. FCEUmm Zapper -> fceumm_zapper_mode=clightgun).
+  // expected input protocol (e.g. FCEUmm Zapper -> fceumm_zapper_mode=clightgun)
   std::vector<std::pair<std::string, std::string>> companionOptions;
   bool isDefault = false; // the port's default device for this core
 };
 
 // The authority on which cores exist, which platforms each can run, and each
 // platform's default core. Decouples the core from the platform: the platform
-// is the stable identity, the core is a resolvable/overridable attribute.
+// is the stable identity, the core is a resolvable/overridable attribute
 class CoreRegistry {
 public:
   static CoreRegistry &instance();
 
-  // The known-good default core for a platform ("" if none).
+  // The known-good default core for a platform ("" if none)
   [[nodiscard]] std::string defaultCoreForPlatform(int platformId) const;
 
-  // Every core that can run the platform, default first ("" list if none).
+  // Every core that can run the platform, default first ("" list if none)
   [[nodiscard]] std::vector<PlatformCore> coresForPlatform(int platformId) const;
 
   [[nodiscard]] std::string displayNameFor(const std::string &coreId) const;
   [[nodiscard]] bool supportsPlatform(const std::string &coreId,
                                       int platformId) const;
 
-  // Absolute-ish path to the core's DLL ("" if unknown).
+  // Absolute-ish path to the core's DLL ("" if unknown)
   [[nodiscard]] std::string dllPathFor(const std::string &coreId) const;
 
   [[nodiscard]] const std::vector<CoreInfo> &cores() const { return m_cores; }
 
-  // The curated controller variants a core can expose (empty = joypad only).
+  // The curated controller variants a core can expose (empty = joypad only)
   // Not filtered by platform/ROM — callers cross-reference the core's runtime
-  // advertisement (ICore::getControllerDevices) to get the game's actual list.
+  // advertisement (ICore::getControllerDevices) to get the game's actual list
   [[nodiscard]] const std::vector<CoreDeviceVariant> &
   deviceCatalogForCore(const std::string &coreId) const;
 
@@ -80,7 +80,7 @@ public:
   // filtered to what the core advertises (`advertisedDeviceIds`, from
   // getControllerDevices — pass empty to trust the catalog when the core gave no
   // info), with the standard joypad synthesized as the default when the catalog
-  // offers no joypad variant. Ordered default-first.
+  // offers no joypad variant. Ordered default-first
   [[nodiscard]] std::vector<CoreDeviceVariant>
   availableControllerVariants(const std::string &coreId,
                               const std::vector<unsigned> &advertisedDeviceIds) const;
@@ -89,7 +89,7 @@ public:
   // override -> platform default. An override is honored only if that core
   // supports the platform (a stale/invalid override falls back). The override
   // tiers come from the passed SettingsService (the "core" key); pass nullptr
-  // (or an unset service) to get just the platform default.
+  // (or an unset service) to get just the platform default
   [[nodiscard]] std::string
   resolveCoreName(int platformId, const std::string &contentHash,
                   settings::SettingsService *settings) const;
@@ -97,10 +97,10 @@ public:
   // Forces a specific core for this session (CLI `--core`), winning over the
   // stored per-game/per-platform overrides in resolveCoreName. Honored only
   // where the core actually supports the platform (a mismatched override falls
-  // through to the normal resolution). Empty string clears it. Not persisted.
+  // through to the normal resolution). Empty string clears it. Not persisted
   void setSessionCoreOverride(const std::string &coreId);
 
-  // Reserved SettingsService key that stores a platform/game core override.
+  // Reserved SettingsService key that stores a platform/game core override
   static constexpr const char *CORE_SETTING_KEY = "core";
 
 private:

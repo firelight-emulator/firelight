@@ -56,7 +56,7 @@ void HostStreamSender::onPeerReady(const PlayerId memberId, IPeerLink &link) {
     std::lock_guard lock(m_peersMutex);
     m_peers[memberId] = PeerState{&link, false};
   }
-  // A newcomer (or reconnector) can only decode from an IDR.
+  // A newcomer (or reconnector) can only decode from an IDR
   if (m_armed.load() && m_encoder.isRunning()) {
     m_encoder.requestKeyframe();
   }
@@ -139,7 +139,7 @@ void HostStreamSender::onVideoPacket(std::vector<uint8_t> data,
       if (buffered > VIDEO_BACKPRESSURE_LOW) {
         continue; // still draining
       }
-      // Recovered: resume from the next IDR.
+      // Recovered: resume from the next IDR
       peer.droppingVideo = false;
       if (!keyframe) {
         m_encoder.requestKeyframe();
@@ -155,7 +155,7 @@ void HostStreamSender::onVideoPacket(std::vector<uint8_t> data,
 
 void HostStreamSender::onAudioPacket(std::vector<uint8_t> data,
                                      const int64_t ptsMs) {
-  // Audio is never dropped: it's the receivers' clock.
+  // Audio is never dropped: it's the receivers' clock
   const auto bytes = encodePacket(AudioPacket{
       .seq = m_audioSeq++,
       .ptsMs = static_cast<uint32_t>(ptsMs),

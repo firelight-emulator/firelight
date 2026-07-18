@@ -15,7 +15,7 @@ CoreSettingsApplier::CoreSettingsApplier(EmulatorInstance &instance,
   : m_instance(instance), m_context(context),
     m_contentHash(std::move(contentHash)), m_platformId(platformId) {
   // Settings resolve by inheritance (game -> platform -> global -> default), so
-  // a change at ANY tier can alter this game's effective value.
+  // a change at ANY tier can alter this game's effective value
   m_platformSettingChangedConnection =
       EventDispatcher::instance()
       .subscribe<settings::PlatformSettingChangedEvent>(
@@ -52,7 +52,7 @@ void CoreSettingsApplier::refresh() {
 
   // Effective value for a common setting: the resolved override
   // (game -> platform -> global), else the catalog-declared default. The catalog
-  // JSON is the single source of truth for these defaults.
+  // JSON is the single source of truth for these defaults
   const auto value = [&](const std::string &key) {
     return service->getEffectiveValue(m_contentHash, m_platformId, key)
         .value_or(catalog.defaultForCommonKey(key));
@@ -71,7 +71,7 @@ void CoreSettingsApplier::refresh() {
     });
   };
   // Maps the friendly pointer-speed choice to a per-frame glide step (fraction
-  // of the full ±32767 cursor range moved per frame at full stick deflection).
+  // of the full ±32767 cursor range moved per frame at full stick deflection)
   const auto pointerSpeed = [&](const std::string &v) -> double {
     if (v == "slow") {
       return 0.015;

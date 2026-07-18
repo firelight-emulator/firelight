@@ -9,7 +9,7 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library)
     : m_library(library) {
   // A newly added content file gets a run configuration. These events are
   // published on the scanner thread, so the handlers run synchronously there
-  // (the per-thread database connection makes this safe).
+  // (the per-thread database connection makes this safe)
   m_contentFileAddedConnection =
       EventDispatcher::instance().subscribe<ContentFileAddedEvent>(
           [this](const ContentFileAddedEvent &event) {
@@ -19,7 +19,7 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library)
           });
 
   // A run configuration implies a playable entry: create it, or unhide an
-  // existing one for the same content.
+  // existing one for the same content
   m_runConfigurationCreatedConnection =
       EventDispatcher::instance().subscribe<RunConfigurationCreatedEvent>(
           [this](const RunConfigurationCreatedEvent &event) {
@@ -30,7 +30,7 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library)
                 m_library.update(*entry);
               }
             } else {
-              // Display name is the final path segment (basename).
+              // Display name is the final path segment (basename)
               const auto slash = event.filePath.find_last_of('/');
               auto newEntry = Entry{
                   .displayName = slash == std::string::npos
@@ -44,7 +44,7 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library)
           });
 
   // When the last run configuration for a content hash is removed, hide its
-  // entry so it disappears from the library without losing user state.
+  // entry so it disappears from the library without losing user state
   m_runConfigurationDeletedConnection =
       EventDispatcher::instance().subscribe<RunConfigurationDeletedEvent>(
           [this](const RunConfigurationDeletedEvent &event) {

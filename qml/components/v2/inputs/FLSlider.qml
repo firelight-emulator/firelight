@@ -3,7 +3,7 @@ import QtQuick.Controls
 import Firelight 1.0
 
 // Themed slider. Track/handle from Theme; the control's touch height is floored
-// at minTarget.
+// at minTarget
 Slider {
     id: control
 

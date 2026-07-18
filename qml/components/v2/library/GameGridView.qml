@@ -7,7 +7,7 @@ Item {
     id: gridRoot
     property alias model: root.model
 
-    // Multi-select state owned by GameView and bound in.
+    // Multi-select state owned by GameView and bound in
     property var selectedIds: ({})
 
     signal gameClicked(int entryId, int rowIndex, int modifiers)
@@ -16,7 +16,7 @@ Item {
     signal requestChangeArt(string contentHash, string displayName, int platformId)
 
     // A plain snapshot of a game's fields for the detail panel (cheaper than
-    // mirroring every row's full data just to show one).
+    // mirroring every row's full data just to show one)
     function focusSnapshot(m) {
         return {
             entryId: m.entryId, displayName: m.displayName, platformId: m.platformId,
@@ -30,7 +30,7 @@ Item {
     }
 
     // The entries a context action targets: the whole selection when the clicked
-    // game is part of it, otherwise just that one game.
+    // game is part of it, otherwise just that one game
     function targetsFor(entryId) {
         if (gridRoot.selectedIds[entryId] === true) {
             var out = [];
@@ -42,7 +42,7 @@ Item {
     }
 
     // A remote URL passes through; a local file path (user-imported art) becomes
-    // a file:// URL so Image can load it.
+    // a file:// URL so Image can load it
     function iconSource(u) {
         if (!u)
             return ""
@@ -63,7 +63,7 @@ Item {
         height: parent.height
         x: Math.round((parent.width - width) / 2)
 
-        // User-controlled tile size (Settings → System → Display).
+        // User-controlled tile size (Settings → System → Display)
         cellWidth: AppearanceSettings.libraryTileSize
         cellHeight: AppearanceSettings.libraryTileSize
 
@@ -143,7 +143,7 @@ Item {
                 }
 
                 // Status badges — always visible, so the wall of art carries
-                // favorite / unplayed / achievement signal at a glance.
+                // favorite / unplayed / achievement signal at a glance
                 Item {
                     z: 2
                     anchors.fill: parent
@@ -154,7 +154,7 @@ Item {
                         anchors.top: parent.top
                         spacing: AppStyle.spacingXs
 
-                        // Unplayed dot.
+                        // Unplayed dot
                         Rectangle {
                             visible: gameDelegate.model.lastPlayedAt === 0
                             width: Math.round(9 * AppStyle.scale)
@@ -166,7 +166,7 @@ Item {
                             border.width: 1
                         }
 
-                        // Favorite heart chip.
+                        // Favorite heart chip
                         Rectangle {
                             visible: gameDelegate.model.favorite
                             width: Math.round(22 * AppStyle.scale)
@@ -183,7 +183,7 @@ Item {
                         }
                     }
 
-                    // Achievement progress pill (top-right).
+                    // Achievement progress pill (top-right)
                     Rectangle {
                         id: achPill
                         readonly property bool done: gameDelegate.model.achievementsTotal > 0
@@ -207,7 +207,7 @@ Item {
                     }
                 }
 
-                // Title reveal: pristine art at rest, a scrim + name on hover/focus.
+                // Title reveal: pristine art at rest, a scrim + name on hover/focus
                 Rectangle {
                     z: 2
                     anchors.left: parent.left
@@ -216,7 +216,7 @@ Item {
                     height: Math.round(parent.height * 0.55)
                     // Uniform radius, not per-corner: a Rectangle ignores its
                     // gradient when per-corner radii are set. The top corners are
-                    // transparent in the gradient, so rounding them is invisible.
+                    // transparent in the gradient, so rounding them is invisible
                     radius: AppStyle.radiusMd
                     opacity: control.hovered || control.activeFocus ? 1 : 0
                     gradient: Gradient {
@@ -241,7 +241,7 @@ Item {
                     }
                 }
 
-                // Multi-select ring.
+                // Multi-select ring
                 Rectangle {
                     z: 3
                     anchors.fill: parent

@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // Advanced control to choose which libretro core runs a platform, at a given
 // tier (Game or Platform). Writes the reserved "core" override via
-// CoreRegistry; the settings/options below re-resolve automatically.
+// CoreRegistry; the settings/options below re-resolve automatically
 RowLayout {
     id: root
 

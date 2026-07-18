@@ -12,7 +12,7 @@ int CoreInputRouter::getPortInputClass(const unsigned port) const {
 }
 
 void CoreInputRouter::pollInput() {
-  // Glide the shared cursor from a gamepad stick on any Mouse/Light-Gun port.
+  // Glide the shared cursor from a gamepad stick on any Mouse/Light-Gun port
   if (m_pointerInputProvider && m_retropadProvider) {
     namespace fi = firelight::input;
     for (const auto &[port, deviceClass]: m_portInputClass) {
@@ -21,7 +21,7 @@ void CoreInputRouter::pollInput() {
         continue;
       }
       // Fall back to player 0 so one controller still aims a gun the game
-      // auto-placed elsewhere (e.g. Duck Hunt's Zapper on port 2).
+      // auto-placed elsewhere (e.g. Duck Hunt's Zapper on port 2)
       auto pad =
           m_retropadProvider->getRetropadForPlayerIndex(static_cast<int>(port));
       if (!pad) {
@@ -39,7 +39,7 @@ void CoreInputRouter::pollInput() {
     }
   }
 
-  // getRelativeMotion consumes the delta, so read it once for the whole frame.
+  // getRelativeMotion consumes the delta, so read it once for the whole frame
   if (m_pointerInputProvider) {
     m_frameMouseDelta = m_pointerInputProvider->getRelativeMotion();
   } else {
@@ -83,13 +83,13 @@ int16_t CoreInputRouter::readInputState(const unsigned port,
   }
 
   // Branch on the device the core actually queries (masked), not what we set:
-  // some cores query LIGHTGUN ids for a MOUSE-advertised device (FCEUmm Zapper).
+  // some cores query LIGHTGUN ids for a MOUSE-advertised device (FCEUmm Zapper)
   const auto deviceClass = device & RETRO_DEVICE_MASK;
   if (deviceClass == RETRO_DEVICE_MOUSE ||
       deviceClass == RETRO_DEVICE_LIGHTGUN) {
     namespace fi = firelight::input;
     // Inert unless the physical mouse (toggle) or the gamepad (port set to this
-    // device type) is allowed to drive it.
+    // device type) is allowed to drive it
     const int selectedClass = getPortInputClass(port);
     const bool gamepadAllowed =
         (deviceClass == RETRO_DEVICE_MOUSE &&
@@ -147,13 +147,13 @@ int16_t CoreInputRouter::readInputState(const unsigned port,
       case RETRO_DEVICE_ID_LIGHTGUN_Y:
         return m_frameMouseDelta.second;
       case RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN:
-        // Only the mouse can be off-screen; a gamepad-driven cursor never is.
+        // Only the mouse can be off-screen; a gamepad-driven cursor never is
         return mouseAllowed && pointer && pointer->isPointerOffscreen();
       case RETRO_DEVICE_ID_LIGHTGUN_TRIGGER:
         return (mouseAllowed && pointer && pointer->isPressed()) ||
                mapped(fi::LightgunTrigger);
       case RETRO_DEVICE_ID_LIGHTGUN_RELOAD:
-        // Right-click reloads (shoot off-screen) by convention.
+        // Right-click reloads (shoot off-screen) by convention
         return mouseBtn(RETRO_DEVICE_ID_MOUSE_RIGHT) || mapped(fi::LightgunReload);
       case RETRO_DEVICE_ID_LIGHTGUN_AUX_A:
         return mapped(fi::LightgunAuxA);
@@ -178,7 +178,7 @@ int16_t CoreInputRouter::readInputState(const unsigned port,
     }
   }
 
-  // Joypad reads come from the per-frame snapshot (pollInput).
+  // Joypad reads come from the per-frame snapshot (pollInput)
   if (port >= static_cast<unsigned>(MAX_INPUT_PORTS) || !m_portActive[port]) {
     return 0;
   }

@@ -8,7 +8,7 @@ namespace firelight::settings {
 namespace {
 
 // Ranked strongest to weakest. A hit takes its best score, not the sum, so one
-// strong match can't be outweighed by several incidental ones.
+// strong match can't be outweighed by several incidental ones
 constexpr int SCORE_EXACT_KEY = 100;
 constexpr int SCORE_EXACT_LABEL = 90;
 constexpr int SCORE_LABEL_PREFIX = 70;
@@ -148,7 +148,7 @@ std::vector<SettingSearchResult> SettingsIndex::search(const std::string &query,
                      if (a.score != b.score) {
                        return a.score > b.score;
                      }
-                     // Ties read better alphabetically than in catalog order.
+                     // Ties read better alphabetically than in catalog order
                      return a.label < b.label;
                    });
 

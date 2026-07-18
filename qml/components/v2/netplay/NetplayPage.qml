@@ -17,7 +17,7 @@ Item {
             return 1
         }
 
-        // Entry view: sign in, then host or join by code.
+        // Entry view: sign in, then host or join by code
         Item {
             ColumnLayout {
                 anchors.centerIn: parent
@@ -43,7 +43,7 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                // Signed out: one button, labeled from the provider.
+                // Signed out: one button, labeled from the provider
                 ColumnLayout {
                     visible: NetworkService.signInState !== "ready"
                     spacing: 8

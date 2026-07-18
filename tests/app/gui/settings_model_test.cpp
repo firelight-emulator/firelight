@@ -13,7 +13,7 @@
 namespace firelight::settings {
 namespace {
 
-// Platform 3 = Game Boy Advance -> core "mgba_libretro".
+// Platform 3 = Game Boy Advance -> core "mgba_libretro"
 constexpr int GBA_PLATFORM_ID = 3;
 
 const char *CATALOG = R"JSON(
@@ -77,7 +77,7 @@ protected:
   void TearDown() override {
     SettingsCatalog::instance().loadFromJson("{}");
     SettingsService::setInstance(nullptr);
-    // Game-picker tests wire a library service; make sure it doesn't leak.
+    // Game-picker tests wire a library service; make sure it doesn't leak
     ServiceAccessor::setLibraryService(nullptr);
   }
 
@@ -91,7 +91,7 @@ TEST_F(SettingsModelTest, GlobalShowsCommonSettingsOnly) {
   SettingsModel model;
   model.setGroup("emulation");
   model.setLevel(Global);
-  // No platform -> only the common settings.
+  // No platform -> only the common settings
   EXPECT_EQ(model.rowCount({}), 2);
 }
 
@@ -134,7 +134,7 @@ TEST_F(SettingsModelTest, ShowsInheritedValueThenGameOverride) {
 
   const int row = findRow(model, "aspect-ratio");
   ASSERT_NE(row, -1);
-  // Inherited from platform; not overridden at the game tier.
+  // Inherited from platform; not overridden at the game tier
   EXPECT_EQ(value(model, row, "value").toString(), "pixel");
   EXPECT_FALSE(value(model, row, "resettable").toBool());
 
@@ -150,7 +150,7 @@ TEST_F(SettingsModelTest, ShowsInheritedValueThenGameOverride) {
 
 TEST_F(SettingsModelTest, NotResettableAtTheGlobalTier) {
   // Global is the base tier for emulation settings: nothing sits below it, so
-  // there's nothing to fall back to and no Reset.
+  // there's nothing to fall back to and no Reset
   SettingsModel model;
   model.setGroup("emulation");
   model.setLevel(Global);
@@ -165,7 +165,7 @@ TEST_F(SettingsModelTest, NotResettableAtTheGlobalTier) {
 
 TEST_F(SettingsModelTest, NotResettableWhenTheOverrideMatchesWhatItInherits) {
   // Setting a value and putting it back leaves an override that changes
-  // nothing. Offering to clear it is noise: Reset would do nothing visible.
+  // nothing. Offering to clear it is noise: Reset would do nothing visible
   m_service.setPlatformValue(GBA_PLATFORM_ID, "aspect-ratio", "pixel");
 
   SettingsModel model;
@@ -192,12 +192,12 @@ TEST_F(SettingsModelTest, MarksRowsThatDependOnAnotherShownRow) {
   model.setContentHash("hash1");
   model.setLevel(Game);
 
-  // solar-level is visibleWhen solar-sensor, which is right here.
+  // solar-level is visibleWhen solar-sensor, which is right here
   const int dependent = findRow(model, "solar-level");
   ASSERT_NE(dependent, -1);
   EXPECT_TRUE(value(model, dependent, "subItem").toBool());
 
-  // The row it depends on is not itself a sub-item.
+  // The row it depends on is not itself a sub-item
   const int parent = findRow(model, "solar-sensor");
   ASSERT_NE(parent, -1);
   EXPECT_FALSE(value(model, parent, "subItem").toBool());
@@ -239,10 +239,10 @@ TEST_F(SettingsModelTest, VisibleWhenTracksDependency) {
   ASSERT_NE(sensor, -1);
   ASSERT_NE(level, -1);
 
-  // solar-sensor defaults false -> solar-level hidden.
+  // solar-sensor defaults false -> solar-level hidden
   EXPECT_FALSE(value(model, level, "visible").toBool());
 
-  // Turn the sensor on -> the dependent slider becomes visible.
+  // Turn the sensor on -> the dependent slider becomes visible
   const int valueRole = roleFor(model, "value");
   ASSERT_TRUE(model.setData(model.index(sensor), true, valueRole));
   EXPECT_TRUE(value(model, level, "visible").toBool());
@@ -257,7 +257,7 @@ TEST_F(SettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
   const int adv = findRow(model, "adv-opt");
   ASSERT_NE(adv, -1);
 
-  // Advanced settings are hidden by default (showAdvanced defaults false).
+  // Advanced settings are hidden by default (showAdvanced defaults false)
   EXPECT_FALSE(value(model, adv, "visible").toBool());
 
   model.setShowAdvanced(true);
@@ -288,7 +288,7 @@ TEST_F(SettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
   ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(GAME_PICKER_CATALOG));
 
   // Seed a library with one eligible (Game Boy, platform 1) and one ineligible
-  // (SNES, platform 4) entry.
+  // (SNES, platform 4) entry
   library::SqliteUserLibraryRepository repo(":memory:");
   library::UserLibraryService lib(
       repo, (QDir::tempPath() + "/fl_tpak_test").toStdString());
@@ -312,7 +312,7 @@ TEST_F(SettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
 
   const auto options =
       value(model, row, "options").value<QVector<QVariantHash>>();
-  // "None" plus only the eligible Game Boy game (SNES filtered out).
+  // "None" plus only the eligible Game Boy game (SNES filtered out)
   ASSERT_EQ(options.size(), 2);
   EXPECT_EQ(options[0].value("label").toString(), "None");
   EXPECT_EQ(options[0].value("value").toString(), "");
@@ -370,7 +370,7 @@ TEST_F(SettingsModelTest, ExposesNewWidgetRolesAndStringValues) {
   EXPECT_EQ(value(model, romdir, "widget").toString(), "folder-picker");
   EXPECT_TRUE(value(model, romdir, "directoryMode").toBool());
 
-  // Multi-select stores its selection as an opaque (JSON array) string.
+  // Multi-select stores its selection as an opaque (JSON array) string
   const int cheats = findRow(model, "cheats");
   ASSERT_NE(cheats, -1);
   EXPECT_EQ(value(model, cheats, "widget").toString(), "multi-select");
@@ -384,7 +384,7 @@ TEST_F(SettingsModelTest, ExposesNewWidgetRolesAndStringValues) {
 
 namespace {
 // An app setting and an emulation setting sharing one group — the case the
-// group filter exists for.
+// group filter exists for
 const char *GROUP_CATALOG = R"JSON(
 {
   "pages": [
@@ -422,7 +422,7 @@ TEST_F(SettingsModelGroupTest, ShowsOnlyTheGroupInDeclaredOrder) {
   model.setGroup("theme");
 
   ASSERT_EQ(model.rowCount({}), 2);
-  // Ordered by `order`, across both arrays.
+  // Ordered by `order`, across both arrays
   EXPECT_EQ(value(model, 0, "key").toString(), "in-theme-too");
   EXPECT_EQ(value(model, 1, "key").toString(), "accent-color");
   EXPECT_EQ(findRow(model, "elsewhere"), -1);
@@ -441,7 +441,7 @@ TEST_F(SettingsModelGroupTest, ExposesTheGroupTitle) {
 
 TEST_F(SettingsModelGroupTest, AppSettingReadsAndWritesGlobalWithoutALevel) {
   // No level set (Unknown) — an app setting still resolves, because it's
-  // pinned to the global tier rather than following the tier chain.
+  // pinned to the global tier rather than following the tier chain
   SettingsModel model;
   model.setGroup("emulation");
   model.setGroup("theme");
@@ -460,7 +460,7 @@ TEST_F(SettingsModelGroupTest, AppSettingReadsAndWritesGlobalWithoutALevel) {
 TEST_F(SettingsModelGroupTest, AppSettingIsNeverResettable) {
   // Reset means "fall back to what I inherit", and an app setting inherits
   // from nothing — so changing one is just changing it, with no Reset to
-  // clutter the row.
+  // clutter the row
   SettingsModel model;
   model.setGroup("emulation");
   model.setGroup("theme");
@@ -476,7 +476,7 @@ TEST_F(SettingsModelGroupTest, AppSettingIsNeverResettable) {
 
 TEST_F(SettingsModelGroupTest, AppSettingIgnoresTheModelLevel) {
   // Even asked for the Game tier, an app setting writes global: nothing
-  // overrides it per-game.
+  // overrides it per-game
   SettingsModel model;
   model.setGroup("emulation");
   model.setGroup("theme");
@@ -504,7 +504,7 @@ TEST_F(SettingsModelGroupTest, AppSettingResetFallsBackToCatalogDefault) {
                             roleFor(model, "value")));
 
   // No Reset row affordance, but resetValue still works — the CLI and any
-  // future "restore defaults" both go through it.
+  // future "restore defaults" both go through it
   model.resetValue(row);
   EXPECT_EQ(value(model, row, "value").toString(), "#f76b15");
   EXPECT_FALSE(m_service.getGlobalValue("accent-color").has_value());
@@ -512,7 +512,7 @@ TEST_F(SettingsModelGroupTest, AppSettingResetFallsBackToCatalogDefault) {
 
 TEST_F(SettingsModelGroupTest, EmulationSettingInAGroupStillNeedsALevel) {
   // The emulation row shares the group but is tiered; with no level it can't
-  // resolve, while the app row alongside it still does.
+  // resolve, while the app row alongside it still does
   SettingsModel model;
   model.setGroup("emulation");
   model.setGroup("theme");
@@ -527,7 +527,7 @@ TEST_F(SettingsModelGroupTest, EmulationSettingInAGroupStillNeedsALevel) {
 
 TEST_F(SettingsModelTest, GamePickerWithoutLibraryHasOnlyNone) {
   ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(GAME_PICKER_CATALOG));
-  // No library service wired (TearDown clears it) -> just the "None" option.
+  // No library service wired (TearDown clears it) -> just the "None" option
   ServiceAccessor::setLibraryService(nullptr);
 
   SettingsModel model;

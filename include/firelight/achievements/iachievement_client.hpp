@@ -9,7 +9,7 @@ class ICore;
 namespace firelight::achievements {
 
 // The slice of the RetroAchievements client the emulation loop drives, so the
-// emulation layer depends on this interface instead of the Qt/GUI-bound RAClient.
+// emulation layer depends on this interface instead of the Qt/GUI-bound RAClient
 class IAchievementClient {
 public:
   virtual ~IAchievementClient() = default;

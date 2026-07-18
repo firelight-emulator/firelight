@@ -43,7 +43,7 @@ TEST(StreamCodecTest, EncodeDecodeRoundTrip) {
   const auto extradata = encoder.extradata();
   EXPECT_FALSE(extradata.empty());
 
-  // One second of solid-red video + a sine tone at the core's rate.
+  // One second of solid-red video + a sine tone at the core's rate
   QImage frame(64, 64, QImage::Format_RGBA8888);
   frame.fill(Qt::red);
   std::vector<int16_t> tone(32768 * 2);
@@ -79,20 +79,20 @@ TEST(StreamCodecTest, EncodeDecodeRoundTrip) {
   for (size_t i = 1; i < videoPackets.size(); ++i) {
     EXPECT_GT(videoPackets[i].ptsMs, videoPackets[i - 1].ptsMs);
   }
-  // The requested IDR lands in the post-request packets.
+  // The requested IDR lands in the post-request packets
   bool idrAfterRequest = false;
   for (size_t i = packetsBeforeIdr; i < videoPackets.size(); ++i) {
     idrAfterRequest = idrAfterRequest || videoPackets[i].keyframe;
   }
   EXPECT_TRUE(idrAfterRequest);
 
-  // ~1 second of audio -> ~50 Opus packets of 20 ms, all small.
+  // ~1 second of audio -> ~50 Opus packets of 20 ms, all small
   EXPECT_GE(audioPackets.size(), 40u);
   for (const auto &packet : audioPackets) {
     EXPECT_LT(packet.data.size(), 2000u);
   }
 
-  // Decode everything back.
+  // Decode everything back
   StreamDecoder decoder;
   int decodedFrames = 0;
   StreamVideoFrame lastFrame;
@@ -119,7 +119,7 @@ TEST(StreamCodecTest, EncodeDecodeRoundTrip) {
   EXPECT_EQ(lastFrame.width, 64);
   EXPECT_EQ(lastFrame.height, 64);
   ASSERT_EQ(lastFrame.rgba.size(), 64u * 64u * 4u);
-  // Solid red survives the trip (YUV conversion is slightly lossy).
+  // Solid red survives the trip (YUV conversion is slightly lossy)
   const auto centerOffset = (32 * 64 + 32) * 4;
   EXPECT_GT(lastFrame.rgba[centerOffset], 200);     // R
   EXPECT_LT(lastFrame.rgba[centerOffset + 1], 60);  // G
@@ -127,7 +127,7 @@ TEST(StreamCodecTest, EncodeDecodeRoundTrip) {
 
   EXPECT_GT(decodedAudioFrames, 35000u); // ~1 s at 48 kHz, minus warmup
 
-  // A mid-stream reset re-arms on the next keyframe.
+  // A mid-stream reset re-arms on the next keyframe
   ASSERT_TRUE(decoder.reset(extradata));
   decodedFrames = 0;
   decoder.pushVideoPacket(videoPackets.front().data,

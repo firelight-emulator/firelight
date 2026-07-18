@@ -11,7 +11,7 @@ CliOptions parseCli(int argc, char **argv) {
   CLI::App app{"Firelight - a libretro emulation frontend"};
   // Only recognize --long / -short options; otherwise CLI11 treats a leading
   // "/" as a Windows-style option flag and mis-parses POSIX-style ROM paths
-  // (e.g. "/roms/game.gba").
+  // (e.g. "/roms/game.gba")
   app.allow_windows_style_options(false);
 #ifndef FL_VERSION
 #define FL_VERSION "dev"
@@ -50,14 +50,14 @@ CliOptions parseCli(int argc, char **argv) {
                  "file")
       ->type_name("FILE");
 
-  // Repeatable inline emulation overrides, collected raw then split below.
+  // Repeatable inline emulation overrides, collected raw then split below
   std::vector<std::string> rawSets;
   app.add_option("--set", rawSets,
                  "Override an emulation setting for this launch (key=value; "
                  "repeatable)")
       ->type_name("KEY=VALUE");
 
-  // RetroAchievements startup login flags (a GUI launch logs in on start).
+  // RetroAchievements startup login flags (a GUI launch logs in on start)
   app.add_option("--ra-username", opts.raUsername,
                  "RetroAchievements username to log in at startup")
       ->type_name("USER");
@@ -97,7 +97,7 @@ CliOptions parseCli(int argc, char **argv) {
   }
 
   // Split inline `--set` items into key/value pairs (a missing '=' or empty key
-  // is a usage error).
+  // is a usage error)
   for (const auto &item : rawSets) {
     const auto eq = item.find('=');
     if (eq == std::string::npos || eq == 0) {

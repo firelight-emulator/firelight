@@ -16,8 +16,8 @@
 
 namespace libretro {
   // Only supports one core at a time for now, but, eh. The libretro C callbacks
-  // reach the active core through this context (set on load, cleared on unload).
-  // Declared in core_environment.hpp so the env-call handlers can read it too.
+  // reach the active core through this context (set on load, cleared on unload)
+  // Declared in core_environment.hpp so the env-call handlers can read it too
   CoreCallbackContext *g_ctx = nullptr;
 
   void log(enum retro_log_level level, const char *fmt, ...) {
@@ -124,7 +124,7 @@ namespace libretro {
     // vkDestroyDevice is a no-op (the frontend must destroy the device). So run
     // the core's context_destroy, fully deinit the core, and only THEN tear down
     // the HW context/device — all while the DLL is still loaded, since
-    // destroy_device is invoked from destroyHwContext() and needs the DLL.
+    // destroy_device is invoked from destroyHwContext() and needs the DLL
     if (m_destroyContextFunction) {
       m_destroyContextFunction();
       m_destroyContextFunction = nullptr;
@@ -138,7 +138,7 @@ namespace libretro {
       m_dll->unload();
       g_ctx = nullptr;
     } else if (videoReceiver) {
-      // No loaded DLL to deinit, but still release any HW context we created.
+      // No loaded DLL to deinit, but still release any HW context we created
       videoReceiver->destroyHwContext();
     }
   }
@@ -186,7 +186,7 @@ namespace libretro {
     const auto size = getSerializeSize();
 
     // A mismatched size means the state is for a different game/core version;
-    // unserializing it could corrupt the running game, so refuse.
+    // unserializing it could corrupt the running game, so refuse
     if (data.size() != size) {
       spdlog::error(
         "[Core] Refusing to load state: size mismatch (data: {}, expected: {})",
@@ -286,7 +286,7 @@ namespace libretro {
 
   bool Core::setDiskIndex(const unsigned index) {
     // Prefer the extended interface's functions when present; both expose the
-    // same base eject/set-index/count callbacks.
+    // same base eject/set-index/count callbacks
     const auto setEject =
         m_hasDiskControlExt
           ? m_diskControlExt.set_eject_state
@@ -302,7 +302,7 @@ namespace libretro {
     if (!setEject || !setIndex || index >= getDiskCount()) {
       return false;
     }
-    // A disc swap is eject -> select -> insert.
+    // A disc swap is eject -> select -> insert
     setEject(true);
     const bool ok = setIndex(index);
     setEject(false);

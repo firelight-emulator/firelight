@@ -9,7 +9,7 @@
 namespace firelight::netplay {
 
 namespace {
-// Real WebRTC over loopback: two transports whose signaling is wired directly.
+// Real WebRTC over loopback: two transports whose signaling is wired directly
 struct Loopback {
   Loopback() {
     RtcTransportConfig config;
@@ -43,7 +43,7 @@ bool waitFor(std::mutex &mutex, std::condition_variable &cv,
 // abort, roughly 1 run in 3). Real deployments always have one endpoint per
 // process, so this topology exists only here. Run it on demand with
 // --gtest_also_run_disabled_tests; the definitive check is the two-machine
-// manual smoke.
+// manual smoke
 TEST(RtcTransportTest, DISABLED_LoopbackConnectExchangeAndClose) {
   Loopback loop;
 
@@ -95,7 +95,7 @@ TEST(RtcTransportTest, DISABLED_LoopbackConnectExchangeAndClose) {
                       [&] { return firstLink && secondLink; }))
       << "peers did not connect";
 
-  // Exchange one payload per channel in each direction.
+  // Exchange one payload per channel in each direction
   for (const auto kind : {ChannelKind::Control, ChannelKind::Video,
                           ChannelKind::Audio, ChannelKind::Input}) {
     const std::vector<uint8_t> toSecond{static_cast<uint8_t>(kind), 1, 2, 3};
@@ -116,7 +116,7 @@ TEST(RtcTransportTest, DISABLED_LoopbackConnectExchangeAndClose) {
                                   8, 7}));
   EXPECT_GE(firstLink->roundTripMs(), -1);
 
-  // Closing one end reports the drop on the other.
+  // Closing one end reports the drop on the other
   loop.second->closeAll();
   EXPECT_TRUE(waitFor(mutex, cv, [&] { return disconnects >= 1; }))
       << "disconnect was not reported";

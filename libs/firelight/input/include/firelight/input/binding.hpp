@@ -23,9 +23,9 @@ inline void from_json(const nlohmann::json &j, TurboOptions &t) {
   t.rateHz = j.value("rateHz", 10.0f);
 }
 
-// A single physical source bound to an emulated input, plus how it behaves.
+// A single physical source bound to an emulated input, plus how it behaves
 // Multiple Bindings may target the same emulated input; their evaluated results
-// are OR'd together (digital) or summed/maxed (analog).
+// are OR'd together (digital) or summed/maxed (analog)
 struct Binding {
   InputSource source;
   bool toggle = false;    // press latches the emulated input on/off
@@ -42,7 +42,7 @@ struct Binding {
 
 inline void to_json(nlohmann::json &j, const Binding &b) {
   j = nlohmann::json{{"source", b.source}};
-  // Only emit non-default options to keep the serialized form compact.
+  // Only emit non-default options to keep the serialized form compact
   if (b.toggle) {
     j["toggle"] = b.toggle;
   }

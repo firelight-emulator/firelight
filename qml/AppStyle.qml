@@ -5,52 +5,52 @@ pragma Singleton
 Item {
     // The metrics half of the design system: sizes only (fonts, spacing,
     // dimensions). Color lives in Theme — read color from Theme, size from here,
-    // and never a literal at a call site.
+    // and never a literal at a call site
     //
     // Two user-facing multipliers feed every token, from the Interface scale /
     // Density settings. `scale` zooms everything (text and metrics); `density`
-    // tightens/loosens spacing and row heights without touching font size.
+    // tightens/loosens spacing and row heights without touching font size
     // Tokens round to whole px so text stays crisp. This depends on
-    // AppearanceSettings, which depends only on SettingBinding — no cycle.
+    // AppearanceSettings, which depends only on SettingBinding — no cycle
     readonly property real scale: AppearanceSettings.uiScale
     readonly property real density: AppearanceSettings.uiDensity
 
     // Interactive controls must never resolve below 24px (WCAG 2.5.8), whatever
-    // scale/density do.
+    // scale/density do
     readonly property int minTarget: 24
 
     // Font size scale — device-independent px. Use these for text; never font.pointSize
-    // (pointSize renders ~25% smaller on macOS than Windows due to a 72-vs-96 logical-DPI baseline).
+    // (pointSize renders ~25% smaller on macOS than Windows due to a 72-vs-96 logical-DPI baseline)
     readonly property int fontSizeSmall: Math.round(14 * scale)  // captions, muted/secondary labels
     readonly property int fontSizeMedium: Math.round(15 * scale)  // body / default
     readonly property int fontSizeLarge: Math.round(22 * scale)   // subtitles, section headers
     readonly property int fontSizeXLarge: Math.round(32 * scale)  // page / hero titles
 
     // Spacing / gaps / padding — scale AND density (density is about how tightly
-    // content packs).
+    // content packs)
     readonly property int spacingXs: Math.round(4 * scale * density)
     readonly property int spacingSm: Math.round(8 * scale * density)
     readonly property int spacingMd: Math.round(12 * scale * density)
     readonly property int spacingLg: Math.round(16 * scale * density)
     readonly property int spacingXl: Math.round(24 * scale * density)
 
-    // Interactive heights — floored at minTarget.
+    // Interactive heights — floored at minTarget
     readonly property int controlHeight: Math.max(minTarget, Math.round(36 * scale * density))
     readonly property int rowHeight: Math.max(minTarget, Math.round(44 * scale * density))
 
-    // Icon glyph sizes — scale only (an icon isn't a density concern).
+    // Icon glyph sizes — scale only (an icon isn't a density concern)
     readonly property int iconSizeSm: Math.round(16 * scale)
     readonly property int iconSizeMd: Math.round(24 * scale)
     readonly property int iconSizeLg: Math.round(32 * scale)
 
-    // Corner radii — scale only.
+    // Corner radii — scale only
     readonly property int radiusSm: Math.round(4 * scale)
     readonly property int radiusMd: Math.round(8 * scale)
     readonly property int radiusLg: Math.round(12 * scale)
 
     readonly property int windowPadding: Math.round(18 * scale)
 
-    // Button metrics (color/opacity moved to Theme).
+    // Button metrics (color/opacity moved to Theme)
     readonly property int buttonStandardWidth: Math.round(200 * scale)
     readonly property int buttonStandardHeight: Math.max(minTarget, Math.round(42 * scale * density))
     readonly property int buttonTextFontSize: fontSizeMedium

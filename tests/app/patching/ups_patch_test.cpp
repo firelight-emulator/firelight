@@ -11,7 +11,7 @@
  * 
  * Tests the UPS patch format implementation, including patch parsing, record
  * extraction, CRC32 validation, and ROM patching operations. UPS is a universal
- * binary patch format that supports bidirectional patching and integrity checks.
+ * binary patch format that supports bidirectional patching and integrity checks
  */
 class UPSPatchTest : public testing::Test {
 protected:
@@ -33,7 +33,7 @@ protected:
  * 
  * Verifies that a UPS patch file is correctly parsed, extracting patch records,
  * input/output file sizes, and CRC32 checksums. Tests against a well-formatted
- * UPS file with 1,069,392 patch records and validates input ROM CRC32 checksum.
+ * UPS file with 1,069,392 patch records and validates input ROM CRC32 checksum
  */
 TEST_F(UPSPatchTest, ConstructorTest) {
   const firelight::patching::UPSPatch patch("test_resources/wellformatted.ups");
@@ -65,7 +65,7 @@ TEST_F(UPSPatchTest, ConstructorTest) {
  * 
  * Verifies that a UPS patch can be successfully applied to ROM data and that
  * the resulting patched data matches the expected output CRC32 checksum. Tests
- * the core patching functionality using a GBA ROM file.
+ * the core patching functionality using a GBA ROM file
  */
 TEST_F(UPSPatchTest, PatchRomTest) {
   const firelight::patching::UPSPatch patch("test_resources/wellformatted.ups");

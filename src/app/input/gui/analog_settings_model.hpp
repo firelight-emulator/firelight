@@ -14,7 +14,7 @@ namespace firelight::input {
 // QML-facing editor for a profile's default analog tuning. Bind `profileId`,
 // then read/write the per-axis properties; every change is persisted to the
 // profile immediately. Curve is exposed as an int (0 = Linear, 1 = Exponential)
-// for easy use in QML combo boxes.
+// for easy use in QML combo boxes
 class AnalogSettingsModel : public QObject, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int profileId READ profileId WRITE setProfileId NOTIFY profileIdChanged)
@@ -87,7 +87,7 @@ public:
   double rightTriggerThreshold() const;
   void setRightTriggerThreshold(double value);
 
-  // Restores the profile's analog settings to the library defaults.
+  // Restores the profile's analog settings to the library defaults
   Q_INVOKABLE void resetToDefault();
 
 signals:

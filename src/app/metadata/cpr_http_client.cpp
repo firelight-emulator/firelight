@@ -16,7 +16,7 @@ HttpResponse CprHttpClient::get(const std::string &url,
 
   HttpResponse result;
   // A transport-level failure leaves status 0 (ok() == false); callers treat
-  // that the same as an HTTP error and fall back to an empty result set.
+  // that the same as an HTTP error and fall back to an empty result set
   if (response.error) {
     return result;
   }

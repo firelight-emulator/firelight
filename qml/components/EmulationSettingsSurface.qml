@@ -5,12 +5,12 @@ import Firelight 1.0
 
 // The emulation settings for a single tier. Callers set `level` plus the scope
 // (`platformId`, `contentHash`). Each row shows the effective value; a row that
-// overrides an inherited one gets a Reset.
+// overrides an inherited one gets a Reset
 //
 // The rows themselves are just the catalog's `emulation` page — SettingsGroup
 // renders them, the same as every other settings page. What's special here is
 // the footer: the core's own raw libretro options, which aren't catalog settings
-// at all and get their own drill-down.
+// at all and get their own drill-down
 FocusScope {
     id: root
 
@@ -18,11 +18,11 @@ FocusScope {
     property var platformId: -1
     property var contentHash: ""
     // Driven by the global "Show advanced settings" preference — reveals both
-    // advanced friendly settings and the raw core-options section.
+    // advanced friendly settings and the raw core-options section
     property bool advancedOpen: GeneralSettings.showAdvancedSettings
 
     // Raw libretro options for the "Advanced" section (populated once a game on
-    // this console has run this session).
+    // this console has run this session)
     CoreOptionsModel {
         id: coreOptionsModel
         level: root.level
@@ -56,7 +56,7 @@ FocusScope {
 
             // Advanced (raw core options) — only for a specific console, and
             // only when advanced settings are on. Not catalog settings: these
-            // are whatever the core declared at runtime.
+            // are whatever the core declared at runtime
             ColumnLayout {
                 Layout.fillWidth: true
                 visible: root.platformId !== -1 && root.advancedOpen
@@ -92,7 +92,7 @@ FocusScope {
                     font.weight: Font.Medium
                 }
 
-                // Inside a category: a back link to the category list.
+                // Inside a category: a back link to the category list
                 Button {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
@@ -116,7 +116,7 @@ FocusScope {
                     onClicked: coreOptionsModel.categoryFilter = ""
                 }
 
-                // Top level: one entry per category; click to drill in.
+                // Top level: one entry per category; click to drill in
                 Repeater {
                     model: coreOptionsModel.categoryFilter === "" ? coreOptionsModel.categories : null
 

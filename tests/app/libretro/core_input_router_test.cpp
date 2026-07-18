@@ -8,7 +8,7 @@
 namespace firelight::libretro {
 namespace {
 
-// Scriptable retropad: preset buttons/axes + active virtual inputs.
+// Scriptable retropad: preset buttons/axes + active virtual inputs
 class FakePad : public IRetroPad {
 public:
   uint16_t buttons = 0;
@@ -31,7 +31,7 @@ public:
   void setWeakRumble(int, uint16_t) override {}
 };
 
-// Hands the router one pad on player 0; every other slot is empty.
+// Hands the router one pad on player 0; every other slot is empty
 class FakeProvider : public IRetropadProvider {
 public:
   std::shared_ptr<FakePad> pad = std::make_shared<FakePad>();
@@ -109,7 +109,7 @@ TEST_F(CoreInputRouterTest, AnalogAxesReadFromSnapshot) {
 
 TEST_F(CoreInputRouterTest, EmptyPortIsInactive) {
   router.pollInput();
-  // Player slot 3 has no pad, so any read is zero.
+  // Player slot 3 has no pad, so any read is zero
   EXPECT_EQ(router.readInputState(3, RETRO_DEVICE_JOYPAD, 0,
                                   RETRO_DEVICE_ID_JOYPAD_A),
             0);
@@ -132,7 +132,7 @@ TEST_F(CoreInputRouterTest, MouseMotionAndButtonFromPointer) {
 }
 
 TEST_F(CoreInputRouterTest, DeviceIsInertWhenNeitherSourceAllowed) {
-  // Mouse toggle off + port left on Joypad => the mouse device is inert.
+  // Mouse toggle off + port left on Joypad => the mouse device is inert
   router.setMouseControlsPointerDevices(false);
   pointer.motion = {9, 9};
   router.pollInput();
@@ -160,7 +160,7 @@ TEST_F(CoreInputRouterTest, LightgunAimAndTriggerFromPointer) {
 
 TEST_F(CoreInputRouterTest, GamepadMappedLightgunButtonFires) {
   // Port selected as a light gun => a mapped gamepad binding drives it even
-  // with the physical mouse disabled.
+  // with the physical mouse disabled
   router.setMouseControlsPointerDevices(false);
   router.setPortInputDeviceClass(
       0, static_cast<int>(firelight::input::GamepadInputClass::Lightgun));

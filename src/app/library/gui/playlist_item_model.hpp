@@ -43,33 +43,33 @@ namespace firelight::gui {
     Q_INVOKABLE bool addFolder(const QString &displayName);
 
     // Creates a manual folder under `parentId` (-1 = root). Returns the new
-    // folder's id, or -1 on failure.
+    // folder's id, or -1 on failure
     Q_INVOKABLE int createFolder(const QString &displayName, int parentId);
 
     // Creates a smart folder whose membership is computed live from the given
     // SmartFolderCriteria JSON (see smart_folder.hpp). Returns the new folder's
-    // id, or -1 on failure (so the caller can then set color/sort on it).
+    // id, or -1 on failure (so the caller can then set color/sort on it)
     Q_INVOKABLE int addSmartFolder(const QString &displayName,
                                    const QString &filterJson);
 
-    // Replaces a smart folder's criteria JSON.
+    // Replaces a smart folder's criteria JSON
     Q_INVOKABLE bool updateSmartFolder(int folderId, const QString &filterJson);
 
-    // Sets a folder's accent color (empty string clears it).
+    // Sets a folder's accent color (empty string clears it)
     Q_INVOKABLE bool setFolderColor(int folderId, const QString &color);
 
-    // Renames a folder.
+    // Renames a folder
     Q_INVOKABLE bool setFolderName(int folderId, const QString &displayName);
 
     // Remembers a folder's game sort (role name + direction). An empty role
-    // clears the override so the view falls back to its default.
+    // clears the override so the view falls back to its default
     Q_INVOKABLE bool setFolderSort(int folderId, const QString &sortRole,
                                    bool ascending);
 
     // Manual folder ordering. reorderFolders sets the order of the folders in
     // orderedIds within a parent scope (parentId -1 = root); setFolderParent
     // moves a folder under a new parent (appended at the end). The UI for these
-    // is a later step; the model API exists now.
+    // is a later step; the model API exists now
     Q_INVOKABLE bool reorderFolders(int parentId, const QVariantList &orderedIds);
     Q_INVOKABLE bool setFolderParent(int folderId, int newParentId);
 

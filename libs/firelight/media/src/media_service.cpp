@@ -12,7 +12,7 @@
 namespace firelight::media {
 namespace {
 // The capture filename stem is its epoch-ms timestamp; fall back to the file's
-// mtime if a file was named some other way.
+// mtime if a file was named some other way
 int64_t timestampFromFile(const QString &filePath) {
   bool ok = false;
   const int64_t stamp = QFileInfo(filePath).completeBaseName().toLongLong(&ok);
@@ -84,7 +84,7 @@ void MediaService::reconcile() {
                  "png");
   scanCaptureDir(m_capturesDirectory + "/clips", CaptureType::Clip, "mp4");
 
-  // Prune index rows whose files were deleted outside the app.
+  // Prune index rows whose files were deleted outside the app
   for (const auto &capture : m_captures.listAll()) {
     if (!QFileInfo::exists(QString::fromStdString(capture.filePath))) {
       m_captures.remove(capture.id);

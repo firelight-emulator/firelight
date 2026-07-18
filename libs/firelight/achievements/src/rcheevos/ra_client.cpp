@@ -16,7 +16,7 @@
 #include "ra_constants.h"
 
 // Previously pulled in transitively from core.hpp; declared here now that this
-// file includes the lean icore.hpp instead.
+// file includes the lean icore.hpp instead
 using std::array;
 using std::string;
 using std::vector;
@@ -31,7 +31,7 @@ namespace firelight::achievements {
       case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED: {
         if (event->achievement->id == UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID) {
           emit raClient->unsupportedEmulatorError();
-          // TODO: Show user a message or something.
+          // TODO: Show user a message or something
           break;
         }
 
@@ -102,7 +102,7 @@ namespace firelight::achievements {
         break;
       case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_HIDE:
         // Intentionally ignored as we dynamically update the same popup and set our
-        // own duration.
+        // own duration
         break;
       case RC_CLIENT_EVENT_GAME_COMPLETED: {
         auto gameInfo = rc_client_get_game_info(client);

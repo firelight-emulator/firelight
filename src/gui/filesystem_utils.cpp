@@ -20,7 +20,7 @@ QString FilesystemUtils::getFileURI() {
 
 QString FilesystemUtils::readTextFile(const QString &url) {
   // Resolve qrc:/ and file:// URLs to something QFile understands; a plain path
-  // (including a ":/..." resource path) is used as-is.
+  // (including a ":/..." resource path) is used as-is
   QString path = url;
   if (const QUrl parsed(url); parsed.scheme() == "qrc") {
     path = ":" + parsed.path();

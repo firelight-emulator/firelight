@@ -75,7 +75,7 @@ TEST_F(SqliteSaveDatabaseTest, SuspendPointCrudRoundTrips) {
   ASSERT_TRUE(got.has_value());
   EXPECT_FALSE(got->locked);
 
-  // updateSuspendPointMetadata persists the lock flag.
+  // updateSuspendPointMetadata persists the lock flag
   got->locked = true;
   ASSERT_TRUE(db.updateSuspendPointMetadata(*got));
   EXPECT_TRUE(db.getSuspendPointMetadata("hash", 1, 1)->locked);
@@ -83,7 +83,7 @@ TEST_F(SqliteSaveDatabaseTest, SuspendPointCrudRoundTrips) {
 
 TEST_F(SqliteSaveDatabaseTest, GetSuspendPointsForContentReturnsRows) {
   // Regression: the old implementation never populated the result vector and
-  // always returned empty.
+  // always returned empty
   for (int slot = 1; slot <= 2; ++slot) {
     SuspendPointMetadata m;
     m.contentId = "hash";
@@ -95,7 +95,7 @@ TEST_F(SqliteSaveDatabaseTest, GetSuspendPointsForContentReturnsRows) {
 }
 
 TEST_F(SqliteSaveDatabaseTest, DeleteSuspendPointActuallyDeletes) {
-  // Regression: the old implementation was a no-op that leaked rows.
+  // Regression: the old implementation was a no-op that leaked rows
   SuspendPointMetadata m;
   m.contentId = "hash";
   m.saveSlotNumber = 1;

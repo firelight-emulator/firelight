@@ -13,7 +13,7 @@ namespace firelight::gui {
 
 // Exposes the capture index (screenshots + clips) to the QML gallery. A flat
 // list; filtering/sorting/grouping-by-game is done in QML with a
-// SortFilterProxyModel over these roles.
+// SortFilterProxyModel over these roles
 class CaptureListModel : public QAbstractListModel {
   Q_OBJECT
   Q_PROPERTY(int count READ getCount NOTIFY countChanged)
@@ -43,10 +43,10 @@ public:
   bool setData(const QModelIndex &index, const QVariant &value,
                int role) override;
 
-  // Reloads from the repository (e.g. when the gallery opens).
+  // Reloads from the repository (e.g. when the gallery opens)
   Q_INVOKABLE void refresh();
   Q_INVOKABLE void toggleFavorite(int captureId);
-  // Removes the capture from the index and deletes its file(s).
+  // Removes the capture from the index and deletes its file(s)
   Q_INVOKABLE void removeCapture(int captureId);
 
   [[nodiscard]] int getCount() const {

@@ -11,7 +11,7 @@ namespace firelight::settings {
 CoreOptionsModel::CoreOptionsModel(QObject *parent)
     : QAbstractListModel(parent) {
   // Changing the resolved core (the "core" key) at a matching scope changes
-  // which raw options exist, so rebuild the list.
+  // which raw options exist, so rebuild the list
   m_platformSettingChangedConnection =
       EventDispatcher::instance().subscribe<PlatformSettingChangedEvent>(
           [this](const PlatformSettingChangedEvent &e) {
@@ -78,7 +78,7 @@ void CoreOptionsModel::rebuild() {
     const auto filter = m_categoryFilter.toStdString();
     for (const auto &option : repository->getCoreOptions(coreName)) {
       // Collect the distinct non-empty categories across all options (for the
-      // top-level drill-in list), regardless of the current filter.
+      // top-level drill-in list), regardless of the current filter
       if (!option.category.empty()) {
         const auto key = QString::fromStdString(option.category);
         bool seen = false;
@@ -146,7 +146,7 @@ CoreOptionsModel::resolveValue(const std::string &key) {
     return std::nullopt;
   }
   const auto hash = m_contentHash.toStdString();
-  // From this tier toward the base (Global); first override wins.
+  // From this tier toward the base (Global); first override wins
   if (m_level <= Game) {
     if (auto v = m_settingsService->getValueAtLevel(Game, hash, m_platformId, key)) {
       return v;

@@ -21,7 +21,7 @@
 // in-memory repository, points it at a temp content directory, runs a full scan
 // through the QtConcurrent worker + event loop, then asserts on what was
 // catalogued. Exercises the directory walk, extension routing, disc-track
-// skipping, archive descent, and patch/unknown-file handling together.
+// skipping, archive descent, and patch/unknown-file handling together
 namespace firelight::library {
 
 namespace {
@@ -51,7 +51,7 @@ protected:
   // An in-memory DB is fine even though the scanner hashes/creates on a worker
   // thread: the repository holds a single SQLite connection shared across threads
   // (serialized by its internal recursive mutex), so the worker sees the same
-  // database as the main thread.
+  // database as the main thread
   QTemporaryDir tempDir;
   platforms::PlatformService m_platformService;
   std::unique_ptr<SqliteUserLibraryRepository> m_repo;
@@ -65,7 +65,7 @@ protected:
 
   // Runs a scan and blocks until the worker goes idle, whether or not it changed
   // anything. scanFinished only fires on changes, so wait on the scanning flag
-  // returning to false instead (the worker's DB writes are complete by then).
+  // returning to false instead (the worker's DB writes are complete by then)
   static void waitForScanIdle(LibraryScanner2 &scanner) {
     QEventLoop loop;
     QObject::connect(&scanner, &LibraryScanner2::scanningChanged, &loop, [&] {
@@ -73,13 +73,13 @@ protected:
         loop.quit();
       }
     });
-    // Safety valve so a hung scan fails the test instead of blocking forever.
+    // Safety valve so a hung scan fails the test instead of blocking forever
     QTimer::singleShot(20000, &loop, &QEventLoop::quit);
     scanner.scanAll();
     loop.exec();
   }
 
-  // Registers the temp dir as a content directory and runs one full scan.
+  // Registers the temp dir as a content directory and runs one full scan
   void scanTempDir() {
     ContentDirectory dir;
     dir.path = tempDir.path().toStdString();
@@ -97,7 +97,7 @@ protected:
   }
 
   // Runs a scan and blocks until scanFinished (which only fires when the scan
-  // changed something). Use only when the scan is expected to add/remove content.
+  // changed something). Use only when the scan is expected to add/remove content
   static void waitForScanFinished(LibraryScanner2 &scanner) {
     QEventLoop loop;
     QObject::connect(&scanner, &LibraryScanner2::scanFinished, &loop,
@@ -108,7 +108,7 @@ protected:
   }
 
   // Pumps the event loop for a fixed spell (to let a background scan run when we
-  // expect it NOT to emit scanFinished, or not to run at all).
+  // expect it NOT to emit scanFinished, or not to run at all)
   static void pumpEvents(int ms) {
     QEventLoop loop;
     QTimer::singleShot(ms, &loop, &QEventLoop::quit);
@@ -136,7 +136,7 @@ protected:
 };
 
 // Loose cartridge ROMs are catalogued, including those nested in subdirectories;
-// unrelated files are ignored.
+// unrelated files are ignored
 TEST_F(LibraryScannerTest, DetectsCartridgesRecursively) {
   ASSERT_TRUE(tempDir.isValid());
   writeFile(path("game.gb"), romBytes(1024, 1));
@@ -158,7 +158,7 @@ TEST_F(LibraryScannerTest, DetectsCartridgesRecursively) {
 }
 
 // A raw disc track (.bin) sitting next to its cue sheet is pulled in via the
-// sheet, so the lone track is never catalogued on its own.
+// sheet, so the lone track is never catalogued on its own
 TEST_F(LibraryScannerTest, SkipsRawTrackWhenSheetPresent) {
   ASSERT_TRUE(tempDir.isValid());
   ASSERT_TRUE(QDir(tempDir.path()).mkpath("disc"));
@@ -176,7 +176,7 @@ TEST_F(LibraryScannerTest, SkipsRawTrackWhenSheetPresent) {
 }
 
 // A ROM stored inside a .zip is catalogued as archived content, recording the
-// inner entry name and the archive path.
+// inner entry name and the archive path
 TEST_F(LibraryScannerTest, DetectsRomInsideArchive) {
   ASSERT_TRUE(tempDir.isValid());
   const std::string zipPath =
@@ -194,7 +194,7 @@ TEST_F(LibraryScannerTest, DetectsRomInsideArchive) {
 }
 
 // Unknown extensions and patch files are not catalogued as content (a patch is
-// stored separately via the patch path, never as a ContentFile).
+// stored separately via the patch path, never as a ContentFile)
 TEST_F(LibraryScannerTest, IgnoresUnknownAndPatchFiles) {
   ASSERT_TRUE(tempDir.isValid());
   writeFile(path("readme.txt"), QByteArray("hello"));
@@ -208,7 +208,7 @@ TEST_F(LibraryScannerTest, IgnoresUnknownAndPatchFiles) {
 
 // Nested folders that hold games are watched (so future adds/removes there are
 // caught instantly), along with the content root -- but folders with no games
-// are not, so the watch count scales with game folders, not the whole tree.
+// are not, so the watch count scales with game folders, not the whole tree
 TEST_F(LibraryScannerTest, WatchesGameFoldersAndRootButNotEmptyFolders) {
   ASSERT_TRUE(tempDir.isValid());
   ASSERT_TRUE(QDir(tempDir.path()).mkpath("snes"));
@@ -238,7 +238,7 @@ TEST_F(LibraryScannerTest, WatchesGameFoldersAndRootButNotEmptyFolders) {
 
 // A rescan with no filesystem change must not report a change: scanFinished
 // (which refreshes/resets the library UI) stays silent, and nothing is
-// duplicated. This is what keeps the periodic safety scan from flickering the UI.
+// duplicated. This is what keeps the periodic safety scan from flickering the UI
 TEST_F(LibraryScannerTest, NoOpRescanDoesNotEmitScanFinished) {
   ASSERT_TRUE(tempDir.isValid());
   writeFile(path("game.gb"), romBytes(1024, 4));
@@ -258,7 +258,7 @@ TEST_F(LibraryScannerTest, NoOpRescanDoesNotEmitScanFinished) {
 }
 
 // While suspended (e.g. a game is running) no scan runs, even if directories
-// change; resuming processes the deferred work.
+// change; resuming processes the deferred work
 TEST_F(LibraryScannerTest, SuspendedScannerDefersUntilResumed) {
   ASSERT_TRUE(tempDir.isValid());
   writeFile(path("game.gb"), romBytes(1024, 6));
@@ -271,7 +271,7 @@ TEST_F(LibraryScannerTest, SuspendedScannerDefersUntilResumed) {
   EXPECT_TRUE(m_repo->getContentFiles().empty());
   EXPECT_FALSE(scanner->isScanning());
 
-  // Resume -> the deferred scan runs and finds the ROM.
+  // Resume -> the deferred scan runs and finds the ROM
   bool finished = false;
   QObject::connect(scanner.get(), &LibraryScanner2::scanFinished,
                    [&] { finished = true; });

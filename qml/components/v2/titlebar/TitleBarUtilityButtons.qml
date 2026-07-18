@@ -113,7 +113,7 @@ FocusScope {
                     ctx.clearRect(0, 0, width, height);
                     // Without beginPath the path accumulates across repaints
                     // (e.g. the first paint at 0-size before the size binding
-                    // resolves), leaving stray segments in the X.
+                    // resolves), leaving stray segments in the X
                     ctx.beginPath();
                     ctx.lineWidth = 1;
                     ctx.strokeStyle = "white";

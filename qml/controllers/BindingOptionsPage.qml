@@ -3,10 +3,10 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// Standalone editor for the bindings attached to a single emulated button.
+// Standalone editor for the bindings attached to a single emulated button
 // Lets the user add alternate physical bindings and toggle turbo/autofire and
 // press-to-latch (toggle) per binding. Bind profileId/platformId/
-// controllerTypeId/targetInput plus a human-readable targetLabel.
+// controllerTypeId/targetInput plus a human-readable targetLabel
 FocusScope {
     id: root
 
@@ -15,7 +15,7 @@ FocusScope {
     property int controllerTypeId: 1
     property int targetInput: -1
     property string targetLabel: "Button"
-    // Which player's controller to read when capturing a new binding.
+    // Which player's controller to read when capturing a new binding
     property int capturePlayerNumber: 1
 
     property bool capturing: false

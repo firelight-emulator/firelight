@@ -24,9 +24,9 @@ int64_t nowMs() {
       .count();
 }
 
-// Last-modified time of a file as int64 milliseconds since the Unix epoch.
+// Last-modified time of a file as int64 milliseconds since the Unix epoch
 // Portable conversion from filesystem clock to system clock (C++20 clock_cast
-// support is uneven across the toolchains we build on).
+// support is uneven across the toolchains we build on)
 int64_t fileMtimeMs(const fs::path &p) {
   std::error_code ec;
   const auto ftime = fs::last_write_time(p, ec);
@@ -39,7 +39,7 @@ int64_t fileMtimeMs(const fs::path &p) {
 }
 
 // Atomically replace `path` with `data` via a temp file + rename, so a failed
-// or partial write can never corrupt a prior good file. Returns false on error.
+// or partial write can never corrupt a prior good file. Returns false on error
 bool writeAtomic(const fs::path &path, const void *data, size_t size) {
   const fs::path tmp = path.string() + ".tmp";
   {
@@ -65,7 +65,7 @@ bool writeAtomic(const fs::path &path, const void *data, size_t size) {
 // Convert a possibly-file:// URL into a filesystem path. Strips the scheme but,
 // unlike the old code, does NOT strip the leading '/' of a POSIX absolute path
 // (that turned /Users/x into Users/x). Only a Windows drive path (/C:/...) has
-// its leading slash removed.
+// its leading slash removed
 std::string stripFileUrl(std::string s) {
   constexpr std::string_view kScheme = "file://";
   if (s.rfind(kScheme, 0) == 0)
@@ -173,7 +173,7 @@ std::future<bool> SaveManager::writeSaveData(const std::string &contentHash,
         exists ? m_saveDatabase.updateSavefileMetadata(metadata)
                : m_saveDatabase.createSavefileMetadata(metadata);
     if (!metadataOk) {
-      // The save data is safely on disk; only the metadata index failed.
+      // The save data is safely on disk; only the metadata index failed
       spdlog::warn(
           "Savefile written but metadata persistence failed for {} slot {}",
           contentHash, saveSlotNumber);

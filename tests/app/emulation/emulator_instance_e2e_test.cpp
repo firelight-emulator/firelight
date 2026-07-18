@@ -23,7 +23,7 @@ namespace firelight::emulation {
 // End-to-end flow driven entirely through EmulationService/EmulatorInstance with
 // a FakeCore injected via the core factory: load -> initialize -> run frames ->
 // save -> rewind (serialize/deserialize) -> reset -> teardown, with NO real
-// libretro DLL (so no process-exit on core teardown).
+// libretro DLL (so no process-exit on core teardown)
 class EmulatorInstanceE2ETest : public testing::Test {
 protected:
   std::unique_ptr<library::SqliteUserLibraryRepository> m_library;
@@ -45,7 +45,7 @@ protected:
     ASSERT_TRUE(m_saveDir.isValid());
     m_library =
         std::make_unique<library::SqliteUserLibraryRepository>(":memory:");
-    // Turns created content files into entries (subscribes to library events).
+    // Turns created content files into entries (subscribes to library events)
     m_ingest = std::make_unique<library::LibraryIngestService>(*m_library);
     m_libraryService =
         std::make_unique<library::UserLibraryService>(*m_library, ".");
@@ -121,13 +121,13 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   ASSERT_NE(m_fakeCore, nullptr);
 
   // Achievements/input services are unset and null-guarded, so initialize()
-  // works with just a (null) video receiver.
+  // works with just a (null) video receiver
   ASSERT_TRUE(instance->initialize(nullptr));
   ASSERT_TRUE(instance->isInitialized());
   ASSERT_TRUE(m_fakeCore->initialized());
 
   // The core was handed a Firelight-managed, per-game/per-slot save directory
-  // (not the system dir) so its own file writes stay organized.
+  // (not the system dir) so its own file writes stay organized
   const auto expectedSaveDir =
       (m_saveDir.path() + "/" + QString::fromStdString(m_hash) + "/slot" +
        QString::number(instance->getSaveSlotNumber()) + "/core")
@@ -135,7 +135,7 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   EXPECT_EQ(m_fakeCore->savedSaveDirectory(), expectedSaveDir);
 
   // initialize() published EmulationStartedEvent, so the core's declared options
-  // should now be cached (keyed by the platform's core) for the advanced editor.
+  // should now be cached (keyed by the platform's core) for the advanced editor
   const auto coreName = CoreRegistry::instance().defaultCoreForPlatform(3);
   const auto cachedOptions = m_coreOptionRepo->getCoreOptions(coreName);
   ASSERT_EQ(cachedOptions.size(), 2u);
@@ -144,13 +144,13 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   ASSERT_EQ(cachedOptions[0].values.size(), 2u);
   EXPECT_EQ(cachedOptions[0].values[1].value, "off");
 
-  // Run frames — the fake advances a frame counter and touches SRAM.
+  // Run frames — the fake advances a frame counter and touches SRAM
   for (int i = 0; i < 5; ++i) {
     instance->runFrame();
   }
   EXPECT_EQ(m_fakeCore->frameCount(), 5);
 
-  // Save — SRAM (mutated by run) is persisted through the real SaveManager.
+  // Save — SRAM (mutated by run) is persisted through the real SaveManager
   ASSERT_TRUE(instance->save().get());
   const auto sramAtSave = m_fakeCore->sram();
   const auto readBack = m_saveManager->readSaveData(
@@ -158,7 +158,7 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   ASSERT_TRUE(readBack.has_value());
   EXPECT_EQ(readBack->getSaveRamData(), sramAtSave);
 
-  // Rewind — capture a state, advance, then restore it.
+  // Rewind — capture a state, advance, then restore it
   const auto rewindPoint = instance->serializeState();
   for (int i = 0; i < 3; ++i) {
     instance->runFrame();
@@ -167,18 +167,18 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   instance->deserializeState(rewindPoint);
   EXPECT_EQ(m_fakeCore->frameCount(), 5); // restored to the rewind point
 
-  // Reset.
+  // Reset
   instance->reset();
   EXPECT_EQ(m_fakeCore->frameCount(), 0);
 
-  // Teardown — destroying the instance must NOT exit the process (no real DLL).
+  // Teardown — destroying the instance must NOT exit the process (no real DLL)
   m_emulationService->stopEmulation();
   EXPECT_EQ(m_emulationService->getCurrentEmulatorInstance(), nullptr);
 }
 
 TEST_F(EmulatorInstanceE2ETest, AppliesTypedCheatsOnLoad) {
   // A Game Genie cheat (core-applied) + a RAM cheat (Firelight poke) + a
-  // disabled one that should be ignored.
+  // disabled one that should be ignored
   cheats::Cheat gg{.contentHash = m_hash,
                    .name = "Infinite Lives",
                    .type = cheats::CheatType::GameGenie,
@@ -204,12 +204,12 @@ TEST_F(EmulatorInstanceE2ETest, AppliesTypedCheatsOnLoad) {
   ASSERT_NE(instance, nullptr);
   ASSERT_TRUE(instance->initialize(nullptr));
 
-  // Core-applied cheats: reset + only the enabled Game Genie code handed over.
+  // Core-applied cheats: reset + only the enabled Game Genie code handed over
   EXPECT_GE(m_fakeCore->cheatsClearedCount(), 1);
   ASSERT_EQ(m_fakeCore->cheatCalls().size(), 1u);
   EXPECT_EQ(m_fakeCore->cheatCalls()[0].code, "SXIOPO");
 
-  // The RAM cheat is applied by Firelight each frame.
+  // The RAM cheat is applied by Firelight each frame
   instance->runFrame();
   ASSERT_GT(m_fakeCore->systemRam().size(), 0x10u);
   EXPECT_EQ(m_fakeCore->systemRam()[0x10], 0x63);

@@ -22,7 +22,7 @@ PlaySession makeSession(const std::string &hash, uint64_t start, uint64_t end,
 
 // NOTE: getDatabase() caches the :memory: connection per-thread and there is no
 // teardown, so instances on this thread share one database. Each test therefore
-// uses a unique content hash and only queries by that hash to stay isolated.
+// uses a unique content hash and only queries by that hash to stay isolated
 class SqliteActivityLogTest : public testing::Test {
 protected:
   SqliteActivityLog m_log{":memory:"};
@@ -37,7 +37,7 @@ TEST_F(SqliteActivityLogTest, CreateAssignsIdAndGetLatestReturnsIt) {
   ASSERT_TRUE(latest.has_value());
   EXPECT_EQ(latest->startTime, 1000u);
   EXPECT_EQ(latest->endTime, 2000u);
-  // Duration is persisted at second granularity, so whole seconds round-trip.
+  // Duration is persisted at second granularity, so whole seconds round-trip
   EXPECT_EQ(latest->unpausedDurationMillis, 5000u);
 }
 

@@ -66,18 +66,18 @@ CoreConfiguration::getOptionValue(const std::string &key) {
   //     from its effective (or default) friendly value;
   //  4. a Firelight friendly default whose key *is* this core option (identity);
   //  5. a hardcoded per-platform default;
-  //  6. the core's own declared default.
+  //  6. the core's own declared default
   if (m_cache.contains(key)) {
     return {m_cache[key]};
   }
 
-  // 2. Raw override of the exact core key ("advanced" beats "friendly").
+  // 2. Raw override of the exact core key ("advanced" beats "friendly")
   if (auto raw = m_settingsService.getEffectiveValue(m_contentHash,
                                                      m_platformId, key)) {
     return raw;
   }
 
-  // 3. A friendly setting whose mapping drives this core option.
+  // 3. A friendly setting whose mapping drives this core option
   for (const auto &setting : m_friendlySettings) {
     for (const auto &mapping : setting.mapping) {
       if (mapping.coreKey != key) {
@@ -92,24 +92,24 @@ CoreConfiguration::getOptionValue(const std::string &key) {
     }
   }
 
-  // 4. Identity friendly default (the setting's key is itself the core key).
+  // 4. Identity friendly default (the setting's key is itself the core key)
   for (const auto &setting : m_friendlySettings) {
     if (setting.key == key) {
       return setting.defaultValue;
     }
   }
 
-  // 5. Firelight per-core default override (from the settings catalog).
+  // 5. Firelight per-core default override (from the settings catalog)
   if (const auto it = m_coreDefaults.find(key); it != m_coreDefaults.end()) {
     return it->second;
   }
 
-  // 5b. Legacy hardcoded per-platform default (cores not yet in the catalog).
+  // 5b. Legacy hardcoded per-platform default (cores not yet in the catalog)
   if (auto def = firelight::defaultCoreOptionForPlatform(m_platformId, key)) {
     return def;
   }
 
-  // 6. The core's own declared default.
+  // 6. The core's own declared default
   if (const auto opt = m_options.find(key); opt != m_options.end()) {
     return opt->second.defaultValueKey;
   }

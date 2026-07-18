@@ -3,10 +3,10 @@ import QtQuick.Controls
 import Firelight 1.0
 
 // Right-click menu for a game tile / list row. Acts on `targetIds` (the whole
-// multi-selection when the clicked game is part of it, otherwise just that one).
+// multi-selection when the clicked game is part of it, otherwise just that one)
 // Global actions (play, favorite, view media) are handled here; the two that
 // need a shared host resource (the art picker, the add-to-folder dialog) are
-// raised as signals.
+// raised as signals
 RightClickMenu {
     id: menu
 

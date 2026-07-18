@@ -7,7 +7,7 @@ namespace firelight::library {
 // Domain events the user-library repository publishes through the global
 // EventDispatcher (replacing the old Qt signals). They are consumed by the
 // ingest service (content/run-config) and by the app's scanner wiring (watched
-// directories). Synchronous, same-thread delivery.
+// directories). Synchronous, same-thread delivery
 
 struct ContentFileAddedEvent {
   int id = -1;

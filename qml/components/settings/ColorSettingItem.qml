@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // Color setting: a row of preset swatches plus a hex entry for arbitrary
 // colors. `value` is a hex string (e.g. "#ff8800"); `presets` is an optional
-// list of {label, value} swatches (from the setting's `options`).
+// list of {label, value} swatches (from the setting's `options`)
 BaseSettingItem {
     id: root
 
@@ -15,7 +15,7 @@ BaseSettingItem {
     property var presets: []
     signal picked(string hex)
 
-    // Fall back to a default palette when the setting declares no swatches.
+    // Fall back to a default palette when the setting declares no swatches
     readonly property var swatches: {
         if (presets && presets.length > 0) {
             var out = [];

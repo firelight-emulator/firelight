@@ -250,7 +250,7 @@ void QtNetworkServiceProxy::attachStreamItem(QObject *item) {
   }
   m_attachedStreamItem = streamItem;
   // QPointer: the item is QML-owned and may be destroyed while frames are in
-  // flight; presentFrame marshals internally, so a stale call is a no-op.
+  // flight; presentFrame marshals internally, so a stale call is a no-op
   QPointer<NetplayStreamItem> guard(streamItem);
   m_service.streamReceiver().setFrameSink(
       [guard](firelight::media::StreamVideoFrame frame) {

@@ -8,12 +8,12 @@
 namespace firelight::gui {
 
 // Names the settings tiers for QML, so pages read `level: SettingsLevel.Global`
-// rather than `level: 2`.
+// rather than `level: 2`
 //
 // The enum itself lives in firelight_settings, which is deliberately Qt-free and
 // so can't carry Q_ENUM — hence a shim on the app side rather than a change to
 // the lib. The values mirror settings::SettingsLevel and are asserted below, so
-// the two can't drift apart silently.
+// the two can't drift apart silently
 namespace SettingsLevelShim {
 Q_NAMESPACE
 

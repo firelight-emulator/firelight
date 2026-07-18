@@ -107,7 +107,7 @@ AchievementService::getAchievementCounts(const std::string &contentHash,
     return {0, total};
   }
   // getAllUserUnlocks filters by achievement_sets.game_id (the RA game id),
-  // not the set's primary key — so pass gameId, not id.
+  // not the set's primary key — so pass gameId, not id
   int earned = 0;
   for (const auto &unlock :
        m_repository.getAllUserUnlocks(username, set->gameId)) {

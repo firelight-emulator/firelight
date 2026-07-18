@@ -17,7 +17,7 @@ protected:
   ContentIdentifier identifier{platformService};
 
   // Writes a synthetic single-track .iso whose first sector begins with the
-  // given 16-byte magic, padded out so the disc readers have data to work with.
+  // given 16-byte magic, padded out so the disc readers have data to work with
   QString writeMagicIso(const QString &name, const QByteArray &magic) {
     QByteArray data = magic;
     data.append(64 * 1024 - magic.size(), '\0');
@@ -30,7 +30,7 @@ protected:
     return path;
   }
 
-  // Writes a .zip containing a single entry with the given magic-prefixed data.
+  // Writes a .zip containing a single entry with the given magic-prefixed data
   QString writeMagicIsoZip(const QString &zipName, const QString &entryName,
                            const QByteArray &magic) {
     QByteArray data = magic;
@@ -59,7 +59,7 @@ protected:
 };
 
 // A disc image's platform must be determined from contents, not the (ambiguous)
-// .iso extension. The Sega CD magic at sector 0 should classify as Sega CD.
+// .iso extension. The Sega CD magic at sector 0 should classify as Sega CD
 TEST_F(ContentIdentifierTest, DetectsSegaCdFromMagic) {
   ASSERT_TRUE(tempDir.isValid());
   const QString path = writeMagicIso("segacd.iso", "SEGADISCSYSTEM  ");
@@ -72,7 +72,7 @@ TEST_F(ContentIdentifierTest, DetectsSegaCdFromMagic) {
 }
 
 // rcheevos folds Saturn into the Sega CD hashing umbrella; identification must
-// disambiguate via the sector-0 magic so Saturn isn't mislabeled as Sega CD.
+// disambiguate via the sector-0 magic so Saturn isn't mislabeled as Sega CD
 TEST_F(ContentIdentifierTest, DetectsSaturnFromMagic) {
   ASSERT_TRUE(tempDir.isValid());
   const QString path = writeMagicIso("saturn.iso", "SEGA SEGASATURN ");
@@ -85,14 +85,14 @@ TEST_F(ContentIdentifierTest, DetectsSaturnFromMagic) {
 }
 
 // A disc image stored inside an archive must be extracted to temp and detected
-// the same way (exercises the two-pass, extract-only-what's-needed path).
+// the same way (exercises the two-pass, extract-only-what's-needed path)
 TEST_F(ContentIdentifierTest, DetectsDiscInsideArchive) {
   ASSERT_TRUE(tempDir.isValid());
   const QString zipPath =
       writeMagicIsoZip("saturn.zip", "saturn.iso", "SEGA SEGASATURN ");
 
   // Mirrors how LibraryScanner2 identifies in-archive disc entries: no buffer,
-  // detection re-opens the archive itself.
+  // detection re-opens the archive itself
   const auto result =
       identifier.identifyInArchive("saturn.iso", {}, 0, zipPath.toStdString());
 
@@ -102,11 +102,11 @@ TEST_F(ContentIdentifierTest, DetectsDiscInsideArchive) {
 }
 
 // A loose multi-file disc set (a .cue sheet + its .bin track) must be detected
-// via the sheet, and the track recorded as a disc member.
+// via the sheet, and the track recorded as a disc member
 TEST_F(ContentIdentifierTest, ReportsDiscMembersForCueBinSet) {
   ASSERT_TRUE(tempDir.isValid());
 
-  // A Saturn data track, and a cue sheet that references it.
+  // A Saturn data track, and a cue sheet that references it
   writeMagicIso("game.bin", "SEGA SEGASATURN ");
   const QString cuePath = tempDir.filePath("game.cue");
   QFile cue(cuePath);
@@ -124,7 +124,7 @@ TEST_F(ContentIdentifierTest, ReportsDiscMembersForCueBinSet) {
   ASSERT_EQ(result.discMembers[0].role, "track");
 }
 
-// A disc image we can't identify must not be added to the library.
+// A disc image we can't identify must not be added to the library
 TEST_F(ContentIdentifierTest, UnidentifiableDiscIsInvalid) {
   ASSERT_TRUE(tempDir.isValid());
   const QString path = writeMagicIso("garbage.iso", "NOT A REAL DISC!");

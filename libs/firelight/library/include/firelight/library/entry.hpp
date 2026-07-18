@@ -28,7 +28,7 @@ namespace firelight::library {
     std::vector<int> folderIds{};
 
     // The content directories that contain this entry's content file(s). Used for smart filtering and for
-    // determining whether an entry is in any content directories.
+    // determining whether an entry is in any content directories
     std::vector<int> contentDirectoryIds{};
     std::vector<std::string> contentPaths{};
 

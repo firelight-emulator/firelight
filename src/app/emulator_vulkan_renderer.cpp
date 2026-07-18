@@ -173,7 +173,7 @@ void EmulatorVulkanRenderer::renderFrame(
     m_vkfQueueSubmit(m_vkQueue, 1, &si, m_vkFrameFences[0]);
   }
   // CPU-sync: wait for the blit to finish so Qt can safely read m_sharedImage
-  // without needing a cross-device semaphore import.
+  // without needing a cross-device semaphore import
   m_vkfWaitForFences(m_vkDevice, 1, &m_vkFrameFences[0], VK_TRUE, UINT64_MAX);
 }
 
@@ -189,7 +189,7 @@ bool EmulatorVulkanRenderer::initialize(
   const auto *vk =
       static_cast<const QRhiVulkanNativeHandles *>(rhi->nativeHandles());
 
-  // Get the raw vkGetInstanceProcAddr directly from the Vulkan loader DLL.
+  // Get the raw vkGetInstanceProcAddr directly from the Vulkan loader DLL
   //
   // Qt's QVulkanInstance::getInstanceProcAddr("vkGetInstanceProcAddr") returns
   // the trampoline that routes through Qt's layer chain (Steam overlay, OBS,
@@ -198,10 +198,10 @@ bool EmulatorVulkanRenderer::initialize(
   // every function pointer.  Qt's layer-chained trampoline may not recognise
   // granite_instance (because the overlay layer was never attached to it) and
   // returns null / crashes for physical-device functions such as
-  // vkGetPhysicalDeviceMemoryProperties.
+  // vkGetPhysicalDeviceMemoryProperties
   //
   // The raw loader export (from vulkan-1.dll) correctly dispatches for ANY
-  // valid instance, bypassing the Qt-specific layer chain entirely.
+  // valid instance, bypassing the Qt-specific layer chain entirely
   PFN_vkGetInstanceProcAddr globalProcAddr = nullptr;
 #ifdef _WIN32
   if (HMODULE vulkanLib = GetModuleHandleA("vulkan-1.dll")) {
@@ -222,19 +222,19 @@ bool EmulatorVulkanRenderer::initialize(
   //
   // Pass Qt's VkInstance so Granite uses it directly rather than creating its
   // own. This keeps the instance consistent between Granite's internal state
-  // and the m_vkInterface.instance we hand back to the core — they must match.
-  // GPU is left as VK_NULL_HANDLE so Granite still picks the best device.
+  // and the m_vkInterface.instance we hand back to the core — they must match
+  // GPU is left as VK_NULL_HANDLE so Granite still picks the best device
   //
   // VkPhysicalDeviceFeatures must not be nullptr: parallel_create_device
-  // SIMD-copies the features struct without a null guard, causing a crash.
+  // SIMD-copies the features struct without a null guard, causing a crash
   retro_vulkan_context ctx{};
   VkPhysicalDeviceFeatures features{};
 
-  // Disable implicit Vulkan layers before Granite calls vkCreateInstance.
+  // Disable implicit Vulkan layers before Granite calls vkCreateInstance
   // Steam/OBS/Overwolf overlay layers crash or return null function pointers
   // when invoked for a second VkInstance in the same process (they already
-  // initialised for Qt's instance and don't handle the second one).
-  // VK_LOADER_LAYERS_DISABLE=~implicit~ is honoured by the Vulkan Loader.
+  // initialised for Qt's instance and don't handle the second one)
+  // VK_LOADER_LAYERS_DISABLE=~implicit~ is honoured by the Vulkan Loader
   std::string savedLayerDisable; {
     const char *v = getenv("VK_LOADER_LAYERS_DISABLE");
     if (v) savedLayerDisable = v;
@@ -246,7 +246,7 @@ bool EmulatorVulkanRenderer::initialize(
   // leave vkGetMemoryWin32HandleKHR / vkGetSemaphoreWin32HandleKHR null, crashing
   // ensureSharedImage. (parallel-RDP/Granite enables these itself.) Filter to
   // what the physical device actually advertises so create_device can't fail
-  // with VK_ERROR_EXTENSION_NOT_PRESENT.
+  // with VK_ERROR_EXTENSION_NOT_PRESENT
   std::vector<const char *> requiredDeviceExts;
 #ifdef _WIN32
   {
@@ -284,7 +284,7 @@ bool EmulatorVulkanRenderer::initialize(
   // required for the shared-image path (core + Qt must be on the same GPU). The
   // surface must also be a real VkSurfaceKHR — PPSSPP asserts it and queries
   // swapchain capabilities from it; VK_NULL_HANDLE crashes it (parallel-RDP
-  // ignores it).
+  // ignores it)
   const bool deviceOk = negotiation->create_device(
     &ctx, vk->inst->vkInstance(), vk->physDev, surface, globalProcAddr,
     requiredDeviceExts.empty() ? nullptr : requiredDeviceExts.data(),
@@ -302,7 +302,7 @@ bool EmulatorVulkanRenderer::initialize(
 
   // Store destroy_device as a bare function pointer now, before the core DLL could
   // be unloaded. negotiation itself becomes a dangling pointer after coreLib->unload(),
-  // so destroy() must call m_fnDestroyDevice directly.
+  // so destroy() must call m_fnDestroyDevice directly
   m_fnDestroyDevice = negotiation->destroy_device;
 
   m_vkDevice = ctx.device;
@@ -490,7 +490,7 @@ bool EmulatorVulkanRenderer::initialize(
   buildVulkanHwInterface(vk->inst->vkInstance(), ctx.gpu, globalProcAddr);
 
   // context_reset: the core calls GET_HW_RENDER_INTERFACE from inside here,
-  // which returns &m_vkInterface. Granite then finishes its device setup.
+  // which returns &m_vkInterface. Granite then finishes its device setup
   if (resetCallback) {
     resetCallback();
   }

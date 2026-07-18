@@ -9,7 +9,7 @@ namespace firelight::cli {
 namespace {
 
 // Parses a synthetic command line. Owns the arg strings for the call (CLI11's
-// int/argv overload does not modify them, but writable buffers are safest).
+// int/argv overload does not modify them, but writable buffers are safest)
 CliOptions parseArgs(std::vector<std::string> args) {
   std::vector<char *> argv;
   argv.reserve(args.size() + 1);

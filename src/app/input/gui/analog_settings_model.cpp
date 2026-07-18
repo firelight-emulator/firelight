@@ -40,7 +40,7 @@ void AnalogSettingsModel::persist() {
 
 // Helper macro to cut down on near-identical getter/setter boilerplate. Each
 // setter clamps reasonable ranges implicitly via the UI; here we only guard
-// against no-op writes and persist + notify on real changes.
+// against no-op writes and persist + notify on real changes
 #define FL_ANALOG_FLOAT_PROP(getterName, setterName, member)                   \
   double AnalogSettingsModel::getterName() const { return member; }            \
   void AnalogSettingsModel::setterName(const double value) {                   \

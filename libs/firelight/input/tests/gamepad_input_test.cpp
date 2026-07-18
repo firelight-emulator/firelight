@@ -5,7 +5,7 @@
 
 namespace firelight::input {
 
-// Device-neutral labels the mapping UI renders for each joypad input.
+// Device-neutral labels the mapping UI renders for each joypad input
 TEST(GamepadInputDisplayNameTest, JoypadLabels) {
   EXPECT_EQ(std::string_view(displayName(SouthFace)), "South Face");
   EXPECT_EQ(std::string_view(displayName(EastFace)), "East Face");
@@ -22,7 +22,7 @@ TEST(GamepadInputDisplayNameTest, JoypadLabels) {
 }
 
 // Mouse inputs get button-oriented labels (the device class disambiguates the
-// generic "Left Button"/"Right Button" wording from a joypad's).
+// generic "Left Button"/"Right Button" wording from a joypad's)
 TEST(GamepadInputDisplayNameTest, MouseLabels) {
   EXPECT_EQ(std::string_view(displayName(MouseX)), "Mouse X");
   EXPECT_EQ(std::string_view(displayName(MouseY)), "Mouse Y");
@@ -41,14 +41,14 @@ TEST(GamepadInputDisplayNameTest, LightgunLabels) {
 }
 
 // An input value outside the labeled set falls back to "Unknown" (the switch's
-// default), so the UI never renders an empty label.
+// default), so the UI never renders an empty label
 TEST(GamepadInputDisplayNameTest, UnknownValueFallsBack) {
   EXPECT_EQ(std::string_view(displayName(static_cast<GamepadInput>(99999))),
             "Unknown");
 }
 
 // displayName agrees with classOf on device family for representative inputs
-// (the label set and the class mask are derived independently).
+// (the label set and the class mask are derived independently)
 TEST(GamepadInputDisplayNameTest, LabelsAlignWithDeviceClass) {
   EXPECT_EQ(classOf(SouthFace), GamepadInputClass::Joypad);
   EXPECT_EQ(classOf(MouseLeft), GamepadInputClass::Mouse);

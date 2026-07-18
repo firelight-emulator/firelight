@@ -24,7 +24,7 @@ struct AchievementSessionEndedEvent {
 
 // Published when the logged-in user changes (login sets a username, logout
 // clears it). Login completes asynchronously after startup, so consumers that
-// show per-user data (e.g. the library's achievement counts) refresh on this.
+// show per-user data (e.g. the library's achievement counts) refresh on this
 struct UserLoggedInEvent {
   std::string username; // empty on logout
 };
@@ -38,7 +38,7 @@ public:
    *
    * Fetches complete user information including authentication token and
    * point totals for both normal and hardcore modes. Delegates to the
-   * underlying repository implementation.
+   * underlying repository implementation
    *
    * @param username The username to retrieve data for
    * @return User data if found, std::nullopt otherwise
@@ -51,7 +51,7 @@ public:
    * Stores or updates user information including authentication token and
    * point totals. Uses upsert semantics - if the user already exists, their
    * data will be updated with the new values. Delegates to the underlying
-   * repository implementation.
+   * repository implementation
    *
    * @param user The user data to store or update
    * @return true if the operation succeeded, false otherwise
@@ -82,7 +82,7 @@ public:
    * Looks up the achievement set ID that has been mapped to a specific game
    * content hash. This is the reverse operation of setGameId and enables
    * querying which achievement set is associated with a given game. Delegates
-   * to the underlying repository implementation.
+   * to the underlying repository implementation
    *
    * @param contentHash The content hash to look up
    * @return The achievement set ID if found, std::nullopt otherwise
@@ -99,11 +99,11 @@ public:
   [[nodiscard]] std::vector<UserUnlock>
   getAllUserUnlocks(const std::string &username, unsigned gameId) const;
 
-  // Offline {earned, total} achievement counts for a game by content hash.
+  // Offline {earned, total} achievement counts for a game by content hash
   // total is the achievement-set size; earned counts the user's unlocks
   // (softcore or hardcore). {0, 0} when the game has no achievement set;
   // earned stays 0 when username is empty. Used by the library model to show
-  // per-game progress.
+  // per-game progress
   [[nodiscard]] std::pair<int, int>
   getAchievementCounts(const std::string &contentHash,
                        const std::string &username) const;
@@ -113,7 +113,7 @@ public:
                               const StartSessionResponse &startSessionResponse);
 
   /**
-   * Attempts to send an unlock request for every unsynced achievement unlock.
+   * Attempts to send an unlock request for every unsynced achievement unlock
    */
   void syncOfflineAchievements();
 
@@ -122,14 +122,14 @@ public:
   void endSession();
 
   /**
-   * @return True if there's an active hardcore session, otherwise false.
+   * @return True if there's an active hardcore session, otherwise false
    */
   [[nodiscard]] bool inHardcoreSession() const;
 
   /**
    *
    * @return The number of achievements the user has unlocked in hardcore mode
-   *   during the current session.
+   *   during the current session
    */
   [[nodiscard]] unsigned getNumCurrentSessionHardcoreUnlocks() const;
 

@@ -7,14 +7,14 @@ import Firelight 1.0
 // Renders every setting declared in one catalog group as a section card, title
 // and all. Adding a setting to the group is a catalog edit — nothing here
 // changes. When a control needs to be bespoke, declare the setting `custom` and
-// name your own delegate (PaletteSettingItem is the reference).
+// name your own delegate (PaletteSettingItem is the reference)
 //
 // Every widget the parser can emit needs a DelegateChoice below, or it silently
 // falls through to a dropdown. That invariant is the whole reason this is the
-// only place settings are rendered.
+// only place settings are rendered
 //
 // `level`/`platformId`/`contentHash` only matter for emulation settings; app
-// settings in the group ignore them and always use the global tier.
+// settings in the group ignore them and always use the global tier
 SettingsSection {
     id: root
 
@@ -26,7 +26,7 @@ SettingsSection {
 
     title: settingsModel.groupLabel
 
-    // The card would otherwise sit at its implicit width inside a ColumnLayout.
+    // The card would otherwise sit at its implicit width inside a ColumnLayout
     Layout.fillWidth: true
 
     property alias model: settingsModel

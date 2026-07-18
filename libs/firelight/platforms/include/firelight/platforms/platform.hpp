@@ -13,14 +13,14 @@ struct Platform {
   std::string name;
   std::string abbreviation;
   std::string slug;
-  // rcheevos console id (RC_CONSOLE_*) this platform maps to; 0 if none.
+  // rcheevos console id (RC_CONSOLE_*) this platform maps to; 0 if none
   unsigned retroAchievementsId = 0;
   std::vector<std::string> fileAssociations;
-  // Discord rich-presence large-image key; empty means fall back to `slug`.
+  // Discord rich-presence large-image key; empty means fall back to `slug`
   std::string discordImage;
   std::vector<ControllerType> controllerTypes;
 
-  // The Discord large-image key, defaulting to the slug when unset.
+  // The Discord large-image key, defaulting to the slug when unset
   [[nodiscard]] std::string discordImageOrSlug() const {
     return discordImage.empty() ? slug : discordImage;
   }

@@ -9,7 +9,7 @@ namespace firelight::discord {
 
 namespace {
 constexpr uint64_t APPLICATION_ID = 1208162396921929739;
-// Comfortably under Discord's 2,000-char message cap with metadata overhead.
+// Comfortably under Discord's 2,000-char message cap with metadata overhead
 constexpr size_t SIGNAL_CHUNK_CHARS = 1200;
 
 const std::string METADATA_HOST_KEY = "host";
@@ -201,7 +201,7 @@ void DiscordLobbyBackend::joinLobby(const std::string &joinCode,
           return;
         }
         // CreateOrJoin makes a fresh (host-less) lobby when the code doesn't
-        // match one — treat that as "no such lobby".
+        // match one — treat that as "no such lobby"
         const auto handle = m_client.GetLobbyHandle(lobbyId);
         const auto metadata =
             handle ? handle->Metadata()
@@ -321,7 +321,7 @@ void DiscordLobbyBackend::registerCallbacks() {
         if (status == discordpp::Client::Status::Disconnected) {
           if (m_signInState == netplay::SignInState::SigningIn &&
               !m_triedRefresh) {
-            // The stored access token likely expired; try its refresh token.
+            // The stored access token likely expired; try its refresh token
             m_triedRefresh = true;
             refreshWithStoredToken();
           } else if (m_signInState == netplay::SignInState::Ready) {

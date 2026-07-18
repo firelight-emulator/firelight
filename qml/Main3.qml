@@ -49,7 +49,7 @@ ApplicationWindow {
 
     visible: true
     // A CLI --fullscreen/--windowed override (session-only) wins over the saved
-    // preference; -1 means no override was given.
+    // preference; -1 means no override was given
     visibility: StartupOptions.fullscreenOverride === 1 ? Window.FullScreen
               : StartupOptions.fullscreenOverride === 0 ? Window.Windowed
               : (GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed)
@@ -77,7 +77,7 @@ ApplicationWindow {
         }
 
         function onEmulationStopped() {
-            // External-launcher mode: the app exists only to run this one game.
+            // External-launcher mode: the app exists only to run this one game
             if (StartupOptions.exitOnClose) {
                 Qt.quit()
                 return
@@ -92,7 +92,7 @@ ApplicationWindow {
     function startGame(entryId) {
         // In a lobby, launching becomes a ready check: the host announces the
         // game (from anywhere in the app) and launches from the toast; guests
-        // can't start games.
+        // can't start games
         if (NetworkService.inLobby) {
             if (!NetworkService.isHost) {
                 netplayMessageToast.show("Only the host can start games")
@@ -124,7 +124,7 @@ ApplicationWindow {
     }
 
     // A CLI RetroAchievements login (via --ra-*) runs before the game launches;
-    // the auto-launch waits for the result and a failure surfaces a dialog.
+    // the auto-launch waits for the result and a failure surfaces a dialog
     property bool raLoginInProgress: false
 
     function maybeAutoLaunch() {
@@ -152,7 +152,7 @@ ApplicationWindow {
 
     // Auto-launch a game passed on the command line (`firelight <rom>`), once
     // the window and its content stack have been set up. If a CLI login was
-    // requested, do that first and gate the launch on its result.
+    // requested, do that first and gate the launch on its result
     Component.onCompleted: {
         if (StartupOptions.raPendingLogin) {
             window.beginRaLogin()
@@ -162,7 +162,7 @@ ApplicationWindow {
     }
 
     // A launch forwarded from a second `--single-instance` process (SingleInstance
-    // is null unless --single-instance was passed).
+    // is null unless --single-instance was passed)
     Connections {
         target: SingleInstance
         enabled: SingleInstance !== null
@@ -305,7 +305,7 @@ ApplicationWindow {
     }
 
     // Shown when a CLI-requested RetroAchievements login (--ra-*) fails. Lets the
-    // user retry with corrected credentials, continue unauthenticated, or quit.
+    // user retry with corrected credentials, continue unauthenticated, or quit
     Dialog {
         id: raLoginDialog
 
@@ -443,7 +443,7 @@ ApplicationWindow {
         }
     }
 
-    // Guests are brought to the stream when the host's game goes live.
+    // Guests are brought to the stream when the host's game goes live
     Connections {
         target: NetworkService
         function onPhaseChanged() {

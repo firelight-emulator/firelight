@@ -29,7 +29,7 @@ protected:
     std::filesystem::remove_all(tempDir, ec);
   }
 
-  // Writes a .zip with the given (name, content) entries; returns its path.
+  // Writes a .zip with the given (name, content) entries; returns its path
   std::string
   writeZip(const std::vector<std::pair<std::string, std::string>> &entries) {
     const std::string zipPath = (tempDir / "test.zip").string();

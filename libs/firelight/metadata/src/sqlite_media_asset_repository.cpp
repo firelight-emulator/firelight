@@ -42,7 +42,7 @@ namespace firelight::metadata {
       m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
     try {
       // Nullable text is stored as '' (never NULL) so the uniqueness index below
-      // actually dedupes.
+      // actually dedupes
       m_db->exec("CREATE TABLE IF NOT EXISTS media_assets("
         "id INTEGER PRIMARY KEY,"
         "content_hash TEXT NOT NULL,"
@@ -152,7 +152,7 @@ namespace firelight::metadata {
         insert.exec();
       }
       // Resolve the id (existing or newly inserted) via the unique key, then
-      // refresh the mutable fields (a re-add can update a cached local path/size).
+      // refresh the mutable fields (a re-add can update a cached local path/size)
       {
         SQLite::Statement select(
           *m_db, "SELECT id FROM media_assets WHERE content_hash = :contentHash AND "

@@ -421,11 +421,11 @@ Pane {
             id: emuMenuScope
 
             // Bumped whenever the running game's device selection changes, to
-            // re-evaluate the invokable-backed properties below.
+            // re-evaluate the invokable-backed properties below
             property int deviceRefreshTick: 0
             // Ports that actually offer a device choice (e.g. Gamepad / Zapper);
             // empty for standard-controller-only games, so the Controls entry
-            // stays hidden and nothing extra clutters the menu.
+            // stays hidden and nothing extra clutters the menu
             property var deviceChoicePorts: {
                 emuMenuScope.deviceRefreshTick; // re-evaluate on device changes
                 var list = []
@@ -513,7 +513,7 @@ Pane {
                      }
                      // These route through the dispatcher rather than doing the
                      // work here, so the menu and the hotkey can't drift: same
-                     // save slot, same hardcore gate, same toast.
+                     // save slot, same hardcore gate, same toast
                      FirelightMenuItem {
                          id: screenshotButton
                          labelText: "Screenshot"
@@ -533,7 +533,7 @@ Pane {
                      FirelightMenuItem {
                          id: muteButton
                          // Follows the setting, so it stays right when the
-                         // hotkey is what changed it.
+                         // hotkey is what changed it
                          labelText: muteBinding.value === "true" ? "Unmute" : "Mute"
                          Layout.fillWidth: true
                          KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
@@ -553,7 +553,7 @@ Pane {
                          checkable: false
                          alignRight: true
                          // Only when the game offers a real device choice
-                         // (Gamepad / Mouse / Light Gun).
+                         // (Gamepad / Mouse / Light Gun)
                          visible: emuMenuScope.deviceChoicePorts.length > 0
                          onClicked: {
                              quickMenuStack.replaceCurrentItem(controlsMenu, {}, StackView.Immediate)

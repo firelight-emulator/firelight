@@ -3,7 +3,7 @@ import QtQuick.Controls
 import Firelight 1.0
 
 // Surface card. variant: solid (functional, opaque) | glass (translucent over
-// the blurred background). Put content inside as children — it's a Pane.
+// the blurred background). Put content inside as children — it's a Pane
 //
 //   FLPanel { ColumnLayout { ... } }
 //   FLPanel { variant: "glass"; ... }

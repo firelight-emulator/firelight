@@ -21,7 +21,7 @@ namespace firelight::media {
 
 namespace {
 // Backpressure: if the encoder falls behind, drop the oldest queued frame
-// rather than let the hand-off queue grow. A handful of small retro frames.
+// rather than let the hand-off queue grow. A handful of small retro frames
 constexpr std::size_t MAX_QUEUED_FRAMES = 8;
 
 struct RawFrame {
@@ -47,7 +47,7 @@ struct ClipRecorder::Impl {
   int encHeight = 0;
 
   // ffmpeg state — created on start(), used only by the worker while running,
-  // freed by stop() after the worker joins.
+  // freed by stop() after the worker joins
   AVCodecContext *enc = nullptr;
   SwsContext *sws = nullptr;
   int swsSrcW = 0;
@@ -57,7 +57,7 @@ struct ClipRecorder::Impl {
   std::vector<uint8_t> extradata;
   int64_t lastPts = -1;
 
-  // Hand-off queue: render thread -> worker.
+  // Hand-off queue: render thread -> worker
   std::deque<RawFrame> queue;
   std::mutex queueMutex;
   std::condition_variable queueCv;
@@ -66,7 +66,7 @@ struct ClipRecorder::Impl {
   std::thread worker;
   std::atomic<bool> running{false};
 
-  // Rolling compressed window + PCM ring.
+  // Rolling compressed window + PCM ring
   mutable std::mutex ringMutex;
   std::deque<EncodedPacket> videoRing;
   std::deque<int16_t> pcmRing;
@@ -98,7 +98,7 @@ bool ClipRecorder::Impl::start(const int w, const int h, const int f,
   }
   // Retro frames are tiny; a raw native-res encode looks soft once a player
   // upscales it. Integer-upscale (nearest-neighbor, done in encodeFrame) to
-  // roughly 720 lines so the clip stays pixel-sharp on playback.
+  // roughly 720 lines so the clip stays pixel-sharp on playback
   constexpr int targetHeight = 720;
   const int scale = std::clamp(targetHeight / h, 1, 6);
   encWidth = (w * scale) & ~1; // even dims for YUV420
@@ -159,7 +159,7 @@ void ClipRecorder::Impl::stop() {
       worker.join();
     }
   }
-  // Safe to free now: the worker has exited.
+  // Safe to free now: the worker has exited
   if (enc) {
     avcodec_free_context(&enc);
   }
@@ -196,7 +196,7 @@ void ClipRecorder::Impl::pushVideo(const QImage &frame, const int64_t ptsMs) {
     return;
   }
   // Premultiplied-opaque bytes are identical to straight RGBA (alpha == 255),
-  // so accept both without a conversion copy; convert anything else.
+  // so accept both without a conversion copy; convert anything else
   const bool rgbaBytes =
       frame.format() == QImage::Format_RGBA8888 ||
       frame.format() == QImage::Format_RGBA8888_Premultiplied;
@@ -227,7 +227,7 @@ void ClipRecorder::Impl::pushAudio(const int16_t *data,
   const std::size_t samples = numFrames * static_cast<std::size_t>(channels);
   std::lock_guard<std::mutex> lk(ringMutex);
   pcmRing.insert(pcmRing.end(), data, data + samples);
-  // Keep ~window + 0.5s of audio so it comfortably covers the video window.
+  // Keep ~window + 0.5s of audio so it comfortably covers the video window
   const auto windowSamples =
       static_cast<std::size_t>(windowUs / 1'000'000) *
           static_cast<std::size_t>(sampleRate) *
@@ -271,7 +271,7 @@ void ClipRecorder::Impl::flush() {
 
 void ClipRecorder::Impl::encodeFrame(const RawFrame &f) {
   if (!sws || swsSrcW != f.width || swsSrcH != f.height) {
-    // SWS_POINT = nearest-neighbor: keeps upscaled pixels sharp (no blur).
+    // SWS_POINT = nearest-neighbor: keeps upscaled pixels sharp (no blur)
     sws = sws_getCachedContext(sws, f.width, f.height, AV_PIX_FMT_RGBA, encWidth,
                                encHeight, AV_PIX_FMT_YUV420P, SWS_POINT,
                                nullptr, nullptr, nullptr);
@@ -323,7 +323,7 @@ void ClipRecorder::Impl::appendPacket(const AVPacket *p) {
 
 void ClipRecorder::Impl::trimVideoRing() {
   // Drop whole leading GOPs while the buffer would still cover the window
-  // without them, so the front is always a keyframe.
+  // without them, so the front is always a keyframe
   if (videoRing.empty()) {
     return;
   }

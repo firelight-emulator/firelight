@@ -12,7 +12,7 @@ namespace firelight::input {
 
 // A profile's shortcut triggers: for each shortcut action id, a list of input
 // sources (combos) that fire it. Multiple sources per id allow alternate
-// bindings on the same device. Serializes to versioned JSON.
+// bindings on the same device. Serializes to versioned JSON
 class ShortcutMapping {
 public:
   explicit ShortcutMapping(

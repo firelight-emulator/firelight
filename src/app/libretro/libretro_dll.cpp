@@ -16,7 +16,7 @@ LibretroDll::LibretroDll(const std::string &path) {
   // Resolve every libretro entry point up front. A compliant core exports all of
   // them (features it doesn't support are stubbed), so a missing symbol means a
   // broken/incompatible core; collect any misses and fail with a clear message
-  // instead of crashing on a null call later.
+  // instead of crashing on a null call later
   std::vector<std::string> missing;
   const auto req = [&](const char *name) -> QFunctionPointer {
     const auto ptr = m_lib->resolve(name);

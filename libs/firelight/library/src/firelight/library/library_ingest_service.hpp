@@ -10,7 +10,7 @@ class IUserLibraryRepository;
 // configuration and ensure an entry exists; when the last run configuration for
 // a content hash is removed, hide its entry. Keeping this here leaves the
 // repository free of domain orchestration. Driven by repository events (see
-// library_events.hpp), so it is a plain class — not a QObject.
+// library_events.hpp), so it is a plain class — not a QObject
 class LibraryIngestService final {
 public:
   explicit LibraryIngestService(IUserLibraryRepository &library);

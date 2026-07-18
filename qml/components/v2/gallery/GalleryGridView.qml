@@ -67,7 +67,7 @@ Item {
                         cache: true
                     }
 
-                    // Clip play badge.
+                    // Clip play badge
                     Rectangle {
                         visible: cell.model.captureType === "clip"
                         anchors.centerIn: parent
@@ -83,7 +83,7 @@ Item {
                         }
                     }
 
-                    // Favorite marker.
+                    // Favorite marker
                     Text {
                         anchors.top: parent.top
                         anchors.right: parent.right

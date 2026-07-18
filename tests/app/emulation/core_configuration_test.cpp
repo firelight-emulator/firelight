@@ -60,10 +60,10 @@ TEST_F(CoreConfigurationTest, FriendlyMappingDrivesCoreValue) {
   CoreConfiguration config(m_hash, m_platformId, {s}, {}, m_service);
   config.registerOption(coreOption("core_color", "coredefault"));
 
-  // No user override -> friendly default "Accurate" -> mapped "accurate".
+  // No user override -> friendly default "Accurate" -> mapped "accurate"
   EXPECT_EQ(config.getOptionValue("core_color").value_or(""), "accurate");
 
-  // Set the friendly setting at platform level -> mapped "fast".
+  // Set the friendly setting at platform level -> mapped "fast"
   m_service.setPlatformValue(m_platformId, "friendly-color", "Fast");
   EXPECT_EQ(config.getOptionValue("core_color").value_or(""), "fast");
 }
@@ -77,7 +77,7 @@ TEST_F(CoreConfigurationTest, AdvancedRawOverrideBeatsFriendlyMapping) {
   CoreConfiguration config(m_hash, m_platformId, {s}, {}, m_service);
   config.registerOption(coreOption("core_color", "coredefault"));
 
-  // A raw override of the core key (advanced editor) wins over the friendly map.
+  // A raw override of the core key (advanced editor) wins over the friendly map
   m_service.setGameValue(m_hash, "core_color", "raw-advanced");
   EXPECT_EQ(config.getOptionValue("core_color").value_or(""), "raw-advanced");
 }
@@ -98,7 +98,7 @@ TEST_F(CoreConfigurationTest, OverridesResolveGameOverPlatformOverGlobal) {
 
 // A CLI --set targeting a raw core option key flows through getEffectiveValue,
 // so it wins over every stored tier here too (proving one session-override
-// mechanism covers both common settings and per-core options).
+// mechanism covers both common settings and per-core options)
 TEST_F(CoreConfigurationTest, SessionOverrideOnCoreKeyWins) {
   CoreConfiguration config(m_hash, m_platformId, {}, {}, m_service);
   config.registerOption(coreOption("core_x", "coredefault"));

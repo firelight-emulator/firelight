@@ -26,7 +26,7 @@ struct InputFrame {
     return id < 16 && ((buttons >> id) & 1u) != 0;
   }
 
-  // Value for a RETRO_DEVICE_ID_JOYPAD_MASK read.
+  // Value for a RETRO_DEVICE_ID_JOYPAD_MASK read
   [[nodiscard]] int16_t buttonMask() const {
     return static_cast<int16_t>(buttons);
   }
@@ -41,7 +41,7 @@ struct InputFrame {
 
   bool operator==(const InputFrame &) const = default;
 
-  // Fixed-size little-endian wire encoding: 2 (buttons) + 4*2 (axes) = 10 bytes.
+  // Fixed-size little-endian wire encoding: 2 (buttons) + 4*2 (axes) = 10 bytes
   static constexpr std::size_t SERIALIZED_SIZE = 10;
 
   [[nodiscard]] std::array<uint8_t, SERIALIZED_SIZE> serialize() const {
@@ -76,7 +76,7 @@ struct InputFrame {
 
 // Samples a controller's joypad state (all 16 buttons + both analog sticks) into
 // an InputFrame — the once-per-frame snapshot. `platformId`/`controllerTypeId`
-// match the values the libretro input callback queries the pad with.
+// match the values the libretro input callback queries the pad with
 [[nodiscard]] inline InputFrame captureJoypadFrame(libretro::IRetroPad &pad,
                                                    int platformId,
                                                    int controllerTypeId) {

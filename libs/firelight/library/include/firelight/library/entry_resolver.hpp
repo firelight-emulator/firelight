@@ -11,7 +11,7 @@ namespace firelight::library {
 class IUserLibraryRepository;
 
 // The content selected to launch for an entry: the chosen ROM/disc file and,
-// optionally, a patch to apply on top of it.
+// optionally, a patch to apply on top of it
 struct ResolvedContent {
   bool valid = false;
   ContentFile contentFile;
@@ -19,7 +19,7 @@ struct ResolvedContent {
 };
 
 // Chooses the "most correct" content to launch for a library entry from among
-// its run configurations.
+// its run configurations
 class EntryResolver {
 public:
   explicit EntryResolver(IUserLibraryRepository &library);

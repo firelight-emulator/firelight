@@ -12,7 +12,7 @@ struct StoredAuthToken {
 
 // Persists the OAuth tokens between runs so sign-in is a one-time browser
 // round-trip. An adapter-internal detail — nothing outside the Discord
-// adapter sees tokens.
+// adapter sees tokens
 class ITokenStore {
 public:
   virtual ~ITokenStore() = default;

@@ -11,7 +11,7 @@ namespace {
 // RA-supported consoles Firelight does not fully model (no controller/extension
 // data). Each becomes an identity-only Platform (id = 1000 + rcheevos console
 // id) so its name still renders in the library. Names mirror the previous
-// PlatformMetadata::getPlatformName mapping.
+// PlatformMetadata::getPlatformName mapping
 struct RaCoverageConsole {
   int rcConsoleId;
   const char *name;
@@ -706,7 +706,7 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
             });
 
         // Modeled with legacy ids but without full controller/extension data yet
-        // (identity only, so names/abbreviations still render).
+        // (identity only, so names/abbreviations still render)
         m_platforms.emplace_back(Platform{.id = PLATFORM_ID_VIRTUAL_BOY,
                                           .name = "Virtual Boy",
                                           .abbreviation = "Virtual Boy",
@@ -733,7 +733,7 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
                                           .retroAchievementsId =
                                               RC_CONSOLE_PLAYSTATION_2});
 
-        // RA-coverage consoles Firelight doesn't fully model: id = 1000 + rc id.
+        // RA-coverage consoles Firelight doesn't fully model: id = 1000 + rc id
         for (const auto &console : RA_COVERAGE_CONSOLES) {
             m_platforms.emplace_back(Platform{
                 .id = static_cast<unsigned>(1000 + console.rcConsoleId),
@@ -774,7 +774,7 @@ constexpr std::array RA_COVERAGE_CONSOLES = {
 
     int PlatformService::platformIdForRcConsole(const int rcConsoleId) const {
         // Consoles Firelight modeled with legacy ids keep them; every other
-        // RA-supported console maps to its provisional id (1000 + rc id).
+        // RA-supported console maps to its provisional id (1000 + rc id)
         switch (rcConsoleId) {
         case RC_CONSOLE_GAMEBOY:
             return PLATFORM_ID_GAMEBOY;

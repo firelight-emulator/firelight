@@ -14,7 +14,7 @@ namespace firelight::saves {
 // SQLiteCpp-backed save/suspend metadata index. Qt-free. A single connection is
 // guarded by a mutex so it can be shared across threads (matching the pattern in
 // SqliteGameCaptureRepository). The Phase 2 save worker will hold its own
-// instance on its own thread.
+// instance on its own thread
 class SqliteSaveDatabase final : public ISaveDatabase {
 public:
   explicit SqliteSaveDatabase(const std::string &dbFile);

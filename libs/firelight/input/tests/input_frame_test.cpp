@@ -6,7 +6,7 @@ namespace firelight::input {
 
 namespace {
 // A scriptable IRetroPad: returns preset button/analog values so the capture
-// helper can be tested without SDL or a real controller.
+// helper can be tested without SDL or a real controller
 class FakePad : public libretro::IRetroPad {
 public:
   uint16_t buttons = 0;
@@ -35,7 +35,7 @@ TEST(InputFrameTest, ButtonBitmaskAccessors) {
   EXPECT_FALSE(f.button(4));
   f.setButton(3, false);
   EXPECT_FALSE(f.button(3));
-  // Out-of-range ids are ignored and never read as pressed.
+  // Out-of-range ids are ignored and never read as pressed
   f.setButton(20, true);
   EXPECT_FALSE(f.button(20));
 }

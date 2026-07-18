@@ -9,7 +9,7 @@ std::optional<GamepadInput> gamepadInputFromName(const std::string_view name) {
   // The names are the enum identifiers verbatim, so a data file and this header
   // read the same. Mouse and light-gun inputs are left out on purpose: they are
   // inputs of an emulated device, not buttons a physical pad has, so a shortcut
-  // could never be triggered by one.
+  // could never be triggered by one
   static const std::map<std::string, GamepadInput, std::less<>> BY_NAME = {
       {"SouthFace", SouthFace},
       {"EastFace", EastFace},

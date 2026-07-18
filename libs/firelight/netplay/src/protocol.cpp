@@ -5,7 +5,7 @@
 namespace firelight::netplay {
 
 std::string generateJoinCode() {
-  // Crockford base32: no I, L, O, U — unambiguous to read aloud.
+  // Crockford base32: no I, L, O, U — unambiguous to read aloud
   static constexpr char ALPHABET[] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
   std::random_device device;
   std::uniform_int_distribution<int> pick(0, 31);

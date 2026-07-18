@@ -11,7 +11,7 @@ namespace firelight::netplay {
 
 // Signaling payloads (SDP blobs) can exceed a lobby provider's message size
 // cap, so they're base64-encoded and split into chunks that ride individual
-// lobby messages; the receiver reassembles by (sender, signalId).
+// lobby messages; the receiver reassembles by (sender, signalId)
 
 struct SignalChunk {
   std::string signalId;
@@ -28,7 +28,7 @@ chunkSignal(const std::string &payload, size_t maxContentChars,
 
 class SignalReassembler {
 public:
-  // Returns the full payload once every chunk of a signal has arrived.
+  // Returns the full payload once every chunk of a signal has arrived
   std::optional<std::string> accept(PlayerId from, const SignalChunk &chunk);
 
 private:

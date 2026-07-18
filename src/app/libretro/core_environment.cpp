@@ -51,7 +51,7 @@ namespace libretro {
     if (it == m_envHandlers.end()) {
       // Intentionally unhandled libretro env commands (camera, location, MIDI,
       // JIT, device-power, throttle, playlist dirs, proc-address, …): declining
-      // is correct — the core falls back to its defaults.
+      // is correct — the core falls back to its defaults
       spdlog::debug("Unhandled libretro env command: {}", cmd);
       environmentCalls.emplace_back("UNIMPLEMENTED");
       return false;
@@ -160,7 +160,7 @@ namespace libretro {
     m_envHandlers[RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE] = {
       "RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE", [this](void *data) -> bool {
         // The core hands us its disk-control callbacks; copy them by value (the
-        // pointed-to struct may not persist) so we can drive disc swaps later.
+        // pointed-to struct may not persist) so we can drive disc swaps later
         if (const auto *cb =
             static_cast<const retro_disk_control_callback *>(data)) {
           m_diskControl = *cb;
@@ -284,14 +284,14 @@ namespace libretro {
       "RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES", [this](void *data) -> bool {
         auto ptr = static_cast<uint64_t *>(data);
         //* Gets a bitmask telling which device type are expected to be
-        // * handled properly in a call to retro_input_state_t.
+        // * handled properly in a call to retro_input_state_t
         // * Devices which are not handled or recognized always return
-        // * 0 in retro_input_state_t.
+        // * 0 in retro_input_state_t
         // * Example bitmask: caps = (1 << RETRO_DEVICE_JOYPAD) | (1 <<
-        // RETRO_DEVICE_ANALOG).
+        // RETRO_DEVICE_ANALOG)
 
         // Advertise the device types inputStateCallback actually services
-        // (pointer for DS touch; mouse + light gun for WS2 device support).
+        // (pointer for DS touch; mouse + light gun for WS2 device support)
         *ptr = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG) |
                (1 << RETRO_DEVICE_POINTER) | (1 << RETRO_DEVICE_MOUSE) |
                (1 << RETRO_DEVICE_LIGHTGUN);
@@ -306,7 +306,7 @@ namespace libretro {
       }};
     m_envHandlers[RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE] = {
       "RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE", [this](void *data) -> bool {
-        // Camera not supported; hand back no-op callbacks and decline.
+        // Camera not supported; hand back no-op callbacks and decline
         auto ptr = static_cast<retro_camera_callback *>(data);
         ptr->start = [] { return false; };
         ptr->stop = [] {
@@ -359,7 +359,7 @@ namespace libretro {
         };
         /* A simple counter. Usually nanoseconds, but can also be CPU cycles.
          * Can be used directly if desired (when creating a more sophisticated
-         * performance counter system).
+         * performance counter system)
          * */
         ptr->get_perf_counter = [] { return static_cast<retro_perf_tick_t>(0); };
 
@@ -377,7 +377,7 @@ namespace libretro {
 
         /* Asks frontend to log and/or display the state of performance
          * counters. Performance counters can always be poked into manually as
-         * well.
+         * well
          */
         ptr->perf_log = [] {
         };
@@ -408,7 +408,7 @@ namespace libretro {
     m_envHandlers[RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY] = {
       "RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY", [this](void *data) -> bool {
         // Hand back the Firelight-managed per-game/per-slot save directory (set
-        // in EmulatorInstance::initialize), NOT the system dir.
+        // in EmulatorInstance::initialize), NOT the system dir
         if (m_saveDirectory.empty()) {
           return false;
         }
@@ -446,7 +446,7 @@ namespace libretro {
       "RETRO_ENVIRONMENT_SET_CONTROLLER_INFO", [this](void *data) -> bool {
         // The core advertises the device types it accepts on each port; store a
         // copy (strings may be transient) so the UI can offer a per-port device
-        // choice and we can call retro_set_controller_port_device.
+        // choice and we can call retro_set_controller_port_device
         auto ptr = static_cast<retro_controller_info *>(data);
         m_controllerDevices.clear();
         for (unsigned port = 0; port < 100; ++port) {
@@ -544,7 +544,7 @@ namespace libretro {
     m_envHandlers[RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS] = {
       "RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS", [this](void *data) -> bool {
         // Record the quirks the core reports for its savestate format (consulted
-        // when we harden rewind/savestate; we accept the core's set as-is).
+        // when we harden rewind/savestate; we accept the core's set as-is)
         if (data) {
           serializationQuirksBitmap = *static_cast<uint64_t *>(data);
         }
@@ -557,7 +557,7 @@ namespace libretro {
       }};
     m_envHandlers[RETRO_ENVIRONMENT_GET_VFS_INTERFACE] = {
       "RETRO_ENVIRONMENT_GET_VFS_INTERFACE", [this](void *data) -> bool {
-        // Intentionally declined: Firelight does not virtualize core file I/O.
+        // Intentionally declined: Firelight does not virtualize core file I/O
         // Cores fall back to stdio, which is correct given the managed system +
         // per-slot save directories we hand them. (A vfs:: impl exists in the
         // codebase if we ever want to intercept I/O.)
@@ -727,7 +727,7 @@ namespace libretro {
     m_envHandlers[RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE] = {
       "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE", [this](void *data) -> bool {
         // Extended interface (adds disc labels/paths); we use its shared base
-        // functions for index-based swapping. Stored by value like the plain one.
+        // functions for index-based swapping. Stored by value like the plain one
         if (const auto *cb =
             static_cast<const retro_disk_control_ext_callback *>(data)) {
           m_diskControlExt = *cb;
@@ -756,7 +756,7 @@ namespace libretro {
       }};
     m_envHandlers[RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY] = {
       "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY", [this](void *data) -> bool {
-        // Not needed as we implement dynamic rate control.
+        // Not needed as we implement dynamic rate control
         return true;
       }};
     m_envHandlers[RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE] = {
@@ -963,7 +963,7 @@ namespace libretro {
     m_envHandlers[RETRO_ENVIRONMENT_GET_THROTTLE_STATE] = {
       "RETRO_ENVIRONMENT_GET_THROTTLE_STATE", [this](void *data) -> bool {
         auto ptr = static_cast<retro_throttle_state *>(data);
-        // Not needed as far as I'm aware.
+        // Not needed as far as I'm aware
         return false;
       }};
     m_envHandlers[RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT] = {

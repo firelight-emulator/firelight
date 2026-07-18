@@ -61,7 +61,7 @@ bool ClipThumbnailer::writePoster(const QString &mp4Path,
       break;
     }
 
-    // Read + decode until the first video frame emerges.
+    // Read + decode until the first video frame emerges
     bool gotFrame = false;
     while (!gotFrame && av_read_frame(fmt, packet) >= 0) {
       if (packet->stream_index == videoStream &&

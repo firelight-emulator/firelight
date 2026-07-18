@@ -9,7 +9,7 @@
 namespace firelight::media {
 
 // One decoded frame as raw pixels (RGBA8888, tightly packed). Deliberately
-// Qt-free; the display layer wraps it however it likes.
+// Qt-free; the display layer wraps it however it likes
 struct StreamVideoFrame {
   int width = 0;
   int height = 0;
@@ -18,7 +18,7 @@ struct StreamVideoFrame {
 
 // Decodes a live game stream (H.264 + Opus 48 kHz stereo). Synchronous:
 // push* decodes on the calling thread and fires the callback before
-// returning. Set callbacks before start.
+// returning. Set callbacks before start
 class StreamDecoder {
 public:
   StreamDecoder();
@@ -35,7 +35,7 @@ public:
   bool start(std::span<const uint8_t> videoExtradata);
   void stop();
   [[nodiscard]] bool isRunning() const;
-  // Mid-stream config change (resolution switch): tear down and re-arm.
+  // Mid-stream config change (resolution switch): tear down and re-arm
   bool reset(std::span<const uint8_t> videoExtradata);
 
   void pushVideoPacket(std::span<const uint8_t> data, int64_t ptsMs);

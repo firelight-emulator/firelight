@@ -322,8 +322,8 @@ FocusScope {
 
             // Steam reads gamepads globally through its own driver, so its Guide
             // shortcut fires even for games it didn't launch. We can't pre-empt
-            // it from in here — say so rather than let it look like our bug.
-            // Checked when the page opens; Steam may well have started since.
+            // it from in here — say so rather than let it look like our bug
+            // Checked when the page opens; Steam may well have started since
             Rectangle {
                 id: steamWarning
                 property bool steamRunning: false

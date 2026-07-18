@@ -10,7 +10,7 @@
 namespace firelight::netplay {
 
 // One player slot (P1..P8). localPadIndex is which of the member's local
-// controllers drives this slot, so one member can hold several slots.
+// controllers drives this slot, so one member can hold several slots
 struct SlotAssignment {
   PlayerId memberId = 0;
   int localPadIndex = 0;
@@ -26,7 +26,7 @@ public:
   bool assign(int index, SlotAssignment assignment);
   void clear(int index);
   void clearMember(PlayerId memberId);
-  // Ready is a per-member flag; applies to every slot they hold.
+  // Ready is a per-member flag; applies to every slot they hold
   void setReady(PlayerId memberId, bool ready);
   void renameMember(PlayerId memberId, const std::string &name);
 
@@ -35,7 +35,7 @@ public:
   [[nodiscard]] int occupiedCount() const;
 
   // Named all() rather than slots(): Qt defines `slots` as a macro, and this
-  // header is included from Qt code.
+  // header is included from Qt code
   [[nodiscard]] const std::array<std::optional<SlotAssignment>, MAX_SLOTS> &
   all() const {
     return m_slots;

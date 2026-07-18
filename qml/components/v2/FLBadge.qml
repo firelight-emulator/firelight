@@ -1,7 +1,7 @@
 import QtQuick
 import Firelight 1.0
 
-// A small status pill. tone: neutral | accent | success | warning | danger.
+// A small status pill. tone: neutral | accent | success | warning | danger
 Rectangle {
     id: root
 

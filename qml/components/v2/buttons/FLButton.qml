@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // Text (+ optional leading icon) button. Colors from Theme, metrics from
 // AppStyle. Height is derived from content and floored at minTarget, so it
-// grows with the UI scale instead of clipping.
+// grows with the UI scale instead of clipping
 //
 //   FLButton { text: "Save"; variant: "primary" }
 //   FLButton { text: "Delete"; variant: "danger"; iconName: "delete" }

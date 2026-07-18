@@ -20,7 +20,7 @@ public:
 
   /**
    * @enum Roles
-   * @brief The roles that can be used with this model.
+   * @brief The roles that can be used with this model
    */
   enum Roles {
     Id = Qt::UserRole + 1,

@@ -15,7 +15,7 @@ namespace firelight::netplay {
 // Maps libretro ports to lobby slots while the host runs an online game:
 // slot N's occupant answers port N — the host through their local pads,
 // remote members through their RemoteRetroPads. Inactive (or with no inner
-// provider change needed), it's a pure pass-through.
+// provider change needed), it's a pure pass-through
 class SlotMappedRetropadProvider final : public libretro::IRetropadProvider {
 public:
   SlotMappedRetropadProvider(libretro::IRetropadProvider *localPads,

@@ -6,7 +6,7 @@ import Firelight 1.0
 FocusScope {
     id: root
 
-    // 0 = Game (this game's overrides), 1 = Platform (all games on this console).
+    // 0 = Game (this game's overrides), 1 = Platform (all games on this console)
     property int level: SettingsLevel.Game
     required property var contentHash
     required property var platformId

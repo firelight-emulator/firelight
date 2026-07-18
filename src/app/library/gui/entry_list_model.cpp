@@ -24,7 +24,7 @@ namespace firelight::library {
         EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
           [this](const emulation::EmulationStartedEvent &event) {
             // Published on the render thread; hop to the GUI thread before
-            // touching the model.
+            // touching the model
             const auto contentHash = event.contentHash;
             QMetaObject::invokeMethod(
               this, [this, contentHash] {
@@ -65,7 +65,7 @@ namespace firelight::library {
           });
 
     // A finished session may have unlocked achievements; refresh every row's
-    // counts (cheap indexed lookups) on the GUI thread.
+    // counts (cheap indexed lookups) on the GUI thread
     m_achievementSessionEndedConnection =
         EventDispatcher::instance()
             .subscribe<achievements::AchievementSessionEndedEvent>(
@@ -77,7 +77,7 @@ namespace firelight::library {
 
     // Login completes asynchronously, after this constructor's reset() has
     // already computed counts with no user; recompute when the user arrives
-    // (and on logout, which zeroes earned).
+    // (and on logout, which zeroes earned)
     m_userLoggedInConnection =
         EventDispatcher::instance().subscribe<achievements::UserLoggedInEvent>(
           [this](const achievements::UserLoggedInEvent &) {

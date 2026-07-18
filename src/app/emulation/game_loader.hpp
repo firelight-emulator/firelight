@@ -24,7 +24,7 @@ namespace firelight::emulation {
 // Outcome of a load attempt: a ready EmulatorInstance plus the state the
 // EmulationService facade retains (entry/platform/hash + the core config whose
 // declared options it caches once the core starts). success == false on any
-// failure, with `instance` null.
+// failure, with `instance` null
 struct GameLoadResult {
   bool success = false;
   std::unique_ptr<EmulatorInstance> instance;
@@ -36,7 +36,7 @@ struct GameLoadResult {
 
 // The load pipeline extracted from EmulationService: resolve entry -> content +
 // patch -> bytes -> save data -> core + config -> instance. EmulationService
-// stays the facade (publishes events, holds the current instance).
+// stays the facade (publishes events, holds the current instance)
 class GameLoader {
 public:
   GameLoader(library::UserLibraryService &library,

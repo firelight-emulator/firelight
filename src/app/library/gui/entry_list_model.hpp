@@ -28,7 +28,7 @@ namespace firelight::library {
   public:
     /**
      * @enum Roles
-     * @brief The roles that can be used with this model.
+     * @brief The roles that can be used with this model
      */
     enum Roles {
       Id = Qt::UserRole + 1,
@@ -90,17 +90,17 @@ namespace firelight::library {
 
     // Sets an entry's favorite flag by entry id. Multi-select bulk actions and
     // the context menu act on ids, not a delegate, so they can't go through
-    // setData like the per-row heart does.
+    // setData like the per-row heart does
     Q_INVOKABLE void setEntryFavorite(int entryId, bool favorite);
 
     // True if the entry satisfies the given smart folder's criteria. Used by
     // the client-side folder filter for smart folders (manual folders use
     // folderIds membership). Parsed criteria are cached per folder; call
-    // invalidateSmartFolderCache() after a smart folder's criteria change.
+    // invalidateSmartFolderCache() after a smart folder's criteria change
     Q_INVOKABLE bool matchesSmartFolder(int folderId, int entryId);
 
     // Drops cached smart-folder criteria so the next matchesSmartFolder /
-    // count reflects edited criteria.
+    // count reflects edited criteria
     Q_INVOKABLE void invalidateSmartFolderCache();
 
     int getCount() const;
@@ -127,27 +127,27 @@ namespace firelight::library {
     // Reconciles a single entry with the model after a create/update event:
     // inserts a newly-visible entry, removes one that became hidden/deleted, or
     // updates one in place (the QML SortFilterProxyModel re-sorts/re-filters, so
-    // the source order doesn't matter). Runs on the GUI thread only.
+    // the source order doesn't matter). Runs on the GUI thread only
     void syncEntry(int entryId);
 
-    // Fills an item's play stats (total + last-played) from the activity log.
+    // Fills an item's play stats (total + last-played) from the activity log
     void applyPlayStats(Item &item) const;
 
     // Fills an item's earned/total achievement counts from the achievement
     // service (offline, by content hash). Cheap indexed lookups; run on reset
-    // and after a play session ends (a session may have unlocked achievements).
+    // and after a play session ends (a session may have unlocked achievements)
     void applyAchievementCounts(Item &item) const;
 
     // Recomputes every row's achievement counts and notifies. Counts are
     // per-user, so this runs after login (which completes async, post-reset)
-    // and after a session ends. Must run on the GUI thread.
+    // and after a session ends. Must run on the GUI thread
     void refreshAllAchievementCounts();
 
-    // Rebuilds m_indexByEntryId to match m_items (after a structural change).
+    // Rebuilds m_indexByEntryId to match m_items (after a structural change)
     void rebuildIndex();
 
     // Coalesces the count-property change notifications so a burst of syncEntry
-    // calls (e.g. a scan importing several games) recomputes the counts once.
+    // calls (e.g. a scan importing several games) recomputes the counts once
     void scheduleCountsChanged();
 
     UserLibraryService &m_userLibrary;
@@ -157,16 +157,16 @@ namespace firelight::library {
     QList<Item> m_items{};
 
     // Flattens an item (entry attributes + joined play stats) into the Qt-free
-    // struct the smart-folder evaluator consumes.
+    // struct the smart-folder evaluator consumes
     [[nodiscard]] static EntryFields buildEntryFields(const Item &item);
 
-    // Resolves (and memoizes) a smart folder's parsed criteria by id.
+    // Resolves (and memoizes) a smart folder's parsed criteria by id
     const SmartFolderCriteria &criteriaForFolder(int folderId) const;
     mutable std::unordered_map<int, SmartFolderCriteria> m_smartFolderCache;
 
     // entry id -> index into m_items, rebuilt on reset(); lets the per-entry
     // matchesSmartFolder lookup avoid an O(n) scan (so a filter pass is O(n),
-    // not O(n^2)).
+    // not O(n^2))
     std::unordered_map<int, int> m_indexByEntryId;
 
     ScopedConnection m_gamePlayedConnection;
@@ -176,7 +176,7 @@ namespace firelight::library {
     ScopedConnection m_userLoggedInConnection;
 
     // Fires once (single-shot, 0ms) after a burst of syncEntry calls to emit the
-    // count-property change signals a single time.
+    // count-property change signals a single time
     QTimer m_countsChangedTimer;
   };
 } // namespace firelight::library

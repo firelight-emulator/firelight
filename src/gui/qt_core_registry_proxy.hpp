@@ -13,14 +13,14 @@ class QtCoreRegistryProxy : public QObject {
 public:
   explicit QtCoreRegistryProxy(QObject *parent = nullptr);
 
-  // Cores that can run a platform, default first: [{id, name, isDefault}].
+  // Cores that can run a platform, default first: [{id, name, isDefault}]
   Q_INVOKABLE QVariantList coresForPlatform(int platformId) const;
 
-  // The effective core for a scope (default -> platform -> game override).
+  // The effective core for a scope (default -> platform -> game override)
   Q_INVOKABLE QString resolvedCore(int platformId,
                                    const QString &contentHash) const;
 
-  // The core explicitly set at a tier ("" if none / inheriting).
+  // The core explicitly set at a tier ("" if none / inheriting)
   Q_INVOKABLE QString coreOverride(int level, int platformId,
                                    const QString &contentHash) const;
 

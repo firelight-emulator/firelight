@@ -9,7 +9,7 @@ public:
   Q_INVOKABLE static QString getFileURI();
   // Reads a text file into a UTF-8 string. Accepts a plain path, a file:// URL,
   // or a qrc:/ resource URL; returns "" on failure. Used to load bundled help
-  // articles for Markdown rendering.
+  // articles for Markdown rendering
   Q_INVOKABLE static QString readTextFile(const QString &url);
   Q_INVOKABLE static bool isFile(const QString &path);
   Q_INVOKABLE static QString prependFileURI(const QString &path);

@@ -77,7 +77,7 @@ TEST_F(InputServiceImplTest, PlatformPreferredControllerPromotedToPlayerOne) {
 
   inputService.applyGameContext(std::nullopt, platformId);
 
-  // The N64 controller should now be player one, swapping with the Xbox pad.
+  // The N64 controller should now be player one, swapping with the Xbox pad
   ASSERT_EQ(n64Pad->getPlayerIndex(), 0);
   ASSERT_EQ(xboxPad->getPlayerIndex(), 1);
 }
@@ -96,7 +96,7 @@ TEST_F(InputServiceImplTest, SessionPreferredControllerOverridesStoredPreference
   constexpr int platformId = 5;
   // The stored preference points at the Xbox pad...
   m_repo.setPlatformPreferredType(platformId, MICROSOFT_XBOX_ONE);
-  // ...but a CLI --controller session override for the N64 pad wins.
+  // ...but a CLI --controller session override for the N64 pad wins
   inputService.setSessionPreferredControllerType(platformId, NINTENDO_NSO_N64);
 
   inputService.applyGameContext(std::nullopt, platformId);
@@ -241,19 +241,19 @@ TEST_F(InputServiceImplTest, GameContextOverrideSwapsProfileAndRestores) {
   ASSERT_TRUE(pad->getProfile());
   const auto deviceDefaultId = pad->getProfile()->getId();
 
-  // Applying the game context swaps the device to the override profile.
+  // Applying the game context swaps the device to the override profile
   inputService.applyGameContext("hashX", -1);
   ASSERT_TRUE(pad->getProfile());
   EXPECT_EQ(pad->getProfile()->getId(), overrideProfile->getId());
 
-  // Clearing restores the device's default profile.
+  // Clearing restores the device's default profile
   inputService.clearGameContext();
   EXPECT_EQ(pad->getProfile()->getId(), deviceDefaultId);
 }
 
 // ---------------------------------------------------------------------------
 // Device connect/disconnect lifecycle + emitted events. These exercise the
-// public API that the SDL event loop drives on CONTROLLERDEVICEADDED/REMOVED.
+// public API that the SDL event loop drives on CONTROLLERDEVICEADDED/REMOVED
 // ---------------------------------------------------------------------------
 
 TEST_F(InputServiceImplTest, AddGamepadPublishesConnectedEvent) {
@@ -296,7 +296,7 @@ TEST_F(InputServiceImplTest, UnpluggingMiddleFreesSlotAndItIsReused) {
   EXPECT_EQ(inputService.getPlayerGamepad(1), nullptr); // slot freed
   EXPECT_EQ(inputService.getPlayerGamepad(2), p2);      // others keep slots
 
-  // The next device fills the freed slot rather than a new one.
+  // The next device fills the freed slot rather than a new one
   auto p3 = std::make_shared<input::TestGamepad>(4);
   inputService.addGamepad(p3);
   EXPECT_EQ(p3->getPlayerIndex(), 1);
@@ -311,7 +311,7 @@ TEST_F(InputServiceImplTest, ReplugSameDeviceReusesItsProfile) {
 
   inputService.removeGamepadByInstanceId(1);
 
-  // Same model (same vendor/product/version) reconnecting gets the same profile.
+  // Same model (same vendor/product/version) reconnecting gets the same profile
   auto again = std::make_shared<input::TestGamepad>(2);
   inputService.addGamepad(again);
   ASSERT_TRUE(again->getProfile());
@@ -400,13 +400,13 @@ TEST_F(InputServiceImplTest, UnpluggingGamepadLeavesKeyboardConnected) {
   auto pad = std::make_shared<input::TestGamepad>(1);
   inputService.addGamepad(pad);
 
-  // Gamepad preferred into player one, keyboard bumped.
+  // Gamepad preferred into player one, keyboard bumped
   ASSERT_EQ(pad->getPlayerIndex(), 0);
   ASSERT_EQ(keyboard->getPlayerIndex(), 1);
 
   inputService.removeGamepadByInstanceId(1);
 
-  // Keyboard remains connected in its slot.
+  // Keyboard remains connected in its slot
   EXPECT_EQ(inputService.getPlayerGamepad(1), keyboard);
   bool keyboardStillListed = false;
   for (const auto &g : inputService.listGamepads()) {
@@ -433,7 +433,7 @@ TEST_F(InputServiceImplTest, ConcurrentReadsDuringConnectDisconnectAreSafe) {
   std::thread reader([&] {
     while (!stop.load(std::memory_order_relaxed)) {
       for (int i = 0; i < SLOTS; ++i) {
-        // Non-null check only: don't read mutable per-device fields here.
+        // Non-null check only: don't read mutable per-device fields here
         (void)(inputService.getPlayerGamepad(i) != nullptr);
         (void)inputService.getRetropadForPlayerIndex(i);
       }
@@ -446,7 +446,7 @@ TEST_F(InputServiceImplTest, ConcurrentReadsDuringConnectDisconnectAreSafe) {
     }
   });
 
-  // Churn a rotating set of four controllers many times.
+  // Churn a rotating set of four controllers many times
   for (int round = 0; round < 500; ++round) {
     std::vector<std::shared_ptr<input::TestGamepad>> pads;
     for (int i = 0; i < 4; ++i) {
@@ -462,7 +462,7 @@ TEST_F(InputServiceImplTest, ConcurrentReadsDuringConnectDisconnectAreSafe) {
   stop.store(true, std::memory_order_relaxed);
   reader.join();
 
-  // After the storm every device is gone and the slots are consistent.
+  // After the storm every device is gone and the slots are consistent
   EXPECT_TRUE(inputService.listGamepads().empty());
   for (int i = 0; i < SLOTS; ++i) {
     EXPECT_EQ(inputService.getPlayerGamepad(i), nullptr);
@@ -470,7 +470,7 @@ TEST_F(InputServiceImplTest, ConcurrentReadsDuringConnectDisconnectAreSafe) {
 }
 
 // A reader observing player-one while a preferred controller is promoted (a
-// GamepadOrderChangedEvent path) must never see a corrupt slot map.
+// GamepadOrderChangedEvent path) must never see a corrupt slot map
 TEST_F(InputServiceImplTest, ConcurrentReadsDuringOrderChangesAreSafe) {
   input::SDLInputService inputService(m_repo);
   auto a = std::make_shared<input::TestGamepad>(1);
@@ -494,7 +494,7 @@ TEST_F(InputServiceImplTest, ConcurrentReadsDuringOrderChangesAreSafe) {
   stop.store(true, std::memory_order_relaxed);
   reader.join();
 
-  // Both controllers are still present, one per slot.
+  // Both controllers are still present, one per slot
   EXPECT_EQ(inputService.listGamepads().size(), 2u);
   EXPECT_NE(inputService.getPlayerGamepad(0), nullptr);
   EXPECT_NE(inputService.getPlayerGamepad(1), nullptr);
@@ -517,7 +517,7 @@ TEST_F(InputServiceImplTest, AxisDecodeSetsBothStickDirections) {
 
   // The opposite direction is reported as released rather than left alone, so
   // flicking extreme-to-extreme without passing through the deadzone doesn't
-  // leave it stuck on.
+  // leave it stuck on
   const auto left =
       SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, -20000);
   EXPECT_EQ(left[0], std::make_pair(input::LeftStickLeft, true));
@@ -542,7 +542,7 @@ TEST_F(InputServiceImplTest, AxisDecodeTreatsTriggersAsOneDirection) {
 }
 
 // Triggers are axes, not buttons, so a shortcut bound to one only fires if the
-// axis path reaches the shortcut engine.
+// axis path reaches the shortcut engine
 TEST_F(InputServiceImplTest, TriggerAxisFiresShortcutBoundToIt) {
   input::ShortcutRegistry::instance().clear();
   input::ShortcutAction action;
@@ -560,7 +560,7 @@ TEST_F(InputServiceImplTest, TriggerAxisFiresShortcutBoundToIt) {
   inputService.addGamepad(gamepad);
 
   // After adding: addGamepad resolves the device's profile from the repository,
-  // which would replace one set beforehand.
+  // which would replace one set beforehand
   auto profile = std::make_shared<input::GamepadProfile>(1);
   auto mapping = std::make_shared<input::ShortcutMapping>();
   input::InputSource trigger;
@@ -575,7 +575,7 @@ TEST_F(InputServiceImplTest, TriggerAxisFiresShortcutBoundToIt) {
   EXPECT_EQ(fired[0].id, "fast_forward");
   EXPECT_EQ(fired[0].phase, input::ShortcutPhase::Started);
 
-  // Still held: no second edge.
+  // Still held: no second edge
   inputService.handleAxisMotion(7, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 25000);
   EXPECT_EQ(fired.size(), 1u);
 

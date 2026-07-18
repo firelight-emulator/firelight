@@ -48,7 +48,7 @@ namespace firelight::input {
 
     // Forward-only schema migrations, stamped into PRAGMA user_version. A future
     // schema change adds the next-numbered migration instead of renaming tables
-    // (the old `_v3`-suffix approach).
+    // (the old `_v3`-suffix approach)
     const auto createSchemaV1 = [&exec] {
       exec("CREATE TABLE IF NOT EXISTS profiles("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -100,7 +100,7 @@ namespace firelight::input {
     };
 
     // The preset a profile's shortcuts were seeded from, so the editor can show
-    // which rows have been changed since and reset them back.
+    // which rows have been changed since and reset them back
     const auto addPresetIdV2 = [&exec] {
       exec("ALTER TABLE profiles ADD COLUMN preset_id TEXT NOT NULL DEFAULT '';");
     };
@@ -202,18 +202,18 @@ namespace firelight::input {
   }
 
   namespace {
-    // Copies a preset's shipped bindings into a brand-new profile's mapping.
+    // Copies a preset's shipped bindings into a brand-new profile's mapping
     //
     // A preset is a starting point, not a tier the engine resolves through: from
     // here on the profile owns a flat mapping, so an action with no binding means
-    // "off" rather than "inherit", and resetting a row is a write.
+    // "off" rather than "inherit", and resetting a row is a write
     //
     // Sources the controller hasn't got are copied in too, deliberately. They can
     // never match (the engine only ever sees codes a device actually reports), and
     // a preset lists alternates precisely so the next one takes over — an N64 pad
     // simply never satisfies the L3+R3 entry and lands on Select+Start. Filtering
     // here would need the device, which a profile isn't tied to: profiles are
-    // shared between controllers, so one pad's shape must not be baked in.
+    // shared between controllers, so one pad's shape must not be baked in
     void seedShortcuts(ShortcutMapping &mapping, const std::string &presetId,
                        const DeviceType device) {
       const auto *preset = ShortcutRegistry::instance().findPreset(presetId);
@@ -234,7 +234,7 @@ namespace firelight::input {
           mapping.setBindings(id, sources);
         }
       }
-      // Mutating a mapping doesn't persist it; the caller syncs.
+      // Mutating a mapping doesn't persist it; the caller syncs
       mapping.sync();
     }
   } // namespace
@@ -330,7 +330,7 @@ namespace firelight::input {
     auto profile = std::make_shared<GamepadProfile>(query.lastInsertId().toInt());
     profile->setName(name);
     // Both are set before loadProfileContents, which seeds the profile's
-    // shortcuts from the preset for its kind of device.
+    // shortcuts from the preset for its kind of device
     profile->setIsKeyboardProfile(device == DeviceType::Keyboard);
     profile->setPresetId(presetId);
     loadProfileContents(profile);
@@ -406,11 +406,11 @@ namespace firelight::input {
       return nullptr;
     }
 
-    // Copy the profile-wide analog defaults.
+    // Copy the profile-wide analog defaults
     setProfileAnalogSettings(clone->getId(), source->getDefaultAnalogSettings());
 
     // Copy each platform's bindings (and any per-platform analog override) by
-    // round-tripping the serialized mapping.
+    // round-tripping the serialized mapping
     for (const auto &platform:
          m_platformService.listPlatforms()) {
       for (const auto &controller: platform.controllerTypes) {
@@ -425,7 +425,7 @@ namespace firelight::input {
       }
     }
 
-    // Copy the shortcut mapping.
+    // Copy the shortcut mapping
     if (source->getShortcutMapping() && clone->getShortcutMapping()) {
       clone->getShortcutMapping()->deserialize(
         source->getShortcutMapping()->serialize());
@@ -569,7 +569,7 @@ namespace firelight::input {
       return nullptr;
     }
 
-    // Ensure the imported name does not collide with an existing one.
+    // Ensure the imported name does not collide with an existing one
     std::string baseName = j.value("name", std::string("Imported Profile"));
     std::string name = baseName;
     std::shared_ptr<GamepadProfile> profile;

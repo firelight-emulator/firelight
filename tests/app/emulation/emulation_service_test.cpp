@@ -17,7 +17,7 @@ namespace firelight::emulation {
  * @brief Test fixture for EmulationService functionality
  *
  * Tests the core emulation service operations including ROM loading,
- * archive extraction, and emulator instance management.
+ * archive extraction, and emulator instance management
  */
 class EmulationServiceTest : public testing::Test {
 protected:
@@ -60,7 +60,7 @@ protected:
  * @brief Test that loading a non-existent entry fails gracefully
  *
  * Verifies that attempting to load an entry that doesn't exist in the library
- * returns nullptr and triggers a GameLoadFailedEvent.
+ * returns nullptr and triggers a GameLoadFailedEvent
  */
 TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
   bool gameLoadFailedEventReceived = false;
@@ -85,7 +85,7 @@ TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
  *
  * The entry resolves from the library, but its on-disk content path does not
  * exist. loadEntry must return a ready future holding nullptr (never an invalid
- * future) and publish a GameLoadFailedEvent, without attempting to load a core.
+ * future) and publish a GameLoadFailedEvent, without attempting to load a core
  */
 TEST_F(EmulationServiceTest, LoadWithMissingContentPathFails) {
   bool gameLoadFailedEventReceived = false;
@@ -118,7 +118,7 @@ TEST_F(EmulationServiceTest, LoadWithMissingContentPathFails) {
  *
  * Verifies that a valid ROM file can be loaded, creates an EmulatorInstance,
  * and triggers a GameLoadedEvent. Tests that the instance has correct metadata
- * including content hash and platform ID.
+ * including content hash and platform ID
  */
 TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
   bool gameLoadedEventReceived = false;
@@ -159,7 +159,7 @@ TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
  *
  * Verifies that ROM files stored in ZIP archives can be properly extracted
  * and loaded. Tests archive extraction functionality and ensures the
- * EmulatorInstance is created with correct metadata.
+ * EmulatorInstance is created with correct metadata
  */
 TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
   bool gameLoadedEventReceived = false;
@@ -201,7 +201,7 @@ TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
  *
  * Verifies that ROM files stored in 7Z archives can be properly extracted
  * and loaded. Tests 7-Zip archive format support and ensures proper
- * EmulatorInstance creation.
+ * EmulatorInstance creation
  */
 TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
   bool gameLoadedEventReceived = false;
@@ -243,7 +243,7 @@ TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
  *
  * Verifies that ROM files stored in TAR archives can be properly extracted
  * and loaded. Tests TAR archive format support and validates that the
- * resulting EmulatorInstance has correct properties.
+ * resulting EmulatorInstance has correct properties
  */
 TEST_F(EmulationServiceTest, LoadValidRomInTarSucceeds) {
   bool gameLoadedEventReceived = false;

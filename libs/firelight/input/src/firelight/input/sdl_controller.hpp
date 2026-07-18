@@ -64,20 +64,20 @@ private:
   [[nodiscard]] int16_t evaluateMapping(GamepadInput input) const;
 
   // How far a physical input has to travel to count as pressed: the profile's
-  // tunable threshold for a trigger, half range for anything else.
+  // tunable threshold for a trigger, half range for anything else
   [[nodiscard]] int digitalThreshold(GamepadInput input, int platformId,
                                      int controllerTypeId) const;
   // Evaluates a single Binding to a digital pressed/not-pressed result,
-  // honoring its modifiers (all must be held) and analog threshold.
+  // honoring its modifiers (all must be held) and analog threshold
   [[nodiscard]] bool evaluateBindingDigital(const Binding &binding) const;
   // Evaluates a Binding including toggle (latch on rising edge) and turbo
   // (autofire while active) behavior. Mutates per-binding state, so it must be
-  // called once per frame per binding.
+  // called once per frame per binding
   bool evaluateBindingWithModes(GamepadInput target, std::size_t index,
                                 const Binding &binding);
   std::shared_ptr<GamepadProfile> m_profile = nullptr;
 
-  // Per-binding state for toggle/turbo, keyed by (target << 8 | bindingIndex).
+  // Per-binding state for toggle/turbo, keyed by (target << 8 | bindingIndex)
   std::map<uint64_t, bool> m_togglePrevRaw;
   std::map<uint64_t, bool> m_toggleLatch;
 

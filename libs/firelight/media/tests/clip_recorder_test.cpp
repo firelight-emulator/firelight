@@ -15,7 +15,7 @@ namespace firelight::media {
 namespace {
 QImage makeFrame(int w, int h, int i) {
   QImage img(w, h, QImage::Format_RGBA8888);
-  // Varying content so the encoder has real data to compress.
+  // Varying content so the encoder has real data to compress
   img.fill(QColor((i * 5) % 256, (i * 3) % 256, (i * 7) % 256));
   return img;
 }
@@ -23,7 +23,7 @@ QImage makeFrame(int w, int h, int i) {
 
 // The core promise of the design: continuous encoding keeps only a bounded,
 // compressed, keyframe-aligned window — not a raw-frame backlog that grows with
-// play time.
+// play time
 TEST(ClipRecorderTest, RollingWindowStaysBoundedAndStartsOnKeyframe) {
   ClipRecorder recorder(/*windowSeconds=*/2);
   ASSERT_TRUE(recorder.start(64, 64, 30, 48000, 2));
@@ -39,7 +39,7 @@ TEST(ClipRecorderTest, RollingWindowStaysBoundedAndStartsOnKeyframe) {
     }
     recorder.pushAudio(audio.data(), audio.size() / 2);
     // Pace the feed in small batches so the test never trips the backpressure
-    // valve (real frames arrive at ~fps, far slower than encode).
+    // valve (real frames arrive at ~fps, far slower than encode)
     if (i % 4 == 0) {
       recorder.flush();
     }
@@ -50,13 +50,13 @@ TEST(ClipRecorderTest, RollingWindowStaysBoundedAndStartsOnKeyframe) {
   ASSERT_FALSE(snap.empty());
   EXPECT_TRUE(snap.video.front().keyframe); // window begins on a keyframe
   // Small sources are integer-upscaled toward ~720 lines for a crisp clip:
-  // a whole multiple of the source, aspect preserved (square stays square).
+  // a whole multiple of the source, aspect preserved (square stays square)
   EXPECT_EQ(snap.width, snap.height);
   EXPECT_GT(snap.height, 64);
   EXPECT_EQ(snap.width % 64, 0);
 
   // Fed 5 seconds but configured for 2 -> the retained span is bounded to the
-  // window (plus at most one GOP), never the full runtime.
+  // window (plus at most one GOP), never the full runtime
   const int64_t spanUs = snap.video.back().ptsUs - snap.video.front().ptsUs;
   EXPECT_GE(spanUs, 1'000'000);
   EXPECT_LE(spanUs, 3'500'000);

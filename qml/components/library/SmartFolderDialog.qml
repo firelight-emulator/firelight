@@ -6,34 +6,34 @@ import QtQuick.Effects
 import Firelight 1.0
 
 // Editor for a smart folder's name + criteria. Produces the SmartFolderCriteria
-// JSON consumed by the C++ evaluator (keys must match smart_folder.cpp's parse).
+// JSON consumed by the C++ evaluator (keys must match smart_folder.cpp's parse)
 // Create: leave editFolderId at -1, open(). Edit: set editFolderId + call
-// loadFromJson(existingJson) + set folderName, then open().
+// loadFromJson(existingJson) + set folderName, then open()
 FirelightDialog {
     id: control
 
-    // -1 = creating a new folder; otherwise the id being edited.
+    // -1 = creating a new folder; otherwise the id being edited
     property int editFolderId: -1
     property alias folderName: nameInput.text
 
     headerText: editFolderId === -1 ? "New smart folder" : "Edit smart folder"
     acceptText: "Save"
 
-    // Selection state for the multi-select lists (arrays of ids).
+    // Selection state for the multi-select lists (arrays of ids)
     property var selectedDirIds: []
     property var selectedPlatformIds: []
 
-    // Appearance (persisted separately from the criteria JSON).
+    // Appearance (persisted separately from the criteria JSON)
     property string selectedColor: ""
     property string selectedSortRole: ""
     property bool selectedSortAscending: true
 
-    // The available folder accent colors ("" = none).
+    // The available folder accent colors ("" = none)
     readonly property var swatchColors: ["", "#e5484d", "#f76b15", "#f5d90a",
         "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
 
     // Game-sort options for the folder's remembered sort (role names must match
-    // EntryListModel's roles).
+    // EntryListModel's roles)
     readonly property var sortOptions: [
         { label: "Default (name)", role: "" },
         { label: "Name", role: "displayName" },
@@ -42,7 +42,7 @@ FirelightDialog {
         { label: "Release year", role: "releaseYear" }
     ]
 
-    // Lets a future edit entry point prefill the appearance controls.
+    // Lets a future edit entry point prefill the appearance controls
     function loadAppearance(color, sortRole, ascending) {
         selectedColor = color || "";
         selectedSortRole = sortRole || "";
@@ -104,12 +104,12 @@ FirelightDialog {
         selectedDirIds = c.contentDirectoryIds ? c.contentDirectoryIds.slice() : [];
         selectedPlatformIds = c.platformIds ? c.platformIds.slice() : [];
         // The rolling "last N days" window round-trips now (it's stored as a day
-        // count, not an absolute timestamp).
+        // count, not an absolute timestamp)
         lastDaysInput.text = c.playedWithinDays !== undefined ? String(c.playedWithinDays) : "";
     }
 
     // Prefill the fields for a common smart folder. Keeps a name the user has
-    // already typed; otherwise names the folder after the template.
+    // already typed; otherwise names the folder after the template
     function applyTemplate(kind) {
         var priorName = nameInput.text;
         resetFields();
@@ -180,7 +180,7 @@ FirelightDialog {
         control.saved();
     }
 
-    // A dark themed single-line text field.
+    // A dark themed single-line text field
     component ThemedField: Pane {
         id: fieldPane
         property alias text: fieldInput.text
@@ -464,7 +464,7 @@ FirelightDialog {
                             ? "white"
                             : (modelData === "" ? ColorPalette.neutral500 : "#00000040")
 
-                        // "None" swatch shows a slash.
+                        // "None" swatch shows a slash
                         Rectangle {
                             visible: parent.modelData === ""
                             width: parent.width - 8

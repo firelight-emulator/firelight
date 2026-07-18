@@ -22,7 +22,7 @@ void GamepadStatusItem::setPlayerNumber(const int playerNumber) {
   m_controller = getInputService()->getPlayerGamepad(playerNumber).get();
 
   // An empty slot is normal — asking about player 2 with one pad plugged in, or
-  // about any player with none.
+  // about any player with none
   const bool connected = m_controller != nullptr;
   if (m_isConnected != connected) {
     m_isConnected = connected;

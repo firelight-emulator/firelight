@@ -6,7 +6,7 @@
 // Frontend audio output: receives the libretro core's audio and drives playback
 // (mute, pause, buffer level, rate). Injected as a factory so the emulation code
 // doesn't depend on the Qt-Multimedia impl (AudioManager); a headless/CLI app
-// can supply its own.
+// can supply its own
 class IAudioOutput {
 public:
   virtual ~IAudioOutput() = default;

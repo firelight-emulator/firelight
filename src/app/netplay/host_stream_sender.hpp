@@ -17,20 +17,20 @@ namespace firelight::netplay {
 // the audio tap (H.264/Opus) and fans the packets out to every connected
 // peer, dropping video per-peer under backpressure and recovering with an
 // IDR. Frames arrive on the render thread, audio on the audio path, packets
-// leave on encoder threads.
+// leave on encoder threads
 class HostStreamSender final : public media::IClipSink {
 public:
   explicit HostStreamSender(NetplaySession &session);
   ~HostStreamSender() override;
 
-  // Fired once per encoder start with the parameters receivers need.
+  // Fired once per encoder start with the parameters receivers need
   void setConfigReadyCallback(std::function<void(StreamConfig)> callback);
 
   void arm();
   void disarm();
   [[nodiscard]] bool armed() const { return m_armed.load(); }
 
-  // The core's audio rate, from the audio tee (varies per game).
+  // The core's audio rate, from the audio tee (varies per game)
   void setAudioSampleRate(int rate);
 
   void onPeerReady(PlayerId memberId, IPeerLink &link);

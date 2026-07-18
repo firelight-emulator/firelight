@@ -7,7 +7,7 @@
 namespace firelight::gui {
 
 // Always MAX_SLOTS rows — empty slots are rows with occupied=false, so the
-// lobby's slot grid is a stable 8-cell layout.
+// lobby's slot grid is a stable 8-cell layout
 class NetplaySlotsModel final : public QAbstractListModel {
   Q_OBJECT
 

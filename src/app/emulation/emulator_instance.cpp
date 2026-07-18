@@ -31,12 +31,12 @@ namespace firelight::emulation {
     m_lastSaveTime = std::chrono::steady_clock::now();
 
     // Subscribes to setting changes and applies this game's resolved common
-    // settings now (all members it touches are initialized above).
+    // settings now (all members it touches are initialized above)
     m_settingsApplier = std::make_unique<CoreSettingsApplier>(
       *this, m_context, m_contentHash, m_platformId);
 
     // Keys for a core that reads the keyboard. Queued rather than delivered
-    // here: this fires on the GUI thread, and the core is the render thread's.
+    // here: this fires on the GUI thread, and the core is the render thread's
     m_keyboardKeyConnection =
         EventDispatcher::instance().subscribe<input::KeyboardKeyEvent>(
             [this](const input::KeyboardKeyEvent &event) {
@@ -70,7 +70,7 @@ namespace firelight::emulation {
     // Nothing turned them off by hand, so honour the core: one that asked for
     // the keyboard gets it, and only the keyboard — a controller keeps its
     // hotkeys. This is what makes it unnecessary to know in advance which
-    // systems need the keys.
+    // systems need the keys
     const auto autoDisable =
         m_context.settingsService &&
         m_context.settingsService->getGlobalValue("auto-disable-keyboard-hotkeys")
@@ -82,7 +82,7 @@ namespace firelight::emulation {
 
   void EmulatorInstance::drainKeyboardEvents() {
     // Most cores never ask for the keyboard, so this costs one atomic read a
-    // frame for them.
+    // frame for them
     if (!m_core->wantsKeyboard()) {
       std::lock_guard lock(m_pendingKeysMutex);
       m_pendingKeys.clear();
@@ -103,11 +103,11 @@ namespace firelight::emulation {
     spdlog::info("[EmulatorInstance] Shutting down");
 
     // Destroy the settings applier first: its subscriptions capture `this` and
-    // touch members, so a late event mustn't fire into a half-torn-down instance.
+    // touch members, so a late event mustn't fire into a half-torn-down instance
     m_settingsApplier.reset();
 
     // Restore device-default controller profiles when the game unloads, and
-    // hand back any hotkeys this game turned off — the menu needs them.
+    // hand back any hotkeys this game turned off — the menu needs them
     if (const auto inputService = m_context.inputService) {
       inputService->clearGameContext();
       inputService->setHotkeysEnabled(true);
@@ -119,14 +119,14 @@ namespace firelight::emulation {
     libretro::IVideoDataReceiver *videoDataReceiver) {
     // Audio output + microphone are injected as factories (main.cpp supplies the
     // Qt-Multimedia impls); both are created here on the render thread for Qt
-    // audio thread-affinity. Null in headless/tests -> no audio.
+    // audio thread-affinity. Null in headless/tests -> no audio
     if (m_context.audioOutputFactory) {
       m_audioOutput = m_context.audioOutputFactory();
       // Apply the requested initial mute now that the output exists (a QML muted
-      // binding fires before this and would otherwise be lost).
+      // binding fires before this and would otherwise be lost)
       m_audioOutput->setMuted(m_startMuted);
       // Apply the resolved DRC setting (refreshAllSettings may have run before
-      // the output existed, so it only stored the value on this instance).
+      // the output existed, so it only stored the value on this instance)
       m_audioOutput->setDynamicRateControlEnabled(m_dynamicRateControl);
       m_core->setAudioReceiver(m_audioOutput);
     }
@@ -150,7 +150,7 @@ namespace firelight::emulation {
     m_core->loadGame(&game);
 
     // The core registers its keyboard callback while loading, so only now can
-    // the auto-disable see whether this one wants the keys.
+    // the auto-disable see whether this one wants the keys
     applyHotkeyState();
 
     if (m_saveData.size() > 0) {
@@ -163,7 +163,7 @@ namespace firelight::emulation {
       achievements->loadGame(m_platformId, m_contentHash);
     }
 
-    // Apply per-game controller profile override + platform preferred controller.
+    // Apply per-game controller profile override + platform preferred controller
     if (const auto inputService = m_context.inputService) {
       inputService->applyGameContext(m_contentHash, m_platformId);
     }
@@ -175,7 +175,7 @@ namespace firelight::emulation {
     });
 
     // Announce the disc set for multi-disc content so subscribers (disc UI, etc.)
-    // learn the count without polling.
+    // learn the count without polling
     if (const auto count = m_core->getDiskCount(); count > 1) {
       EventDispatcher::instance().publish(
         DiscChangedEvent{
@@ -187,7 +187,7 @@ namespace firelight::emulation {
 
     // Resolve + apply the per-port controller variant (the game's default unless
     // overridden), driving the core device + any companion core options, and
-    // announce availability so the input UI can offer a choice.
+    // announce availability so the input UI can offer a choice
     if (const auto portCount = getControllerPortCount(); portCount > 0) {
       for (unsigned port = 0; port < portCount; ++port) {
         const auto variant = resolveSelectedVariant(port);
@@ -268,7 +268,7 @@ namespace firelight::emulation {
     // The core didn't advertise its ports via SET_CONTROLLER_INFO, but our catalog
     // may still define alternate devices for it (e.g. FCEUmm's Zapper). Expose a
     // small default port count so the player can still pick one; the picker hides
-    // ports with no real choice anyway.
+    // ports with no real choice anyway
     const auto coreId =
         CoreRegistry::instance().resolveCoreName(m_platformId, m_contentHash,
                                                  m_context.settingsService);
@@ -291,7 +291,7 @@ namespace firelight::emulation {
     }
 
     // Per-game override (a stored coreDeviceId), honored only if still offered by
-    // the loaded core (a stale value from another core falls back to the default).
+    // the loaded core (a stale value from another core falls back to the default)
     if (auto *settings = m_context.settingsService) {
       if (const auto v = settings->getEffectiveValue(
         m_contentHash, m_platformId,
@@ -304,7 +304,7 @@ namespace firelight::emulation {
             }
           }
         } catch (const std::exception &) {
-          // Malformed stored value; fall through to the default.
+          // Malformed stored value; fall through to the default
         }
       }
     }
@@ -324,7 +324,7 @@ namespace firelight::emulation {
     }
     // Companion options take effect when the core reads its options (on init);
     // the current session already runs the core's default, and the selection
-    // persists for the next launch.
+    // persists for the next launch
     for (const auto &[key, value]: variant.companionOptions) {
       settings->setGameValue(m_contentHash, key, value);
     }
@@ -361,7 +361,7 @@ namespace firelight::emulation {
       return;
     }
 
-    // While RA hardcore mode is active, gameplay-affecting cheats are disallowed.
+    // While RA hardcore mode is active, gameplay-affecting cheats are disallowed
     const bool hardcore = m_context.achievementManager &&
                           m_context.achievementManager->hardcoreModeActive();
 
@@ -372,10 +372,10 @@ namespace firelight::emulation {
         continue;
       }
       if (cheat.isCoreApplied()) {
-        // Game Genie / emu-handler: the core must decode it (ROM substitution).
+        // Game Genie / emu-handler: the core must decode it (ROM substitution)
         m_core->setCheat(coreIndex++, true, cheat.rawCode);
       } else {
-        // RAM cheats: Firelight replays these pokes every frame.
+        // RAM cheats: Firelight replays these pokes every frame
         pokes.insert(pokes.end(), cheat.pokes.begin(), cheat.pokes.end());
       }
     }
@@ -434,12 +434,12 @@ namespace firelight::emulation {
     if (now - std::chrono::seconds(m_saveIntervalSeconds) > m_lastSaveTime) {
       m_lastSaveTime = now;
       // Keep the future so its destructor doesn't block this (render) thread
-      // until the write completes. The write runs on its own copy of the data.
+      // until the write completes. The write runs on its own copy of the data
       m_pendingSave = save();
     }
 
     m_core->run(0);
-    // Re-apply RAM cheats after each frame so values the game overwrites stick.
+    // Re-apply RAM cheats after each frame so values the game overwrites stick
     m_cheatEngine.apply(*m_core);
     if (const auto achievements = m_context.achievementManager) {
       achievements->doFrame(m_core.get());

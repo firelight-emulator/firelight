@@ -9,8 +9,8 @@
 
 namespace firelight::metadata {
   /**
-   * Art provider that fetches art from SteamGridDB (https://www.steamgriddb.com/).
-   * Requires an API key (user must register on the site to get one).
+   * Art provider that fetches art from SteamGridDB (https://www.steamgriddb.com/)
+   * Requires an API key (user must register on the site to get one)
    */
   class SteamGridDbArtProvider final : public IArtProvider {
   public:
@@ -20,7 +20,7 @@ namespace firelight::metadata {
     [[nodiscard]] bool isConfigured() const override { return !m_apiKey.empty(); }
 
     /**
-     * @param apiKey The user's SteamGridDB API key (must be registered on the site to get one).
+     * @param apiKey The user's SteamGridDB API key (must be registered on the site to get one)
      */
     void setApiKey(std::string apiKey) { m_apiKey = std::move(apiKey); }
 
@@ -34,15 +34,15 @@ namespace firelight::metadata {
     };
 
     /**
-     * @param gameName The name of the game to search for.
-     * @param limit The maximum number of matches to return.
-     * @return List of game matches (id and name) for the given game name, up to the specified limit.
+     * @param gameName The name of the game to search for
+     * @param limit The maximum number of matches to return
+     * @return List of game matches (id and name) for the given game name, up to the specified limit
      */
     [[nodiscard]] std::vector<GameMatch> resolveGames(const std::string &gameName,
                                                       int limit) const;
 
     /**
-     * Append art candidates for the given game to the output vector, up to the specified remaining count.
+     * Append art candidates for the given game to the output vector, up to the specified remaining count
      */
     void collectArtForGame(const GameMatch &game, MediaType type, int remaining,
                            std::vector<ArtCandidate> &out) const;

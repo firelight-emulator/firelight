@@ -29,8 +29,8 @@ struct LobbyInfo {
 };
 
 // Callbacks a backend fires as the lobby changes. chatReceived fires only for
-// REMOTE senders — the session appends the local user's messages itself.
-// memberRenamed fires for every rename, the local user's included.
+// REMOTE senders — the session appends the local user's messages itself
+// memberRenamed fires for every rename, the local user's included
 struct LobbyEvents {
   std::function<void(const LobbyMember &)> memberJoined;
   std::function<void(PlayerId)> memberLeft;
@@ -54,10 +54,10 @@ public:
   virtual void beginSignIn(std::function<void(bool ok)> done) = 0;
   [[nodiscard]] virtual SignInState signInState() const = 0;
   [[nodiscard]] virtual PlayerIdentity localIdentity() const = 0;
-  // Human-readable provider name for UI copy ("Discord").
+  // Human-readable provider name for UI copy ("Discord")
   [[nodiscard]] virtual std::string providerName() const = 0;
   // Backends without account-owned names accept a user-chosen one; applies to
-  // the next lobby joined. Provider-named backends ignore it.
+  // the next lobby joined. Provider-named backends ignore it
   virtual void setPreferredDisplayName(const std::string &) {}
 
   virtual void createLobby(const std::string &joinCode,
@@ -66,7 +66,7 @@ public:
   virtual void leaveLobby() = 0;
 
   virtual void sendChat(const std::string &text) = 0;
-  // Carries connection-handshake payloads (e.g. SDP) to one member.
+  // Carries connection-handshake payloads (e.g. SDP) to one member
   virtual void sendSignal(PlayerId to, const std::string &payload) = 0;
 
   [[nodiscard]] virtual LobbyInfo currentLobby() const = 0;

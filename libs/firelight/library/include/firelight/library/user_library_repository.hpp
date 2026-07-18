@@ -62,7 +62,7 @@ namespace firelight::library {
     virtual bool reorderFolders(int parentId,
                                 const std::vector<int> &orderedFolderIds) = 0;
 
-    // Moves a folder under a new parent (-1 = root), appended at the end.
+    // Moves a folder under a new parent (-1 = root), appended at the end
     virtual bool setFolderParent(int folderId, int newParentId) = 0;
 
     virtual bool deleteContentDirectory(int id) = 0;

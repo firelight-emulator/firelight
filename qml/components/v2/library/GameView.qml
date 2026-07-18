@@ -13,11 +13,11 @@ Item {
     property int filterPlatformId: -1
     // A folder scope matches the folder AND all its descendants. The sidebar
     // supplies the descendant ids split by kind (manual = membership, smart =
-    // computed), so selecting a parent shows everything nested under it.
+    // computed), so selecting a parent shows everything nested under it
     property int filterFolderId: -1
     property var filterManualIds: []
     property var filterSmartIds: []
-    // Human label + breadcrumb for the current scope, supplied by the sidebar.
+    // Human label + breadcrumb for the current scope, supplied by the sidebar
     property string scopeLabel: "All games"
     property var scopeCrumb: []
 
@@ -25,7 +25,7 @@ Item {
     property bool showOnlyFavorites: false
     property bool showOnlyUnplayed: false
     property string filterText: ""
-    // Advanced refine filters (from the Filters popup).
+    // Advanced refine filters (from the Filters popup)
     property bool filterHasAchievements: false
     property bool filterCompleted: false
     property string filterPlayTime: "any" // any / never / short / medium / long
@@ -70,13 +70,13 @@ Item {
     property string viewMode: "grid"
 
     // --- Multi-select (drives bulk actions; independent of scope/refine) ---
-    // entryId -> true. Reassigned wholesale on every change so bindings refresh.
+    // entryId -> true. Reassigned wholesale on every change so bindings refresh
     property var selectedIds: ({})
     property int selectedCount: 0
     property int selectionAnchorRow: -1
 
     // The scoped folder, but only when it's a manual folder we can remove from
-    // (a smart folder's membership is computed, so "remove" is meaningless).
+    // (a smart folder's membership is computed, so "remove" is meaningless)
     readonly property int removableFolderId: filterManualIds.indexOf(filterFolderId) !== -1
                                              ? filterFolderId : -1
 
@@ -111,7 +111,7 @@ Item {
     }
 
     // The sidebar picks a scope; it clears only the other scope axis, never the
-    // refine toggles — so "SNES" + "Favorites" combine instead of replacing.
+    // refine toggles — so "SNES" + "Favorites" combine instead of replacing
     function setScopeAll() {
         filterPlatformId = -1;
         filterFolderId = -1;
@@ -199,7 +199,7 @@ Item {
         root.selectedCount = 0;
         root.selectionAnchorRow = -1;
     }
-    // Modifier-aware click from a tile / row.
+    // Modifier-aware click from a tile / row
     function handleGameClick(entryId, rowIndex, modifiers) {
         if (modifiers & Qt.ShiftModifier)
             root.rangeSelectTo(rowIndex);
@@ -224,7 +224,7 @@ Item {
     property var detailData: null
     property bool detailOpen: false
     // Favoriting from the panel: persist + keep the snapshot in sync (reassign a
-    // copy so the panel's bindings refresh).
+    // copy so the panel's bindings refresh)
     function setDetailFavorite(entryId, fav) {
         LibraryEntryModel.setEntryFavorite(entryId, fav);
         if (root.detailData && root.detailData.entryId === entryId) {
@@ -320,7 +320,7 @@ Item {
     // A lightweight, ordered mirror of the filtered/sorted rows. Qt's tech-preview
     // SortFilterProxyModel exposes neither get(row) nor count, so this Instantiator
     // is how QML reads the result set in order — it backs the live count and
-    // shift-range selection (and later, group-by sections).
+    // shift-range selection (and later, group-by sections)
     Instantiator {
         id: gameMirror
         model: gameModel
@@ -330,7 +330,7 @@ Item {
     }
 
     // Shared, single-instance dialogs raised by the grid/list context menus and
-    // the bulk bar.
+    // the bulk bar
     GameArtPickerDialog {
         id: artPicker
     }
@@ -416,7 +416,7 @@ Item {
                 }
             }
 
-            // Bulk action bar — appears while games are multi-selected.
+            // Bulk action bar — appears while games are multi-selected
             RowLayout {
                 Layout.fillWidth: true
                 visible: root.selectedCount > 0
@@ -522,7 +522,7 @@ Item {
                         modal: false
                         focus: true
                         // Escape or the Filters button closes it; not press-outside,
-                        // which the nested combo popups would trip.
+                        // which the nested combo popups would trip
                         closePolicy: Popup.CloseOnEscape
                         background: Rectangle {
                             color: Theme.surfaceElevated
@@ -635,7 +635,7 @@ Item {
                 }
             }
 
-            // Active advanced-filter chips (removable).
+            // Active advanced-filter chips (removable)
             Flow {
                 Layout.fillWidth: true
                 visible: root.anyAdvancedFilter
@@ -668,7 +668,7 @@ Item {
 
     // Right dock: details for the last-clicked game. Width animates 0 -> open so
     // the grid reflows to make room; the panel keeps a fixed content width and is
-    // clipped, so it slides rather than reflowing while animating.
+    // clipped, so it slides rather than reflowing while animating
     Item {
         id: detailDock
         anchors.right: parent.right
@@ -728,7 +728,7 @@ Item {
         property string genres
     }
 
-    // A removable pill for an active refine filter.
+    // A removable pill for an active refine filter
     component RefineChip: Rectangle {
         id: chip
         property string label: ""

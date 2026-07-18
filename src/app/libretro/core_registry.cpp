@@ -8,7 +8,7 @@ namespace firelight {
   namespace {
     // RETRO_DEVICE_* base classes + the SUBCLASS macro, mirrored here so the
     // catalog reads like the core sources (libretro.h) without pulling that heavy
-    // header into this TU. RETRO_DEVICE_SUBCLASS(base, id) = ((id+1) << 8) | base.
+    // header into this TU. RETRO_DEVICE_SUBCLASS(base, id) = ((id+1) << 8) | base
     constexpr unsigned JOYPAD = 1;
     constexpr unsigned MOUSE = 2;
     constexpr unsigned LIGHTGUN = 4;
@@ -20,7 +20,7 @@ namespace firelight {
     using Class = input::GamepadInputClass;
 
     // Where bundled cores live and their dll suffix, per OS. Cores are shipped
-    // under system/_cores/<os>/.
+    // under system/_cores/<os>/
     std::string coreDirectoryPath() {
 #if defined(_WIN32)
       return "./system/_cores/windows/";
@@ -55,13 +55,13 @@ namespace firelight {
 
     // Bundled cores + the platforms each can run. Where a core can run several
     // platforms, its default platforms are those it's listed as the default for
-    // in m_platformDefaults below; the rest are selectable alternates.
+    // in m_platformDefaults below; the rest are selectable alternates
     m_cores = {
       {
         "gambatte_libretro", "Gambatte",
         {PM::PLATFORM_ID_GAMEBOY, PM::PLATFORM_ID_GAMEBOY_COLOR}
       },
-      // mGBA is the GBA default and also plays GB/GBC (alternate there).
+      // mGBA is the GBA default and also plays GB/GBC (alternate there)
       {
         "mgba_libretro", "mGBA",
         {
@@ -94,12 +94,12 @@ namespace firelight {
         "mednafen_ngp_libretro", "Beetle NeoPop",
         {PM::PLATFORM_ID_NEOGEO_POCKET}
       },
-      // Bundled but not yet the default for a modeled platform.
+      // Bundled but not yet the default for a modeled platform
       {"geolith_libretro", "Geolith", {}},
       {"mednafen_psx_hw_libretro", "Beetle PSX HW", {PM::PLATFORM_ID_PS1}}
     };
 
-    // Per-platform default core (matches the historical getCoreName mapping).
+    // Per-platform default core (matches the historical getCoreName mapping)
     m_platformDefaults = {
       {PM::PLATFORM_ID_GAMEBOY, "gambatte_libretro"},
       {PM::PLATFORM_ID_GAMEBOY_COLOR, "gambatte_libretro"},
@@ -126,7 +126,7 @@ namespace firelight {
     // here expose only the standard joypad. The standard joypad is implicit (the
     // platform's default) and only listed where the core offers a real choice
     // (Genesis 3- vs 6-button). Cross-referenced at load with the core's runtime
-    // SET_CONTROLLER_INFO advertisement.
+    // SET_CONTROLLER_INFO advertisement
     m_coreDevices = {
       {
         "genesis_plus_gx_libretro",
@@ -154,7 +154,7 @@ namespace firelight {
         "fceumm_libretro",
         {
           // Advertised as a MOUSE subclass, but reads LIGHTGUN ids in
-          // "clightgun" mode (its default) — force it so aim/trigger work.
+          // "clightgun" mode (its default) — force it so aim/trigger work
           {
             subclass(MOUSE, 0),
             Class::Lightgun,
@@ -192,7 +192,7 @@ namespace firelight {
     const std::vector<unsigned> &advertisedDeviceIds) const {
     const auto &catalog = deviceCatalogForCore(coreId);
     const auto advertised = [&](const unsigned id) {
-      // No SET_CONTROLLER_INFO from the core -> trust the curated catalog.
+      // No SET_CONTROLLER_INFO from the core -> trust the curated catalog
       return advertisedDeviceIds.empty() ||
              std::find(advertisedDeviceIds.begin(), advertisedDeviceIds.end(),
                        id) != advertisedDeviceIds.end();
@@ -208,7 +208,7 @@ namespace firelight {
     }
     if (!hasJoypad) {
       // Every platform has a standard controller; synthesize it as the default
-      // when the catalog doesn't enumerate joypad variants for this core.
+      // when the catalog doesn't enumerate joypad variants for this core
       result.insert(result.begin(), CoreDeviceVariant{
                       .coreDeviceId = JOYPAD,
                       .deviceClass = Class::Joypad,
@@ -237,7 +237,7 @@ namespace firelight {
   CoreRegistry::coresForPlatform(const int platformId) const {
     const auto defaultId = defaultCoreForPlatform(platformId);
     std::vector<PlatformCore> result;
-    // Default first.
+    // Default first
     for (const auto &core: m_cores) {
       if (core.id == defaultId && supportsPlatform(core.id, platformId)) {
         result.push_back({core.id, core.displayName, true});
@@ -274,7 +274,7 @@ namespace firelight {
     const auto def = defaultCoreForPlatform(platformId);
 
     // A CLI `--core` override wins over every stored tier (still guarded by
-    // platform support so a mismatched force can't wedge the launch).
+    // platform support so a mismatched force can't wedge the launch)
     if (!m_sessionCoreOverride.empty() &&
         supportsPlatform(m_sessionCoreOverride, platformId)) {
       return m_sessionCoreOverride;
@@ -285,7 +285,7 @@ namespace firelight {
     }
 
     // Per-game override wins, then per-platform; each honored only if it can run
-    // the platform (a stale override must never wedge the platform).
+    // the platform (a stale override must never wedge the platform)
     if (!contentHash.empty()) {
       if (const auto v = settings->getValueAtLevel(settings::Game, contentHash,
                                                    platformId, CORE_SETTING_KEY);

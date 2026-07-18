@@ -6,18 +6,18 @@
 namespace firelight::cli {
 
 // Startup values derived from the command line, exposed to QML as a context
-// property ("StartupOptions") so the root window can act on them once loaded.
-// Values are fixed at construction (set before the QML engine loads).
+// property ("StartupOptions") so the root window can act on them once loaded
+// Values are fixed at construction (set before the QML engine loads)
 class StartupOptions : public QObject {
   Q_OBJECT
-  // A library entry id to auto-launch on startup, or -1 for none.
+  // A library entry id to auto-launch on startup, or -1 for none
   Q_PROPERTY(int launchEntryId READ launchEntryId CONSTANT)
-  // -1 = unset (use the saved preference), 0 = windowed, 1 = fullscreen.
+  // -1 = unset (use the saved preference), 0 = windowed, 1 = fullscreen
   Q_PROPERTY(int fullscreenOverride READ fullscreenOverride CONSTANT)
-  // Quit the app when the launched game closes (external-launcher mode).
+  // Quit the app when the launched game closes (external-launcher mode)
   Q_PROPERTY(bool exitOnClose READ exitOnClose CONSTANT)
   // A RetroAchievements login the QML coordinator should perform before the
-  // game launches (from the `--ra-*` startup flags).
+  // game launches (from the `--ra-*` startup flags)
   Q_PROPERTY(bool raPendingLogin READ raPendingLogin CONSTANT)
   Q_PROPERTY(QString raUsername READ raUsername CONSTANT)
   Q_PROPERTY(QString raPassword READ raPassword CONSTANT)
@@ -47,7 +47,7 @@ public:
 
   // One-shot getters for the per-game start knobs: they return the requested
   // value the first time and false afterwards, so only the CLI-launched game
-  // (the first NewEmulatorPage created) picks them up.
+  // (the first NewEmulatorPage created) picks them up
   Q_INVOKABLE bool consumeStartMuted() {
     const bool v = m_data.startMuted;
     m_data.startMuted = false;

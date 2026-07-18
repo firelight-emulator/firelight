@@ -123,7 +123,7 @@ bool SettingsService::resetValueAtLevel(SettingsLevel level,
 std::optional<std::string>
 SettingsService::getEffectiveValue(const std::string &contentHash,
                                    int platformId, const std::string &key) {
-  // Session (CLI) overrides win over every stored tier and are never persisted.
+  // Session (CLI) overrides win over every stored tier and are never persisted
   if (const auto it = m_sessionOverrides.find(key);
       it != m_sessionOverrides.end()) {
     return it->second;

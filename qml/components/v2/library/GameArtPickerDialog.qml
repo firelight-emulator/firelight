@@ -7,7 +7,7 @@ import Firelight 1.0
 // Per-game "Change artwork" picker. Shows the stored candidates + current
 // selection for a media type, lets the user search SteamGridDB for more, and
 // import a local image. All actions go through GameArtService, which reprojects
-// the entry's art and refreshes the library tile in place.
+// the entry's art and refreshes the library tile in place
 Dialog {
     id: control
 
@@ -16,7 +16,7 @@ Dialog {
     property int platformId: -1
     property int mediaType: 0 // C++ MediaType enum (Icon = 0)
 
-    // The media types the picker can manage; `type` matches the C++ enum.
+    // The media types the picker can manage; `type` matches the C++ enum
     readonly property var mediaTypes: [
         {label: "Icon", type: 0},
         {label: "Box Art", type: 1},
@@ -27,15 +27,15 @@ Dialog {
     property var storedList: []
     property var onlineList: []
     // onlineList grouped by matched game, order preserved:
-    // [{gameName, items:[...]}]. Each item keeps its flat `resultIndex`.
+    // [{gameName, items:[...]}]. Each item keeps its flat `resultIndex`
     property var onlineGroups: control.groupResults(control.onlineList)
 
     // The term used for provider searches. Defaults to the game's name, but the
-    // user can override it when the title doesn't turn up matches.
+    // user can override it when the title doesn't turn up matches
     property string searchTerm: ""
 
     // Groups the flat result list by matched game name, preserving first-seen
-    // (best-match) order so each game gets its own header in the picker.
+    // (best-match) order so each game gets its own header in the picker
     function groupResults(list) {
         var groups = []
         var indexByName = ({})
@@ -74,7 +74,7 @@ Dialog {
         GameArtService.search(control.contentHash, term, control.platformId, control.mediaType)
     }
 
-    // Load cached results when switching to a type; auto-search the first time.
+    // Load cached results when switching to a type; auto-search the first time
     function maybeAutoSearch() {
         if (GameArtService.providerConfigured && control.onlineList.length === 0)
             control.doSearch()
@@ -144,7 +144,7 @@ Dialog {
     }
 
     // Reused for both stored and online thumbnails. Self-contained so it can be
-    // used as an inline component without reaching for outer ids.
+    // used as an inline component without reaching for outer ids
     component ArtThumb: Rectangle {
         id: thumb
         property string url: ""
@@ -152,7 +152,7 @@ Dialog {
         signal picked
 
         // A remote URL passes through; a local file path (user import) becomes a
-        // file:// URL so Image can load it.
+        // file:// URL so Image can load it
         function resolveSource(u) {
             if (!u)
                 return ""
@@ -192,7 +192,7 @@ Dialog {
     contentItem: ColumnLayout {
         spacing: 12
 
-        // Type selector.
+        // Type selector
         RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: 20
@@ -301,7 +301,7 @@ Dialog {
                 }
 
                 // Search term: pre-filled with the game's name, editable so the
-                // user can try a different query when the title finds nothing.
+                // user can try a different query when the title finds nothing
                 RowLayout {
                     Layout.fillWidth: true
                     visible: GameArtService.providerConfigured
@@ -323,7 +323,7 @@ Dialog {
                     }
                 }
 
-                // API-key entry when the provider isn't configured yet.
+                // API-key entry when the provider isn't configured yet
                 ColumnLayout {
                     Layout.fillWidth: true
                     visible: !GameArtService.providerConfigured
@@ -378,7 +378,7 @@ Dialog {
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
 
-                // Results grouped by matched game, each under its own header.
+                // Results grouped by matched game, each under its own header
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 12

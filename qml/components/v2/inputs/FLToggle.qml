@@ -3,7 +3,7 @@ import QtQuick.Controls
 import Firelight 1.0
 
 // On/off switch. Track and thumb scale with the UI; the touch target is the
-// whole control, floored at minTarget.
+// whole control, floored at minTarget
 Switch {
     id: control
 

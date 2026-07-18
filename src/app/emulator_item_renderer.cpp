@@ -195,8 +195,8 @@ void EmulatorItemRenderer::getHwRenderInterface(
 void EmulatorItemRenderer::receive(const void *data, const unsigned width,
                                    const unsigned height, const size_t pitch) {
   if (data == RETRO_HW_FRAME_BUFFER_VALID) {
-    // Vulkan: m_coreImage already set by set_image() earlier this frame.
-    // Record the actual render dimensions so synchronize() can resize colorTexture to match.
+    // Vulkan: m_coreImage already set by set_image() earlier this frame
+    // Record the actual render dimensions so synchronize() can resize colorTexture to match
     if (m_vulkanRenderer) {
       m_vulkanRenderer->setRenderDimensions(width, height);
     }
@@ -221,19 +221,19 @@ void EmulatorItemRenderer::receive(const void *data, const unsigned width,
 // Reads the composited frame back off the GPU and fans it out to every CPU-side
 // capture consumer. colorTexture() is filled by both the software path
 // (uploadTexture) and the hardware path (copyTexture), so this is the one place
-// frames are captured regardless of how the core rendered.
+// frames are captured regardless of how the core rendered
 void EmulatorItemRenderer::scheduleFrameReadback(QRhiResourceUpdateBatch *batch) {
   auto *rbResult = new QRhiReadbackResult;
   rbResult->completed = [this, rbResult] {
     if (!rbResult->data.isEmpty()) {
       const auto *pixels =
           reinterpret_cast<const uchar *>(rbResult->data.constData());
-      // Own the pixels: the readback buffer is freed when this callback returns.
+      // Own the pixels: the readback buffer is freed when this callback returns
       QImage frame = QImage(pixels, rbResult->pixelSize.width(),
                             rbResult->pixelSize.height(),
                             QImage::Format_RGBA8888_Premultiplied)
                          .copy();
-      // OpenGL's default framebuffer is bottom-up.
+      // OpenGL's default framebuffer is bottom-up
       if (m_graphicsApi == QSGRendererInterface::OpenGL)
         frame.flip(Qt::Vertical);
       m_currentImage = frame;
@@ -262,7 +262,7 @@ bool EmulatorItemRenderer::deferCaptureUntilFrameReady(
     const EmulatorCommand &command) {
   // Only HW cores idle enough to skip readback need this; software cores and
   // active HW cores already have a fresh m_currentImage. Paused cores never run
-  // a frame, so deferring would never resolve — capture the pause image instead.
+  // a frame, so deferring would never resolve — capture the pause image instead
   if (!m_usingHardwareRenderer || m_paused || command.deferred ||
       anyFrameConsumerActive())
     return false;
@@ -274,7 +274,7 @@ bool EmulatorItemRenderer::deferCaptureUntilFrameReady(
 }
 
 // Same core-frame pts scheme as the clip recorder; the sink no-ops unless a
-// host stream is armed.
+// host stream is armed
 void EmulatorItemRenderer::feedNetplayStream(const QImage &frame) {
   if (!m_emulatorInstance) {
     return;
@@ -291,13 +291,13 @@ void EmulatorItemRenderer::feedNetplayStream(const QImage &frame) {
 // Keeps the rolling instant-replay window fed with the latest frame. newImage is
 // a deep copy (from convertToFormat), so ClipRecorder can hand it to its encoder
 // worker safely. The pts is core-frame-based (not wall clock), so the window is
-// N seconds of gameplay regardless of fast-forward.
+// N seconds of gameplay regardless of fast-forward
 void EmulatorItemRenderer::feedClipRecorder(const QImage &frame) {
   if (!m_clipRecorder)
     return;
 
-  // Gated by the "instant-replay-enabled" setting (resolved on the instance).
-  // When off, tear down the recorder so it isn't burning CPU encoding.
+  // Gated by the "instant-replay-enabled" setting (resolved on the instance)
+  // When off, tear down the recorder so it isn't burning CPU encoding
   if (!m_emulatorInstance || !m_emulatorInstance->getInstantReplayEnabled()) {
     if (m_clipRecorder->isRecording()) {
       m_clipRecorder->stop();
@@ -313,7 +313,7 @@ void EmulatorItemRenderer::feedClipRecorder(const QImage &frame) {
 
   const int fps = m_clipFps >= 1.0 ? static_cast<int>(m_clipFps + 0.5) : 60;
 
-  // (Re)start when the source geometry changes (some cores switch resolution).
+  // (Re)start when the source geometry changes (some cores switch resolution)
   if (!m_clipRecorder->isRecording() || width != m_clipWidth ||
       height != m_clipHeight) {
     if (!m_clipRecorder->start(width, height, fps, 48000, 2)) {
@@ -368,7 +368,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   m_emulatorItem = emulatorItem;
 
   if (m_paused && !emulatorItem->paused()) {
-    // Resumed: bring audio back.
+    // Resumed: bring audio back
     if (m_emulatorInstance)
       m_emulatorInstance->setPaused(false);
     if (m_playSessionTimer.isValid())
@@ -376,7 +376,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     else
       m_playSessionTimer.start();
   } else if (!m_paused && emulatorItem->paused()) {
-    // Paused: suspend audio so the queued buffer doesn't keep playing.
+    // Paused: suspend audio so the queued buffer doesn't keep playing
     if (m_emulatorInstance)
       m_emulatorInstance->setPaused(true);
     if (m_playSessionTimer.isValid())
@@ -387,8 +387,8 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   m_contentHash = emulatorItem->m_contentHash;
   m_saveSlotNumber = emulatorItem->m_saveSlotNumber;
 
-  // Apply video-callback render dimensions to colorTexture.
-  // synchronize() runs with the main thread blocked, so setFixed* is safe here.
+  // Apply video-callback render dimensions to colorTexture
+  // synchronize() runs with the main thread blocked, so setFixed* is safe here
   if (m_vulkanRenderer) {
     const uint32_t pendingW = m_vulkanRenderer->pendingWidth();
     const uint32_t pendingH = m_vulkanRenderer->pendingHeight();
@@ -406,12 +406,12 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   // Take the cross-thread queue into a local under the lock, then process it
   // without holding the lock: command handling is heavy (state serialize, GPU
   // work) and must not block the GUI/pacing threads enqueueing, and some
-  // handlers re-enqueue onto m_deferredCommands mid-loop.
+  // handlers re-enqueue onto m_deferredCommands mid-loop
   QQueue<EmulatorCommand> pending;
   {
     std::lock_guard lock(m_commandQueueMutex);
     // Capture commands held back a frame (waiting for a fresh HW readback) run
-    // now that m_currentImage has been refreshed.
+    // now that m_currentImage has been refreshed
     while (!m_deferredCommands.isEmpty())
       m_commandQueue.enqueue(m_deferredCommands.dequeue());
     pending.swap(m_commandQueue);
@@ -430,7 +430,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         // Rolling snapshots take whatever frame is already on hand rather than
         // forcing a per-interval GPU readback, which stalled HW-rendered cores
         // every few seconds. The serialized state — the part rewind needs — is
-        // always current; on a HW core the thumbnail may be stale or blank.
+        // always current; on a HW core the thumbnail may be stale or blank
         SuspendPoint sp;
         sp.state = m_emulatorInstance->serializeState();
         QImage thumb = m_currentImage;
@@ -512,7 +512,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         if (deferCaptureUntilFrameReady(command))
           break;
         // Reuse the current frame image the suspend-point path captures. Copy so
-        // the PNG write doesn't race the next frame's readback.
+        // the PNG write doesn't race the next frame's readback
         if (const auto mediaService = m_mediaService;
           mediaService && !m_currentImage.isNull()) {
           mediaService->saveScreenshot(m_contentHash, m_currentImage.copy());
@@ -639,8 +639,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     if (m_negotiation) {
       // Some HW cores (PPSSPP) require a real VkSurfaceKHR passed to
       // create_device — they query swapchain capabilities from it and crash on
-      // VK_NULL_HANDLE. Others (parallel-RDP) render offscreen and ignore it.
-      // Hand over the window's surface for both.
+      // VK_NULL_HANDLE. Others (parallel-RDP) render offscreen and ignore it
+      // Hand over the window's surface for both
       VkSurfaceKHR surface = VK_NULL_HANDLE;
       if (auto *inst = m_window ? m_window->vulkanInstance() : nullptr) {
         surface = inst->surfaceForWindow(m_window);
@@ -695,7 +695,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     cb->endExternal();
 
     // Software cores always read back — the cost is small at native resolution
-    // and it keeps m_currentImage fresh for instant screenshots.
+    // and it keeps m_currentImage fresh for instant screenshots
     scheduleFrameReadback(batch);
 
     m_currentUpdateBatch = nullptr;
@@ -707,9 +707,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     if (m_vulkanRenderer->isFirstFrameReady() &&
         m_vulkanRenderer->sharedTexture() &&
         m_vulkanRenderer->sharedSemValue() > 0) {
-      // Composite the shared image into colorTexture() via a GPU copy.
+      // Composite the shared image into colorTexture() via a GPU copy
       // renderFrame() already CPU-waited on the blit fence, so m_sharedImage
-      // is guaranteed complete â€” no GPU-side semaphore needed here.
+      // is guaranteed complete â€” no GPU-side semaphore needed here
       m_vulkanRenderer->sharedTexture()->createFrom({
         reinterpret_cast<quint64>(m_vulkanRenderer->qtSharedImage()),
         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -718,7 +718,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
       QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
       batch->copyTexture(colorTexture(), m_vulkanRenderer->sharedTexture());
       // Read the composited frame back only when something needs it, so an
-      // idle HW core doesn't pay for a per-frame GPU->CPU copy.
+      // idle HW core doesn't pay for a per-frame GPU->CPU copy
       if (anyFrameConsumerActive())
         scheduleFrameReadback(batch);
       cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);

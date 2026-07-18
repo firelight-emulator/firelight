@@ -24,7 +24,7 @@ public:
     std::vector<OptionValue> possibleValues;
     std::string defaultValueKey;
     // Core-options v2 groups options into categories (e.g. a "Parallel" renderer
-    // subsection). Empty for uncategorized / top-level options.
+    // subsection). Empty for uncategorized / top-level options
     std::string category;      // category key
     std::string categoryLabel; // human-readable category name
   };
@@ -34,7 +34,7 @@ public:
   virtual void registerOption(Option option) = 0;
 
   // All options the core has declared so far (via registerOption). Lets the
-  // frontend cache/persist a core's option definitions for pre-launch editing.
+  // frontend cache/persist a core's option definitions for pre-launch editing
   [[nodiscard]] virtual std::vector<Option> getOptions() const = 0;
 
   virtual bool anyOptionValueHasChanged() = 0;

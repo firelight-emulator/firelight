@@ -15,7 +15,7 @@ QByteArray encodeLine(const QJsonObject &message) {
   return QJsonDocument(message).toJson(QJsonDocument::Compact) + '\n';
 }
 
-// Pulls complete newline-delimited JSON objects out of a stream buffer.
+// Pulls complete newline-delimited JSON objects out of a stream buffer
 template <typename Fn> void drainLines(QByteArray &buffer, Fn &&handle) {
   int newline;
   while ((newline = buffer.indexOf('\n')) >= 0) {
@@ -71,7 +71,7 @@ void DirectLobbyBackend::setPreferredDisplayName(const std::string &name) {
     return;
   }
 
-  // Renames apply live: tell the lobby, and report the local change too.
+  // Renames apply live: tell the lobby, and report the local change too
   if (m_server) {
     broadcastToGuests({{"t", "member-renamed"},
                        {"id", QString::number(selfId)},
@@ -332,7 +332,7 @@ void DirectLobbyBackend::joinLobby(const std::string &hostAddress,
             }
           });
 
-  // Cap the OS connect timeout at something a person will wait through.
+  // Cap the OS connect timeout at something a person will wait through
   QTimer::singleShot(10000, this, [this] {
     if (m_pendingJoin && m_hostSocket &&
         m_hostSocket->state() != QAbstractSocket::ConnectedState) {
@@ -443,7 +443,7 @@ void DirectLobbyBackend::hostSocketClosed() {
 // --- both ---
 
 void DirectLobbyBackend::leaveLobby() {
-  // Marshal: teardown touches sockets, which live on the main thread.
+  // Marshal: teardown touches sockets, which live on the main thread
   QMetaObject::invokeMethod(this, [this] { resetState(); },
                             Qt::QueuedConnection);
 }

@@ -21,11 +21,11 @@ QtGameArtProxy::QtGameArtProxy(metadata::MetadataService &service,
     : QObject(parent), m_service(service), m_provider(provider),
       m_mediaAssets(mediaAssets) {
   // One worker: SteamGridDB requests are serialized so overlapping searches
-  // can't interleave state, and we never hammer the API.
+  // can't interleave state, and we never hammer the API
   m_pool.setMaxThreadCount(1);
 
   // Seed the provider with the persisted key (the user can also paste one at
-  // runtime via setApiKey).
+  // runtime via setApiKey)
   const QSettings settings;
   m_provider.setApiKey(
       settings.value(API_KEY_SETTING).toString().toStdString());
@@ -70,7 +70,7 @@ QVariantList QtGameArtProxy::storedAssets(const QString &contentHash,
     map["assetId"] = asset.id;
     map["source"] = QString::fromStdString(metadata::toString(asset.source));
     // Prefer the thumbnail for this small preview so it stays crisp and matches
-    // what the search results showed.
+    // what the search results showed
     map["url"] = QString::fromStdString(asset.displayThumb());
     map["selected"] = asset.selected;
     map["width"] = asset.width;
@@ -83,7 +83,7 @@ QVariantList QtGameArtProxy::storedAssets(const QString &contentHash,
 void QtGameArtProxy::search(const QString &contentHash, const QString &gameName,
                             int platformId, int mediaType) {
   if (m_shuttingDown || !m_provider.isConfigured()) {
-    // Nothing to search: still notify so the picker can drop any spinner.
+    // Nothing to search: still notify so the picker can drop any spinner
     emit searchResultsReady(contentHash, mediaType);
     return;
   }
@@ -100,7 +100,7 @@ void QtGameArtProxy::search(const QString &contentHash, const QString &gameName,
     }
 
     // Marshal the results back onto the GUI thread. Tying the invocation to
-    // `this` means it's silently dropped if the proxy is destroyed first.
+    // `this` means it's silently dropped if the proxy is destroyed first
     QMetaObject::invokeMethod(
         this,
         [this, contentHash, mediaType,
@@ -135,7 +135,7 @@ QVariantList QtGameArtProxy::searchResults(const QString &contentHash,
     map["height"] = candidate.height;
     map["gameName"] = QString::fromStdString(candidate.gameName);
     // Position in the flat result list, so the grouped QML view can still call
-    // applyOnline() with the right index after regrouping by game.
+    // applyOnline() with the right index after regrouping by game
     map["resultIndex"] = resultIndex++;
     list.append(map);
   }

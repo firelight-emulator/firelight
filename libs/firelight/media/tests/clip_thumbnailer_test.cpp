@@ -17,7 +17,7 @@ QImage makeFrame(int w, int h, int i) {
   return img;
 }
 
-// Encodes a short clip to `path` (same recorder→muxer pipeline the app uses).
+// Encodes a short clip to `path` (same recorder→muxer pipeline the app uses)
 bool writeSampleClip(const QString &path, int w, int h) {
   ClipRecorder recorder(3);
   if (!recorder.start(w, h, 30, 48000, 2)) {
@@ -50,7 +50,7 @@ TEST(ClipThumbnailerTest, WritesPosterFromValidMp4) {
   QImage poster;
   ASSERT_TRUE(poster.load(png));
   // The clip is integer-upscaled toward ~720 lines, so the poster is a whole
-  // multiple of the 80x64 source with its 5:4 aspect preserved.
+  // multiple of the 80x64 source with its 5:4 aspect preserved
   EXPECT_GT(poster.height(), 64);
   EXPECT_EQ(poster.width() % 80, 0);
   EXPECT_EQ(poster.width() * 64, poster.height() * 80);

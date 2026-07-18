@@ -4,7 +4,7 @@
 
 class FuzzyStringMatcher {
 public:
-    // Returns an integer score. Higher = better match. Returns -1 if it doesn't match.
+    // Returns an integer score. Higher = better match. Returns -1 if it doesn't match
     static int match(const QString &text, const QString &pattern) {
         if (pattern.isEmpty()) return 0;
         if (text.isEmpty()) return -1;

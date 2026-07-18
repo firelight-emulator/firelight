@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // The lobby hub: everyone returns here between games. Slots, game choice,
-// members, and chat persist for the life of the lobby.
+// members, and chat persist for the life of the lobby
 Item {
     id: root
 
@@ -71,7 +71,7 @@ Item {
             Layout.fillHeight: true
             spacing: 16
 
-            // Left: game + slots + controls.
+            // Left: game + slots + controls
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -178,7 +178,7 @@ Item {
                 }
             }
 
-            // Right: chat.
+            // Right: chat
             LobbyChatPanel {
                 Layout.preferredWidth: 280
                 Layout.fillHeight: true
@@ -186,7 +186,7 @@ Item {
         }
     }
 
-    // Host-only: pick which member sits in the clicked slot.
+    // Host-only: pick which member sits in the clicked slot
     Popup {
         id: memberPicker
         modal: true

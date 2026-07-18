@@ -212,7 +212,7 @@ void ShortcutsModel::applyPreset(const QString &presetId) {
 
   // Every action, not just the ones the preset names: one it leaves out is one
   // it wants unbound, so a leftover binding from the previous preset would
-  // survive as a phantom.
+  // survive as a phantom
   for (const auto &action : input::ShortcutRegistry::instance().listActions()) {
     m_shortcutMapping->setBindings(action.id,
                                    preset->sourcesFor(deviceType(), action.id));

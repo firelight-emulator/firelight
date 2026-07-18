@@ -12,7 +12,7 @@
 
 namespace firelight::netplay {
 
-// Control-channel messages (JSON on the wire, host is authoritative).
+// Control-channel messages (JSON on the wire, host is authoritative)
 
 struct Hello {
   int proto = 0;
@@ -20,7 +20,7 @@ struct Hello {
   PlayerId memberId = 0;
 };
 
-// Everything the guest's audio/video decoder needs to start mid-stream.
+// Everything the guest's audio/video decoder needs to start mid-stream
 struct StreamConfig {
   std::string codec = "h264";
   std::string extradataB64;
@@ -36,7 +36,7 @@ struct StreamConfig {
 };
 
 // Full state snapshot sent to any member whose control channel opens — a fresh
-// join, a mid-game join, or a reconnect all recover from this one message.
+// join, a mid-game join, or a reconnect all recover from this one message
 // (Fields avoid the name `slots`: Qt defines it as a macro and these headers
 // are included from Qt code.)
 struct Welcome {

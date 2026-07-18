@@ -28,7 +28,7 @@ FocusScope {
             Layout.preferredHeight: 32
             horizontalPadding: 0
             background: Item {}
-            // Hidden in the collapsed rail (too narrow for a section label).
+            // Hidden in the collapsed rail (too narrow for a section label)
             visible: root.title !== "" && root.width > Math.round(64 * AppStyle.scale)
 
             RowLayout {

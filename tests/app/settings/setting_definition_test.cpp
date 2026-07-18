@@ -31,7 +31,7 @@ TEST(EmulationSettingMappingTest, ValueTranslation) {
   EXPECT_EQ(accurate[0].first, "gambatte_gbc_color_correction_mode");
   EXPECT_EQ(accurate[0].second, "accurate");
 
-  // A friendly value with no explicit translation falls back to identity.
+  // A friendly value with no explicit translation falls back to identity
   const auto unknown = resolveCoreOptionValues(s, "Weird");
   ASSERT_EQ(unknown.size(), 1u);
   EXPECT_EQ(unknown[0].second, "Weird");

@@ -11,7 +11,7 @@ UserLibraryService::UserLibraryService(IUserLibraryRepository &repository,
   // Guarantee the default content directory: the user never picks or changes the
   // primary games folder, so make sure it exists on disk and is watched. Both
   // steps are idempotent, so this is safe on every startup (and re-seeds a reset
-  // database or a library the user emptied of all directories).
+  // database or a library the user emptied of all directories)
   std::error_code ec;
   std::filesystem::create_directories(defaultContentDirectory, ec);
   if (ec) {

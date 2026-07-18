@@ -14,7 +14,7 @@ class QtSettingsCatalogProxy : public QObject {
 public:
   explicit QtSettingsCatalogProxy(QObject *parent = nullptr);
 
-  // The page's group ids, in declared order. Empty for an unknown page.
+  // The page's group ids, in declared order. Empty for an unknown page
   [[nodiscard]] Q_INVOKABLE QStringList groupsForPage(const QString &pageId) const;
 };
 

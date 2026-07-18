@@ -14,7 +14,7 @@
 namespace firelight::emulation {
 
 // The `hotkeys-disabled` setting and the keyboard auto-disable, driven through
-// a real EmulatorInstance against a FakeCore and a recording input service.
+// a real EmulatorInstance against a FakeCore and a recording input service
 class HotkeysDisabledTest : public testing::Test {
 protected:
   std::unique_ptr<library::SqliteUserLibraryRepository> m_library;
@@ -123,13 +123,13 @@ TEST_F(HotkeysDisabledTest, LiveSettingChangeReachesTheInputService) {
 }
 
 // The core only registers its keyboard callback while loading, so a decision
-// made before that (in the constructor) always sees wantsKeyboard() == false.
+// made before that (in the constructor) always sees wantsKeyboard() == false
 TEST_F(HotkeysDisabledTest, KeyboardAutoDisableWaitsForTheCoreToLoad) {
   m_coreWantsKeyboard = true;
   loadAndInitialize();
 
   EXPECT_TRUE(m_inputService.keyboardHotkeysDisabled());
-  // Only the keyboard: a controller keeps its hotkeys.
+  // Only the keyboard: a controller keeps its hotkeys
   const auto &last = m_inputService.hotkeyCalls.back();
   ASSERT_TRUE(last.only.has_value());
   EXPECT_EQ(DeviceType::Keyboard, *last.only);
@@ -150,7 +150,7 @@ TEST_F(HotkeysDisabledTest, KeyboardAutoDisableCanBeTurnedOff) {
   EXPECT_FALSE(m_inputService.keyboardHotkeysDisabled());
 }
 
-// A game that turned hotkeys off must not leave the menu without them.
+// A game that turned hotkeys off must not leave the menu without them
 TEST_F(HotkeysDisabledTest, UnloadingHandsHotkeysBack) {
   m_coreWantsKeyboard = true;
   loadAndInitialize();

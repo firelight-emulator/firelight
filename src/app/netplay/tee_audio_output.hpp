@@ -10,7 +10,7 @@ namespace firelight::netplay {
 
 // Wraps the real audio output and mirrors the core's PCM into the host stream
 // sender (which no-ops unless a stream is armed). Also reports the core's
-// sample rate so the encoder can resample to Opus's 48 kHz.
+// sample rate so the encoder can resample to Opus's 48 kHz
 class TeeAudioOutput final : public IAudioOutput {
 public:
   TeeAudioOutput(std::shared_ptr<IAudioOutput> inner, HostStreamSender *tap)

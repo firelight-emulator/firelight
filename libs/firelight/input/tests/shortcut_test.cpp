@@ -102,13 +102,13 @@ TEST_F(ShortcutTest, HoldFiresStartedAndEnded) {
 // An action that flips something global (mute, pause) reports an edge and lets
 // the consumer own the value. The engine must not track that value itself: it
 // only ever sees one device, so two devices sharing a profile would each keep
-// their own copy and drift apart.
+// their own copy and drift apart
 TEST_F(ShortcutTest, EveryPressFiresOnEveryDevice) {
   addAction("mute", ActivationType::Press, ScopeInGame);
   auto profile = makeProfile();
   profile->getShortcutMapping()->setBindings("mute", {btn(GamepadInput::Home)});
 
-  // One profile, two pads — what two identical controllers look like.
+  // One profile, two pads — what two identical controllers look like
   TestGamepad padOne;
   TestGamepad padTwo;
   padOne.setProfile(profile);
@@ -137,7 +137,7 @@ TEST_F(ShortcutTest, EveryPressFiresOnEveryDevice) {
 
 // A bare press still reaches the game; the same button as part of a combo does
 // not. That conditional is only possible because the modifier disambiguates the
-// two intents at the trigger's rising edge — with no lookahead needed.
+// two intents at the trigger's rising edge — with no lookahead needed
 TEST_F(ShortcutTest, ComboWithholdsItsTriggerButABarePressStillReachesTheGame) {
   addAction("save_state", ActivationType::Press, ScopeInGame);
   auto profile = makeProfile();
@@ -150,22 +150,22 @@ TEST_F(ShortcutTest, ComboWithholdsItsTriggerButABarePressStillReachesTheGame) {
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
 
-  // Pressed on its own: no shortcut fires, so the game gets it.
+  // Pressed on its own: no shortcut fires, so the game gets it
   engine.onInput(0, &pad, GamepadInput::EastFace, true);
   EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
   engine.onInput(0, &pad, GamepadInput::EastFace, false);
 
-  // Held with the modifier: the shortcut fires and the game must not see it.
+  // Held with the modifier: the shortcut fires and the game must not see it
   engine.onInput(0, &pad, GamepadInput::Select, true);
   engine.onInput(0, &pad, GamepadInput::EastFace, true);
   EXPECT_TRUE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
 
   // The modifier leaks on purpose: it was already down, so masking it now would
-  // hand the core a release it never got.
+  // hand the core a release it never got
   EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::Select));
 
   // Letting the modifier go first must not hand the core a spurious press —
-  // the trigger stays withheld until it is itself released.
+  // the trigger stays withheld until it is itself released
   engine.onInput(0, &pad, GamepadInput::Select, false);
   EXPECT_TRUE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
 
@@ -188,7 +188,7 @@ TEST_F(ShortcutTest, LeavingGameplayDropsEveryMask) {
   ASSERT_TRUE(pad.suppressor().isSuppressed(GamepadInput::WestFace));
 
   // A ScopeAlways action can fire in a menu, where nothing reads the mask; it
-  // must not still be set when the game comes back.
+  // must not still be set when the game comes back
   engine.setContext(ScopeInMenu);
   EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::WestFace));
 }
@@ -208,14 +208,14 @@ TEST_F(ShortcutTest, ForgettingADeviceDropsItsMasks) {
   ASSERT_TRUE(pad.suppressor().isSuppressed(GamepadInput::SouthFace));
 
   // Unplugged mid-combo: the release never arrives, so the mask has to go with
-  // the device or it would wedge that button forever.
+  // the device or it would wedge that button forever
   engine.forgetDevice(&pad);
   EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::SouthFace));
 }
 
 // Turning hotkeys off hands the whole device to the game — which is what a core
 // that wants the entire keyboard (DOS, Amiga, MSX) needs, and what no amount of
-// per-binding cleverness can give it.
+// per-binding cleverness can give it
 TEST_F(ShortcutTest, HotkeysOffSilencesEverythingButTheWayBack) {
   addAction("save_state", ActivationType::Press, ScopeInGame);
   addAction(TOGGLE_HOTKEYS_ID, ActivationType::Press, ScopeAlways);
@@ -242,14 +242,14 @@ TEST_F(ShortcutTest, HotkeysOffSilencesEverythingButTheWayBack) {
   engine.onInput(0, &pad, GamepadInput::Home, false);
   EXPECT_FALSE(engine.hotkeysEnabled(&pad));
 
-  // Off: the game gets this, the shortcut doesn't fire, and nothing is withheld.
+  // Off: the game gets this, the shortcut doesn't fire, and nothing is withheld
   events.clear();
   engine.onInput(0, &pad, GamepadInput::EastFace, true);
   EXPECT_TRUE(events.empty());
   EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
   engine.onInput(0, &pad, GamepadInput::EastFace, false);
 
-  // The toggle itself still works, or there'd be no way back.
+  // The toggle itself still works, or there'd be no way back
   engine.onInput(0, &pad, GamepadInput::Home, true);
   EXPECT_TRUE(engine.hotkeysEnabled(&pad));
   engine.onInput(0, &pad, GamepadInput::Home, false);
@@ -264,7 +264,7 @@ TEST_F(ShortcutTest, HotkeysOffAppliesOnlyToTheDeviceThatDidIt) {
   auto profile = makeProfile();
   profile->getShortcutMapping()->setBindings("save_state",
                                             {btn(GamepadInput::EastFace)});
-  // One profile, two pads: turning them off on one must not touch the other.
+  // One profile, two pads: turning them off on one must not touch the other
   TestGamepad padOne;
   TestGamepad padTwo;
   padOne.setProfile(profile);
@@ -303,7 +303,7 @@ TEST_F(ShortcutTest, TurningHotkeysOffHandsBackAnythingWithheld) {
   ASSERT_TRUE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
 
   // Giving the game its inputs back is the whole point, so a mask can't outlive
-  // the switch being thrown.
+  // the switch being thrown
   engine.setHotkeysEnabled(&pad, false);
   EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
 }
@@ -322,12 +322,12 @@ TEST_F(ShortcutTest, ScopeGatesActivation) {
   const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
       [&events](const ShortcutEvent &e) { events.push_back(e); });
 
-  // Out of scope: nothing fires.
+  // Out of scope: nothing fires
   engine.onInput(0, &pad, GamepadInput::WestFace, true);
   engine.onInput(0, &pad, GamepadInput::WestFace, false);
   EXPECT_TRUE(events.empty());
 
-  // In scope: fires.
+  // In scope: fires
   engine.setContext(ScopeInMenu);
   engine.onInput(0, &pad, GamepadInput::WestFace, true);
   ASSERT_EQ(events.size(), 1u);
@@ -348,12 +348,12 @@ TEST_F(ShortcutTest, ComboRequiresModifierHeld) {
   const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
       [&events](const ShortcutEvent &e) { events.push_back(e); });
 
-  // Start alone (no modifier) does nothing.
+  // Start alone (no modifier) does nothing
   engine.onInput(0, &pad, GamepadInput::Start, true);
   EXPECT_TRUE(events.empty());
   engine.onInput(0, &pad, GamepadInput::Start, false);
 
-  // Hold the modifier, then press Start.
+  // Hold the modifier, then press Start
   engine.onInput(0, &pad, GamepadInput::LeftTrigger, true);
   engine.onInput(0, &pad, GamepadInput::Start, true);
   ASSERT_EQ(events.size(), 1u);
@@ -389,7 +389,7 @@ TEST_F(ShortcutTest, AlternateSourcesEitherFires) {
   const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
       [&events](const ShortcutEvent &e) { events.push_back(e); });
 
-  // Either alternate fires the same action.
+  // Either alternate fires the same action
   engine.onInput(0, &pad, GamepadInput::Start, true);
   ASSERT_EQ(events.size(), 1u);
   EXPECT_EQ(events[0].id, "ss");
@@ -432,7 +432,7 @@ TEST_F(ShortcutTest, ForgetDeviceResetsHoldState) {
 
   engine.onInput(0, &pad, GamepadInput::Start, true); // Started
   engine.forgetDevice(&pad);
-  // After forgetting, the stale release should not emit an Ended.
+  // After forgetting, the stale release should not emit an Ended
   engine.onInput(0, &pad, GamepadInput::Start, false);
 
   ASSERT_EQ(events.size(), 1u);

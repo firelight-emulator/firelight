@@ -36,7 +36,7 @@ namespace firelight::library {
     }
 
     // Builds an Entry from the current row of a `SELECT e.*` / `SELECT *` over
-    // entriesv1. Does not read folder ids or provenance (the loaders add those).
+    // entriesv1. Does not read folder ids or provenance (the loaders add those)
     Entry deserializeEntry(const SQLite::Statement &query) {
       return Entry{
         .id = query.getColumn("id").getInt(),
@@ -65,7 +65,7 @@ namespace firelight::library {
       };
     }
 
-    // Reads a ContentFile from the current row of a `SELECT *` over content_files.
+    // Reads a ContentFile from the current row of a `SELECT *` over content_files
     ContentFile deserializeContentFile(SQLite::Statement &query) {
       return ContentFile{
         .m_id = query.getColumn("id").getInt(),
@@ -104,7 +104,7 @@ namespace firelight::library {
         "created_at INTEGER NOT NULL);");
 
       // A multi-file disc set's member tracks/discs, keyed to the primary
-      // ContentFile (the cue/gdi/m3u sheet) in content_files.
+      // ContentFile (the cue/gdi/m3u sheet) in content_files
       m_db->exec("CREATE TABLE IF NOT EXISTS disc_members("
         "id INTEGER PRIMARY KEY,"
         "content_file_id INTEGER NOT NULL,"
@@ -196,12 +196,12 @@ namespace firelight::library {
 
       // folder_entries is looked up by entry_id (per-entry, in loops). The
       // UNIQUE(folder_id, entry_id) index can't serve entry_id-only lookups, so
-      // add a dedicated index to avoid table scans.
+      // add a dedicated index to avoid table scans
       m_db->exec("CREATE INDEX IF NOT EXISTS folderEntryEntryIdx ON "
         "folder_entries(entry_id);");
 
       // content_hash is the primary lookup key for entries, run configurations and
-      // content files (loadEntry + library scanning), so index each.
+      // content files (loadEntry + library scanning), so index each
       m_db->exec("CREATE INDEX IF NOT EXISTS entriesContentHashIdx ON "
         "entriesv1(content_hash);");
       m_db->exec("CREATE INDEX IF NOT EXISTS runConfigContentHashIdx ON "
@@ -214,7 +214,7 @@ namespace firelight::library {
 
     // Migrate databases created before these columns existed. CREATE TABLE IF
     // NOT EXISTS won't add columns to an existing table, so add them here;
-    // otherwise reads/writes referencing them fail on older databases.
+    // otherwise reads/writes referencing them fail on older databases
     ensureColumnExists("content_files", "content_directory_id",
                  "INTEGER NOT NULL DEFAULT -1");
     ensureColumnExists("folders", "type", "INTEGER NOT NULL DEFAULT 0");
@@ -227,13 +227,13 @@ namespace firelight::library {
     ensureColumnExists("entriesv1", "name_user_set", "INTEGER NOT NULL DEFAULT 0");
 
     // Give pre-existing content files their directory provenance (new files get
-    // it stamped at insert time in create(ContentFile)).
+    // it stamped at insert time in create(ContentFile))
     backfillContentDirectoryIds();
 
     // The default content directory is guaranteed by UserLibraryService, not
     // seeded here. The scan-time orchestration (content file -> run
     // configuration -> entry) lives in LibraryIngestService, which subscribes to
-    // the events published below.
+    // the events published below
   }
 
   SqliteUserLibraryRepository::~SqliteUserLibraryRepository() = default;
@@ -243,7 +243,7 @@ namespace firelight::library {
                                                  const std::string &definition) {
     try {
       // PRAGMA/DDL identifiers can't be parameterized; table/column/definition are
-      // internal constants.
+      // internal constants
       SQLite::Statement info(*m_db, "PRAGMA table_info(" + table + ");");
       while (info.executeStep()) {
         if (info.getColumn("name").getString() == column) {
@@ -301,7 +301,7 @@ namespace firelight::library {
   bool SqliteUserLibraryRepository::create(FolderInfo &folder) {
     std::lock_guard lock(m_mutex);
     try {
-      // New folders append to the end of their parent's ordering.
+      // New folders append to the end of their parent's ordering
       folder.position = nextFolderPosition(folder.parentId);
 
       SQLite::Statement query(
@@ -370,7 +370,7 @@ namespace firelight::library {
     std::vector<FolderInfo> folders;
     try {
       // Order within each parent scope by the manual position, so callers get
-      // folders in user order (and can group by parent_id for the nested tree).
+      // folders in user order (and can group by parent_id for the nested tree)
       SQLite::Statement query(
         *m_db, "SELECT * FROM folders ORDER BY parent_id, position, id");
       while (query.executeStep()) {
@@ -424,7 +424,7 @@ namespace firelight::library {
 
     try {
       // Ordering (parent_id/position) is managed by reorderFolders/setFolderParent,
-      // not here, so a stale FolderInfo can't clobber the user's arrangement.
+      // not here, so a stale FolderInfo can't clobber the user's arrangement
       SQLite::Statement query(
         *m_db, "UPDATE folders SET display_name = :displayName, "
         "description = :description, icon_source_url = :iconSourceUrl, "
@@ -480,7 +480,7 @@ namespace firelight::library {
     std::lock_guard lock(m_mutex);
     try {
       // Moving to a new parent appends the folder to the end of that parent's
-      // ordering.
+      // ordering
       SQLite::Statement query(
         *m_db, "UPDATE folders SET parent_id = :parentId, position = :position "
         "WHERE id = :folderId;");

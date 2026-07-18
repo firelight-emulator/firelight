@@ -13,7 +13,7 @@ public:
   // The inputs this device is withholding from the game because a shortcut is
   // using them. Concrete state on the interface so every device shares one
   // implementation and the shortcut engine, which already holds an IGamepad*,
-  // can reach it without a lookup.
+  // can reach it without a lookup
   InputSuppressor &suppressor() { return m_suppressor; }
   [[nodiscard]] const InputSuppressor &suppressor() const {
     return m_suppressor;

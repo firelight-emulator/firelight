@@ -6,7 +6,7 @@ FocusScope {
     id: root
 
     // One generic, catalog-driven page for every console; pushed with the
-    // target platform's id + name.
+    // target platform's id + name
     Component {
         id: platformPage
         PlatformEmulationSettingsPage {

@@ -11,7 +11,7 @@ namespace firelight::cheats {
 
 // A minimal ICore for exercising CheatEngine in isolation: a test-configurable,
 // writable SYSTEM_RAM buffer; every other ICore method is an inert stub. Keeps
-// the cheats module test independent of the app's emulation FakeCore.
+// the cheats module test independent of the app's emulation FakeCore
 class FakeRamCore final : public ::libretro::ICore {
 public:
   void setSystemRamSize(std::size_t bytes) { m_ram.assign(bytes, 0); }

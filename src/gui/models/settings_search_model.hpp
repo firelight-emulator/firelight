@@ -34,9 +34,9 @@ public:
   [[nodiscard]] int count() const;
 
   // The route of the best hit, or "" when there are none — what Enter in the
-  // search field follows.
+  // search field follows
   [[nodiscard]] Q_INVOKABLE QString topRoute() const;
-  // The setting key of the best hit, "" if it's a page hit or there are none.
+  // The setting key of the best hit, "" if it's a page hit or there are none
   [[nodiscard]] Q_INVOKABLE QString topKey() const;
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;

@@ -4,7 +4,7 @@ import Firelight 1.0
 
 // Icon-only button. Glyph size from AppStyle (sm/md/lg, or an explicit
 // iconSize), colors from Theme. The hit target is floored at minTarget
-// (WCAG 2.5.8) even when the glyph is small. Checkable for toolbar toggles.
+// (WCAG 2.5.8) even when the glyph is small. Checkable for toolbar toggles
 //
 //   FLIconButton { iconName: "settings"; tooltipText: "Settings" }
 //   FLIconButton { iconName: "grid"; size: "sm"; checkable: true }
@@ -19,7 +19,7 @@ RoundButton {
                          : AppStyle.iconSizeMd
     property string tooltipText: ""
     // Icon color when checked. Defaults to accent for toolbar toggles; set to
-    // Theme.textPrimary for nav-style buttons that shouldn't tint on select.
+    // Theme.textPrimary for nav-style buttons that shouldn't tint on select
     property color checkedColor: Theme.accent
     property bool showGlobalCursor: true
 
@@ -30,7 +30,7 @@ RoundButton {
 
     TapHandler {
         id: tapHandler
-        // toggle() is a no-op unless checkable; clicked() always fires.
+        // toggle() is a no-op unless checkable; clicked() always fires
         onTapped: { control.toggle(); control.clicked(); }
         onDoubleTapped: control.doubleClicked()
         margin: 8
@@ -51,7 +51,7 @@ RoundButton {
     }
 
     // Focus is drawn by the app's global cursor overlay (showGlobalCursor), so
-    // the button paints only the hover/press/checked wash — no second ring.
+    // the button paints only the hover/press/checked wash — no second ring
     background: Rectangle {
         radius: width / 2
         color: Theme.textPrimary

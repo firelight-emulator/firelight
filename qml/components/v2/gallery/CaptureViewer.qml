@@ -16,7 +16,7 @@ Popup {
     property string mediaUrl: ""
     property string mediaKind: "" // "screenshot" | "clip"
 
-    // Opens the viewer for a capture row (from the model).
+    // Opens the viewer for a capture row (from the model)
     function openWith(item) {
         mediaUrl = item.fileUrl;
         mediaKind = item.captureType;

@@ -7,7 +7,7 @@
 namespace firelight::input {
 
 // What a binding physically reads from. For gamepad profiles, `code` is a
-// GamepadInput; for keyboard profiles it is a Qt::Key.
+// GamepadInput; for keyboard profiles it is a Qt::Key
 enum class SourceType {
   None,
   Button,       // digital button (or an analog input treated digitally)

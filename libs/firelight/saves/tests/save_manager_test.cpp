@@ -72,7 +72,7 @@ TEST_F(SaveManagerTest, FirstWriteCreatesMetadataSecondUpdates) {
   EXPECT_EQ(m_db.createCount, 1);
   EXPECT_EQ(m_db.updateCount, 0);
 
-  // Different data -> different MD5 -> an update, not a second create.
+  // Different data -> different MD5 -> an update, not a second create
   ASSERT_TRUE(
       m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("bbbb"))).get());
   EXPECT_EQ(m_db.createCount, 1);
@@ -85,7 +85,7 @@ TEST_F(SaveManagerTest, UnchangedDataSkipsRewrite) {
   EXPECT_EQ(m_db.createCount, 1);
 
   // Identical bytes: the MD5 matches, so the write short-circuits with no
-  // further metadata churn.
+  // further metadata churn
   ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 1, Savefile(data)).get());
   EXPECT_EQ(m_db.createCount, 1);
   EXPECT_EQ(m_db.updateCount, 0);

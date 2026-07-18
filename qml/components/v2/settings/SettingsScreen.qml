@@ -7,15 +7,15 @@ FocusScope {
     id: root
 
     property bool gameRunning: false
-    // Slide direction for the content transition (down = later item selected).
+    // Slide direction for the content transition (down = later item selected)
     property bool movingDown: true
 
     // Single source of truth for the nav taxonomy. Each item's `page` references
     // a Component id defined at the bottom of this file. Grouped equivalent of
-    // FLTwoColumnMenu's parallel menuItems/routeNames/pages.
+    // FLTwoColumnMenu's parallel menuItems/routeNames/pages
     //
     // Search terms are NOT here: they're declared per page in the settings
-    // catalog, alongside the settings themselves, so one index covers both.
+    // catalog, alongside the settings themselves, so one index covers both
     property var sections: [
         {
             "title": "",
@@ -52,17 +52,17 @@ FocusScope {
         // }
     ]
 
-    // The currently selected item, driven by clicks and by the URL.
+    // The currently selected item, driven by clicks and by the URL
     property string currentRoute: ""
     property string currentTitle: ""
     property int currentFlatIndex: -1
 
     // The setting a search result asked us to reveal, handed to the page it
-    // lives on. Only auto-rendered pages can act on it.
+    // lives on. Only auto-rendered pages can act on it
     property string highlightKey: ""
 
     // Searches every declared page AND setting, so "vsync" finds the Sync
-    // method row itself, not just the page it happens to sit on.
+    // method row itself, not just the page it happens to sit on
     SettingsSearchModel {
         id: searchModel
     }
@@ -70,7 +70,7 @@ FocusScope {
     readonly property bool searching: searchModel.query.trim() !== ""
 
     // A hit's route is a full path ("/settings/emulation"); letting the Router
-    // own the change keeps one path in and out of this screen.
+    // own the change keeps one path in and out of this screen
     function openResult(route, key) {
         root.highlightKey = key;
         searchField.text = "";
@@ -87,12 +87,12 @@ FocusScope {
 
     Component.onCompleted: {
         const route = routeFromPath();
-        // initialItem already shows the first item; only deep-links need a swap.
+        // initialItem already shows the first item; only deep-links need a swap
         applyRoute(route, route !== sections[0].items[0].route);
         syncFromRoute();
     }
 
-    // Resolve the route the URL is asking for, falling back to the first item.
+    // Resolve the route the URL is asking for, falling back to the first item
     function routeFromPath() {
         const m = Router.match(Router.path, ["/settings/:section"]);
         if (m.matched && itemForRoute(m.params.section)) {
@@ -101,7 +101,7 @@ FocusScope {
         return sections[0].items[0].route;
     }
 
-    // Find an item + its flat index (across all sections) by route.
+    // Find an item + its flat index (across all sections) by route
     function itemForRoute(route) {
         var flat = 0;
         for (var s = 0; s < sections.length; s++) {
@@ -115,7 +115,7 @@ FocusScope {
         return null;
     }
 
-    // Select a route; swaps the content page (with transition) when animate.
+    // Select a route; swaps the content page (with transition) when animate
     function applyRoute(route, animate) {
         const found = itemForRoute(route);
         if (!found) {
@@ -130,7 +130,7 @@ FocusScope {
         }
     }
 
-    // A user selection: swap the page and reflect it in the URL.
+    // A user selection: swap the page and reflect it in the URL
     function navigateTo(route) {
         if (route === root.currentRoute) {
             return;
@@ -144,7 +144,7 @@ FocusScope {
         }
     }
 
-    // Keep the selected page and the /settings/<section> URL in sync.
+    // Keep the selected page and the /settings/<section> URL in sync
     function syncFromRoute() {
         if (!Router.isActive("/settings")) {
             return;
@@ -192,7 +192,7 @@ FocusScope {
             }
 
             // Results take over the column while a query is live; the nav comes
-            // back the moment it's cleared.
+            // back the moment it's cleared
             ListView {
                 id: resultList
                 visible: root.searching
@@ -217,7 +217,7 @@ FocusScope {
                     padding: AppStyle.spacingSm
                     leftPadding: AppStyle.spacingMd
                     rightPadding: AppStyle.spacingMd
-                    // Content-driven so a scaled two-line result doesn't clip.
+                    // Content-driven so a scaled two-line result doesn't clip
                     height: Math.max(AppStyle.rowHeight, resultContent.implicitHeight + topPadding + bottomPadding)
                     hoverEnabled: true
 
@@ -246,7 +246,7 @@ FocusScope {
                         }
 
                         // Where the hit lives. A page hit is its own answer, so
-                        // it needs no breadcrumb.
+                        // it needs no breadcrumb
                         Text {
                             Layout.fillWidth: true
                             visible: !resultDelegate.model.isPage
@@ -302,7 +302,7 @@ FocusScope {
                             Layout.fillWidth: true
                             spacing: 0
 
-                            // Divider between sections (not before the first).
+                            // Divider between sections (not before the first)
                             Rectangle {
                                 visible: index > 0
                                 Layout.fillWidth: true
@@ -322,7 +322,7 @@ FocusScope {
 
                                     // Highlight is driven by the active route, not
                                     // by the list's own selection, so make it
-                                    // non-checkable.
+                                    // non-checkable
                                     checkable: false
                                     checked: model.route === root.currentRoute
                                     iconName: model.iconName
@@ -351,7 +351,7 @@ FocusScope {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
 
-        // Pinned to the pane, not the content column, so it stays in the corner.
+        // Pinned to the pane, not the content column, so it stays in the corner
         FLIconButton {
             anchors.top: parent.top
             anchors.right: parent.right
@@ -368,7 +368,7 @@ FocusScope {
         // Settings read as a single column, capped and centred. Letting them span
         // the whole pane flings each label and its control to opposite edges with
         // dead space between. The cap scales with the UI so enlarged controls get
-        // proportional room, but never exceeds the pane (reflow-safe).
+        // proportional room, but never exceeds the pane (reflow-safe)
         ColumnLayout {
             id: contentColumn
             anchors.top: parent.top
@@ -489,7 +489,7 @@ FocusScope {
         }
     }
 
-    // Stand-in for nav items whose real page doesn't exist yet.
+    // Stand-in for nav items whose real page doesn't exist yet
     Component {
         id: placeholderSettings
 

@@ -8,7 +8,7 @@ namespace firelight::netplay {
 
 // The game the lobby has selected. contentHash/platformId identify the content
 // (lockstep verifies them later); gameName/artUrl are for display, so guests
-// without the content can still see what's being played.
+// without the content can still see what's being played
 struct SessionDescriptor {
   std::string gameName;
   std::string contentHash;

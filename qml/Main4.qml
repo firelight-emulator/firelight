@@ -22,13 +22,13 @@ MainWindow {
         defaultColor: "#12131A"
     }
 
-    // Hosts overlay routes (e.g. /settings) as a popup over the current view.
+    // Hosts overlay routes (e.g. /settings) as a popup over the current view
     RouteOverlay {
         id: routeOverlay
     }
 
     // A hotkey has no other feedback: without this, a save state and a binding
-    // that silently doesn't work look identical. The wording is decided in C++.
+    // that silently doesn't work look identical. The wording is decided in C++
     Toast {
         id: shortcutToast
         z: 999
@@ -86,7 +86,7 @@ MainWindow {
         anchors.leftMargin: 2
         anchors.bottom: parent.bottom
         // Scales with the UI so the icon buttons (which grow with scale) always
-        // fit instead of overflowing a fixed rail.
+        // fit instead of overflowing a fixed rail
         width: Math.round(58 * AppStyle.scale)
 
         background: Item {}
@@ -163,7 +163,7 @@ MainWindow {
         Component.onCompleted: Router.navigate("/library")
     }
 
-    // Shown while an uncached page is being built asynchronously.
+    // Shown while an uncached page is being built asynchronously
     BusyIndicator {
         anchors.centerIn: contentStack
         implicitWidth: 48
@@ -175,7 +175,7 @@ MainWindow {
 
     // The running game + quick menu, layered above the router. It grows to full
     // screen when foregrounded and shrinks into a bottom bar when backgrounded —
-    // the game render itself becomes the "now playing" bar.
+    // the game render itself becomes the "now playing" bar
     GameplayLayer {
         id: gameplay
         z: 90

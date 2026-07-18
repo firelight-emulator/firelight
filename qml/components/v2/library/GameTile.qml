@@ -4,7 +4,7 @@ import Firelight 1.0
 
 // A game boxart thumbnail. `source` is the art url (empty or still-loading
 // shows the placeholder frame); `size` sets the tile edge and drives the decode
-// resolution so a scaled-up tile stays crisp without over-decoding a small one.
+// resolution so a scaled-up tile stays crisp without over-decoding a small one
 Item {
     id: root
 
@@ -15,7 +15,7 @@ Item {
     implicitWidth: size
     implicitHeight: size
 
-    // Placeholder / letterbox behind the art.
+    // Placeholder / letterbox behind the art
     Rectangle {
         anchors.fill: parent
         radius: root.radius

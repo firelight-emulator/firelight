@@ -18,7 +18,7 @@ namespace firelight::netplay {
 // The guest side of the game stream: decodes what the host sends (video
 // frames go to the attached view, audio to a local output) and ticks the
 // guest's own controller state back to the host. Packets arrive on network
-// threads; the input tick runs its own thread.
+// threads; the input tick runs its own thread
 class GuestStreamReceiver {
 public:
   GuestStreamReceiver(
@@ -27,7 +27,7 @@ public:
       libretro::IRetropadProvider *localPads);
   ~GuestStreamReceiver();
 
-  // Where decoded frames go (the stream view); called on decode threads.
+  // Where decoded frames go (the stream view); called on decode threads
   void setFrameSink(std::function<void(media::StreamVideoFrame)> sink);
 
   void configure(const StreamConfig &config);

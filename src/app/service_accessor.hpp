@@ -59,7 +59,7 @@ namespace firelight {
   // the QML engine default-constructs (qmlRegisterType models/items) which
   // cannot receive dependencies via a constructor. Everything we construct
   // ourselves should take its dependencies via the constructor instead. All
-  // members are set once in main.cpp.
+  // members are set once in main.cpp
   class ServiceAccessor {
   public:
     static void setInputService(input::InputService *service);
@@ -110,7 +110,7 @@ namespace firelight {
 
     static achievements::RAClient *getAchievementManager();
     // What every emulator hotkey does. EmulatorItem registers itself with it
-    // as the controller to act on.
+    // as the controller to act on
     static emulation::ShortcutActions *getShortcutActions();
 
     static gui::GameImageProvider *getGameImageProvider();

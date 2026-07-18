@@ -30,9 +30,9 @@ namespace firelight::emulation {
       m_coreFactory(std::move(coreFactory)) {
     // The EmulatorInstance created below inherits this context; make sure it
     // carries the same settings service the service was constructed with,
-    // regardless of whether the caller pre-populated the field.
+    // regardless of whether the caller pre-populated the field
     m_context.settingsService = &m_settingsService;
-    // Default factory builds the real dlopen'd Core; tests inject a fake.
+    // Default factory builds the real dlopen'd Core; tests inject a fake
     if (!m_coreFactory) {
       m_coreFactory = [](const firelight::libretro::CoreRunConfig &config)
         -> std::unique_ptr<::libretro::ICore> {
@@ -46,7 +46,7 @@ namespace firelight::emulation {
     // Core options are only known once the core declares them during
     // EmulatorInstance::initialize (render thread). That publishes
     // EmulationStartedEvent, at which point we cache the declared options so the
-    // advanced editor can list them before the next launch.
+    // advanced editor can list them before the next launch
     m_emulationStartedConnection =
         EventDispatcher::instance().subscribe<EmulationStartedEvent>(
           [this](const EmulationStartedEvent &) { persistCoreOptions(); });
@@ -58,7 +58,7 @@ namespace firelight::emulation {
       return;
     }
     // Persist under the core actually resolved for this entry (honors any
-    // per-platform / per-game core override), so the cache matches what ran.
+    // per-platform / per-game core override), so the cache matches what ran
     const auto coreName = CoreRegistry::instance().resolveCoreName(
       m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
     if (coreName.empty()) {
@@ -92,7 +92,7 @@ namespace firelight::emulation {
   std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
     // Every failure path returns a *ready* future holding nullptr (never a
     // default-constructed, invalid future that would be UB to .get()) and
-    // announces the failure so the UI can react.
+    // announces the failure so the UI can react
     const auto failed = [] {
       std::promise<EmulatorInstance *> promise;
       promise.set_value(nullptr);
@@ -105,7 +105,7 @@ namespace firelight::emulation {
     }
 
     // The one-shot CLI launch overrides apply to this launch only, then are
-    // consumed so later launches use the entry's own defaults.
+    // consumed so later launches use the entry's own defaults
     const LaunchOverrides launch = m_pendingLaunch;
     m_pendingLaunch = {};
 

@@ -21,7 +21,7 @@
 namespace firelight::cli {
 
 namespace {
-// Login can take a network round trip; give up (as a failure) after this.
+// Login can take a network round trip; give up (as a failure) after this
 constexpr int LOGIN_TIMEOUT_MS = 30000;
 
 std::string promptLine(const char *prompt) {
@@ -39,7 +39,7 @@ int runLogin(int argc, char **argv, const CliOptions &opts) {
   const auto dirs = resolveDataDirs(opts);
   QDir().mkpath(dirs.appDataPath);
   // RAClient persists the login token via QSettings; point it at the same INI
-  // the GUI reads (organization/application names are set by the caller).
+  // the GUI reads (organization/application names are set by the caller)
   QSettings::setPath(QSettings::Format::IniFormat, QSettings::Scope::UserScope,
                      dirs.appDataPath);
 
@@ -95,7 +95,7 @@ int runLogin(int argc, char **argv, const CliOptions &opts) {
       &raClient, &firelight::achievements::RAClient::loginFailedWithInternalError,
       &loop, [&] { fail("internal error"); });
 
-  // Defer the login into the event loop so we don't miss a synchronous result.
+  // Defer the login into the event loop so we don't miss a synchronous result
   QTimer::singleShot(0, &raClient, [&] {
     if (useToken) {
       raClient.logInUserWithToken(username, QString::fromStdString(opts.raToken));

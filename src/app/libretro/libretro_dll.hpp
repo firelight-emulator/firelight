@@ -13,7 +13,7 @@ namespace libretro {
 // Thin wrapper over a loaded libretro core DLL: owns the QLibrary + every
 // resolved retro_* entry point and forwards raw calls. No policy — Core drives
 // it. The constructor throws if the DLL won't load or a required symbol is
-// missing.
+// missing
 class LibretroDll {
 public:
   explicit LibretroDll(const std::string &path);
@@ -36,7 +36,7 @@ public:
   [[nodiscard]] void *getMemoryData(unsigned id);
   [[nodiscard]] size_t getMemorySize(unsigned id);
 
-  // Callback wiring, called once by Core after construction.
+  // Callback wiring, called once by Core after construction
   void setEnvironment(retro_environment_t cb);
   void setVideoRefresh(retro_video_refresh_t cb);
   void setAudioSample(retro_audio_sample_t cb);
@@ -45,7 +45,7 @@ public:
   void setInputState(retro_input_state_t cb);
 
   // Explicit (not in the destructor) so Core controls the teardown order that
-  // HW-rendered cores require.
+  // HW-rendered cores require
   void unload();
   [[nodiscard]] bool isLoaded() const;
 

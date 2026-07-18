@@ -7,7 +7,7 @@
 #include <mutex>
 #include <typeindex>
 
-// A handle that automatically unsubscribes when it goes out of scope.
+// A handle that automatically unsubscribes when it goes out of scope
 class ScopedConnection {
 public:
   ScopedConnection() = default;
@@ -39,11 +39,11 @@ private:
 // Threading: subscribe()/publish() are called from many threads (render, SDL
 // input, GUI) and are mutex-guarded. Callbacks run synchronously on the
 // publishing thread, so a subscriber must not assume its own thread affinity (a
-// render-thread publish runs GUI subscribers there).
+// render-thread publish runs GUI subscribers there)
 //
 // Owned objects should take an EventDispatcher& by injection; instance() is the
 // process-wide default, kept for QML-constructed types that can't receive
-// constructor arguments.
+// constructor arguments
 class EventDispatcher {
 public:
   EventDispatcher() = default;
@@ -62,7 +62,7 @@ public:
     {
       std::lock_guard lock(m_mutex);
       auto &subscribers = m_subscribers[type];
-      // Using a list to prevent iterator invalidation on add/remove.
+      // Using a list to prevent iterator invalidation on add/remove
       it = subscribers.emplace(
           subscribers.end(), [cb = std::move(callback)](const std::any &event) {
             cb(std::any_cast<const TEvent &>(event));
@@ -78,7 +78,7 @@ public:
   template <typename TEvent> void publish(const TEvent &event) {
     auto type = std::type_index(typeid(TEvent));
     // Snapshot the callbacks under the lock, then invoke them outside it: a
-    // callback may (un)subscribe or re-publish, which would otherwise deadlock.
+    // callback may (un)subscribe or re-publish, which would otherwise deadlock
     std::list<std::function<void(const std::any &)>> callbacks;
     {
       std::lock_guard lock(m_mutex);

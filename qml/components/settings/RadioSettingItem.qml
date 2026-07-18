@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // A vertical list of mutually exclusive options, rendered full-width below the
 // label. `options` is [{label, value, note?}]; `currentValue` is the selected
-// value; emits `changed` on selection.
+// value; emits `changed` on selection
 BaseSettingItem {
     id: root
 

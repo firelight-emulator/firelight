@@ -47,7 +47,7 @@ SignalReassembler::accept(const PlayerId from, const SignalChunk &chunk) {
     return std::nullopt;
   }
 
-  // Keep abandoned partial signals from accumulating.
+  // Keep abandoned partial signals from accumulating
   if (m_partials.size() > 32) {
     m_partials.clear();
   }

@@ -3,11 +3,11 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Firelight 1.0
 
-// Hosts routes that present as a popup over the current view (e.g. /settings).
+// Hosts routes that present as a popup over the current view (e.g. /settings)
 // Driven entirely by Router: opens when the current route is an overlay, closes
 // otherwise. Dismissing the popup (Escape / click-away) calls Router.back() so
 // history and the URL stay in sync. The content stays loaded while closed, so
-// reopening returns to exactly where it was left.
+// reopening returns to exactly where it was left
 Popup {
     id: overlay
 
@@ -20,7 +20,7 @@ Popup {
     padding: 0
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-    // Overlay route pattern -> screen Component.
+    // Overlay route pattern -> screen Component
     readonly property var routes: ({
         "/settings": settingsComponent
     })
@@ -92,7 +92,7 @@ Popup {
     onClosed: {
         _setActive(false);
         // Only a user dismissal reaches here with the route still an overlay;
-        // navigating away closes us via _sync after the route already changed.
+        // navigating away closes us via _sync after the route already changed
         if (Router.overlay) {
             Router.back();
         }

@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Always-visible reminder that a lobby is active while browsing the rest of
-// the app. Click to open the lobby page.
+// the app. Click to open the lobby page
 Rectangle {
     id: root
 

@@ -7,7 +7,7 @@ namespace {
 
 // A fully-populated entry the tests narrow down from. platformId 3 (SNES-ish),
 // favorite, RPG, developer/publisher Squaresoft, 1997, in content dirs {1,2},
-// paths under .../roms/snes/, played recently for an hour.
+// paths under .../roms/snes/, played recently for an hour
 EntryFields sampleEntry() {
   EntryFields e;
   e.platformId = 3;
@@ -119,7 +119,7 @@ TEST(SmartFolderTest, PlayHistory) {
   c2.minSecondsPlayed = 3601;
   EXPECT_FALSE(c2.matches(e));
 
-  // Never-played entry fails a "played since" filter.
+  // Never-played entry fails a "played since" filter
   EntryFields never;
   SmartFolderCriteria c3;
   c3.playedAfterMillis = 1;
@@ -151,7 +151,7 @@ TEST(SmartFolderTest, CriteriaAndTogether) {
   c.pathContains = "snes";
   EXPECT_TRUE(c.matches(sampleEntry()));
 
-  // One failing criterion (favorite) fails the whole match.
+  // One failing criterion (favorite) fails the whole match
   auto e = sampleEntry();
   e.favorite = false;
   EXPECT_FALSE(c.matches(e));
@@ -236,7 +236,7 @@ TEST(SmartFolderTest, ToJsonOmitsUnsetFields) {
   SmartFolderCriteria c;
   c.favorite = true;
   const auto json = c.toJson();
-  // Only "favorite" should be present.
+  // Only "favorite" should be present
   EXPECT_NE(json.find("favorite"), std::string::npos);
   EXPECT_EQ(json.find("pathContains"), std::string::npos);
   EXPECT_EQ(json.find("platformIds"), std::string::npos);

@@ -11,7 +11,7 @@ namespace firelight::library {
 // to the repository's domain events (published through the global EventDispatcher)
 // and turns discovered content into visible/hidden library entries. Each test gets
 // a fresh in-memory repository + ingest service, so the subscriptions are torn
-// down with the fixture.
+// down with the fixture
 class LibraryIngestServiceTest : public testing::Test {
 protected:
   SqliteUserLibraryRepository m_repo{":memory:"};
@@ -43,7 +43,7 @@ protected:
 
 // The realistic chain: adding a content file publishes ContentFileAddedEvent,
 // which the ingest service turns into a run configuration and, in turn, a
-// visible entry whose display name is the file's basename.
+// visible entry whose display name is the file's basename
 TEST_F(LibraryIngestServiceTest, AddingContentFileCreatesVisibleEntry) {
   auto cf = makeContentFile("/roms/gba/Cool Game.gba", 3, "hashA");
   ASSERT_TRUE(m_repo.create(cf));
@@ -57,7 +57,7 @@ TEST_F(LibraryIngestServiceTest, AddingContentFileCreatesVisibleEntry) {
 }
 
 // A run configuration for content whose entry already exists (and is hidden)
-// unhides it instead of creating a duplicate.
+// unhides it instead of creating a duplicate
 TEST_F(LibraryIngestServiceTest, RunConfigForHiddenEntryUnhidesWithoutDuplicating) {
   auto cf = makeContentFile("/roms/Game.gba", 3, "hashB");
   ASSERT_TRUE(m_repo.create(cf));
@@ -67,7 +67,7 @@ TEST_F(LibraryIngestServiceTest, RunConfigForHiddenEntryUnhidesWithoutDuplicatin
   entry->hidden = true;
   ASSERT_TRUE(m_repo.update(*entry));
 
-  // A second run configuration for the same content hash arrives.
+  // A second run configuration for the same content hash arrives
   EventDispatcher::instance().publish(
       RunConfigurationCreatedEvent{.id = 999,
                                    .filePath = "/roms/Game.gba",
@@ -77,15 +77,15 @@ TEST_F(LibraryIngestServiceTest, RunConfigForHiddenEntryUnhidesWithoutDuplicatin
   const auto refreshed = m_repo.getEntryWithContentHash("hashB");
   ASSERT_TRUE(refreshed.has_value());
   EXPECT_FALSE(refreshed->hidden);
-  // No duplicate entry was created for the same content.
+  // No duplicate entry was created for the same content
   EXPECT_EQ(countEntriesWithHash(m_repo.getEntries(0, -1), "hashB"), 1);
 }
 
 // When the last run configuration for a content hash is removed, its entry is
-// hidden (it disappears from the library without losing user state).
+// hidden (it disappears from the library without losing user state)
 TEST_F(LibraryIngestServiceTest, RemovingLastRunConfigHidesEntry) {
   // Create an entry via a run-config event without a backing run_configurations
-  // row, so getRunConfigurations() is empty for this hash.
+  // row, so getRunConfigurations() is empty for this hash
   EventDispatcher::instance().publish(
       RunConfigurationCreatedEvent{.id = 1,
                                    .filePath = "/roms/Solo.gba",
@@ -104,7 +104,7 @@ TEST_F(LibraryIngestServiceTest, RemovingLastRunConfigHidesEntry) {
 }
 
 // A delete event while other run configurations still exist must NOT hide the
-// entry (only the removal of the *last* one hides it).
+// entry (only the removal of the *last* one hides it)
 TEST_F(LibraryIngestServiceTest, DeleteEventKeepsEntryVisibleWhileRunConfigsRemain) {
   auto cf = makeContentFile("/roms/Game.gba", 3, "hashD");
   ASSERT_TRUE(m_repo.create(cf));
@@ -119,7 +119,7 @@ TEST_F(LibraryIngestServiceTest, DeleteEventKeepsEntryVisibleWhileRunConfigsRema
 }
 
 // A file at the filesystem root (no '/') uses the whole path as the display name
-// (guards the basename extraction's npos branch).
+// (guards the basename extraction's npos branch)
 TEST_F(LibraryIngestServiceTest, DisplayNameFallsBackToWholePathWithoutSlash) {
   EventDispatcher::instance().publish(
       RunConfigurationCreatedEvent{.id = 1,

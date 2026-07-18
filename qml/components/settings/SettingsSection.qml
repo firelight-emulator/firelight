@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // A titled group of setting rows rendered as one card. Put the rows in as
 // children; they stack inside the card, separated by hairlines, with the section
-// title above it.
+// title above it
 FocusScope {
     id: root
 
@@ -21,7 +21,7 @@ FocusScope {
         const kids = rows.children;
 
         // The visible rows that can carry a divider, in order. Hidden rows are
-        // skipped: a line either side of nothing is still a line.
+        // skipped: a line either side of nothing is still a line
         const visible = [];
         for (let i = 0; i < kids.length; i++) {
             if (kids[i].showDivider !== undefined && kids[i].visible) {
@@ -35,16 +35,16 @@ FocusScope {
             const next = (i + 1 < visible.length) ? visible[i + 1] : null;
             // No line after the card's last row, and none between a row and
             // whatever depends on it: a sub-setting welds to the setting above
-            // it, so they read as one block.
+            // it, so they read as one block
             const weldsToNext = next !== null && next.subItem === true;
             visible[i].showDivider = (next !== null) && !weldsToNext;
         }
     }
 
     // Reading every row's `visible` makes this re-evaluate whenever rows are
-    // added, removed, shown or hidden — which is the trigger for updateRows().
+    // added, removed, shown or hidden — which is the trigger for updateRows()
     // Rows arrive from a Repeater long after Component.onCompleted, and
-    // dependent rows come and go, so the layout can't be decided just once.
+    // dependent rows come and go, so the layout can't be decided just once
     readonly property var rowVisibility: {
         const out = [];
         for (let i = 0; i < rows.children.length; i++) {

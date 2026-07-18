@@ -9,7 +9,7 @@
 namespace firelight::gui {
 
 // Converts a QImage to the Qt-free firelight::Image (PNG-encoded) at the GUI
-// boundary, keeping domain types (SuspendPoint) free of Qt6::Gui.
+// boundary, keeping domain types (SuspendPoint) free of Qt6::Gui
 inline firelight::Image toImage(const QImage &image) {
   firelight::Image result;
   if (!image.isNull()) {

@@ -10,7 +10,7 @@
 namespace firelight::gui {
 
 // Lists the global shortcut catalog (from ShortcutRegistry) alongside the
-// bindings a single profile has for each action. One row per action.
+// bindings a single profile has for each action. One row per action
 class ShortcutsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
 
@@ -26,30 +26,30 @@ public:
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
   // Appends a binding to a shortcut. `modifiers`/`input` are GamepadInput codes
-  // for a controller profile, or Qt::Key codes for a keyboard profile.
+  // for a controller profile, or Qt::Key codes for a keyboard profile
   Q_INVOKABLE void addBinding(const QString &shortcutId, QList<int> modifiers,
                               int input);
   // Unbinds a shortcut, which is how a shortcut is turned off — there is no
-  // separate disabled state.
+  // separate disabled state
   Q_INVOKABLE void clearBindings(const QString &shortcutId);
 
   // Puts one row back to what the profile's preset ships for it (a write, not an
-  // erase: a preset that leaves it unbound resets it to unbound).
+  // erase: a preset that leaves it unbound resets it to unbound)
   Q_INVOKABLE void resetToDefault(const QString &shortcutId);
 
   // Reseeds every row from a preset and adopts it as the one rows are measured
-  // against. Overwrites edits, so the UI should confirm first.
+  // against. Overwrites edits, so the UI should confirm first
   Q_INVOKABLE void applyPreset(const QString &presetId);
 
   [[nodiscard]] QString presetId() const;
 
   // The presets that apply to this profile's device, as {id, label} rows for a
-  // picker: a keyboard is never offered a gamepad preset.
+  // picker: a keyboard is never offered a gamepad preset
   Q_INVOKABLE QVariantList presetOptions() const;
 
   // The input codes the assign prompt should watch for being held, so it can
   // record a combo. Empty for a keyboard profile — Qt reports those modifiers
-  // on the key event itself.
+  // on the key event itself
   Q_INVOKABLE QList<int> modifierCandidates() const;
 
 signals:
@@ -82,7 +82,7 @@ private:
   QString labelForBindings(const std::vector<input::InputSource> &sources) const;
   [[nodiscard]] DeviceType deviceType() const;
   // What the profile's preset ships for an action; empty when it ships nothing
-  // or the preset is gone.
+  // or the preset is gone
   [[nodiscard]] std::vector<input::InputSource>
   presetSourcesFor(const input::ShortcutId &id) const;
   [[nodiscard]] bool differsFromPreset(const input::ShortcutId &id) const;

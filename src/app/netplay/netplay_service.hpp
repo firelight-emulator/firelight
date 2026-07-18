@@ -20,7 +20,7 @@ namespace firelight::netplay {
 // App-side orchestrator for online play: owns the NetplaySession over the
 // injected lobby backend + transport, resolves library entries into session
 // game descriptors, auto-seats members into player slots, and (in later
-// phases) runs the in-game stream pipelines.
+// phases) runs the in-game stream pipelines
 class NetplayService {
 public:
   NetplayService(
@@ -31,7 +31,7 @@ public:
       std::function<std::shared_ptr<IAudioOutput>()> guestAudioFactory = {});
 
   // Consumer-facing session events; forwarded after this service applies its
-  // own policies (slot auto-assignment). Set before hosting/joining.
+  // own policies (slot auto-assignment). Set before hosting/joining
   void setEvents(SessionEvents events);
 
   void signIn(std::function<void(bool ok)> done);
@@ -53,20 +53,20 @@ public:
 
   // Ready check: host announces the selected game (phase Starting); everyone
   // sees the check and readies up. confirmLaunch moves to InGame (the host
-  // actually launches); endGame returns the lobby to Idle.
+  // actually launches); endGame returns the lobby to Idle
   bool startGame();
   void confirmLaunch();
   void endGame(const std::string &reason = "finished");
 
-  // Library entry behind the host's selected game (-1 when unknown).
+  // Library entry behind the host's selected game (-1 when unknown)
   [[nodiscard]] int selectedEntryId() const;
 
   [[nodiscard]] NetplaySession &session() { return m_session; }
   // Permanently installable frame/audio sink; streams only while a game is
-  // live (see EmulationContext.netplayStreamSink).
+  // live (see EmulationContext.netplayStreamSink)
   [[nodiscard]] HostStreamSender &streamSender() { return m_sender; }
   // Permanently installable port mapper (EmulationContext.retropadProvider);
-  // pass-through until a hosted online game is live.
+  // pass-through until a hosted online game is live
   [[nodiscard]] SlotMappedRetropadProvider &retropadProvider() {
     return m_retropadProvider;
   }
@@ -74,7 +74,7 @@ public:
 
 private:
   // Host policy: members get the first free slot when they join, so a lobby
-  // works without ever opening the lobby page.
+  // works without ever opening the lobby page
   void autoAssignMembers();
 
   void restoreHardcoreIfSuppressed();
@@ -91,9 +91,9 @@ private:
   SessionEvents m_forward;
   int m_selectedEntryId = -1;
   // Remote inputs are indistinguishable from injected ones, so hardcore is
-  // suppressed for the host's game and restored afterward.
+  // suppressed for the host's game and restored afterward
   bool m_hardcoreSuppressed = false;
-  // The lobby's game ends when the host's emulator stops, UI or no UI.
+  // The lobby's game ends when the host's emulator stops, UI or no UI
   ScopedConnection m_emulationStoppedConnection;
 };
 

@@ -11,7 +11,7 @@ namespace firelight::settings {
 
 namespace {
 // Maps a catalog setting's declared control to a QML delegate id. `widget` is
-// authoritative when set; otherwise it is derived from the value type.
+// authoritative when set; otherwise it is derived from the value type
 QString widgetFor(const SettingDefinition &setting) {
   if (!setting.widget.empty()) {
     return QString::fromStdString(setting.widget);
@@ -35,7 +35,7 @@ QString widgetFor(const SettingDefinition &setting) {
 SettingsModel::SettingsModel(QObject *parent)
     : QAbstractListModel(parent) {
   // A "core" change re-resolves which core (and thus which settings) apply, so
-  // the item set must be rebuilt; any other key just refreshes values.
+  // the item set must be rebuilt; any other key just refreshes values
   const auto onMatch = [this](bool matches, const std::string &key) {
     if (!matches) {
       return;
@@ -64,7 +64,7 @@ SettingsModel::SettingsModel(QObject *parent)
           });
 
   // An audio-device row's options are the machine's outputs, so plugging in
-  // headphones has to rebuild them.
+  // headphones has to rebuild them
   m_mediaDevices = new QMediaDevices(this);
   connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this,
           [this] { rebuildItems(); });
@@ -78,7 +78,7 @@ void SettingsModel::rebuildItems() {
 
   const auto &catalog = SettingsCatalog::instance();
   // No platform in scope means no core in scope: the global tier shows the
-  // frontend settings only, never some arbitrary core's.
+  // frontend settings only, never some arbitrary core's
   const auto coreName =
       m_platformId == -1
           ? std::string{}
@@ -135,7 +135,7 @@ void SettingsModel::markSubItems() {
   // and renders indented and welded beneath it. Derived from the dependency the
   // catalog already declares rather than a second thing to author — and scoped
   // to what's on screen, since depending on a setting from another page says
-  // nothing about how this one should look.
+  // nothing about how this one should look
   const auto shownHere = [this](const std::string &key) {
     return std::any_of(m_items.begin(), m_items.end(), [&](const Item &other) {
       return other.key.toStdString() == key;
@@ -157,7 +157,7 @@ void SettingsModel::markSubItems() {
 QVector<QVariantHash>
 SettingsModel::buildGameOptions(const SettingDefinition &setting) const {
   QVector<QVariantHash> options;
-  // A leading "None" (empty value) lets the user clear the choice.
+  // A leading "None" (empty value) lets the user clear the choice
   options.append(
       QVariantHash{{"label", QStringLiteral("None")}, {"value", QString()}});
 
@@ -195,7 +195,7 @@ bool SettingsModel::overridesInheritedValue(const Item &item) const {
   // Reset means "clear this tier's override and go back to what I inherit", so
   // it only means something at a tier with one beneath it. The global tier and
   // app settings are the base: there's nothing below to fall back to, so no
-  // Reset — changing the value is simply the value.
+  // Reset — changing the value is simply the value
   if (item.appScope || (m_level != Game && m_level != Platform)) {
     return false;
   }
@@ -210,7 +210,7 @@ bool SettingsModel::overridesInheritedValue(const Item &item) const {
     return false;
   }
   // An override that matches what it would inherit anyway isn't overriding
-  // anything the user can see, so offering to clear it is just noise.
+  // anything the user can see, so offering to clear it is just noise
   const auto inherited =
       m_level == Game
           ? resolveValueFrom(key, Platform)
@@ -233,7 +233,7 @@ SettingsModel::resolveValueFrom(const std::string &key,
 
 SettingsLevel SettingsModel::levelFor(const Item &item) const {
   // An app setting is an emulation setting pinned to the global tier: it has no
-  // core mapping and nothing overrides it per-platform or per-game.
+  // core mapping and nothing overrides it per-platform or per-game
   return item.appScope ? Global : m_level;
 }
 
@@ -252,7 +252,7 @@ bool SettingsModel::canResolve(const Item &item) const {
 
 QVector<QVariantHash> SettingsModel::buildAudioDeviceOptions() const {
   QVector<QVariantHash> options;
-  // "" means "whatever the OS default is", which follows the OS if it changes.
+  // "" means "whatever the OS default is", which follows the OS if it changes
   options.append(QVariantHash{{"label", QStringLiteral("System default")},
                               {"value", QString()}});
   for (const auto &device : QMediaDevices::audioOutputs()) {
@@ -359,7 +359,7 @@ void SettingsModel::setLevel(int level) {
   }
   // `level` is just the tier this surface edits (Game / Platform / Global); it
   // is not a stored per-game "read level" — the running game resolves settings
-  // by inheritance.
+  // by inheritance
   m_level = static_cast<SettingsLevel>(level);
   emit levelChanged();
   refreshValues();
@@ -482,7 +482,7 @@ bool SettingsModel::setData(const QModelIndex &index,
                                      stringValue.toStdString());
   item.resettable = overridesInheritedValue(item);
   emit dataChanged(index, index, {ValueRole, ResettableRole});
-  // A change here can flip the visibility/enablement of dependent settings.
+  // A change here can flip the visibility/enablement of dependent settings
   recomputeConditions();
   return true;
 }

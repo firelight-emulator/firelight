@@ -56,7 +56,7 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
     if (mapping) {
       const auto &bindings = mapping->getBindings(input);
       if (!bindings.empty()) {
-        // Multiple key bindings for one emulated input are OR'd together.
+        // Multiple key bindings for one emulated input are OR'd together
         for (const auto &binding : bindings) {
           bool modifiersHeld = true;
           for (const auto mod : binding.source.modifiers) {
@@ -80,7 +80,7 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
     return false;
   }
 
-  // A shortcut is using this key, so the game doesn't see it.
+  // A shortcut is using this key, so the game doesn't see it
   if (suppressor().isSuppressed(defaultKey)) {
     return false;
   }
@@ -276,7 +276,7 @@ bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
     bool rising = false;
     {
       std::lock_guard lock(m_keyStatesMutex);
-      // Ignore auto-repeat: only report the rising edge to the shortcut engine.
+      // Ignore auto-repeat: only report the rising edge to the shortcut engine
       if (!m_keyStates.value(key, false)) {
         m_keyStates[key] = true;
         rising = true;

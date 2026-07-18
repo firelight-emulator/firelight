@@ -13,7 +13,7 @@ FocusScope {
     property bool emulatorIsRunning: emulatorStack.depth > 0
 
     // In-game shortcuts are active only when a game is the top item; an open
-    // overlay (pause page, rewind menu) or no game means menu scope.
+    // overlay (pause page, rewind menu) or no game means menu scope
     property bool shortcutsInGame: emulatorStack.depth === 1
     onShortcutsInGameChanged: InputService.setShortcutsInGame(shortcutsInGame)
     Component.onCompleted: InputService.setShortcutsInGame(shortcutsInGame)

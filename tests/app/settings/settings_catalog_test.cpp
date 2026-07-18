@@ -62,7 +62,7 @@ TEST_F(SettingsCatalogTest, ParsesCommonAndPerCore) {
   EXPECT_EQ(catalog.commonSettings().size(), 2u);
   EXPECT_EQ(catalog.coreSpecificSettings("mgba_libretro").size(), 2u);
   EXPECT_TRUE(catalog.coreSpecificSettings("unknown_core").empty());
-  // common followed by the core-specific settings.
+  // common followed by the core-specific settings
   EXPECT_EQ(catalog.settingsForCore("mgba_libretro").size(), 4u);
 }
 
@@ -144,7 +144,7 @@ TEST(SettingsCatalogSyncTest, ParsesSyncMethodAndTargetFramerate) {
   EXPECT_TRUE(fps->advanced); // "advanced": true parsed
   EXPECT_DOUBLE_EQ(fps->minValue, 30.0);
   EXPECT_DOUBLE_EQ(fps->maxValue, 240.0);
-  // Only editable when sync-method is "fixed".
+  // Only editable when sync-method is "fixed"
   ASSERT_EQ(fps->enabledWhen.size(), 1u);
   EXPECT_EQ(fps->enabledWhen[0].key, "sync-method");
   ASSERT_EQ(fps->enabledWhen[0].values.size(), 1u);
@@ -193,19 +193,19 @@ TEST(SettingsCatalogTypesTest, ParsesSliderAndCustomWidgets) {
   EXPECT_DOUBLE_EQ(settings[0].maxValue, 10.0);
   EXPECT_DOUBLE_EQ(settings[0].stepValue, 2.0);
 
-  // "number" is INTEGER value semantics with a spinbox widget.
+  // "number" is INTEGER value semantics with a spinbox widget
   EXPECT_EQ(settings[1].type, SettingType::INTEGER);
   EXPECT_EQ(settings[1].widget, "spinbox");
 
   EXPECT_EQ(settings[2].type, SettingType::CUSTOM);
   EXPECT_EQ(settings[2].widget, "gbc-palette");
 
-  // Fractional step -> float-valued slider.
+  // Fractional step -> float-valued slider
   EXPECT_DOUBLE_EQ(settings[3].minValue, 0.0);
   EXPECT_DOUBLE_EQ(settings[3].maxValue, 2.0);
   EXPECT_DOUBLE_EQ(settings[3].stepValue, 0.25);
 
-  // Integer step other than 1 (e.g. increments of 5).
+  // Integer step other than 1 (e.g. increments of 5)
   EXPECT_DOUBLE_EQ(settings[4].stepValue, 5.0);
 
   // Omitted step defaults to 1.
@@ -228,11 +228,11 @@ TEST(SettingsCatalogGamePickerTest, ParsesLibraryGamePicker) {
   const auto *picker = find(
       c.coreSpecificSettings("mupen64plus_next_libretro"), "transfer-pak-game");
   ASSERT_NE(picker, nullptr);
-  // Value semantics are OPTIONS, rendered by the dropdown widget.
+  // Value semantics are OPTIONS, rendered by the dropdown widget
   EXPECT_EQ(picker->type, SettingType::OPTIONS);
   EXPECT_EQ(picker->widget, "dropdown");
   EXPECT_TRUE(picker->libraryGameSource);
-  // Options are NOT authored in the catalog (the app fills them at runtime).
+  // Options are NOT authored in the catalog (the app fills them at runtime)
   EXPECT_TRUE(picker->options.empty());
   ASSERT_EQ(picker->gamePickerPlatformIds.size(), 2u);
   EXPECT_EQ(picker->gamePickerPlatformIds[0], 1);
@@ -335,7 +335,7 @@ TEST(SettingsCatalogLayoutTest, ParsesPagesAndGroupsInOrder) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(LAYOUT_JSON));
 
-  // Both are sorted by `order`, not declaration order.
+  // Both are sorted by `order`, not declaration order
   ASSERT_EQ(c.pages().size(), 2u);
   EXPECT_EQ(c.pages()[0].id, "appearance");
   EXPECT_EQ(c.pages()[1].id, "emulation");
@@ -376,25 +376,25 @@ TEST(SettingsCatalogLayoutTest, GroupCollectsFromEveryArrayInOrder) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(LAYOUT_JSON));
 
-  // Sorted by `order`, so the later-declared background-mode comes first.
+  // Sorted by `order`, so the later-declared background-mode comes first
   const auto theme = c.settingsForGroup("theme");
   ASSERT_EQ(theme.size(), 2u);
   EXPECT_EQ(theme[0].key, "background-mode");
   EXPECT_EQ(theme[1].key, "accent-color");
 
-  // A group spanning `common` and the named core's settings gathers both.
+  // A group spanning `common` and the named core's settings gathers both
   const auto video = c.settingsForGroup("video", "mgba_libretro");
   ASSERT_EQ(video.size(), 2u);
   EXPECT_NE(find(video, "aspect-ratio"), nullptr);
   EXPECT_NE(find(video, "gba-blend"), nullptr);
 
   // No core in scope (the global tier) means the frontend settings only — not
-  // every core's settings piled together.
+  // every core's settings piled together
   const auto globalVideo = c.settingsForGroup("video");
   ASSERT_EQ(globalVideo.size(), 1u);
   EXPECT_EQ(globalVideo[0].key, "aspect-ratio");
 
-  // A core that declares nothing in the group contributes nothing.
+  // A core that declares nothing in the group contributes nothing
   EXPECT_EQ(c.settingsForGroup("video", "gambatte_libretro").size(), 1u);
 
   EXPECT_TRUE(c.settingsForGroup("nope").empty());
@@ -405,7 +405,7 @@ TEST(SettingsCatalogLayoutTest, FindsAndEnumeratesEverySetting) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(LAYOUT_JSON));
 
-  // app + common + every core's settings — what the search index is built from.
+  // app + common + every core's settings — what the search index is built from
   EXPECT_EQ(c.allSettings().size(), 4u);
 
   const auto *fromCore = c.findByKey("gba-blend");
@@ -430,7 +430,7 @@ TEST(SettingsCatalogLayoutTest, AppSettingsDropCoreOnlyFields) {
   )JSON"));
 
   // An app setting never reaches a core, so these are stripped rather than
-  // left looking load-bearing.
+  // left looking load-bearing
   const auto *s = find(c.appSettings(), "fullscreen");
   ASSERT_NE(s, nullptr);
   EXPECT_TRUE(s->mapping.empty());
@@ -451,7 +451,7 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
     return c.validate();
   };
 
-  // A key declared twice, across different arrays.
+  // A key declared twice, across different arrays
   EXPECT_FALSE(problemsFor(R"JSON(
   {
     "app": [{"key": "dupe", "label": "A", "type": "boolean"}],
@@ -459,49 +459,49 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
   })JSON")
                    .empty());
 
-  // A setting pointing at a group nobody declared.
+  // A setting pointing at a group nobody declared
   EXPECT_FALSE(problemsFor(R"JSON(
   {
     "app": [{"key": "a", "group": "ghost", "label": "A", "type": "boolean"}]
   })JSON")
                    .empty());
 
-  // A group pointing at a page nobody declared.
+  // A group pointing at a page nobody declared
   EXPECT_FALSE(problemsFor(R"JSON(
   {
     "groups": [{"id": "g", "page": "ghost", "label": "G"}]
   })JSON")
                    .empty());
 
-  // custom with no widget to render it.
+  // custom with no widget to render it
   EXPECT_FALSE(problemsFor(R"JSON(
   {
     "common": [{"key": "a", "label": "A", "type": "custom"}]
   })JSON")
                    .empty());
 
-  // An unknown type silently became a dropdown before validate() existed.
+  // An unknown type silently became a dropdown before validate() existed
   EXPECT_FALSE(problemsFor(R"JSON(
   {
     "common": [{"key": "a", "label": "A", "type": "sldier"}]
   })JSON")
                    .empty());
 
-  // Duplicate page / group ids.
+  // Duplicate page / group ids
   EXPECT_FALSE(problemsFor(R"JSON(
   {
     "pages": [{"id": "p", "label": "P"}, {"id": "p", "label": "P2"}]
   })JSON")
                    .empty());
 
-  // A dropdown with nothing to pick.
+  // A dropdown with nothing to pick
   EXPECT_FALSE(problemsFor(R"JSON(
   {
     "common": [{"key": "a", "label": "A", "type": "options"}]
   })JSON")
                    .empty());
 
-  // A game picker sources its options at runtime, so it needs none authored.
+  // A game picker sources its options at runtime, so it needs none authored
   EXPECT_TRUE(problemsFor(R"JSON(
   {
     "common": [{"key": "a", "label": "A", "type": "game-picker"}]
@@ -535,7 +535,7 @@ TEST(SettingsCatalogValidationTest, ParsesTypeAliasesForEveryDelegate) {
 
 // The catalog we actually ship. Every other test here feeds the parser inline
 // JSON, so nothing caught a typo in the real file — and page/group ids are
-// load-bearing, so a typo silently orphans a setting rather than erroring.
+// load-bearing, so a typo silently orphans a setting rather than erroring
 TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE))
@@ -551,7 +551,7 @@ TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   EXPECT_FALSE(c.commonSettings().empty());
 
   // Every group lands on a page, and every setting lands in a group — that's
-  // what lets a page auto-render and search say where a result lives.
+  // what lets a page auto-render and search say where a result lives
   for (const auto &group : c.groups()) {
     EXPECT_FALSE(group.pageId.empty())
         << "group '" << group.id << "' names no page";
@@ -567,7 +567,7 @@ TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
 
 // AudioManager reads this key to pick an output. If it stopped existing, audio
 // would quietly fall back to the system default with no error anywhere — so the
-// key and its declaration are pinned together.
+// key and its declaration are pinned together
 TEST(ShippedSettingsCatalogTest, DeclaresTheAudioOutputKeyAudioManagerReads) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
@@ -579,16 +579,16 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheAudioOutputKeyAudioManagerReads) {
   EXPECT_TRUE(c.isAppSetting(AudioManager::OUTPUT_DEVICE_KEY))
       << "the output device is read from the global tier";
   // Its options come from the machine, so authoring any here would be a lie —
-  // and the runtime flag is what tells the model to go and find them.
+  // and the runtime flag is what tells the model to go and find them
   EXPECT_TRUE(setting->audioDeviceSource);
   EXPECT_TRUE(setting->options.empty());
-  // "" is the system default; anything else names a device.
+  // "" is the system default; anything else names a device
   EXPECT_TRUE(setting->defaultValue.empty());
 }
 
 // Mute lives in the catalog rather than on the emulator so it outlives a game:
 // AudioManager is rebuilt on every load and re-reads this key, which is the only
-// reason muting one game leaves the next one muted too.
+// reason muting one game leaves the next one muted too
 TEST(ShippedSettingsCatalogTest, DeclaresTheMuteKeyAudioManagerReads) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
@@ -601,12 +601,12 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheMuteKeyAudioManagerReads) {
       << "mute is read from the global tier";
   EXPECT_EQ(setting->type, SettingType::BOOLEAN);
   // AudioManager compares against "true"/"false", so the declared default has to
-  // be one of them.
+  // be one of them
   EXPECT_EQ(setting->defaultValue, "false");
 }
 
 // The volume hotkeys and AudioManager both read this key, and neither would say
-// anything if it went missing — the slider would just stop doing anything.
+// anything if it went missing — the slider would just stop doing anything
 TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
@@ -620,7 +620,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
   EXPECT_EQ(setting->type, SettingType::INTEGER);
   EXPECT_EQ(setting->widget, "slider");
   // The hotkeys step within 0-100 and parse the default as a number; a range
-  // that disagreed would let the slider and the hotkey mean different things.
+  // that disagreed would let the slider and the hotkey mean different things
   EXPECT_EQ(setting->minValue, 0);
   EXPECT_EQ(setting->maxValue, 100);
   EXPECT_EQ(setting->defaultValue, "100");
@@ -629,7 +629,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
 // AppearanceSettings.qml is a typed facade: one SettingBinding per key, so the
 // rest of the app can bind to names instead of strings. Nothing in QML fails
 // loudly when a key stops existing — the binding just reports "" forever — so
-// pin the keys here.
+// pin the keys here
 TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
@@ -652,7 +652,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
         << "'" << key
         << "' must be an app setting: the facade reads the global tier only";
     // An empty file path means "no image chosen"; every other facade key needs
-    // a default or the property starts empty and the theme renders wrong.
+    // a default or the property starts empty and the theme renders wrong
     if (key != "background-file") {
       EXPECT_FALSE(setting->defaultValue.empty())
           << "'" << key << "' has no default, so the facade would start empty";

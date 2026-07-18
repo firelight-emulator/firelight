@@ -24,9 +24,9 @@ int main(int argc, char **argv) {
   firelight::settings::SettingsService::setInstance(settingsService.get());
 
   // Load the friendly-settings catalog so emulation-default resolution matches
-  // the app (the catalog is the single source of truth for those defaults).
+  // the app (the catalog is the single source of truth for those defaults)
   // Resolve relative to the executable, not the cwd, so it works however the
-  // test binary is launched.
+  // test binary is launched
   const auto catalogPath =
       QCoreApplication::applicationDirPath() + "/system/settings_catalog.json";
   firelight::settings::SettingsCatalog::instance().loadFromFile(

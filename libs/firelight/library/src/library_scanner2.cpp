@@ -41,7 +41,7 @@ LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library,
 
   // Safety net: a low-frequency full rescan catches anything the watcher missed
   // (network/removable drives, watch-limit overflow, dropped events). Cheap
-  // thanks to the per-directory mtime short-circuit, and skipped during gameplay.
+  // thanks to the per-directory mtime short-circuit, and skipped during gameplay
   m_periodicScanTimer.setInterval(PERIODIC_SCAN_INTERVAL_MS);
   m_periodicScanTimer.callOnTimeout([this] {
     if (!m_suspended) {
@@ -91,7 +91,7 @@ bool LibraryScanner2::isScanning() const { return m_scanRunning; }
 void LibraryScanner2::scheduleWatch(const QString &path) {
   // QFileSystemWatcher must only be touched on the thread the scanner lives on
   // (the main thread); scanDirectory runs on a worker, so hop back via the
-  // event loop.
+  // event loop
   QMetaObject::invokeMethod(
       this, [this, path] { watchPath(path); }, Qt::QueuedConnection);
 }
@@ -99,7 +99,7 @@ void LibraryScanner2::scheduleWatch(const QString &path) {
 void LibraryScanner2::setScanningSuspended(const bool suspended) {
   m_suspended = suspended;
   if (!suspended) {
-    // Resume: process anything that changed (or was queued) while suspended.
+    // Resume: process anything that changed (or was queued) while suspended
     QMetaObject::invokeMethod(
         this, [this] { scanAll(); }, Qt::QueuedConnection);
   }
@@ -111,7 +111,7 @@ QFuture<bool> LibraryScanner2::startScan() {
   }
 
   return QtConcurrent::run(&m_threadPool, [this] {
-    // Scanning is best-effort background work; never contend with the emulator.
+    // Scanning is best-effort background work; never contend with the emulator
     QThread::currentThread()->setPriority(QThread::LowPriority);
     m_scanRunning = true;
     m_changesInScan = 0;
@@ -140,7 +140,7 @@ QFuture<bool> LibraryScanner2::startScan() {
 
     m_scanRunning = false;
     // Only refresh the library UI when the scan actually changed something, so a
-    // periodic no-op scan doesn't reset the list (losing scroll/selection).
+    // periodic no-op scan doesn't reset the list (losing scroll/selection)
     if (m_changesInScan > 0) {
       emit scanFinished();
     }
@@ -191,12 +191,12 @@ void LibraryScanner2::scanDirectory(const QString &path) {
   // If this directory is unchanged since we last scanned it, nothing was added,
   // removed, or renamed directly in it. We still re-descend into subdirectories
   // (their mtimes are checked independently), but skip the per-file DB lookups
-  // and identification here -- that is what keeps periodic rescans cheap.
+  // and identification here -- that is what keeps periodic rescans cheap
   const auto mtimeIt = m_dirMtimeByPath.find(path.toStdString());
   const bool unchanged =
       mtimeIt != m_dirMtimeByPath.end() && mtimeIt->second == dirMtime;
 
-  // Whether this directory holds at least one game (so it's worth watching).
+  // Whether this directory holds at least one game (so it's worth watching)
   bool dirHasContent = false;
 
   QDirIterator iter(path, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
@@ -215,7 +215,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       continue;
     }
 
-    // An unchanged directory only needed a walk to discover its subdirectories.
+    // An unchanged directory only needed a walk to discover its subdirectories
     if (unchanged) {
       continue;
     }
@@ -228,7 +228,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
         firelight::library::isDiscExtension(extensionStd);
 
     // Disc images (and archives that may contain them) routinely exceed 1 GB,
-    // so the size cap only applies to other files.
+    // so the size cap only applies to other files
     if (fileInfo.size() > 1024LL * 1024 * 1024 && !isDisc && !isArchive) {
       spdlog::info("Skipping large file: {}",
                    fileInfo.filePath().toStdString());
@@ -256,7 +256,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
 
             if (firelight::library::isDiscExtension(ext)) {
               // Raw track files are pulled in via their cue/gdi sheet, so don't
-              // classify them on their own.
+              // classify them on their own
               if (firelight::library::isDiscTrackExtension(ext)) {
                 return;
               }
@@ -267,7 +267,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
               }
 
               // Disc detection re-opens the archive to extract the disc set, so
-              // we don't buffer the (potentially multi-GB) entry here.
+              // we don't buffer the (potentially multi-GB) entry here
               const auto identified = identifier.identifyInArchive(
                   entry.pathName, {}, static_cast<size_t>(entry.size),
                   archivePath);
@@ -363,7 +363,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
             firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN ||
         firelight::library::isDiscExtension(extensionStd)) {
       // A raw disc track (bin/img/...) is classified via its sibling cue/gdi
-      // sheet; skip the lone track when such a sheet exists in the directory.
+      // sheet; skip the lone track when such a sheet exists in the directory
       if (firelight::library::isDiscTrackExtension(extensionStd)) {
         const auto sheets = fileInfo.absoluteDir().entryList(
             {"*.cue", "*.gdi", "*.ccd", "*.m3u"}, QDir::Files);
@@ -403,7 +403,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
   }
 
   // Remember this directory's mtime so an unchanged rescan can skip it, and watch
-  // it if it holds games so future adds/removes here are caught instantly.
+  // it if it holds games so future adds/removes here are caught instantly
   m_dirMtimeByPath[path.toStdString()] = dirMtime;
   if (dirHasContent) {
     scheduleWatch(path);

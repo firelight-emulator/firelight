@@ -5,12 +5,12 @@ import Firelight 1.0
 
 // The one home for keybinds. Every profile's shortcuts are edited here, picked
 // from the dropdown at the top — the Controllers page's "Edit profile" button
-// deep-links in with a profileId rather than mounting a second editor.
+// deep-links in with a profileId rather than mounting a second editor
 FocusScope {
     id: root
 
     // Which profile is being edited. Set from the URL on arrival, then by the
-    // picker.
+    // picker
     property int profileId: -1
 
     ProfileListModel {
@@ -29,9 +29,9 @@ FocusScope {
 
     // "Edit profile" deep-links here as /settings/controllers?profileId=N. The
     // route only carries the section, so the id rides in the query — resolve()
-    // drops params for a subtree-owning route, but leaves the query alone.
+    // drops params for a subtree-owning route, but leaves the query alone
     // Without one, edit whatever is in player one: that's what someone opening
-    // this page cold almost always means.
+    // this page cold almost always means
     Component.onCompleted: {
         const requested = parseInt(Router.query.profileId);
         if (!isNaN(requested)) {
@@ -118,7 +118,7 @@ FocusScope {
         }
 
         // Capped: one row per platform would otherwise push the keybinds off
-        // the page, and this page's viewport doesn't scroll as a whole.
+        // the page, and this page's viewport doesn't scroll as a whole
         ScrollView {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.min(platformColumn.implicitHeight, 130)
@@ -189,7 +189,7 @@ FocusScope {
                 valueRole: "profileId"
 
                 // Follows root.profileId rather than driving it, so a deep link
-                // and a pick end up in the same place.
+                // and a pick end up in the same place
                 currentIndex: indexOfValue(root.profileId)
                 onActivated: root.profileId = currentValue
             }
@@ -207,7 +207,7 @@ FocusScope {
                 Layout.preferredWidth: 200
                 textRole: "label"
                 valueRole: "id"
-                // Only the presets that fit this profile's device.
+                // Only the presets that fit this profile's device
                 model: profile.shortcutsModel
                     ? profile.shortcutsModel.presetOptions() : []
 
@@ -296,7 +296,7 @@ FocusScope {
                         onTriggered: profile.shortcutsModel.resetToDefault(shortcutRow.model.shortcutId)
                     }
                     RightClickMenuItem {
-                        // Unbinding is what turning a hotkey off means.
+                        // Unbinding is what turning a hotkey off means
                         text: "Clear (turns it off)"
                         onTriggered: profile.shortcutsModel.clearBindings(shortcutRow.model.shortcutId)
                     }
@@ -330,7 +330,7 @@ FocusScope {
                     }
 
                     // Says this row no longer matches the preset, and is the
-                    // only thing Reset acts on.
+                    // only thing Reset acts on
                     Text {
                         visible: shortcutRow.model.isModified
                         text: "Changed"

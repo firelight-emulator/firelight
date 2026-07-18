@@ -16,7 +16,7 @@ namespace firelight::library {
 
 // The result of identifying a content file: its platform, canonical content
 // hash, and file-level metadata. `valid` is false when the file could not be
-// recognized as a supported ROM or disc image.
+// recognized as a supported ROM or disc image
 struct IdentifiedContent {
   bool valid = false;
   bool isDisc = false;
@@ -29,17 +29,17 @@ struct IdentifiedContent {
 
 // Identifies the platform and computes the canonical content hash of ROM and
 // disc files, on disk or inside archives. The scan-time counterpart to
-// ContentLoader: it determines *what* a file is without loading it for play.
+// ContentLoader: it determines *what* a file is without loading it for play
 class ContentIdentifier {
 public:
   explicit ContentIdentifier(platforms::IPlatformService &platformService);
 
-  // Identifies a loose file on disk.
+  // Identifies a loose file on disk
   [[nodiscard]] IdentifiedContent identify(const std::string &path) const;
 
   // Identifies an archive entry. Cartridge entries are hashed from the provided
   // bytes; disc entries are re-extracted from the archive internally (`data`
-  // may be empty for them, with `sizeBytes` giving the entry size).
+  // may be empty for them, with `sizeBytes` giving the entry size)
   [[nodiscard]] IdentifiedContent
   identifyInArchive(const std::string &entryName,
                     const std::vector<uint8_t> &data, size_t sizeBytes,

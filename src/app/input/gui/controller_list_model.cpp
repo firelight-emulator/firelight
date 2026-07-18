@@ -10,7 +10,7 @@ ControllerListModel::ControllerListModel(QObject *parent)
   m_inputService = getInputService();
 
   // These events are published on the SDL input thread; refreshControllerList
-  // resets the model, so hop to the GUI thread first.
+  // resets the model, so hop to the GUI thread first
   const auto refreshOnGuiThread = [this] {
     QMetaObject::invokeMethod(
         this, [this] { refreshControllerList(); }, Qt::QueuedConnection);

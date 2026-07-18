@@ -14,10 +14,10 @@ public:
   [[nodiscard]] virtual std::vector<Platform> listPlatforms() const = 0;
   // The platform whose file associations include `extension` (lowercase, no
   // dot), or PLATFORM_ID_UNKNOWN. Cartridge extensions only; ambiguous disc
-  // extensions are identified by content, not extension.
+  // extensions are identified by content, not extension
   [[nodiscard]] virtual int
   platformIdForExtension(const std::string &extension) const = 0;
-  // Maps an rcheevos console id (RC_CONSOLE_*) to a Firelight platform id.
+  // Maps an rcheevos console id (RC_CONSOLE_*) to a Firelight platform id
   [[nodiscard]] virtual int platformIdForRcConsole(int rcConsoleId) const = 0;
 };
 

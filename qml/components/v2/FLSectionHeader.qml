@@ -1,7 +1,7 @@
 import QtQuick
 import Firelight 1.0
 
-// A section heading. Set `text`.
+// A section heading. Set `text`
 Text {
     color: Theme.textPrimary
     font.pixelSize: AppStyle.fontSizeLarge

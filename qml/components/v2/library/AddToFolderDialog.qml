@@ -5,7 +5,7 @@ import QtQml.Models
 import Firelight 1.0
 
 // Picks a manual folder and adds one or more entries to it. Opened from the
-// game context menu and the multi-select bulk bar; acts on `targetIds`.
+// game context menu and the multi-select bulk bar; acts on `targetIds`
 FirelightDialog {
     id: control
     headerText: "Add to folder"

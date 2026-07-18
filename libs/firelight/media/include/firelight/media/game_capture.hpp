@@ -12,7 +12,7 @@ enum class CaptureType {
 
 // One captured media file (a screenshot or a gameplay clip) indexed for the
 // gallery. filePath is the .png/.mp4; thumbnailPath is the image shown in the
-// grid — the screenshot itself, or a clip's poster frame.
+// grid — the screenshot itself, or a clip's poster frame
 struct GameCapture {
   int id = 0;
   std::string contentHash; // the game this capture belongs to

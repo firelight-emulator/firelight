@@ -21,7 +21,7 @@ Button {
     required property string displayText
     property var numberOfItems
 
-    // Optional folder accent color (empty = none), shown as a thin left bar.
+    // Optional folder accent color (empty = none), shown as a thin left bar
     property string accentColor: ""
 
     property bool containsDrag: false
@@ -30,7 +30,7 @@ Button {
 
     // Tree rendering (folders only): indent by depth and show a disclosure
     // chevron for rows that have children. Off by default so flat sections
-    // (platforms, settings nav) are untouched.
+    // (platforms, settings nav) are untouched
     property bool treeItem: false
     property int depth: 0
     property bool hasChildren: false
@@ -38,7 +38,7 @@ Button {
     property color iconColor: Theme.textPrimary
     signal toggleExpanded()
 
-    // Scales with the UI (36 at 100%) so the label isn't cramped when enlarged.
+    // Scales with the UI (36 at 100%) so the label isn't cramped when enlarged
     implicitHeight: AppStyle.controlHeight
     width: ListView.view.width
 
@@ -85,12 +85,12 @@ Button {
     contentItem: RowLayout {
         // iconSource may be a Material icon (qrc:/icons/<name>), a console logo, or folder
         // art. Render known Material names as crisp font glyphs; everything else as a crisp
-        // (GPU curve-rendered) vector image.
+        // (GPU curve-rendered) vector image
         readonly property string resolvedIconName: control.iconSource.indexOf("qrc:/icons/") === 0
             ? control.iconSource.substring(11) : ""
         readonly property bool iconIsGlyph: resolvedIconName !== "" && MaterialSymbols.glyph(resolvedIconName) !== ""
 
-        // Nesting indent.
+        // Nesting indent
         Item {
             visible: control.depth > 0
             Layout.preferredWidth: control.depth * Math.round(14 * AppStyle.scale)
@@ -98,7 +98,7 @@ Button {
         }
 
         // Disclosure chevron (a fixed column in tree sections so leaf and
-        // parent rows keep their icons aligned).
+        // parent rows keep their icons aligned)
         Item {
             visible: control.treeItem
             Layout.preferredWidth: control.treeItem ? Math.round(18 * AppStyle.scale) : 0
@@ -135,7 +135,7 @@ Button {
             text: control.displayText
             elide: Text.ElideRight
             // Hidden when the row is narrow (collapsed rail) — scales so it holds
-            // at any UI scale.
+            // at any UI scale
             visible: control.width > Math.round(64 * AppStyle.scale)
         }
         Text {

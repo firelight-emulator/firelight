@@ -40,7 +40,7 @@ SqliteGameCaptureRepository::SqliteGameCaptureRepository(
       m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
   try {
     // Forward-only schema migrations (see migration_runner). A future change
-    // adds the next-numbered migration.
+    // adds the next-numbered migration
     const std::vector<migrations::Migration> schema = {
         {1,
          [this] {

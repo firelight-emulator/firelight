@@ -59,7 +59,7 @@ namespace firelight::emulation {
       auto patch = *resolved.patch;
       if (!patch.load()) {
         // The entry resolved to a patched version; running it unpatched would be
-        // wrong (and could corrupt saves), so treat this as a load failure.
+        // wrong (and could corrupt saves), so treat this as a load failure
         spdlog::error("[GameLoader] Failed to load patch {} for entry {}",
                       patch.m_filePath, entryId);
         return {};
@@ -92,7 +92,7 @@ namespace firelight::emulation {
     }
 
     // Resolve the core for this entry (default -> per-platform -> per-game
-    // override) and locate its DLL.
+    // override) and locate its DLL
     const auto coreName = CoreRegistry::instance().resolveCoreName(
       result.entry.platformId, result.contentHash, &m_settingsService);
     const std::string corePath = CoreRegistry::instance().dllPathFor(coreName);
@@ -134,7 +134,7 @@ namespace firelight::emulation {
       std::vector<uint8_t>(saveDataBytes.begin(), saveDataBytes.end()), m_context);
 
     // The instance is born muted (if requested) once initialize() creates its
-    // AudioManager.
+    // AudioManager
     result.instance->setStartMuted(launch.muted);
 
     result.success = true;

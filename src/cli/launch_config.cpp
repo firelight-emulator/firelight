@@ -28,7 +28,7 @@ std::string toLower(std::string s) {
 }
 
 // Converts a JSON scalar to the string form the settings layer stores. Objects
-// and arrays are rejected (a setting value is always a scalar).
+// and arrays are rejected (a setting value is always a scalar)
 std::string jsonValueToString(const nlohmann::json &value) {
   if (value.is_string()) {
     return value.get<std::string>();

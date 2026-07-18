@@ -34,7 +34,7 @@ ResolvedContent EntryResolver::resolve(const Entry &entry) const {
   }
 
   // Pick the highest-scoring configuration, breaking ties toward the most
-  // recently added (largest id) for determinism.
+  // recently added (largest id) for determinism
   const RunConfiguration *best = nullptr;
   ContentFile bestContentFile;
   int bestScore = -1;

@@ -14,20 +14,20 @@ void WindowsFrameFilter::setWindow(QWindow *window) {
 
     // Qt's logical size is the true desired content size. GetWindowRect would
     // return an inflated outer rect (Qt added title bar + borders via
-    // AdjustWindowRect), so we convert the logical size directly instead.
+    // AdjustWindowRect), so we convert the logical size directly instead
     int physW = static_cast<int>(window->width()  * m_dpr);
     int physH = static_cast<int>(window->height() * m_dpr);
 
     MARGINS m{1, 1, 1, 1};
     DwmExtendFrameIntoClientArea(m_hwnd, &m);
 
-    // Activate our WM_NCCALCSIZE handler (client area = full window rect).
+    // Activate our WM_NCCALCSIZE handler (client area = full window rect)
     SetWindowPos(m_hwnd, nullptr, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
     // Nudge forces WM_SIZE so Qt re-queries GetClientRect. Because
     // WM_NCCALCSIZE now returns client=window, Qt sees physW x physH and
-    // resets contentItem to (0,0) with the correct dimensions.
+    // resets contentItem to (0,0) with the correct dimensions
     SetWindowPos(m_hwnd, nullptr, 0, 0, physW, physH + 1,
                  SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(m_hwnd, nullptr, 0, 0, physW, physH,
@@ -65,8 +65,8 @@ bool WindowsFrameFilter::nativeEventFilter(const QByteArray &eventType,
     switch (msg->message) {
         case WM_NCCALCSIZE: {
             if (msg->wParam == FALSE) return false;
-            // When maximized, Windows adds padding to push content off-screen edges.
-            // Read it back so our client area doesn't get clipped.
+            // When maximized, Windows adds padding to push content off-screen edges
+            // Read it back so our client area doesn't get clipped
             if (IsZoomed(m_hwnd)) {
                 auto *p = reinterpret_cast<NCCALCSIZE_PARAMS *>(msg->lParam);
                 int pad = GetSystemMetrics(SM_CXSIZEFRAME)

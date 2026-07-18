@@ -21,7 +21,7 @@ MetadataService::MetadataService(library::IUserLibraryRepository &library,
     : m_library(library), m_metadataSource(metadataSource),
       m_mediaAssets(mediaAssets), m_mediaDir(std::move(mediaDir)) {
   // One worker thread: metadata.db and media.db are single-connection, so all
-  // access is serialized here regardless of which thread created the entry.
+  // access is serialized here regardless of which thread created the entry
   m_pool.setMaxThreadCount(1);
   m_entryCreatedConnection =
       EventDispatcher::instance().subscribe<library::EntryCreatedEvent>(
@@ -52,11 +52,11 @@ void MetadataService::populate(int entryId) {
 
   const auto metadata = m_metadataSource.lookup(entry.contentHash);
   if (!metadata.has_value()) {
-    // No shipped metadata for this hash: keep the filename and empty art.
+    // No shipped metadata for this hash: keep the filename and empty art
     return;
   }
 
-  // Text fields. A user rename pins the name (nameUserSet), so never override it.
+  // Text fields. A user rename pins the name (nameUserSet), so never override it
   if (!entry.nameUserSet && !metadata->name.empty()) {
     entry.displayName = metadata->name;
   }
@@ -69,7 +69,7 @@ void MetadataService::populate(int entryId) {
   entry.retroachievementsSetId = metadata->retroAchievementsId;
 
   // Seed the default art into the media store; the first of each type becomes
-  // the selection when the user hasn't already chosen one.
+  // the selection when the user hasn't already chosen one
   for (const auto &def : metadata->media) {
     if (def.url.empty()) {
       continue;
@@ -84,7 +84,7 @@ void MetadataService::populate(int entryId) {
     m_mediaAssets.add(asset);
   }
 
-  // Project the selected art onto the entry's denormalized columns.
+  // Project the selected art onto the entry's denormalized columns
   reprojectSelectedMedia(entry);
 
   m_library.updateEntryMetadata(entry);
@@ -93,7 +93,7 @@ void MetadataService::populate(int entryId) {
 void MetadataService::reprojectSelectedMedia(library::Entry &entry) {
   // These columns feed the small library-grid surfaces, so use the provider
   // thumbnail when available (the full original can be low-res, especially for
-  // icons). The full URL stays in the media store for future high-res uses.
+  // icons). The full URL stays in the media store for future high-res uses
   if (const auto icon =
           m_mediaAssets.selectedFor(entry.contentHash, MediaType::Icon)) {
     entry.icon1x1SourceUrl = icon->displayThumb();
@@ -146,7 +146,7 @@ bool MetadataService::importLocalImage(const std::string &contentHash,
   std::error_code ec;
   std::filesystem::create_directories(m_mediaDir, ec);
   const auto ext = std::filesystem::path(sourcePath).extension().string();
-  // Stable per (game, type) name: re-importing replaces the user's custom art.
+  // Stable per (game, type) name: re-importing replaces the user's custom art
   const auto dest =
       (std::filesystem::path(m_mediaDir) /
        (contentHash + "_" + std::to_string(static_cast<int>(type)) + "_user" +

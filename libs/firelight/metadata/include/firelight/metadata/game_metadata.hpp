@@ -20,7 +20,7 @@ namespace firelight::metadata {
   };
 
   /**
-   * A default media asset for a game from the metadata source.
+   * A default media asset for a game from the metadata source
    */
   struct MediaDefault {
     MediaType type = MediaType::Icon;
@@ -29,7 +29,7 @@ namespace firelight::metadata {
 
   /**
    * Set of metadata for a game. This isn't what gets stored in each library entry, it's from our metadata source and
-   * used to populate the library entry when the user adds a game.
+   * used to populate the library entry when the user adds a game
    */
   struct GameMetadata {
     std::string name;

@@ -7,7 +7,7 @@
 namespace firelight::netplay {
 
 namespace {
-// Pumps the Qt event loop until the condition holds or the timeout passes.
+// Pumps the Qt event loop until the condition holds or the timeout passes
 template <typename Predicate>
 bool pumpUntil(Predicate predicate, const int timeoutMs = 5000) {
   QElapsedTimer timer;

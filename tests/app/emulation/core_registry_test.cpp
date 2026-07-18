@@ -39,7 +39,7 @@ TEST(CoreRegistryTest, CoresForPlatformListsDefaultFirstPlusAlternates) {
   ASSERT_FALSE(gb.empty());
   EXPECT_EQ(gb.front().id, "gambatte_libretro");
   EXPECT_TRUE(gb.front().isDefault);
-  // mGBA is offered as an alternate for the Game Boy.
+  // mGBA is offered as an alternate for the Game Boy
   EXPECT_TRUE(contains(gb, "mgba_libretro"));
 
   const auto gba =
@@ -64,7 +64,7 @@ TEST(CoreRegistryTest, SupportsPlatformAndDllPath) {
 TEST(CoreRegistryTest, DeviceCatalogClassifiesVariants) {
   const auto &registry = CoreRegistry::instance();
 
-  // Genesis Plus GX exposes joypad variants + a mouse + light guns.
+  // Genesis Plus GX exposes joypad variants + a mouse + light guns
   const auto &gpgx = registry.deviceCatalogForCore("genesis_plus_gx_libretro");
   ASSERT_FALSE(gpgx.empty());
   bool has6Button = false, hasLightgun = false;
@@ -81,7 +81,7 @@ TEST(CoreRegistryTest, DeviceCatalogClassifiesVariants) {
   EXPECT_TRUE(hasLightgun);
 
   // FCEUmm's Zapper is modeled as a light gun with a companion core option so
-  // the core queries the light-gun protocol.
+  // the core queries the light-gun protocol
   const auto &fceumm = registry.deviceCatalogForCore("fceumm_libretro");
   ASSERT_EQ(fceumm.size(), 1u);
   EXPECT_EQ(fceumm[0].friendlyName, "Zapper");
@@ -90,7 +90,7 @@ TEST(CoreRegistryTest, DeviceCatalogClassifiesVariants) {
   EXPECT_EQ(fceumm[0].companionOptions[0].first, "fceumm_zapper_mode");
   EXPECT_EQ(fceumm[0].companionOptions[0].second, "clightgun");
 
-  // Uncatalogued core -> empty (joypad only).
+  // Uncatalogued core -> empty (joypad only)
   EXPECT_TRUE(registry.deviceCatalogForCore("gambatte_libretro").empty());
 }
 
@@ -99,7 +99,7 @@ TEST(CoreRegistryTest, AvailableVariantsCrossReferencesAdvertisement) {
 
   // snes9x catalog = Mouse(2), Super Scope(260), Justifier(516). The core here
   // advertises only the pad, mouse, and Super Scope -> Justifier is filtered
-  // out, and a standard joypad is synthesized as the default (first).
+  // out, and a standard joypad is synthesized as the default (first)
   const auto variants = registry.availableControllerVariants(
       "snes9x_libretro", {1u, 2u, 260u});
   ASSERT_EQ(variants.size(), 3u);
@@ -115,7 +115,7 @@ TEST(CoreRegistryTest, AvailableVariantsCrossReferencesAdvertisement) {
   EXPECT_TRUE(hasScope);
   EXPECT_FALSE(hasJustifier);
 
-  // An uncatalogued core still yields the synthesized standard controller.
+  // An uncatalogued core still yields the synthesized standard controller
   const auto gb =
       registry.availableControllerVariants("gambatte_libretro", {1u});
   ASSERT_EQ(gb.size(), 1u);
@@ -132,7 +132,7 @@ protected:
 
   void TearDown() override {
     // The registry is a singleton; clear the session override so it can't leak
-    // into other tests.
+    // into other tests
     CoreRegistry::instance().setSessionCoreOverride("");
   }
 };
@@ -140,21 +140,21 @@ protected:
 TEST_F(CoreRegistryResolveTest, ResolvesDefaultThenPlatformThenGame) {
   const auto &registry = CoreRegistry::instance();
 
-  // No overrides -> default.
+  // No overrides -> default
   EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 
-  // Valid platform override wins (mGBA supports Game Boy).
+  // Valid platform override wins (mGBA supports Game Boy)
   m_service.setPlatformValue(m_gb, "core", "mgba_libretro");
   EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "mgba_libretro");
 
-  // Game override wins over platform.
+  // Game override wins over platform
   m_service.setGameValue(m_hash, "core", "gambatte_libretro");
   EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 }
 
 TEST_F(CoreRegistryResolveTest, IgnoresOverrideThatDoesNotSupportPlatform) {
   const auto &registry = CoreRegistry::instance();
-  // snes9x can't run a Game Boy -> the override is rejected, falls back.
+  // snes9x can't run a Game Boy -> the override is rejected, falls back
   m_service.setPlatformValue(m_gb, "core", "snes9x_libretro");
   EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 }
@@ -163,18 +163,18 @@ TEST_F(CoreRegistryResolveTest, SessionOverrideBeatsStoredOverrides) {
   auto &registry = CoreRegistry::instance();
   // A stored game override would normally win...
   m_service.setGameValue(m_hash, "core", "gambatte_libretro");
-  // ...but a CLI --core session override beats every stored tier (mGBA runs GB).
+  // ...but a CLI --core session override beats every stored tier (mGBA runs GB)
   registry.setSessionCoreOverride("mgba_libretro");
   EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "mgba_libretro");
 }
 
 TEST_F(CoreRegistryResolveTest, SessionOverrideIgnoredWhenPlatformUnsupported) {
   auto &registry = CoreRegistry::instance();
-  // snes9x can't run a Game Boy -> the session override is guarded out.
+  // snes9x can't run a Game Boy -> the session override is guarded out
   registry.setSessionCoreOverride("snes9x_libretro");
   EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 
-  // Clearing it restores normal resolution.
+  // Clearing it restores normal resolution
   registry.setSessionCoreOverride("");
   EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 }

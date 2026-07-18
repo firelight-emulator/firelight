@@ -11,7 +11,7 @@ namespace firelight::input {
 
 namespace {
 // Qt registers Qt::Key with the meta-object system, so key names resolve without
-// a table here to drift out of step with Qt.
+// a table here to drift out of step with Qt
 std::optional<int> keyFromName(const std::string &name) {
   static const auto meta = QMetaEnum::fromType<Qt::Key>();
   bool found = false;
@@ -63,7 +63,7 @@ std::optional<InputSource> parseInputSource(const std::string_view text,
     return std::nullopt;
   }
 
-  // "Select+R3": everything before the last '+' is held alongside the trigger.
+  // "Select+R3": everything before the last '+' is held alongside the trigger
   std::vector<std::string> parts;
   size_t start = 0;
   while (start <= text.size()) {
@@ -224,14 +224,14 @@ std::vector<std::string> ShortcutRegistry::validate() const {
   }
 
   // The keys a console input falls back to during gameplay. A shipped keyboard
-  // shortcut on one of these would fire the shortcut *and* press the button.
+  // shortcut on one of these would fire the shortcut *and* press the button
   const auto &gameplayKeys = KeyboardInputHandler::defaultKeyMap();
 
   for (const auto &preset : m_presets) {
     for (const auto &[device, byId] : preset.bindings) {
       for (const auto &[id, sources] : byId) {
         // The engine skips ids with no action, so a typo here would just never
-        // fire — with nothing logged.
+        // fire — with nothing logged
         if (!m_actions.contains(id)) {
           problems.push_back("preset '" + preset.id + "' binds '" + id +
                              "', which isn't a declared action");

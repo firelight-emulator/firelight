@@ -12,7 +12,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-// Must follow windows.h: it uses HANDLE/DWORD without declaring them.
+// Must follow windows.h: it uses HANDLE/DWORD without declaring them
 #include <tlhelp32.h>
 #endif
 
@@ -21,7 +21,7 @@ namespace firelight::gui {
 namespace {
 // Looks for the Steam client by process name. Deliberately not the registry's
 // ActiveProcess/pid: that keeps a stale pid after a crash, and this warning is
-// only worth showing when Steam is actually there to interfere.
+// only worth showing when Steam is actually there to interfere
 bool steamClientRunning() {
 #ifdef _WIN32
   const auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -43,7 +43,7 @@ bool steamClientRunning() {
   CloseHandle(snapshot);
   return found;
 #else
-  // Only Windows has the filter driver this warning is about.
+  // Only Windows has the filter driver this warning is about
   return false;
 #endif
 }

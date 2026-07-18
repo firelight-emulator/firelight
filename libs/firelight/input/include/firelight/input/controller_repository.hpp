@@ -25,33 +25,33 @@ public:
 
   // `device` decides which shipped preset seeds the new profile's shortcuts,
   // and is persisted so the keyboard's profile is still a keyboard profile
-  // next launch.
+  // next launch
   virtual std::shared_ptr<GamepadProfile>
   createProfile(std::string name, DeviceType device = DeviceType::Gamepad) = 0;
 
-  // Returns every stored profile (built-in and user).
+  // Returns every stored profile (built-in and user)
   virtual std::vector<std::shared_ptr<GamepadProfile>> listProfiles() = 0;
 
   // Deep-copies a profile (bindings, analog settings, shortcuts) under a new
-  // name. Returns nullptr if the source does not exist or the name is taken.
+  // name. Returns nullptr if the source does not exist or the name is taken
   virtual std::shared_ptr<GamepadProfile> cloneProfile(int sourceId,
                                                        std::string newName) = 0;
 
-  // Built-in profiles cannot be deleted. Returns false if not deletable/found.
+  // Built-in profiles cannot be deleted. Returns false if not deletable/found
   virtual bool deleteProfile(int id) = 0;
 
   virtual bool renameProfile(int id, std::string newName) = 0;
 
-  // Persists a profile's default analog tuning.
+  // Persists a profile's default analog tuning
   virtual void setProfileAnalogSettings(int profileId,
                                         const AnalogSettings &settings) = 0;
 
   // Persists which preset a profile's shortcuts are measured against, after the
-  // editor applies a different one. Doesn't touch the bindings.
+  // editor applies a different one. Doesn't touch the bindings
   virtual void setProfilePresetId(int profileId, const std::string &presetId) = 0;
 
   // Serializes a complete profile (analog + per-platform bindings + shortcuts)
-  // to a portable JSON document, and recreates one from such a document.
+  // to a portable JSON document, and recreates one from such a document
   virtual std::string exportProfile(int id) = 0;
   virtual std::shared_ptr<GamepadProfile>
   importProfile(const std::string &json) = 0;

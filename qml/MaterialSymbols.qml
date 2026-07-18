@@ -4,8 +4,8 @@ pragma Singleton
 
 // Material Symbols Rounded codepoint map. Keyed by the app's existing icon names
 // (the qrc:/icons/* aliases) plus canonical names for the button glyphs. Generated
-// from assets/fonts/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf via its cmap.
-// Used by Icon.qml: Icon { name: "settings" }.
+// from assets/fonts/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf via its cmap
+// Used by Icon.qml: Icon { name: "settings" }
 QtObject {
     readonly property var codepoints: ({
         "add": "\ue145",

@@ -16,7 +16,7 @@ namespace firelight::saves {
 // QtSaveManagerProxy, and suspend-point changes are announced through the
 // EventDispatcher — see save_events.hpp). Content hashes and the save directory
 // are std::string; SuspendPoint's screenshot (QImage) is an accepted boundary
-// type shared with the media/screenshot code.
+// type shared with the media/screenshot code
 class ISaveManager {
 public:
   virtual ~ISaveManager() = default;

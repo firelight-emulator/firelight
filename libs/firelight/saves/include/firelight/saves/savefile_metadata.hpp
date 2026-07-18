@@ -4,8 +4,8 @@
 #include <string>
 
 namespace firelight::saves {
-// Index row for a battery/SRAM save (the bytes live on disk as savefile.srm).
-// Timestamps are int64 milliseconds since the Unix epoch.
+// Index row for a battery/SRAM save (the bytes live on disk as savefile.srm)
+// Timestamps are int64 milliseconds since the Unix epoch
 struct SavefileMetadata {
   int id = -1;
   std::string contentId;

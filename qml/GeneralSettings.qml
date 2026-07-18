@@ -5,13 +5,13 @@ import Firelight 1.0
 
 // Typed read path for the general app settings declared in the settings
 // catalog, mirroring AppearanceSettings. The settings page writes these through
-// SettingsModel; the rest of the app binds to the names here.
+// SettingsModel; the rest of the app binds to the names here
 //
 // The value properties are read-only: assigning to one would break its binding
 // and silently stop tracking the store. The set* functions are for the few
-// places that change a setting from outside the settings page.
+// places that change a setting from outside the settings page
 //
-// Window geometry lives in WindowGeometry, not here — it isn't a setting.
+// Window geometry lives in WindowGeometry, not here — it isn't a setting
 QtObject {
     id: root
 

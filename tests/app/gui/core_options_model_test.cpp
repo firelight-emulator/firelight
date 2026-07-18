@@ -10,7 +10,7 @@
 namespace firelight::settings {
 namespace {
 
-// Platform 3 = Game Boy Advance -> core "mgba_libretro" (PlatformMetadata).
+// Platform 3 = Game Boy Advance -> core "mgba_libretro" (PlatformMetadata)
 constexpr int GBA_PLATFORM_ID = 3;
 const char *GBA_CORE = "mgba_libretro";
 
@@ -75,7 +75,7 @@ TEST_F(CoreOptionsModelTest, LoadsCachedOptionsForPlatformCore) {
   EXPECT_EQ(value(model, 0, "key").toString(), "mgba_color_correction");
   EXPECT_EQ(value(model, 0, "label").toString(), "label-mgba_color_correction");
   EXPECT_EQ(value(model, 0, "defaultValue").toString(), "OFF");
-  // No override yet -> shows the core's declared default, not overridden.
+  // No override yet -> shows the core's declared default, not overridden
   EXPECT_EQ(value(model, 0, "value").toString(), "OFF");
   EXPECT_FALSE(value(model, 0, "overridden").toBool());
 }
@@ -90,17 +90,17 @@ TEST_F(CoreOptionsModelTest, FiltersByCategoryAndListsCategories) {
   model.setLevel(Global);
   model.setPlatformId(GBA_PLATFORM_ID);
 
-  // Default filter "" -> only uncategorized options.
+  // Default filter "" -> only uncategorized options
   ASSERT_EQ(model.rowCount({}), 1);
   EXPECT_EQ(value(model, 0, "key").toString(), "top_opt");
 
-  // categories() lists the distinct declared category.
+  // categories() lists the distinct declared category
   const auto cats = model.categories();
   ASSERT_EQ(cats.size(), 1);
   EXPECT_EQ(cats[0].toHash().value("key").toString(), "video");
   EXPECT_EQ(cats[0].toHash().value("label").toString(), "Video");
 
-  // Filtering to the category shows only its options.
+  // Filtering to the category shows only its options
   model.setCategoryFilter("video");
   ASSERT_EQ(model.rowCount({}), 1);
   EXPECT_EQ(value(model, 0, "key").toString(), "vid_opt");
@@ -123,7 +123,7 @@ TEST_F(CoreOptionsModelTest, SetDataWritesOverrideAtLevel) {
 
   EXPECT_EQ(value(model, 0, "value").toString(), "GBA");
   EXPECT_TRUE(value(model, 0, "overridden").toBool());
-  // Persisted to the global tier.
+  // Persisted to the global tier
   EXPECT_EQ(m_service.getValueAtLevel(Global, "", GBA_PLATFORM_ID,
                                       "mgba_color_correction")
                 .value_or(""),
@@ -140,11 +140,11 @@ TEST_F(CoreOptionsModelTest, GameOverrideShadowsGlobalWhenViewedAtGame) {
   model.setLevel(Game);
 
   // At the game tier with no game override, the effective value is the global
-  // one, but it's not overridden *here*.
+  // one, but it's not overridden *here*
   EXPECT_EQ(value(model, 0, "value").toString(), "GBA");
   EXPECT_FALSE(value(model, 0, "overridden").toBool());
 
-  // Set a game override; it now shadows global and is overridden here.
+  // Set a game override; it now shadows global and is overridden here
   const int valueRole = roleFor(model, "value");
   ASSERT_TRUE(model.setData(model.index(0), "OFF", valueRole));
   EXPECT_EQ(value(model, 0, "value").toString(), "OFF");
@@ -165,7 +165,7 @@ TEST_F(CoreOptionsModelTest, ResetValueFallsBackToInherited) {
   ASSERT_TRUE(value(model, 0, "overridden").toBool());
 
   model.resetValue(0);
-  // Falls back to the inherited global value.
+  // Falls back to the inherited global value
   EXPECT_EQ(value(model, 0, "value").toString(), "GBA");
   EXPECT_FALSE(value(model, 0, "overridden").toBool());
 }

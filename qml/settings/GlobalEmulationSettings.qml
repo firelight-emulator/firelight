@@ -5,7 +5,7 @@ import Firelight 1.0
 
 // Global emulation defaults (the base tier). Consoles override these per-core,
 // and individual games override those. With no platform in scope only the
-// frontend settings apply, since per-core options don't mean anything globally.
+// frontend settings apply, since per-core options don't mean anything globally
 FocusScope {
     id: root
 

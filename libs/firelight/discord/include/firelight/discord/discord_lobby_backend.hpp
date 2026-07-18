@@ -18,10 +18,10 @@ namespace firelight::discord {
 // secret, chat rides SendLobbyMessage, and connection signaling rides
 // metadata-tagged lobby messages (chunked, filtered out of chat). Sign-in is
 // the SDK OAuth flow with tokens persisted through the token store — nothing
-// outside this adapter sees Discord types or tokens.
+// outside this adapter sees Discord types or tokens
 //
 // Threading: everything (UI calls + SDK callbacks) runs on the thread that
-// pumps RunCallbacks — the main thread.
+// pumps RunCallbacks — the main thread
 class DiscordLobbyBackend final : public netplay::ILobbyBackend {
 public:
   DiscordLobbyBackend(discordpp::Client &client, ITokenStore &tokenStore);

@@ -12,7 +12,7 @@ namespace firelight::gui {
 // QML bridge for online play. Provider-agnostic on purpose: the UI renders
 // "Sign in with <providerName>" from data and never names Discord. Session
 // events can arrive on network threads; everything is marshaled to the GUI
-// thread before signals fire.
+// thread before signals fire
 class QtNetworkServiceProxy final : public QObject {
   Q_OBJECT
   Q_PROPERTY(QString signInState READ signInState NOTIFY signInStateChanged)
@@ -64,7 +64,7 @@ public:
   Q_INVOKABLE void sendChat(const QString &text);
   // Ready check: startSession announces the game (host only), confirmLaunch
   // marks the game live once the host actually launches, endSession returns
-  // the lobby to idle.
+  // the lobby to idle
   Q_INVOKABLE void startSession();
   Q_INVOKABLE void confirmLaunch();
   Q_INVOKABLE void endSession();
@@ -72,11 +72,11 @@ public:
   Q_INVOKABLE void copyJoinCode();
   // The stream view registers itself to receive decoded frames. Detach only
   // releases if `item` is still the attached view — a page being torn down
-  // must not detach its replacement.
+  // must not detach its replacement
   Q_INVOKABLE void attachStreamItem(QObject *item);
   Q_INVOKABLE void detachStreamItem(QObject *item);
   // Lobby members for the host's slot-assignment picker:
-  // [{memberId, displayName}].
+  // [{memberId, displayName}]
   Q_INVOKABLE [[nodiscard]] QVariantList lobbyMembers() const;
 
 signals:
@@ -92,7 +92,7 @@ signals:
 
 private:
   void setBusy(bool busy);
-  // Queues a signal emission onto the GUI thread.
+  // Queues a signal emission onto the GUI thread
   template <typename Fn> void onGuiThread(Fn &&fn) {
     QMetaObject::invokeMethod(this, std::forward<Fn>(fn),
                               Qt::QueuedConnection);

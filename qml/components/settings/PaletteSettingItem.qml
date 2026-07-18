@@ -6,7 +6,7 @@ import Firelight 1.0
 // Bespoke delegate for the Game Boy palette (widget "gbc-palette"): the usual
 // dropdown row plus a live preview of the selected palette underneath. The
 // reference for what `type: "custom"` looks like — extend a row component and
-// add to it, rather than rebuilding the row.
+// add to it, rather than rebuilding the row
 ComboBoxSettingItem {
     id: root
 
@@ -37,13 +37,13 @@ ComboBoxSettingItem {
         }
     }
 
-    // Lands in BaseSettingItem's nested slot, indented under the row.
+    // Lands in BaseSettingItem's nested slot, indented under the row
     Image {
         Layout.alignment: Qt.AlignHCenter
         Layout.preferredWidth: 240
         Layout.preferredHeight: 240
         fillMode: Image.PreserveAspectFit
-        // Preview assets are named like "gb-dmg" for value "GB - DMG".
+        // Preview assets are named like "gb-dmg" for value "GB - DMG"
         source: root.value !== ""
                 ? "qrc:images/gbc-previews/" + root.value.toLowerCase().replace(/ /g, "")
                 : ""

@@ -7,7 +7,7 @@
 namespace firelight::library {
 
 // Adding a content file creates its run configuration and entry; resolving that
-// entry must return the content file (no patch).
+// entry must return the content file (no patch)
 TEST(EntryResolverTest, ResolvesRomEntry) {
   SqliteUserLibraryRepository library(":memory:");
   LibraryIngestService ingest(library);
@@ -34,7 +34,7 @@ TEST(EntryResolverTest, ResolvesRomEntry) {
   ASSERT_FALSE(resolved.patch.has_value());
 }
 
-// An entry with no run configurations cannot be resolved.
+// An entry with no run configurations cannot be resolved
 TEST(EntryResolverTest, InvalidWhenNoRunConfigurations) {
   SqliteUserLibraryRepository library(":memory:");
 

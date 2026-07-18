@@ -7,7 +7,7 @@
 namespace firelight::gui {
 
 // The editor's preset behavior: which rows read as modified, resetting one row,
-// and applying a different preset wholesale.
+// and applying a different preset wholesale
 class ShortcutsModelTest : public testing::Test {
 protected:
   std::shared_ptr<input::ShortcutMapping> m_mapping;
@@ -39,7 +39,7 @@ protected:
   void TearDown() override { input::ShortcutRegistry::instance().clear(); }
 
   // profileId -1 keeps the model off the (absent) repository; the preset it
-  // measures against is passed in directly.
+  // measures against is passed in directly
   std::unique_ptr<ShortcutsModel> makeModel(const bool isKeyboard,
                                             const std::string &presetId) {
     return std::make_unique<ShortcutsModel>(-1, isKeyboard, m_mapping,
@@ -76,7 +76,7 @@ TEST_F(ShortcutsModelTest, SeededRowsMatchThePresetAndReadUnmodified) {
   const auto model = makeModel(false, "firelight");
   EXPECT_FALSE(valueAt(*model, "fast_forward", "isModified").toBool());
   EXPECT_FALSE(valueAt(*model, "screenshot", "isModified").toBool());
-  // The preset binds nothing here, and neither does the profile.
+  // The preset binds nothing here, and neither does the profile
   EXPECT_FALSE(valueAt(*model, "save_state", "isModified").toBool());
 }
 
@@ -90,7 +90,7 @@ TEST_F(ShortcutsModelTest, RebindingMarksTheRowModified) {
 }
 
 // Clearing is how a shortcut is disabled, so it counts as modified against a
-// preset that binds it — otherwise Reset would look like a no-op.
+// preset that binds it — otherwise Reset would look like a no-op
 TEST_F(ShortcutsModelTest, ClearingAPresetBoundRowMarksItModified) {
   m_mapping->setBindings(
       "fast_forward",
@@ -117,7 +117,7 @@ TEST_F(ShortcutsModelTest, ResetToDefaultRestoresThePresetBinding) {
 }
 
 // Reset is a write, not an erase: for a row the preset leaves alone, it means
-// unbound.
+// unbound
 TEST_F(ShortcutsModelTest, ResetOnAnUnseededRowUnbindsIt) {
   const auto model = makeModel(false, "firelight");
   model->addBinding("save_state", {}, static_cast<int>(input::GamepadInput::NorthFace));
@@ -138,12 +138,12 @@ TEST_F(ShortcutsModelTest, ApplyPresetRebindsAndAdoptsTheNewPreset) {
   EXPECT_EQ("handheld", model->presetId().toStdString());
   EXPECT_EQ(m_mapping->getBindings("fast_forward"),
             std::vector{*input::parseInputSource("Select+SouthFace", DeviceType::Gamepad)});
-  // Everything reads unmodified against the preset just applied.
+  // Everything reads unmodified against the preset just applied
   EXPECT_FALSE(valueAt(*model, "fast_forward", "isModified").toBool());
 }
 
 // A preset that doesn't name an action wants it unbound; the previous preset's
-// binding must not survive.
+// binding must not survive
 TEST_F(ShortcutsModelTest, ApplyPresetClearsRowsTheNewPresetOmits) {
   const auto model = makeModel(false, "firelight");
   model->applyPreset("firelight");
@@ -160,7 +160,7 @@ TEST_F(ShortcutsModelTest, KeyboardProfileReadsTheKeyboardHalfOfThePreset) {
   model->applyPreset("firelight");
 
   EXPECT_TRUE(valueAt(*model, "save_state", "hasBinding").toBool());
-  // fast_forward is bound for the gamepad only.
+  // fast_forward is bound for the gamepad only
   EXPECT_FALSE(valueAt(*model, "fast_forward", "hasBinding").toBool());
 }
 
@@ -176,13 +176,13 @@ TEST_F(ShortcutsModelTest, PresetOptionsAreFilteredByDeviceKind) {
     return ids;
   };
 
-  // "handheld" is gamepad-only, so a keyboard is never offered it.
+  // "handheld" is gamepad-only, so a keyboard is never offered it
   EXPECT_TRUE(idsOf(pad->presetOptions()).contains("handheld"));
   EXPECT_FALSE(idsOf(keys->presetOptions()).contains("handheld"));
   EXPECT_TRUE(idsOf(keys->presetOptions()).contains("firelight"));
 }
 
-// An unknown preset must leave the bindings alone rather than wipe them.
+// An unknown preset must leave the bindings alone rather than wipe them
 TEST_F(ShortcutsModelTest, ApplyingAnUnknownPresetDoesNothing) {
   const auto model = makeModel(false, "firelight");
   model->applyPreset("firelight");

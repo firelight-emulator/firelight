@@ -6,13 +6,13 @@ import Firelight 1.0
 // Hosts the emulator page. Pause and blur are owned by the host (GameplayLayer):
 // it drives `blurAmount` when something is layered over the game and toggles the
 // page's `paused`. This just loads/unloads the page, applies the blur/dim, and
-// reports the Esc/Home "suspend" key.
+// reports the Esc/Home "suspend" key
 Loader {
     id: emulatorLoader
 
     signal suspended()
 
-    // 0 = clear, 1 = fully blurred+dimmed (game behind the quick menu).
+    // 0 = clear, 1 = fully blurred+dimmed (game behind the quick menu)
     property real blurAmount: 0
 
     Behavior on blurAmount {

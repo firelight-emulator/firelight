@@ -4,8 +4,8 @@ import QtQuick.Layouts
 import Firelight 1.0
 
 // Generic per-console settings page: shows the friendly emulation settings for a
-// platform at the Platform tier (defaults for all of that console's games).
-// Driven entirely by `platformId`, so every console gets a real page.
+// platform at the Platform tier (defaults for all of that console's games)
+// Driven entirely by `platformId`, so every console gets a real page
 FocusScope {
     id: root
 

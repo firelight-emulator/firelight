@@ -5,17 +5,17 @@ import Firelight 1.0
 // Renders the current route as a screen and mirrors Router's history. Recently
 // visited screens are kept alive in an LRU cache so navigating back returns to a
 // page exactly as it was left (scroll position, selection, sub-tab). Router owns
-// history; this view only reacts to the transition it hands us.
+// history; this view only reacts to the transition it hands us
 //
 // StackView never destroys items it didn't create itself, so we build the
 // screens ourselves and manage their lifecycle here: the stack only ever holds
 // the current one (depth 1); the rest live hidden in the cache until reused or
 // evicted. First-time builds are asynchronous (incubated across frames) so
-// opening a heavy page doesn't freeze the UI; cached revisits are instant.
+// opening a heavy page doesn't freeze the UI; cached revisits are instant
 //
 // Pages that do ongoing work (timers, animations, media) can pause it while
 // off-screen by declaring `property bool routeActive: true` — this view sets it
-// false when the page isn't current. e.g. `Timer { running: root.routeActive }`.
+// false when the page isn't current. e.g. `Timer { running: root.routeActive }`
 StackView {
     id: stack
 
@@ -23,16 +23,16 @@ StackView {
     initialItem: Item {}
 
     // How many screen instances to keep alive (current + recent). Older ones are
-    // destroyed and rebuilt fresh when revisited.
+    // destroyed and rebuilt fresh when revisited
     property int cacheSize: 5
 
     // True while an uncached page is being built asynchronously, so the shell can
-    // show a loading indicator.
+    // show a loading indicator
     property bool loading: false
 
     // Route pattern -> screen Component. Params (Router.params) are passed as
     // initial properties, so a pattern's :name captures must match the screen's
-    // property names (e.g. :entryId -> FLGameDetailsPanel.entryId).
+    // property names (e.g. :entryId -> FLGameDetailsPanel.entryId)
     readonly property var routes: ({
         "/library": libraryComponent,
         "/library/entries/:entryId": gameDetailsComponent,
@@ -155,7 +155,7 @@ StackView {
 
 
     // Off-screen, invisible parent where pages are built asynchronously before
-    // they're shown. Sized like the stack so layout matches their final home.
+    // they're shown. Sized like the stack so layout matches their final home
     Item {
         id: incubationHolder
         visible: false
@@ -163,14 +163,14 @@ StackView {
         height: stack.height
     }
 
-    // LRU cache of { key, item }, most-recently-used last.
+    // LRU cache of { key, item }, most-recently-used last
     property var _cache: []
-    // Builds currently in flight, keyed by mount key, so a route isn't built twice.
+    // Builds currently in flight, keyed by mount key, so a route isn't built twice
     property var _incubators: ({})
 
     // A route pattern that owns its subtree (e.g. /settings) keeps one instance
     // for all its sub-paths; everything else is keyed by full path so distinct
-    // entries get distinct pages.
+    // entries get distinct pages
     function _isSubtree(pattern) {
         for (var i = 0; i < Router.routes.length; i++) {
             if (Router.routes[i].pattern === pattern) {
@@ -185,7 +185,7 @@ StackView {
     }
 
     // Path params plus query params, as initial properties for the page
-    // (e.g. /controllers/profiles/2?profileId=5 -> {playerNumber, profileId}).
+    // (e.g. /controllers/profiles/2?profileId=5 -> {playerNumber, profileId})
     function _props() {
         var props = {};
         var key;
@@ -239,7 +239,7 @@ StackView {
         stack.loading = false;
         // Keep the depth-1 invariant: if a screen ever pushes onto our stack
         // directly (outside the router), drop those extras so nothing lingers
-        // behind the next page.
+        // behind the next page
         while (stack.depth > 1) {
             stack.popCurrentItem(StackView.Immediate);
         }
@@ -261,7 +261,7 @@ StackView {
         function onNavigated(transition) {
             if (Router.overlay || transition === "none") {
                 // Overlay routes render on top (handled by RouteOverlay); a subtree
-                // screen updates itself in place. Either way, leave content as-is.
+                // screen updates itself in place. Either way, leave content as-is
                 return;
             }
 
@@ -275,7 +275,7 @@ StackView {
                 return;
             }
 
-            // Cache miss: build the page asynchronously so navigation stays smooth.
+            // Cache miss: build the page asynchronously so navigation stays smooth
             stack.loading = true;
             if (stack._incubators[key]) {
                 return; // already building

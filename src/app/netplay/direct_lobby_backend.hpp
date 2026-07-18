@@ -15,11 +15,11 @@ namespace firelight::netplay {
 // Direct-connection lobby: the host listens on a TCP port and shares their
 // IP; guests join by entering it. That one socket carries lobby membership,
 // chat, and the WebRTC signaling — the game streams still flow over the peer
-// transport. No accounts, no provider.
+// transport. No accounts, no provider
 //
 // Sockets live on the main thread; calls arriving from network threads
 // (sendSignal from the transport) are marshaled onto it. State read by other
-// threads (currentLobby) is mirrored behind a mutex.
+// threads (currentLobby) is mirrored behind a mutex
 class DirectLobbyBackend final : public QObject, public ILobbyBackend {
   Q_OBJECT
 
@@ -63,17 +63,17 @@ private:
 
   std::string m_displayName;
 
-  // Host side.
+  // Host side
   QTcpServer *m_server = nullptr;
   std::map<QTcpSocket *, GuestConnection> m_guests;
   PlayerId m_nextGuestId = 2;
 
-  // Guest side.
+  // Guest side
   QTcpSocket *m_hostSocket = nullptr;
   QByteArray m_hostBuffer;
   ResultCallback m_pendingJoin;
 
-  // Mirror of lobby state, readable from any thread.
+  // Mirror of lobby state, readable from any thread
   mutable std::mutex m_stateMutex;
   bool m_joined = false;
   bool m_isHost = false;
