@@ -67,9 +67,9 @@ bool writeAtomic(const fs::path &path, const void *data, size_t size) {
 // (that turned /Users/x into Users/x). Only a Windows drive path (/C:/...) has
 // its leading slash removed
 std::string stripFileUrl(std::string s) {
-  constexpr std::string_view kScheme = "file://";
-  if (s.rfind(kScheme, 0) == 0)
-    s.erase(0, kScheme.size());
+  constexpr std::string_view SCHEME = "file://";
+  if (s.rfind(SCHEME, 0) == 0)
+    s.erase(0, SCHEME.size());
   if (s.size() >= 3 && s[0] == '/' &&
       ((s[1] >= 'A' && s[1] <= 'Z') || (s[1] >= 'a' && s[1] <= 'z')) &&
       s[2] == ':')

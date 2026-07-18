@@ -10,7 +10,7 @@ namespace firelight::library {
 // The primitive attributes of a library entry needed to evaluate smart-folder
 // criteria. Deliberately Qt-free and self-contained so matches() is a pure
 // function and fully unit-testable. The model layer builds it from a loaded
-// Entry (its attributes + filesystem provenance) joined with play stats from
+// Entry (its attributes + file locations) joined with play stats from
 // the activity log
 struct EntryFields {
   int platformId = 0;
@@ -21,7 +21,7 @@ struct EntryFields {
   std::string developer;
   std::string publisher;
   int releaseYear = 0; // 0 = unknown
-  // Filesystem provenance (see Entry): the content directories the entry's
+  // File locations (see Entry): the content directories the entry's
   // files live under, and their on-disk paths
   std::vector<int> contentDirectoryIds;
   std::vector<std::string> contentPaths;

@@ -36,7 +36,7 @@ namespace firelight::library {
     }
 
     // Builds an Entry from the current row of a `SELECT e.*` / `SELECT *` over
-    // entriesv1. Does not read folder ids or provenance (the loaders add those)
+    // entriesv1. Does not read folder ids or file locations (the loaders add those)
     Entry deserializeEntry(const SQLite::Statement &query) {
       return Entry{
         .id = query.getColumn("id").getInt(),
@@ -226,7 +226,7 @@ namespace firelight::library {
     ensureColumnExists("folders", "position", "INTEGER NOT NULL DEFAULT 0");
     ensureColumnExists("entriesv1", "name_user_set", "INTEGER NOT NULL DEFAULT 0");
 
-    // Give pre-existing content files their directory provenance (new files get
+    // Give pre-existing content files their directory (new files get
     // it stamped at insert time in create(ContentFile))
     backfillContentDirectoryIds();
 
@@ -906,7 +906,7 @@ namespace firelight::library {
         entry.contentPaths.push_back(path);
       }
     } catch (const std::exception &e) {
-      spdlog::error("Failed to get content provenance for entry {}: {}", entry.id,
+      spdlog::error("Failed to get content locations for entry {}: {}", entry.id,
                     e.what());
     }
   }

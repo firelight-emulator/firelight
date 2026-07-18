@@ -560,7 +560,7 @@ TEST_F(SqliteUserLibraryTest, ContentDirectoryLongestPrefixWinsTest) {
   ASSERT_EQ(stored->m_contentDirectoryId, nested.id);
 }
 
-TEST_F(SqliteUserLibraryTest, EntryProvenancePopulatedTest) {
+TEST_F(SqliteUserLibraryTest, EntryFileLocationsPopulatedTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
   library::LibraryIngestService ingest(library);
 
@@ -692,14 +692,14 @@ TEST_F(SqliteUserLibraryTest, SetFolderParentMovesAndAppendsTest) {
   EXPECT_EQ(findFolder(folders, parent.id).parentId, -1);
 }
 
-TEST_F(SqliteUserLibraryTest, EntryProvenanceUsesArchivePathTest) {
+TEST_F(SqliteUserLibraryTest, EntryFileLocationsUseArchivePathTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
   library::LibraryIngestService ingest(library);
 
   library::ContentDirectory dir{.path = "roms"};
   ASSERT_TRUE(library.create(dir));
 
-  // An archived entry's on-disk location is the archive path; provenance
+  // An archived entry's on-disk location is the archive path; the file location
   // resolves against that, and contentPaths reports it (so "path contains"
   // works for archived content too)
   library::ContentFile file{.m_fileSizeBytes = 100,
